@@ -13,11 +13,14 @@ import {
 const rootDir = path.resolve(import.meta.dir, "../..");
 
 function canImport(fromDir: string, specifier: string): boolean {
-  const result = Bun.spawnSync([process.execPath, "-e", `await import(${JSON.stringify(specifier)})`], {
-    cwd: fromDir,
-    stdout: "ignore",
-    stderr: "ignore",
-  });
+  const result = Bun.spawnSync(
+    [process.execPath, "-e", `await import(${JSON.stringify(specifier)})`],
+    {
+      cwd: fromDir,
+      stdout: "ignore",
+      stderr: "ignore",
+    },
+  );
   return result.exitCode === 0;
 }
 
@@ -42,12 +45,14 @@ describe("repository workspace", () => {
   });
 });
 
-describe("checkPackage", () => {
-  const web = (manifest: PackageJson = {}) => ({
+function web(manifest: PackageJson = {}) {
+  return {
     dir: "apps/web",
     manifest: { name: "@tonaris/web", private: true, type: "module", ...manifest },
-  });
+  };
+}
 
+describe("checkPackage", () => {
   test("accepts exact versions and allowed workspace references", () => {
     const problems = checkPackage(
       web({
@@ -59,7 +64,9 @@ describe("checkPackage", () => {
   });
 
   test("rejects version ranges and tags", () => {
-    const problems = checkPackage(web({ dependencies: { zod: "^4.2.0", vite: "latest", react: "19.x" } }));
+    const problems = checkPackage(
+      web({ dependencies: { zod: "^4.2.0", vite: "latest", react: "19.x" } }),
+    );
     expect(problems).toHaveLength(3);
     expect(problems.every((problem) => problem.includes("exact version"))).toBe(true);
   });
@@ -95,8 +102,11 @@ describe("checkRoot", () => {
   });
 
   test("requires exact versions for root dependencies", () => {
-    expect(checkRoot({ packageManager: "bun@1.4.3", devDependencies: { "@types/bun": "~1.4.3" } }, "1.4.3")).toEqual([
-      'root: @types/bun must be pinned to an exact version, found "~1.4.3" (TS-07)',
-    ]);
+    expect(
+      checkRoot(
+        { packageManager: "bun@1.4.3", devDependencies: { "@types/bun": "~1.4.3" } },
+        "1.4.3",
+      ),
+    ).toEqual(['root: @types/bun must be pinned to an exact version, found "~1.4.3" (TS-07)']);
   });
 });

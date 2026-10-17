@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["**/*.md"],
+  "sortImports": {
+    "internalPattern": ["@tonaris/"]
+  },
+  "sortTailwindcss": {
+    "functions": ["cn", "cva"]
+  }
+}

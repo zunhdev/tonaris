@@ -34,7 +34,7 @@ The table records the verdicts.
 | Proposed | Verdict | Conditions / reasoning |
 | --- | --- | --- |
 | **Bun** | **Keep, pinned 1.4.x** | 1.4.0 (2026-08-20) was a Zig→Rust rewrite, with regressions fixed through 1.4.3 ([Bun 1.4](https://bun.com/blog/bun-v1.4)). Pin the exact version in `.bun-version`, `packageManager`, and the host's runtime setting. Run the M1 workload soak test before production. |
-| **TypeScript** | **Keep: TypeScript 7 (`tsgo`) for type-checking** | TS 7.0 went GA on 2026-07-08 ([announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)). It has no compiler API yet. A tool that needs the API gets the alias `typescript → npm:@typescript/typescript6` in that tool's scope only. Keep the tsconfig TS7-clean: no `baseUrl` and no `node10` resolution. |
+| **TypeScript** | **Keep: TypeScript 7 for type-checking** (its native compiler ships as `tsc`) | TS 7.0 went GA on 2026-07-08 ([announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)). It has no compiler API yet. A tool that needs the API gets the alias `typescript → npm:@typescript/typescript6` in that tool's scope only. Keep the tsconfig TS7-clean: no `baseUrl` and no `node10` resolution. |
 | **oxlint** | **Keep** | 1.x, with type-aware linting stable since 2026-07-22 (59/61 typescript-eslint rules) ([Oxc](https://oxc.rs/blog/2026-07-22-type-aware-linting-stable)). No ESLint. |
 | **oxfmt** | **Keep with conditions** | Still beta (0.73). Pin it. Enable `sortTailwindcss` and import sorting ([oxfmt beta](https://oxc.rs/blog/2026-02-24-oxfmt-beta)). If a blocking formatter bug appears, fall back to Prettier with the Tailwind plugin; the switch is a single CI step. |
 | **TanStack Start** | **Keep, ≥ 1.169.x, scoped** | 1.0 was released 2026-10-13. Versions before the CVE-2026-102989 fix are excluded: that is a critical XSS in server-function responses, fixed in start-server-core 1.169.39 ([advisory](https://tanstack.com/blog/tanstack-start-security-update-cve-2026-102989)). **Use:** routing, the UI shell, and SSR of public pages only. It is a client of the API like any other (TS-01). **Do not use:** server functions for data (TS-03). |
@@ -1070,7 +1070,7 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
 - `bun install --frozen-lockfile`
 - `oxlint --type-aware`
 - `oxfmt --check`
-- `tsgo --noEmit`
+- `tsc --noEmit` per package (TypeScript 7)
 - `bun test` (unit and integration, with Postgres 18)
 - Playwright (Chromium on PRs; all engines nightly)
 - `drizzle-kit check` plus a no-diff `generate`
@@ -1158,7 +1158,7 @@ context: |
   Tonaris: personal album-collection web app (creator-hosted, invite-only, English UI, dark theme).
   Source of truth for behavior: docs/product-requirements.md. Cite FR-/X-/Q-/AC- IDs; never contradict it.
   Design decisions: docs/design-spec.md (DS- IDs). Technical decisions: docs/tech-spec.md (TS- IDs).
-  Stack: Bun 1.4, TypeScript 7 (tsgo), TanStack Start (web UI + public SSR only), Elysia 2 beta (standalone API
+  Stack: Bun 1.4, TypeScript 7 (native `tsc`), TanStack Start (web UI + public SSR only), Elysia 2 beta (standalone API
   service at api.<domain>: /v1 REST + OpenAPI 3.1, SSE, /mcp, OAuth AS),
   Drizzle 1.0 RC + postgres.js, Postgres 18, TanStack DB (custom SSE sync), Better Auth, MCP SDK v2, Zod 4,
   shadcn/ui on Base UI + Tailwind v4, oxlint/oxfmt, Playwright.
