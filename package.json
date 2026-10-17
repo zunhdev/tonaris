@@ -1,14 +1,28 @@
 {
   "name": "tonaris",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tooling"
+  ],
   "type": "module",
-  "packageManager": "bun@1.4.3",
-  "workspaces": ["apps/*", "packages/*", "tooling"],
   "scripts": {
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun test",
+    "check:workspace": "bun tooling/src/workspace-check.ts",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "test": "bun test",
-    "check:workspace": "bun tooling/src/workspace-check.ts"
+    "typecheck": "bun run --filter '*' typecheck"
   },
   "devDependencies": {
-    "@types/bun": "1.4.3"
-  }
+    "@types/bun": "1.4.3",
+    "oxfmt": "0.73.0",
+    "oxlint": "1.88.0",
+    "oxlint-tsgolint": "7.0.2004",
+    "typescript": "7.0.2"
+  },
+  "packageManager": "bun@1.4.3"
 }

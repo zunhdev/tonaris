@@ -2,9 +2,12 @@
   "name": "@tonaris/domain",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "description": "Framework-free business logic: commands, queries, policies, Zod schemas and normalization (TS-02).",
+  "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
   }
 }

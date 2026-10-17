@@ -13,8 +13,7 @@
 
 ## Verification
 
-- [ ] `bun test`
-- [ ] `bun run check:workspace`
+- [ ] `bun run check` (format, lint, typecheck, workspace rules, tests)
 
 ## Notes
 

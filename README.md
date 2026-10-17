@@ -48,9 +48,15 @@ Requires Bun 1.4.3 (see `.bun-version`).
 
 ```sh
 bun install --frozen-lockfile   # install exactly what bun.lock records
-bun test                        # run all tests
+bun run check                   # everything below, in order; run before opening a PR
+bun run format:check            # oxfmt (bun run format to fix)
+bun run lint                    # oxlint with type-aware rules (bun run lint:fix to fix)
+bun run typecheck               # TypeScript 7 `tsc --noEmit` in every package
 bun run check:workspace         # layering and pinning rules
+bun test                        # all tests
 ```
+
+Tooling: oxlint (`.oxlintrc.json`), oxfmt (`.oxfmtrc.json`; Markdown is not auto-formatted), TypeScript 7 with a shared `tsconfig.base.json` that each package extends. Recommended editor extensions are listed in `.vscode/extensions.json`.
 
 New dependencies are added with `bun add <name>` inside the package that uses them; `bunfig.toml` makes Bun write the exact version.
 
