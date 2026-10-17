@@ -1,0 +1,6 @@
+[install]
+# `bun add` writes exact versions, never ranges (tech spec TS-07).
+exact = true
+# Each package resolves only the dependencies it declares, so an import that
+# breaks the layering in TS-02 fails instead of silently working via hoisting.
+linker = "isolated"

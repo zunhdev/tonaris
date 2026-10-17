@@ -1,0 +1,13 @@
+{
+  "name": "@tonaris/providers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Link parsing, MusicBrainz and Cover Art Archive clients, and policy-gated provider adapters (TS-40, TS-41).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@tonaris/domain": "workspace:*"
+  }
+}

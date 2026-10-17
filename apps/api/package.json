@@ -1,0 +1,12 @@
+{
+  "name": "@tonaris/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Elysia API service: /v1 REST, sync stream, MCP, auth and jobs (TS-01, TS-09).",
+  "dependencies": {
+    "@tonaris/db": "workspace:*",
+    "@tonaris/domain": "workspace:*",
+    "@tonaris/providers": "workspace:*"
+  }
+}

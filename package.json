@@ -1,0 +1,14 @@
+{
+  "name": "tonaris",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.3",
+  "workspaces": ["apps/*", "packages/*", "tooling"],
+  "scripts": {
+    "test": "bun test",
+    "check:workspace": "bun tooling/src/workspace-check.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.3"
+  }
+}

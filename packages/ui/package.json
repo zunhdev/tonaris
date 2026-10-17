@@ -1,0 +1,10 @@
+{
+  "name": "@tonaris/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Design system: tokens, Base UI/shadcn primitives and shared patterns (design spec DS-10–DS-29).",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

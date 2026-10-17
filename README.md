@@ -15,6 +15,45 @@ Tonaris is in specification and feasibility planning; no application code exists
 | [Tech spec](docs/tech-spec.md) | Stack, architecture, data, sync, MCP, operations, verification, and delivery plan | `TS-` |
 | [Audits](docs/audits/) | Dated requirement audits and the decisions taken in them | — |
 
+## Repository layout
+
+A Bun workspace (tech spec TS-05):
+
+| Path | Package | Purpose |
+| --- | --- | --- |
+| `apps/web` | `@tonaris/web` | TanStack Start web app: UI and server-rendered public pages. All data goes through the API. |
+| `apps/api` | `@tonaris/api` | Standalone Elysia API service: `/v1` REST, sync stream, MCP, auth, jobs. |
+| `packages/domain` | `@tonaris/domain` | Framework-free business logic: commands, queries, policies, schemas, normalization. |
+| `packages/db` | `@tonaris/db` | Drizzle schema, migrations, repositories. |
+| `packages/providers` | `@tonaris/providers` | Link parsing, MusicBrainz and Cover Art Archive clients, provider adapters. |
+| `packages/ui` | `@tonaris/ui` | Design system: tokens, primitives, patterns. |
+| `tooling` | `@tonaris/tooling` | Repository tooling: workspace checks, seeds, restore drill, export validator. |
+| `docs` | — | Product requirements, design spec, tech spec, audits. |
+
+Packages may depend only on these internal packages (TS-02):
+
+```
+web       → domain, ui
+api       → domain, db, providers
+db        → domain
+providers → domain
+tooling   → domain, db, providers
+```
+
+Installs are *isolated*, so a package can import only what it declares; an undeclared workspace import fails at runtime. `bun run check:workspace` enforces the allowed edges and exact version pinning (TS-07).
+
+## Development
+
+Requires Bun 1.4.3 (see `.bun-version`).
+
+```sh
+bun install --frozen-lockfile   # install exactly what bun.lock records
+bun test                        # run all tests
+bun run check:workspace         # layering and pinning rules
+```
+
+New dependencies are added with `bun add <name>` inside the package that uses them; `bunfig.toml` makes Bun write the exact version.
+
 ## Working conventions
 
 - **IDs are stable.** Linear issues and OpenSpec changes cite the rule IDs they implement, such as `FR-07.9`, `DS-12`, or `TS-08`.

@@ -1,0 +1,13 @@
+{
+  "name": "@tonaris/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Drizzle schema, migrations and the repository implementation of the domain's transaction port (TS-02, TS-17).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@tonaris/domain": "workspace:*"
+  }
+}
