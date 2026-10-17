@@ -1,0 +1,11 @@
+{
+  "name": "@tonaris/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TanStack Start web app: UI and server-rendered public pages; all data goes through the API (TS-01, TS-03).",
+  "dependencies": {
+    "@tonaris/domain": "workspace:*",
+    "@tonaris/ui": "workspace:*"
+  }
+}
