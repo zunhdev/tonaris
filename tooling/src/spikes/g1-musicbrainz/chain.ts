@@ -1,8 +1,9 @@
 // The first steps of the TS-41 resolver chain, run over a batch of links for the G1 spike:
-// 0 parse, 1 existing link, 2 MusicBrainz URL lookup, 3 the Qobuz barcode bridge. Spotify's bridge (TON-15) and
-// Apple's hints (TON-16) are other spikes, so those links stop as "pending" here. Every identified release is
-// then looked up once to measure what enrichment would get: TS-45 classification, the original year, Cover Art
-// Archive artwork and TS-46 recording dates.
+// 0 parse, 1 existing link, 2 MusicBrainz URL lookup, 3 the Qobuz barcode bridge.
+// Step 2 also tries the other URL forms MusicBrainz stores, and records whether the canonical URL alone matched.
+// Spotify's bridge (TON-15) and Apple's hints (TON-16) are other spikes, so those links stop as "pending" here.
+// Every identified release is then looked up once to measure what enrichment would get: TS-45 classification,
+// the original year, Cover Art Archive artwork and TS-46 recording dates.
 
 import { z } from "zod";
 
@@ -26,6 +27,10 @@ export type Attempt = {
   releaseIds: string[];
   /** What tells the releases apart, when there are several: input for G2 (TON-18). */
   candidates?: Candidate[];
+  /** Step 2: whether MusicBrainz knew the canonical URL itself, which is all TS-41 asks about. */
+  canonicalMatched?: boolean;
+  /** Step 2: the store slug looked up for an open.qobuz.com link. */
+  qobuzSlug?: string;
   /** URL entries MusicBrainz knows but relates to no release (say, only to an artist). */
   withoutRelease?: number;
   releaseGroups?: number;
@@ -68,6 +73,8 @@ export type ReleaseFacts = {
 export type LinkResult = {
   index: number;
   input: string;
+  /** Which sample the link came from, from the links file's `# sample:` lines. */
+  sample?: string;
   shortLink?: boolean;
   link?: ParsedLink;
   outcome: Outcome;
@@ -142,11 +149,49 @@ const releaseSearchSchema = z.object({ releases: z.array(releaseSchema).default(
 type MbRelease = z.infer<typeof releaseSchema>;
 
 /** Storefronts tried besides the link's own: MusicBrainz keeps the storefront its editor pasted. */
-const appleStorefronts = ["us", "gb", "de", "fr", "jp", "ca", "au", "nl", "se", "it", "es"];
+const appleStorefronts = ["us", "gb", "de", "fr", "jp", "ca", "au", "nl", "se", "it", "es", "fi"];
+/** Qobuz store locales, which MusicBrainz also keeps as pasted. */
+const qobuzLocales = [
+  "us-en",
+  "gb-en",
+  "fr-fr",
+  "de-de",
+  "it-it",
+  "es-es",
+  "nl-nl",
+  "be-fr",
+  "be-nl",
+  "ch-de",
+  "ch-fr",
+  "at-de",
+  "lu-fr",
+  "ie-en",
+  "fi-en",
+  "se-en",
+  "dk-en",
+  "no-en",
+  "au-en",
+  "nz-en",
+  "ca-en",
+  "ca-fr",
+  "jp-ja",
+  "br-pt",
+  "mx-es",
+  "ar-es",
+  "cl-es",
+  "co-es",
+];
 
 const unique = (items: readonly (string | false | undefined)[]) => [
   ...new Set(items.filter((item): item is string => Boolean(item))),
 ];
+
+/**
+ * The URLs step 2 asks MusicBrainz about, in one request. `canonical` is the link's canonical URL, which is all
+ * TS-41 specifies; `variants` are the other forms MusicBrainz stores the same album under, which the spike tries
+ * to measure what they would add.
+ */
+export type UrlCandidates = { canonical: string; variants: string[] };
 
 const urlForms: Record<Service, (link: ParsedLink, albumId: string) => string[]> = {
   spotify: (_, albumId) => [`https://open.spotify.com/album/${albumId}`],
@@ -158,16 +203,33 @@ const urlForms: Record<Service, (link: ParsedLink, albumId: string) => string[]>
     unique([
       `https://open.qobuz.com/album/${albumId}`,
       link.slug && `https://www.qobuz.com/album/${link.slug}/${albumId}`,
-      link.locale &&
-        link.slug &&
-        `https://www.qobuz.com/${link.locale}/album/${link.slug}/${albumId}`,
+      ...unique([link.locale, ...qobuzLocales]).map(
+        (locale) => link.slug && `https://www.qobuz.com/${locale}/album/${link.slug}/${albumId}`,
+      ),
       `https://play.qobuz.com/album/${albumId}`,
     ]),
 };
 
 /** The forms MusicBrainz may store this album's URL in. Spotify and Qobuz track links name no album. */
-export function urlCandidates(link: ParsedLink): string[] {
-  return link.albumId ? urlForms[link.service](link, link.albumId) : [];
+export function urlCandidates(link: ParsedLink): UrlCandidates | undefined {
+  if (!link.albumId) return undefined;
+  const canonical = link.canonical.replace(/\?.*$/, "");
+  const variants = urlForms[link.service](link, link.albumId).filter((url) => url !== canonical);
+  return { canonical, variants };
+}
+
+/**
+ * The slug of a Qobuz album, which open.qobuz.com links lack and MusicBrainz's store URLs include. The store
+ * redirects any slug to the right one; a title with no Latin letters has the slug "-", and no redirect.
+ */
+export async function qobuzSlug(albumId: string, fetcher: Fetcher): Promise<string | undefined> {
+  const response = await fetcher(`https://www.qobuz.com/us-en/album/-/${albumId}`, {
+    redirect: "manual",
+  });
+  await response.body?.cancel();
+  if (response.status === 200) return "-";
+  const location = response.headers.get("location") ?? "";
+  return new RegExp(`/album/([^/]+)/${albumId}$`).exec(location)?.[1];
 }
 
 /** A 13-digit Qobuz album id is an EAN-13 (TS-41). MusicBrainz often stores a UPC-A, without the leading 0. */
@@ -328,10 +390,17 @@ export async function runChain(
     }
     seen.set(key, index);
 
-    // Step 2: MusicBrainz URL lookup, every stored form in one request.
-    const candidates = urlCandidates(link);
-    if (candidates.length > 0) {
-      const body = await mb.get("url", { resource: candidates, inc: "release-rels" });
+    // Step 2: MusicBrainz URL lookup, every stored form in one request. A Qobuz link without the store's slug
+    // gets it first, so the store forms can be tried.
+    let slugged = link;
+    if (link.service === "qobuz" && link.albumId && !link.slug) {
+      const slug = await qobuzSlug(link.albumId, fetcher).catch(() => undefined);
+      if (slug) slugged = { ...link, slug };
+    }
+    const candidates = urlCandidates(slugged);
+    if (candidates) {
+      const tried = [candidates.canonical, ...candidates.variants];
+      const body = await mb.get("url", { resource: tried, inc: "release-rels" });
       const lookup = body === null ? { urls: [] } : urlLookupSchema.parse(body);
       const urls = "urls" in lookup ? lookup.urls : [lookup];
       const linked = new Map(
@@ -343,8 +412,10 @@ export async function runChain(
       const releaseIds = [...linked.keys()];
       const attempt: Attempt = {
         step: 2,
-        tried: candidates,
+        tried,
         matched: urls.map((url) => url.resource),
+        canonicalMatched: urls.some((url) => url.resource === candidates.canonical),
+        ...(slugged.slug !== link.slug && { qobuzSlug: slugged.slug }),
         releaseIds,
         ...(linked.size > 1 && { candidates: [...linked.values()] }),
         withoutRelease: urls.filter(

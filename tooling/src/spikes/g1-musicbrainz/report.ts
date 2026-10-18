@@ -79,7 +79,7 @@ function urlForms(results: readonly LinkResult[]): string {
     for (const url of step2.matched) {
       const form = url
         .replace(r.link.albumId ?? "", "{id}")
-        .replace(r.link.slug ?? "\u0000", "{slug}")
+        .replace(r.link.slug ?? step2.qobuzSlug ?? "\u0000", "{slug}")
         .replace(r.link.storefront ? `/${r.link.storefront}/` : "\u0000", "/{link's storefront}/");
       lines.push(`${serviceNames[r.link.service]}: \`${form}\``);
     }
@@ -99,6 +99,45 @@ const idShape = (id: string) =>
     : /^\d+$/.test(id)
       ? `${id.length} digits`
       : "letters and digits";
+
+function canonicalOrVariant(results: readonly LinkResult[]): string {
+  const rows = services.flatMap((service) => {
+    const group = results.filter((r) => r.link?.service === service && r.link.albumId);
+    if (group.length === 0) return [];
+    const step2 = group.map((r) => r.attempts.find((a) => a.step === 2));
+    const hit = step2.filter((a) => a && a.releaseIds.length > 0);
+    const canonical = hit.filter((a) => a?.canonicalMatched);
+    return [
+      [
+        serviceNames[service],
+        String(group.length),
+        percent(canonical.length, group.length),
+        percent(hit.length - canonical.length, group.length),
+        percent(hit.length, group.length),
+      ],
+    ];
+  });
+  return table(
+    [
+      "Links naming an album",
+      "n",
+      "Canonical URL (TS-41 as written)",
+      "Only another stored form",
+      "Step 2 in all",
+    ],
+    rows,
+  );
+}
+
+/** One section per sample when the links file has several. */
+function perSample(
+  results: readonly LinkResult[],
+  section: (group: readonly LinkResult[]) => string,
+) {
+  const samples = Map.groupBy(results, (r) => r.sample ?? "links");
+  if (samples.size < 2) return [section(results), ""];
+  return [...samples].flatMap(([name, group]) => [`### Sample: ${name}`, "", section(group), ""]);
+}
 
 function qobuzIds(results: readonly LinkResult[]): string {
   const albums = results.filter((r) => r.link?.service === "qobuz" && r.link.kind === "album");
@@ -249,8 +288,10 @@ export function buildReport(
   return [
     "## Outcomes per service and step",
     "",
-    outcomes(results),
+    ...perSample(results, outcomes),
+    "## Step 2: the canonical URL, or another stored form",
     "",
+    ...perSample(results, canonicalOrVariant),
     "## Step 2: URL forms MusicBrainz stores",
     "",
     urlForms(results),

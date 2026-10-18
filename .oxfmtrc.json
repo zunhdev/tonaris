@@ -6,6 +6,7 @@
     "apps/api/openapi/**",
     "**/routeTree.gen.ts",
     "packages/domain/fixtures/**",
+    "tooling/fixtures/**",
     "**/playwright/.auth/**"
   ],
   "sortImports": {
