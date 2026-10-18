@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Status | Working baseline, iteration 6 |
-| Updated | 17 October 2026 |
+| Updated | 19 October 2026 |
 | Companion documents | [Design spec](design-spec.md) · [Tech spec](tech-spec.md) · [Audits](audits/) |
 | Change history | [Section 11](#11-change-log) |
 
@@ -25,7 +25,7 @@ This document is the source of truth for Tonaris's purpose, scope, user-visible 
 | `X-NN` | Cross-cutting rule that applies to every FR | X-05 Rejections change nothing |
 | `Q-NN` | Quality requirement | Q-04 Service disaster recovery |
 | `AC-NN` | Representative acceptance check | AC-30 Delete, recover, re-add albums |
-| `D1`–`D8`, `G1`–`G3` | Decision areas and feasibility gates | G2 Edition matching |
+| `D1`–`D8`, `G1`–`G3` | Decision areas and feasibility gates | G2 Album matching |
 
 **Brevity convention.** Cross-cutting rules (section 4) are stated once and are not repeated in each FR. A rule mentions the design or tech spec only when it hands over a specific decision.
 
@@ -57,7 +57,7 @@ This document is the source of truth for Tonaris's purpose, scope, user-visible 
 | --- | --- |
 | Lists, nested folders, Unsorted, 30-day Trash | FR-01, FR-14 |
 | Link capture from Spotify, Apple Music, and Qobuz with metadata enrichment; manual entry | FR-02 |
-| Editable metadata, editions, chronology, optional custom fields | FR-03 |
+| Editable metadata, chronology, optional custom fields | FR-03 |
 | Viewing and editing modes; sorting, manual order, release-type grouping | FR-04, FR-05 |
 | Streaming-service links that open the external app | FR-06 |
 | Read-only sharing by account invitation and guest-viewable link | FR-07 |
@@ -103,7 +103,7 @@ The substantial first-version scope is accepted. Work is delivered in increments
 
 ### 2.5 Services and collection scope
 
-- **Launch services:** Spotify, Apple Music, Qobuz. Tonaris accepts links supplied by users or MCP clients. It resolves them, retrieves available metadata, matches them to saved editions, and opens saved links. People and client agents find links themselves; built-in catalog search and link discovery are out of scope (FR-06.7). Access and permitted use must be validated for all three services (**Open**, G1).
+- **Launch services:** Spotify, Apple Music, Qobuz. Tonaris accepts links supplied by users or MCP clients. It resolves them, retrieves available metadata, matches them to saved albums, and opens saved links. People and client agents find links themselves; built-in catalog search and link discovery are out of scope (FR-06.7). Access and permitted use must be validated for all three services (**Open**, G1).
 - **Independent collection.** Tonaris does not synchronize with streaming-service saved-album libraries in either direction. Saved Tonaris data still synchronizes across the user's devices (FR-09).
 - **Albums, not tracks.** Collection items are album/release records, including EPs, live albums, and compilations. Tracks are not collection items, and a track link resolves to its parent release (FR-02.3). The app and MCP use the same item scope.
 
@@ -143,9 +143,9 @@ These are user-facing concepts, not a data model.
 | List entry (membership) | An album's presence in a particular list. One album can be in many lists. |
 | Unsorted | An automatic view of the owner's saved albums that belong to no list. |
 | Trash | An owner-only recovery area for deleted albums, lists, and folder hierarchies. Items stay there for 30 days. |
-| Album | A saved album/release record (album, EP, live album, compilation) with its source release and any identified edition. Recognized editions stay distinct. |
-| Edition | A version of an album described separately where known, for example "2010 remaster" or "2022 deluxe". |
-| Album chronology | The year used for chronological sorting (FR-05.5). It is distinct from the saved edition's release year. |
+| Album | A saved album record (album, EP, live album, compilation). There is one record per album, whichever edition its links point to (FR-02.12). |
+| Edition | A version of an album, for example "2010 remaster" or "2022 deluxe". This version doesn't distinguish editions: a link to any edition belongs to the album (FR-02.12). |
+| Album chronology | The year used for chronological sorting (FR-05.5). It is never a reissue's release year. |
 | Release-type group | A presentation group: Album, EP, Live, Compilation, or Unclassified (FR-05.9). |
 | Service link | A link to a particular release on a streaming service. |
 | Custom field | An account-level field definition that albums can optionally use. Values belong to the album. |
@@ -210,7 +210,7 @@ The rule applies to creation, renaming, moves, and recovery.
 
 **FR-01.6 Albums in many lists.** One saved album can appear in many lists of a collection. Every appearance shares the same metadata, service links, and custom-field usage and values, so an edit made from any list applies to all of them.
 
-**FR-01.7 One entry per list.** Each saved album appears at most once in a list. Different editions can coexist. Re-adding an album that is already present keeps its entry and position, reports that it is already in the list, and does not overwrite metadata or field values.
+**FR-01.7 One entry per list.** Each saved album appears at most once in a list. Re-adding an album that is already present keeps its entry and position, reports that it is already in the list, and does not overwrite metadata or field values.
 
 **FR-01.8 Album retention.** A saved album belongs to the collection independently of its memberships.
 
@@ -259,19 +259,19 @@ The rule applies to creation, renaming, moves, and recovery.
 
 ### FR-02 — Capture: links and manual entry
 
-**FR-02.1 Link capture.** A user pastes a Spotify, Apple Music, or Qobuz album link into a list or without one (FR-02.2). Common share-link variants are supported. Tonaris identifies the release behind the link and populates the available metadata automatically from permitted sources (G1): title, artist credit, artwork, source service and link, and available release information. Missing information stays unknown.
+**FR-02.1 Link capture.** A user pastes a Spotify, Apple Music, or Qobuz album link into a list or without one (FR-02.2). Common share-link variants are supported. Tonaris identifies the album behind the link (FR-02.12) and populates the available metadata automatically from permitted sources (G1): title, artist credit, artwork, source service and link, and available release information. Missing information stays unknown.
 
 **FR-02.2 Capture without a list.** Link capture, manual entry, and MCP additions may omit a destination list, and a new unlisted album appears in Unsorted. The same information, enrichment, matching, capacity, and outcome rules apply.
 
 - If the addition reuses an active record, that record's memberships are untouched.
 - A matched trashed album added without a destination is reactivated with no memberships (FR-14.4).
 
-**FR-02.3 Track links.** A track link resolves to the parent release associated with that specific link. For example, a track linked from a compilation adds that compilation, not some other album containing the song. Only the parent release is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
+**FR-02.3 Track links.** A track link resolves to the album of the release that specific link belongs to. For example, a track linked from a compilation adds that compilation, not some other album containing the song. Only that album is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
 
 **FR-02.4 Manual entry.** A regular form adds an album without a lookup.
 
 - Required: title, artist credit, and an applicable year (FR-02.6).
-- Optional, but shown: artwork URL, edition, release classification, original release year, recording year or range, service links, and custom fields. Unused fields stay unused.
+- Optional, but shown: artwork URL, release classification, original release year, recording year or range, service links, and custom fields. Unused fields stay unused.
 - An album can have no streaming link.
 - When capture fails, the form is pre-filled with the pasted link and any retrieved or entered information.
 
@@ -290,31 +290,36 @@ This is enforced for manual entry, capture, MCP, and edits.
 - Required values are never invented.
 - Edits cannot clear a required value.
 
-**FR-02.7 Edition enrichment.** Capture makes a best-effort attempt to identify the edition and fill a separate, editable edition label. Unknown or ambiguous editions stay unknown and do not block capture. Tonaris never invents an edition or infers a remaster from a release year. The edition is distinct from the title, recording date, and release date.
-
 **FR-02.8 Chronology and classification.** Release type, live classification, original release year, and live recording year or range are distinct, editable information.
 
 - Initial classification follows the canonical metadata source's main release identity (currently MusicBrainz release-group types; tech spec), mapped to product categories (FR-05.9).
 - Enrichment happens only where the information is reliable; otherwise values stay unknown.
-- Provider or edition release years are never presented as live recording years.
+- Provider release years, including a reissue's, are never presented as live recording years.
 
-**FR-02.9 Incoming-link matching.** When a supplied link confidently identifies the same edition as a saved album, including one in Trash (FR-14.4), Tonaris adds the link to that album and reuses it for the requested membership. FR-01.7 still applies.
+**FR-02.9 Incoming-link matching.** When a supplied link confidently identifies the same album as a saved one, including one in Trash (FR-14.4), Tonaris adds the link to that album and reuses it for the requested membership. FR-01.7 still applies.
 
 - Uncertain matches require user confirmation before linking. Tonaris never guesses or silently merges.
-- Matching distinguishes editions and never relies on artist/title similarity alone.
+- A link to another edition of a saved album identifies that album (FR-02.12).
+- Two albums are the same only through the canonical metadata source's album identity or a shared service link. Artist/title similarity alone never merges them.
 - **Open:** evidence and confidence criteria (G2).
 
 **FR-02.10 Uncertain matches without immediate confirmation.** In batches and MCP operations, uncertain items stay unapplied: no link attached, no membership added, no new record created. Unambiguous items continue. Items needing confirmation are reported separately, with their links and information preserved for review.
 
 **FR-02.11 Batch capture.** Batch additions process valid records and report invalid ones with reasons (FR-13.4).
 
+**FR-02.12 Album identity.** Tonaris identifies albums, not editions.
+
+- A link to any edition of an album, such as a remaster, a deluxe edition or a regional release, identifies that album as the canonical metadata source groups it (currently MusicBrainz release groups; tech spec).
+- The album keeps its canonical title and original release year: a link to "Bleach (Deluxe Edition)" saves *Bleach* (1989).
+- Edition details aren't captured in this version. Custom fields can record them.
+
 **Open:** metadata access, permitted use, and matching feasibility (D3; G1, G2).
 
 ### FR-03 — Metadata and custom fields
 
-**FR-03.1 Editable metadata.** All supported album metadata is editable: title, artist credit, chronology fields, release classification, edition, service links (FR-06.3), and artwork URL. Edits enforce FR-02.6 and field validation. Folder and list names and descriptions are editable too.
+**FR-03.1 Editable metadata.** All supported album metadata is editable: title, artist credit, chronology fields, release classification, service links (FR-06.3), and artwork URL. Edits enforce FR-02.6 and field validation. Folder and list names and descriptions are editable too.
 
-**FR-03.2 Current values only.** A manual correction replaces the saved value. Tonaris keeps current metadata and saved source links. It does not keep previous provider values, a comparison view, or a full edit history. Temporary input kept for conflict or failure review (FR-09.4, FR-13.2) is still required. Distinct chronology and edition fields are never collapsed, and edits never remove links or change edition identity automatically.
+**FR-03.2 Current values only.** A manual correction replaces the saved value. Tonaris keeps current metadata and saved source links. It does not keep previous provider values, a comparison view, or a full edit history. Temporary input kept for conflict or failure review (FR-09.4, FR-13.2) is still required. Distinct chronology fields are never collapsed, and edits never remove links or change album identity automatically.
 
 **FR-03.3 Enrichment fills gaps only.** Automatic enrichment, whether on capture, on retry, or from a newly matched link from another service, fills missing values only. It preserves populated values, imported or manual, including when another service supplies a conflicting classification. Users can explicitly replace any value.
 
@@ -395,7 +400,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-05.5 Chronological rule.**
 
-- **Non-live releases** (studio albums, non-live EPs and compilations) use the original release year, even when the saved edition is a later remaster or deluxe release.
+- **Non-live releases** (studio albums, non-live EPs and compilations) use the original release year, even when the captured link points to a later remaster or deluxe release.
 - **Compilations** use the compilation's first release year, not its tracks' years.
 - **Live releases**, including live EPs and compilations, use the recording year or range. A range sorts by its start year in both directions and is displayed in full: 1978–1982 sorts as 1978.
 
@@ -436,7 +441,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-06.7 No link discovery.** The app and MCP never offer catalog search to users and never discover links. They resolve, enrich, and match supplied links (FR-02). To identify the release behind a supplied link, Tonaris may automatically query metadata sources (G1). This never adds a link or an album the user didn't supply.
 
-**FR-06.8 No false promises.** Tonaris guarantees nothing about playback, subscriptions, or regional availability, and never presents an unverified cross-service match as the same edition.
+**FR-06.8 No false promises.** Tonaris guarantees nothing about playback, subscriptions, or regional availability, and never presents an unverified cross-service match as the same album.
 
 ### FR-07 — Read-only sharing
 
@@ -533,7 +538,7 @@ The concrete formats are defined in the tech spec.
 
 **FR-08.3 Contents.** As currently saved:
 
-- every saved album: active, in Unsorted, or in Trash. Each includes all supported metadata (title, artist credit, chronology fields, release classification, edition label, service links, artwork URL), its custom-field usage and values, and its list memberships;
+- every saved album: active, in Unsorted, or in Trash. Each includes all supported metadata (title, artist credit, chronology fields, release classification, service links, artwork URL), its custom-field usage and values, and its list memberships;
 - the folder and list hierarchy with names and descriptions;
 - custom-field definitions with types and options;
 - the owner's personal manual arrangements and remembered presentation choices for their own collection (root, folders, lists, Unsorted), and their account presentation defaults;
@@ -714,7 +719,7 @@ Other users' collections are untouched, and their references to the deleted cont
 - Results show only accessible locations, never private ancestor names or paths.
 - Shared results copy nothing and use no slots.
 
-**FR-12.4 Matched fields.** Search matches only folder names, list names, album artist credits as saved, and album titles. It does not match edition labels, descriptions, custom-field names, values, or options, or other metadata. Results identify the content and its accessible location. Streaming catalogs are not searched.
+**FR-12.4 Matched fields.** Search matches only folder names, list names, album artist credits as saved, and album titles. It does not match descriptions, custom-field names, values, or options, or other metadata. Results identify the content and its accessible location. Streaming catalogs are not searched.
 
 **FR-12.5 Matching.** Matching is case- and accent-insensitive and partial: "metal" matches "Metallica", and "bjork" matches "Björk". Results display the original spelling. There is no typo tolerance.
 
@@ -758,16 +763,16 @@ Other users' collections are untouched, and their references to the deleted cont
 - If no membership can be restored, the album goes to Unsorted.
 - Restored memberships in shared lists become visible to current viewers.
 
-**FR-14.3 Same-edition conflict on restore.** If restoring would create a second active record confidently identified as the same edition, Tonaris pauses and explains which active record conflicts.
+**FR-14.3 Same-album conflict on restore.** If restoring would create a second active record confidently identified as the same album, Tonaris pauses and explains which active record conflicts.
 
 - Nothing changes: both records, their information, and their memberships stay as they are. The original stays in Trash with its expiry and still counts toward capacity.
 - Nothing is merged, substituted, or deleted automatically.
 - The owner keeps the active record, or deletes it into Trash (confirmed) and retries.
-- Different editions are not conflicts, and similarity alone does not establish one. Uncertain matches follow FR-02.9.
+- Similarity alone does not establish a conflict. Uncertain matches follow FR-02.9.
 - In batches, dependent steps wait while independent recoveries continue.
 - Re-adding through capture cannot bypass this guard. An ordinary addition that reuses the active record does not recover the trashed one.
 
-**FR-14.4 Re-addition reactivates.** An addition that confidently matches a trashed album's edition reactivates and reuses that record.
+**FR-14.4 Re-addition reactivates.** An addition that confidently matches a trashed album reactivates and reuses that record.
 
 - Populated information is preserved (FR-03.3).
 - The record leaves Trash and its expiry ends.
@@ -788,7 +793,7 @@ Uncertain matches follow FR-02.9 and FR-02.10. Explicit restore still uses FR-14
 
 | Does not use another slot | Uses a slot | Frees a slot |
 | --- | --- | --- |
-| A membership in another list | A separately saved edition | Permanent removal |
+| A membership in another list | A new album | Permanent removal |
 | A matched service link | | |
 | Viewing shared content | | |
 | Removing memberships | | |
@@ -875,16 +880,16 @@ These are representative observable checks, not a test plan. Passing them does n
 | AC-06 | Capture supplied links | Valid album links from all three services resolve. Track links add their actual parent release. Failures preserve input, explain the problem, and offer manual entry. | FR-02.1, FR-02.3, FR-02.5 |
 | AC-07 | Save without a list | Capture, manual entry, and MCP can omit a list. New unlisted albums appear in Unsorted, reused records keep memberships, and a matched trashed record reactivates with only the requested memberships. | FR-02.2, FR-14.4 |
 | AC-08 | Complete required information | Manual entry shows all fields and requires title, artist credit, and applicable year. The same minimum applies to capture, MCP, and edits. Incomplete input is preserved, never saved invalid or invented. | FR-02.4, FR-02.6 |
-| AC-09 | Identify and match editions | Edition labels are attempted without inventing values. Confident matches reuse records, different editions stay distinct, and uncertain matches wait unchanged while independent items proceed. | FR-02.7, FR-02.9–FR-02.10 |
-| AC-10 | Correct and enrich metadata | Edits update every appearance and shared view. Enrichment fills only missing values. No previous-value history is kept, and chronology and edition fields stay distinct. | FR-03.1–FR-03.4 |
+| AC-09 | Identify and match albums | A link to any edition identifies the album, with its canonical title and original year. Confident matches reuse records, and uncertain matches wait unchanged while independent items proceed. | FR-02.9–FR-02.10, FR-02.12 |
+| AC-10 | Correct and enrich metadata | Edits update every appearance and shared view. Enrichment fills only missing values. No previous-value history is kept, and chronology fields stay distinct. | FR-03.1–FR-03.4 |
 | AC-11 | Use optional fields | Fields apply per album and are validated by type. Applied-empty stays distinct from unused, zero, and No. Removing a field from an album clears its value; reapplying starts empty. | FR-03.7–FR-03.8, FR-03.10 |
 | AC-12 | Manage definitions and options | Field-name and option-label uniqueness is case-insensitive. Renames keep selections. Removing a used option and deleting a field are confirmed across active and trashed albums. Recovery never recreates them. | FR-03.9, FR-03.11, FR-03.14–FR-03.18 |
 | AC-13 | Change field types | Changes are allowed only with no usage, including applied-empty. Options are kept between choice types and visibly discarded otherwise, with no automatic restoration. Used fields are rejected without touching data. | FR-03.12–FR-03.13 |
-| AC-14 | Apply chronology | Non-live releases use the original release year. Live releases use the recording year or range (sorting by its start year), with a visible fallback to the release year. Edition and track dates never substitute. | FR-02.8, FR-05.5–FR-05.6 |
+| AC-14 | Apply chronology | Non-live releases use the original release year. Live releases use the recording year or range (sorting by its start year), with a visible fallback to the release year. Reissue and track dates never substitute. | FR-02.8, FR-05.5–FR-05.6 |
 | AC-15 | Combine sorting and grouping | Grouping and sorting switch independently and keep the manual arrangement. Live takes priority, unknown types go to Unclassified, mixed releases follow the main identity, and the group sequence is fixed. | FR-05.7–FR-05.9 |
 | AC-16 | Personal presentation | Owned and shared presentation is personal and synchronizes for signed-in users. Defaults apply to unvisited views and remembered choices win. Guests' choices last one visit. | FR-05.2, FR-11.7–FR-11.9 |
 | AC-17 | Unsorted and root presentation | Unsorted supports list-style sorting and grouping, and the root supports folder-style sorting, both with remembered, synchronized choices. Rearranging never creates memberships, moves containers, or changes access. | FR-05.3–FR-05.4 |
-| AC-18 | Open the selected service | Explicit service choice every time. The app opens where possible, with same-service web fallback. Failures are explained without switching provider or edition. | FR-06.5–FR-06.6 |
+| AC-18 | Open the selected service | Explicit service choice every time. The app opens where possible, with same-service web fallback. Failures are explained without switching provider. | FR-06.5–FR-06.6 |
 | AC-19 | Same-service link conflicts | At most one link per service. A confident capture with a different link keeps the existing one and offers explicit replacement, and the membership still succeeds. Variants of the same release are not conflicts. | FR-06.2–FR-06.4 |
 | AC-20 | Sharing inheritance | New content is private unless created under a shared ancestor. Folder shares include current and future descendants. Moves update inherited access and keep direct shares. Viewers see live content, descriptions, and used fields only. | FR-07.2, FR-07.8–FR-07.9, FR-07.11–FR-07.12 |
 | AC-21 | Sharing disclosure | Before sharing, viewers' field visibility, folder descendants, and link forwarding are explained. Desktop moves and recovery preview effective sharing. MCP reports sharing effects without extra approval for ordinary operations. | FR-07.14 |
@@ -895,7 +900,7 @@ These are representative observable checks, not a test plan. Passing them does n
 | AC-26 | Guest browsing | Guests navigate authorized shares, adjust presentation for the visit, and open service links. Global search requires sign-in; search within a guest share is not required. | FR-11.9, FR-12.1 |
 | AC-27 | Delete and recover containers | Folder deletion is confirmed and keeps albums. Recovery uses active albums only, reports skipped items, and asks for a destination or a new name when needed. Pending choices keep their expiry, and cancelling changes nothing. | FR-01.11, FR-01.14–FR-01.16 |
 | AC-28 | Trash units | Hierarchies deleted together recover and purge as one unit. Separately deleted items keep their own units and expiry. | FR-01.13 |
-| AC-29 | Delete, recover, re-add albums | Deletion moves the album to 30-day Trash. Restore brings back active-list memberships, and re-adding applies only the requested memberships. Both reuse the slot. A same-edition conflict pauses with both records unchanged. | FR-14 |
+| AC-29 | Delete, recover, re-add albums | Deletion moves the album to 30-day Trash. Restore brings back active-list memberships, and re-adding applies only the requested memberships. Both reuse the slot. A same-album conflict pauses with both records unchanged. | FR-14 |
 | AC-30 | Sharing during Trash | Trashed content leaves shared views and search. Recovery resumes unrevoked links and accepted grants, keeps pending invitations pending, and never revives revoked access. | FR-07.10 |
 | AC-31 | Expire and clear Trash | Expiry is shown and enforced at 30 days. Early removal is app-only and confirmed. Purging containers keeps active albums, and purging albums frees slots. Partial outcomes are reported. | FR-01.17–FR-01.18 |
 | AC-32 | Capacity | Active plus trashed records are counted, including Unsorted. Memberships, links, and shared viewing are free. At 5,000, new records are refused clearly while everything else works, and batches report what was not added. | FR-15 |
@@ -933,7 +938,7 @@ Resolve these gates before committing to the implementations they affect. Unrela
 
   The final G1 decision follows the M1 spike and legal review (tech spec TS-41).
 
-**G2 Edition matching (D2, D3).** Test real examples: remasters, deluxe editions, reissues, compilations, regional variants, identical titles, and track links. Define the evidence for confident matches and when confirmation is needed; title/artist similarity is insufficient. Distinguish provider edition dates from original-release and live-recording years. Chronology may need manual completion where providers lack it.
+**G2 Album matching (D2, D3).** Albums are identified, not editions (FR-02.12). Test real examples: remasters, deluxe editions, reissues, compilations, regional variants, identical titles, and track links. Each must resolve to the right album, and different albums with the same title must stay apart. Define the evidence for confident matches and when confirmation is needed; title/artist similarity alone is insufficient. Distinguish reissue dates from original-release and live-recording years. Chronology may need manual completion where providers lack it.
 
 **G3 MCP compatibility and verifiable approvals (D7).** Test one server with Claude web, ChatGPT web, and Codex desktop. Cover authentication, revocation, remote transport, scoped approvals, batches, and app-only restrictions. Choose an approval mechanism Tonaris can verify; an agent's claim that the user approved is not enough.
 
@@ -949,7 +954,7 @@ Resolve these gates before committing to the implementations they affect. Unrela
 
 - *Scope and cost.* The 5,000-album cap bounds collection size, but not accounts, traffic, artwork, provider calls, or bulk agent activity (FR-15.4).
 - *Organizational complexity.* Nested folders, custom-field lifecycle, sharing inheritance, and Trash units drive design and test effort.
-- *Album identity.* Complete automatic edition identification is not guaranteed, so unknown editions must stay usable.
+- *Album identity.* Automatic identification is not guaranteed, so manually entered and unidentified albums must stay fully usable.
 
 ## 9. Open decisions and pending approvals
 
@@ -959,7 +964,7 @@ D1–D8 are stable references from earlier iterations, not eight unanswered ques
 | --- | --- | --- |
 | D1 | Audience, admission, capacity | Resource limits approved on 17 October 2026 (TS-18). Budget and hosting are creator-owned (FR-15.5). |
 | D2 | Identity, metadata, fields, chronology, grouping | Validate matching evidence (G2). Design defines controls, initial presentation, and group sequence. |
-| D3 | Capture and enrichment | Experiment direction set (G1). **Open:** final permitted-metadata decision after the M1 spike and legal review; artwork and export rights; link variants; regional constraints; edition matching (G1, G2). |
+| D3 | Capture and enrichment | Experiment direction set (G1). **Open:** final permitted-metadata decision after the M1 spike and legal review; artwork and export rights; link variants; regional constraints; album matching (G1, G2). |
 | D4 | Sharing | Design: access controls, exposure previews, invitation presentation. |
 | D5 | Retention, Trash, export | Design and tech for FR-08 export. Import and restore are not planned. |
 | D6 | Quality | Performance targets are provisional until M1 measurements confirm them (Q-01). The test matrix is approved (Q-03). Backup retention, RPO/RTO, and historical-backup deletion treatment remain with the creator's hosting decisions (Q-04). |
@@ -998,6 +1003,11 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - approving an agent's operation works on mobile (X-04);
   - resource limits approved (FR-15.4); budget and hosting are creator-owned (FR-15.5);
   - performance targets are provisional (Q-01); the test matrix is approved (Q-03).
+- **Decisions (19 October 2026), during the G1 Apple spike** ([report](spikes/2026-10-19-g1-apple-hints.md)):
+  - **albums, not editions** (new FR-02.12): a link to any edition identifies the album, with its canonical title and original release year. Edition details aren't captured in this version;
+  - **retired FR-02.7** (edition enrichment), and with it the edition label in manual entry, editable metadata, export and search (FR-02.4, FR-03.1, FR-03.2, FR-08.3, FR-12.4);
+  - matching, conflicts and capacity are per album: FR-01.7, FR-02.1, FR-02.3, FR-02.9, FR-06.8, FR-14.3, FR-14.4, FR-15.2, AC-09, AC-10, AC-14, AC-18 and AC-29 changed to match. G2 is now *Album matching*;
+  - live albums keep their recording-year chronology (FR-05.5, FR-05.6 unchanged).
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);

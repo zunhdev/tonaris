@@ -1,0 +1,6541 @@
+[
+  {
+    "index": 0,
+    "input": "https://music.apple.com/fi/album/bleach-deluxe-edition/669728060",
+    "knownByUrl": false,
+    "candidates": 50,
+    "albumTitles": {
+      "f1afec0b-26dd-3db5-9aa1-c91229a74a24": "Bleach",
+      "c588b459-9d25-3fb7-8418-2c7e8d0d0977": "Bleach Sessions",
+      "e6a264a5-a8f3-3cd9-8f2c-df75ad4f6ea9": "1991-11-11: Markthalle, Hamburg, Germany",
+      "67f6a058-66cf-3c44-886c-c7acd254b5cb": "\"Master Reel\" Bleach Demos",
+      "b6139cd9-e8ab-35bc-b6ce-2bcdec864e70": "1989-07-08: Club Dreamerz, Chicago, IL, USA",
+      "99f00404-ebe9-3d0c-baa4-5f6cd35dee77": "\"Kurdt's Tape Side a\" Bleach Demos"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+        "releases": 11,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+        "releases": 43,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+        "releases": 43,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+        "releases": 11,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+        "releases": 43,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "f1afec0b-26dd-3db5-9aa1-c91229a74a24"
+      ],
+      "source": "manual MusicBrainz search, 19 October 2026"
+    },
+    "hints": {
+      "storefront": "fi",
+      "date": "1989-06-15",
+      "trackCount": 26,
+      "decorated": true
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": false,
+      "artist": false,
+      "tracks": true,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "creator"
+  },
+  {
+    "index": 1,
+    "input": "https://music.apple.com/fi/album/%D0%B8%D0%BA%D1%80%D0%B0-deluxe/869027888",
+    "knownByUrl": false,
+    "candidates": 9,
+    "albumTitles": {
+      "54dc2ea4-d3da-319d-8ee9-c2f4faf98581": "Икра",
+      "b5f32f2b-dda1-43d6-9a94-c031bf373c19": "Икра",
+      "43877fdb-1206-46ba-afb4-929a0474f0ea": "Чёрная икра"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "54dc2ea4-d3da-319d-8ee9-c2f4faf98581"
+      ],
+      "source": "manual MusicBrainz search, 19 October 2026"
+    },
+    "hints": {
+      "storefront": "fi",
+      "date": "1997-11-21",
+      "trackCount": 15,
+      "decorated": true
+    },
+    "fallbackSearch": true,
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": false,
+      "artist": true,
+      "tracks": true,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "creator"
+  },
+  {
+    "index": 2,
+    "input": "https://music.apple.com/fi/album/ep2/679710399",
+    "knownByUrl": false,
+    "candidates": 1,
+    "albumTitles": {
+      "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1": "EP2"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "8ae9b2e3-5d6d-4390-b8e7-a7031e4eafb1"
+      ],
+      "source": "manual MusicBrainz search, 19 October 2026"
+    },
+    "hints": {
+      "storefront": "fi",
+      "date": "2013-09-17",
+      "trackCount": 4,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": true,
+      "originalYear": false
+    },
+    "sample": "creator"
+  },
+  {
+    "index": 3,
+    "input": "https://music.apple.com/fi/album/dopamine-chamber/6792085051",
+    "knownByUrl": true,
+    "candidates": 2,
+    "albumTitles": {
+      "8897af6d-f344-4ad4-af70-83cb425d8397": "Dopamine Chamber"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "8897af6d-f344-4ad4-af70-83cb425d8397"
+      ],
+      "source": "MusicBrainz URL relationship"
+    },
+    "hints": {
+      "storefront": "fi",
+      "date": "2026-10-16",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "creator"
+  },
+  {
+    "index": 4,
+    "input": "https://music.apple.com/fi/album/tchaikovsky-the-nutcracker-remastered-2026/6809480000",
+    "knownByUrl": false,
+    "candidates": 1,
+    "albumTitles": {
+      "95959c5f-6011-4c20-b932-0a70b529e045": "The Nutcracker"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "95959c5f-6011-4c20-b932-0a70b529e045",
+        "releases": 1,
+        "albums": 1,
+        "correct": false
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "5fe75120-028e-4157-b6c6-322e86dcf89d"
+      ],
+      "source": "manual MusicBrainz search, 19 October 2026"
+    },
+    "hints": {
+      "storefront": "fi",
+      "date": "2026-10-09",
+      "trackCount": 8,
+      "decorated": true
+    },
+    "rightAlbumFound": false,
+    "sample": "creator"
+  },
+  {
+    "index": 5,
+    "input": "https://music.apple.com/fi/album/magic-boy-the-jimi-hendrix-experience-live-at/6805666150",
+    "knownByUrl": true,
+    "candidates": 1,
+    "albumTitles": {
+      "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319": "Magic Boy: The Jimi Hendrix Experience Live at Berkeley [First Show]"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "e0e6dcf6-da0b-4cbf-9ea5-81b55c1b8319"
+      ],
+      "source": "MusicBrainz URL relationship"
+    },
+    "hints": {
+      "storefront": "fi",
+      "date": "2026-10-16",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "creator"
+  },
+  {
+    "index": 6,
+    "input": "https://music.apple.com/us/album/1758786495",
+    "knownByUrl": true,
+    "candidates": 14,
+    "albumTitles": {
+      "32faf671-3b3e-3271-b497-a0631605b0f6": "Better Than Raw"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+        "releases": 14,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+        "releases": 14,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+        "releases": 14,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "32faf671-3b3e-3271-b497-a0631605b0f6"
+      ],
+      "source": "Wikidata Q832462 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1998-01-01",
+      "trackCount": 15,
+      "decorated": true
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 7,
+    "input": "https://music.apple.com/us/album/1442571446",
+    "knownByUrl": false,
+    "candidates": 3,
+    "albumTitles": {
+      "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf": "Light and Shade"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 2,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf"
+      ],
+      "source": "Wikidata Q6546132 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1987-01-01",
+      "trackCount": 10,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 8,
+    "input": "https://music.apple.com/us/album/1443475587",
+    "knownByUrl": true,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "db638f34-9f14-4899-b0e0-40671f2fc184"
+      ],
+      "source": "Wikidata Q59307466 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 9,
+    "input": "https://music.apple.com/us/album/1147736060",
+    "knownByUrl": false,
+    "candidates": 1,
+    "albumTitles": {
+      "e7a460aa-60b1-438c-8060-622ac69b3d91": "Illimitic"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "e7a460aa-60b1-438c-8060-622ac69b3d91",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "e7a460aa-60b1-438c-8060-622ac69b3d91",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "e7a460aa-60b1-438c-8060-622ac69b3d91",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "e7a460aa-60b1-438c-8060-622ac69b3d91",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "e7a460aa-60b1-438c-8060-622ac69b3d91",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "e7a460aa-60b1-438c-8060-622ac69b3d91",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "e7a460aa-60b1-438c-8060-622ac69b3d91",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "e7a460aa-60b1-438c-8060-622ac69b3d91"
+      ],
+      "source": "Wikidata Q139796575 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2016-09-23",
+      "trackCount": 16,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": true,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 10,
+    "input": "https://music.apple.com/us/album/1443104897",
+    "knownByUrl": true,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "ab88ca0b-da32-4e01-ae9b-198b0b7b8681"
+      ],
+      "source": "Wikidata Q18650966 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 11,
+    "input": "https://music.apple.com/us/album/1693409117",
+    "knownByUrl": true,
+    "candidates": 1,
+    "albumTitles": {
+      "41996d23-b45f-4470-a3b9-9b2347894a0b": "שמחת חינם"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "41996d23-b45f-4470-a3b9-9b2347894a0b"
+      ],
+      "source": "Wikidata Q133822064 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2023-07-03",
+      "trackCount": 10,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": true,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 12,
+    "input": "https://music.apple.com/us/album/1601445044",
+    "knownByUrl": true,
+    "candidates": 4,
+    "albumTitles": {
+      "8af782a4-793c-4ae3-a141-7b23b233eb5a": "Never Forget My Love",
+      "64aebef3-f2f0-4d9c-a9f8-9767a95a2e3d": "Never Forget My Love"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 3,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "ambiguous",
+        "releases": 4,
+        "albums": 2
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "8af782a4-793c-4ae3-a141-7b23b233eb5a"
+      ],
+      "source": "Wikidata Q111094374 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2022-02-11",
+      "trackCount": 10,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 13,
+    "input": "https://music.apple.com/us/album/1756357844",
+    "knownByUrl": true,
+    "candidates": 5,
+    "albumTitles": {
+      "a4c6be15-bfc4-4078-b80b-d9f03a4049b1": "Ambivalence Avenue",
+      "67cd2404-7a3e-4cf8-b6f0-4f7eb2f489e7": "Ambivalence Avenue / Fire Ant"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "a4c6be15-bfc4-4078-b80b-d9f03a4049b1"
+      ],
+      "source": "Wikidata Q2842103 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2009-06-22",
+      "trackCount": 15,
+      "decorated": true
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 14,
+    "input": "https://music.apple.com/us/album/1208110183",
+    "knownByUrl": false,
+    "candidates": 6,
+    "albumTitles": {
+      "e96be39c-db4f-4137-90e9-dc7a623d8b27": "What Do You Think About the Car?"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "e96be39c-db4f-4137-90e9-dc7a623d8b27"
+      ],
+      "source": "Wikidata Q30933243 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2017-05-12",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 15,
+    "input": "https://music.apple.com/us/album/1545382283",
+    "knownByUrl": true,
+    "candidates": 23,
+    "albumTitles": {
+      "9796da06-2d59-3176-8598-2105f31ee54a": "19"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 4,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 13,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 13,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 23,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 13,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 23,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 13,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "9796da06-2d59-3176-8598-2105f31ee54a",
+        "releases": 23,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "9796da06-2d59-3176-8598-2105f31ee54a"
+      ],
+      "source": "Wikidata Q208902 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2008-01-28",
+      "trackCount": 12,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 16,
+    "input": "https://music.apple.com/us/album/1030797896",
+    "knownByUrl": false,
+    "candidates": 1,
+    "albumTitles": {
+      "fd1d5522-3acb-4bfd-8d86-680d3e4eb2f0": "Cançons de la veritat oculta"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "fd1d5522-3acb-4bfd-8d86-680d3e4eb2f0"
+      ],
+      "source": "Wikidata Q124079211 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2012-09-01",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": true,
+      "artist": true,
+      "tracks": false,
+      "releaseDate": true,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 17,
+    "input": "https://music.apple.com/us/album/254249657",
+    "knownByUrl": false,
+    "candidates": 2,
+    "albumTitles": {
+      "5aacff4c-7a06-44a3-b1db-1ec6393038ac": "Idéal",
+      "06116135-e106-4757-b041-be4b4a304c9f": "Idéal"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "06116135-e106-4757-b041-be4b4a304c9f",
+        "releases": 1,
+        "albums": 1,
+        "correct": false
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "06116135-e106-4757-b041-be4b4a304c9f",
+        "releases": 1,
+        "albums": 1,
+        "correct": false
+      },
+      "…original year, no track count": {
+        "outcome": "ambiguous",
+        "releases": 2,
+        "albums": 2
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "06116135-e106-4757-b041-be4b4a304c9f",
+        "releases": 1,
+        "albums": 1,
+        "correct": false
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "ambiguous",
+        "releases": 2,
+        "albums": 2
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "06116135-e106-4757-b041-be4b4a304c9f",
+        "releases": 1,
+        "albums": 1,
+        "correct": false
+      },
+      "…loose, without the date": {
+        "outcome": "ambiguous",
+        "releases": 2,
+        "albums": 2
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "b0baefd8-a463-3946-8397-1dcee5c8e7b1"
+      ],
+      "source": "Wikidata Q3541177 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1983-01-01",
+      "trackCount": 9,
+      "decorated": false
+    },
+    "rightAlbumFound": false,
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 18,
+    "input": "https://music.apple.com/us/album/1205557765",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "55252a8e-a32e-4504-9780-c18e85c58b26"
+      ],
+      "source": "Wikidata Q56343297 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 19,
+    "input": "https://music.apple.com/us/album/1326132775",
+    "knownByUrl": false,
+    "candidates": 5,
+    "albumTitles": {
+      "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1": "EVERYONE AFRAID TO BE FORGOTTEN"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 3,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "95f77f86-cb66-4afb-b079-f6e3bcc0c6a1"
+      ],
+      "source": "Wikidata Q55389147 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2018-02-16",
+      "trackCount": 15,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 20,
+    "input": "https://music.apple.com/us/album/1794575477",
+    "knownByUrl": true,
+    "candidates": 1,
+    "albumTitles": {
+      "17988df2-81cd-4005-a374-c837b1dd88a5": "Primeros auxilios"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "17988df2-81cd-4005-a374-c837b1dd88a5",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "17988df2-81cd-4005-a374-c837b1dd88a5"
+      ],
+      "source": "Wikidata Q135395831 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2025-02-21",
+      "trackCount": 9,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-in-mb"
+  },
+  {
+    "index": 21,
+    "input": "https://music.apple.com/us/album/696702714",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1980-01-01",
+      "trackCount": 15,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 22,
+    "input": "https://music.apple.com/us/album/295606165",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2008-10-20",
+      "trackCount": 17,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 23,
+    "input": "https://music.apple.com/us/album/1278890815",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2011-01-01",
+      "trackCount": 10,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 24,
+    "input": "https://music.apple.com/us/album/1702933845",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2023-09-08",
+      "trackCount": 28,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 25,
+    "input": "https://music.apple.com/us/album/1466619675",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2003-09-20",
+      "trackCount": 14,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 26,
+    "input": "https://music.apple.com/us/album/516474819",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2012-04-20",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 27,
+    "input": "https://music.apple.com/us/album/1631887892",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2019-07-05",
+      "trackCount": 3,
+      "decorated": true
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 28,
+    "input": "https://music.apple.com/us/album/1728270383",
+    "knownByUrl": false,
+    "candidates": 2,
+    "albumTitles": {
+      "deba9a7d-eb2c-4033-a1c1-2018a1003c12": "Gapmu"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2024-02-06",
+      "trackCount": 9,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 29,
+    "input": "https://music.apple.com/us/album/655815212",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1980-01-01",
+      "trackCount": 12,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 30,
+    "input": "https://music.apple.com/us/album/895600403",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-not-in-mb"
+  },
+  {
+    "index": 31,
+    "input": "https://music.apple.com/us/album/191437839",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "34291a49-8df9-304e-bd39-16b11d829d5f"
+      ],
+      "source": "Wikidata Q923550 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 32,
+    "input": "https://music.apple.com/us/album/1660941895",
+    "knownByUrl": true,
+    "candidates": 7,
+    "albumTitles": {
+      "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6": "ILLENIUM",
+      "631b1b02-ebfb-4db7-884e-2a6f53d05832": "Illenium EP",
+      "69dddfd1-f347-4425-8a1a-57fd3b90b333": "ILLENIUM (Remixes)",
+      "4e283dda-b376-43e4-b6c9-b303527cb1ba": "Illenium Remix EP",
+      "6a163770-07b4-4d4d-979d-493d44ed5c2e": "ILLENIUM WE1 | Tomorrowland 2026"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 3,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6"
+      ],
+      "source": "Wikidata Q113808636 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2023-04-28",
+      "trackCount": 16,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 33,
+    "input": "https://music.apple.com/us/album/1497541612",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "5b2aa56e-60fd-4590-9e61-9e18331b684d"
+      ],
+      "source": "Wikidata Q89208555 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 34,
+    "input": "https://music.apple.com/us/album/1111542502",
+    "knownByUrl": false,
+    "candidates": 9,
+    "albumTitles": {
+      "1f7ae33f-6b94-4f58-b8c9-5f9770a18871": "Album gratuit",
+      "b6b8fbaf-a8e2-4630-a583-1456ea9a9bfd": "Album Gratuit Vol.4",
+      "8c1304d2-bf7d-4b83-952b-435d3abd0e22": "Album gratuit vol.5",
+      "212db42e-ad52-47cc-a62b-ef4365e99175": "Album gratuit, vol. 2",
+      "5c76f85e-2a0a-4a1c-a198-b85e73589889": "Album gratuit, vol. 6",
+      "392b08ac-4736-48fc-8ec9-7d3a61acb6a4": "Album gratuit, vol. 7",
+      "6e3e4e39-c16b-468f-80f5-9c2fb7f329ea": "Album gratuit, vol. 8",
+      "a65d3a49-768f-4349-8f22-8a8072e406b0": "Album gratuit Vol. 3"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "1f7ae33f-6b94-4f58-b8c9-5f9770a18871",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "1f7ae33f-6b94-4f58-b8c9-5f9770a18871"
+      ],
+      "source": "Wikidata Q109160687 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2016-05-13",
+      "trackCount": 30,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 35,
+    "input": "https://music.apple.com/us/album/1438661657",
+    "knownByUrl": false,
+    "candidates": 1,
+    "albumTitles": {
+      "ddf9c700-2c00-3ea3-bb1f-7bf314ed88fa": "Wild Life"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "ddf9c700-2c00-3ea3-bb1f-7bf314ed88fa",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "ddf9c700-2c00-3ea3-bb1f-7bf314ed88fa",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "ddf9c700-2c00-3ea3-bb1f-7bf314ed88fa",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "ddf9c700-2c00-3ea3-bb1f-7bf314ed88fa"
+      ],
+      "source": "Wikidata Q1345602 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1971-12-07",
+      "trackCount": 28,
+      "decorated": true
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": false,
+      "artist": true,
+      "tracks": true,
+      "releaseDate": true,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 36,
+    "input": "https://music.apple.com/us/album/1672482606",
+    "knownByUrl": true,
+    "candidates": 2,
+    "albumTitles": {
+      "baf26f71-04b5-48b7-80c0-bb50d4b4f706": "NMB13"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "baf26f71-04b5-48b7-80c0-bb50d4b4f706",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "baf26f71-04b5-48b7-80c0-bb50d4b4f706"
+      ],
+      "source": "Wikidata Q119383243 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2023-03-08",
+      "trackCount": 32,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 37,
+    "input": "https://music.apple.com/us/album/1443089499",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "dcc0d723-e27f-36e8-8438-dbbde7eb9a67"
+      ],
+      "source": "Wikidata Q1317668 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 38,
+    "input": "https://music.apple.com/us/album/1551592387",
+    "knownByUrl": false,
+    "candidates": 5,
+    "albumTitles": {
+      "8040b090-805a-4e06-9c41-98ef596c3119": "La Llorona"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "8040b090-805a-4e06-9c41-98ef596c3119",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8040b090-805a-4e06-9c41-98ef596c3119",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8040b090-805a-4e06-9c41-98ef596c3119",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "8040b090-805a-4e06-9c41-98ef596c3119",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8040b090-805a-4e06-9c41-98ef596c3119",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8040b090-805a-4e06-9c41-98ef596c3119",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "8040b090-805a-4e06-9c41-98ef596c3119",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "8040b090-805a-4e06-9c41-98ef596c3119"
+      ],
+      "source": "Wikidata Q264465 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1997-02-04",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": true,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 39,
+    "input": "https://music.apple.com/us/album/1632445912",
+    "knownByUrl": true,
+    "candidates": 3,
+    "albumTitles": {
+      "659e3857-e5cf-47b9-8218-2c7a70d85199": "Ali"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "659e3857-e5cf-47b9-8218-2c7a70d85199",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "659e3857-e5cf-47b9-8218-2c7a70d85199"
+      ],
+      "source": "Wikidata Q115815598 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2022-09-23",
+      "trackCount": 8,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 40,
+    "input": "https://music.apple.com/us/album/1452902328",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "d26c1a77-b641-36b9-bafa-b4df05cc4aab"
+      ],
+      "source": "Wikidata Q5659370 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1980-01-01",
+      "trackCount": 9,
+      "decorated": false
+    },
+    "fallbackSearch": true,
+    "rightAlbumFound": false,
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 41,
+    "input": "https://music.apple.com/us/album/1349249594",
+    "knownByUrl": false,
+    "candidates": 6,
+    "albumTitles": {
+      "bb9a87c6-0086-3fa3-ae82-b82e30e31673": "A Sultan's Ransom"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "bb9a87c6-0086-3fa3-ae82-b82e30e31673",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "bb9a87c6-0086-3fa3-ae82-b82e30e31673"
+      ],
+      "source": "Wikidata Q4659891 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1989-01-01",
+      "trackCount": 10,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 42,
+    "input": "https://music.apple.com/us/album/1466876988",
+    "knownByUrl": true,
+    "candidates": 5,
+    "albumTitles": {
+      "087b3a7d-d532-44d9-b37a-84427677ddcd": "Indigo"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 2,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "087b3a7d-d532-44d9-b37a-84427677ddcd"
+      ],
+      "source": "Wikidata Q65043779 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2019-06-28",
+      "trackCount": 32,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 43,
+    "input": "https://music.apple.com/us/album/927744704",
+    "knownByUrl": true,
+    "candidates": 21,
+    "albumTitles": {
+      "082c68eb-d993-36cf-9b32-6663cba2d052": "Iowa",
+      "6fca68ce-8e15-3a9d-8079-de112b206a2c": "Iowa",
+      "5f5ea7fc-0ef7-33c5-a8e0-61417bb64a67": "Iowa Sampler",
+      "8646f9f0-7a8e-415a-8135-6059ccbfab8f": "Iowa / Disasterpieces Vol. 2"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 4,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "082c68eb-d993-36cf-9b32-6663cba2d052",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "082c68eb-d993-36cf-9b32-6663cba2d052",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "082c68eb-d993-36cf-9b32-6663cba2d052",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "ambiguous",
+        "releases": 12,
+        "albums": 2
+      },
+      "…original year, tracks ±1": {
+        "outcome": "ambiguous",
+        "releases": 14,
+        "albums": 2
+      },
+      "…original year, no track count": {
+        "outcome": "ambiguous",
+        "releases": 18,
+        "albums": 2
+      },
+      "…original year, first artist only": {
+        "outcome": "ambiguous",
+        "releases": 12,
+        "albums": 2
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "ambiguous",
+        "releases": 18,
+        "albums": 2
+      },
+      "…loose, tracks ±1": {
+        "outcome": "ambiguous",
+        "releases": 14,
+        "albums": 2
+      },
+      "…loose, without the date": {
+        "outcome": "ambiguous",
+        "releases": 18,
+        "albums": 2
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "082c68eb-d993-36cf-9b32-6663cba2d052"
+      ],
+      "source": "Wikidata Q828268 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2001-08-28",
+      "trackCount": 14,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 44,
+    "input": "https://music.apple.com/us/album/1548180167",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "6d462cd4-aca0-4c96-902f-464ad914ae41"
+      ],
+      "source": "Wikidata Q104092287 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 45,
+    "input": "https://music.apple.com/us/album/1296201863",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "2425999b-b2bc-40f6-97e0-efe33897b701"
+      ],
+      "source": "Wikidata Q110605597 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 46,
+    "input": "https://music.apple.com/us/album/1653765372",
+    "knownByUrl": false,
+    "candidates": 1,
+    "albumTitles": {
+      "b2402e3b-4a06-3dbe-b0f8-403e782b8cda": "Afropopbrasileiro"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "b2402e3b-4a06-3dbe-b0f8-403e782b8cda",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "b2402e3b-4a06-3dbe-b0f8-403e782b8cda"
+      ],
+      "source": "Wikidata Q10296094 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2001-12-14",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 47,
+    "input": "https://music.apple.com/us/album/1444072472",
+    "knownByUrl": true,
+    "candidates": 7,
+    "albumTitles": {
+      "66533e20-7282-3ddd-aa4c-61a24a06d283": "Skull Ring",
+      "61ca30ce-6343-3969-a3c4-56cbb91624cb": "Skull Ring EP"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "66533e20-7282-3ddd-aa4c-61a24a06d283",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "66533e20-7282-3ddd-aa4c-61a24a06d283"
+      ],
+      "source": "Wikidata Q1935254 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2003-01-01",
+      "trackCount": 17,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 48,
+    "input": "https://music.apple.com/us/album/456659855",
+    "knownByUrl": false,
+    "candidates": 1,
+    "albumTitles": {
+      "2cd9723e-0f91-404a-9823-3f75a1113b31": "I miei ricordi..."
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "2cd9723e-0f91-404a-9823-3f75a1113b31",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "2cd9723e-0f91-404a-9823-3f75a1113b31"
+      ],
+      "source": "Wikidata Q121677125 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2005-01-01",
+      "trackCount": 12,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": true,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": true,
+      "originalYear": true
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 49,
+    "input": "https://music.apple.com/us/album/1440851650",
+    "knownByUrl": true,
+    "candidates": 39,
+    "albumTitles": {
+      "93d5a1d1-73c0-34d3-b7f1-49473c48face": "Songs About Jane",
+      "055b33c3-5448-4c57-a6a2-e922dc970904": "A Few Songs About Jane",
+      "5ab76f0f-f8ea-46f8-9dd1-6592062a2bbb": "Songs About Jane + It Won’t Be Soon Before Long"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 2,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 17,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 18,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 31,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 17,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 31,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 18,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+        "releases": 31,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "93d5a1d1-73c0-34d3-b7f1-49473c48face"
+      ],
+      "source": "Wikidata Q217268 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2002-06-25",
+      "trackCount": 12,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 50,
+    "input": "https://music.apple.com/us/album/1358775354",
+    "knownByUrl": true,
+    "candidates": 23,
+    "albumTitles": {
+      "69eb9696-35c8-4463-aff5-952526213ce8": "hopeless fountain kingdom",
+      "8fcae6b6-dfd8-40ab-bd6f-0a6545cbba33": "hopeless fountain kingdom (live from Webster Hall)"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+        "releases": 13,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+        "releases": 21,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+        "releases": 21,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+        "releases": 13,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+        "releases": 21,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "69eb9696-35c8-4463-aff5-952526213ce8"
+      ],
+      "source": "Wikidata Q29168478 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2017-06-02",
+      "trackCount": 17,
+      "decorated": true
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 51,
+    "input": "https://music.apple.com/us/album/829640817",
+    "knownByUrl": true,
+    "candidates": 7,
+    "albumTitles": {
+      "debe7f92-dc96-43ae-ae40-28852fdde33c": "Caustic Love",
+      "0dd6654e-0f84-4014-98b4-0bc2c2035eb9": "Caustic Love (live and in session)"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 3,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "debe7f92-dc96-43ae-ae40-28852fdde33c",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "debe7f92-dc96-43ae-ae40-28852fdde33c"
+      ],
+      "source": "Wikidata Q16585846 P436"
+    },
+    "hints": {
+      "storefront": "gb",
+      "date": "2014-04-11",
+      "trackCount": 13,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 52,
+    "input": "https://music.apple.com/us/album/1539127716",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "6f9bd756-65c1-4abc-9266-94d35ea27b8c"
+      ],
+      "source": "Wikidata Q106823816 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 53,
+    "input": "https://music.apple.com/us/album/1453111396",
+    "knownByUrl": true,
+    "candidates": 2,
+    "albumTitles": {
+      "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c": "Tulva"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 2,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "c6c452cc-6a4d-4d55-a1f4-b3a9d5dbd19c"
+      ],
+      "source": "Wikidata Q62025738 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2019-03-01",
+      "trackCount": 12,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 54,
+    "input": "https://music.apple.com/us/album/1734433543",
+    "knownByUrl": true,
+    "candidates": 1,
+    "albumTitles": {
+      "4578d6ac-f56b-433a-a2f6-e2eac2693f18": "0"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "4578d6ac-f56b-433a-a2f6-e2eac2693f18",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "4578d6ac-f56b-433a-a2f6-e2eac2693f18",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "4578d6ac-f56b-433a-a2f6-e2eac2693f18",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "4578d6ac-f56b-433a-a2f6-e2eac2693f18",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "4578d6ac-f56b-433a-a2f6-e2eac2693f18",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "4578d6ac-f56b-433a-a2f6-e2eac2693f18",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "4578d6ac-f56b-433a-a2f6-e2eac2693f18",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "4578d6ac-f56b-433a-a2f6-e2eac2693f18"
+      ],
+      "source": "Wikidata Q124750843 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2024-03-08",
+      "trackCount": 20,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": true,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 55,
+    "input": "https://music.apple.com/us/album/1601221747",
+    "knownByUrl": false,
+    "candidates": 1,
+    "albumTitles": {
+      "9487ce5d-9883-4785-9756-ac6789f44a79": "Vivant"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "9487ce5d-9883-4785-9756-ac6789f44a79",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "9487ce5d-9883-4785-9756-ac6789f44a79",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "9487ce5d-9883-4785-9756-ac6789f44a79",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "9487ce5d-9883-4785-9756-ac6789f44a79",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "9487ce5d-9883-4785-9756-ac6789f44a79",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "9487ce5d-9883-4785-9756-ac6789f44a79",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "9487ce5d-9883-4785-9756-ac6789f44a79",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "9487ce5d-9883-4785-9756-ac6789f44a79",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "9487ce5d-9883-4785-9756-ac6789f44a79"
+      ],
+      "source": "Wikidata Q140195245 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2021-12-17",
+      "trackCount": 18,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": true,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 56,
+    "input": "https://music.apple.com/us/album/1555972466",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "b6f0f9c8-db23-4aed-9fb3-2caf3f9f0490"
+      ],
+      "source": "Wikidata Q114101161 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 57,
+    "input": "https://music.apple.com/us/album/393601349",
+    "knownByUrl": true,
+    "candidates": 5,
+    "albumTitles": {
+      "12c275f9-1156-4977-95a3-53957e090ee7": "Mixed Race"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "12c275f9-1156-4977-95a3-53957e090ee7"
+      ],
+      "source": "Wikidata Q1985058 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2010-09-27",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": true,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 58,
+    "input": "https://music.apple.com/us/album/1845414445",
+    "knownByUrl": true,
+    "candidates": 1,
+    "albumTitles": {
+      "8e600787-9a73-4d39-9510-49deabf3815c": "Lamento en baile"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "8e600787-9a73-4d39-9510-49deabf3815c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "8e600787-9a73-4d39-9510-49deabf3815c"
+      ],
+      "source": "Wikidata Q136542810 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2025-10-16",
+      "trackCount": 19,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 59,
+    "input": "https://music.apple.com/us/album/1493062330",
+    "knownByUrl": true,
+    "candidates": 4,
+    "albumTitles": {
+      "83300a7e-6337-4da2-b094-026815bcd3aa": "Che vita meravigliosa",
+      "7491e8f7-a9bf-4690-bef3-583996e30cff": "Che vita meravigliosa"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 2,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "7491e8f7-a9bf-4690-bef3-583996e30cff",
+        "releases": 3,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "ambiguous",
+        "releases": 4,
+        "albums": 2
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "7491e8f7-a9bf-4690-bef3-583996e30cff"
+      ],
+      "source": "Wikidata Q84628300 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2020-02-14",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 60,
+    "input": "https://music.apple.com/us/album/1440804754",
+    "knownByUrl": true,
+    "candidates": 23,
+    "albumTitles": {
+      "df46f245-7f62-4982-9d2c-e83d7be91cbf": "Believe",
+      "f63dd98b-e613-4359-93a7-ae0c5b8b3c9a": "Believe Acoustic"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "df46f245-7f62-4982-9d2c-e83d7be91cbf",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "df46f245-7f62-4982-9d2c-e83d7be91cbf",
+        "releases": 17,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "df46f245-7f62-4982-9d2c-e83d7be91cbf",
+        "releases": 17,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "df46f245-7f62-4982-9d2c-e83d7be91cbf",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "df46f245-7f62-4982-9d2c-e83d7be91cbf",
+        "releases": 17,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "df46f245-7f62-4982-9d2c-e83d7be91cbf"
+      ],
+      "source": "Wikidata Q815612 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2012-01-01",
+      "trackCount": 15,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": true,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 61,
+    "input": "https://music.apple.com/us/album/1351110460",
+    "knownByUrl": false,
+    "candidates": 2,
+    "albumTitles": {
+      "fb6d24e5-3f76-437f-b286-ae9811184d8c": "Anthologie"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "fb6d24e5-3f76-437f-b286-ae9811184d8c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "fb6d24e5-3f76-437f-b286-ae9811184d8c"
+      ],
+      "source": "Wikidata Q105739935 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2018-03-02",
+      "trackCount": 30,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 62,
+    "input": "https://music.apple.com/us/album/1076213357",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "94de522e-c7ab-3e04-b049-52b72b711c2a"
+      ],
+      "source": "Wikidata Q7187789 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 63,
+    "input": "https://music.apple.com/us/album/486449194",
+    "knownByUrl": false,
+    "candidates": 2,
+    "albumTitles": {
+      "f3917cdc-5a12-3cc3-a695-5d112fd6a562": "Trait pour trait"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "f3917cdc-5a12-3cc3-a695-5d112fd6a562",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "f3917cdc-5a12-3cc3-a695-5d112fd6a562"
+      ],
+      "source": "Wikidata Q3028879 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2006-05-22",
+      "trackCount": 15,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 64,
+    "input": "https://music.apple.com/us/album/1321106012",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "079bbe78-270e-49ce-9563-ace5bef60a7e"
+      ],
+      "source": "Wikidata Q60240412 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 65,
+    "input": "https://music.apple.com/us/album/1160990427",
+    "knownByUrl": true,
+    "candidates": 9,
+    "albumTitles": {
+      "a867a345-f904-3cd1-939d-f7c24b14719f": "International Superhits!"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 4,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 6,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 7,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 8,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "a867a345-f904-3cd1-939d-f7c24b14719f",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "a867a345-f904-3cd1-939d-f7c24b14719f"
+      ],
+      "source": "Wikidata Q1753019 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2001-11-13",
+      "trackCount": 21,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 66,
+    "input": "https://music.apple.com/us/album/721207206",
+    "knownByUrl": true,
+    "candidates": 5,
+    "albumTitles": {
+      "a159e102-18bb-42ca-a59e-5f96a7eff241": "Siamese Dream",
+      "cb94282e-44f3-48ec-b46d-cde8f9c15b6d": "B‐Sides From Siamese Dream",
+      "de06c202-1e64-38ff-820b-13ff74fe9dc0": "Drown"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "a159e102-18bb-42ca-a59e-5f96a7eff241",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "a159e102-18bb-42ca-a59e-5f96a7eff241",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "a159e102-18bb-42ca-a59e-5f96a7eff241",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "a159e102-18bb-42ca-a59e-5f96a7eff241",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "a159e102-18bb-42ca-a59e-5f96a7eff241",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "a159e102-18bb-42ca-a59e-5f96a7eff241"
+      ],
+      "source": "Wikidata Q902233 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1993-07-27",
+      "trackCount": 14,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": true,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 67,
+    "input": "https://music.apple.com/us/album/454841012",
+    "knownByUrl": false,
+    "candidates": 4,
+    "albumTitles": {
+      "33f481b0-720b-3aa7-8295-5d3260bb5676": "Crítica social"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "33f481b0-720b-3aa7-8295-5d3260bb5676",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "33f481b0-720b-3aa7-8295-5d3260bb5676",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "33f481b0-720b-3aa7-8295-5d3260bb5676",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "33f481b0-720b-3aa7-8295-5d3260bb5676"
+      ],
+      "source": "Wikidata Q133257665 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1993-01-01",
+      "trackCount": 25,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 68,
+    "input": "https://music.apple.com/us/album/1016609792",
+    "knownByUrl": false,
+    "candidates": 4,
+    "albumTitles": {
+      "9fcf656c-ebd5-4685-8a9c-a217189b0992": "The Original Faces"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 4,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "9fcf656c-ebd5-4685-8a9c-a217189b0992",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "9fcf656c-ebd5-4685-8a9c-a217189b0992"
+      ],
+      "source": "Wikidata Q127508664 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2015-09-04",
+      "trackCount": 12,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 69,
+    "input": "https://music.apple.com/us/album/1710206295",
+    "knownByUrl": true,
+    "candidates": 27,
+    "albumTitles": {
+      "9c89f4e7-d48b-3eac-b363-cc6aea256a97": "Grinderman",
+      "75b46ea9-ff55-4c1a-9eca-6fa3a379258a": "Grinderman 2",
+      "a52aec5c-d11a-4fc6-86b9-78a5b91748bb": "The Grinderman Podcast",
+      "0b9f7819-4db8-4fab-859a-632c7ee7254a": "Grinderman 2: RMX"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 4,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 4,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 8,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 8,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 8,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 10,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 8,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 10,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 8,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "9c89f4e7-d48b-3eac-b363-cc6aea256a97",
+        "releases": 10,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "9c89f4e7-d48b-3eac-b363-cc6aea256a97"
+      ],
+      "source": "Wikidata Q1953476 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2007-03-05",
+      "trackCount": 11,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 70,
+    "input": "https://music.apple.com/us/album/1474185287",
+    "knownByUrl": true,
+    "candidates": 27,
+    "albumTitles": {
+      "b067cde8-f3a7-394a-b8e7-640ca744f2e4": "Undertow",
+      "3a879a3c-af15-46e2-8505-0c2479245129": "Undertow Outtakes"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "ambiguous",
+        "releases": 5,
+        "albums": 1
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 5,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 12,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 14,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 26,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 12,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 26,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 14,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "b067cde8-f3a7-394a-b8e7-640ca744f2e4",
+        "releases": 26,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "b067cde8-f3a7-394a-b8e7-640ca744f2e4"
+      ],
+      "source": "Wikidata Q1139460 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1993-04-06",
+      "trackCount": 10,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 71,
+    "input": "https://music.apple.com/us/album/304100159",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "5546f504-66cc-3249-b78c-8bb6ddac9e4a"
+      ],
+      "source": "Wikidata Q3375255 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 72,
+    "input": "https://music.apple.com/us/album/1169888724",
+    "knownByUrl": true,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "dafbb45b-e06f-3a2b-b4fd-981d3d99a3a4"
+      ],
+      "source": "Wikidata Q1757244 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 73,
+    "input": "https://music.apple.com/us/album/666995818",
+    "knownByUrl": false,
+    "candidates": 12,
+    "albumTitles": {
+      "772a2f03-9295-3444-b12b-aa2e034e83f8": "Hourglass",
+      "8a109b54-92d9-3bbf-b1f4-294147b266ee": "Hourglass Remixes"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "772a2f03-9295-3444-b12b-aa2e034e83f8",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "772a2f03-9295-3444-b12b-aa2e034e83f8",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "772a2f03-9295-3444-b12b-aa2e034e83f8",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "772a2f03-9295-3444-b12b-aa2e034e83f8",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "772a2f03-9295-3444-b12b-aa2e034e83f8",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "772a2f03-9295-3444-b12b-aa2e034e83f8",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "772a2f03-9295-3444-b12b-aa2e034e83f8",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "772a2f03-9295-3444-b12b-aa2e034e83f8"
+      ],
+      "source": "Wikidata Q2601863 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2007-10-23",
+      "trackCount": 13,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 74,
+    "input": "https://music.apple.com/us/album/1862039378",
+    "knownByUrl": false,
+    "candidates": 4,
+    "albumTitles": {
+      "e390d930-91ac-3290-9550-57be93f85c64": "Celelalte cuvinte",
+      "c6a3e920-7317-35a3-bfe5-25da86c3442f": "Celelalte cuvinte II"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…release year instead of date": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…and original year allowed": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "e390d930-91ac-3290-9550-57be93f85c64",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "e390d930-91ac-3290-9550-57be93f85c64",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "e390d930-91ac-3290-9550-57be93f85c64",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "e390d930-91ac-3290-9550-57be93f85c64"
+      ],
+      "source": "Wikidata Q12723759 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1987-01-01",
+      "trackCount": 3,
+      "decorated": true
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": false,
+      "artist": false,
+      "tracks": true,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 75,
+    "input": "https://music.apple.com/us/album/74187430",
+    "knownByUrl": false,
+    "candidates": 2,
+    "albumTitles": {
+      "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037": "色彩のブルース",
+      "74c8f356-264b-3367-990e-541c254d6830": "Midnight Dejavu 色彩のブルース"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "the same, one album": {
+        "outcome": "none",
+        "releases": 0,
+        "albums": 0
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "fa64aa3b-bdf5-3ba3-9ef7-94a3c4c6d037"
+      ],
+      "source": "Wikidata Q48765149 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2000-09-02",
+      "trackCount": 5,
+      "decorated": true
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": true,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 76,
+    "input": "https://music.apple.com/us/album/1312908179",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "8b28cc8b-9dcb-4094-8689-fe9e3be8c06e"
+      ],
+      "source": "Wikidata Q47463349 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 77,
+    "input": "https://music.apple.com/us/album/1524127369",
+    "knownByUrl": true,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "d6d1de65-7e43-4277-b723-fc74a2b385e1",
+        "fcd3637b-3365-4780-802d-0013b070bca2"
+      ],
+      "source": "Wikidata Q97566108 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 78,
+    "input": "https://music.apple.com/us/album/6766750836",
+    "knownByUrl": true,
+    "candidates": 9,
+    "albumTitles": {
+      "c4f1b0ff-54e4-4ee3-a722-4c30892997b7": "Daughter from Hell"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+        "releases": 9,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "60179d2e-07df-4351-90fb-c08c7cde4396",
+        "c4f1b0ff-54e4-4ee3-a722-4c30892997b7"
+      ],
+      "source": "Wikidata Q139753645 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "2026-07-17",
+      "trackCount": 17,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 79,
+    "input": "https://music.apple.com/us/album/633330626",
+    "knownByUrl": false,
+    "candidates": 3,
+    "albumTitles": {
+      "2bc13e29-fdbc-3bb0-8803-89414f81471c": "Search and Nearness",
+      "3ba24b51-3001-47fe-89bf-17985728f67f": "See / Search and Nearness"
+    },
+    "decisions": {
+      "TS-41 as written: one release": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "the same, one album": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…clean titles": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…release year instead of date": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 1,
+        "albums": 1,
+        "correct": true
+      },
+      "…and original year allowed": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…original year, first artist only": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose titles and artist names, no track count": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, tracks ±1": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      },
+      "…loose, without the date": {
+        "outcome": "accepted",
+        "releaseGroupId": "2bc13e29-fdbc-3bb0-8803-89414f81471c",
+        "releases": 2,
+        "albums": 1,
+        "correct": true
+      }
+    },
+    "truth": {
+      "releaseGroupIds": [
+        "2bc13e29-fdbc-3bb0-8803-89414f81471c"
+      ],
+      "source": "Wikidata Q7441642 P436"
+    },
+    "hints": {
+      "storefront": "us",
+      "date": "1971-03-01",
+      "trackCount": 10,
+      "decorated": false
+    },
+    "rightAlbumFound": true,
+    "failed": {
+      "titleExact": false,
+      "titleClean": false,
+      "artist": false,
+      "tracks": false,
+      "releaseDate": false,
+      "originalYear": false
+    },
+    "sample": "wikidata-apple-extra"
+  },
+  {
+    "index": 80,
+    "input": "https://music.apple.com/us/album/1459933085",
+    "knownByUrl": false,
+    "candidates": 0,
+    "albumTitles": {},
+    "decisions": {},
+    "truth": {
+      "releaseGroupIds": [
+        "5b395c75-d10a-4387-9d49-93a88be0f0fc"
+      ],
+      "source": "Wikidata Q63147187 P436"
+    },
+    "error": "iTunes Lookup has no such album in the storefronts tried",
+    "sample": "wikidata-apple-extra"
+  }
+]

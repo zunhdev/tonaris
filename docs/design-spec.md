@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Status | Draft v0.1 |
-| Updated | 18 October 2026 |
+| Updated | 19 October 2026 |
 | Source of truth for behavior | [Product requirements](product-requirements.md), iteration 6 |
 | Companion | [Tech spec](tech-spec.md) |
 | Decisions log | [Section 17](#17-design-decisions-log) |
@@ -176,7 +176,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 1. selection checkbox (editing mode, DS-44);
 2. drag handle (editing mode with manual sort only);
 3. 28px artwork;
-4. title, plus an edition chip when known;
+4. title;
 5. artist credit (`fg.secondary`);
 6. chronology year (tabular, DS-24);
 7. release type in text (`fg.tertiary`; hidden when grouped by type);
@@ -185,7 +185,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 On hover or focus a trailing "Open" button appears; it opens the service chooser (DS-25). Columns collapse from the right as the width shrinks: type, then services. *(FR-05, FR-06.5, FR-09.3)*
 
-**DS-22 Album card.** This is the grid item. A square artwork tile (160–200px, responsive columns) sits over the title and artist, each truncated to one line, then the year. The edition chip shows on hover or focus. Save state appears as a corner badge. *(FR-05)*
+**DS-22 Album card.** This is the grid item. A square artwork tile (160–200px, responsive columns) sits over the title and artist, each truncated to one line, then the year. Save state appears as a corner badge. *(FR-05)*
 
 **DS-23 Artwork.**
 - A fixed-aspect box with lazy loading, `decoding="async"`, a `sizes`/`srcset` where the source allows it, and a 150ms fade-in.
@@ -200,7 +200,7 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 | Live, recording year known | Year or full range, e.g. `1978–1982`, with a small `rec.` prefix in `fg.tertiary` |
 | Live, recording year unknown | Release year with a fallback marker, e.g. `1979 ·` plus a "release-year fallback" glyph; tooltip and accessible label: "Recording year unknown — sorted by release year" |
 
-The edition's own release date never appears in the year column. It appears in the inspector's Info section, labelled "Edition released".
+A reissue's release date never appears in the year column. Tonaris saves albums, not editions (FR-02.12).
 
 **DS-25 Service-link chooser.** "Open in…" lists only the services that have a link, each with its logo and name ("Open in Spotify").
 - **Desktop:** a popover anchored to the Open button or invoked with `O`. The first item is focused, and Enter opens it.
@@ -375,12 +375,12 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
 **DS-46 Album inspector.** It opens with Enter or a click on a row, shows the album at `?album=:id`, and Esc closes it. With the inspector open, J/K moves to the next or previous album. Sections, top to bottom: *(FR-03.1–FR-03.4, FR-06.2–FR-06.4, FR-01.6, FR-01.8, FR-14.1)*
 
-1. **Artwork** (240px) and title, artist credit, and edition chip.
+1. **Artwork** (240px), title and artist credit.
 2. **Chronology:** release type (Album / EP / Compilation / Unknown), a Live switch, original release year, and recording year or range (shown when Live is on). Hints explain which year sorts.
-3. **Links:** one row per service, each with Open, Replace, and Remove (editing). A pending alternative link from capture (FR-06.4) shows as a notice: "Another Spotify link was found for this edition · Replace · Dismiss".
+3. **Links:** one row per service, each with Open, Replace, and Remove (editing). A pending alternative link from capture (FR-06.4) shows as a notice: "Another Spotify link was found for this album · Replace · Dismiss".
 4. **Custom fields:** applied fields with editors (DS-26), then "+ Add field".
 5. **Lists:** membership chips with × to remove and "+ Add to list" (`L`). With no memberships, an "Unsorted" chip.
-6. **Info:** source service, edition release date, and date added to the collection.
+6. **Info:** source service and date added to the collection.
 7. **Footer (editing):** "Delete from collection…" in danger text.
 
 **DS-47 Manual entry form.** A 560px dialog titled "New album" (desktop). Shortcut ⌘Enter saves; Esc asks before discarding entered data. *(FR-02.4, FR-02.6, FR-13.2)*
@@ -391,11 +391,10 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   3. Release type + Live
   4. Original release year
   5. Recording year or range (when Live)
-  6. Edition
-  7. Artwork URL (with live preview)
-  8. Spotify / Apple Music / Qobuz links
-  9. Custom fields (+ Add field)
-  10. Destination list
+  6. Artwork URL (with live preview)
+  7. Spotify / Apple Music / Qobuz links
+  8. Custom fields (+ Add field)
+  9. Destination list
 - **Year rule** in the helper text: "Required: original release year — or, for live releases, the recording year or release year."
 - **Validation** runs on blur and on submit. Errors appear inline under each field and are summarized at the top for screen readers.
 - **Destination list** is an optional combobox. It defaults to the current list when opened from one; otherwise it reads "No list (goes to Unsorted)".
@@ -418,9 +417,9 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   | Restored from Trash (FR-14.4) | "Restored from Trash and added" |
   | Different link already saved for that service (FR-06.4) | "Kept your existing Spotify link · Review" |
 
-- **Uncertain match:** an inline decision card in the row asks "Is this the same edition?"
-  - It shows the existing album (artwork, title, edition, year, services) and plain-language evidence: matching identifiers, track count, release date.
-  - Actions: **Same edition — link it**, **Different edition — save separately**, **Decide later**. "Decide later" keeps the item pending in the batch report.
+- **Uncertain match:** an inline decision card in the row asks "Is this the same album?"
+  - It shows the existing album (artwork, title, year, services) and plain-language evidence: matching identifiers, title, artist and year.
+  - Actions: **Same album — link it**, **Different album — save separately**, **Decide later**. "Decide later" keeps the item pending in the batch report.
 - **Batches** (more than one link) show a progress panel in the bottom-right, e.g. "Adding 12 · 8 done · 2 need you · 1 failed", which expands into the BatchOutcomeReport (DS-84).
 - **Capacity refusals** appear inline with a link to the usage meter (DS-98).
 
@@ -477,7 +476,7 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Destination** (original parent unavailable): a dialog explains "'{parent}' is in Trash or no longer exists. Choose where to restore '{item}'." It offers a tree picker of active folders and the root, then **Restore** or **Cancel**.
 - **Name collision:** a dialog explains "'{destination}' already has a list or folder named '{name}'." It offers a name input pre-filled with the current name, selected for editing; Tonaris never auto-renames. A "Choose another location…" link opens the picker. Then **Restore** or **Cancel**.
 - **Skipped memberships** (container or album restore): a toast reads "Restored · 2 memberships skipped". A **Details** button opens a report listing each skipped album or list with its reason.
-- **Same-edition conflict** (album restore): a dialog shows both records side by side with the explanation from FR-14.3, and three actions:
+- **Same-album conflict** (album restore): a dialog shows both records side by side with the explanation from FR-14.3, and three actions:
   - **Keep the active album** (cancels the restore);
   - **Delete the active album, then restore…**, which leads to the standard confirmation dialog;
   - **Cancel**.
@@ -683,7 +682,7 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **Consequences:** SharingImpact, album retention or removal, and recoverability.
 - **Expiry:** "Expires in 9:42". The page stops accepting decisions at expiry.
 - **Buttons:** **Approve** (danger variant for deletions) and **Decline**.
-- **Uncertain-match variant:** the DS-48 decision card, with **Same edition** / **Different edition** / **Decline**.
+- **Uncertain-match variant:** the DS-48 decision card, with **Same album** / **Different album** / **Decline**.
 - **After a decision:** "Approved — return to {client} to continue" or "Declined". Revisiting the page shows the recorded decision. An expired or already-used request is explained, and nothing happens.
 - **Mobile:** the page is fully responsive and usable. Approving authorizes an MCP operation, so it isn't a browser collection edit (FR-10.6, X-04).
 
