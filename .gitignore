@@ -7,6 +7,9 @@
 !.env.example
 !.env.*.example
 
+# Per-machine overrides for the local services in compose.yaml
+compose.override.yaml
+
 # Dependencies and build output
 node_modules/
 dist/

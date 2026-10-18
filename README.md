@@ -60,6 +60,28 @@ Tooling: oxlint (`.oxlintrc.json`), oxfmt (`.oxfmtrc.json`; Markdown is not auto
 
 New dependencies are added with `bun add <name>` inside the package that uses them; `bunfig.toml` makes Bun write the exact version.
 
+### Running locally
+
+The local services need Docker with Compose v2 (TS-06).
+
+```sh
+docker compose up -d   # Postgres 18 and Mailpit in the background (compose.yaml)
+bun dev                # web and api together; each reloads when you save
+bun run mail:test      # send one email to Mailpit
+docker compose down    # stop the services; add -v to also delete the database
+```
+
+| Service | Address |
+| --- | --- |
+| Web app | http://localhost:3000 |
+| API | http://localhost:3001, health check at `/healthz` |
+| Postgres 18 | `postgres://tonaris:tonaris@localhost:5433/tonaris` |
+| Mailpit | inbox at http://localhost:8025, SMTP on `localhost:1025` |
+
+- Both apps are placeholders until the API and web skeletons land.
+- Postgres uses host port 5433, so it doesn't clash with a natively installed Postgres. Every port binds to localhost only. To change one on your machine, override it in `compose.override.yaml`, which git ignores.
+- In watch mode, an app that crashes waits for a file change instead of exiting; stop everything with Ctrl+C.
+
 ## Working conventions
 
 - **IDs are stable.** Linear issues and OpenSpec changes cite the rule IDs they implement, such as `FR-07.9`, `DS-12`, or `TS-08`.

@@ -4,6 +4,10 @@
   "private": true,
   "description": "Standalone Elysia API service: /v1 REST, sync stream, MCP, auth and jobs (TS-01, TS-09).",
   "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@tonaris/db": "workspace:*",
     "@tonaris/domain": "workspace:*",

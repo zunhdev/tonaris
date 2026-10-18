@@ -188,7 +188,7 @@ openspec/                  OpenSpec specs and changes (TS-132)
 docs/                      PRD, design spec, tech spec, audits, runbooks
 ```
 
-**TS-06 Local development (Decided).** `docker compose` runs `postgres:18` and Mailpit, which captures email. One `bun dev` script starts two processes: `apps/api` (`bun --watch`, port 3001) and `apps/web` (Vite with Start HMR, port 3000). The web app calls the API cross-origin under the same CORS and cookie rules as production, with `http://localhost:3000` on the allowlist (TS-102). There is deliberately no Vite proxy, so cross-origin bugs surface locally rather than in production. Seeds come from `tooling/` and include the 5,000-album workload (TS-120).
+**TS-06 Local development (Decided).** `docker compose` (`compose.yaml`) runs `postgres:18` and Mailpit, which captures email. Their ports bind to localhost only: Postgres on 5433, so it doesn't clash with a natively installed Postgres, and Mailpit's SMTP on 1025 and its inbox on 8025. One `bun dev` script starts two processes: `apps/api` (`bun --watch`, port 3001) and `apps/web` (Vite with Start HMR, port 3000). The web app calls the API cross-origin under the same CORS and cookie rules as production, with `http://localhost:3000` on the allowlist (TS-102). There is deliberately no Vite proxy, so cross-origin bugs surface locally rather than in production. Seeds come from `tooling/` and include the 5,000-album workload (TS-120).
 
 **TS-07 Dependency policy (Decided; Q-06).**
 
