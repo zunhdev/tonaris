@@ -1,5 +1,5 @@
 // Sends one email through Mailpit's SMTP port, to check that local email capture works (TS-06).
-// Start the local services with `docker compose up -d`, run `bun run mail:test`, then open the inbox.
+// With Mailpit running (`brew services start mailpit`), run `bun run mail:test`, then open the inbox.
 // curl speaks SMTP, so the check needs no mail library.
 
 import { $ } from "bun";
@@ -28,7 +28,7 @@ try {
 } catch (error) {
   if (!(error instanceof $.ShellError)) throw error;
   console.error(`Could not send through ${smtpUrl}: ${error.stderr.toString().trim()}`);
-  console.error("Is Mailpit running? Start the local services with `docker compose up -d`.");
+  console.error("Is Mailpit running? Start it with `brew services start mailpit`.");
   process.exit(1);
 }
 

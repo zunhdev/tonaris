@@ -62,24 +62,24 @@ New dependencies are added with `bun add <name>` inside the package that uses th
 
 ### Running locally
 
-The local services need Docker with Compose v2 (TS-06).
+Postgres and Mailpit run natively on your machine, not in Docker; Docker is only for deployment builds (TS-06). You need:
+
+- **Postgres 18** on `localhost:5432` with the `pg_trgm` extension available, for example through [DBngin](https://dbngin.com);
+- **Mailpit**, which captures outgoing email: `brew install mailpit`, then `brew services start mailpit`.
 
 ```sh
-docker compose up -d   # Postgres 18 and Mailpit in the background (compose.yaml)
-bun dev                # web and api together; each reloads when you save
-bun run mail:test      # send one email to Mailpit
-docker compose down    # stop the services; add -v to also delete the database
+bun dev             # web and api together; each reloads when you save
+bun run mail:test   # send one email to Mailpit
 ```
 
 | Service | Address |
 | --- | --- |
 | Web app | http://localhost:3000 |
 | API | http://localhost:3001, health check at `/healthz` |
-| Postgres 18 | `postgres://tonaris:tonaris@localhost:5433/tonaris` |
+| Postgres 18 | `localhost:5432` |
 | Mailpit | inbox at http://localhost:8025, SMTP on `localhost:1025` |
 
-- Both apps are placeholders until the API and web skeletons land.
-- Postgres uses host port 5433, so it doesn't clash with a natively installed Postgres. Every port binds to localhost only. To change one on your machine, override it in `compose.override.yaml`, which git ignores.
+- Both apps are placeholders until the API and web skeletons land, and nothing connects to Postgres yet.
 - In watch mode, an app that crashes waits for a file change instead of exiting; stop everything with Ctrl+C.
 
 ## Working conventions

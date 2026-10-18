@@ -188,7 +188,7 @@ openspec/                  OpenSpec specs and changes (TS-132)
 docs/                      PRD, design spec, tech spec, audits, runbooks
 ```
 
-**TS-06 Local development (Decided).** `docker compose` (`compose.yaml`) runs `postgres:18` and Mailpit, which captures email. Their ports bind to localhost only: Postgres on 5433, so it doesn't clash with a natively installed Postgres, and Mailpit's SMTP on 1025 and its inbox on 8025. One `bun dev` script starts two processes: `apps/api` (`bun --watch`, port 3001) and `apps/web` (Vite with Start HMR, port 3000). The web app calls the API cross-origin under the same CORS and cookie rules as production, with `http://localhost:3000` on the allowlist (TS-102). There is deliberately no Vite proxy, so cross-origin bugs surface locally rather than in production. Seeds come from `tooling/` and include the 5,000-album workload (TS-120).
+**TS-06 Local development (Decided).** Postgres 18 and Mailpit run natively on the developer's machine; Docker is used only for deployment builds (TS-110). Postgres listens on `localhost:5432` with `pg_trgm` available (the creator uses DBngin). Mailpit, installed with Homebrew, captures email, with SMTP on 1025 and its inbox on 8025. One `bun dev` script starts two processes: `apps/api` (`bun --watch`, port 3001) and `apps/web` (Vite with Start HMR, port 3000). The web app calls the API cross-origin under the same CORS and cookie rules as production, with `http://localhost:3000` on the allowlist (TS-102). There is deliberately no Vite proxy, so cross-origin bugs surface locally rather than in production. Seeds come from `tooling/` and include the 5,000-album workload (TS-120).
 
 **TS-07 Dependency policy (Decided; Q-06).**
 
@@ -953,7 +953,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
 - **Managed Postgres** gives point-in-time recovery, automated backups, and patching, which makes Q-04 much easier for a solo operator.
 - **Dockerised Postgres** means owning WAL archiving, upgrades, and restore tooling.
 - Either way, the app uses only vanilla features (`pg_trgm`, standard types, CTEs), so `pg_dump` and restore work anywhere.
-- Local development and CI always use Docker Postgres.
+- Local development uses a native Postgres 18 (TS-06); CI uses a Postgres 18 service container.
 
 **TS-112 Backup tooling (Decided tooling; objectives are creator-owned, Q-04).**
 
@@ -1036,7 +1036,7 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 | Level | Tooling | Covers |
 | --- | --- | --- |
 | Unit | `bun test` | Domain commands as pure logic: invariants, CAS, normalization, policy, export builder. Property-based tests (fast-check) for hierarchy moves, sharing inheritance, and Trash units. |
-| Integration | `bun test` against real Postgres 18 (Docker locally, a service container in CI), each test in its own schema | Commands with SQL, the idempotency race, uniqueness under concurrency |
+| Integration | `bun test` against real Postgres 18 (the native install locally, a service container in CI), each test in its own schema | Commands with SQL, the idempotency race, uniqueness under concurrency |
 | API contract | `bun test` against a running `apps/api` | Every `/v1` endpoint against the committed OpenAPI document; the sync-protocol conformance suite (TS-28); CORS, cookie, and bearer rules (TS-102) |
 | MCP contract | MCP SDK client against a local server | Every tool: modes, X-03 rejections, the approval round trip, partial batches |
 | End-to-end | Playwright: Chromium, Firefox, WebKit, plus iPhone and Pixel emulation; axe-core on key screens | The AC scenarios as specs, named `AC-xx` |
