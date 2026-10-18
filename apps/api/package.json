@@ -11,17 +11,22 @@
     "dev": "bun --watch src/index.ts",
     "openapi:check": "bun src/generate-openapi.ts --check",
     "openapi:generate": "bun src/generate-openapi.ts",
+    "seed:creator": "bun src/auth/seed-creator.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@elysia/cors": "2.0.0-beta.2",
     "@elysia/openapi": "2.0.0-beta.6",
     "@tonaris/db": "workspace:*",
     "@tonaris/domain": "workspace:*",
     "@tonaris/providers": "workspace:*",
+    "better-auth": "1.7.10",
     "elysia": "2.0.0-beta.32",
+    "nodemailer": "10.1.6",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@elysia/eden": "2.0.0-beta.6"
+    "@elysia/eden": "2.0.0-beta.6",
+    "@types/nodemailer": "8.0.2"
   }
 }

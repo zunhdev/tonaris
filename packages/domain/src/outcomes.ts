@@ -10,6 +10,7 @@ export const errorCodes = [
   "name_conflict",
   "capacity_exceeded",
   "limit_exceeded",
+  "unauthenticated",
   "permission_denied",
   "app_only",
   "not_found",

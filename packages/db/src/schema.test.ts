@@ -13,7 +13,9 @@ import {
   containers,
   memberships,
   mutations,
+  sessions,
   trashUnits,
+  users,
 } from "./schema";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
@@ -28,6 +30,13 @@ afterEach(async () => {
 });
 
 const id = () => Bun.randomUUIDv7();
+
+/** Inserts an account and returns its id: owner and person columns reference `user` (TS-11). */
+async function newUser(values: Partial<typeof users.$inferInsert> = {}): Promise<string> {
+  const userId = id();
+  await t.db.insert(users).values({ id: userId, email: `${userId}@example.com`, ...values });
+  return userId;
+}
 
 /** The constraint a query violated, or undefined if it succeeded. */
 async function violation(query: PromiseLike<unknown>): Promise<string | undefined> {
@@ -76,6 +85,7 @@ describe("migrations", () => {
     );
     expect(rows.map((row) => row.table_name)).toEqual([
       "__drizzle_migrations",
+      "account",
       "account_sync",
       "album_field_multi",
       "album_field_values",
@@ -90,9 +100,12 @@ describe("migrations", () => {
       "mutations",
       "positions",
       "saved_references",
+      "session",
       "share_grants",
       "share_links",
       "trash_units",
+      "user",
+      "verification",
       "view_prefs",
     ]);
   });
@@ -107,7 +120,7 @@ describe("JSONB round trip", () => {
       looksLikeJson: '{"a":1}',
       emoji: "🎷",
     };
-    const accountId = id();
+    const accountId = await newUser();
     await t.db
       .insert(changeLog)
       .values({ accountId, seq: 1, entity: "album", entityId: id(), op: "upsert", data });
@@ -126,7 +139,7 @@ describe("JSONB round trip", () => {
     const mutationId = id();
     await t.db.insert(mutations).values({
       id: mutationId,
-      accountId: id(),
+      accountId: await newUser(),
       principal: "session",
       name: "album.update",
       status: "confirmed",
@@ -142,7 +155,7 @@ describe("JSONB round trip", () => {
   });
 
   test("defaults and round-trips arrays", async () => {
-    const ownerId = id();
+    const ownerId = await newUser();
     const unitId = await trashUnit(ownerId, id());
     const [created] = await t.db.select().from(trashUnits).where(eq(trashUnits.id, unitId));
     expect(created?.tombstones).toEqual([]);
@@ -160,7 +173,7 @@ describe("timestamp round trip", () => {
     const unitId = id();
     await t.db.insert(trashUnits).values({
       id: unitId,
-      ownerId: id(),
+      ownerId: await newUser(),
       kind: "album",
       rootId: id(),
       deletedAt,
@@ -186,7 +199,7 @@ describe("timestamp round trip", () => {
   });
 
   test("database defaults read back exactly, so they can be matched again", async () => {
-    const accountId = id();
+    const accountId = await newUser();
     const [inserted] = await t.db.insert(accountSync).values({ accountId }).returning();
     if (!inserted) throw new Error("insert returned no row");
 
@@ -200,7 +213,7 @@ describe("timestamp round trip", () => {
 
 describe("account_sync", () => {
   test("hands out increasing seq numbers as JS numbers", async () => {
-    const accountId = id();
+    const accountId = await newUser();
     await t.db.insert(accountSync).values({ accountId });
 
     const next = () =>
@@ -216,7 +229,7 @@ describe("account_sync", () => {
 
 describe("constraints", () => {
   test("active sibling names are unique per owner, the root included", async () => {
-    const ownerId = id();
+    const ownerId = await newUser();
     const folder = (values: Partial<typeof containers.$inferInsert> = {}) => ({
       id: id(),
       ownerId,
@@ -237,7 +250,7 @@ describe("constraints", () => {
       await violation(t.db.insert(containers).values(folder({ parentId: first.id }))),
     ).toBeUndefined();
     expect(
-      await violation(t.db.insert(containers).values(folder({ ownerId: id() }))),
+      await violation(t.db.insert(containers).values(folder({ ownerId: await newUser() }))),
     ).toBeUndefined();
     const trashed = folder();
     const unitId = await trashUnit(ownerId, trashed.id);
@@ -253,7 +266,7 @@ describe("constraints", () => {
       await violation(
         t.db.insert(containers).values({
           id: id(),
-          ownerId: id(),
+          ownerId: await newUser(),
           kind: "list",
           name: "Later",
           nameKey: "later",
@@ -266,12 +279,11 @@ describe("constraints", () => {
   test("names must not be blank, Unicode spaces included", async () => {
     const noBreakAndIdeographicSpace = String.fromCodePoint(0xa0, 0x3000);
     const blanks = ["", " \t\n", noBreakAndIdeographicSpace];
+    const ownerId = await newUser();
     const violations = await Promise.all(
       blanks.map((name) =>
         violation(
-          t.db
-            .insert(containers)
-            .values({ id: id(), ownerId: id(), kind: "list", name, nameKey: name }),
+          t.db.insert(containers).values({ id: id(), ownerId, kind: "list", name, nameKey: name }),
         ),
       ),
     );
@@ -279,7 +291,7 @@ describe("constraints", () => {
   });
 
   test("albums need the applicable year", async () => {
-    const ownerId = id();
+    const ownerId = await newUser();
     expect(await violation(t.db.insert(albums).values(album(ownerId)))).toBeUndefined();
     expect(
       await violation(
@@ -305,7 +317,7 @@ describe("constraints", () => {
   });
 
   test("purging an album removes its memberships", async () => {
-    const ownerId = id();
+    const ownerId = await newUser();
     const listId = id();
     const purged = album(ownerId);
     const kept = album(ownerId);
@@ -321,5 +333,59 @@ describe("constraints", () => {
     await t.db.delete(albums).where(eq(albums.id, purged.id));
     const remaining = await t.db.select().from(memberships).where(eq(memberships.listId, listId));
     expect(remaining.map((row) => row.albumId)).toEqual([kept.id]);
+  });
+});
+
+describe("accounts", () => {
+  test("owner and person columns need an existing account", async () => {
+    expect(
+      await violation(
+        t.db
+          .insert(containers)
+          .values({ id: id(), ownerId: id(), kind: "list", name: "Later", nameKey: "later" }),
+      ),
+    ).toBe("containers_owner_id_user_id_fkey");
+    expect(await violation(t.db.insert(accountSync).values({ accountId: id() }))).toBe(
+      "account_sync_account_id_user_id_fkey",
+    );
+  });
+
+  test("there is at most one creator, and roles are creator or user", async () => {
+    await newUser({ role: "creator" });
+    expect(await violation(newUser({ role: "creator" }))).toBe("user_single_creator_key");
+    expect(await violation(newUser({ role: "user" }))).toBeUndefined();
+    expect(
+      await violation(
+        t.db.execute(
+          sql`insert into "user" (id, email, role) values (${id()}, 'x@example.com', 'admin')`,
+        ),
+      ),
+    ).toBe("user_role_check");
+  });
+
+  test("emails are unique", async () => {
+    await newUser({ email: "anna@example.com" });
+    expect(await violation(newUser({ email: "anna@example.com" }))).toBe("user_email_key");
+  });
+
+  test("a user with owned data can't be deleted, while their sessions go with them", async () => {
+    const userId = await newUser();
+    const session = {
+      id: id(),
+      userId,
+      token: id(),
+      expiresAt: new Date(Date.now() + 86_400_000),
+    };
+    await t.db.insert(sessions).values(session);
+    await t.db.insert(albums).values(album(userId));
+
+    // Account deletion removes owned data first and the user row last (TS-74).
+    expect(await violation(t.db.delete(users).where(eq(users.id, userId)))).toBe(
+      "albums_owner_id_user_id_fkey",
+    );
+
+    await t.db.delete(albums).where(eq(albums.ownerId, userId));
+    await t.db.delete(users).where(eq(users.id, userId));
+    expect(await t.db.select().from(sessions).where(eq(sessions.id, session.id))).toEqual([]);
   });
 });

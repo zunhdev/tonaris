@@ -1,9 +1,10 @@
 // Share links, person-to-person grants and saved references (TS-11, TS-32, TS-33; FR-07).
-// Grantee and viewer columns hold Better Auth user ids; the foreign keys to `user` arrive with its tables (TON-9).
+// Grantee and viewer columns reference `user` with NO ACTION, like owner columns (TS-74).
 
 import { sql } from "drizzle-orm";
 import { bytea, check, index, primaryKey, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
+import { users } from "./auth";
 import { containers } from "./collection";
 import { instant, oneOf, table, timestamps } from "./columns";
 
@@ -43,7 +44,9 @@ export const shareGrants = table(
     containerId: uuid()
       .notNull()
       .references(() => containers.id, { onDelete: "cascade" }),
-    granteeId: uuid().notNull(),
+    granteeId: uuid()
+      .notNull()
+      .references(() => users.id),
     status: text({ enum: shareGrantStatuses }).notNull(),
     emailStatus: text({ enum: emailStatuses }),
     ...timestamps,
@@ -63,7 +66,9 @@ export const shareGrants = table(
 export const savedReferences = table(
   "saved_references",
   {
-    viewerId: uuid().notNull(),
+    viewerId: uuid()
+      .notNull()
+      .references(() => users.id),
     containerId: uuid()
       .notNull()
       .references(() => containers.id, { onDelete: "cascade" }),

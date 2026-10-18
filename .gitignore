@@ -13,6 +13,7 @@ dist/
 coverage/
 *.tsbuildinfo
 
-# Playwright
+# Playwright (signed-in browser state included)
 test-results/
 playwright-report/
+**/playwright/.auth/

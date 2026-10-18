@@ -25,8 +25,23 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
+/** Whether a generated response is `problemSchema` inlined, which routes declare for their error statuses. */
+function isInlinedProblem(response: unknown, problem: string): boolean {
+  if (typeof response !== "object" || response === null || !("content" in response)) return false;
+  const content: unknown = response.content;
+  if (typeof content !== "object" || content === null || !("application/json" in content))
+    return false;
+  const json: unknown = content["application/json"];
+  if (typeof json !== "object" || json === null || !("schema" in json)) return false;
+  const { schema } = json;
+  if (typeof schema !== "object" || schema === null) return false;
+  const rest = Object.fromEntries(Object.entries(schema).filter(([key]) => key !== "$schema"));
+  return JSON.stringify(rest) === problem;
+}
+
 /** Builds the document for the routes registered on `app`. */
 export function openApiDocument(app: AnyElysia) {
+  const problem = JSON.stringify(jsonSchema(problemSchema));
   const { paths, components } = toOpenAPISchema(
     app,
     { paths: [/\/openapi\.json$/] },
@@ -35,10 +50,15 @@ export function openApiDocument(app: AnyElysia) {
     openapiVersion,
   );
   // Every operation can answer with a problem; listing it once per operation keeps generated clients honest.
+  // Error statuses a route declares with `problemSchema` point at the same component, as problem+json.
   for (const operations of Object.values(paths ?? {})) {
     for (const operation of Object.values(operations ?? {})) {
       if (typeof operation === "object" && operation !== null && "responses" in operation) {
-        operation.responses = { ...operation.responses, default: problemResponse };
+        const responses = Object.entries(operation.responses ?? {}).map(([status, response]) => [
+          status,
+          isInlinedProblem(response, problem) ? problemResponse : response,
+        ]);
+        operation.responses = { ...Object.fromEntries(responses), default: problemResponse };
       }
     }
   }

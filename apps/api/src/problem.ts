@@ -9,10 +9,25 @@ import type { ErrorCode, Problem } from "@tonaris/domain";
 /** The codes the HTTP layer produces itself; commands report the rest of the TS-27 vocabulary. */
 export type HttpProblemCode = Extract<
   ErrorCode,
-  "not_found" | "validation_failed" | "internal_error"
+  "not_found" | "validation_failed" | "unauthenticated" | "rate_limited" | "internal_error"
 >;
 
 type InvalidParam = NonNullable<Problem["errors"]>[number];
+
+/**
+ * A refusal the HTTP layer decides itself, such as a missing session or a rate limit. Thrown from a handler or
+ * hook, it becomes a problem with this status and code; `headers` carry extras such as `Retry-After`.
+ */
+export class ProblemError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: HttpProblemCode,
+    readonly detail: string,
+    readonly headers: Record<string, string> = {},
+  ) {
+    super(detail);
+  }
+}
 
 const statusPhrases: Record<number, string | undefined> = StatusMapBack;
 
@@ -25,6 +40,7 @@ function problemFor(
   code: HttpProblemCode,
   instance: string,
   members: { detail?: string; errors?: InvalidParam[] } = {},
+  headers: Record<string, string> = {},
 ): Response {
   const body: Problem = {
     type: "about:blank",
@@ -34,7 +50,10 @@ function problemFor(
     instance,
     ...members,
   };
-  return Response.json(body, { status, headers: { "content-type": "application/problem+json" } });
+  return Response.json(body, {
+    status,
+    headers: { ...headers, "content-type": "application/problem+json" },
+  });
 }
 
 /** Turns a validation issue's path into `location.key.0.key`; issue paths hold keys or `{ key }` segments. */
@@ -70,7 +89,8 @@ export type ProblemDetailsOptions = {
 
 /**
  * Maps every error, in this app and all its plugins, to a problem. Unknown routes are `not_found`, bad input
- * (schema or unparsable body) is `validation_failed`, and anything else is a generic `internal_error`.
+ * (schema or unparsable body) is `validation_failed`, a `ProblemError` is itself, and anything else is a generic
+ * `internal_error`.
  *
  * Eden types: Elysia types a route with input schemas as answering 422 with its own `ValidationProblem`
  * (`code: "validation"`). Such routes declare `422: problemSchema` (from @tonaris/domain) in their `response` map, which replaces
@@ -82,6 +102,9 @@ export function problemDetails({
   // Typed `any` on purpose: a catch-all handler with a typed return would erase every route's response
   // types for Eden (Elysia 2 beta).
   const toProblem = ({ error, path }: { error: unknown; path: string }): any => {
+    if (error instanceof ProblemError) {
+      return problemFor(error.status, error.code, path, { detail: error.detail }, error.headers);
+    }
     if (error instanceof ValidationError && error.type !== "response") {
       return problemFor(422, "validation_failed", path, {
         detail: "The request has invalid values.",
