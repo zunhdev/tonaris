@@ -28,7 +28,7 @@ A Bun workspace (tech spec TS-05):
 | `packages/db` | `@tonaris/db` | Drizzle schema, migrations, repositories. |
 | `packages/providers` | `@tonaris/providers` | Link parsing, MusicBrainz and Cover Art Archive clients, provider adapters. |
 | `packages/ui` | `@tonaris/ui` | Design system: tokens, primitives, patterns. |
-| `tooling` | `@tonaris/tooling` | Repository tooling: workspace checks, seeds, restore drill, export validator. |
+| `tooling` | `@tonaris/tooling` | Repository tooling: workspace checks, seeds and the reference workload, restore drill, export validator. |
 | `docs` | — | Product requirements, design spec, tech spec, audits. |
 
 Packages may depend only on these internal packages (TS-02):
@@ -83,6 +83,7 @@ Postgres and Mailpit run natively on your machine, not in Docker; Docker is only
 bun run db:create                               # once: create the tonaris and tonaris_test databases
 bun run db:migrate                              # apply the committed migrations to tonaris
 CREATOR_EMAIL=you@example.com bun run seed:creator  # once: create your creator account
+bun run seed:workload                           # optional: the 5,000-album reference workload (TS-120)
 bun dev                                         # web and api together; each reloads when you save
 bun run mail:test                               # send one email to Mailpit
 ```
@@ -96,6 +97,7 @@ bun run mail:test                               # send one email to Mailpit
 
 - The web app runs TanStack Start on Vite (`bun --bun vite dev`). The workspace shell is a placeholder until M2 fills it in.
 - **Signing in:** open http://localhost:3000, enter the creator's email, and take the code (or the link) from the Mailpit inbox. Sign-in never creates accounts: any other address gets a "no account" email. Sign out from the account menu at the top of the sidebar.
+- **Reference workload:** `bun run seed:workload` gives `workload@tonaris.test` 5,000 albums in 250 lists and 60 folders, plus 3 collections shared with it by `workload-sharer-1@tonaris.test` to `-3`. Sign in as any of them. Every run replaces exactly those accounts' data with the same rows, IDs included, and leaves your own account alone.
 - **Settings:** every setting has a local default, so none is needed to run locally. `.env.example` lists them all (TS-105). Bun reads a `.env` file from the directory a command runs in, such as `apps/api`.
 - **Browsers:** the session cookie is `__Secure-` and `Secure` locally too, as in production (TS-70). Chrome and Firefox accept that on `http://localhost`; Safari does not, so sign in locally with Chrome or Firefox.
 - The defaults connect as `postgres` without a password. Set `DATABASE_URL` or `TEST_DATABASE_URL` to use another server; production must set `DATABASE_URL`.

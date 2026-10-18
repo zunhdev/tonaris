@@ -6,5 +6,10 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tonaris/db": "workspace:*",
+    "@tonaris/domain": "workspace:*",
+    "drizzle-orm": "1.0.0-rc.4"
   }
 }
