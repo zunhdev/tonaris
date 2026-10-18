@@ -953,7 +953,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
 - **Managed Postgres** gives point-in-time recovery, automated backups, and patching, which makes Q-04 much easier for a solo operator.
 - **Dockerised Postgres** means owning WAL archiving, upgrades, and restore tooling.
 - Either way, the app uses only vanilla features (`pg_trgm`, standard types, CTEs), so `pg_dump` and restore work anywhere.
-- Local development uses a native Postgres 18 (TS-06); CI uses a Postgres 18 service container.
+- Local development uses a native Postgres 18 (TS-06). How CI provides Postgres 18 is decided when the pipeline is built (TS-124).
 
 **TS-112 Backup tooling (Decided tooling; objectives are creator-owned, Q-04).**
 
@@ -1036,7 +1036,7 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 | Level | Tooling | Covers |
 | --- | --- | --- |
 | Unit | `bun test` | Domain commands as pure logic: invariants, CAS, normalization, policy, export builder. Property-based tests (fast-check) for hierarchy moves, sharing inheritance, and Trash units. |
-| Integration | `bun test` against real Postgres 18 (the native install locally, a service container in CI), each test in its own schema | Commands with SQL, the idempotency race, uniqueness under concurrency |
+| Integration | `bun test` against real Postgres 18 (the native install locally; CI's setup is decided with TS-124), each test in its own schema | Commands with SQL, the idempotency race, uniqueness under concurrency |
 | API contract | `bun test` against a running `apps/api` | Every `/v1` endpoint against the committed OpenAPI document; the sync-protocol conformance suite (TS-28); CORS, cookie, and bearer rules (TS-102) |
 | MCP contract | MCP SDK client against a local server | Every tool: modes, X-03 rejections, the approval round trip, partial batches |
 | End-to-end | Playwright: Chromium, Firefox, WebKit, plus iPhone and Pixel emulation; axe-core on key screens | The AC scenarios as specs, named `AC-xx` |
