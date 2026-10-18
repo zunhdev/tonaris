@@ -1097,11 +1097,13 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
 
   Postgres 18 and Mailpit run as service containers on the runner (decided by the creator on 18 October 2026), pinned to the versions used locally (`postgres:18.4`, `axllent/mailpit:v1.31.6`). Local development stays native (TS-06).
 
+  **Temporarily disabled** (creator decision, 18 October 2026, to stay within a budget). The job is commented out in the workflow, with instructions for bringing it back. Until then, the full `bun run check` runs locally before every push and before a PR is handed over; it includes `bun test` and the Playwright suite.
+
 Actions are pinned to commit SHAs. Still to come:
 - the Docker builds arrive with the Dockerfiles (TON-12);
 - all browser engines nightly arrives with the browser matrix (TON-94). WebKit first needs HTTPS locally, because it refuses `Secure` cookies on `http://localhost`.
 
-The "Protect main" ruleset requires both jobs. Production deploys from `main` by tag or manual trigger, with the API before the web app. There is no staging environment for now.
+The "Protect main" ruleset requires **Static checks**, and requires **Tests** again once that job is re-enabled. Production deploys from `main` by tag or manual trigger, with the API before the web app. There is no staging environment for now.
 
 ---
 
