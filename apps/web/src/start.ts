@@ -20,11 +20,3 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, pathn
 export const startInstance = createStart(() => ({
   requestMiddleware: [securityHeadersMiddleware],
 }));
-
-// Types the request context (the nonce) for `getGlobalStartContext()`. Start's route-tree generator writes this
-// registration only when it sees this file at generation time, which the committed tree doesn't reflect.
-declare module "@tanstack/react-start" {
-  interface Register {
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>;
-  }
-}
