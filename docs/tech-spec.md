@@ -581,6 +581,8 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 
 *Spike results (18 October 2026):* [G1 MusicBrainz spike](spikes/2026-10-18-g1-musicbrainz.md). Step 2 needs every stored URL form, Qobuz's barcode bridge needs the UPC-A form, and most misses are albums MusicBrainz has without the service link. The proposed changes wait for the creator's G1 decision (TON-25).
 
+*Spike results (19 October 2026):* [G1 Apple hints spike](spikes/2026-10-19-g1-apple-hints.md). Scored on the album (the release group), as the creator decided on 19 October: the strict rule as written identifies 21% of labelled Apple links, while a rule with loose titles and artist names, release or original year, no track count and exactly one album identifies 66% (87% of those with hints), with no wrong matches. The proposed step 4 rule waits for TON-25.
+
 *Still open (G1):*
 
 - legal review of Spotify API use (Policy III.5, integration with other services' content) and of the iTunes Lookup terms;
