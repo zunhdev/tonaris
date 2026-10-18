@@ -3,12 +3,22 @@
 
 import path from "node:path";
 
+import { createDatabase } from "@tonaris/db";
+
 import { createApp } from "./app";
+import { createAuth } from "./auth/auth";
+import { apiConfig } from "./config";
 import { committedDocumentPath, openApiDocument, serializeDocument } from "./openapi";
 
-/** The document as the current routes generate it, in its committed text form. */
+/**
+ * The document as the current routes generate it, in its committed text form. The app is built on the local
+ * defaults and never handles a request, so no database or mail server is needed.
+ */
 export function generatedDocument(): string {
-  return serializeDocument(openApiDocument(createApp()));
+  const config = apiConfig({});
+  const email = { send: () => Promise.resolve() };
+  const app = createApp({ config, auth: createAuth({ config, db: createDatabase(), email }) });
+  return serializeDocument(openApiDocument(app));
 }
 
 if (import.meta.main) {

@@ -1,8 +1,9 @@
 // Personal presentation: remembered view choices and manual order (TS-11, TS-16; FR-05.2).
-// Person columns hold Better Auth user ids; the foreign keys to `user` arrive with its tables (TON-9).
+// Person columns reference `user` with NO ACTION, like owner columns (TS-74).
 
 import { boolean, check, primaryKey, text, uuid } from "drizzle-orm/pg-core";
 
+import { users } from "./auth";
 import { oneOf, table, timestamps } from "./columns";
 
 export const sortDirections = ["asc", "desc"] as const;
@@ -15,7 +16,9 @@ export const viewLayouts = ["rows", "grid"] as const;
 export const viewPrefs = table(
   "view_prefs",
   {
-    personId: uuid().notNull(),
+    personId: uuid()
+      .notNull()
+      .references(() => users.id),
     viewKey: text().notNull(),
     sortMode: text(),
     sortDir: text({ enum: sortDirections }),
@@ -34,7 +37,9 @@ export const viewPrefs = table(
 export const positions = table(
   "positions",
   {
-    personId: uuid().notNull(),
+    personId: uuid()
+      .notNull()
+      .references(() => users.id),
     viewKey: text().notNull(),
     itemId: uuid().notNull(),
     // Fractional index. Compare bytewise (JS `<`, or SQL `COLLATE "C"`), never by the database locale.

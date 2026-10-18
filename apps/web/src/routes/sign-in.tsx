@@ -1,25 +1,14 @@
-// Sign-in (DS-90): a public page, rendered on the server (TS-03). TON-9 adds the email-code form.
+// Sign-in (DS-90): public pages, rendered on the server (TS-03). `/sign-in` asks for the email and
+// `/sign-in/verify` for the emailed code, both inside the same card.
 
-import { createFileRoute } from "@tanstack/react-router";
+import { SignInCard } from "@/features/account/sign-in-card";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/sign-in")({
   head: () => ({ meta: [{ title: "Sign in · Tonaris" }] }),
-  component: SignIn,
+  component: () => (
+    <SignInCard>
+      <Outlet />
+    </SignInCard>
+  ),
 });
-
-function SignIn() {
-  return (
-    <main
-      aria-labelledby="sign-in-title"
-      className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6"
-    >
-      <p className="text-title text-fg-primary">Tonaris</p>
-      <div className="flex w-full max-w-sm flex-col gap-2 rounded-xl border border-subtle bg-panel p-6">
-        <h1 id="sign-in-title" className="text-title text-fg-primary">
-          Sign in
-        </h1>
-        <p className="text-fg-secondary">Sign-in isn't available yet.</p>
-      </div>
-    </main>
-  );
-}

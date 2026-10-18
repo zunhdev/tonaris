@@ -64,7 +64,7 @@ Tooling: oxlint (`.oxlintrc.json`), oxfmt (`.oxfmtrc.json`; Markdown is not auto
 
 New dependencies are added with `bun add <name>` inside the package that uses them; `bunfig.toml` makes Bun write the exact version.
 
-The browser tests run Playwright's test runner, which needs Node 20.19 or later and Chromium: `bunx playwright install chromium` once. They build the web app and serve it with `vite preview` on port 3100.
+The browser tests run Playwright's test runner, which needs Node 20.19 or later and Chromium: `bunx playwright install chromium` once. They build the web app and serve it with `vite preview` on port 3100, next to an API on port 3101 (`apps/api/src/e2e-server.ts`) that runs on a fresh schema of `tonaris_test`. They sign in with codes from Mailpit, so **Postgres and Mailpit must be running** (see [Running locally](#running-locally)).
 
 ### Running locally
 
@@ -74,20 +74,24 @@ Postgres and Mailpit run natively on your machine, not in Docker; Docker is only
 - **Mailpit**, which captures outgoing email: `brew install mailpit`, then `brew services start mailpit`.
 
 ```sh
-bun run db:create   # once: create the tonaris and tonaris_test databases
-bun run db:migrate  # apply the committed migrations to tonaris
-bun dev             # web and api together; each reloads when you save
-bun run mail:test   # send one email to Mailpit
+bun run db:create                               # once: create the tonaris and tonaris_test databases
+bun run db:migrate                              # apply the committed migrations to tonaris
+CREATOR_EMAIL=you@example.com bun run seed:creator  # once: create your creator account
+bun dev                                         # web and api together; each reloads when you save
+bun run mail:test                               # send one email to Mailpit
 ```
 
 | Service | Address |
 | --- | --- |
-| Web app | http://localhost:3000: the workspace at `/c` (client-rendered), sign-in at `/sign-in` (server-rendered) |
-| API | http://localhost:3001: `/v1/health`, the OpenAPI document at `/v1/openapi.json`, the host health check at `/healthz` |
+| Web app | http://localhost:3000: the workspace at `/c` (client-rendered, signed in only), sign-in at `/sign-in` (server-rendered) |
+| API | http://localhost:3001: `/v1/health`, `/v1/me`, the OpenAPI document at `/v1/openapi.json`, sign-in at `/auth/*`, the host health check at `/healthz` |
 | Postgres 18 | `localhost:5432`: database `tonaris` (`DATABASE_URL`), tests in `tonaris_test` (`TEST_DATABASE_URL`) |
 | Mailpit | inbox at http://localhost:8025, SMTP on `localhost:1025` |
 
-- The web app runs TanStack Start on Vite (`bun --bun vite dev`). The workspace shell and sign-in are placeholders until M2 and the sign-in work fill them in.
+- The web app runs TanStack Start on Vite (`bun --bun vite dev`). The workspace shell is a placeholder until M2 fills it in.
+- **Signing in:** open http://localhost:3000, enter the creator's email, and take the code (or the link) from the Mailpit inbox. Sign-in never creates accounts: any other address gets a "no account" email. Sign out from the account menu at the top of the sidebar.
+- **Settings:** every setting has a local default, so none is needed to run locally. `.env.example` lists them all (TS-105). Bun reads a `.env` file from the directory a command runs in, such as `apps/api`.
+- **Browsers:** the session cookie is `__Secure-` and `Secure` locally too, as in production (TS-70). Chrome and Firefox accept that on `http://localhost`; Safari does not, so sign in locally with Chrome or Firefox.
 - The defaults connect as `postgres` without a password. Set `DATABASE_URL` or `TEST_DATABASE_URL` to use another server; production must set `DATABASE_URL`.
 - Integration tests each run in a fresh, migrated schema of `tonaris_test` (`@tonaris/db/testing`), dropped afterwards.
 - In watch mode, an app that crashes waits for a file change instead of exiting; stop everything with Ctrl+C.
@@ -99,7 +103,9 @@ The API (`apps/api`, Elysia 2 beta) serves every resource under `/v1` (TS-09):
 - **Errors** are RFC 9457 problems (`application/problem+json`) with `type: "about:blank"`, the status phrase as `title`, and a TS-27 `code` such as `not_found`, `validation_failed` or `internal_error`. Validation problems list each invalid input in `errors`. Unexpected errors are logged and answered without details.
 - **OpenAPI 3.1** is generated from the routes' Zod schemas. After changing a route, run `bun run openapi:generate`, review the diff of `apps/api/openapi/v1.json` and commit it; `bun run openapi:check` fails while it is stale. Changes within `/v1` are additive only.
 - **Clients:** the web app types its calls with Eden from the API's `type App` (`apps/web/src/api.ts`); native clients are generated from the OpenAPI document (TS-29).
-- Routes that validate input declare `422: problemSchema` in their `response` map, so Eden and OpenAPI see the problem the API actually sends.
+- Routes that validate input declare `422: problemSchema` in their `response` map, so Eden and OpenAPI see the problem the API actually sends. Error statuses declared with `problemSchema` appear in the OpenAPI document as the shared `Problem` component.
+- **Signed-in routes** declare `signedIn: true`, which resolves the request's `principal` (TS-30) and `account` from the session cookie, or answers `401` `unauthenticated` (`apps/api/src/auth/plugin.ts`). They also declare `401: problemSchema`.
+- **Sign-in** is Better Auth with email codes (TS-70), served at `/auth/*` outside `/v1`. Only the endpoints sign-in needs are routed; see `apps/api/src/auth/`. Credentialed CORS is allowed for `WEB_ORIGIN` only (TS-102).
 
 ### Design system
 

@@ -1,0 +1,97 @@
+// What tonaris-api listens on and whom it trusts (TS-08, TS-105). Local development runs on defaults (TS-06);
+// production must set every origin and secret, and start-up fails without them. `.env.example` lists them.
+
+export type ApiConfig = {
+  port: number;
+  /** The API's own origin, `https://api.tonaris.<tld>` (TS-08): Better Auth's base URL. */
+  apiOrigin: string;
+  /**
+   * The web app's origin: the only credentialed CORS origin (TS-102), Better Auth's trusted origin, and where
+   * the links in emails point.
+   */
+  webOrigin: string;
+  /**
+   * The parent domain the session cookie is scoped to (TS-08): the web app's host, since it is the apex. None
+   * for `localhost` or an IP address, where a host-only cookie already reaches every port.
+   */
+  cookieDomain: string | undefined;
+  authSecret: string;
+  smtpUrl: string;
+  emailFrom: string;
+  /** The header the host's proxy puts the client address in; unset means the socket address (TS-104). */
+  clientIpHeader: string | undefined;
+};
+
+type Env = Record<string, string | undefined>;
+
+// Development only: production refuses to start without its own BETTER_AUTH_SECRET.
+const localAuthSecret = "3f9c1e7a5b2d48c6a0e4f7b9d1c3a5e7f2b4d6c8a0e1f3b5d7c9a2e4f6b8d0c1";
+
+const localDefaults = {
+  API_ORIGIN: "http://localhost:3001",
+  WEB_ORIGIN: "http://localhost:3000",
+  BETTER_AUTH_SECRET: localAuthSecret,
+  SMTP_URL: "smtp://localhost:1025",
+  EMAIL_FROM: "Tonaris <no-reply@tonaris.test>",
+} as const;
+
+const requiredInProduction = [
+  "API_ORIGIN",
+  "WEB_ORIGIN",
+  "BETTER_AUTH_SECRET",
+  "SMTP_URL",
+  "EMAIL_FROM",
+] as const satisfies (keyof typeof localDefaults)[];
+type Required = (typeof requiredInProduction)[number];
+
+export function apiConfig(env: Env = process.env): ApiConfig {
+  const production = env.NODE_ENV === "production";
+  const missing = requiredInProduction.filter((name) => !env[name]);
+  if (production && missing.length > 0) {
+    throw new Error(`Set ${missing.join(", ")} in production (see .env.example).`);
+  }
+  const value = (name: Required) => env[name] || localDefaults[name];
+
+  const apiOrigin = origin("API_ORIGIN", value("API_ORIGIN"), production);
+  const webOrigin = origin("WEB_ORIGIN", value("WEB_ORIGIN"), production);
+  const cookieDomain = parentDomain(webOrigin);
+  if (cookieDomain && !new URL(apiOrigin).hostname.endsWith(`.${cookieDomain}`)) {
+    throw new Error(
+      `API_ORIGIN (${apiOrigin}) must be a subdomain of WEB_ORIGIN's host ${cookieDomain} so the session cookie reaches both (TS-08).`,
+    );
+  }
+
+  return {
+    port: Number(env.PORT ?? 3001),
+    apiOrigin,
+    webOrigin,
+    cookieDomain,
+    authSecret: value("BETTER_AUTH_SECRET"),
+    smtpUrl: value("SMTP_URL"),
+    emailFrom: value("EMAIL_FROM"),
+    clientIpHeader: env.CLIENT_IP_HEADER?.toLowerCase() || undefined,
+  };
+}
+
+/** The origin of `url`, which must be nothing more than an origin, and HTTPS in production. */
+function origin(name: string, url: string, production: boolean): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`${name} must be an origin such as https://tonaris.example, not "${url}".`);
+  }
+  if (parsed.origin !== url.replace(/\/$/, "")) {
+    throw new Error(`${name} must be an origin only, without a path: "${url}".`);
+  }
+  if (production && parsed.protocol !== "https:") {
+    throw new Error(`${name} must use https in production: "${url}".`);
+  }
+  return parsed.origin;
+}
+
+function parentDomain(webOrigin: string): string | undefined {
+  const { hostname } = new URL(webOrigin);
+  const isIp = /^[\d.]+$/.test(hostname) || hostname.startsWith("[");
+  return hostname === "localhost" || isIp ? undefined : hostname;
+}

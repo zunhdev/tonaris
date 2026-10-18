@@ -33,6 +33,8 @@ describe("outcome vocabulary (TS-27)", () => {
   test("names every error code once", () => {
     expect(new Set(errorCodes).size).toBe(errorCodes.length);
     expect(errorCodes).toContain("internal_error");
+    // Signed-out requests (401), distinct from a signed-in person lacking access (permission_denied).
+    expect(errorCodes).toContain("unauthenticated");
   });
 
   test("accepts each server outcome", () => {

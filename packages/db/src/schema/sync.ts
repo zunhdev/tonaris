@@ -1,8 +1,9 @@
 // Write serialization, the change stream and idempotency records (TS-11, TS-20–TS-23).
-// Account columns hold Better Auth user ids; the foreign keys to `user` arrive with its tables (TON-9).
+// Account columns reference `user` with NO ACTION, like owner columns (TS-74).
 
 import { bigint, index, jsonb, text, unique, uuid } from "drizzle-orm/pg-core";
 
+import { users } from "./auth";
 import { instant, table, timestamps } from "./columns";
 
 /**
@@ -10,7 +11,9 @@ import { instant, table, timestamps } from "./columns";
  * so commit order equals `seq` order, and `seq` is the stream cursor (TS-20, TS-23).
  */
 export const accountSync = table("account_sync", {
-  accountId: uuid().primaryKey(),
+  accountId: uuid()
+    .primaryKey()
+    .references(() => users.id),
   seq: bigint({ mode: "number" }).notNull().default(0),
   ...timestamps,
 });
@@ -20,7 +23,9 @@ export const changeLog = table(
   "change_log",
   {
     id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
-    accountId: uuid().notNull(),
+    accountId: uuid()
+      .notNull()
+      .references(() => users.id),
     seq: bigint({ mode: "number" }).notNull(),
     entity: text().notNull(),
     // Text, not uuid: preference changes are keyed by view keys such as `root` (TS-11 `view_prefs`).
@@ -38,7 +43,9 @@ export const mutations = table(
   "mutations",
   {
     id: uuid().primaryKey(),
-    accountId: uuid().notNull(),
+    accountId: uuid()
+      .notNull()
+      .references(() => users.id),
     // A web or native session, or an MCP grant (TS-30).
     principal: text().notNull(),
     name: text().notNull(),

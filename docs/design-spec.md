@@ -698,6 +698,15 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **Email link:** it opens `/sign-in/verify` and submits the same code automatically (TS-70), then lands on the original destination.
   - Opened on a different device or browser from the one that asked: the page first asks "Sign in on this device?" with **Sign in** and **Cancel**.
   - Expired or used: "This sign-in link has expired or was already used" with **Send a new code**.
+- **Messages** (as built in TON-9):
+  - wrong code: "That code isn't right. Check the email and try again.";
+  - expired code: "This code has expired. Send a new code.";
+  - too many wrong codes: "Too many wrong codes. Send a new code.";
+  - sign-in limit reached (TS-104): "Too many sign-in attempts. Try again in {n} minutes.";
+  - API unreachable: "Couldn't reach Tonaris. Check your connection and try again.";
+  - after a resend: "We sent a new code to {email}.";
+  - on another device: "This link signs in to Tonaris as {email}." under "Sign in on this device?".
+- **The code field** accepts a pasted code with spaces or a dash, and six digits submit by themselves.
 
 **DS-91 Admission landing** (`/join/:admissionToken`). *(FR-11.2, FR-11.6, FR-11.3)*
 1. "You're invited to Tonaris", showing the bound email.

@@ -1,5 +1,6 @@
 // Folders, lists, albums, their memberships and Trash units (TS-11, TS-13).
-// Owner columns hold Better Auth user ids; the foreign keys to `user` arrive with its tables (TON-9).
+// Owner columns reference `user`. Account deletion removes owned rows first and the user last (TS-74), so the
+// foreign keys keep the default NO ACTION rather than cascading.
 
 import { sql } from "drizzle-orm";
 import {
@@ -14,6 +15,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { users } from "./auth";
 import { instant, notBlank, oneOf, table, timestamps, trashStamp } from "./columns";
 
 export const trashUnitKinds = ["folder", "list", "album"] as const;
@@ -26,7 +28,9 @@ export const trashUnits = table(
   "trash_units",
   {
     id: uuid().primaryKey(),
-    ownerId: uuid().notNull(),
+    ownerId: uuid()
+      .notNull()
+      .references(() => users.id),
     kind: text({ enum: trashUnitKinds }).notNull(),
     rootId: uuid().notNull(),
     deletedAt: instant().notNull(),
@@ -48,7 +52,9 @@ export const containers = table(
   "containers",
   {
     id: uuid().primaryKey(),
-    ownerId: uuid().notNull(),
+    ownerId: uuid()
+      .notNull()
+      .references(() => users.id),
     kind: text({ enum: containerKinds }).notNull(),
     // Null means the root. Deliberately no foreign key: a container trashed on its own keeps its parent's id
     // after that parent is purged, so recovery can tell the parent is missing and ask (FR-01.15).
@@ -86,7 +92,9 @@ export const albums = table(
   "albums",
   {
     id: uuid().primaryKey(),
-    ownerId: uuid().notNull(),
+    ownerId: uuid()
+      .notNull()
+      .references(() => users.id),
     title: text().notNull(),
     artistCredit: text().notNull(),
     // Null is Unclassified (TS-45).
@@ -160,7 +168,9 @@ export const albumServiceLinks = table(
       .notNull()
       .references(() => albums.id, { onDelete: "cascade" }),
     // Copied from the album so capture can match a link within one owner's collection (TS-11).
-    ownerId: uuid().notNull(),
+    ownerId: uuid()
+      .notNull()
+      .references(() => users.id),
     service: text({ enum: streamingServices }).notNull(),
     url: text().notNull(),
     entityId: text().notNull(),
@@ -186,7 +196,9 @@ export const memberships = table(
     albumId: uuid()
       .notNull()
       .references(() => albums.id, { onDelete: "cascade" }),
-    ownerId: uuid().notNull(),
+    ownerId: uuid()
+      .notNull()
+      .references(() => users.id),
     addedAt: instant().notNull().defaultNow(),
     ...timestamps,
   },

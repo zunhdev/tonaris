@@ -265,7 +265,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `service_state` | singleton: `admissions_paused` | | FR-11.2 |
 | `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error` | | TS-90 |
 | `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions | FR-11.5–FR-11.6 |
-| Better Auth tables | `user`, `session`, `verification`, OAuth clients, consents, tokens; `jwks` | `user.role` (`creator`\|`user`), `user.display_name`. The owner, account, person, grantee, and viewer columns above hold `user.id`; their foreign keys are added together with these tables. | FR-11 |
+| Better Auth tables | `user`, `session`, `account`, `verification`; later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
 
 **TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/src/normalize.ts` exports two functions, and the same code runs on the server, the client, and in migrations:
 
@@ -434,7 +434,7 @@ Error `code`s:
 
 - `validation_failed`, `required_missing`
 - `name_conflict`, `capacity_exceeded`, `limit_exceeded`
-- `permission_denied`, `app_only`
+- `unauthenticated` (401: no valid session or token), `permission_denied`, `app_only`
 - `not_found`, `trashed`, `cycle`, `invalid_destination`
 - `field_in_use`
 - `uncertain_match`, `unsupported_link`, `provider_unavailable`
@@ -724,10 +724,12 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 
 **TS-70 Sign-in (Decided; FR-11.1, FR-11.2).**
 
-- **Method.** Sign-in uses the Better Auth `emailOTP` plugin: a 6-digit code, valid for 10 min, single-use, with 5 attempts.
-- **The email.** It contains the code **and** a link to `/sign-in/verify?…` that submits the same code. This gives "link or code" with one mechanism. The magic-link plugin is not used, which also avoids its 2026 advisories.
-- **Cross-device.** A link opened on another device asks for confirmation before signing that device in.
-- **Sessions** (web only; native apps use tokens, TS-30). The cookie uses the `__Secure-` prefix, because `__Host-` forbids the parent-domain `Domain` attribute TS-08 needs. It is `Secure`, `HttpOnly`, `SameSite=Lax`, with `Domain=tonaris.<tld>`. Sessions roll over 30 days.
+- **Method.** Sign-in uses the Better Auth `emailOTP` plugin: a 6-digit code, valid for 10 min, single-use, with 5 attempts. Codes are stored hashed, and a new request replaces the previous code.
+- **The email.** It contains the code **and** a link to `/sign-in/verify?email=…#code=…` that submits the same code. This gives "link or code" with one mechanism. The code is in the fragment, so it never reaches a server log or a `Referer`. The magic-link plugin is not used, which also avoids its 2026 advisories.
+- **Cross-device.** A link opened on another device asks for confirmation before signing that device in. "Another device" means a browser without the pending request that `/sign-in` keeps in `localStorage`. This is only a check on whether to ask: the code is the credential.
+- **Sessions** (web only; native apps use tokens, TS-30). The cookie is `__Secure-tonaris.session_token`; it uses the `__Secure-` prefix because `__Host-` forbids the parent-domain `Domain` attribute TS-08 needs. It is `Secure`, `HttpOnly`, `SameSite=Lax`, with `Domain=tonaris.<tld>`, which is the web origin's host. Locally there is no `Domain`, since a host-only `localhost` cookie reaches both ports. Sessions roll over 30 days: a session used more than a day after its last renewal is extended, and the cookie is renewed with it.
+- **Endpoints.** The API serves only the Better Auth endpoints sign-in needs, under `/auth/*`: request a code, sign in, read the session, and sign out. Any other path is `not_found`, so plugins and upgrades expose nothing unplanned, such as `/update-user`. The signed-in account is `GET /v1/me`.
+- **Privacy.** Sessions store no IP address (`disableIpTracking`), and Better Auth's telemetry is off.
 - **Rate limits.** Sign-in requests are limited per email and per IP (TS-104).
 - **Email normalization.** Email keys are `trim`, then lowercase, then IDNA-to-ASCII for the domain. Plus-addresses are kept as-is.
 
@@ -744,13 +746,14 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   - expiry 14 days (approved 17 October 2026); the creator can re-issue an expired invitation;
   - the token is hashed;
   - emailed through TS-72, with `email_status` tracked separately.
-- **Creator bootstrap.** The `CREATOR_EMAIL` environment variable is read at first deploy, and a one-time seed command creates the creator with `role = creator`. There is no UI path to grant the creator role.
+- **Creator bootstrap.** The `CREATOR_EMAIL` environment variable is read at first deploy, and a one-time seed command, `bun run seed:creator`, creates the creator with `role = creator` and a verified email. It is idempotent for the same address, so the pre-deploy step can run it every time. It refuses a second creator and an address that already belongs to an account. There is no UI path to grant the creator role.
 
 **TS-72 Email delivery (Decided adapter; provider decided later).**
 
 - **Adapter.** `packages/domain` defines `EmailPort.send(template, to, data)`; implementations use a provider HTTP API, with SMTP as a fallback.
 - **Provider.** The creator chooses before the first real invitation is sent, taking EU data processing into account (Q-06). Candidates: Resend, Postmark, and Scaleway Transactional Email. Until then, development uses Mailpit (TS-06).
 - **Sending.** All email goes through the job queue (TS-90) with retries. Sending outcomes are recorded on the invitation or grant rows (FR-07.5, FR-11.6). Templates are plain, English, and DS-worded.
+- **Until the job queue exists**, sign-in email is sent after the response, through the SMTP adapter (`apps/api/src/email/smtp.ts`, `SMTP_URL`), and a failure is logged. TON-73 moves it to the queue with the chosen provider. The templates render in `packages/domain/src/email.ts`, so every adapter sends the same text.
 
 **TS-73 Email change and recovery (Decided; FR-11.4, FR-11.5).**
 
@@ -902,14 +905,16 @@ The API service's `https://api.tonaris.<tld>/img/{hmac}/{b64url(url)}?w=…` ser
 
 There is no resizing in v1.
 
-**TS-104 Rate limits (captures and exports Decided in TS-18; the rest Proposed).**
+**TS-104 Rate limits (captures and exports Decided in TS-18, sign-in approved 18 October 2026; the rest Proposed).**
 
 - Rate limits use in-memory token buckets in the single instance, moving to Postgres if the service scales out.
-- Better Auth's limiter covers the auth endpoints.
+- Sign-in uses a Tonaris limiter in front of the auth endpoints (`apps/api/src/auth/sign-in-limits.ts`), with sliding windows. Better Auth's own limiter is off: it can't key by email, and without a trusted client address it falls back to one bucket shared by everyone.
+- A refused sign-in answers `429` `rate_limited` with `Retry-After`; it sends nothing and stores nothing. The auth endpoints sit outside `/v1`, so they don't carry the `RateLimit` headers that TS-09 asks of `/v1` responses.
+- The client address is the socket address. Behind the host's proxy, `CLIENT_IP_HEADER` names the header to read instead; for `X-Forwarded-For` that is its last entry.
 
 | Endpoint | Limit |
 | --- | --- |
-| Sign-in | 5 per email per 15 min; 20 per IP per 15 min |
+| Sign-in | Code requests: 5 per email per 15 min. Code requests and submissions together: 20 per IP per 15 min. |
 | Mutations | 30 per second per account (burst) |
 | Captures | 100 per hour per account (TS-18) |
 | Guest share views | 120 per minute per IP |
@@ -917,7 +922,7 @@ There is no resizing in v1.
 
 **TS-105 Secrets.**
 
-- Secrets live in the host's secret store, not in the repo. `.env.example` lists them.
+- Secrets live in the host's secret store, not in the repo. `.env.example` lists them, together with the other settings and their local defaults. The API refuses to start in production without `BETTER_AUTH_SECRET`, `API_ORIGIN`, `WEB_ORIGIN`, `SMTP_URL`, and `EMAIL_FROM`.
 - Key material:
   - `BETTER_AUTH_SECRET`
   - the image-proxy HMAC key

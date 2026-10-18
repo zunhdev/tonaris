@@ -3,11 +3,18 @@ import { describe, expect, test } from "bun:test";
 import { treaty } from "@elysia/eden";
 import { z } from "zod";
 
+import { createDatabase } from "@tonaris/db";
+
 import { createApp } from "./app";
+import { createAuth } from "./auth/auth";
+import { apiConfig } from "./config";
 import { generatedDocument } from "./generate-openapi";
 import { committedDocumentPath } from "./openapi";
 
-const app = createApp();
+// These routes never reach the database or send email, so the pool never connects.
+const config = apiConfig({});
+const auth = createAuth({ config, db: createDatabase(), email: { send: () => Promise.resolve() } });
+const app = createApp({ config, auth });
 const api = treaty(app);
 
 describe("/v1/health", () => {
@@ -52,10 +59,22 @@ describe("OpenAPI", () => {
       .object({ openapi: z.string(), paths: z.record(z.string(), z.unknown()) })
       .parse(await response.json());
     expect(document.openapi).toBe("3.1.2");
-    // Only the versioned contract: no /healthz and no openapi.json itself.
-    expect(Object.keys(document.paths)).toEqual(["/v1/health"]);
+    // Only the versioned contract: no /healthz, /auth/* or openapi.json itself.
+    expect(Object.keys(document.paths)).toEqual(["/v1/health", "/v1/me"]);
     expect(document.paths["/v1/health"]).toMatchObject({
       get: { responses: { default: { content: { "application/problem+json": {} } } } },
+    });
+    // A declared error status is the shared Problem component, as problem+json.
+    expect(document.paths["/v1/me"]).toMatchObject({
+      get: {
+        responses: {
+          401: {
+            content: {
+              "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } },
+            },
+          },
+        },
+      },
     });
   });
 

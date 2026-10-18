@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspaceRouteImport } from './routes/_workspace'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
+import { Route as SignInIndexRouteImport } from './routes/sign-in.index'
+import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -33,36 +35,58 @@ const WorkspaceCRoute = WorkspaceCRouteImport.update({
   path: '/c',
   getParentRoute: () => WorkspaceRoute,
 } as any)
+const SignInIndexRoute = SignInIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SignInRoute,
+} as any)
+const SignInVerifyRoute = SignInVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => SignInRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/sign-in': typeof SignInRoute
+  '/sign-in': typeof SignInRouteWithChildren
   '/c': typeof WorkspaceCRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
+  '/sign-in/': typeof SignInIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/sign-in': typeof SignInRoute
   '/c': typeof WorkspaceCRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
+  '/sign-in': typeof SignInIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_workspace': typeof WorkspaceRouteWithChildren
-  '/sign-in': typeof SignInRoute
+  '/sign-in': typeof SignInRouteWithChildren
   '/_workspace/c': typeof WorkspaceCRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
+  '/sign-in/': typeof SignInIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in' | '/c'
+  fullPaths: '/' | '/sign-in' | '/c' | '/sign-in/verify' | '/sign-in/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sign-in' | '/c'
-  id: '__root__' | '/' | '/_workspace' | '/sign-in' | '/_workspace/c'
+  to: '/' | '/c' | '/sign-in/verify' | '/sign-in'
+  id:
+    | '__root__'
+    | '/'
+    | '/_workspace'
+    | '/sign-in'
+    | '/_workspace/c'
+    | '/sign-in/verify'
+    | '/sign-in/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
-  SignInRoute: typeof SignInRoute
+  SignInRoute: typeof SignInRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -95,6 +119,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceCRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/sign-in/': {
+      id: '/sign-in/'
+      path: '/'
+      fullPath: '/sign-in/'
+      preLoaderRoute: typeof SignInIndexRouteImport
+      parentRoute: typeof SignInRoute
+    }
+    '/sign-in/verify': {
+      id: '/sign-in/verify'
+      path: '/verify'
+      fullPath: '/sign-in/verify'
+      preLoaderRoute: typeof SignInVerifyRouteImport
+      parentRoute: typeof SignInRoute
+    }
   }
 }
 
@@ -110,10 +148,23 @@ const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
   WorkspaceRouteChildren,
 )
 
+interface SignInRouteChildren {
+  SignInVerifyRoute: typeof SignInVerifyRoute
+  SignInIndexRoute: typeof SignInIndexRoute
+}
+
+const SignInRouteChildren: SignInRouteChildren = {
+  SignInVerifyRoute: SignInVerifyRoute,
+  SignInIndexRoute: SignInIndexRoute,
+}
+
+const SignInRouteWithChildren =
+  SignInRoute._addFileChildren(SignInRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   WorkspaceRoute: WorkspaceRouteWithChildren,
-  SignInRoute: SignInRoute,
+  SignInRoute: SignInRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

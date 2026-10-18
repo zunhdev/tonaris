@@ -1,4 +1,5 @@
 // Custom field definitions, options and per-album values (TS-11, TS-14; FR-03.6–FR-03.18).
+// Owner columns reference `user` with NO ACTION, like the collection's (TS-74).
 
 import { sql } from "drizzle-orm";
 import {
@@ -14,6 +15,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { users } from "./auth";
 import { albums } from "./collection";
 import { notBlank, oneOf, table, timestamps } from "./columns";
 
@@ -31,7 +33,9 @@ export const fieldDefinitions = table(
   "field_definitions",
   {
     id: uuid().primaryKey(),
-    ownerId: uuid().notNull(),
+    ownerId: uuid()
+      .notNull()
+      .references(() => users.id),
     name: text().notNull(),
     nameKey: text().notNull(),
     type: text({ enum: fieldTypes }).notNull(),

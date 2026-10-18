@@ -2,6 +2,21 @@
 // Framework-free and runtime-neutral: it runs in Bun and in browsers, so no framework, database, Bun or
 // Node imports (enforced by oxlint).
 
+export {
+  accountSchema,
+  emailKey,
+  signInCode,
+  userRoles,
+  type Account,
+  type UserRole,
+} from "./accounts";
+export {
+  renderEmail,
+  type EmailPort,
+  type EmailTemplate,
+  type EmailTemplates,
+  type RenderedEmail,
+} from "./email";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
 export { caseFold, nameKey, searchKey, searchMatches } from "./normalize";
 export {
