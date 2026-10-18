@@ -1,0 +1,2 @@
+# The G1 spike's sample (TON-14, reused by TON-15 and TON-16): the creator's real album and track links,
+# one per line, as they would be pasted. Run: bun tooling/src/spikes/g1-musicbrainz/run.ts tooling/fixtures/g1-sample/links.txt
