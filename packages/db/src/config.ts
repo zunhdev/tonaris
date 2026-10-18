@@ -15,3 +15,10 @@ export function databaseUrl(env: Record<string, string | undefined> = process.en
 export function testDatabaseUrl(env: Record<string, string | undefined> = process.env): string {
   return env.TEST_DATABASE_URL || localTestDatabaseUrl;
 }
+
+/** The URL without its password, for messages. */
+export function redact(url: string): string {
+  const parsed = new URL(url);
+  if (parsed.password) parsed.password = "***";
+  return parsed.href;
+}

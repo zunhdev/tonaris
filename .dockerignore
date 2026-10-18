@@ -1,0 +1,17 @@
+# The Docker build context (apps/*/Dockerfile, built from the repository root): sources and manifests only.
+**/node_modules
+**/dist
+**/.tanstack
+**/test-results
+**/playwright-report
+**/playwright/.auth
+**/.env
+**/.env.*
+!**/.env.example
+**/.DS_Store
+.git
+.github
+.claude
+.vscode
+docs
+openspec

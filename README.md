@@ -13,6 +13,7 @@ Tonaris is in specification and feasibility planning; no application code exists
 | [Product requirements](docs/product-requirements.md) | Source of truth for behavior, scope, permissions, quality, and acceptance | `FR-NN.M`, `X-`, `Q-`, `AC-`, `G1`–`G3` |
 | [Design spec](docs/design-spec.md) | Design system, information architecture, screens, and interaction flows | `DS-` |
 | [Tech spec](docs/tech-spec.md) | Stack, architecture, data, sync, MCP, operations, verification, and delivery plan | `TS-` |
+| [Deploying](docs/deploy.md) | Production builds, Docker images, settings and deploy steps, for any host | — |
 | [Audits](docs/audits/) | Dated requirement audits and the decisions taken in them | — |
 
 ## Repository layout
@@ -58,7 +59,10 @@ bun run db:check                # migrations match the schema (drizzle-kit check
 bun run openapi:check           # the committed OpenAPI document matches the API routes
 bun test                        # all tests; the integration tests need the local Postgres
 bun run test:e2e                # Playwright browser tests of the web app (needs Node and Chromium)
+bun run build                   # production bundles: apps/api/dist (bin/*.js) and apps/web/dist
 ```
+
+Production builds, the Docker images and the deploy steps are in [docs/deploy.md](docs/deploy.md). Docker is used only there and in CI; locally everything runs natively.
 
 **CI** (`.github/workflows/ci.yml`, TS-124) runs on every pull request and push to `main`. *Static checks* runs the checks above that need no services, plus `oasdiff breaking` against the base branch's OpenAPI document; the "Protect main" ruleset requires it. The *Tests* job (Postgres and Mailpit as service containers, `bun test`, Playwright) is **commented out for now to save runner minutes**. So `bun run check`, which runs everything, is required locally before every push. Actions are pinned to commit SHAs.
 

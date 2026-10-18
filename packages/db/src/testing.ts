@@ -4,9 +4,9 @@
 import postgres from "postgres";
 
 import { createDatabase, type Database } from "./client";
-import { testDatabaseUrl } from "./config";
-import { ensureDatabase, redact } from "./create-database";
-import { migrateDatabase } from "./migrate";
+import { redact, testDatabaseUrl } from "./config";
+import { ensureDatabase } from "./create-database";
+import { migrateDatabase } from "./migrations";
 
 export type TestDatabase = {
   db: Database;

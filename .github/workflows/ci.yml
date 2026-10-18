@@ -62,8 +62,8 @@ jobs:
           echo "$OASDIFF_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" oasdiff
           "$RUNNER_TEMP/oasdiff" breaking "$RUNNER_TEMP/base.json" apps/api/openapi/v1.json --fail-on ERR
-      - name: Build the web app
-        run: bun run --cwd apps/web build
+      - name: Build both apps (the production bundles the images copy)
+        run: bun run build
 
   # ── Tests: temporarily disabled to stay within a budget (decided by the creator, 18 October 2026) ──────────────
   # This is the expensive job: two service containers (Postgres, Mailpit), a Chromium download and the browser

@@ -4,7 +4,7 @@
 
 import postgres from "postgres";
 
-import { databaseUrl, testDatabaseUrl } from "./config";
+import { databaseUrl, redact, testDatabaseUrl } from "./config";
 
 /** Creates the database named in `url` unless it exists. Returns whether it was created. */
 export async function ensureDatabase(url: string): Promise<boolean> {
@@ -29,13 +29,6 @@ export async function ensureDatabase(url: string): Promise<boolean> {
   } finally {
     await sql.end();
   }
-}
-
-/** The URL without its password, for messages. */
-export function redact(url: string): string {
-  const parsed = new URL(url);
-  if (parsed.password) parsed.password = "***";
-  return parsed.href;
 }
 
 if (import.meta.main) {

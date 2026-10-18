@@ -8,6 +8,7 @@
   ],
   "type": "module",
   "scripts": {
+    "build": "bun run --filter './apps/*' build",
     "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun run check:specs && bun run db:check && bun run openapi:check && bun test && bun run test:e2e",
     "check:specs": "openspec validate --all --strict",
     "check:workspace": "bun tooling/src/workspace-check.ts",
