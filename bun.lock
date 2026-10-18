@@ -68,6 +68,9 @@
     "packages/domain": {
       "name": "@tonaris/domain",
       "version": "0.0.0",
+      "dependencies": {
+        "zod": "4.6.7",
+      },
     },
     "packages/providers": {
       "name": "@tonaris/providers",

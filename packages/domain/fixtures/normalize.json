@@ -1,0 +1,69 @@
+{
+  "$comment": "Parity fixtures for nameKey and searchKey (TS-12, TS-50; X-06, FR-12.5). Every implementation of name uniqueness and search runs these: the domain functions now, the server's pg_trgm search in M6, and native clients later. Invisible characters are written as \\u escapes; this file is excluded from oxfmt so they stay readable.",
+  "nameKey": [
+    { "input": "Favorites", "key": "favorites" },
+    { "input": "  Doom  ", "key": "doom" },
+    { "input": "Straße", "key": "strasse" },
+    { "input": "STRAẞE", "key": "strasse" },
+    { "input": "Café", "key": "café" },
+    { "input": "Café", "key": "café" },
+    { "input": "ΣΙΣΥΦΟΣ", "key": "σισυφοσ" },
+    { "input": "Kılıç", "key": "kılıç" }
+  ],
+  "sameName": [
+    ["Favorites", "favorites"],
+    ["Straße", "STRASSE"],
+    ["Café", "CAFÉ"],
+    ["Café", "Café"],
+    ["σίσυφος", "ΣΊΣΥΦΟΣ"]
+  ],
+  "differentName": [
+    ["Café", "Cafe"],
+    ["Björk", "Bjork"],
+    ["Kılıç", "Kiliç"],
+    ["Favorites", "Favourites"]
+  ],
+  "searchKey": [
+    { "input": "Björk", "key": "bjork" },
+    { "input": "Straße", "key": "strasse" },
+    { "input": "Sigur Rós", "key": "sigur ros" },
+    { "input": "  Kind   of\tBlue ", "key": "kind of blue" },
+    { "input": "ＡＢＣ", "key": "abc" },
+    { "input": "ﬁve", "key": "five" },
+    { "input": "İstanbul", "key": "istanbul" }
+  ],
+  "search": [
+    { "query": "bjork", "text": "Björk", "matches": true },
+    { "query": "BJÖRK", "text": "Björk", "matches": true },
+    { "query": "metal", "text": "Metallica", "matches": true },
+    { "query": "ss", "text": "Straße", "matches": true },
+    { "query": "straße", "text": "Strasse", "matches": true },
+    { "query": "sigur ros", "text": "Sigur Rós", "matches": true },
+    { "query": "of blue", "text": "Kind of Blue", "matches": true },
+    { "query": "metalica", "text": "Metallica", "matches": false },
+    { "query": "blue kind", "text": "Kind of Blue", "matches": false }
+  ],
+  "renames": [
+    {
+      "$comment": "A case-only rename of the same item is allowed and keeps the new spelling (X-06).",
+      "siblings": [{ "id": "a", "name": "jazz" }, { "id": "b", "name": "Rock" }],
+      "rename": "a",
+      "to": "Jazz",
+      "conflictsWith": null
+    },
+    {
+      "$comment": "Renaming another item to a case variant of an existing name collides.",
+      "siblings": [{ "id": "a", "name": "jazz" }, { "id": "b", "name": "Rock" }],
+      "rename": "b",
+      "to": "JAZZ",
+      "conflictsWith": "a"
+    },
+    {
+      "$comment": "A new item (no id yet) collides with any sibling of the same key.",
+      "siblings": [{ "id": "a", "name": "Straße" }],
+      "rename": null,
+      "to": "strasse",
+      "conflictsWith": "a"
+    }
+  ]
+}

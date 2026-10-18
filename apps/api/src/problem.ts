@@ -3,32 +3,16 @@
 // outside production; this plugin maps each error to our vocabulary and never exposes internals.
 
 import { Elysia, NotFound, ParseError, StatusMapBack, ValidationError } from "elysia";
-import { z } from "zod";
 
-/** The codes the HTTP layer produces itself. Domain codes (TS-27) arrive with packages/domain (TON-8). */
-export type HttpProblemCode = "not_found" | "validation_failed" | "internal_error";
+import type { ErrorCode, Problem } from "@tonaris/domain";
 
-/** One invalid input: where it is (`query.limit`, `body.title`) and what is wrong with it. */
-export const invalidParamSchema = z.object({ path: z.string(), message: z.string() });
+/** The codes the HTTP layer produces itself; commands report the rest of the TS-27 vocabulary. */
+export type HttpProblemCode = Extract<
+  ErrorCode,
+  "not_found" | "validation_failed" | "internal_error"
+>;
 
-export const problemSchema = z
-  .object({
-    type: z
-      .string()
-      .meta({ description: "`about:blank`: the status and `code` carry the meaning." }),
-    title: z.string().meta({ description: "The HTTP status phrase." }),
-    status: z.int(),
-    detail: z.string().optional().meta({ description: "What went wrong, for people." }),
-    instance: z.string().optional().meta({ description: "The request path." }),
-    code: z.string().meta({ description: "Machine-readable error code (TS-27)." }),
-    errors: z
-      .array(invalidParamSchema)
-      .optional()
-      .meta({ description: "Each invalid input, for `validation_failed`." }),
-  })
-  .meta({ description: "RFC 9457 problem details" });
-
-type InvalidParam = z.infer<typeof invalidParamSchema>;
+type InvalidParam = NonNullable<Problem["errors"]>[number];
 
 const statusPhrases: Record<number, string | undefined> = StatusMapBack;
 
@@ -42,7 +26,7 @@ function problemFor(
   instance: string,
   members: { detail?: string; errors?: InvalidParam[] } = {},
 ): Response {
-  const body: z.input<typeof problemSchema> = {
+  const body: Problem = {
     type: "about:blank",
     title: statusPhrases[status] ?? "Error",
     status,
@@ -89,7 +73,7 @@ export type ProblemDetailsOptions = {
  * (schema or unparsable body) is `validation_failed`, and anything else is a generic `internal_error`.
  *
  * Eden types: Elysia types a route with input schemas as answering 422 with its own `ValidationProblem`
- * (`code: "validation"`). Such routes declare `422: problemSchema` in their `response` map, which replaces
+ * (`code: "validation"`). Such routes declare `422: problemSchema` (from @tonaris/domain) in their `response` map, which replaces
  * that type with what this plugin actually sends and documents it in OpenAPI.
  */
 export function problemDetails({

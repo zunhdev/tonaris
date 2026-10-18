@@ -46,6 +46,166 @@
           }
         ]
       }
+    },
+    {
+      "files": ["packages/domain/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "elysia",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "react",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "react-dom",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "drizzle-orm",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "postgres",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "bun",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/api",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/db",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/providers",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/ui",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/web",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@elysia/*",
+                  "@tanstack/*",
+                  "@modelcontextprotocol/*",
+                  "@base-ui/*",
+                  "drizzle-orm/*",
+                  "react/*",
+                  "react-dom/*",
+                  "better-auth",
+                  "better-auth/*"
+                ],
+                "message": "packages/domain is framework-free (TS-02): frameworks belong in apps/api, apps/web or packages/db."
+              },
+              {
+                "group": ["node:*", "bun:*"],
+                "message": "packages/domain also runs in browsers: no Node or Bun modules outside tests."
+              }
+            ]
+          }
+        ],
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "Bun",
+            "message": "packages/domain also runs in browsers (TS-02)."
+          },
+          {
+            "name": "process",
+            "message": "packages/domain also runs in browsers (TS-02)."
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/domain/**/*.test.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "elysia",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "react",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "react-dom",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "drizzle-orm",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "postgres",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "bun",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/api",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/db",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/providers",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/ui",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              },
+              {
+                "name": "@tonaris/web",
+                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@elysia/*",
+                  "@tanstack/*",
+                  "@modelcontextprotocol/*",
+                  "@base-ui/*",
+                  "drizzle-orm/*",
+                  "react/*",
+                  "react-dom/*",
+                  "better-auth",
+                  "better-auth/*"
+                ],
+                "message": "packages/domain is framework-free (TS-02): frameworks belong in apps/api, apps/web or packages/db."
+              }
+            ]
+          }
+        ],
+        "no-restricted-globals": "off"
+      }
     }
   ],
   "ignorePatterns": ["**/routeTree.gen.ts"]

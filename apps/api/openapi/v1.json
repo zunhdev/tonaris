@@ -78,6 +78,26 @@
           },
           "code": {
             "type": "string",
+            "enum": [
+              "validation_failed",
+              "required_missing",
+              "name_conflict",
+              "capacity_exceeded",
+              "limit_exceeded",
+              "permission_denied",
+              "app_only",
+              "not_found",
+              "trashed",
+              "cycle",
+              "invalid_destination",
+              "field_in_use",
+              "uncertain_match",
+              "unsupported_link",
+              "provider_unavailable",
+              "rate_limited",
+              "expired",
+              "internal_error"
+            ],
             "description": "Machine-readable error code (TS-27)."
           },
           "errors": {

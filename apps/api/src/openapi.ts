@@ -8,7 +8,7 @@ import { toOpenAPISchema } from "@elysia/openapi";
 import type { AnyElysia } from "elysia";
 import { z } from "zod";
 
-import { problemSchema } from "./problem";
+import { problemSchema } from "@tonaris/domain";
 
 const openapiVersion = "3.1.2";
 export const committedDocumentPath = path.join(import.meta.dir, "../openapi/v1.json");

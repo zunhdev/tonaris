@@ -130,7 +130,7 @@ flowchart LR
 | `apps/web` | UI, the client store, and SSR loaders, which are API clients (TS-03) | import `packages/db` or execute commands. It may import `packages/domain` schemas, types, and pure helpers such as `normalize()`, and `type App` from `apps/api` for its Eden client (types only, TS-29). |
 | `packages/db` | Drizzle schema, migrations, the repository implementation of the `Tx` port | |
 
-The web app, future native clients, and MCP all reach **the same commands** through `apps/api`. That is how X-02 channel parity is guaranteed: there is no second implementation to drift. An import-boundary lint rule enforces the `apps/web` column: oxlint's `no-restricted-imports` rejects `@tonaris/db` and anything but type imports from `@tonaris/api`, and the workspace check allows `@tonaris/api` in `apps/web` only as a devDependency.
+The web app, future native clients, and MCP all reach **the same commands** through `apps/api`. That is how X-02 channel parity is guaranteed: there is no second implementation to drift. oxlint keeps `packages/domain` free of frameworks, databases, and Node or Bun modules and globals, so it also runs in browsers. An import-boundary lint rule enforces the `apps/web` column: oxlint's `no-restricted-imports` rejects `@tonaris/db` and anything but type imports from `@tonaris/api`, and the workspace check allows `@tonaris/api` in `apps/web` only as a devDependency.
 
 **TS-03 Rendering split (Decided; FR-11.9, Q-01).**
 
@@ -267,10 +267,12 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions | FR-11.5–FR-11.6 |
 | Better Auth tables | `user`, `session`, `verification`, OAuth clients, consents, tokens; `jwks` | `user.role` (`creator`\|`user`), `user.display_name`. The owner, account, person, grantee, and viewer columns above hold `user.id`; their foreign keys are added together with these tables. | FR-11 |
 
-**TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/normalize.ts` exports two functions, and the same code runs on the server, the client, and in migrations:
+**TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/src/normalize.ts` exports two functions, and the same code runs on the server, the client, and in migrations:
 
 - `nameKey(s)`: trim, then NFC, then full Unicode case-fold. It is case-insensitive only, as X-06 requires; accents still distinguish names.
-- `searchKey(s)`: NFKD, then strip combining marks (`\p{M}`), then case-fold (ß→ss), then collapse whitespace.
+- `searchKey(s)`: NFKD, then strip combining marks (`\p{M}`), then case-fold (ß→ss), then collapse whitespace. Marks the fold introduces (as from "İ") are stripped again.
+- **Case folding** is per code point: lower, then upper, then lower case. That matches Unicode's `CaseFolding.txt` (full folding) for every character the JavaScript engine knows, except that it would merge the Turkish dotless "ı" into "i", so "ı" is left alone. A test checks this against the committed Unicode 18 table.
+- **Parity fixtures** live in `packages/domain/fixtures/normalize.json` (exported as `@tonaris/domain/fixtures/normalize.json`): name keys, same and different names, search keys, matches and non-matches, and case-only renames. Every implementation runs them, including the server search (TS-50).
 
 Keys are stored rather than computed in SQL so that app, MCP, and export behave identically. The rejected alternative is Postgres `unaccent`/`lower`, whose tables differ from the JavaScript ones and would break FR-12 parity.
 
@@ -415,7 +417,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 
 The input is then resubmitted as a new mutation carrying the user's choice. Unresolved inputs keep the item in its current state; for example, Trash expiry keeps running (FR-01.16).
 
-**TS-27 Outcome vocabulary (Decided; shared with the design spec).**
+**TS-27 Outcome vocabulary (Decided; shared with the design spec).** It is defined once, as Zod schemas in `packages/domain/src/outcomes.ts` (statuses, error codes, outcomes, and the RFC 9457 problem), and used by commands, the API, MCP, and clients.
 
 | Status | Meaning | Client display (DS-defined) |
 | --- | --- | --- |
@@ -481,7 +483,7 @@ Eden types and the OpenAPI document both derive from the same Zod schemas, so th
 - Sign-in inside the flow is the normal email-code page on the web host.
 - Web sessions keep using the cookie.
 
-Every query and command takes a principal. Authorization lives in `packages/domain/policies.ts`, never in route handlers.
+Every query and command takes a principal (`packages/domain/src/principals.ts`: a signed-in `user` from the web or a native app, an `mcp` grant with its mode, or a link `guest`). Authorization lives in `packages/domain/src/policies.ts`, never in route handlers; it answers `permission_denied` or `app_only` (X-03).
 
 **TS-31 Hierarchy queries (Decided; FR-01.4, FR-07.8–FR-07.10).**
 
