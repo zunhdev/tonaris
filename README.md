@@ -60,6 +60,8 @@ bun test                        # all tests; the integration tests need the loca
 bun run test:e2e                # Playwright browser tests of the web app (needs Node and Chromium)
 ```
 
+**CI** (`.github/workflows/ci.yml`, TS-124) runs the same checks on every pull request and push to `main`, in two jobs: *Static checks*, plus `oasdiff breaking` against the base branch's OpenAPI document, and *Tests*, with Postgres 18 and Mailpit as service containers. The "Protect main" ruleset requires both. Actions are pinned to commit SHAs.
+
 Tooling: oxlint (`.oxlintrc.json`), oxfmt (`.oxfmtrc.json`; Markdown is not auto-formatted), TypeScript 7 with a shared `tsconfig.base.json` that each package extends. Recommended editor extensions are listed in `.vscode/extensions.json`.
 
 New dependencies are added with `bun add <name>` inside the package that uses them; `bunfig.toml` makes Bun write the exact version.

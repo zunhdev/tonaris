@@ -969,7 +969,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
 - **Managed Postgres** gives point-in-time recovery, automated backups, and patching, which makes Q-04 much easier for a solo operator.
 - **Dockerised Postgres** means owning WAL archiving, upgrades, and restore tooling.
 - Either way, the app uses only vanilla features (`pg_trgm`, standard types, CTEs), so `pg_dump` and restore work anywhere.
-- Local development uses a native Postgres 18 (TS-06). How CI provides Postgres 18 is decided when the pipeline is built (TS-124).
+- Local development uses a native Postgres 18 (TS-06). CI runs Postgres 18 as a service container on the runner (TS-124).
 
 **TS-112 Backup tooling (Decided tooling; objectives are creator-owned, Q-04).**
 
@@ -1052,7 +1052,7 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 | Level | Tooling | Covers |
 | --- | --- | --- |
 | Unit | `bun test` | Domain commands as pure logic: invariants, CAS, normalization, policy, export builder. Property-based tests (fast-check) for hierarchy moves, sharing inheritance, and Trash units. |
-| Integration | `bun test` against real Postgres 18 (the native install locally; CI's setup is decided with TS-124), each test in its own schema | Commands with SQL, the idempotency race, uniqueness under concurrency |
+| Integration | `bun test` against real Postgres 18 (the native install locally, a service container in CI, TS-124), each test in its own schema | Commands with SQL, the idempotency race, uniqueness under concurrency |
 | API contract | `bun test` against a running `apps/api` | Every `/v1` endpoint against the committed OpenAPI document; the sync-protocol conformance suite (TS-28); CORS, cookie, and bearer rules (TS-102) |
 | MCP contract | MCP SDK client against a local server | Every tool: modes, X-03 rejections, the approval round trip, partial batches |
 | End-to-end | Playwright: Chromium, Firefox, WebKit, plus iPhone and Pixel emulation; axe-core on key screens | The AC scenarios as specs, named `AC-xx` |
@@ -1081,20 +1081,27 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
 
 *Open:* which ChatGPT plan allows write actions for personal accounts is unverified, so it needs testing (G3).
 
-**TS-124 CI and CD (Decided).** GitHub Actions on every pull request runs:
+**TS-124 CI and CD (Decided; built in TON-11).** GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request to `main` and every push to it, in two jobs:
 
-- `bun install --frozen-lockfile`
-- `oxlint --type-aware`
-- `oxfmt --check`
-- `tsc --noEmit` per package (TypeScript 7)
-- `bun test` (unit and integration, with Postgres 18)
-- Playwright (Chromium on PRs; all engines nightly)
-- `drizzle-kit check` plus a no-diff `generate`
-- `openspec validate --all --strict`
-- regenerate OpenAPI and diff it against `apps/api/openapi/v1.json`, failing on an uncommitted change or any breaking change (`oasdiff breaking`)
-- both apps' builds and Docker builds
+- **Static checks:**
+  - `bun install --frozen-lockfile`
+  - `oxfmt --check`, `oxlint` (type-aware), and `tsc --noEmit` per package (TypeScript 7)
+  - the workspace rules
+  - `openspec validate --all --strict`
+  - `drizzle-kit check` plus a no-diff `generate`
+  - the regenerated OpenAPI diffed against `apps/api/openapi/v1.json`, plus, on pull requests, `oasdiff breaking` against the base branch's document
+  - the web app's build
+- **Tests:**
+  - `bun test` (unit and integration) against Postgres 18;
+  - Playwright on Chromium, against the e2e API, with email from Mailpit.
 
-Branch protection on `main` requires all of these. Production deploys from `main` by tag or manual trigger, with the API before the web app. There is no staging environment for now.
+  Postgres 18 and Mailpit run as service containers on the runner (decided by the creator on 18 October 2026), pinned to the versions used locally (`postgres:18.4`, `axllent/mailpit:v1.31.6`). Local development stays native (TS-06).
+
+Actions are pinned to commit SHAs. Still to come:
+- the Docker builds arrive with the Dockerfiles (TON-12);
+- all browser engines nightly arrives with the browser matrix (TON-94). WebKit first needs HTTPS locally, because it refuses `Secure` cookies on `http://localhost`.
+
+The "Protect main" ruleset requires both jobs. Production deploys from `main` by tag or manual trigger, with the API before the web app. There is no staging environment for now.
 
 ---
 
