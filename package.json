@@ -10,10 +10,12 @@
   "scripts": {
     "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun test",
     "check:workspace": "bun tooling/src/workspace-check.ts",
+    "dev": "bun run --parallel --filter './apps/*' dev",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "mail:test": "bun tooling/src/send-test-mail.ts",
     "test": "bun test",
     "typecheck": "bun run --filter '*' typecheck"
   },

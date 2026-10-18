@@ -98,7 +98,7 @@ Key: **Type · Capability/Gate · Area**. "Blocked by" refers to the keys in the
 | --- | --- | --- | --- | --- |
 | M0-01 | Bun workspace skeleton (apps/web, apps/api, packages/*, tooling) | Chore · infra | TS-05, TS-07 | — |
 | M0-02 | Lint, format, typecheck: oxlint type-aware, oxfmt, tsgo | Chore · infra | TS stack review, TS-124 | M0-01 |
-| M0-03 | Local dev: docker compose Postgres 18 + Mailpit; one `bun dev` for web + api | Chore · infra | TS-06 | M0-01 |
+| M0-03 | Local dev: native Postgres 18 + Mailpit; one `bun dev` for web + api | Chore · infra | TS-06 | M0-01 |
 | M0-04 | Initialize OpenSpec: config.yaml context, x-linear convention | Chore · docs | TS-132, TS-133 | M0-01 |
 | M0-05 | Database layer: Drizzle 1.0 RC + postgres.js, migration workflow, base tables | Chore · infra | TS-11, TS-17 | M0-03 |
 | M0-06 | Standalone Elysia API skeleton: /v1, health, RFC 9457 errors, OpenAPI, Eden type export | Chore · api | TS-01, TS-04, TS-09, TS-29 | M0-01 |
