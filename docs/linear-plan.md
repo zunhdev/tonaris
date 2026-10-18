@@ -59,7 +59,7 @@ Each group is exclusive in Linear, so an issue carries at most one label per gro
 | Group | Labels |
 | --- | --- |
 | Type | `Feature`, `Spike`, `Chore`, `Design`, `Bug` (reuse workspace defaults if they exist) |
-| Capability (OpenSpec, TS-132) | `collection-hierarchy`, `album-records`, `album-capture`, `edition-matching`, `custom-fields`, `trash-and-recovery`, `views-and-ordering`, `service-links`, `sharing`, `data-export`, `sync-and-conflicts`, `mcp-access`, `accounts`, `admission`, `search`, `capacity-limits` |
+| Capability (OpenSpec, TS-132) | `collection-hierarchy`, `album-records`, `album-capture`, `album-matching` (renamed from `edition-matching` on 19 October 2026), `custom-fields`, `trash-and-recovery`, `views-and-ordering`, `service-links`, `sharing`, `data-export`, `sync-and-conflicts`, `mcp-access`, `accounts`, `admission`, `search`, `capacity-limits` |
 | Gate | `G1`, `G2`, `G3` |
 | Area | `web`, `api`, `domain`, `infra`, `docs` |
 
@@ -118,7 +118,7 @@ Key: **Type · Capability/Gate · Area**. "Blocked by" refers to the keys in the
 | M1-03 | G1 spike: Spotify client credentials in dev mode; UPC and track→album | Spike · G1 · api | G1; TS-41 | M0-01 |
 | M1-04 | G1 spike: Apple iTunes Lookup hints + strict MusicBrainz match accuracy | Spike · G1 · api | G1; TS-41 | M1-02 |
 | M1-05 | G1: terms review of Spotify API use (III.5) and iTunes Lookup; decision memo | Spike · G1 · docs | G1, FR-08.8, FR-10.9 | — |
-| M1-06 | G2 spike: edition-matching evidence corpus and rules | Spike · G2 · domain | G2; TS-44 | M1-02 |
+| M1-06 | G2 spike: album-matching evidence corpus and rules | Spike · G2 · domain | G2; TS-44 | M1-02 |
 | M1-07 | Elysia 2 viability: Eden v2, OpenAPI generation, SSE on Bun | Spike · api | TS-04, TS-09 | M0-06 |
 | M1-08 | Sync prototype: envelope, field CAS, idempotency, change_log, SSE, TanStack DB collection | Spike · sync-and-conflicts · domain | FR-09, FR-13; TS-20–TS-28 | M0-05, M0-08, M1-07 |
 | M1-09 | Measure sync prototype against provisional Q-01 targets | Spike · sync-and-conflicts · web | Q-01; TS-120 | M1-01, M1-08 |
@@ -154,7 +154,7 @@ Key: **Type · Capability/Gate · Area**. "Blocked by" refers to the keys in the
 | M3-03 | MusicBrainz client: 1 req/s global queue and cache | Feature · album-capture · api | TS-41, TS-90 | M3-02 |
 | M3-04 | Identification resolver chain (steps 0–5) | Feature · album-capture · api | FR-02.1–FR-02.3, FR-06.7; TS-41 | M3-01, M3-03 |
 | M3-05 | Enrichment: fill gaps only, provenance, classification mapping, chronology | Feature · album-capture · domain | FR-02.7–FR-02.8, FR-03.3; TS-15, TS-42, TS-45, TS-46 | M3-04 |
-| M3-06 | Edition matching and uncertain-match confirmation, including re-addition from Trash | Feature · edition-matching · domain | FR-02.9–FR-02.10, FR-14.4; TS-26, TS-44 | M3-04 |
+| M3-06 | Album matching and uncertain-match confirmation, including re-addition from Trash | Feature · album-matching · domain | FR-02.9–FR-02.10, FR-14.4; TS-26, TS-44 | M3-04 |
 | M3-07 | Capture UX: paste anywhere, capture popover, placeholder rows, outcome toasts, batch panel | Design · album-capture · web | FR-02.1–FR-02.5, FR-02.11; DS-48 | M3-05, M3-06 |
 | M3-08 | Service links: one per service, capture conflicts, manual editing | Feature · service-links · domain | FR-06.2–FR-06.4 | M3-01 |
 | M3-09 | Open-in-service chooser with app/web fallback | Feature · service-links · web | FR-06.5–FR-06.6; TS-43; DS-25 | M3-08 |

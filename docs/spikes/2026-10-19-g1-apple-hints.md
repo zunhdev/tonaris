@@ -126,7 +126,11 @@ Apple's release date is often the album's *original* date even for a reissue: *B
 
 - **TS-41 step 4:** the rule above replaces "exactly one release matches the normalized title, artist credit, track count, and release date or year".
 - **TS-41 step 2 and TON-14:** with album identity, several releases in one release group are one album, so *confident* rather than `needs_input`. In TON-14 that would turn *BRAT* (Qobuz) and Kind of Blue (Spotify, in the smoke test) into identified albums.
-- **The PRD, G2 (TON-18) and TS-44:** edition matching, edition labels and same-edition conflicts (FR-01.7, FR-02.7, FR-02.9, FR-14.3, FR-14.4, AC-09) follow from the creator's album-identity decision. They are recorded separately: this spike only measures step 4.
+- **The PRD, the design and tech specs, G2 (TON-18) and TS-44:** the creator's album-identity decision is recorded alongside this report.
+  - New FR-02.12; FR-02.7 (edition enrichment) retired.
+  - Matching, conflicts and capacity are per album.
+  - The edition label is gone from entry, the inspector, export and search.
+  - G2 is now *Album matching*. Live albums keep their recording years.
 - **Retention:** whether Apple's hints may be stored, shown through MCP or exported is still TON-17's question.
   - `results.json` keeps Apple's numbers (date, track count) but not its titles or artist names.
   - Names in this report come from MusicBrainz, which is CC0, except the few quoted from the creator's own links and failure cases.

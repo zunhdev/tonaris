@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Status | Draft v0.1 |
-| Updated | 17 October 2026 |
+| Updated | 19 October 2026 |
 | Implements | [Product requirements](product-requirements.md) iteration 6 (`FR-`, `X-`, `Q-`, `AC-`, `G-` IDs) |
 | Companion | [Design spec](design-spec.md) (`DS-` IDs) |
 | Hosting | Creator-owned (current preference: Render, Frankfurt); see [section 13](#13-hosting-and-operations-creator-owned) |
@@ -245,7 +245,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | --- | --- | --- | --- |
 | `account_sync` | `account_id` PK, `seq bigint` | Per-account write serializer and cursor (TS-23) | FR-09 |
 | `containers` | `id`, `owner_id`, `kind` (`folder`\|`list`), `parent_id` (null = root), `name`, `name_key`, `description`, `trashed_at`, `trash_unit_id` | Partial unique index `(owner_id, coalesce(parent_id, nil UUID), name_key) WHERE trashed_at IS NULL`, so root-level names collide too; drizzle-kit can't emit `NULLS NOT DISTINCT` on a partial index. No foreign key on `parent_id`: a container trashed on its own keeps its parent's id after that parent is purged, so recovery can see the parent is missing (FR-01.15). CHECK: name not blank. Depth ≤ 32 enforced in the move/create command (TS-31). | FR-01.1–FR-01.5, X-06 |
-| `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `edition_label`, `artwork_url`, `mb_release_id`, `mb_release_group_id`, `barcode`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live IS TRUE AND recording_year_start IS NOT NULL)`. (`IS TRUE`, because a null `is_live` would make the expression null, which a CHECK accepts.) CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. | FR-02.6, FR-02.8, FR-05.5 |
+| `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `artwork_url`, `mb_release_group_id`, `mb_release_id`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live IS TRUE AND recording_year_start IS NOT NULL)`. (`IS TRUE`, because a null `is_live` would make the expression null, which a CHECK accepts.) CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. One record per album (FR-02.12): `mb_release_group_id` is the album's identity (TS-44), and `mb_release_id` only records the release a link resolved to. There is no edition label or barcode; the schema drops `edition_label` and `barcode` with M2-02 (TON-27). | FR-02.6, FR-02.8, FR-02.12, FR-05.5 |
 | `album_provenance` | `album_id`, `field`, `source` (`user`\|`musicbrainz`\|`coverartarchive`\|`itunes-lookup`), `source_ref`, `retrieved_at`. PK `(album_id, field)` | Policy flags are *derived* from `source` through a versioned policy map in `packages/providers` (TS-15). Spotify-derived values are never stored, so there is no `spotify` source (TS-41). | G1, FR-08.8 |
 | `album_service_links` | `album_id`, `owner_id` (copied from the album), `service`, `url` (canonical), `entity_id`. PK `(album_id, service)` | One current link per service. Index on `(owner_id, service, entity_id)` for matching. | FR-06.2–FR-06.4 |
 | `memberships` | `list_id`, `album_id`, `owner_id`, `added_at`. PK `(list_id, album_id)` | A membership is *effective* when both list and album are active. Rows survive the trashing of either side (TS-13). | FR-01.6–FR-01.10, FR-14.2 |
@@ -549,9 +549,10 @@ Two canonical URLs that refer to the same `{service, kind, id}` are equivalent a
 Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export (FR-08) promises. Hence:
 
 - **MusicBrainz is the canonical metadata source.** Its core data is CC0 ([license](https://musicbrainz.org/doc/About/Data_License)), so it can be stored, sent to agents, and exported.
-  - Stored fields: title, artist credit, the release group's `first-release-date` (original year), release-group primary and secondary types (TS-45), barcode, MBIDs, and recording dates where present (TS-46).
+  - **The album, not the edition (FR-02.12, decided 19 October 2026).** Identification ends at the release group. A link to any of its releases identifies the same album.
+  - Stored fields: the release group's title (the canonical album title) and artist credit, its `first-release-date` (original year), its primary and secondary types (TS-45), the MBIDs, and recording dates where present (TS-46).
   - Initial classification follows MusicBrainz, the canonical source (FR-02.8 as clarified on 17 October 2026).
-  - Artwork comes from the Cover Art Archive (`/release/{mbid}/front-500`) and is shown through the image proxy (TS-103).
+  - Artwork comes from the Cover Art Archive: the release group's front (`/release-group/{mbid}/front-500`), which stands for the album whichever edition was linked. It is shown through the image proxy (TS-103).
 - **The user-supplied canonical URL** is stored as the service link; it is user input.
 
 *Resolver chain.* It runs in the capture job and stops at the first confident result.
@@ -560,9 +561,9 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 | --- | --- | --- | --- |
 | 0. Parse | all | Local allowlisted parsing (TS-40) into `{service, kind, id}` | Unsupported input → FR-02.3 error |
 | 1. Existing link | all | The same `{service, entity_id}` is already linked in the owner's collection, Trash included | Reuse that album (TS-44) |
-| 2. MusicBrainz URL lookup | album links; Apple track links, whose album id is in the path | `/ws/2/url?resource={canonical}&inc=release-rels` | One release → confident; several → `needs_input` with the candidates (TS-26); none → next step |
-| 3. Identifier bridge | Qobuz, Spotify | **Qobuz:** a 13-digit numeric album id is treated as a UPC. **Spotify:** Web API with client credentials, in an app owned by the creator (Premium). `Get Album` yields `external_ids.upc`; for a track link, `Get Track` yields the parent album id, which goes back through step 2 and then this step. The UPC drives a MusicBrainz barcode search. | One release → confident; several in one release group → `needs_input`; none → next step |
-| 4. Apple hints | Apple | Public iTunes Lookup API (no key) supplies title, artist, release date, and track count as hints for an **automatic strict** MusicBrainz release search | Accepted only if exactly one release matches the normalized title, artist credit, track count, and release date or year; otherwise next step |
+| 2. MusicBrainz URL lookup | album links; Apple track links, whose album id is in the path | `/ws/2/url?resource={canonical}&inc=release-rels` | One album → confident, however many of its releases the URL is linked to; several albums → `needs_input` with the candidates (TS-26); none → next step |
+| 3. Identifier bridge | Qobuz, Spotify | **Qobuz:** a 13-digit numeric album id is treated as a UPC. **Spotify:** Web API with client credentials, in an app owned by the creator (Premium). `Get Album` yields `external_ids.upc`; for a track link, `Get Track` yields the parent album id, which goes back through step 2 and then this step. The UPC drives a MusicBrainz barcode search. | One album → confident; several albums → `needs_input`; none → next step |
+| 4. Apple hints | Apple | Public iTunes Lookup API (no key) supplies title, artist, release date, and track count as hints for an **automatic strict** MusicBrainz release search | Accepted only if the releases matching the hints belong to exactly one album. The criteria are proposed in the [TON-16 report](spikes/2026-10-19-g1-apple-hints.md): loose title and artist names, the release year or the album's original year, no track count. They are decided in TON-25. Several albums → `needs_input`; none → next step |
 | 5. Manual entry | all | Form prefilled with the link and, for Apple, the hints (FR-02.4) | The user completes and saves |
 
 - **Spotify: identifiers only.** Spotify-derived values (the UPC, a parent album id) live only in memory for the duration of the job. They are never stored, logged, cached, sent to agents, or exported. Spotify titles and artists are never used as hints. Only MusicBrainz-sourced values, including MusicBrainz's barcode, are stored.
@@ -596,18 +597,21 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 - **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior is unverified (M3 spike).
 - The service is never switched (FR-06.6).
 
-**TS-44 Edition matching (Proposed, validated by spike M1-G2; FR-02.9, FR-02.10, FR-14.3).**
+**TS-44 Album matching (Decided 19 October 2026: identity is the album; evidence validated by spike M1-G2; FR-02.9, FR-02.10, FR-02.12, FR-14.3).**
 
 | Evidence | Outcome |
 | --- | --- |
-| Same MB **release** MBID | Confident: same edition |
-| Same barcode **and** same MB release group | Confident |
-| Same service and entity id as an existing link | Confident (same release) |
-| Same release group but different release, different or missing barcode | Different edition: a new record |
-| ISRC-set overlap ≥ 90% with an equal track count, no barcode | **Uncertain**: needs confirmation (FR-02.9) |
+| Same MB **release group** MBID | Confident: same album, whichever releases the links resolved to |
+| Same service and entity id as an existing link | Confident: same album |
+| Different release groups | Different albums: a new record |
+| Several albums fit the hints (TS-41 step 4) | **Uncertain**: needs confirmation (FR-02.9) |
 | Title/artist similarity only | Never a match. Treated as unrelated: a new record (FR-02.9) |
 
-The spike corpus covers remasters, deluxe editions, regional variants, compilations, identical titles, and track links (G2). Matching reads candidates for the owner, including trashed albums (FR-14.4), under the write lock.
+- **MusicBrainz's grouping decides.** Tonaris follows it, even where it surprises. The TON-16 spike found two cases:
+  - MusicBrainz gives some remasters their own release group, such as *Tchaikovsky: The Nutcracker (Remastered 2026)*.
+  - It keeps some albums under two, such as Trust's *Idéal* and *Trust IV*.
+- **What G2 tests.** The corpus checks that remasters, deluxe editions, regional variants, reissues and track links resolve to the right album, and that different albums with the same title stay apart.
+- Matching reads candidates for the owner, including trashed albums (FR-14.4), under the write lock.
 
 **TS-45 Classification mapping (Decided; FR-02.8, FR-05.9).**
 
@@ -624,7 +628,7 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 - `original_year` is the release group's `first-release-date` year.
 - For live releases, `recording_year_start` and `recording_year_end` are the minimum and maximum of the recordings' "recorded at" relationship dates, when present.
 - Otherwise the fields stay null, and FR-05.6's fallback is shown.
-- Provider or edition release dates never fill recording years.
+- Provider or reissue release dates never fill recording years.
 
 ---
 
@@ -815,9 +819,9 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   "fields": [ { "id": "…", "name": "Rating", "type": "singleChoice",
                 "options": [ { "id": "…", "label": "★★★★★" } ] } ],
   "albums": [ { "id": "…", "title": "…", "artistCredit": "…", "releaseType": "album|ep|compilation|null",
-                "isLive": false, "originalYear": 1977, "recordingYears": null, "edition": "2010 remaster",
+                "isLive": false, "originalYear": 1977, "recordingYears": null,
                 "artworkUrl": "…", "serviceLinks": { "spotify": "https://open.spotify.com/album/…" },
-                "identifiers": { "musicbrainzRelease": "…", "barcode": "…" },
+                "identifiers": { "musicbrainzReleaseGroup": "…" },
                 "fields": { "<fieldId>": { "name": "Rating", "type": "singleChoice",
                                             "value": { "optionId": "…", "label": "★★★★★" } } },
                 "status": "active|trashed", "provenance": { "title": "musicbrainz" } } ],
@@ -835,7 +839,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 
 **TS-82 Markdown rendering (Decided).**
 
-- `collection.md` renders the folder tree as headings, then lists as tables in the owner's arrangement: *#, Title, Artist, Year, Type, Edition, Links, custom fields*.
+- `collection.md` renders the folder tree as headings, then lists as tables in the owner's arrangement: *#, Title, Artist, Year, Type, Links, custom fields*.
 - Unsorted and Trash are separate sections. Trash items show their deletion and expiry dates.
 - `README.md` explains the files, conventions, and versioning in plain English. It is also written to help an AI tool reading the archive.
 
@@ -1181,8 +1185,8 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 | --- | --- |
 | `collection-hierarchy` | FR-01.1–FR-01.5, FR-03.5 |
 | `album-records` | FR-01.6–FR-01.9, FR-02.6, FR-03.1–FR-03.4 |
-| `album-capture` | FR-02.1–FR-02.5, FR-02.7–FR-02.8, FR-02.11 |
-| `edition-matching` | FR-02.9–FR-02.10, FR-14.3–FR-14.4 |
+| `album-capture` | FR-02.1–FR-02.5, FR-02.8, FR-02.11 |
+| `album-matching` | FR-02.9–FR-02.10, FR-02.12, FR-14.3–FR-14.4 |
 | `custom-fields` | FR-03.6–FR-03.20 |
 | `trash-and-recovery` | FR-01.10–FR-01.18, FR-14 |
 | `views-and-ordering` | FR-04, FR-05, FR-11.7–FR-11.9 |
@@ -1225,7 +1229,7 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 | # | Item | Status and next step | Rules |
 | --- | --- | --- | --- |
 | 1 | G1 final metadata decision | After the M1-G1 spike and the legal review of Spotify API use and the iTunes Lookup terms (TS-41) | G1, D3, FR-02, FR-08.8, FR-10 |
-| 2 | Edition-matching evidence | TS-44 table, validated by the M1-G2 spike corpus | G2 |
+| 2 | Album-matching evidence | TS-44 table, validated by the M1-G2 spike corpus | G2 |
 | 3 | Performance targets | Provisional (TS-120); confirmed with M1 measurements before acceptance | Q-01 |
 | 4 | Backup objectives and deletion wording | Creator-owned: retention, RPO/RTO, and the drill schedule. The TS-114 wording must match the retention. | Q-04 |
 | 5 | Email provider | The creator picks one before the first real invitation (TS-72) | Q-06 |
