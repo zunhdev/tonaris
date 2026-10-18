@@ -3,7 +3,9 @@ import { describe, expect, mock, test } from "bun:test";
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { problemDetails, problemSchema } from "./problem";
+import { problemSchema } from "@tonaris/domain";
+
+import { problemDetails } from "./problem";
 
 function testApp() {
   const logError = mock((_error: unknown, _path: string) => {});

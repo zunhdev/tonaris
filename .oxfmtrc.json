@@ -4,7 +4,8 @@
     "**/*.md",
     "packages/db/migrations/**",
     "apps/api/openapi/**",
-    "**/routeTree.gen.ts"
+    "**/routeTree.gen.ts",
+    "packages/domain/fixtures/**"
   ],
   "sortImports": {
     "internalPattern": ["@tonaris/"]

@@ -40,7 +40,7 @@ providers → domain
 tooling   → domain, db, providers
 ```
 
-Installs are *isolated*, so a package can import only what it declares; an undeclared workspace import fails at runtime. `bun run check:workspace` enforces the allowed edges and exact version pinning (TS-07). The web app's dependency on the API must be a devDependency, and oxlint rejects anything but `import type` from `@tonaris/api` (or any import of `@tonaris/db`) in `apps/web`.
+Installs are *isolated*, so a package can import only what it declares; an undeclared workspace import fails at runtime. `bun run check:workspace` enforces the allowed edges and exact version pinning (TS-07). The web app's dependency on the API must be a devDependency, and oxlint rejects anything but `import type` from `@tonaris/api` (or any import of `@tonaris/db`) in `apps/web`. oxlint also keeps `packages/domain` free of frameworks, databases, and Node or Bun modules and globals, because the web app runs its normalization and schemas in the browser.
 
 ## Development
 
