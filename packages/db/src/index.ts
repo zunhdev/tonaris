@@ -3,5 +3,5 @@
 export { findCreator, findUserByEmail, insertCreator, type UserRow } from "./accounts";
 export { createDatabase, type Database } from "./client";
 export { databaseUrl } from "./config";
-export { migrateDatabase, migrationsFolder } from "./migrate";
+export { migrateDatabase, migrationsFolder } from "./migrations";
 export * from "./schema";

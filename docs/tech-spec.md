@@ -170,7 +170,7 @@ apps/web/                  TanStack Start app (deployable: tonaris-web)
                            the pathless `_workspace` layout (`ssr: false`); public routes are server-rendered.
   src/client/sync/         TanStack DB collections, outbox, SSE client, leader tab (web-only details)
   src/features/            UI features (collection, capture, fields, sharing, settings, admin…)
-  server.ts                production Bun.serve wrapper (static + Start fetch)
+  server.ts                production Bun.serve wrapper (static + Start fetch); Dockerfile (TS-110)
   e2e/                     Playwright browser tests (`*.e2e.ts`, TS-121)
 apps/api/                  Elysia 2 service (deployable: tonaris-api)
   src/app.ts               builds the app without side effects; exports `type App` for Eden (TS-29)
@@ -182,6 +182,7 @@ apps/api/                  Elysia 2 service (deployable: tonaris-api)
   src/jobs/                job runner and schedules (TS-90)
   src/img/                 image proxy (TS-103)
   openapi/v1.json          generated, committed contract (TS-09)
+  build.ts, Dockerfile     production bundle (bin/server.js, bin/migrate.js, bin/seed-creator.js) and image (TS-110)
 packages/domain/           framework-free business logic + Zod schemas + normalize()
 packages/db/               Drizzle schema, migrations, repositories
 packages/ui/               design system: src/styles/tokens.css (DS-10 token layers), shadcn components on Base UI
@@ -963,6 +964,12 @@ The creator chooses the host, region, and budget; the current preference is Rend
 
 - Environments are production plus local development; there is no staging for now.
 - The Dockerfiles are the portability path to any container host (Q-08).
+- **Built in TON-12** (deploy steps: `docs/deploy.md`):
+  - `apps/api/Dockerfile`: `apps/api/build.ts` bundles the server, the pre-deploy migration and the creator seed into single files, `bin/server.js`, `bin/migrate.js` and `bin/seed-creator.js`, next to `migrations/`. A script guard (`import.meta.main`) is allowed only in an entry file, and the build fails if a bundled library module has one.
+  - `apps/web/Dockerfile`: the server build bundles its dependencies, and `apps/web/server.ts` (`Bun.serve`) serves the built client files and passes everything else to Start.
+  - Neither image contains `node_modules`. Both run on `oven/bun:1.4.3-slim` as the `bun` user, with a health check on `/healthz`.
+  - The web app reads the API origin, `API_URL`, at start-up and renders it into each page for the browser, so one image serves any host.
+  - Locally the same commands run natively; Docker runs only in CI and production (TS-06).
 
 **TS-111 Managed or Dockerised Postgres (Advisory: the creator decides; Q-04).**
 
@@ -1099,8 +1106,7 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
 
   **Temporarily disabled** (creator decision, 18 October 2026, to stay within a budget). The job is commented out in the workflow, with instructions for bringing it back. Until then, the full `bun run check` runs locally before every push and before a PR is handed over; it includes `bun test` and the Playwright suite.
 
-Actions are pinned to commit SHAs. Still to come:
-- the Docker builds arrive with the Dockerfiles (TON-12);
+Actions are pinned to commit SHAs. **Docker images** are covered by a separate workflow, `.github/workflows/images.yml`. It builds both images and smoke-runs them against Postgres and Mailpit: migrate, seed, health checks, a sign-in email and the web page. To save runner minutes, it runs only when the images' recipe or dependencies change, or by hand, and it isn't a required check. Static checks builds the same bundles (`bun run build`) on every pull request. Still to come:
 - all browser engines nightly arrives with the browser matrix (TON-94). WebKit first needs HTTPS locally, because it refuses `Secure` cookies on `http://localhost`.
 
 The "Protect main" ruleset requires **Static checks**, and requires **Tests** again once that job is re-enabled. Production deploys from `main` by tag or manual trigger, with the API before the web app. There is no staging environment for now.

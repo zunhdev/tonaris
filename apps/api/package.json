@@ -8,10 +8,12 @@
     ".": "./src/app.ts"
   },
   "scripts": {
+    "build": "bun build.ts",
     "dev": "bun --watch src/index.ts",
     "openapi:check": "bun src/generate-openapi.ts --check",
     "openapi:generate": "bun src/generate-openapi.ts",
     "seed:creator": "bun src/auth/seed-creator.ts",
+    "start": "bun dist/bin/server.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

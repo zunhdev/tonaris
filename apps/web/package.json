@@ -8,6 +8,7 @@
     "build": "bun --bun vite build",
     "dev": "bun --bun vite dev",
     "preview": "bun --bun vite preview",
+    "start": "bun server.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },

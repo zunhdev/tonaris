@@ -42,7 +42,7 @@ export default defineConfig({
     {
       command: `bun --bun vite build && bun --bun vite preview --port ${port} --strictPort`,
       url: `http://localhost:${port}/sign-in`,
-      env: { VITE_API_URL: apiUrl },
+      env: { API_URL: apiUrl },
       timeout: 120_000,
     },
   ],
