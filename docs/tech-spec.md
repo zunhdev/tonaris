@@ -185,6 +185,7 @@ packages/ui/               design system (tokens, Base UI/shadcn primitives, pat
 packages/providers/        link parsing, MusicBrainz/CAA clients, provider adapters (policy-gated)
 tooling/                   seed + workload generator, restore drill, export validator
 openspec/                  OpenSpec specs and changes (TS-132)
+.claude/                   Claude Code: /opsx commands, OpenSpec skills, SessionStart hook (TS-132)
 docs/                      PRD, design spec, tech spec, audits, runbooks
 ```
 
@@ -1125,10 +1126,19 @@ Branch protection on `main` requires all of these. Production deploys from `main
 
 **TS-132 OpenSpec workflow (Decided).** OpenSpec 1.x uses OPSX and `config.yaml` ([OpenSpec](https://github.com/Fission-AI/OpenSpec)).
 
-- **One unit of work:** one Linear issue maps to one OpenSpec change, one branch, and one PR. The change's `.openspec.yaml` carries `x-linear: TON-123`, which OpenSpec ignores and `--strict` accepts.
-- **Lifecycle:** `/opsx:propose` → `/opsx:apply` → merge → `/opsx:archive`. Archiving merges the deltas into `openspec/specs/`.
+- **One unit of work:** every Linear issue maps to one branch and one PR. Feature and Design issues also map to exactly one OpenSpec change. Chore, Spike, and Bug issues have none, and their PRs say so.
+- **Linking:** the change's `.openspec.yaml` carries `x-linear: TON-123`.
+  - OpenSpec ignores keys matching `x-…`, so `--strict` accepts them.
+  - Any other unknown key, such as `linear:`, is a warning, which `--strict` turns into a failure.
+- **Lifecycle:** `/opsx:propose` → `/opsx:apply` → review → `/opsx:archive` as the PR's last commit → merge.
+  - Archiving moves the change to `openspec/changes/archive/` and merges its deltas into `openspec/specs/`.
+  - Because the archive is part of the same PR, `main` never holds a half-finished change.
 - **Do not bulk-convert the PRD.** OpenSpec's guidance is that this produces stale specs. Capabilities grow change by change, and each requirement names its source FR ID.
-- Spikes use `skip_specs: true`.
+- **Tooling:**
+  - The CLI is a root devDependency pinned exactly (`@fission-ai/openspec`, TS-07). `bun run check:specs` runs `openspec validate --all --strict`.
+  - `openspec init --tools claude --profile core` generated the `/opsx:*` commands and `openspec-*` skills in `.claude/`.
+  - Those files call a bare `openspec`, so a SessionStart hook in `.claude/settings.json` puts `node_modules/.bin` on PATH for Claude Code sessions.
+  - After an upgrade, `bunx openspec update` regenerates the files and the result is committed.
 - Capability names are kebab-case and describe lasting behavior:
 
 | Capability | Source rules |
@@ -1150,29 +1160,23 @@ Branch protection on `main` requires all of these. Production deploys from `main
 | `search` | FR-12 |
 | `capacity-limits` | FR-15 |
 
-**TS-133 Suggested `openspec/config.yaml` (Decided content; verify the keys against the installed version).** It is kept short and links to the specs rather than pasting them, as OpenSpec recommends:
+**TS-133 `openspec/config.yaml` (Decided).** The file itself is the source; this entry only describes it. As OpenSpec recommends, it is kept short and links to the specs rather than pasting them.
 
-```yaml
-schema: spec-driven
-context: |
-  Tonaris: personal album-collection web app (creator-hosted, invite-only, English UI, dark theme).
-  Source of truth for behavior: docs/product-requirements.md. Cite FR-/X-/Q-/AC- IDs; never contradict it.
-  Design decisions: docs/design-spec.md (DS- IDs). Technical decisions: docs/tech-spec.md (TS- IDs).
-  Stack: Bun 1.4, TypeScript 7 (native `tsc`), TanStack Start (web UI + public SSR only), Elysia 2 beta (standalone API
-  service at api.<domain>: /v1 REST + OpenAPI 3.1, SSE, /mcp, OAuth AS),
-  Drizzle 1.0 RC + postgres.js, Postgres 18, TanStack DB (custom SSE sync), Better Auth, MCP SDK v2, Zod 4,
-  shadcn/ui on Base UI + Tailwind v4, oxlint/oxfmt, Playwright.
-  Invariants: all writes are domain commands in packages/domain shared by HTTP and MCP; mutations carry mutationId
-  and base values (field-level CAS); no Start server functions for data; the web app is an API client like future native apps; additive-only /v1
-  changes; one shared normalize() for names/search.
-rules:
-  proposal:
-    - Name the Linear issue (x-linear in .openspec.yaml) and the FR rule IDs implemented.
-  specs:
-    - One requirement per FR rule touched; put the FR ID in the requirement text; scenarios mirror AC checks.
-  tasks:
-    - Include tests (unit/integration/e2e or MCP contract) for every requirement scenario.
-```
+- **`schema: spec-driven`.** Each change has a proposal, spec deltas, a design, and tasks.
+- **`context`.** It covers:
+  - what Tonaris is;
+  - that the PRD is the source of truth, citing FR-/X-/Q-/AC- IDs;
+  - where DS- and TS- decisions live;
+  - the stack;
+  - the invariants: domain commands shared by HTTP and MCP, `mutationId` plus base values, no Start server functions for data, the web app as an API client, additive-only `/v1`, and one shared `normalize()`.
+- **`rules`:**
+  - **`proposal`:** only Feature and Design issues get a change. Name the Linear issue and the FR IDs implemented, and record the issue as `x-linear` (TS-132).
+  - **`specs`:** one requirement per FR rule touched, with the FR ID in the requirement text; scenarios mirror AC checks.
+  - **`tasks`:** tests for every requirement scenario.
+- **Checked against OpenSpec 1.14.3:**
+  - `schema`, `context`, and `rules` keyed by artifact ID (`proposal`, `specs`, `design`, `tasks`) are supported keys.
+  - `context` is capped at 50 KB.
+  - A rule containing `: ` must be quoted. Otherwise YAML reads it as a mapping, and OpenSpec drops that artifact's rules with only a warning.
 
 ---
 

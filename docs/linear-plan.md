@@ -48,7 +48,7 @@ This file seeds the initial Linear structure from the tech spec's delivery plan 
   Done when: <exit check>
   ```
 
-- **One issue = one OpenSpec change = one branch/PR** (TS-132). Coarse issues in later projects are split when their project starts.
+- **One issue = one branch/PR; Feature and Design issues also get one OpenSpec change** (TS-132). Chore, Spike, and Bug issues get none. Coarse issues in later projects are split when their project starts.
 - **States:** M0 issues start in *Todo*; everything else starts in *Backlog*.
 - **Priority:** M0 and M1 are High; M2–M5 Medium; M6–M11 Low.
 

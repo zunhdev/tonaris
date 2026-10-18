@@ -1,0 +1,24 @@
+schema: spec-driven
+
+# Kept short: link to the specs rather than pasting them (TS-133).
+context: |
+  Tonaris: personal album-collection web app (creator-hosted, invite-only, English UI, dark theme).
+  Source of truth for behavior: docs/product-requirements.md. Cite FR-/X-/Q-/AC- IDs; never contradict it.
+  Design decisions: docs/design-spec.md (DS- IDs). Technical decisions: docs/tech-spec.md (TS- IDs).
+  Stack: Bun 1.4, TypeScript 7 (native `tsc`), TanStack Start (web UI + public SSR only), Elysia 2 beta (standalone API
+  service at api.<domain>: /v1 REST + OpenAPI 3.1, SSE, /mcp, OAuth AS),
+  Drizzle 1.0 RC + postgres.js, Postgres 18, TanStack DB (custom SSE sync), Better Auth, MCP SDK v2, Zod 4,
+  shadcn/ui on Base UI + Tailwind v4, oxlint/oxfmt, Playwright.
+  Invariants: all writes are domain commands in packages/domain shared by HTTP and MCP; mutations carry mutationId
+  and base values (field-level CAS); no Start server functions for data; the web app is an API client like future native apps; additive-only /v1
+  changes; one shared normalize() for names/search.
+
+rules:
+  proposal:
+    - Only Linear Feature and Design issues get a change; chores, spikes and bugs have none (TS-132).
+    - Name the Linear issue and the FR rule IDs implemented.
+    - "Add `x-linear: TON-<n>` to the change's .openspec.yaml. Use exactly that key; OpenSpec ignores `x-` keys, but any other unknown key fails `openspec validate --strict`."
+  specs:
+    - One requirement per FR rule touched; put the FR ID in the requirement text; scenarios mirror AC checks.
+  tasks:
+    - Include tests (unit/integration/e2e or MCP contract) for every requirement scenario.
