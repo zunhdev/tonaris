@@ -30,10 +30,18 @@ if (!linksFile) {
 }
 
 const dir = path.dirname(path.resolve(linksFile));
-const links = (await Bun.file(linksFile).text())
-  .split("\n")
-  .map((line) => line.replace(/\s#.*$/, "").trim())
-  .filter((line) => line && !line.startsWith("#"));
+// `# sample: <name>` starts a group of links; the report shows each group's outcomes apart.
+const links: string[] = [];
+const samples: (string | undefined)[] = [];
+let sample: string | undefined;
+for (const raw of (await Bun.file(linksFile).text()).split("\n")) {
+  const marker = /^#\s*sample:\s*(\S+)/.exec(raw.trim());
+  if (marker) sample = marker[1];
+  const line = raw.replace(/\s#.*$/, "").trim();
+  if (!line || line.startsWith("#")) continue;
+  links.push(line);
+  samples.push(sample);
+}
 
 const minIntervalMs = Number(values.interval);
 const mb = new MusicBrainz({
@@ -44,11 +52,14 @@ console.error(
   `Running ${links.length} links, one MusicBrainz request every ${minIntervalMs} ms at most…`,
 );
 const results = await runChain(links, mb, {
-  onResult: (r) =>
+  onResult: (r) => {
+    const name = samples[r.index];
+    if (name) r.sample = name;
     console.error(
       `[${r.index + 1}/${links.length}] ${r.link ? `${r.link.service} ${r.link.kind}` : "unparsed"}: ` +
         `${r.outcome}${r.step === undefined ? "" : ` (step ${r.step})`}${r.reason ? `, ${r.reason}` : ""}`,
-    ),
+    );
+  },
 });
 
 await Bun.write(

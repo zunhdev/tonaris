@@ -579,6 +579,8 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 - whether Spotify client credentials work under development mode (the Premium requirement), and Spotify track-link resolution;
 - the chain's latency at 1 request per second for a batch of 50.
 
+*Spike results (18 October 2026):* [G1 MusicBrainz spike](spikes/2026-10-18-g1-musicbrainz.md). Step 2 needs every stored URL form, Qobuz's barcode bridge needs the UPC-A form, and most misses are albums MusicBrainz has without the service link. The proposed changes wait for the creator's G1 decision (TON-25).
+
 *Still open (G1):*
 
 - legal review of Spotify API use (Policy III.5, integration with other services' content) and of the iTunes Lookup terms;

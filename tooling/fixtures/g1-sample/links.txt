@@ -1,2 +1,102 @@
-# The G1 spike's sample (TON-14, reused by TON-15 and TON-16): the creator's real album and track links,
-# one per line, as they would be pasted. Run: bun tooling/src/spikes/g1-musicbrainz/run.ts tooling/fixtures/g1-sample/links.txt
+# The G1 spike's sample (TON-14), reused by TON-15 and TON-16. One link per line, as it would be pasted.
+#   bun tooling/src/spikes/g1-musicbrainz/run.ts tooling/fixtures/g1-sample/links.txt --cache
+# "creator" holds the creator's own links (18 October 2026). The wikidata-* samples were drawn by sample-wikidata.ts
+# the same day; each line's comment names its Wikidata item.
+
+# sample: creator
+https://music.apple.com/fi/album/bleach-deluxe-edition/669728060
+https://music.apple.com/fi/album/%D0%B8%D0%BA%D1%80%D0%B0-deluxe/869027888
+https://music.apple.com/fi/album/ep2/679710399
+https://music.apple.com/fi/album/dopamine-chamber/6792085051
+https://music.apple.com/fi/album/tchaikovsky-the-nutcracker-remastered-2026/6809480000
+https://music.apple.com/fi/album/magic-boy-the-jimi-hendrix-experience-live-at/6805666150
+https://open.qobuz.com/album/tietg8e0jjdh8
+https://open.qobuz.com/album/c6zb0r5qcrqoa
+https://open.qobuz.com/album/capw1vifm759b
+https://open.qobuz.com/album/z96u0k0znz1xb
+https://open.qobuz.com/album/0884977423006
+https://open.spotify.com/album/1KVGLuPtrMrLlyy4Je6df7?si=LnOyGBweR4agFG4VItiz7A
+https://open.spotify.com/album/1giq3rw3XSuUUUmrgU1kSR?si=1s1YgAm8Qx6RiVMUVLDOIg
+https://open.spotify.com/album/6qM2ORmRcqDKgNlWA3cMjx?si=fLT_iDEbRfOIUKmUZpLjcA
+https://open.spotify.com/album/719ELjvRzp0lHiLyAuAGj3?si=JX1ffmBxR_GaTRFVYKpU6Q
+
+# sample: wikidata-spotify-in-mb
+https://open.spotify.com/album/32NZSslCL03dkXyILrrbGe # Q11197000
+https://open.spotify.com/album/740w8I7bWyDqwpi43GUFRj # Q18907757
+https://open.spotify.com/album/1QoIC9lvQYBmXnlpnKE8pa # Q10316499
+https://open.spotify.com/album/5NFLUa7LJ8la1znPXcxIfd # Q18650966
+https://open.spotify.com/album/4lnBBTwTaPhgIs6ulqHO4r # Q133822064
+https://open.spotify.com/album/0jhHzxKkbDQIa0cljYbgnj # Q125504124
+https://open.spotify.com/album/2IsJvOVAVDq7aHN8sRhGni # Q111342758
+https://open.spotify.com/album/3GBpagKDLL4cRseF5yxKVV # Q1754943
+https://open.spotify.com/album/2SwBlWsPDm0zPkZHAN3Lae # Q111094374
+https://open.spotify.com/album/2Lb2YUneFftfbtXpFHWpki # Q10635702
+https://open.spotify.com/album/1wpDZ0qOWgafQyv9Nr7raS # Q1853607
+https://open.spotify.com/album/67wSWfKeI2lgdNpST16HBD # Q1172084
+https://open.spotify.com/album/7sdz6zUhXNwbwzqVRskzj9 # Q1937833
+https://open.spotify.com/album/2lIdJKPBNVOXDZknJxdBxp # Q124079211
+https://open.spotify.com/album/47ZAm5PRPZhmuoaWD3lF1Z # Q113839012
+
+# sample: wikidata-spotify-not-in-mb
+https://open.spotify.com/album/3s4HmqnnKlm0Kh6EudjrTT # Q133105596
+https://open.spotify.com/album/30uepBPxzp5V7ovyC3ASmX # Q65230596
+https://open.spotify.com/album/6T6tm4jOM3aBrMsW8p4iIn # Q124151777
+https://open.spotify.com/album/03REwT8roensVXdD6nAbUw # Q118396249
+https://open.spotify.com/album/5PzMNoFvUKa4PpdYgPa9NQ # Q12500009
+https://open.spotify.com/album/1gOW0YiRDt11BVuaCHc88O # Q3514470
+https://open.spotify.com/album/69ELkcI76VZPk0h2EiqvUi # Q25476763
+https://open.spotify.com/album/06AnVCX7e9F1pdcobg7sZn # Q16521094
+https://open.spotify.com/album/4oHSulCTIeZK1LHxqG16Nd # Q5991260
+https://open.spotify.com/album/6GBaIPZsPjHBFhixaOLoOZ # Q123976835
+
+# sample: wikidata-apple-in-mb
+https://music.apple.com/us/album/1758786495 # Q832462
+https://music.apple.com/us/album/1442571446 # Q6546132
+https://music.apple.com/us/album/1443475587 # Q59307466
+https://music.apple.com/us/album/1147736060 # Q139796575
+https://music.apple.com/us/album/1443104897 # Q18650966
+https://music.apple.com/us/album/1693409117 # Q133822064
+https://music.apple.com/us/album/1601445044 # Q111094374
+https://music.apple.com/us/album/1756357844 # Q2842103
+https://music.apple.com/us/album/1208110183 # Q30933243
+https://music.apple.com/us/album/1545382283 # Q208902
+https://music.apple.com/us/album/1030797896 # Q124079211
+https://music.apple.com/us/album/254249657 # Q3541177
+https://music.apple.com/us/album/1205557765 # Q56343297
+https://music.apple.com/us/album/1326132775 # Q55389147
+https://music.apple.com/us/album/1794575477 # Q135395831
+
+# sample: wikidata-apple-not-in-mb
+https://music.apple.com/us/album/696702714 # Q133105596
+https://music.apple.com/us/album/295606165 # Q110687952
+https://music.apple.com/us/album/1278890815 # Q30889467
+https://music.apple.com/us/album/1702933845 # Q122418848
+https://music.apple.com/us/album/1466619675 # Q4053797
+https://music.apple.com/us/album/516474819 # Q18014981
+https://music.apple.com/us/album/1631887892 # Q135438312
+https://music.apple.com/us/album/1728270383 # Q136109059
+https://music.apple.com/us/album/655815212 # Q47200009
+https://music.apple.com/us/album/895600403 # Q108350264
+
+# sample: wikidata-qobuz-in-mb
+https://open.qobuz.com/album/d4bpey5kkf9hc # Q832462
+https://open.qobuz.com/album/0060254799999 # Q6546132
+https://open.qobuz.com/album/0886444095280 # Q1766649
+https://open.qobuz.com/album/mgcel8njixy5b # Q2842103
+https://open.qobuz.com/album/vrya2g9g2szca # Q120357974
+https://open.qobuz.com/album/qrzshjf1rhktb # Q1060887
+https://open.qobuz.com/album/0603497866670 # Q7091941
+https://open.qobuz.com/album/c8f0bs8nq70uc # Q3010825
+https://open.qobuz.com/album/0075678265068 # Q2932009
+https://open.qobuz.com/album/0088807200374 # Q1508334
+https://open.qobuz.com/album/0888880696069 # Q283221
+https://open.qobuz.com/album/z9rzcky5afxpa # Q85775733
+https://open.qobuz.com/album/0744861104056 # Q8328875
+https://open.qobuz.com/album/0886444064385 # Q14567932
+https://open.qobuz.com/album/0060249868948 # Q284509
+
+# sample: wikidata-qobuz-not-in-mb
+https://open.qobuz.com/album/qfz0lw3p891mc # Q122418848
+https://open.qobuz.com/album/il3kcvbs0de83 # Q140001320
+https://open.qobuz.com/album/qz7xo3ta060tb # Q134614410
+https://open.qobuz.com/album/aa7odiq1cg78a # Q1686537

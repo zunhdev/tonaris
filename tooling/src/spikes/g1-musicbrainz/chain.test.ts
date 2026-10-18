@@ -63,12 +63,23 @@ function fakeMusicBrainz(busy: readonly string[] = []) {
   return async (href: string) => {
     const url = new URL(href);
     if (url.hostname === "coverartarchive.org") return new Response(null, { status: 307 });
+    if (url.hostname === "www.qobuz.com") {
+      const id = url.pathname.split("/").at(-1);
+      return new Response(null, {
+        status: 301,
+        headers: { location: `/us-en/album/a-slug/${id}` },
+      });
+    }
     if (busy.some((b) => href.includes(b)) && !refused.has(href)) {
       refused.add(href);
       return new Response("slow down", { status: 503, headers: { "retry-after": "0" } });
     }
     const resources = url.searchParams.getAll("resource");
     if (url.pathname.endsWith("/url")) {
+      const stored = "https://www.qobuz.com/gb-en/album/a-slug/storeonly0001";
+      if (resources.includes(stored)) {
+        return json({ urls: [{ resource: stored, relations: [releaseRel("r-store")] }] });
+      }
       if (resources.some((r) => r.includes("/album/ONE"))) {
         return json({ resource: resources[0], relations: [releaseRel("r-live")] });
       }
@@ -153,6 +164,14 @@ describe("runChain", () => {
         span: ["1975-01-24", "1975-01-25"],
       },
     });
+  });
+
+  test("looks up a Qobuz open link's store slug, and tells a stored form from the canonical URL", async () => {
+    const [result] = await runChain(["https://open.qobuz.com/album/storeonly0001"], client(), {
+      fetch: fakeMusicBrainz(),
+    });
+    expect(result).toMatchObject({ outcome: "confident", step: 2, releaseId: "r-store" });
+    expect(result?.attempts[0]).toMatchObject({ canonicalMatched: false, qobuzSlug: "a-slug" });
   });
 
   test("retries after a 503 and counts it", async () => {
