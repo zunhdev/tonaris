@@ -30,6 +30,14 @@ export const allowedInternalDependencies: Readonly<Record<string, readonly strin
   "@tonaris/tooling": ["@tonaris/domain", "@tonaris/db", "@tonaris/providers"],
 };
 
+/**
+ * Internal packages a workspace package may use for types only, so only as a devDependency. The web app types
+ * its Eden client from the API's `type App` without bundling server code (TS-29); oxlint rejects value imports.
+ */
+export const typeOnlyInternalDependencies: Readonly<Record<string, readonly string[]>> = {
+  "@tonaris/web": ["@tonaris/api"],
+};
+
 const dependencyFields = [
   "dependencies",
   "devDependencies",
@@ -83,13 +91,20 @@ export function checkPackage({ dir, manifest }: WorkspacePackage): string[] {
   if (manifest.private !== true) problems.push(`${name}: must be "private": true`);
   if (manifest.type !== "module") problems.push(`${name}: must be "type": "module"`);
 
+  const typeOnly = typeOnlyInternalDependencies[name] ?? [];
   for (const field of dependencyFields) {
     for (const [dependency, version] of Object.entries(manifest[field] ?? {})) {
       if (!dependency.startsWith(internalScope)) continue;
       if (version !== "workspace:*") {
         problems.push(`${name}: ${dependency} must use "workspace:*", found "${version}"`);
       }
-      if (allowed && !allowed.includes(dependency)) {
+      if (typeOnly.includes(dependency)) {
+        if (field !== "devDependencies") {
+          problems.push(
+            `${name}: ${dependency} is for types only, so it must be a devDependency (TS-29)`,
+          );
+        }
+      } else if (allowed && !allowed.includes(dependency)) {
         problems.push(`${name}: may not depend on ${dependency} (TS-02 layering)`);
       }
     }

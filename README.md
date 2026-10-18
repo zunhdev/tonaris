@@ -33,14 +33,14 @@ A Bun workspace (tech spec TS-05):
 Packages may depend only on these internal packages (TS-02):
 
 ```
-web       → domain, ui
+web       → domain, ui; api for types only (its Eden client, TS-29)
 api       → domain, db, providers
 db        → domain
 providers → domain
 tooling   → domain, db, providers
 ```
 
-Installs are *isolated*, so a package can import only what it declares; an undeclared workspace import fails at runtime. `bun run check:workspace` enforces the allowed edges and exact version pinning (TS-07).
+Installs are *isolated*, so a package can import only what it declares; an undeclared workspace import fails at runtime. `bun run check:workspace` enforces the allowed edges and exact version pinning (TS-07). The web app's dependency on the API must be a devDependency, and oxlint rejects anything but `import type` from `@tonaris/api` (or any import of `@tonaris/db`) in `apps/web`.
 
 ## Development
 
@@ -55,6 +55,7 @@ bun run typecheck               # TypeScript 7 `tsc --noEmit` in every package
 bun run check:workspace         # layering and pinning rules
 bun run check:specs             # openspec validate --all --strict
 bun run db:check                # migrations match the schema (drizzle-kit check, no-diff generate)
+bun run openapi:check           # the committed OpenAPI document matches the API routes
 bun test                        # all tests; the integration tests need the local Postgres
 ```
 
@@ -79,14 +80,23 @@ bun run mail:test   # send one email to Mailpit
 | Service | Address |
 | --- | --- |
 | Web app | http://localhost:3000 |
-| API | http://localhost:3001, health check at `/healthz` |
+| API | http://localhost:3001: `/v1/health`, the OpenAPI document at `/v1/openapi.json`, the host health check at `/healthz` |
 | Postgres 18 | `localhost:5432`: database `tonaris` (`DATABASE_URL`), tests in `tonaris_test` (`TEST_DATABASE_URL`) |
 | Mailpit | inbox at http://localhost:8025, SMTP on `localhost:1025` |
 
-- Both apps are placeholders until the API and web skeletons land.
+- The web app is a placeholder until the web skeleton lands. Each page load shows the API's health, fetched through the typed Eden client (`API_INTERNAL_URL`, default `http://localhost:3001`).
 - The defaults connect as `postgres` without a password. Set `DATABASE_URL` or `TEST_DATABASE_URL` to use another server; production must set `DATABASE_URL`.
 - Integration tests each run in a fresh, migrated schema of `tonaris_test` (`@tonaris/db/testing`), dropped afterwards.
 - In watch mode, an app that crashes waits for a file change instead of exiting; stop everything with Ctrl+C.
+
+### API contract
+
+The API (`apps/api`, Elysia 2 beta) serves every resource under `/v1` (TS-09):
+
+- **Errors** are RFC 9457 problems (`application/problem+json`) with `type: "about:blank"`, the status phrase as `title`, and a TS-27 `code` such as `not_found`, `validation_failed` or `internal_error`. Validation problems list each invalid input in `errors`. Unexpected errors are logged and answered without details.
+- **OpenAPI 3.1** is generated from the routes' Zod schemas. After changing a route, run `bun run openapi:generate`, review the diff of `apps/api/openapi/v1.json` and commit it; `bun run openapi:check` fails while it is stale. Changes within `/v1` are additive only.
+- **Clients:** the web app types its calls with Eden from the API's `type App` (`apps/web/src/api.ts`); native clients are generated from the OpenAPI document (TS-29).
+- Routes that validate input declare `422: problemSchema` in their `response` map, so Eden and OpenAPI see the problem the API actually sends.
 
 ### Database changes
 

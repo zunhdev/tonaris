@@ -1,12 +1,7 @@
-// Placeholder for the API service so `bun dev` can run both apps (TS-06).
-// TON-6 replaces it with the Elysia app (TS-04); `/healthz` is the host health check (TS-110).
+// Starts tonaris-api on the Bun adapter (TS-01, TS-04). `bun dev` runs it on port 3001 (TS-06).
 
-const server = Bun.serve({
-  port: Number(Bun.env.PORT ?? 3001),
-  routes: {
-    "/healthz": new Response("ok"),
-  },
-  fetch: () => new Response("Not found", { status: 404 }),
-});
+import { createApp } from "./app";
 
-console.log(`tonaris-api (placeholder) listening on ${server.url.href}`);
+const app = createApp().listen(Number(Bun.env.PORT ?? 3001));
+
+console.log(`tonaris-api listening on ${app.server?.url.href}`);

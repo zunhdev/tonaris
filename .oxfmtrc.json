@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["**/*.md", "packages/db/migrations/**"],
+  "ignorePatterns": ["**/*.md", "packages/db/migrations/**", "apps/api/openapi/**"],
   "sortImports": {
     "internalPattern": ["@tonaris/"]
   },

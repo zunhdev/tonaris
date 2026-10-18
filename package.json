@@ -8,7 +8,7 @@
   ],
   "type": "module",
   "scripts": {
-    "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun run check:specs && bun run db:check && bun test",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun run check:specs && bun run db:check && bun run openapi:check && bun test",
     "check:specs": "openspec validate --all --strict",
     "check:workspace": "bun tooling/src/workspace-check.ts",
     "db:check": "bun run --cwd packages/db db:check",
@@ -21,6 +21,8 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "mail:test": "bun tooling/src/send-test-mail.ts",
+    "openapi:check": "bun run --cwd apps/api openapi:check",
+    "openapi:generate": "bun run --cwd apps/api openapi:generate",
     "test": "bun test",
     "typecheck": "bun run --filter '*' typecheck"
   },
