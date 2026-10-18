@@ -53,6 +53,7 @@ bun run format:check            # oxfmt (bun run format to fix)
 bun run lint                    # oxlint with type-aware rules (bun run lint:fix to fix)
 bun run typecheck               # TypeScript 7 `tsc --noEmit` in every package
 bun run check:workspace         # layering and pinning rules
+bun run check:specs             # openspec validate --all --strict
 bun test                        # all tests
 ```
 
@@ -82,10 +83,27 @@ bun run mail:test   # send one email to Mailpit
 - Both apps are placeholders until the API and web skeletons land, and nothing connects to Postgres yet.
 - In watch mode, an app that crashes waits for a file change instead of exiting; stop everything with Ctrl+C.
 
+### Spec changes (OpenSpec)
+
+Feature and Design issues each get exactly one [OpenSpec](https://github.com/Fission-AI/OpenSpec) change, in the same branch and PR as the code. Chore, Spike, and Bug issues get none.
+
+In Claude Code:
+
+1. `/opsx:propose <what to build>` creates `openspec/changes/<name>/` with a proposal, spec deltas, a design, and tasks. Add `x-linear: TON-<n>` to the change's `.openspec.yaml`, using exactly that key, because `--strict` rejects any other unknown key.
+2. `/opsx:apply` implements the tasks.
+3. Once review is done, `/opsx:archive` is the PR's last commit. It moves the change to `openspec/changes/archive/` and merges its deltas into `openspec/specs/`.
+
+Notes:
+
+- `openspec/config.yaml` gives every change the project context and per-artifact rules (TS-133).
+- The CLI is pinned as a devDependency. Outside Claude Code, run it as `bunx openspec …`.
+- In Claude Code, a SessionStart hook in `.claude/settings.json` puts `node_modules/.bin` on PATH, so the generated commands and skills can call `openspec` directly. That needs Node 20.19 or later on PATH; `bun run check:specs` works without Node.
+- After upgrading `@fission-ai/openspec`, run `bunx openspec update` and commit the regenerated `.claude/commands/opsx/` and `.claude/skills/openspec-*` files.
+
 ## Working conventions
 
 - **IDs are stable.** Linear issues and OpenSpec changes cite the rule IDs they implement, such as `FR-07.9`, `DS-12`, or `TS-08`.
 - **Change promises in the requirements first.** When product behavior changes, update the requirements before the design or tech spec, and add a change-log entry.
-- **OpenSpec grows change by change.** Each Linear issue that changes behavior becomes one OpenSpec change, linked through `x-linear` in its `.openspec.yaml`. Capability specs build up as changes are archived; the requirements are not bulk-converted. See the tech spec's delivery section.
+- **OpenSpec grows change by change.** Capability specs in `openspec/specs/` build up as changes are archived; the requirements are not bulk-converted. See [Spec changes](#spec-changes-openspec) and the tech spec's delivery section (TS-132).
 
 Next steps: run the G1–G3 feasibility spikes, then set up Linear projects following the tech spec's delivery plan.

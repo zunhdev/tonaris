@@ -8,7 +8,8 @@
   ],
   "type": "module",
   "scripts": {
-    "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun test",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun run check:specs && bun test",
+    "check:specs": "openspec validate --all --strict",
     "check:workspace": "bun tooling/src/workspace-check.ts",
     "dev": "bun run --parallel --filter './apps/*' dev",
     "format": "oxfmt",
@@ -20,6 +21,7 @@
     "typecheck": "bun run --filter '*' typecheck"
   },
   "devDependencies": {
+    "@fission-ai/openspec": "1.14.3",
     "@types/bun": "1.4.3",
     "oxfmt": "0.73.0",
     "oxlint": "1.88.0",

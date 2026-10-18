@@ -9,7 +9,7 @@
 - Design: DS-
 - Tech: TS-
 - Verifies: AC-
-- OpenSpec change: <!-- openspec/changes/<name>, or "skip_specs" for spikes and chores -->
+- OpenSpec change: <!-- the change name for Feature and Design issues; "none" for chores, spikes and bugs -->
 
 ## Verification
 
