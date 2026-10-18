@@ -1,0 +1,136 @@
+# CI (TS-124): every pull request to main and every push to main. The "Protect main" ruleset requires Static
+# checks. The Tests job is commented out for now to save runner minutes (see the note above it); `bun run check`
+# runs every check locally. Actions are pinned to commit SHAs and images to exact versions (TS-07).
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  static:
+    name: Static checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Format (oxfmt)
+        run: bun run format:check
+      - name: Lint (oxlint, type-aware)
+        run: bun run lint
+      - name: Typecheck (tsc per package)
+        run: bun run typecheck
+      - name: Workspace rules
+        run: bun run check:workspace
+      - name: OpenSpec (validate --all --strict)
+        run: bun run check:specs
+      - name: Migrations match the schema
+        run: bun run db:check
+      - name: OpenAPI document is up to date
+        run: bun run openapi:check
+      - name: OpenAPI has no breaking change (oasdiff)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          OASDIFF_VERSION: 1.33.0
+          OASDIFF_SHA256: 43a4e328e2d13ba1552d760aa68d2485c75c5621f309f6ff64ae895188345247
+        run: |
+          git fetch --depth=1 origin "$BASE_REF"
+          if ! git show FETCH_HEAD:apps/api/openapi/v1.json > "$RUNNER_TEMP/base.json" 2>/dev/null; then
+            echo "No OpenAPI document on $BASE_REF yet; nothing to compare."
+            exit 0
+          fi
+          archive="oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" \
+            "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/${archive}"
+          echo "$OASDIFF_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" oasdiff
+          "$RUNNER_TEMP/oasdiff" breaking "$RUNNER_TEMP/base.json" apps/api/openapi/v1.json --fail-on ERR
+      - name: Build the web app
+        run: bun run --cwd apps/web build
+
+  # ── Tests: temporarily disabled to stay within a budget (decided by the creator, 18 October 2026) ──────────────
+  # This is the expensive job: two service containers (Postgres, Mailpit), a Chromium download and the browser
+  # suite, about 90 s of each run, against roughly 25 s for Static checks. It last ran green on PR #12, which
+  # introduced CI. Until it comes back, run the full `bun run check` locally before every push and before handing
+  # over a PR: it runs `bun test` and `bun run test:e2e` against the native Postgres and Mailpit (TS-06).
+  # To re-enable: uncomment the job, then add "Tests" back to the required checks of the "Protect main" ruleset
+  # (rulesets/25320567, GitHub Actions integration id 15368).
+  #
+  # test:
+  #   name: Tests
+  #   runs-on: ubuntu-24.04
+  #   timeout-minutes: 20
+  #   # The same services as local development (TS-06), here as containers on the runner.
+  #   services:
+  #     postgres:
+  #       image: postgres:18.4
+  #       env:
+  #         # Like the local install: user `postgres`, no password.
+  #         POSTGRES_HOST_AUTH_METHOD: trust
+  #       ports: ["5432:5432"]
+  #       options: >-
+  #         --health-cmd "pg_isready -U postgres"
+  #         --health-interval 2s
+  #         --health-timeout 5s
+  #         --health-retries 20
+  #     mailpit:
+  #       image: axllent/mailpit:v1.31.6
+  #       ports: ["1025:1025", "8025:8025"]
+  #       options: >-
+  #         --health-cmd "/mailpit readyz"
+  #         --health-interval 2s
+  #         --health-timeout 5s
+  #         --health-retries 20
+  #   steps:
+  #     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+  #     - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+  #       with:
+  #         bun-version-file: .bun-version
+  #     # Playwright's test runner needs Node.
+  #     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+  #       with:
+  #         node-version: 24
+  #     - name: Install
+  #       run: bun install --frozen-lockfile
+  #     - name: Unit and integration tests (bun test, Postgres 18)
+  #       run: bun test
+  #     - name: Cache Playwright's Chromium
+  #       id: playwright-cache
+  #       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+  #       with:
+  #         path: ~/.cache/ms-playwright
+  #         key: playwright-chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+  #     - name: Install Chromium
+  #       if: steps.playwright-cache.outputs.cache-hit != 'true'
+  #       working-directory: apps/web
+  #       run: npx playwright install --with-deps chromium
+  #     - name: Install Chromium's system libraries
+  #       if: steps.playwright-cache.outputs.cache-hit == 'true'
+  #       working-directory: apps/web
+  #       run: npx playwright install-deps chromium
+  #     - name: Browser tests (Playwright, Chromium)
+  #       run: bun run test:e2e
+  #     - name: Keep Playwright traces of failed tests
+  #       if: failure()
+  #       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  #       with:
+  #         name: playwright-traces
+  #         path: apps/web/test-results/
+  #         retention-days: 7

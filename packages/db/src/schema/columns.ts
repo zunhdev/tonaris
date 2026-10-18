@@ -21,9 +21,17 @@ export const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-/** CHECK body: the text column holds something other than whitespace, Unicode spaces included. */
+/**
+ * The characters JavaScript's `trim()` removes (ECMAScript WhiteSpace and LineTerminator), as a regex class body.
+ * `isBlankName` in packages/domain uses `trim()`, so the database must agree with it. They are spelled out because
+ * `[[:space:]]` follows the database's locale: glibc's doesn't count U+00A0 as a space, macOS's does.
+ */
+export const trimmedCharacters =
+  "\\u0009-\\u000D\\u0020\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF";
+
+/** CHECK body: the text column holds something `trim()` would keep (X-06). */
 export function notBlank(column: AnyPgColumn): SQL {
-  return sql`${column} ~ '[^[:space:]]'`;
+  return sql`${column} ~ ${sql.raw(`'[^${trimmedCharacters}]'`)}`;
 }
 
 /** CHECK body: the text column holds one of `values` (NULL passes, so pair it with NOT NULL where required). */
