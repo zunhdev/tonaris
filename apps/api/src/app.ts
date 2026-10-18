@@ -13,6 +13,7 @@ import { webCors } from "./cors";
 import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
 import { meRoutes } from "./routes/v1/me";
+import { csrfGuard, securityHeaders } from "./security";
 
 export const healthSchema = z
   .object({ status: z.literal("ok") })
@@ -49,7 +50,10 @@ export function createApp({
   return (
     new Elysia({ name: "tonaris-api" })
       .use(problemDetails(problemOptions))
+      .use(securityHeaders())
+      // CORS answers preflights before the CSRF rule looks at a request.
       .use(webCors(config))
+      .use(csrfGuard(config))
       // The host's health check (TS-110), outside the versioned contract.
       .get("/healthz", { detail: { hide: true } }, () => "ok")
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))

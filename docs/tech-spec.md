@@ -872,23 +872,27 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Server | SSRF through links and artwork | Allowlisted parsing, guarded fetcher (TS-103) |
 | Users' browsers | XSS through metadata or descriptions | React escaping, no `dangerouslySetInnerHTML` for user text, strict CSP (TS-101) |
 
-**TS-101 Headers.**
+**TS-101 Headers (built in TON-10).**
 
-- `Content-Security-Policy` on the web app:
+- `Content-Security-Policy` on the web app, on every response and in development too:
   - `default-src 'self'`
-  - `script-src 'self' 'nonce-{n}'`; Start SSR uses the nonce, verified in M0
+  - `script-src 'self' 'nonce-{n}'` and `style-src 'self' 'nonce-{n}'`. A request middleware in `apps/web/src/start.ts` makes a fresh 128-bit nonce. The router puts it on every script and style it renders, and `CSPProvider` puts it on the few that Base UI renders itself.
   - `img-src 'self' data: https://api.tonaris.<tld>`; all artwork goes through the API's `/img`
-  - `connect-src 'self' https://api.tonaris.<tld> https://*.ingest.de.sentry.io`
-  - `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`
-- Also: HSTS, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`, overridden to `no-referrer` on `/s/`.
-- API responses send `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `nosniff`, and HSTS. Image-proxy responses add a fixed image `Content-Type`.
+  - `connect-src 'self' https://api.tonaris.<tld>`. The Sentry ingest host is added with TS-115, as the project's exact host: a `*.ingest.de.sentry.io` wildcard would let injected code report to anyone's Sentry project.
+  - `font-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`
+- **No eval.** Zod probes for `new Function` before compiling its parsers. The CSP blocks that, and the browser reports each probe as a violation. So `packages/domain` imports Zod through `src/zod.ts`, which switches Zod to `jitless` in browsers, and a lint rule enforces that import. Servers keep the compiled parsers.
+- Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains` (no preload), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`, overridden to `no-referrer` on `/s/`.
+- API responses send `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `nosniff`, and the same HSTS. Problems and Better Auth's responses get them too. Image-proxy responses add a fixed image `Content-Type`.
 
 **TS-102 CORS and CSRF (Decided; Q-05, Q-06).**
 
 - **CORS.** The API allows credentialed requests (`Access-Control-Allow-Credentials: true`) only from the exact web origin, plus `http://localhost:3000` in development. There is no wildcard. Preflights are cached for 10 minutes. Guest share endpoints (`/v1/s/*`) are called without credentials.
 - **Cookie.** The session cookie is `__Secure-`, `HttpOnly`, `SameSite=Lax`, and scoped to the parent domain (TS-08, TS-70).
-- **CSRF.** Every cookie-authenticated non-GET request under `/v1` and `/auth` must carry an allowlisted `Origin` and `Content-Type: application/json`, which also forces a CORS preflight. GET requests never mutate.
-- **Bearer principals ignore cookies.** A request carrying `Authorization: Bearer` (native app or MCP) is authenticated by the token alone, and any cookie is ignored. `/mcp` never reads cookies.
+- **CSRF** (`apps/api/src/security.ts`). It applies to every non-GET request under `/v1` and `/auth`:
+  - It must send `Content-Type: application/json`, otherwise it gets `415` `validation_failed`. A cross-site HTML form can't send JSON, and JSON forces a CORS preflight. This holds without cookies too, which also stops login CSRF.
+  - If it carries cookies, its `Origin` must be the web origin, otherwise it gets `403` `permission_denied`. A missing `Origin` is refused as well.
+  - GET requests never mutate.
+- **Bearer principals ignore cookies.** A request carrying `Authorization: Bearer` (native app or MCP) is authenticated by the token alone, and any cookie is ignored: the `signedIn` guard never reads the session for it, and the origin rule doesn't apply to it on `/v1`. Until native-app and MCP tokens exist, no bearer token is valid (`401`). `/mcp` never reads cookies.
 
 **TS-103 SSRF guard and image proxy (Decided; Q-05, FR-03.4).** One `safeFetch` is used for short links, MusicBrainz, CAA, and the image proxy:
 

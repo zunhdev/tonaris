@@ -6,6 +6,7 @@ import { Elysia, NotFound } from "elysia";
 import { emailKey, type Account, type Principal } from "@tonaris/domain";
 
 import { ProblemError } from "../problem";
+import { hasBearerToken } from "../security";
 import type { Auth } from "./auth";
 import type { SignInLimiter } from "./sign-in-limits";
 
@@ -88,12 +89,16 @@ export function authRoutes({ auth, limiter, clientIpHeader }: AuthRoutesOptions)
 /**
  * `signedIn: true` on a route requires a session and resolves `principal` (TS-30) and `account`. A renewed
  * session cookie is passed on, so the cookie rolls with the session (TS-70). Without a session, the route
- * answers 401 `unauthenticated`.
+ * answers 401 `unauthenticated`. A bearer request is judged by its token alone and never by cookies (TS-102);
+ * until native-app and MCP tokens exist (TS-30, TS-61), no token is valid.
  */
 export function sessionGuard(auth: Auth) {
   return new Elysia({ name: "session-guard" }).macro({
     signedIn: {
       async derive({ request, set }) {
+        if (hasBearerToken(request)) {
+          throw new ProblemError(401, "unauthenticated", "This token isn't valid for this API.");
+        }
         const { headers, response: session } = await auth.api.getSession({
           headers: request.headers,
           returnHeaders: true,

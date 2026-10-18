@@ -55,6 +55,10 @@
           {
             "paths": [
               {
+                "name": "zod",
+                "message": "Import `z` from ./zod, which turns off Zod's eval in browsers for the CSP (TS-101)."
+              },
+              {
                 "name": "elysia",
                 "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
               },
@@ -205,6 +209,12 @@
           }
         ],
         "no-restricted-globals": "off"
+      }
+    },
+    {
+      "files": ["packages/domain/src/zod.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
       }
     }
   ],

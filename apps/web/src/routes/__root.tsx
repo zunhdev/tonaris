@@ -1,8 +1,10 @@
 // The document every route renders into. Workspace routes are client-only, but the server still sends this
 // shell, so even their first paint is dark (DS-11) and styled.
 
-import { createRootRoute, HeadContent, Link, Scripts } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Link, Scripts, useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+
+import { CSPProvider } from "@tonaris/ui/components/csp-provider";
 
 import stylesheet from "@tonaris/ui/globals.css?url";
 
@@ -36,13 +38,15 @@ function NotFound() {
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
+  // The request's CSP nonce (TS-101), also for the inline elements Base UI renders.
+  const nonce = useRouter().options.ssr?.nonce;
   return (
     <html lang="en" data-theme="dark">
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <CSPProvider nonce={nonce}>{children}</CSPProvider>
         <Scripts />
       </body>
     </html>

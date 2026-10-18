@@ -1,7 +1,7 @@
 // The outcome vocabulary (TS-27), shared by commands, the HTTP API, MCP and every client. Statuses and
 // codes are a contract: clients must tolerate codes added later (TS-09).
 
-import { z } from "zod";
+import { z } from "./zod";
 
 /** Why an operation was rejected (TS-27). Rejections change nothing (X-05). */
 export const errorCodes = [

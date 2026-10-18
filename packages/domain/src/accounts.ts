@@ -1,7 +1,7 @@
 // Accounts (FR-11): how an email address identifies an account, the roles, and the signed-in account as every
 // client sees it (`GET /v1/me`).
 
-import { z } from "zod";
+import { z } from "./zod";
 
 /** The sign-in code rules (TS-70): 6 digits, valid for 10 minutes, single-use, with 5 attempts. */
 export const signInCode = { length: 6, validMinutes: 10, attempts: 5 } as const;
