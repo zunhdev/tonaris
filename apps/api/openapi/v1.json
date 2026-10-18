@@ -1,0 +1,115 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Tonaris API",
+    "version": "1",
+    "description": "The /v1 contract shared by the web app, native clients and integrations. Changes within v1 are additive only."
+  },
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "summary": "Check that the API is up",
+        "tags": [
+          "system"
+        ],
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "The API is up.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "ok"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ],
+                  "additionalProperties": false,
+                  "description": "The API is up."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "`about:blank`: the status and `code` carry the meaning."
+          },
+          "title": {
+            "type": "string",
+            "description": "The HTTP status phrase."
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "detail": {
+            "description": "What went wrong, for people.",
+            "type": "string"
+          },
+          "instance": {
+            "description": "The request path.",
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable error code (TS-27)."
+          },
+          "errors": {
+            "description": "Each invalid input, for `validation_failed`.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code"
+        ],
+        "additionalProperties": false,
+        "description": "RFC 9457 problem details"
+      }
+    }
+  }
+}

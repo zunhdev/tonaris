@@ -4,13 +4,24 @@
   "private": true,
   "description": "Standalone Elysia API service: /v1 REST, sync stream, MCP, auth and jobs (TS-01, TS-09).",
   "type": "module",
+  "exports": {
+    ".": "./src/app.ts"
+  },
   "scripts": {
     "dev": "bun --watch src/index.ts",
+    "openapi:check": "bun src/generate-openapi.ts --check",
+    "openapi:generate": "bun src/generate-openapi.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@elysia/openapi": "2.0.0-beta.6",
     "@tonaris/db": "workspace:*",
     "@tonaris/domain": "workspace:*",
-    "@tonaris/providers": "workspace:*"
+    "@tonaris/providers": "workspace:*",
+    "elysia": "2.0.0-beta.32",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@elysia/eden": "2.0.0-beta.6"
   }
 }

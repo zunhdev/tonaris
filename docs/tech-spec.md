@@ -127,10 +127,10 @@ flowchart LR
 | --- | --- | --- |
 | `packages/domain` | Commands (writes), queries (reads), invariants, authorization policies, outcome types, normalization, export builder. Pure TypeScript plus a `Tx` port. | import Elysia, Start, React, or the MCP SDK |
 | Adapters in `apps/api` | HTTP routes (Elysia), the SSE stream, MCP tools, the job runner | contain business rules |
-| `apps/web` | UI, the client store, and SSR loaders, which are API clients (TS-03) | import `packages/db` or execute commands. It may import `packages/domain` schemas, types, and pure helpers such as `normalize()`. |
+| `apps/web` | UI, the client store, and SSR loaders, which are API clients (TS-03) | import `packages/db` or execute commands. It may import `packages/domain` schemas, types, and pure helpers such as `normalize()`, and `type App` from `apps/api` for its Eden client (types only, TS-29). |
 | `packages/db` | Drizzle schema, migrations, the repository implementation of the `Tx` port | |
 
-The web app, future native clients, and MCP all reach **the same commands** through `apps/api`. That is how X-02 channel parity is guaranteed: there is no second implementation to drift. An import-boundary lint rule enforces the `apps/web` column.
+The web app, future native clients, and MCP all reach **the same commands** through `apps/api`. That is how X-02 channel parity is guaranteed: there is no second implementation to drift. An import-boundary lint rule enforces the `apps/web` column: oxlint's `no-restricted-imports` rejects `@tonaris/db` and anything but type imports from `@tonaris/api`, and the workspace check allows `@tonaris/api` in `apps/web` only as a devDependency.
 
 **TS-03 Rendering split (Decided; FR-11.9, Q-01).**
 
@@ -150,7 +150,7 @@ SSR loaders call the API over the host's private network (`API_INTERNAL_URL`) wi
 
 **TS-04 API service policy (Decided; conditions apply).**
 
-- `apps/api/src/index.ts` builds the Elysia app and calls `app.listen(PORT)` on the Bun adapter.
+- `apps/api/src/app.ts` builds the Elysia app; `apps/api/src/index.ts` calls `app.listen(PORT)` on the Bun adapter. Routes use Elysia 2's `(path, hook, handler)` order.
 - Resource routes are grouped under `/v1` (TS-09). Endpoints whose shape is set by external standards sit outside it: Better Auth and OAuth at `/auth/*`, `/.well-known/*`, and `/mcp`. So does the internal `/img`.
 - Elysia provides routing, Zod validation (Standard Schema), auth macros that resolve the principal (TS-30), RFC 9457 errors (native in v2), CORS (TS-102), and OpenAPI generation (TS-09). Business rules stay in `packages/domain`.
 - **Upgrade policy:** the exact beta is pinned and bumped at most every two weeks on a branch, after reading the changelog and passing the full suite.
@@ -171,7 +171,8 @@ apps/web/                  TanStack Start app (deployable: tonaris-web)
   src/features/            UI features (collection, capture, fields, sharing, settings, admin…)
   server.ts                production Bun.serve wrapper (static + Start fetch)
 apps/api/                  Elysia 2 service (deployable: tonaris-api)
-  src/index.ts             app.listen; exports `type App` for Eden (TS-29)
+  src/app.ts               builds the app without side effects; exports `type App` for Eden (TS-29)
+  src/index.ts             app.listen
   src/routes/v1/           REST resources, thin, calling packages/domain
   src/sync/                bootstrap, SSE hub, mutation endpoint (TS-20–TS-28)
   src/mcp/                 MCP adapter (TS-60–TS-66)
@@ -213,10 +214,10 @@ docs/                      PRD, design spec, tech spec, audits, runbooks
 **TS-09 API contract and versioning (Decided; Q-08, FR-13.6).**
 
 - **Prefix.** Every resource route is under `/v1`.
-- **OpenAPI 3.1.** The document is generated from the shared Zod schemas, through `@elysia/openapi` once it supports v2 cleanly, and otherwise a small generator using `z.toJSONSchema`. It is committed at `apps/api/openapi/v1.json`, served at `/v1/openapi.json`, and diffed in CI (TS-124).
+- **OpenAPI 3.1.** The document is generated from the routes' Zod schemas with `@elysia/openapi`'s `toOpenAPISchema`; every operation also lists a `default` problem response. It is committed at `apps/api/openapi/v1.json` (`bun run openapi:generate`), served at `/v1/openapi.json` without a documentation UI, and checked with `bun run openapi:check` locally and in CI (TS-124).
 - **Compatibility.** Within v1, changes are additive only: new endpoints, new optional fields, and new enum values, which clients must tolerate. A removal or semantic change needs `/v2`. v1 stays available for a deprecation window, at least 6 months once native apps exist (they can't be force-updated), signalled with `Deprecation` and `Sunset` headers.
 - **Conventions:**
-  - errors are RFC 9457 `application/problem+json` carrying the TS-27 `code`;
+  - errors are RFC 9457 `application/problem+json` carrying the TS-27 `code`: `type` is `about:blank`, `title` is the status phrase, `instance` is the request path, and `validation_failed` problems list each invalid input in `errors` (`{path, message}`). Invalid input answers 422 and an unparsable body 400. Unexpected errors answer 500 `internal_error` with no details in any environment;
   - lists use opaque cursor pagination (`?cursor=…&limit=…` → `nextCursor`);
   - every write carries a `mutationId` and is idempotent (TS-22);
   - rate-limited responses carry the IETF `RateLimit` headers, plus `Retry-After` on 429 (TS-104);
@@ -434,6 +435,7 @@ Error `code`s:
 - `field_in_use`
 - `uncertain_match`, `unsupported_link`, `provider_unavailable`
 - `rate_limited`, `expired`
+- `internal_error`: an unexpected server fault, answered without details
 
 **TS-28 Client-agnostic sync contract (Decided; FR-09, FR-13, PRD section 2.2 later platforms).** Bootstrap, the stream, and mutations form one documented protocol that any client implements. The web app is its first implementation.
 

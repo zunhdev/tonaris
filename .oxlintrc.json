@@ -24,6 +24,27 @@
       "rules": {
         "unicorn/no-empty-file": "off"
       }
+    },
+    {
+      "files": ["apps/web/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@tonaris/api",
+                "allowTypeImports": true,
+                "message": "The web app is an API client: import only types, such as `type App` for Eden (TS-29)."
+              },
+              {
+                "name": "@tonaris/db",
+                "message": "The web app never touches the database; call the API (TS-02)."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

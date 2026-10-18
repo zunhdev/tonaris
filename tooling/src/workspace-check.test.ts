@@ -12,16 +12,14 @@ import {
 
 const rootDir = path.resolve(import.meta.dir, "../..");
 
-function canImport(fromDir: string, specifier: string): boolean {
-  const result = Bun.spawnSync(
-    [process.execPath, "-e", `await import(${JSON.stringify(specifier)})`],
-    {
-      cwd: fromDir,
-      stdout: "ignore",
-      stderr: "ignore",
-    },
-  );
-  return result.exitCode === 0;
+/** Whether Bun resolves `specifier` from `fromDir`, without running the module (some are type-only). */
+function canResolve(fromDir: string, specifier: string): boolean {
+  try {
+    Bun.resolveSync(specifier, fromDir);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 describe("repository workspace", () => {
@@ -33,15 +31,15 @@ describe("repository workspace", () => {
     const { packages } = await loadWorkspace(rootDir);
     const unresolved = packages.flatMap((pkg) =>
       internalDependencies(pkg.manifest)
-        .filter((dependency) => !canImport(pkg.dir, dependency))
+        .filter((dependency) => !canResolve(pkg.dir, dependency))
         .map((dependency) => `${pkg.manifest.name} -> ${dependency}`),
     );
     expect(unresolved).toEqual([]);
   });
 
   test("isolated installs reject internal packages a package does not declare", () => {
-    expect(canImport(path.join(rootDir, "apps/web"), "@tonaris/db")).toBe(false);
-    expect(canImport(path.join(rootDir, "packages/domain"), "@tonaris/db")).toBe(false);
+    expect(canResolve(path.join(rootDir, "apps/web"), "@tonaris/db")).toBe(false);
+    expect(canResolve(path.join(rootDir, "packages/domain"), "@tonaris/db")).toBe(false);
   });
 });
 
@@ -74,6 +72,13 @@ describe("checkPackage", () => {
   test("rejects internal dependencies that break the layering", () => {
     expect(checkPackage(web({ dependencies: { "@tonaris/db": "workspace:*" } }))).toEqual([
       "@tonaris/web: may not depend on @tonaris/db (TS-02 layering)",
+    ]);
+  });
+
+  test("allows type-only internal dependencies only as devDependencies", () => {
+    expect(checkPackage(web({ devDependencies: { "@tonaris/api": "workspace:*" } }))).toEqual([]);
+    expect(checkPackage(web({ dependencies: { "@tonaris/api": "workspace:*" } }))).toEqual([
+      "@tonaris/web: @tonaris/api is for types only, so it must be a devDependency (TS-29)",
     ]);
   });
 

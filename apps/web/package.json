@@ -9,7 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@elysia/eden": "2.0.0-beta.6",
     "@tonaris/domain": "workspace:*",
     "@tonaris/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@tonaris/api": "workspace:*"
   }
 }
