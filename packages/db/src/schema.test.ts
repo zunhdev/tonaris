@@ -17,6 +17,7 @@ import {
   trashUnits,
   users,
 } from "./schema";
+import { trimmedCharacters } from "./schema/columns";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
@@ -288,6 +289,21 @@ describe("constraints", () => {
       ),
     );
     expect(violations).toEqual(blanks.map(() => "containers_name_check"));
+  });
+
+  test("blank means what JavaScript's trim() removes, whatever the database's locale", async () => {
+    const trimmed: number[] = [];
+    for (let code = 1; code <= 0xffff; code++) {
+      if (code >= 0xd800 && code <= 0xdfff) continue;
+      if (String.fromCodePoint(code).trim() === "") trimmed.push(code);
+    }
+    const [row] = await t.db.execute<{ blank: number[] }>(
+      sql`select coalesce(array_agg(code order by code), '{}') as blank
+          from generate_series(1, 65535) as code
+          where code not between 55296 and 57343
+            and chr(code) !~ ${sql.raw(`'[^${trimmedCharacters}]'`)}`,
+    );
+    expect(row?.blank).toEqual(trimmed);
   });
 
   test("albums need the applicable year", async () => {
