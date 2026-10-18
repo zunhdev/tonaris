@@ -25,6 +25,7 @@
     "openapi:check": "bun run --cwd apps/api openapi:check",
     "openapi:generate": "bun run --cwd apps/api openapi:generate",
     "seed:creator": "bun run --cwd apps/api seed:creator",
+    "seed:workload": "bun tooling/src/workload/seed.ts",
     "test": "bun test",
     "test:e2e": "bun run --cwd apps/web test:e2e",
     "typecheck": "bun run --filter '*' typecheck",

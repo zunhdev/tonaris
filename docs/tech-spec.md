@@ -1036,6 +1036,8 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 - 12 custom fields at 40% usage;
 - 3 saved shared collections holding 5,000 albums in total.
 
+*Generator:* `bun run seed:workload` seeds the workload deterministically into the local database (`tooling/src/workload`), in accounts of its own: the owner `workload@tonaris.test` and three sharers. Each run replaces those accounts' data in one transaction. Performance tests seed it with `seedWorkload`.
+
 *Devices:*
 
 - Desktop reference: 2022-class laptop (Apple M1 or Intel i5-1235U), latest Chrome, 50 Mbit/s with 30 ms RTT to the server region.
