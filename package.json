@@ -8,7 +8,7 @@
   ],
   "type": "module",
   "scripts": {
-    "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun run check:specs && bun run db:check && bun run openapi:check && bun test",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun run check:specs && bun run db:check && bun run openapi:check && bun test && bun run test:e2e",
     "check:specs": "openspec validate --all --strict",
     "check:workspace": "bun tooling/src/workspace-check.ts",
     "db:check": "bun run --cwd packages/db db:check",
@@ -24,7 +24,9 @@
     "openapi:check": "bun run --cwd apps/api openapi:check",
     "openapi:generate": "bun run --cwd apps/api openapi:generate",
     "test": "bun test",
-    "typecheck": "bun run --filter '*' typecheck"
+    "test:e2e": "bun run --cwd apps/web test:e2e",
+    "typecheck": "bun run --filter '*' typecheck",
+    "ui:add": "bun run --cwd packages/ui ui:add"
   },
   "devDependencies": {
     "@fission-ai/openspec": "1.14.3",

@@ -5,15 +5,31 @@
   "description": "TanStack Start web app: UI and server-rendered public pages; all data goes through the API (TS-01, TS-03).",
   "type": "module",
   "scripts": {
-    "dev": "bun --hot src/placeholder.ts",
+    "build": "bun --bun vite build",
+    "dev": "bun --bun vite dev",
+    "preview": "bun --bun vite preview",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@elysia/eden": "2.0.0-beta.6",
+    "@tanstack/react-router": "1.170.45",
+    "@tanstack/react-start": "1.169.3",
     "@tonaris/domain": "workspace:*",
-    "@tonaris/ui": "workspace:*"
+    "@tonaris/ui": "workspace:*",
+    "lucide-react": "1.59.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "@tonaris/api": "workspace:*"
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
+    "@tailwindcss/vite": "4.3.3",
+    "@tonaris/api": "workspace:*",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "tailwindcss": "4.3.3",
+    "vite": "8.3.4"
   }
 }

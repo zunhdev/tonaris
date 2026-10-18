@@ -1,0 +1,198 @@
+/*
+ * Tonaris design tokens (design spec DS-10 to DS-18). Three layers:
+ *   1. Primitives on :root: OKLCH ramps named by hue family and lightness ×1000, plus layers.
+ *   2. Semantic tokens per theme: bg.*, fg.*, border.*, accent.*, status.*, focus. Only these and the
+ *      component tokens may be used by components (DS-10).
+ *   3. Component tokens: the variables shadcn's components read, mapped onto semantic tokens.
+ * The contrast test (tokens.test.ts) reads this file, so keep each declaration on one line.
+ */
+
+/* 1. Primitives */
+:root {
+  --gray-155: oklch(0.155 0.006 265);
+  --gray-185: oklch(0.185 0.007 265);
+  --gray-215: oklch(0.215 0.008 265);
+  --gray-235: oklch(0.235 0.008 265);
+  --gray-250: oklch(0.25 0.008 265);
+  --gray-460: oklch(0.46 0.008 265);
+  --gray-520: oklch(0.52 0.01 265);
+  --gray-640: oklch(0.64 0.01 265);
+  --gray-760: oklch(0.76 0.008 265);
+  --gray-950: oklch(0.95 0.004 265);
+  --white-980: oklch(0.98 0 0);
+  --violet-260: oklch(0.26 0.03 275);
+  --violet-540: oklch(0.54 0.17 275);
+  --violet-660: oklch(0.66 0.17 275);
+  --violet-660-a12: oklch(0.66 0.17 275 / 12%);
+  --green-720: oklch(0.72 0.15 155);
+  --amber-800: oklch(0.8 0.14 80);
+  --red-660: oklch(0.66 0.19 25);
+  --blue-720: oklch(0.72 0.11 240);
+  --black-a40: oklch(0 0 0 / 40%);
+
+  /* Stacking layers (DS-18) */
+  --z-sticky: 10;
+  --z-resize-handle: 20;
+  --z-popover: 40;
+  --z-sheet: 50;
+  --z-dialog: 60;
+  --z-palette: 70;
+  --z-toast: 80;
+  --z-tooltip: 90;
+}
+
+/* 2. Semantic tokens: the dark theme (DS-11, DS-12; tuned against DS-14 on 18 October 2026) */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-app: var(--gray-155);
+  --bg-panel: var(--gray-185);
+  --bg-raised: var(--gray-215);
+  --bg-hover: var(--gray-235);
+  --bg-selected: var(--violet-260);
+  --border-subtle: var(--gray-250);
+  --border-strong: var(--gray-520);
+  --fg-primary: var(--gray-950);
+  --fg-secondary: var(--gray-760);
+  --fg-tertiary: var(--gray-640);
+  --fg-disabled: var(--gray-460);
+  --fg-on-accent: var(--white-980);
+  --accent-solid: var(--violet-660);
+  --accent-fill: var(--violet-540);
+  --accent-soft: var(--violet-660-a12);
+  --status-success: var(--green-720);
+  --status-warning: var(--amber-800);
+  --status-danger: var(--red-660);
+  --status-info: var(--blue-720);
+  --focus: var(--accent-solid);
+  --shadow-color: var(--black-a40);
+}
+
+/* 3. Component tokens: shadcn's variables, theme-independent because they point at semantic tokens */
+:root {
+  --background: var(--bg-app);
+  --foreground: var(--fg-primary);
+  --card: var(--bg-panel);
+  --card-foreground: var(--fg-primary);
+  --popover: var(--bg-raised);
+  --popover-foreground: var(--fg-primary);
+  --primary: var(--accent-fill);
+  --primary-foreground: var(--fg-on-accent);
+  --secondary: var(--bg-raised);
+  --secondary-foreground: var(--fg-primary);
+  --muted: var(--bg-raised);
+  --muted-foreground: var(--fg-tertiary);
+  --accent: var(--bg-hover);
+  --accent-foreground: var(--fg-primary);
+  --destructive: var(--status-danger);
+  --border: var(--border-subtle);
+  --input: var(--border-strong);
+  --ring: var(--focus);
+  --sidebar: var(--bg-app);
+  --sidebar-foreground: var(--fg-secondary);
+  --sidebar-primary: var(--accent-fill);
+  --sidebar-primary-foreground: var(--fg-on-accent);
+  --sidebar-accent: var(--bg-hover);
+  --sidebar-accent-foreground: var(--fg-primary);
+  --sidebar-border: var(--border-subtle);
+  --sidebar-ring: var(--focus);
+}
+
+/*
+ * Tailwind utilities. Tailwind's default palette, type scale and shadows are removed, so the only colors,
+ * text sizes and shadows a class can name are these (DS-10, DS-13, DS-16).
+ */
+@theme {
+  --color-*: initial;
+  --text-*: initial;
+  --shadow-*: initial;
+
+  --font-sans:
+    "Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans",
+    sans-serif;
+  --font-heading: var(--font-sans);
+
+  /* DS-13: size / line-height (weight) */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1rem;
+  --text-micro--font-weight: 500;
+  --text-small: 0.75rem;
+  --text-small--line-height: 1rem;
+  --text-base: 0.8125rem;
+  --text-base--line-height: 1.25rem;
+  --text-input: 0.875rem;
+  --text-input--line-height: 1.25rem;
+  --text-title: 0.9375rem;
+  --text-title--line-height: 1.375rem;
+  --text-title--font-weight: 600;
+  --text-page: 1.25rem;
+  --text-page--line-height: 1.75rem;
+  --text-page--font-weight: 600;
+  --text-display: 1.75rem;
+  --text-display--line-height: 2.125rem;
+  --text-display--font-weight: 600;
+
+  /* DS-15: 4 chips, artwork, checkboxes; 6 buttons, inputs; 8 popovers, menus, cards; 12 dialogs, palette */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* DS-17 */
+  --ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+@theme inline {
+  --shadow-floating: 0 8px 24px var(--shadow-color), 0 0 0 1px var(--border-subtle);
+
+  /* Semantic tokens, named after the design spec: bg.panel is `bg-panel`, border.strong `border-strong`. */
+  --color-app: var(--bg-app);
+  --color-panel: var(--bg-panel);
+  --color-raised: var(--bg-raised);
+  --color-hover: var(--bg-hover);
+  --color-selected: var(--bg-selected);
+  --color-subtle: var(--border-subtle);
+  --color-strong: var(--border-strong);
+  --color-fg-primary: var(--fg-primary);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-fg-tertiary: var(--fg-tertiary);
+  --color-fg-disabled: var(--fg-disabled);
+  --color-fg-on-accent: var(--fg-on-accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-soft: var(--accent-soft);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger: var(--status-danger);
+  --color-status-info: var(--status-info);
+  --color-focus: var(--focus);
+
+  /* Component tokens, for shadcn's components */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}

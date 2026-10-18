@@ -1,4 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src"]
+  "compilerOptions": {
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["vite/client", "bun"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@tonaris/ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": ["src", "e2e", "*.config.ts"]
 }
