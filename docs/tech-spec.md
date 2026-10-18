@@ -227,7 +227,7 @@ docs/                      PRD, design spec, tech spec, audits, runbooks
 
 ## 3. Data model
 
-This is an outline. The Drizzle schema in `packages/db` is authoritative. All tables carry `created_at` and `updated_at` (`timestamptz`), and ownership columns are indexed.
+This is an outline. The Drizzle schema in `packages/db` is authoritative. All tables carry `created_at` and `updated_at`, and ownership columns are indexed. Timestamps are `timestamptz(3)`: millisecond precision matches JS `Date` and the API's ISO strings, so a value read back compares equal to the stored one.
 
 **TS-10 Identifiers (Decided; FR-09.3, FR-13.5).**
 
@@ -240,10 +240,10 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | Table | Key columns | Constraints and notes | Rules |
 | --- | --- | --- | --- |
 | `account_sync` | `account_id` PK, `seq bigint` | Per-account write serializer and cursor (TS-23) | FR-09 |
-| `containers` | `id`, `owner_id`, `kind` (`folder`\|`list`), `parent_id` (null = root), `name`, `name_key`, `description`, `trashed_at`, `trash_unit_id` | Partial unique index `(owner_id, parent_id, name_key) NULLS NOT DISTINCT WHERE trashed_at IS NULL`. CHECK: name not blank. Depth ≤ 32 enforced in the move/create command (TS-31). | FR-01.1–FR-01.5, X-06 |
-| `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `edition_label`, `artwork_url`, `mb_release_id`, `mb_release_group_id`, `barcode`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live AND recording_year_start IS NOT NULL)`. CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. | FR-02.6, FR-02.8, FR-05.5 |
+| `containers` | `id`, `owner_id`, `kind` (`folder`\|`list`), `parent_id` (null = root), `name`, `name_key`, `description`, `trashed_at`, `trash_unit_id` | Partial unique index `(owner_id, coalesce(parent_id, nil UUID), name_key) WHERE trashed_at IS NULL`, so root-level names collide too; drizzle-kit can't emit `NULLS NOT DISTINCT` on a partial index. No foreign key on `parent_id`: a container trashed on its own keeps its parent's id after that parent is purged, so recovery can see the parent is missing (FR-01.15). CHECK: name not blank. Depth ≤ 32 enforced in the move/create command (TS-31). | FR-01.1–FR-01.5, X-06 |
+| `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `edition_label`, `artwork_url`, `mb_release_id`, `mb_release_group_id`, `barcode`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live IS TRUE AND recording_year_start IS NOT NULL)`. (`IS TRUE`, because a null `is_live` would make the expression null, which a CHECK accepts.) CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. | FR-02.6, FR-02.8, FR-05.5 |
 | `album_provenance` | `album_id`, `field`, `source` (`user`\|`musicbrainz`\|`coverartarchive`\|`itunes-lookup`), `source_ref`, `retrieved_at`. PK `(album_id, field)` | Policy flags are *derived* from `source` through a versioned policy map in `packages/providers` (TS-15). Spotify-derived values are never stored, so there is no `spotify` source (TS-41). | G1, FR-08.8 |
-| `album_service_links` | `album_id`, `service`, `url` (canonical), `entity_id`. PK `(album_id, service)` | One current link per service. Index on `(owner_id, service, entity_id)` for matching. | FR-06.2–FR-06.4 |
+| `album_service_links` | `album_id`, `owner_id` (copied from the album), `service`, `url` (canonical), `entity_id`. PK `(album_id, service)` | One current link per service. Index on `(owner_id, service, entity_id)` for matching. | FR-06.2–FR-06.4 |
 | `memberships` | `list_id`, `album_id`, `owner_id`, `added_at`. PK `(list_id, album_id)` | A membership is *effective* when both list and album are active. Rows survive the trashing of either side (TS-13). | FR-01.6–FR-01.10, FR-14.2 |
 | `field_definitions` | `id`, `owner_id`, `name`, `name_key`, `type` | Unique `(owner_id, name_key)` | FR-03.6, FR-03.9 |
 | `field_options` | `id`, `field_id`, `label`, `label_key`, `sort_key` | Unique `(field_id, label_key)` | FR-03.14–FR-03.16 |
@@ -262,7 +262,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `service_state` | singleton: `admissions_paused` | | FR-11.2 |
 | `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error` | | TS-90 |
 | `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions | FR-11.5–FR-11.6 |
-| Better Auth tables | `user`, `session`, `verification`, OAuth clients, consents, tokens; `jwks` | `user.role` (`creator`\|`user`), `user.display_name` | FR-11 |
+| Better Auth tables | `user`, `session`, `verification`, OAuth clients, consents, tokens; `jwks` | `user.role` (`creator`\|`user`), `user.display_name`. The owner, account, person, grantee, and viewer columns above hold `user.id`; their foreign keys are added together with these tables. | FR-11 |
 
 **TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/normalize.ts` exports two functions, and the same code runs on the server, the client, and in migrations:
 
@@ -304,10 +304,10 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 
 **TS-17 Migrations (Decided).**
 
-- drizzle-kit 1.0 generates SQL migrations, which are reviewed and committed. `drizzle-kit push` is never used against shared databases.
-- Changes follow expand/contract so a deploy never breaks the running version.
-- The host's pre-deploy step runs `bun run db:migrate` (TS-110).
-- CI checks for migration conflicts and requires that `generate` produces no diff.
+- drizzle-kit 1.0 generates SQL migrations (`bun run db:generate`), which are reviewed and committed under `packages/db/migrations/`. `drizzle-kit push` is never used against shared databases.
+- Changes follow expand/contract so a deploy never breaks the running version. A merged migration is never edited.
+- The host's pre-deploy step runs `bun run db:migrate` (TS-110). It applies all pending migrations in one transaction.
+- `bun run db:check` runs `drizzle-kit check` (snapshots readable, no migration conflicts) and `drizzle-kit generate --explain`, which must report no changes. Neither needs a database. CI runs it (TS-124).
 
 **TS-18 Resource limits (Decided 17 October 2026; FR-15.1, FR-15.3, FR-15.4).** Approved by the creator. Each value is one constant in `packages/domain/limits.ts`, checked under the owner's write lock (TS-20).
 
