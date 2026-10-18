@@ -54,7 +54,8 @@ bun run lint                    # oxlint with type-aware rules (bun run lint:fix
 bun run typecheck               # TypeScript 7 `tsc --noEmit` in every package
 bun run check:workspace         # layering and pinning rules
 bun run check:specs             # openspec validate --all --strict
-bun test                        # all tests
+bun run db:check                # migrations match the schema (drizzle-kit check, no-diff generate)
+bun test                        # all tests; the integration tests need the local Postgres
 ```
 
 Tooling: oxlint (`.oxlintrc.json`), oxfmt (`.oxfmtrc.json`; Markdown is not auto-formatted), TypeScript 7 with a shared `tsconfig.base.json` that each package extends. Recommended editor extensions are listed in `.vscode/extensions.json`.
@@ -69,6 +70,8 @@ Postgres and Mailpit run natively on your machine, not in Docker; Docker is only
 - **Mailpit**, which captures outgoing email: `brew install mailpit`, then `brew services start mailpit`.
 
 ```sh
+bun run db:create   # once: create the tonaris and tonaris_test databases
+bun run db:migrate  # apply the committed migrations to tonaris
 bun dev             # web and api together; each reloads when you save
 bun run mail:test   # send one email to Mailpit
 ```
@@ -77,11 +80,28 @@ bun run mail:test   # send one email to Mailpit
 | --- | --- |
 | Web app | http://localhost:3000 |
 | API | http://localhost:3001, health check at `/healthz` |
-| Postgres 18 | `localhost:5432` |
+| Postgres 18 | `localhost:5432`: database `tonaris` (`DATABASE_URL`), tests in `tonaris_test` (`TEST_DATABASE_URL`) |
 | Mailpit | inbox at http://localhost:8025, SMTP on `localhost:1025` |
 
-- Both apps are placeholders until the API and web skeletons land, and nothing connects to Postgres yet.
+- Both apps are placeholders until the API and web skeletons land.
+- The defaults connect as `postgres` without a password. Set `DATABASE_URL` or `TEST_DATABASE_URL` to use another server; production must set `DATABASE_URL`.
+- Integration tests each run in a fresh, migrated schema of `tonaris_test` (`@tonaris/db/testing`), dropped afterwards.
 - In watch mode, an app that crashes waits for a file change instead of exiting; stop everything with Ctrl+C.
+
+### Database changes
+
+Migrations are generated from the Drizzle schema in `packages/db/src/schema/`, reviewed, and committed (TS-17):
+
+1. Change the schema.
+2. `bun run db:generate --name <what_changed>` writes `packages/db/migrations/<timestamp>_<name>/migration.sql` and a snapshot. Read the SQL; it is what production will run.
+3. `bun run db:migrate` applies it locally; `bun test` runs the integration tests against it.
+4. Commit the schema change and the migration together. `bun run db:check` fails while the schema has changes without a migration.
+
+Notes:
+
+- Don't edit a migration once it is merged; fix forward with a new one. Changes follow expand/contract, so a deploy never breaks the running version.
+- `drizzle-kit push` is never used against shared databases.
+- Generated migration files are excluded from oxfmt, so they stay exactly as drizzle-kit wrote them.
 
 ### Spec changes (OpenSpec)
 
