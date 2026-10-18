@@ -15,6 +15,7 @@ Tonaris is in specification and feasibility planning; no application code exists
 | [Tech spec](docs/tech-spec.md) | Stack, architecture, data, sync, MCP, operations, verification, and delivery plan | `TS-` |
 | [Deploying](docs/deploy.md) | Production builds, Docker images, settings and deploy steps, for any host | — |
 | [Audits](docs/audits/) | Dated requirement audits and the decisions taken in them | — |
+| [Spikes](docs/spikes/) | Dated feasibility spike reports (M1), with their evidence in `tooling/fixtures/` | — |
 
 ## Repository layout
 

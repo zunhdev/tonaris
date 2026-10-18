@@ -17,3 +17,6 @@ coverage/
 test-results/
 playwright-report/
 **/playwright/.auth/
+
+# G1 spike: MusicBrainz responses cached by --cache (TON-14)
+tooling/fixtures/**/cache/

@@ -10,6 +10,7 @@
   "dependencies": {
     "@tonaris/db": "workspace:*",
     "@tonaris/domain": "workspace:*",
-    "drizzle-orm": "1.0.0-rc.4"
+    "drizzle-orm": "1.0.0-rc.4",
+    "zod": "4.6.7"
   }
 }
