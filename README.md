@@ -57,11 +57,14 @@ bun run check:specs             # openspec validate --all --strict
 bun run db:check                # migrations match the schema (drizzle-kit check, no-diff generate)
 bun run openapi:check           # the committed OpenAPI document matches the API routes
 bun test                        # all tests; the integration tests need the local Postgres
+bun run test:e2e                # Playwright browser tests of the web app (needs Node and Chromium)
 ```
 
 Tooling: oxlint (`.oxlintrc.json`), oxfmt (`.oxfmtrc.json`; Markdown is not auto-formatted), TypeScript 7 with a shared `tsconfig.base.json` that each package extends. Recommended editor extensions are listed in `.vscode/extensions.json`.
 
 New dependencies are added with `bun add <name>` inside the package that uses them; `bunfig.toml` makes Bun write the exact version.
+
+The browser tests run Playwright's test runner, which needs Node 20.19 or later and Chromium: `bunx playwright install chromium` once. They build the web app and serve it with `vite preview` on port 3100.
 
 ### Running locally
 
@@ -79,12 +82,12 @@ bun run mail:test   # send one email to Mailpit
 
 | Service | Address |
 | --- | --- |
-| Web app | http://localhost:3000 |
+| Web app | http://localhost:3000: the workspace at `/c` (client-rendered), sign-in at `/sign-in` (server-rendered) |
 | API | http://localhost:3001: `/v1/health`, the OpenAPI document at `/v1/openapi.json`, the host health check at `/healthz` |
 | Postgres 18 | `localhost:5432`: database `tonaris` (`DATABASE_URL`), tests in `tonaris_test` (`TEST_DATABASE_URL`) |
 | Mailpit | inbox at http://localhost:8025, SMTP on `localhost:1025` |
 
-- The web app is a placeholder until the web skeleton lands. Each page load shows the API's health, fetched through the typed Eden client (`API_INTERNAL_URL`, default `http://localhost:3001`).
+- The web app runs TanStack Start on Vite (`bun --bun vite dev`). The workspace shell and sign-in are placeholders until M2 and the sign-in work fill them in.
 - The defaults connect as `postgres` without a password. Set `DATABASE_URL` or `TEST_DATABASE_URL` to use another server; production must set `DATABASE_URL`.
 - Integration tests each run in a fresh, migrated schema of `tonaris_test` (`@tonaris/db/testing`), dropped afterwards.
 - In watch mode, an app that crashes waits for a file change instead of exiting; stop everything with Ctrl+C.
@@ -97,6 +100,15 @@ The API (`apps/api`, Elysia 2 beta) serves every resource under `/v1` (TS-09):
 - **OpenAPI 3.1** is generated from the routes' Zod schemas. After changing a route, run `bun run openapi:generate`, review the diff of `apps/api/openapi/v1.json` and commit it; `bun run openapi:check` fails while it is stale. Changes within `/v1` are additive only.
 - **Clients:** the web app types its calls with Eden from the API's `type App` (`apps/web/src/api.ts`); native clients are generated from the OpenAPI document (TS-29).
 - Routes that validate input declare `422: problemSchema` in their `response` map, so Eden and OpenAPI see the problem the API actually sends.
+
+### Design system
+
+`packages/ui` holds the design system (design spec DS-10 to DS-20):
+
+- **Tokens** live in `src/styles/tokens.css`, in three layers: OKLCH primitives, the dark theme's semantic tokens (`bg.*`, `fg.*`, `border.*`, `accent.*`, `status.*`, `focus`), and the shadcn variables mapped onto them. Tailwind utilities are named after the semantic tokens: `bg-panel`, `text-fg-secondary`, `border-strong`, `bg-accent-fill`. Tailwind's default palette, text sizes and shadows are switched off.
+- **Components use semantic tokens only.** `bun test` fails if a component or app file names a primitive, or if a token change breaks a DS-14 contrast target.
+- **Components** are shadcn's, on Base UI: `bun run ui:add <name>` copies one into `packages/ui/src/components`, where it is restyled to DS-15 (24, 28 and 32px controls) and imported as `@tonaris/ui/components/<name>`.
+- **Fonts:** Inter Variable is bundled into the app's own assets; no font CDN.
 
 ### Database changes
 

@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "promise"],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "promise", "react", "jsx-a11y"],
   "categories": {
     "correctness": "error",
     "suspicious": "error",
@@ -16,7 +16,8 @@
     "typescript/await-thenable": "error",
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
-    "typescript/switch-exhaustiveness-check": "error"
+    "typescript/switch-exhaustiveness-check": "error",
+    "react/react-in-jsx-scope": "off"
   },
   "overrides": [
     {
@@ -46,5 +47,6 @@
         ]
       }
     }
-  ]
+  ],
+  "ignorePatterns": ["**/routeTree.gen.ts"]
 }

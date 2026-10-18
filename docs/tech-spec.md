@@ -166,10 +166,12 @@ SSR loaders call the API over the host's private network (`API_INTERNAL_URL`) wi
 
 ```
 apps/web/                  TanStack Start app (deployable: tonaris-web)
-  src/routes/              file routes (DS-32); no data endpoints or server functions
+  src/routes/              file routes (DS-32); no data endpoints or server functions. Workspace routes sit under
+                           the pathless `_workspace` layout (`ssr: false`); public routes are server-rendered.
   src/client/sync/         TanStack DB collections, outbox, SSE client, leader tab (web-only details)
   src/features/            UI features (collection, capture, fields, sharing, settings, admin…)
   server.ts                production Bun.serve wrapper (static + Start fetch)
+  e2e/                     Playwright browser tests (`*.e2e.ts`, TS-121)
 apps/api/                  Elysia 2 service (deployable: tonaris-api)
   src/app.ts               builds the app without side effects; exports `type App` for Eden (TS-29)
   src/index.ts             app.listen
@@ -182,7 +184,7 @@ apps/api/                  Elysia 2 service (deployable: tonaris-api)
   openapi/v1.json          generated, committed contract (TS-09)
 packages/domain/           framework-free business logic + Zod schemas + normalize()
 packages/db/               Drizzle schema, migrations, repositories
-packages/ui/               design system (tokens, Base UI/shadcn primitives, patterns)
+packages/ui/               design system: src/styles/tokens.css (DS-10 token layers), shadcn components on Base UI
 packages/providers/        link parsing, MusicBrainz/CAA clients, provider adapters (policy-gated)
 tooling/                   seed + workload generator, restore drill, export validator
 openspec/                  OpenSpec specs and changes (TS-132)
@@ -190,7 +192,7 @@ openspec/                  OpenSpec specs and changes (TS-132)
 docs/                      PRD, design spec, tech spec, audits, runbooks
 ```
 
-**TS-06 Local development (Decided).** Postgres 18 and Mailpit run natively on the developer's machine; Docker is used only for deployment builds (TS-110). Postgres listens on `localhost:5432` with `pg_trgm` available (the creator uses DBngin). Mailpit, installed with Homebrew, captures email, with SMTP on 1025 and its inbox on 8025. One `bun dev` script starts two processes: `apps/api` (`bun --watch`, port 3001) and `apps/web` (Vite with Start HMR, port 3000). The web app calls the API cross-origin under the same CORS and cookie rules as production, with `http://localhost:3000` on the allowlist (TS-102). There is deliberately no Vite proxy, so cross-origin bugs surface locally rather than in production. Seeds come from `tooling/` and include the 5,000-album workload (TS-120).
+**TS-06 Local development (Decided).** Postgres 18 and Mailpit run natively on the developer's machine; Docker is used only for deployment builds (TS-110). Postgres listens on `localhost:5432` with `pg_trgm` available (the creator uses DBngin). Mailpit, installed with Homebrew, captures email, with SMTP on 1025 and its inbox on 8025. One `bun dev` script starts two processes: `apps/api` (`bun --watch`, port 3001) and `apps/web` (Vite with Start HMR, run as `bun --bun vite`, port 3000). The web app calls the API cross-origin under the same CORS and cookie rules as production, with `http://localhost:3000` on the allowlist (TS-102). There is deliberately no Vite proxy, so cross-origin bugs surface locally rather than in production. Seeds come from `tooling/` and include the 5,000-album workload (TS-120).
 
 **TS-07 Dependency policy (Decided; Q-06).**
 
@@ -1161,6 +1163,8 @@ Branch protection on `main` requires all of these. Production deploys from `main
 | `admission` | FR-11.2, FR-11.6 |
 | `search` | FR-12 |
 | `capacity-limits` | FR-15 |
+| `design-system` | DS-10–DS-29; Q-02, Q-10 |
+| `app-shell` | DS-30–DS-32; TS-03 |
 
 **TS-133 `openspec/config.yaml` (Decided).** The file itself is the source; this entry only describes it. As OpenSpec recommends, it is kept short and links to the specs rather than pasting them.
 

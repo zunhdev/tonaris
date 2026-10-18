@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Status | Draft v0.1 |
-| Updated | 17 October 2026 |
+| Updated | 18 October 2026 |
 | Source of truth for behavior | [Product requirements](product-requirements.md), iteration 6 |
 | Companion | [Tech spec](tech-spec.md) |
 | Decisions log | [Section 17](#17-design-decisions-log) |
@@ -56,7 +56,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 *(Q-10)*
 
-**DS-12 Color.** The neutral ramp is cool-tinted at hue ≈ 265 with chroma ≤ 0.012. These are starting values, tuned in implementation against the contrast targets in DS-14.
+**DS-12 Color.** The neutral ramp is cool-tinted at hue ≈ 265 with chroma ≤ 0.012. These were starting values, tuned in implementation against the contrast targets in DS-14; the tuned values below are the ones in `packages/ui/src/styles/tokens.css` (18 October 2026).
 
 | Semantic token | Value (OKLCH) | Use |
 | --- | --- | --- |
@@ -66,12 +66,14 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `bg.hover` | 0.235 0.008 265 | Row and item hover |
 | `bg.selected` | 0.26 0.03 275 | Selected row (tinted toward accent) |
 | `border.subtle` | 0.25 0.008 265 | Dividers, row separators |
-| `border.strong` | 0.32 0.01 265 | Inputs, focused containers |
+| `border.strong` | 0.52 0.01 265 | Inputs, focused containers (raised from 0.32 to reach 3:1, DS-14) |
 | `fg.primary` | 0.95 0.004 265 | Titles, primary text |
 | `fg.secondary` | 0.76 0.008 265 | Artist, metadata |
 | `fg.tertiary` | 0.64 0.01 265 | Hints, timestamps, placeholders |
 | `fg.disabled` | 0.46 0.008 265 | Disabled controls only |
-| `accent.solid` | 0.66 0.17 275 | Primary buttons, focus, selection marks |
+| `fg.on-accent` | 0.98 0 0 | Labels on `accent.fill` (primary buttons) |
+| `accent.solid` | 0.66 0.17 275 | Focus ring (`focus`), selection marks |
+| `accent.fill` | 0.54 0.17 275 | Primary button backgrounds; dark enough for `fg.on-accent` labels at 4.5:1 |
 | `accent.soft` | 0.66 0.17 275 / 12% | Accent backgrounds, live-update flash |
 | `status.success` | 0.72 0.15 155 | Confirmed outcomes in reports |
 | `status.warning` | 0.80 0.14 80 | Conflicts, reconnecting, pending-approval notices |
@@ -96,7 +98,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `text.page` | 20 / 28 | 600 | Page headers (list/folder name) |
 | `text.display` | 28 / 34 | 600 | Guest page title, empty-state headline |
 
-**DS-14 Contrast targets.** Contrast is checked by an automated token test.
+**DS-14 Contrast targets.** Contrast is checked by an automated token test (`packages/ui/src/styles/tokens.test.ts`). It reads `tokens.css`, converts OKLCH to sRGB, blends translucent tokens over their background, and fails naming each pair below its minimum. It checks `fg.primary`, `fg.secondary` and `fg.tertiary` at 4.5:1; `border.strong`, `focus` and every `status.*` at 3:1; and `fg.on-accent` on `accent.fill` at 4.5:1, all against the four surfaces below.
 
 | Element | Minimum ratio | Against |
 | --- | --- | --- |
@@ -829,7 +831,7 @@ The tech spec sets the measurable targets (Q-01, pending approval).
 
 ## 17. Design decisions log
 
-No design questions are open. The creator settled these on 17 October 2026:
+No design questions are open. The creator settled these on 17 October 2026, and rows 10 and 11 on 18 October 2026:
 
 | # | Question | Decision |
 | --- | --- | --- |
@@ -842,6 +844,8 @@ No design questions are open. The creator settled these on 17 October 2026:
 | 7 | Link-preview artwork (DS-72) | Text-only until G1 clears artwork use |
 | 8 | Wordmark and app icon (DS-19) | A simple text wordmark |
 | 9 | Typed confirmation for account deletion (DS-97) | The user types their sign-in email |
+| 10 | Input borders below 3:1 (DS-12, DS-14), 18 Oct 2026 | Raise `border.strong` to 0.52, reaching 3:1 on every surface |
+| 11 | Primary button labels below 4.5:1 on the accent (DS-12, DS-14), 18 Oct 2026 | New `accent.fill` (0.54 0.17 275) behind near-white `fg.on-accent` labels; `accent.solid` stays for focus and selection |
 
 New questions are added here as **Open (design)** rows.
 
