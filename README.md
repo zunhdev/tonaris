@@ -106,6 +106,7 @@ The API (`apps/api`, Elysia 2 beta) serves every resource under `/v1` (TS-09):
 - Routes that validate input declare `422: problemSchema` in their `response` map, so Eden and OpenAPI see the problem the API actually sends. Error statuses declared with `problemSchema` appear in the OpenAPI document as the shared `Problem` component.
 - **Signed-in routes** declare `signedIn: true`, which resolves the request's `principal` (TS-30) and `account` from the session cookie, or answers `401` `unauthenticated` (`apps/api/src/auth/plugin.ts`). They also declare `401: problemSchema`.
 - **Sign-in** is Better Auth with email codes (TS-70), served at `/auth/*` outside `/v1`. Only the endpoints sign-in needs are routed; see `apps/api/src/auth/`. Credentialed CORS is allowed for `WEB_ORIGIN` only (TS-102).
+- **Security baseline** (`apps/api/src/security.ts`, TS-101/TS-102): every response carries `default-src 'none'` CSP, `nosniff` and HSTS. Writes under `/v1` and `/auth` must be JSON (`415` otherwise). Those that carry cookies must come from `WEB_ORIGIN` (`403` otherwise). Bearer requests never use cookies.
 
 ### Design system
 
@@ -115,6 +116,7 @@ The API (`apps/api`, Elysia 2 beta) serves every resource under `/v1` (TS-09):
 - **Components use semantic tokens only.** `bun test` fails if a component or app file names a primitive, or if a token change breaks a DS-14 contrast target.
 - **Components** are shadcn's, on Base UI: `bun run ui:add <name>` copies one into `packages/ui/src/components`, where it is restyled to DS-15 (24, 28 and 32px controls) and imported as `@tonaris/ui/components/<name>`.
 - **Fonts:** Inter Variable is bundled into the app's own assets; no font CDN.
+- **CSP:** the web app sends a strict Content-Security-Policy with a per-request nonce (`apps/web/src/start.ts`, TS-101), in development too. Inline scripts and `<style>` elements without the nonce don't run, and neither does `eval`. Use stylesheets and Tailwind classes. `packages/domain` imports Zod through `src/zod.ts`, which keeps Zod from probing for `eval` in browsers.
 
 ### Database changes
 

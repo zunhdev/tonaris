@@ -9,7 +9,12 @@ import type { ErrorCode, Problem } from "@tonaris/domain";
 /** The codes the HTTP layer produces itself; commands report the rest of the TS-27 vocabulary. */
 export type HttpProblemCode = Extract<
   ErrorCode,
-  "not_found" | "validation_failed" | "unauthenticated" | "rate_limited" | "internal_error"
+  | "not_found"
+  | "validation_failed"
+  | "unauthenticated"
+  | "permission_denied"
+  | "rate_limited"
+  | "internal_error"
 >;
 
 type InvalidParam = NonNullable<Problem["errors"]>[number];
