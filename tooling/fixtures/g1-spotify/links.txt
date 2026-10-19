@@ -1,0 +1,123 @@
+# The TON-15 sample: the G1 sample's Spotify links (tooling/fixtures/g1-sample) plus 'wikidata-spotify-extra'
+# albums and 'wikidata-spotify-tracks', drawn by tooling/src/spikes/g1-spotify/sample.ts. labels.json names each
+# labelled link's MusicBrainz release group.
+#   bun tooling/src/spikes/g1-spotify/run.ts tooling/fixtures/g1-spotify/links.txt
+
+# sample: creator
+https://open.spotify.com/album/1KVGLuPtrMrLlyy4Je6df7?si=LnOyGBweR4agFG4VItiz7A
+https://open.spotify.com/album/1giq3rw3XSuUUUmrgU1kSR?si=1s1YgAm8Qx6RiVMUVLDOIg
+https://open.spotify.com/album/6qM2ORmRcqDKgNlWA3cMjx?si=fLT_iDEbRfOIUKmUZpLjcA
+https://open.spotify.com/album/719ELjvRzp0lHiLyAuAGj3?si=JX1ffmBxR_GaTRFVYKpU6Q
+
+# sample: wikidata-spotify-in-mb
+https://open.spotify.com/album/32NZSslCL03dkXyILrrbGe # Q11197000
+https://open.spotify.com/album/740w8I7bWyDqwpi43GUFRj # Q18907757
+https://open.spotify.com/album/1QoIC9lvQYBmXnlpnKE8pa # Q10316499
+https://open.spotify.com/album/5NFLUa7LJ8la1znPXcxIfd # Q18650966
+https://open.spotify.com/album/4lnBBTwTaPhgIs6ulqHO4r # Q133822064
+https://open.spotify.com/album/0jhHzxKkbDQIa0cljYbgnj # Q125504124
+https://open.spotify.com/album/2IsJvOVAVDq7aHN8sRhGni # Q111342758
+https://open.spotify.com/album/3GBpagKDLL4cRseF5yxKVV # Q1754943
+https://open.spotify.com/album/2SwBlWsPDm0zPkZHAN3Lae # Q111094374
+https://open.spotify.com/album/2Lb2YUneFftfbtXpFHWpki # Q10635702
+https://open.spotify.com/album/1wpDZ0qOWgafQyv9Nr7raS # Q1853607
+https://open.spotify.com/album/67wSWfKeI2lgdNpST16HBD # Q1172084
+https://open.spotify.com/album/7sdz6zUhXNwbwzqVRskzj9 # Q1937833
+https://open.spotify.com/album/2lIdJKPBNVOXDZknJxdBxp # Q124079211
+https://open.spotify.com/album/47ZAm5PRPZhmuoaWD3lF1Z # Q113839012
+
+# sample: wikidata-spotify-not-in-mb
+https://open.spotify.com/album/3s4HmqnnKlm0Kh6EudjrTT # Q133105596
+https://open.spotify.com/album/30uepBPxzp5V7ovyC3ASmX # Q65230596
+https://open.spotify.com/album/6T6tm4jOM3aBrMsW8p4iIn # Q124151777
+https://open.spotify.com/album/03REwT8roensVXdD6nAbUw # Q118396249
+https://open.spotify.com/album/5PzMNoFvUKa4PpdYgPa9NQ # Q12500009
+https://open.spotify.com/album/1gOW0YiRDt11BVuaCHc88O # Q3514470
+https://open.spotify.com/album/69ELkcI76VZPk0h2EiqvUi # Q25476763
+https://open.spotify.com/album/06AnVCX7e9F1pdcobg7sZn # Q16521094
+https://open.spotify.com/album/4oHSulCTIeZK1LHxqG16Nd # Q5991260
+https://open.spotify.com/album/6GBaIPZsPjHBFhixaOLoOZ # Q123976835
+
+# sample: wikidata-spotify-extra
+https://open.spotify.com/album/4TxAIzgvhjP9TdVtCfvm08 # Q2342690
+https://open.spotify.com/album/0AD4wxcSCGqqMR2Yvo8bFr # Q3541172
+https://open.spotify.com/album/5A7qhg1w3J1GVoPPTChYCF # Q125855780
+https://open.spotify.com/album/2BNe5H753L6yYE5Y21B7T0 # Q3136970
+https://open.spotify.com/album/63vpVRMhMQQZj4c7SRfP4y # Q269337
+https://open.spotify.com/album/42blSc4ZKA1Ber7ZbYDYuB # Q3149468
+https://open.spotify.com/album/715deAG2jUDWITl5w1j8Su # Q1143207
+https://open.spotify.com/album/6gXM7TK58OxPBWyAWQFbEN # Q19385606
+https://open.spotify.com/album/1cuwPgs7eeNeoiMMigetop # Q1810622
+https://open.spotify.com/album/7DlGCTOUpFojsQrfXE0IRa # Q3111043
+https://open.spotify.com/album/2uOfGSWri3PQOtibtgM78V # Q16653551
+https://open.spotify.com/album/6uZABwQhmEllK5otzX9ONK # Q3148487
+https://open.spotify.com/album/2YeCvyPNFpxxT10gFYr0Nr # Q1072202
+https://open.spotify.com/album/4rPsV2qfjewaH9tAidFVv9 # Q3280186
+https://open.spotify.com/album/61xPv4JRySw7lQyvsmU83G # Q1713749
+https://open.spotify.com/album/06d2wF12THMtOee4tagK7K # Q15925322
+https://open.spotify.com/album/0Vw6FmuN5pWZQbW5ztqOfk # Q28497827
+https://open.spotify.com/album/4C91mXMnUw22yIi5omosDZ # Q3220426
+https://open.spotify.com/album/4RQnFSkkZlA65Xxchhnaha # Q117817
+https://open.spotify.com/album/561eKNmfenwaF1fZsVayMv # Q120648227
+https://open.spotify.com/album/7wWV7fPoyYnj5u8y7zqg5S # Q3028879
+https://open.spotify.com/album/69TPOVVeA5VBEPWLrCMQ4f # Q3283451
+https://open.spotify.com/album/4PTq788RYYJ6cUV1yzFaUP # Q109255557
+https://open.spotify.com/album/0IVncKBAETM03yydg06TIq # Q2714861
+https://open.spotify.com/album/3Oq0b7Bfm9wZpshiNUnFD3 # Q16482028
+https://open.spotify.com/album/1NFGnxmeIEBakre4DvLaJq # Q16419
+https://open.spotify.com/album/40S3R4ln51wiKHnoTG0FNl # Q24898781
+https://open.spotify.com/album/2p0rXgrNJHmSg0SiYm2AZT # Q11973924
+https://open.spotify.com/album/1Ya7tBWa4EYNCMoSZ4N1Na # Q1944928
+https://open.spotify.com/album/1osZiBHlDNDYLZdyl0oGFA # Q3230977
+https://open.spotify.com/album/5VuziwMegerFHGnfjBpxhT # Q104853381
+https://open.spotify.com/album/3177kbTL2CQMUeIojn2SdK # Q121040377
+https://open.spotify.com/album/3PkdGRruLnJ9zCtANiDrpB # Q1709490
+https://open.spotify.com/album/0Bk6rV33JObdtOpjJg0vIy # Q1065457
+https://open.spotify.com/album/1x5VqEMZz4fNfwPeBTaNzF # Q1768383
+https://open.spotify.com/album/3wDeIA9tJU0uNlsroUdcYK # Q1976781
+https://open.spotify.com/album/35LBELudi4TfqIvvJMOp4A # Q2660075
+https://open.spotify.com/album/1WyrGCkFDlH1xPadZ5qTkL # Q24034651
+https://open.spotify.com/album/36MYNMQ8o0QggL9zyNgyLe # Q1947175
+https://open.spotify.com/album/5SGKHab9xI6G4TKWYz3WOe # Q131392615
+https://open.spotify.com/album/2Kgh3RyvT2EkH4ZxiIVkex # Q12643321
+https://open.spotify.com/album/3c3VkRXYbjHDeJFiUq8Hse # Q3446204
+https://open.spotify.com/album/0PVjDkptaHbw2wrpsWupoV # Q3213455
+https://open.spotify.com/album/0dvlmNvi7bwLGzO2SG4KAa # Q2058674
+https://open.spotify.com/album/2PeWE2c3X22cAuIK7KWVoE # Q1098197
+https://open.spotify.com/album/1h5xomkdLABZzzJZqd9ZDu # Q1058128
+https://open.spotify.com/album/5dIJHC8ZlPRqe6dNKcGhLD # Q1937126
+https://open.spotify.com/album/4iNmDhEZ1WYGecKm9ekWxB # Q1317668
+https://open.spotify.com/album/0QOBJYviordwqHAgv5g9m3 # Q250629
+https://open.spotify.com/album/5iVI155wEcVAS0fa9uLkc3 # Q2481279
+
+# sample: wikidata-spotify-tracks
+https://open.spotify.com/track/1tQy2AqgFc0AdddmIboIfX # Q109854989
+https://open.spotify.com/track/7xVpkVkd1klTzLJEysIR7z # Q109956306
+https://open.spotify.com/track/72j6CMlN5NCzF0oLMyfFcQ # Q124025080
+https://open.spotify.com/track/0Wrz6Ua5qB7UoOwUJVVbLO # Q127694480
+https://open.spotify.com/track/6PRZIYPOPMt5y8wGofp44d # Q114236543
+https://open.spotify.com/track/6mib3N4E8PZHAGQ3xy7bho # Q61284361
+https://open.spotify.com/track/3OFc2bUPHokD3BpjDNxWzl # Q127421050
+https://open.spotify.com/track/2PaktlQ4uhWfR0Cuk0qRtN # Q124030164
+https://open.spotify.com/track/16znV4n3VrHaHIkNcU5s6c # Q106781693
+https://open.spotify.com/track/4oXnW0CV8q1I0FJAeNyFXj # Q104144940
+https://open.spotify.com/track/2C4bCqwlYENTkzMv9yLuLF # Q66622345
+https://open.spotify.com/track/7e7OrQFDPHKZKo9mGlGeQq # Q126920789
+https://open.spotify.com/track/6TbbYOyf6BSxFiVUtAvNx0 # Q25394385
+https://open.spotify.com/track/514ln9JxZocsEseLTuvu0T # Q113991130
+https://open.spotify.com/track/4CfwZNFqgOZmmMKvakrUXM # Q104773433
+https://open.spotify.com/track/3ijwOhVxJ7B2m6aIPlmRVF # Q109730539
+https://open.spotify.com/track/5XLLP0fmIfBvtJIJX7LvZA # Q124314882
+https://open.spotify.com/track/5qdmxwRkULsZY1BxNvSGx4 # Q33248709
+https://open.spotify.com/track/67gDqPeyqOo3DKICrz5Y8Y # Q61750351
+https://open.spotify.com/track/4dZYJSoIkFRLo6GbxJwxi4 # Q63380966
+https://open.spotify.com/track/5NCDNPLzJvyHzAAsyaMpcf # Q124634022
+https://open.spotify.com/track/5tOBPD3zL9kWpeELqkzwJC # Q132217410
+https://open.spotify.com/track/5bljaC0OYKt9jqd0xyS1lS # Q126389817
+https://open.spotify.com/track/6vJSLX1aqt8mVFK2j5Lk6C # Q122065444
+https://open.spotify.com/track/60BmSp4whSDDysRNgkKdqd # Q124058418
+https://open.spotify.com/track/4TW4754ksLR6BO2Rjn09Qm # Q3211826
+https://open.spotify.com/track/08VNzAOt0R9LpMWEnPSOOM # Q16259047
+https://open.spotify.com/track/0UWTiapjdKbt2rFzdwl2Vk # Q124291563
+https://open.spotify.com/track/6xBwIgiITWIzcxet6DJU7z # Q124016017
+https://open.spotify.com/track/5Fnsomnxvs2g9FvX5EGD7y # Q6464900

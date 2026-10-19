@@ -1,0 +1,5957 @@
+{
+  "results": [
+    {
+      "index": 0,
+      "input": "https://open.spotify.com/album/1KVGLuPtrMrLlyy4Je6df7?si=LnOyGBweR4agFG4VItiz7A",
+      "albums": {
+        "f1afec0b-26dd-3db5-9aa1-c91229a74a24": {
+          "title": "Bleach",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 209
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "f1afec0b-26dd-3db5-9aa1-c91229a74a24"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "f1afec0b-26dd-3db5-9aa1-c91229a74a24"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "f1afec0b-26dd-3db5-9aa1-c91229a74a24"
+        ],
+        "releases": 2
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+        "correct": true
+      },
+      "sample": "creator"
+    },
+    {
+      "index": 1,
+      "input": "https://open.spotify.com/album/1giq3rw3XSuUUUmrgU1kSR?si=1s1YgAm8Qx6RiVMUVLDOIg",
+      "albums": {
+        "54dc2ea4-d3da-319d-8ee9-c2f4faf98581": {
+          "title": "Икра",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 82
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "54dc2ea4-d3da-319d-8ee9-c2f4faf98581"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "54dc2ea4-d3da-319d-8ee9-c2f4faf98581"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "54dc2ea4-d3da-319d-8ee9-c2f4faf98581"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+        "correct": true
+      },
+      "sample": "creator"
+    },
+    {
+      "index": 2,
+      "input": "https://open.spotify.com/album/6qM2ORmRcqDKgNlWA3cMjx?si=fLT_iDEbRfOIUKmUZpLjcA",
+      "albums": {
+        "4e9806e5-04ac-457b-90aa-e69f309beaf8": {
+          "title": "The Nutcracker (complete)",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 91
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "4e9806e5-04ac-457b-90aa-e69f309beaf8"
+        ],
+        "releases": 1
+      },
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "4e9806e5-04ac-457b-90aa-e69f309beaf8"
+      },
+      "sample": "creator"
+    },
+    {
+      "index": 3,
+      "input": "https://open.spotify.com/album/719ELjvRzp0lHiLyAuAGj3?si=JX1ffmBxR_GaTRFVYKpU6Q",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 139
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "da40e720-2097-3730-8a7f-0c2ddbff4a96"
+        ],
+        "source": "manual MusicBrainz search, 19 October 2026"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 56,
+        "withBarcode": 44,
+        "digital": 4,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "creator"
+    },
+    {
+      "index": 4,
+      "input": "https://open.spotify.com/album/32NZSslCL03dkXyILrrbGe",
+      "albums": {
+        "1fc45f68-7542-45de-8514-66b566af473d": {
+          "title": "doing",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 129
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "1fc45f68-7542-45de-8514-66b566af473d"
+        ],
+        "source": "Wikidata Q11197000 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "1fc45f68-7542-45de-8514-66b566af473d"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "1fc45f68-7542-45de-8514-66b566af473d"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "1fc45f68-7542-45de-8514-66b566af473d",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 5,
+      "input": "https://open.spotify.com/album/740w8I7bWyDqwpi43GUFRj",
+      "albums": {
+        "5db40a82-9420-46f1-a87c-19f38403300d": {
+          "title": "Pretty Girls and Grey Sweaters",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 270
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "5db40a82-9420-46f1-a87c-19f38403300d"
+        ],
+        "source": "Wikidata Q18907757 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "5db40a82-9420-46f1-a87c-19f38403300d"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "5db40a82-9420-46f1-a87c-19f38403300d",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 6,
+      "input": "https://open.spotify.com/album/1QoIC9lvQYBmXnlpnKE8pa",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 156
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "a201d54f-5242-4278-935a-a2070549f363"
+        ],
+        "source": "Wikidata Q10316499 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 0,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 7,
+      "input": "https://open.spotify.com/album/5NFLUa7LJ8la1znPXcxIfd",
+      "albums": {
+        "ab88ca0b-da32-4e01-ae9b-198b0b7b8681": {
+          "title": "Rebel Heart",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 90
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "ab88ca0b-da32-4e01-ae9b-198b0b7b8681"
+        ],
+        "source": "Wikidata Q18650966 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "ab88ca0b-da32-4e01-ae9b-198b0b7b8681"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "ab88ca0b-da32-4e01-ae9b-198b0b7b8681"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "ab88ca0b-da32-4e01-ae9b-198b0b7b8681",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 8,
+      "input": "https://open.spotify.com/album/4lnBBTwTaPhgIs6ulqHO4r",
+      "albums": {
+        "41996d23-b45f-4470-a3b9-9b2347894a0b": {
+          "title": "שמחת חינם",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 138
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "41996d23-b45f-4470-a3b9-9b2347894a0b"
+        ],
+        "source": "Wikidata Q133822064 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "41996d23-b45f-4470-a3b9-9b2347894a0b"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "41996d23-b45f-4470-a3b9-9b2347894a0b"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "41996d23-b45f-4470-a3b9-9b2347894a0b",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 9,
+      "input": "https://open.spotify.com/album/0jhHzxKkbDQIa0cljYbgnj",
+      "albums": {
+        "e63934d5-ef99-4fbe-a61d-f23deaee4aee": {
+          "title": "Nothing’s Impossible",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 178
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "e63934d5-ef99-4fbe-a61d-f23deaee4aee"
+        ],
+        "source": "Wikidata Q125504124 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "e63934d5-ef99-4fbe-a61d-f23deaee4aee"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "e63934d5-ef99-4fbe-a61d-f23deaee4aee",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 10,
+      "input": "https://open.spotify.com/album/2IsJvOVAVDq7aHN8sRhGni",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 103
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "44730e48-13cc-4d70-8c4c-5e27651cb7bf"
+        ],
+        "source": "Wikidata Q111342758 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 0,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 11,
+      "input": "https://open.spotify.com/album/3GBpagKDLL4cRseF5yxKVV",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 95
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "62ad2ee8-c654-345f-a276-abc4913e4788"
+        ],
+        "source": "Wikidata Q1754943 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 7,
+        "withBarcode": 4,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 12,
+      "input": "https://open.spotify.com/album/2SwBlWsPDm0zPkZHAN3Lae",
+      "albums": {
+        "8af782a4-793c-4ae3-a141-7b23b233eb5a": {
+          "title": "Never Forget My Love",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 190
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "8af782a4-793c-4ae3-a141-7b23b233eb5a"
+        ],
+        "source": "Wikidata Q111094374 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "8af782a4-793c-4ae3-a141-7b23b233eb5a"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "8af782a4-793c-4ae3-a141-7b23b233eb5a"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "8af782a4-793c-4ae3-a141-7b23b233eb5a",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 13,
+      "input": "https://open.spotify.com/album/2Lb2YUneFftfbtXpFHWpki",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 127
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "738cff5e-b2df-4c68-ad32-64a2af82e97c"
+        ],
+        "source": "Wikidata Q10635702 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 1,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 14,
+      "input": "https://open.spotify.com/album/1wpDZ0qOWgafQyv9Nr7raS",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 169
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "236778b6-fc25-3f08-9e34-904a9ec13c29"
+        ],
+        "source": "Wikidata Q1853607 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 0,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 15,
+      "input": "https://open.spotify.com/album/67wSWfKeI2lgdNpST16HBD",
+      "albums": {
+        "31b33adb-3d87-3646-89b6-4cb35b31765a": {
+          "title": "Saliva",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 80
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "31b33adb-3d87-3646-89b6-4cb35b31765a"
+        ],
+        "source": "Wikidata Q1172084 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "31b33adb-3d87-3646-89b6-4cb35b31765a"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "31b33adb-3d87-3646-89b6-4cb35b31765a",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 16,
+      "input": "https://open.spotify.com/album/7sdz6zUhXNwbwzqVRskzj9",
+      "albums": {
+        "af7c7ca3-e3a8-3d30-9984-05fe07ead521": {
+          "title": "Motorcade of Generosity",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 190
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "af7c7ca3-e3a8-3d30-9984-05fe07ead521"
+        ],
+        "source": "Wikidata Q1937833 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "af7c7ca3-e3a8-3d30-9984-05fe07ead521"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "af7c7ca3-e3a8-3d30-9984-05fe07ead521"
+        ],
+        "releases": 3
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "af7c7ca3-e3a8-3d30-9984-05fe07ead521",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 17,
+      "input": "https://open.spotify.com/album/2lIdJKPBNVOXDZknJxdBxp",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 121
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "fd1d5522-3acb-4bfd-8d86-680d3e4eb2f0"
+        ],
+        "source": "Wikidata Q124079211 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 0,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 18,
+      "input": "https://open.spotify.com/album/47ZAm5PRPZhmuoaWD3lF1Z",
+      "albums": {
+        "8176c85b-12cb-4988-9a23-06a48caebd96": {
+          "title": "La Direction",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 95
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "8176c85b-12cb-4988-9a23-06a48caebd96"
+        ],
+        "source": "Wikidata Q113839012 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "8176c85b-12cb-4988-9a23-06a48caebd96"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "8176c85b-12cb-4988-9a23-06a48caebd96"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "8176c85b-12cb-4988-9a23-06a48caebd96",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-in-mb"
+    },
+    {
+      "index": 19,
+      "input": "https://open.spotify.com/album/3s4HmqnnKlm0Kh6EudjrTT",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 173
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 20,
+      "input": "https://open.spotify.com/album/30uepBPxzp5V7ovyC3ASmX",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 126
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 21,
+      "input": "https://open.spotify.com/album/6T6tm4jOM3aBrMsW8p4iIn",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 312
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 22,
+      "input": "https://open.spotify.com/album/03REwT8roensVXdD6nAbUw",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 90
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 23,
+      "input": "https://open.spotify.com/album/5PzMNoFvUKa4PpdYgPa9NQ",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 268
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 24,
+      "input": "https://open.spotify.com/album/1gOW0YiRDt11BVuaCHc88O",
+      "albums": {
+        "85feb452-e95a-316e-a21c-a858eab076e5": {
+          "title": "Talents Fâchés, volume 4 : 4 coins de la France",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Compilation"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 134
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "85feb452-e95a-316e-a21c-a858eab076e5"
+        ],
+        "releases": 1
+      },
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "85feb452-e95a-316e-a21c-a858eab076e5"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 25,
+      "input": "https://open.spotify.com/album/69ELkcI76VZPk0h2EiqvUi",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 86
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 26,
+      "input": "https://open.spotify.com/album/06AnVCX7e9F1pdcobg7sZn",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 208
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 27,
+      "input": "https://open.spotify.com/album/4oHSulCTIeZK1LHxqG16Nd",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 98
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 28,
+      "input": "https://open.spotify.com/album/6GBaIPZsPjHBFhixaOLoOZ",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 104
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-not-in-mb"
+    },
+    {
+      "index": 29,
+      "input": "https://open.spotify.com/album/4TxAIzgvhjP9TdVtCfvm08",
+      "albums": {
+        "aab8850c-160e-37b5-9ab9-6b1752937c76": {
+          "title": "Secret Society",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 177
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "aab8850c-160e-37b5-9ab9-6b1752937c76"
+        ],
+        "source": "Wikidata Q2342690 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "aab8850c-160e-37b5-9ab9-6b1752937c76"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "aab8850c-160e-37b5-9ab9-6b1752937c76",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 30,
+      "input": "https://open.spotify.com/album/0AD4wxcSCGqqMR2Yvo8bFr",
+      "albums": {
+        "a848f837-06ab-418e-ae4b-6d32f46db297": {
+          "title": "Le Best of",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Compilation"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 177
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "09e08722-be36-4143-898d-93e90389c499"
+        ],
+        "source": "Wikidata Q3541172 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "a848f837-06ab-418e-ae4b-6d32f46db297"
+        ],
+        "releases": 1
+      },
+      "step3Correct": false,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "a848f837-06ab-418e-ae4b-6d32f46db297",
+        "correct": false
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 31,
+      "input": "https://open.spotify.com/album/5A7qhg1w3J1GVoPPTChYCF",
+      "albums": {
+        "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7": {
+          "title": "Live at the Paramount",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Live"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 95
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7"
+        ],
+        "source": "Wikidata Q125855780 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 32,
+      "input": "https://open.spotify.com/album/2BNe5H753L6yYE5Y21B7T0",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 104
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "f6e44908-767a-3ebe-9702-238170691566"
+        ],
+        "source": "Wikidata Q3136970 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 5,
+        "withBarcode": 5,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 33,
+      "input": "https://open.spotify.com/album/63vpVRMhMQQZj4c7SRfP4y",
+      "albums": {
+        "711ef782-d201-345e-916c-1d1b15f06e24": {
+          "title": "Lush Life",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 91
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "711ef782-d201-345e-916c-1d1b15f06e24"
+        ],
+        "source": "Wikidata Q269337 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "711ef782-d201-345e-916c-1d1b15f06e24"
+        ],
+        "releases": 2
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "711ef782-d201-345e-916c-1d1b15f06e24",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 34,
+      "input": "https://open.spotify.com/album/42blSc4ZKA1Ber7ZbYDYuB",
+      "albums": {
+        "e8c3e38f-de01-30e4-af7c-5eabc68d3471": {
+          "title": "samurai champloo music record: impression",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Soundtrack"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 134
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "e8c3e38f-de01-30e4-af7c-5eabc68d3471"
+        ],
+        "source": "Wikidata Q3149468 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "e8c3e38f-de01-30e4-af7c-5eabc68d3471"
+        ],
+        "releases": 2
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "e8c3e38f-de01-30e4-af7c-5eabc68d3471"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "e8c3e38f-de01-30e4-af7c-5eabc68d3471",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 35,
+      "input": "https://open.spotify.com/album/715deAG2jUDWITl5w1j8Su",
+      "albums": {
+        "c4bbcdec-1e39-3f5f-a67f-3da9f8c1a9dc": {
+          "title": "Synchestra",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 115
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "c4bbcdec-1e39-3f5f-a67f-3da9f8c1a9dc"
+        ],
+        "source": "Wikidata Q1143207 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "c4bbcdec-1e39-3f5f-a67f-3da9f8c1a9dc"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "c4bbcdec-1e39-3f5f-a67f-3da9f8c1a9dc"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "c4bbcdec-1e39-3f5f-a67f-3da9f8c1a9dc",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 36,
+      "input": "https://open.spotify.com/album/6gXM7TK58OxPBWyAWQFbEN",
+      "albums": {
+        "41789a0a-16b1-4c2c-8cab-fb54ebd7fee9": {
+          "title": "Postkort fra Lillebjørn",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Compilation"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 148
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "41789a0a-16b1-4c2c-8cab-fb54ebd7fee9"
+        ],
+        "source": "Wikidata Q19385606 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "41789a0a-16b1-4c2c-8cab-fb54ebd7fee9"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "41789a0a-16b1-4c2c-8cab-fb54ebd7fee9",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 37,
+      "input": "https://open.spotify.com/album/1cuwPgs7eeNeoiMMigetop",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 289
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "cce64d81-b23e-3659-ae8c-b9e0b643b647"
+        ],
+        "source": "Wikidata Q1810622 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 1,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 38,
+      "input": "https://open.spotify.com/album/7DlGCTOUpFojsQrfXE0IRa",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 159
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "bba16990-5443-460d-b12f-92fe8416d979"
+        ],
+        "source": "Wikidata Q3111043 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 9,
+        "withBarcode": 7,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 39,
+      "input": "https://open.spotify.com/album/2uOfGSWri3PQOtibtgM78V",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 94
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "8bd3bb01-6697-4bfe-8264-5230db65c9e2"
+        ],
+        "source": "Wikidata Q16653551 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 4,
+        "withBarcode": 2,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 40,
+      "input": "https://open.spotify.com/album/6uZABwQhmEllK5otzX9ONK",
+      "albums": {
+        "5f091cea-9948-482b-a92b-841df8a02b6c": {
+          "title": "Jacques Dutronc",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 100
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "5f091cea-9948-482b-a92b-841df8a02b6c"
+        ],
+        "source": "Wikidata Q3148487 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "5f091cea-9948-482b-a92b-841df8a02b6c"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "5f091cea-9948-482b-a92b-841df8a02b6c"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "5f091cea-9948-482b-a92b-841df8a02b6c",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 41,
+      "input": "https://open.spotify.com/album/2YeCvyPNFpxxT10gFYr0Nr",
+      "albums": {
+        "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08": {
+          "title": "III",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 108
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08"
+        ],
+        "source": "Wikidata Q1072202 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08"
+        ],
+        "releases": 3
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 42,
+      "input": "https://open.spotify.com/album/4rPsV2qfjewaH9tAidFVv9",
+      "albums": {
+        "7a4913d2-fde8-3199-90d7-2afaf2d85941": {
+          "title": "Cuts Both Ways",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 102
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "7a4913d2-fde8-3199-90d7-2afaf2d85941"
+        ],
+        "source": "Wikidata Q3280186 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "7a4913d2-fde8-3199-90d7-2afaf2d85941"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "7a4913d2-fde8-3199-90d7-2afaf2d85941",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 43,
+      "input": "https://open.spotify.com/album/61xPv4JRySw7lQyvsmU83G",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 189
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "15f0cfa9-6632-402d-bf60-03281a072d46"
+        ],
+        "source": "Wikidata Q1713749 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 4,
+        "withBarcode": 4,
+        "digital": 2,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 44,
+      "input": "https://open.spotify.com/album/06d2wF12THMtOee4tagK7K",
+      "albums": {
+        "a7f04f2b-c6f9-4f58-9ae5-07f21f8f4915": {
+          "title": "Ikuiset lapset",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 84
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "a7f04f2b-c6f9-4f58-9ae5-07f21f8f4915"
+        ],
+        "source": "Wikidata Q15925322 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "a7f04f2b-c6f9-4f58-9ae5-07f21f8f4915"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "a7f04f2b-c6f9-4f58-9ae5-07f21f8f4915"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "a7f04f2b-c6f9-4f58-9ae5-07f21f8f4915",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 45,
+      "input": "https://open.spotify.com/album/0Vw6FmuN5pWZQbW5ztqOfk",
+      "albums": {
+        "c49554db-2046-3853-99b5-9527e31d359f": {
+          "title": "Older",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 160
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "c49554db-2046-3853-99b5-9527e31d359f"
+        ],
+        "source": "Wikidata Q28497827 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "c49554db-2046-3853-99b5-9527e31d359f"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "c49554db-2046-3853-99b5-9527e31d359f"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "c49554db-2046-3853-99b5-9527e31d359f",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 46,
+      "input": "https://open.spotify.com/album/4C91mXMnUw22yIi5omosDZ",
+      "albums": {
+        "8dbf14b0-ab66-3bfe-980d-eb764871e19c": {
+          "title": "Le Bestiaire",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 76
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "8dbf14b0-ab66-3bfe-980d-eb764871e19c"
+        ],
+        "source": "Wikidata Q3220426 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "8dbf14b0-ab66-3bfe-980d-eb764871e19c"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "8dbf14b0-ab66-3bfe-980d-eb764871e19c",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 47,
+      "input": "https://open.spotify.com/album/4RQnFSkkZlA65Xxchhnaha",
+      "albums": {
+        "f21cec66-4e3a-42fc-b7e4-59b17bed0cca": {
+          "title": "Diamond Eyes",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 102
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "f21cec66-4e3a-42fc-b7e4-59b17bed0cca"
+        ],
+        "source": "Wikidata Q117817 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "f21cec66-4e3a-42fc-b7e4-59b17bed0cca"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "f21cec66-4e3a-42fc-b7e4-59b17bed0cca"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "f21cec66-4e3a-42fc-b7e4-59b17bed0cca",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 48,
+      "input": "https://open.spotify.com/album/561eKNmfenwaF1fZsVayMv",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 211
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "055c5ea8-1b6f-48c1-a996-86db5d142923"
+        ],
+        "source": "Wikidata Q120648227 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 2,
+        "withBarcode": 1,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 49,
+      "input": "https://open.spotify.com/album/7wWV7fPoyYnj5u8y7zqg5S",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 86
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "f3917cdc-5a12-3cc3-a695-5d112fd6a562"
+        ],
+        "source": "Wikidata Q3028879 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 2,
+        "withBarcode": 2,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 50,
+      "input": "https://open.spotify.com/album/69TPOVVeA5VBEPWLrCMQ4f",
+      "albums": {
+        "2372bab8-ad60-3f39-9abf-ffafe3f04429": {
+          "title": "One Voice",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Live"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 143
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "2372bab8-ad60-3f39-9abf-ffafe3f04429"
+        ],
+        "source": "Wikidata Q3283451 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "2372bab8-ad60-3f39-9abf-ffafe3f04429"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "2372bab8-ad60-3f39-9abf-ffafe3f04429"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "2372bab8-ad60-3f39-9abf-ffafe3f04429",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 51,
+      "input": "https://open.spotify.com/album/4PTq788RYYJ6cUV1yzFaUP",
+      "albums": {
+        "083902ba-4f44-4bff-b3cc-9fa480a93a93": {
+          "title": "Alejado de la red",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 116
+      },
+      "musicbrainz": 4,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "083902ba-4f44-4bff-b3cc-9fa480a93a93"
+        ],
+        "source": "Wikidata Q109255557 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "083902ba-4f44-4bff-b3cc-9fa480a93a93"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 0,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "083902ba-4f44-4bff-b3cc-9fa480a93a93",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 52,
+      "input": "https://open.spotify.com/album/0IVncKBAETM03yydg06TIq",
+      "albums": {
+        "7cf4e03b-bc9a-33fc-8b38-706f5c3ea35b": {
+          "title": "Who’s Last",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Live"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 248
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "7cf4e03b-bc9a-33fc-8b38-706f5c3ea35b"
+        ],
+        "source": "Wikidata Q2714861 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "7cf4e03b-bc9a-33fc-8b38-706f5c3ea35b"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "7cf4e03b-bc9a-33fc-8b38-706f5c3ea35b"
+        ],
+        "releases": 3
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "7cf4e03b-bc9a-33fc-8b38-706f5c3ea35b",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 53,
+      "input": "https://open.spotify.com/album/3Oq0b7Bfm9wZpshiNUnFD3",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 89
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "b918774c-3048-452d-a36f-1eb3024cf7b9"
+        ],
+        "source": "Wikidata Q16482028 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 2,
+        "withBarcode": 1,
+        "digital": 2,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 54,
+      "input": "https://open.spotify.com/album/1NFGnxmeIEBakre4DvLaJq",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 109
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "bc7630eb-521a-3312-a281-adfb8c5aac7d"
+        ],
+        "source": "Wikidata Q16419 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 15,
+        "withBarcode": 10,
+        "digital": 9,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 55,
+      "input": "https://open.spotify.com/album/40S3R4ln51wiKHnoTG0FNl",
+      "albums": {
+        "9b25a15a-3fdb-40ff-b078-915fe010ea7e": {
+          "title": "Colour",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 203
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "9b25a15a-3fdb-40ff-b078-915fe010ea7e"
+        ],
+        "source": "Wikidata Q24898781 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "9b25a15a-3fdb-40ff-b078-915fe010ea7e"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "9b25a15a-3fdb-40ff-b078-915fe010ea7e",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 56,
+      "input": "https://open.spotify.com/album/2p0rXgrNJHmSg0SiYm2AZT",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 99
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "c2c020f7-8648-4575-a94c-d786e5a0acf6"
+        ],
+        "source": "Wikidata Q11973924 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 0,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 57,
+      "input": "https://open.spotify.com/album/1Ya7tBWa4EYNCMoSZ4N1Na",
+      "albums": {
+        "690e3fc0-8862-4605-a3d3-eeed6ba6aed6": {
+          "title": "Punk Goes Pop, Volume 4",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Compilation"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 106
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "690e3fc0-8862-4605-a3d3-eeed6ba6aed6"
+        ],
+        "source": "Wikidata Q1944928 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "690e3fc0-8862-4605-a3d3-eeed6ba6aed6"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "690e3fc0-8862-4605-a3d3-eeed6ba6aed6"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "690e3fc0-8862-4605-a3d3-eeed6ba6aed6",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 58,
+      "input": "https://open.spotify.com/album/1osZiBHlDNDYLZdyl0oGFA",
+      "albums": {
+        "a0affd4a-0b35-3528-ab4f-13b6c91ebaf9": {
+          "title": "Les Beaux Dégâts",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 324
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "a0affd4a-0b35-3528-ab4f-13b6c91ebaf9"
+        ],
+        "source": "Wikidata Q3230977 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "a0affd4a-0b35-3528-ab4f-13b6c91ebaf9"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "a0affd4a-0b35-3528-ab4f-13b6c91ebaf9"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "a0affd4a-0b35-3528-ab4f-13b6c91ebaf9",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 59,
+      "input": "https://open.spotify.com/album/5VuziwMegerFHGnfjBpxhT",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 92
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "b5049db1-7bd3-3261-a622-eec949fb6ad6"
+        ],
+        "source": "Wikidata Q104853381 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 1,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 60,
+      "input": "https://open.spotify.com/album/3177kbTL2CQMUeIojn2SdK",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 187
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "38ea56a3-872b-4b33-95a6-c14925842309"
+        ],
+        "source": "Wikidata Q121040377 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 2,
+        "withBarcode": 0,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 61,
+      "input": "https://open.spotify.com/album/3PkdGRruLnJ9zCtANiDrpB",
+      "albums": {
+        "045b64e4-2bec-3b56-a94c-7a892a5f47c2": {
+          "title": "Buffalo Springfield",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 106
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "045b64e4-2bec-3b56-a94c-7a892a5f47c2"
+        ],
+        "source": "Wikidata Q1709490 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "045b64e4-2bec-3b56-a94c-7a892a5f47c2"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "045b64e4-2bec-3b56-a94c-7a892a5f47c2"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "045b64e4-2bec-3b56-a94c-7a892a5f47c2",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 62,
+      "input": "https://open.spotify.com/album/0Bk6rV33JObdtOpjJg0vIy",
+      "albums": {
+        "ad555095-b0a6-42c8-87aa-8ba035d20e12": {
+          "title": "The Sensual World",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 130
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "ad555095-b0a6-42c8-87aa-8ba035d20e12"
+        ],
+        "source": "Wikidata Q1065457 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "ad555095-b0a6-42c8-87aa-8ba035d20e12"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "ad555095-b0a6-42c8-87aa-8ba035d20e12"
+        ],
+        "releases": 2
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "ad555095-b0a6-42c8-87aa-8ba035d20e12",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 63,
+      "input": "https://open.spotify.com/album/1x5VqEMZz4fNfwPeBTaNzF",
+      "albums": {
+        "ed8166ac-fb3c-32a3-8ad7-019dee5e1bee": {
+          "title": "In the Garden of Venus: The 6th Album",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 90
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "ed8166ac-fb3c-32a3-8ad7-019dee5e1bee"
+        ],
+        "source": "Wikidata Q1768383 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "ed8166ac-fb3c-32a3-8ad7-019dee5e1bee"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "ed8166ac-fb3c-32a3-8ad7-019dee5e1bee"
+        ],
+        "releases": 2
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "ed8166ac-fb3c-32a3-8ad7-019dee5e1bee",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 64,
+      "input": "https://open.spotify.com/album/3wDeIA9tJU0uNlsroUdcYK",
+      "albums": {
+        "6f381dd5-4fb0-3ae1-8742-c0100466b535": {
+          "title": "The Woman in Me",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 84
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "6f381dd5-4fb0-3ae1-8742-c0100466b535"
+        ],
+        "source": "Wikidata Q1976781 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "6f381dd5-4fb0-3ae1-8742-c0100466b535"
+        ],
+        "releases": 4
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "6f381dd5-4fb0-3ae1-8742-c0100466b535",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 65,
+      "input": "https://open.spotify.com/album/35LBELudi4TfqIvvJMOp4A",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 117
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "f411b01e-8028-3db9-b35f-31fa650c4ff0"
+        ],
+        "source": "Wikidata Q2660075 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 4,
+        "withBarcode": 3,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 66,
+      "input": "https://open.spotify.com/album/1WyrGCkFDlH1xPadZ5qTkL",
+      "albums": {
+        "bd166f52-cc11-4554-8045-ada94e6b2911": {
+          "title": "The Colour in Anything",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 191
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "bd166f52-cc11-4554-8045-ada94e6b2911"
+        ],
+        "source": "Wikidata Q24034651 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "bd166f52-cc11-4554-8045-ada94e6b2911"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "bd166f52-cc11-4554-8045-ada94e6b2911",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 67,
+      "input": "https://open.spotify.com/album/36MYNMQ8o0QggL9zyNgyLe",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 95
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "f8f1fe07-3e6e-491e-bd1e-34c51163600f"
+        ],
+        "source": "Wikidata Q1947175 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 7,
+        "withBarcode": 5,
+        "digital": 2,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 68,
+      "input": "https://open.spotify.com/album/5SGKHab9xI6G4TKWYz3WOe",
+      "albums": {
+        "be1be20b-7428-49fa-b64d-d24fe24cae2d": {
+          "title": "L'eterno è solo un attimo",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 177
+      },
+      "musicbrainz": 4,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "be1be20b-7428-49fa-b64d-d24fe24cae2d"
+        ],
+        "source": "Wikidata Q131392615 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "be1be20b-7428-49fa-b64d-d24fe24cae2d"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 0,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "be1be20b-7428-49fa-b64d-d24fe24cae2d",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 69,
+      "input": "https://open.spotify.com/album/2Kgh3RyvT2EkH4ZxiIVkex",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 262
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "de403fa8-0581-32e9-8eb8-02469f59a425"
+        ],
+        "source": "Wikidata Q12643321 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 2,
+        "withBarcode": 0,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 70,
+      "input": "https://open.spotify.com/album/3c3VkRXYbjHDeJFiUq8Hse",
+      "albums": {
+        "3131932b-bc2f-3c6a-a08c-23a5ae95ec27": {
+          "title": "The Animals",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 90
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "3131932b-bc2f-3c6a-a08c-23a5ae95ec27"
+        ],
+        "source": "Wikidata Q3446204 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "3131932b-bc2f-3c6a-a08c-23a5ae95ec27"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "3131932b-bc2f-3c6a-a08c-23a5ae95ec27"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "3131932b-bc2f-3c6a-a08c-23a5ae95ec27",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 71,
+      "input": "https://open.spotify.com/album/0PVjDkptaHbw2wrpsWupoV",
+      "albums": {
+        "7c32d3aa-ce22-35cf-b053-6d7fa20d624e": {
+          "title": "N°4 : La Valse à mille temps",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 88
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "7c32d3aa-ce22-35cf-b053-6d7fa20d624e"
+        ],
+        "source": "Wikidata Q3213455 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "7c32d3aa-ce22-35cf-b053-6d7fa20d624e"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "7c32d3aa-ce22-35cf-b053-6d7fa20d624e",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 72,
+      "input": "https://open.spotify.com/album/0dvlmNvi7bwLGzO2SG4KAa",
+      "albums": {
+        "fa0b08c0-8118-486d-8201-8c1d01ba858a": {
+          "title": "Le Voyage dans la Lune",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Soundtrack"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 92
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "fa0b08c0-8118-486d-8201-8c1d01ba858a"
+        ],
+        "source": "Wikidata Q2058674 P436"
+      },
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "fa0b08c0-8118-486d-8201-8c1d01ba858a"
+        ],
+        "releases": 1
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "fa0b08c0-8118-486d-8201-8c1d01ba858a"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "fa0b08c0-8118-486d-8201-8c1d01ba858a",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 73,
+      "input": "https://open.spotify.com/album/2PeWE2c3X22cAuIK7KWVoE",
+      "albums": {
+        "55a73423-bf7d-3969-b1b2-c34c43140e1a": {
+          "title": "Isn’t Anything",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 344
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "55a73423-bf7d-3969-b1b2-c34c43140e1a"
+        ],
+        "source": "Wikidata Q1098197 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "55a73423-bf7d-3969-b1b2-c34c43140e1a"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "55a73423-bf7d-3969-b1b2-c34c43140e1a",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 74,
+      "input": "https://open.spotify.com/album/1h5xomkdLABZzzJZqd9ZDu",
+      "albums": {
+        "6d86b87e-43e5-3631-bb46-84cb65b3f303": {
+          "title": "I’ve Got a Tiger by the Tail",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 104
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "6d86b87e-43e5-3631-bb46-84cb65b3f303"
+        ],
+        "source": "Wikidata Q1058128 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "6d86b87e-43e5-3631-bb46-84cb65b3f303"
+        ],
+        "releases": 2
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "6d86b87e-43e5-3631-bb46-84cb65b3f303",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 75,
+      "input": "https://open.spotify.com/album/5dIJHC8ZlPRqe6dNKcGhLD",
+      "albums": {
+        "0d962042-8184-3915-893e-cbadf2976625": {
+          "title": "Donkey",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 115
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "0d962042-8184-3915-893e-cbadf2976625"
+        ],
+        "source": "Wikidata Q1937126 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "0d962042-8184-3915-893e-cbadf2976625"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "0d962042-8184-3915-893e-cbadf2976625",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 76,
+      "input": "https://open.spotify.com/album/4iNmDhEZ1WYGecKm9ekWxB",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 160
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "dcc0d723-e27f-36e8-8438-dbbde7eb9a67"
+        ],
+        "source": "Wikidata Q1317668 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 19,
+        "withBarcode": 11,
+        "digital": 4,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 77,
+      "input": "https://open.spotify.com/album/0QOBJYviordwqHAgv5g9m3",
+      "albums": {
+        "c1a568c7-055c-374a-9d92-9ea077f2bf1f": {
+          "title": "Quiet Life",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 1,
+        "ms": 100
+      },
+      "musicbrainz": 2,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "c1a568c7-055c-374a-9d92-9ea077f2bf1f"
+        ],
+        "source": "Wikidata Q250629 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "c1a568c7-055c-374a-9d92-9ea077f2bf1f"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "c1a568c7-055c-374a-9d92-9ea077f2bf1f",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 78,
+      "input": "https://open.spotify.com/album/5iVI155wEcVAS0fa9uLkc3",
+      "albums": {},
+      "spotify": {
+        "calls": 1,
+        "ms": 90
+      },
+      "musicbrainz": 3,
+      "kind": "album",
+      "truth": {
+        "releaseGroupIds": [
+          "d8b12f5c-9c02-43a4-a106-54b889ce2a79"
+        ],
+        "source": "Wikidata Q2481279 P436"
+      },
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 2,
+        "withBarcode": 2,
+        "digital": 0,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-extra"
+    },
+    {
+      "index": 79,
+      "input": "https://open.spotify.com/track/1tQy2AqgFc0AdddmIboIfX",
+      "albums": {
+        "1e9428ef-9c74-3bb8-8b14-e53defab3b48": {
+          "title": "Parsley, Sage, Rosemary and Thyme",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 320
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "1e9428ef-9c74-3bb8-8b14-e53defab3b48"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "1e9428ef-9c74-3bb8-8b14-e53defab3b48"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "1e9428ef-9c74-3bb8-8b14-e53defab3b48"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "1e9428ef-9c74-3bb8-8b14-e53defab3b48",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 80,
+      "input": "https://open.spotify.com/track/7xVpkVkd1klTzLJEysIR7z",
+      "albums": {
+        "169b62aa-c3a5-3ed9-bed1-cc47c4bc51ad": {
+          "title": "The Freewheelin’ Bob Dylan",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 272
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "169b62aa-c3a5-3ed9-bed1-cc47c4bc51ad"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "169b62aa-c3a5-3ed9-bed1-cc47c4bc51ad"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "169b62aa-c3a5-3ed9-bed1-cc47c4bc51ad"
+        ],
+        "releases": 2
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "169b62aa-c3a5-3ed9-bed1-cc47c4bc51ad",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 81,
+      "input": "https://open.spotify.com/track/72j6CMlN5NCzF0oLMyfFcQ",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 307
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 82,
+      "input": "https://open.spotify.com/track/0Wrz6Ua5qB7UoOwUJVVbLO",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 541
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 83,
+      "input": "https://open.spotify.com/track/6PRZIYPOPMt5y8wGofp44d",
+      "albums": {
+        "1f5ef8d3-10ca-30eb-b41e-85b16987d412": {
+          "title": "“Heroes”",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 290
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "1f5ef8d3-10ca-30eb-b41e-85b16987d412"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "1f5ef8d3-10ca-30eb-b41e-85b16987d412"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "1f5ef8d3-10ca-30eb-b41e-85b16987d412"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "1f5ef8d3-10ca-30eb-b41e-85b16987d412",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 84,
+      "input": "https://open.spotify.com/track/6mib3N4E8PZHAGQ3xy7bho",
+      "albums": {
+        "6c9ae3dd-32ad-472c-96be-69d0a3536261": {
+          "title": "The Rise and Fall of Ziggy Stardust and the Spiders From Mars",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 351
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "6c9ae3dd-32ad-472c-96be-69d0a3536261"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "6c9ae3dd-32ad-472c-96be-69d0a3536261"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "6c9ae3dd-32ad-472c-96be-69d0a3536261"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "6c9ae3dd-32ad-472c-96be-69d0a3536261",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 85,
+      "input": "https://open.spotify.com/track/3OFc2bUPHokD3BpjDNxWzl",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 227
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 86,
+      "input": "https://open.spotify.com/track/2PaktlQ4uhWfR0Cuk0qRtN",
+      "albums": {
+        "631daa13-02f1-4012-a05f-bfff17e70255": {
+          "title": "C'est pas des lol",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 266
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "631daa13-02f1-4012-a05f-bfff17e70255"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "631daa13-02f1-4012-a05f-bfff17e70255"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "631daa13-02f1-4012-a05f-bfff17e70255"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "631daa13-02f1-4012-a05f-bfff17e70255",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 87,
+      "input": "https://open.spotify.com/track/16znV4n3VrHaHIkNcU5s6c",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 397
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 88,
+      "input": "https://open.spotify.com/track/4oXnW0CV8q1I0FJAeNyFXj",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 193
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 89,
+      "input": "https://open.spotify.com/track/2C4bCqwlYENTkzMv9yLuLF",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 254
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 90,
+      "input": "https://open.spotify.com/track/7e7OrQFDPHKZKo9mGlGeQq",
+      "albums": {
+        "f7692f8f-494c-4461-995e-28f3ec770c17": {
+          "title": "Mappamondo",
+          "primaryType": "Single",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 300
+      },
+      "musicbrainz": 4,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "f7692f8f-494c-4461-995e-28f3ec770c17"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "f7692f8f-494c-4461-995e-28f3ec770c17"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "miss": {
+        "releases": 1,
+        "withBarcode": 0,
+        "digital": 1,
+        "barcodeFormsMissed": false
+      },
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "f7692f8f-494c-4461-995e-28f3ec770c17",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 91,
+      "input": "https://open.spotify.com/track/6TbbYOyf6BSxFiVUtAvNx0",
+      "albums": {
+        "a8447ca4-c63a-30c0-9e1a-66c292a0a5c5": {
+          "title": "Paradize",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 406
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "a8447ca4-c63a-30c0-9e1a-66c292a0a5c5"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "a8447ca4-c63a-30c0-9e1a-66c292a0a5c5"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "a8447ca4-c63a-30c0-9e1a-66c292a0a5c5"
+        ],
+        "releases": 4
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "a8447ca4-c63a-30c0-9e1a-66c292a0a5c5",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 92,
+      "input": "https://open.spotify.com/track/514ln9JxZocsEseLTuvu0T",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 327
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 93,
+      "input": "https://open.spotify.com/track/4CfwZNFqgOZmmMKvakrUXM",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 240
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 94,
+      "input": "https://open.spotify.com/track/3ijwOhVxJ7B2m6aIPlmRVF",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 255
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 95,
+      "input": "https://open.spotify.com/track/5XLLP0fmIfBvtJIJX7LvZA",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 340
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 96,
+      "input": "https://open.spotify.com/track/5qdmxwRkULsZY1BxNvSGx4",
+      "albums": {
+        "2a4a400a-d1e9-319e-b2de-4bf57b9efc09": {
+          "title": "The Lion King: Original Broadway Cast Recording",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Soundtrack"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 178
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "2a4a400a-d1e9-319e-b2de-4bf57b9efc09"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "2a4a400a-d1e9-319e-b2de-4bf57b9efc09"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "2a4a400a-d1e9-319e-b2de-4bf57b9efc09"
+        ],
+        "releases": 3
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "2a4a400a-d1e9-319e-b2de-4bf57b9efc09",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 97,
+      "input": "https://open.spotify.com/track/67gDqPeyqOo3DKICrz5Y8Y",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 447
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 98,
+      "input": "https://open.spotify.com/track/4dZYJSoIkFRLo6GbxJwxi4",
+      "albums": {
+        "92a06784-e829-43b6-94d2-aa5c234fc46a": {
+          "title": "Les Années Orlando, Volume 9: Mourir sur scène",
+          "primaryType": "Album",
+          "secondaryTypes": [
+            "Compilation"
+          ]
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 607
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "92a06784-e829-43b6-94d2-aa5c234fc46a"
+        ],
+        "releases": 1
+      },
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "92a06784-e829-43b6-94d2-aa5c234fc46a"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 99,
+      "input": "https://open.spotify.com/track/5NCDNPLzJvyHzAAsyaMpcf",
+      "albums": {
+        "d38d40b7-c78e-3dd2-8315-91a0cfcddf18": {
+          "title": "Seven Days of Falling",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 639
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "d38d40b7-c78e-3dd2-8315-91a0cfcddf18"
+        ],
+        "releases": 1
+      },
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "d38d40b7-c78e-3dd2-8315-91a0cfcddf18"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 100,
+      "input": "https://open.spotify.com/track/5tOBPD3zL9kWpeELqkzwJC",
+      "albums": {
+        "1b990d18-72db-406f-9684-c48c08cb54ad": {
+          "title": "La cura per me",
+          "primaryType": "Single",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 160
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "1b990d18-72db-406f-9684-c48c08cb54ad"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "1b990d18-72db-406f-9684-c48c08cb54ad"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "1b990d18-72db-406f-9684-c48c08cb54ad"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "1b990d18-72db-406f-9684-c48c08cb54ad",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 101,
+      "input": "https://open.spotify.com/track/5bljaC0OYKt9jqd0xyS1lS",
+      "albums": {
+        "581ef83d-e8bc-471a-a128-4a6da4835f93": {
+          "title": "Mise à jour",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 527
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "581ef83d-e8bc-471a-a128-4a6da4835f93"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "581ef83d-e8bc-471a-a128-4a6da4835f93"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "581ef83d-e8bc-471a-a128-4a6da4835f93"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "581ef83d-e8bc-471a-a128-4a6da4835f93",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 102,
+      "input": "https://open.spotify.com/track/6vJSLX1aqt8mVFK2j5Lk6C",
+      "albums": {
+        "b0af8e78-ed92-43d3-a274-697a5dce290c": {
+          "title": "The Loveliest Time",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 352
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "b0af8e78-ed92-43d3-a274-697a5dce290c"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "b0af8e78-ed92-43d3-a274-697a5dce290c"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "b0af8e78-ed92-43d3-a274-697a5dce290c"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "b0af8e78-ed92-43d3-a274-697a5dce290c",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 103,
+      "input": "https://open.spotify.com/track/60BmSp4whSDDysRNgkKdqd",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 363
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 104,
+      "input": "https://open.spotify.com/track/4TW4754ksLR6BO2Rjn09Qm",
+      "albums": {
+        "f584bb2c-bdd0-3fb8-9d43-62e1f045a3c7": {
+          "title": "Attitudes",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 510
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "f584bb2c-bdd0-3fb8-9d43-62e1f045a3c7"
+        ],
+        "releases": 1
+      },
+      "chain": {
+        "outcome": "confident",
+        "step": 3,
+        "releaseGroupId": "f584bb2c-bdd0-3fb8-9d43-62e1f045a3c7"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 105,
+      "input": "https://open.spotify.com/track/08VNzAOt0R9LpMWEnPSOOM",
+      "albums": {
+        "234152ee-5dfe-3b2f-ae7d-2a95e845f68d": {
+          "title": "No Point in Wasting Tears",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 156
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "234152ee-5dfe-3b2f-ae7d-2a95e845f68d"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "234152ee-5dfe-3b2f-ae7d-2a95e845f68d"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 12,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "234152ee-5dfe-3b2f-ae7d-2a95e845f68d"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "234152ee-5dfe-3b2f-ae7d-2a95e845f68d",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 106,
+      "input": "https://open.spotify.com/track/0UWTiapjdKbt2rFzdwl2Vk",
+      "albums": {},
+      "spotify": {
+        "calls": 2,
+        "ms": 350
+      },
+      "musicbrainz": 2,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "upc": "present",
+      "upcDigits": 13,
+      "step3": {
+        "outcome": "none",
+        "releaseGroupIds": [],
+        "releases": 0
+      },
+      "chain": {
+        "outcome": "none"
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 107,
+      "input": "https://open.spotify.com/track/6xBwIgiITWIzcxet6DJU7z",
+      "albums": {
+        "0aff7021-1cf1-4028-8696-34fe5da9f1e5": {
+          "title": "Or noir",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 319
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "0aff7021-1cf1-4028-8696-34fe5da9f1e5"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "0aff7021-1cf1-4028-8696-34fe5da9f1e5"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "0aff7021-1cf1-4028-8696-34fe5da9f1e5"
+        ],
+        "releases": 1
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "0aff7021-1cf1-4028-8696-34fe5da9f1e5",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    },
+    {
+      "index": 108,
+      "input": "https://open.spotify.com/track/5Fnsomnxvs2g9FvX5EGD7y",
+      "albums": {
+        "2d5a2768-4f9d-409d-aebc-11a394f19b90": {
+          "title": "Du plaisir",
+          "primaryType": "Album",
+          "secondaryTypes": []
+        }
+      },
+      "spotify": {
+        "calls": 2,
+        "ms": 305
+      },
+      "musicbrainz": 3,
+      "kind": "track",
+      "parentFound": true,
+      "step2": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "2d5a2768-4f9d-409d-aebc-11a394f19b90"
+        ],
+        "releases": 1
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "2d5a2768-4f9d-409d-aebc-11a394f19b90"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "upc": "present",
+      "upcDigits": 14,
+      "step3": {
+        "outcome": "confident",
+        "releaseGroupIds": [
+          "2d5a2768-4f9d-409d-aebc-11a394f19b90"
+        ],
+        "releases": 2
+      },
+      "step3Correct": true,
+      "agrees": true,
+      "chain": {
+        "outcome": "confident",
+        "step": 2,
+        "releaseGroupId": "2d5a2768-4f9d-409d-aebc-11a394f19b90",
+        "correct": true
+      },
+      "sample": "wikidata-spotify-tracks"
+    }
+  ],
+  "spotify": [
+    {
+      "call": "token",
+      "status": 200,
+      "ms": 95,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 114,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 82,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 91,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 139,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 129,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 270,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 156,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 90,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 138,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 178,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 103,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 95,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 127,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 169,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 80,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 190,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 121,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 95,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 173,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 126,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 312,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 90,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 268,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 134,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 86,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 208,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 98,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 104,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 177,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 177,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 95,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 104,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 91,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 134,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 115,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 148,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 289,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 159,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 94,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 100,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 108,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 102,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 189,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 84,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 160,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 76,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 102,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 211,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 86,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 143,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 116,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 248,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 89,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 109,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 203,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 99,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 106,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 324,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 92,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 187,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 106,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 130,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 90,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 84,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 117,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 191,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 95,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 177,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 262,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 90,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 88,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 92,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 344,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 104,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 115,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 160,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 100,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 90,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 212,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 109,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 95,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 177,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 204,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 102,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 82,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 460,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 151,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 139,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 170,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 181,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 121,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 106,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 155,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 111,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 177,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 220,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 77,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 115,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 111,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 142,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 193,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 107,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 75,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 331,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 125,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 202,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 127,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 113,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 134,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 122,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 199,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 141,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 83,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 95,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 77,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 370,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 77,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 530,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 531,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 108,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 79,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 80,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 375,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 152,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 78,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 274,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 189,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 174,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 351,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 159,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 75,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 81,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 213,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 138,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 220,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 99,
+      "retries": 0
+    },
+    {
+      "call": "track",
+      "status": 200,
+      "ms": 199,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 106,
+      "retries": 0
+    },
+    {
+      "call": "token",
+      "status": 200,
+      "ms": 81,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 108,
+      "retries": 0
+    }
+  ],
+  "burst": [
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 213,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 311,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 163,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 162,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 75,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 124,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 77,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 246,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 220,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 183,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 122,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 90,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 111,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 152,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 136,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 78,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 156,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 202,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 97,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 78,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 147,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 382,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 142,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 165,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 375,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 206,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 158,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 144,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 85,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 138,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 103,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 79,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 181,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 81,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 190,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 192,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 81,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 207,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 125,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 116,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 101,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 145,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 272,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 105,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 81,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 174,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 163,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 128,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 99,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 168,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 132,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 152,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 371,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 157,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 84,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 114,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 167,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 245,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 113,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 166,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 139,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 120,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 166,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 99,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 80,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 145,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 300,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 174,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 172,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 178,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 85,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 87,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 111,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 242,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 214,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 86,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 226,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 120,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 155,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 127,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 118,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 157,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 108,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 107,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 153,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 296,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 226,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 74,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 136,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 213,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 179,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 82,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 97,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 102,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 362,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 83,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 440,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 96,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 428,
+      "retries": 0
+    },
+    {
+      "call": "album",
+      "status": 200,
+      "ms": 96,
+      "retries": 0
+    }
+  ]
+}

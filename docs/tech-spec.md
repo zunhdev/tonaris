@@ -541,7 +541,7 @@ Two canonical URLs that refer to the same `{service, kind, id}` are equivalent a
 
 *Evidence (provider research, 17 October 2026):*
 
-- **Spotify.** The [Developer Terms](https://developer.spotify.com/terms) and [Policy](https://developer.spotify.com/policy) forbid ingesting Spotify Content into AI models (Policy III.14), transferring it to third parties (Terms IV.2(e)), building databases of it or storing it indefinitely (IV.3), and integrating with other services' content (III.5). Development mode requires the owner to have Premium, allows 5 users, and removed `label`. `external_ids.upc` was restored in March 2026 ([changelog](https://developer.spotify.com/documentation/web-api/references/changes/march-2026)). Extended quota requires an organization with 250k monthly active users.
+- **Spotify.** The [Developer Terms](https://developer.spotify.com/terms) and [Policy](https://developer.spotify.com/policy) forbid ingesting Spotify Content into AI models (Policy III.14), transferring it to third parties (Terms IV.2(e)), building databases of it or storing it indefinitely (IV.3), and integrating with other services' content (III.5). Development mode requires the owner to have Premium, allows 5 users, and removed `label` and the batch endpoints such as Get Several Albums ([migration guide](https://developer.spotify.com/documentation/web-api/tutorials/february-2026-migration-guide)). `external_ids.upc` was restored in March 2026 ([changelog](https://developer.spotify.com/documentation/web-api/references/changes/march-2026)). Since July 2026, development-mode quota is counted per developer account, across all its apps ([changelog](https://developer.spotify.com/documentation/web-api/references/changes/july-2026)). Extended quota requires an organization with 250k monthly active users.
 - **Apple.** MusicKit §3.3.6(D) limits API use to "facilitating access to Your end users' Apple Music subscriptions", and art and text may not be used apart from playback or playlists ([DPLA](https://developer.apple.com/support/terms/apple-developer-program-license-agreement/)).
 - **Qobuz.** There is no developer portal. The 2011 ToU requires granted keys, and the community practice of extracting app IDs breaks it ([ToU](https://static.qobuz.com/apps/api/QobuzAPI-TermsofUse.pdf)).
 - **Odesli.** Its public API was retired on 2026-07-31.
@@ -562,7 +562,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 | 0. Parse | all | Local allowlisted parsing (TS-40) into `{service, kind, id}` | Unsupported input → FR-02.3 error |
 | 1. Existing link | all | The same `{service, entity_id}` is already linked in the owner's collection, Trash included | Reuse that album (TS-44) |
 | 2. MusicBrainz URL lookup | album links; Apple track links, whose album id is in the path | `/ws/2/url?resource={canonical}&inc=release-rels` | One album → confident, however many of its releases the URL is linked to; several albums → `needs_input` with the candidates (TS-26); none → next step |
-| 3. Identifier bridge | Qobuz, Spotify | **Qobuz:** a 13-digit numeric album id is treated as a UPC. **Spotify:** Web API with client credentials, in an app owned by the creator (Premium). `Get Album` yields `external_ids.upc`; for a track link, `Get Track` yields the parent album id, which goes back through step 2 and then this step. The UPC drives a MusicBrainz barcode search. | One album → confident; several albums → `needs_input`; none → next step |
+| 3. Identifier bridge | Qobuz, Spotify | **Qobuz:** a 13-digit numeric album id is treated as a UPC. **Spotify:** Web API with client credentials, in an app owned by the creator (Premium). `Get Album` yields `external_ids.upc`; for a track link, `Get Track` yields the parent album id, which goes back through step 2 and then this step. The UPC drives a MusicBrainz barcode search. The [TON-15 report](spikes/2026-10-19-g1-spotify-bridge.md) proposes searching it as 12, 13 and 14 digits; this is decided in TON-25. | One album → confident; several albums → `needs_input`; none → next step |
 | 4. Apple hints | Apple | Public iTunes Lookup API (no key) supplies title, artist, release date, and track count as hints for an **automatic strict** MusicBrainz release search | Accepted only if the releases matching the hints belong to exactly one album. The criteria are proposed in the [TON-16 report](spikes/2026-10-19-g1-apple-hints.md): loose title and artist names, the release year or the album's original year, no track count. They are decided in TON-25. Several albums → `needs_input`; none → next step |
 | 5. Manual entry | all | Form prefilled with the link and, for Apple, the hints (FR-02.4) | The user completes and saves |
 
@@ -584,9 +584,21 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 
 *Spike results (19 October 2026):* [G1 Apple hints spike](spikes/2026-10-19-g1-apple-hints.md). Scored on the album (the release group), as the creator decided on 19 October: the strict rule as written identifies 21% of labelled Apple links, while a rule with loose titles and artist names, release or original year, no track count and exactly one album identifies 66% (87% of those with hints), with no wrong matches. The proposed step 4 rule waits for TON-25.
 
+*Spike results (19 October 2026):* [G1 Spotify bridge spike](spikes/2026-10-19-g1-spotify-bridge.md).
+
+- Client credentials, `Get Album` and `Get Track` work in development mode, with no throttling in 241 calls.
+- Every album had a UPC, and every track link named its album.
+- The bridge identifies 55% of Spotify links. With step 2 first, the chain identifies 58%, against 37% for step 2 alone, with no wrong album.
+- Misses are editions MusicBrainz lacks.
+- The report proposes, for TON-25:
+  - the 14-digit barcode form;
+  - no cache entry keyed by a Spotify value on a miss;
+  - query strings stripped from MusicBrainz URLs in errors and logs;
+  - Spotify values derived again on each job attempt.
+
 *Still open (G1):*
 
-- legal review of Spotify API use (Policy III.5, integration with other services' content) and of the iTunes Lookup terms;
+- legal review of Spotify API use (Policy III.5, integration with other services' content; a production service on a development-mode app owned by the creator's Premium account) and of the iTunes Lookup terms;
 - the creator's final G1 decision after the spike.
 
 **TS-42 Enrichment rule (Decided; FR-03.3).** Enrichment writes only fields that are currently null and records their provenance. Populated fields, including user-entered ones, are never overwritten. Retries and newly matched links follow the same rule.
