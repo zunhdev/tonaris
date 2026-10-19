@@ -1,13 +1,13 @@
-// One Qobuz link through the TON-99 measurement: the album it truly is (labels.json, or MusicBrainz's URL
-// relationship once the slug is known), the store page's hints, the MusicBrainz releases they find, and every
-// rule's decision. Results keep the hints' date but none of Qobuz's strings, not even the slug: nothing from the
-// page may be kept (TON-17). Names in the report come from MusicBrainz, which is CC0.
+// One store link through the TON-99 measurement, for Qobuz or Tidal: the album it truly is (labels.json, or
+// MusicBrainz's URL relationship once any slug is known), the store page's hints, the MusicBrainz releases they
+// find, and every rule's decision. Results keep the hints' date but none of the store's strings, not even the
+// slug: nothing from the page may be kept (TON-17). Names in the report come from MusicBrainz, which is CC0.
 
 import { type Label, searchCandidates, urlTruth } from "../g1-apple-hints/match";
 import { type Decision, failedCriteria } from "../g1-apple-hints/rules";
 import { parseLink } from "../g1-musicbrainz/links";
 import type { MusicBrainz } from "../g1-musicbrainz/musicbrainz";
-import type { Qobuz, QobuzHints } from "./qobuz";
+import type { StoreHints, StorePages } from "./qobuz";
 import { decideQobuz, rules } from "./rules";
 
 export type MatchResult = {
@@ -19,9 +19,9 @@ export type MatchResult = {
   truth?: Label;
   /** What the store requests gave, without the page's strings. */
   page?: {
-    /** Requests to www.qobuz.com: 1 for a store link or a title without Latin letters, else 2. */
+    /** Requests to the store: for Qobuz, 1 for a store link or a title without Latin letters, else 2. */
     requests: number;
-    /** Whether the link lacked the slug, so request A ran. */
+    /** Whether the link lacked a Qobuz slug, so request A ran. */
     slugRequest: boolean;
     date?: string;
     /** Whether og:title carries a version note the `MusicAlbum` name lacks. */
@@ -47,8 +47,8 @@ export async function matchLink(
   input: string,
   labels: Readonly<Record<string, Label>>,
   mb: MusicBrainz,
-  qobuz: Qobuz,
-  explain?: (hints: QobuzHints | undefined, result: MatchResult) => void,
+  pages: StorePages,
+  explain?: (hints: StoreHints | undefined, result: MatchResult) => void,
 ): Promise<MatchResult> {
   const result: MatchResult = {
     index,
@@ -59,16 +59,16 @@ export async function matchLink(
     decisions: {},
   };
   const parsed = parseLink(input);
-  if (!parsed.ok || parsed.link.service !== "qobuz" || !parsed.link.albumId)
-    return { ...result, error: parsed.ok ? "not a Qobuz album link" : parsed.reason };
+  if (!parsed.ok || parsed.link.service !== pages.service || !parsed.link.albumId)
+    return { ...result, error: parsed.ok ? `not a ${pages.service} album link` : parsed.reason };
   const { link } = parsed;
 
   // Requests A and B. Production would make B only after step 2 misses; the spike measures every link.
-  const page = await qobuz.album(link);
+  const page = await pages.album(link);
   const { hints } = page;
   result.page = {
     requests: page.requests,
-    slugRequest: !link.slug,
+    slugRequest: page.slugRequested ?? false,
     ...(hints && { date: hints.date, versioned: hints.fullTitle !== hints.title }),
     ...(page.problem && { problem: page.problem }),
   };

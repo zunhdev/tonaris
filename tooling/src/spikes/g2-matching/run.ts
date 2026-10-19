@@ -136,6 +136,7 @@ async function identifyEditions(): Promise<Identified[]> {
     spotify: 80,
     "apple-music": 60,
     qobuz: 40,
+    tidal: 0,
   });
   const spotify = spotifyFromEnv();
   const itunes = new Itunes();

@@ -180,6 +180,7 @@ describe("Qobuz.album", () => {
     const { qobuz } = store({});
     expect(await qobuz.album(linkOf("https://open.qobuz.com/album/abc123"))).toEqual({
       requests: 1,
+      slugRequested: true,
       problem: "the page answered 404",
     });
   });

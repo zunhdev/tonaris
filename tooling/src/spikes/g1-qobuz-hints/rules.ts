@@ -4,7 +4,7 @@
 // the title compared.
 
 import { type Candidate, type Decision, decide, type Rule } from "../g1-apple-hints/rules";
-import type { QobuzHints } from "./qobuz";
+import type { StoreHints } from "./qobuz";
 
 export type QobuzRule = Rule & {
   /** `official` keeps only official releases of albums and EPs (the G2 spike, TON-18). */
@@ -59,7 +59,7 @@ export function eligible(rule: QobuzRule, candidates: readonly Candidate[]): Can
 
 export function decideQobuz(
   rule: QobuzRule,
-  hints: QobuzHints,
+  hints: StoreHints,
   candidates: readonly Candidate[],
 ): Decision {
   const title = rule.version === "with" ? hints.fullTitle : hints.title;

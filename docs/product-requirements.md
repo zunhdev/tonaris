@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Status | Working baseline, iteration 6 |
-| Updated | 19 October 2026 |
+| Updated | 20 October 2026 |
 | Companion documents | [Design spec](design-spec.md) · [Tech spec](tech-spec.md) · [Audits](audits/) |
 | Change history | [Section 11](#11-change-log) |
 
@@ -56,7 +56,7 @@ This document is the source of truth for Tonaris's purpose, scope, user-visible 
 | Capability | Requirements |
 | --- | --- |
 | Lists, nested folders, Unsorted, 30-day Trash | FR-01, FR-14 |
-| Link capture from Spotify, Apple Music, and Qobuz with metadata enrichment; manual entry | FR-02 |
+| Link capture from Spotify, Apple Music, Qobuz, and Tidal with metadata enrichment; manual entry | FR-02 |
 | Editable metadata, chronology, optional custom fields | FR-03 |
 | Viewing and editing modes; sorting, manual order, release-type grouping | FR-04, FR-05 |
 | Streaming-service links that open the external app | FR-06 |
@@ -103,7 +103,7 @@ The substantial first-version scope is accepted. Work is delivered in increments
 
 ### 2.5 Services and collection scope
 
-- **Launch services:** Spotify, Apple Music, Qobuz. Tonaris accepts links supplied by users or MCP clients. It resolves them, retrieves available metadata, matches them to saved albums, and opens saved links. People and client agents find links themselves; built-in catalog search and link discovery are out of scope (FR-06.7). Permitted use was reviewed for all three services on 19 October 2026 (G1); final access paths follow the G1 decision.
+- **Launch services:** Spotify, Apple Music, Qobuz, Tidal (added 20 October 2026). Tonaris accepts links supplied by users or MCP clients. It resolves them, retrieves available metadata, matches them to saved albums, and opens saved links. People and client agents find links themselves; built-in catalog search and link discovery are out of scope (FR-06.7). Permitted use was reviewed for Spotify, Apple Music and Qobuz on 19 October 2026, and for Tidal on 20 October 2026 (G1); final access paths follow the G1 decision.
 - **Independent collection.** Tonaris does not synchronize with streaming-service saved-album libraries in either direction. Saved Tonaris data still synchronizes across the user's devices (FR-09).
 - **Albums, not tracks.** Collection items are album/release records, including EPs, live albums, and compilations. Tracks are not collection items, and a track link resolves to its parent release (FR-02.3). The app and MCP use the same item scope.
 
@@ -259,7 +259,7 @@ The rule applies to creation, renaming, moves, and recovery.
 
 ### FR-02 — Capture: links and manual entry
 
-**FR-02.1 Link capture.** A user pastes a Spotify, Apple Music, or Qobuz album link into a list or without one (FR-02.2). Common share-link variants are supported. Tonaris identifies the album behind the link (FR-02.12) and populates the available metadata automatically from permitted sources (G1): title, artist credit, artwork, source service and link, and available release information. Missing information stays unknown.
+**FR-02.1 Link capture.** A user pastes a Spotify, Apple Music, Qobuz, or Tidal album link into a list or without one (FR-02.2). Common share-link variants are supported. Tonaris identifies the album behind the link (FR-02.12) and populates the available metadata automatically from permitted sources (G1): title, artist credit, artwork, source service and link, and available release information. Missing information stays unknown.
 
 **FR-02.2 Capture without a list.** Link capture, manual entry, and MCP additions may omit a destination list, and a new unlisted album appears in Unsorted. The same information, enrichment, matching, capacity, and outcome rules apply.
 
@@ -268,6 +268,8 @@ The rule applies to creation, renaming, moves, and recovery.
 
 **FR-02.3 Track links.** A track link resolves to the album of the release that specific link belongs to. For example, a track linked from a compilation adds that compilation, not some other album containing the song. A track from a single adds the single, which is Unclassified (FR-05.9; decided 19 October 2026). Only that album is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
 
+- A Tidal track link names no album Tonaris may look up (G1). It is explained, and manual entry opens with the link kept as the album's Tidal link (decided 20 October 2026).
+
 **FR-02.4 Manual entry.** A regular form adds an album without a lookup.
 
 - Required: title, artist credit, and an applicable year (FR-02.6).
@@ -275,7 +277,7 @@ The rule applies to creation, renaming, moves, and recovery.
 - An album can have no streaming link.
 - When capture fails, the form is pre-filled with the pasted link and any retrieved or entered information.
 
-Manual entry supplements three-service capture; it does not replace it.
+Manual entry supplements link capture; it does not replace it.
 
 **FR-02.5 Lookup failures.** A failed lookup explains the failure and allows a retry without losing the link.
 
@@ -560,7 +562,7 @@ The distinctions between *unknown*, *unused*, and *applied-empty* are preserved.
 
 **FR-08.7 Before account deletion.** The account-deletion warning offers an export first (FR-11.10).
 
-**FR-08.8 Independence from providers.** Saved metadata stays available for display and export without a fresh provider lookup. No provider's terms restrict a saved field (G1 terms review, 19 October 2026): canonical metadata is public-domain, values the user confirms from Apple's hints are their data, and nothing from Spotify or Qobuz is saved. A future conflict comes back as an explicit product decision; fields are not silently dropped.
+**FR-08.8 Independence from providers.** Saved metadata stays available for display and export without a fresh provider lookup. No provider's terms restrict a saved field (G1 terms review, 19 October 2026): canonical metadata is public-domain, values the user confirms from Apple's hints are their data, and nothing from Spotify, Qobuz or Tidal is saved. A future conflict comes back as an explicit product decision; fields are not silently dropped.
 
 ### FR-09 — Synchronization and concurrent edits
 
@@ -877,7 +879,7 @@ These are representative observable checks, not a test plan. Passing them does n
 | AC-03 | Organize containers | Create root and nested lists and folders, and rename them without sibling collisions across types. Descriptions are editable, visible live to viewers, kept through moves and recovery, and not searched. | FR-01.1–FR-01.3, FR-03.5, FR-12.4 |
 | AC-04 | Move folders and lists | Moves keep identity, contents, descriptions, direct shares, and preferences without copying. Cycles, invalid destinations, and collisions are rejected with nothing changed. Inherited access updates. | FR-01.4–FR-01.5, FR-07.9 |
 | AC-05 | Reuse albums across lists | One album's metadata and fields are shared across lists. Re-adding keeps one entry and position. Removing the last membership keeps the album in counted, searchable Unsorted. | FR-01.6–FR-01.9, FR-15.2 |
-| AC-06 | Capture supplied links | Valid album links from all three services resolve. Track links add their actual parent release. Failures preserve input, explain the problem, and offer manual entry. | FR-02.1, FR-02.3, FR-02.5 |
+| AC-06 | Capture supplied links | Valid album links from all four services resolve. Track links add their actual parent release, except Tidal's, which go to manual entry with the link kept (FR-02.3). Failures preserve input, explain the problem, and offer manual entry. | FR-02.1, FR-02.3, FR-02.5 |
 | AC-07 | Save without a list | Capture, manual entry, and MCP can omit a list. New unlisted albums appear in Unsorted, reused records keep memberships, and a matched trashed record reactivates with only the requested memberships. | FR-02.2, FR-14.4 |
 | AC-08 | Complete required information | Manual entry shows all fields and requires title, artist credit, and applicable year. The same minimum applies to capture, MCP, and edits. Incomplete input is preserved, never saved invalid or invented. | FR-02.4, FR-02.6 |
 | AC-09 | Identify and match albums | A link to any edition identifies the album, with its canonical title and original year. Confident matches reuse records, and uncertain matches wait unchanged while independent items proceed. | FR-02.9–FR-02.10, FR-02.12 |
@@ -944,6 +946,10 @@ Resolve these gates before committing to the implementations they affect. Unrela
   - Qobuz store pages may be read for an album's address and, transiently, for hints. Nothing from them is saved, and manual entry isn't prefilled from them;
   - Qobuz isn't asked for API keys: it doesn't grant them to individuals;
   - services are named in plain text, with no logos or badges (design spec).
+- **Tidal (20 October 2026)** ([report](spikes/2026-10-20-g1-tidal.md)). Tidal became a launch service, and the creator decided:
+  - Tidal links are identified by MusicBrainz's URL lookup and, transiently, by hints from tidal.com's album page, under Qobuz's rules. One request per pasted link, nothing from the page is saved, and manual entry isn't prefilled from it;
+  - Tidal's API isn't used. Without Tidal's written approval, its developer terms forbid sending its data to another service, combining it with other services, and any use in connection with AI;
+  - Tidal track links go to manual entry with the link kept (FR-02.3).
 
 **G2 Album matching (D2, D3).** Albums are identified, not editions (FR-02.12). Test real examples: remasters, deluxe editions, reissues, compilations, regional variants, identical titles, and track links. Each must resolve to the right album, and different albums with the same title must stay apart. Define the evidence for confident matches and when confirmation is needed; title/artist similarity alone is insufficient. Distinguish reissue dates from original-release and live-recording years. Chronology may need manual completion where providers lack it.
 
@@ -954,8 +960,9 @@ Resolve these gates before committing to the implementations they affect. Unrela
 - *Practical precedent.* [MusicBox's help](https://marcosatanaka.com/support/musicbox/musicbox-help.html) documents album and song URL imports from Apple Music and Spotify. It does not disclose how metadata is retrieved, cover Qobuz, or establish permissions for web, MCP, or export use.
 - *Spotify.* Development mode requires Premium for app owners and is capped at five authenticated users, and extended access is restrictive ([quota modes](https://developer.spotify.com/documentation/web-api/concepts/quota-modes)). Catalog-only [client-credentials access](https://developer.spotify.com/documentation/web-api/tutorials/client-credentials-flow) still needs validation. The [Developer Policy](https://developer.spotify.com/policy) restricts ingesting Spotify content into AI models, integration with other services, and data transfer. Do not assume Spotify-derived metadata can be used in MCP responses, cross-service enrichment, or exports. The [album response](https://developer.spotify.com/documentation/web-api/reference/get-an-album) gives release dates with year, month, or day precision.
 - *Apple Music.* Tonaris uses the public iTunes Lookup API, not the [Apple Music API](https://developer.apple.com/documentation/AppleMusicAPI), whose terms limit it to access to users' Apple Music subscriptions. Use, storage and redistribution were reviewed on 19 October 2026 (G1 terms review).
+- *Tidal.* The [Developer Terms](https://developer.tidal.com/documentation/guidelines/guidelines-developer-terms), [Developer Guidelines](https://developer.tidal.com/documentation/guidelines/guidelines-developer-guidelines) and [Design Guidelines](https://developer.tidal.com/documentation/guidelines/guidelines-design-guidelines) (3.0, 6 May 2024) license non-commercial apps only. Without written approval they prohibit integrating with other services, transferring data to another service, and any use with AI, and they require Tidal's logo on its content. The consumer [terms](https://tidal.com/terms) also ban use in connection with AI.
 - *Qobuz.* The public [API terms](https://static.qobuz.com/apps/api/QobuzAPI-TermsofUse.pdf) require an issued key and date from 2011. Keys aren't granted to individuals: Qobuz's replies quoted in 2022 and 2026 say so, and its only channel is for partners (G1 terms review).
-- Other metadata sources and manual enrichment merit evaluation. Neither is a confirmed substitute for three-service capture.
+- Other metadata sources and manual enrichment merit evaluation. Neither is a confirmed substitute for capture from the launch services.
 
 **Standing risks.**
 
@@ -1024,6 +1031,11 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - FR-08.8's open question is answered, and D3 and D7 are updated;
   - services are named in plain text, with no logos (design spec).
 - **Decision (19 October 2026), during the G2 album-matching spike** ([report](spikes/2026-10-19-g2-album-matching.md)): a track link from a single adds the single (FR-02.3), as the compilation example already implied.
+- **Decisions (20 October 2026), Tidal** ([report](spikes/2026-10-20-g1-tidal.md)):
+  - Tidal is a fourth launch service (section 2, FR-02.1, AC-06);
+  - it is identified by MusicBrainz's URL lookup and transient page hints; its API isn't used (G1);
+  - Tidal track links go to manual entry with the link kept (FR-02.3, AC-06);
+  - nothing from Tidal is saved (FR-08.8).
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);

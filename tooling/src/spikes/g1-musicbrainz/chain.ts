@@ -208,9 +208,16 @@ const urlForms: Record<Service, (link: ParsedLink, albumId: string) => string[]>
       ),
       `https://play.qobuz.com/album/${albumId}`,
     ]),
+  // MusicBrainz cleans Tidal URLs to https://tidal.com/album/{id}; older entries may keep the forms they were added in.
+  tidal: (_, albumId) => [
+    `https://tidal.com/album/${albumId}`,
+    `https://tidal.com/browse/album/${albumId}`,
+    `http://www.tidal.com/album/${albumId}`,
+    `https://listen.tidal.com/album/${albumId}`,
+  ],
 };
 
-/** The forms MusicBrainz may store this album's URL in. Spotify and Qobuz track links name no album. */
+/** The forms MusicBrainz may store this album's URL in. Spotify, Qobuz and Tidal track links name no album. */
 export function urlCandidates(link: ParsedLink): UrlCandidates | undefined {
   if (!link.albumId) return undefined;
   const canonical = link.canonical.replace(/\?.*$/, "");
@@ -460,12 +467,15 @@ export async function runChain(
     const pending = pendingReasons[link.service];
     if (pending)
       return { ...withLink, outcome: "pending", reason: pending, identifiedAtMs: elapsed() };
+    const service = link.service === "tidal" ? "Tidal" : "Qobuz";
     const reason =
       link.kind === "track"
-        ? "a Qobuz track link names no album, and nothing bridges it"
+        ? `a ${service} track link names no album, and nothing bridges it`
         : barcodes.length > 0
           ? "neither the URL nor the barcode is in MusicBrainz"
-          : "the URL isn't in MusicBrainz, and the id isn't a barcode";
+          : link.service === "tidal"
+            ? "the URL isn't in MusicBrainz"
+            : "the URL isn't in MusicBrainz, and the id isn't a barcode";
     return { ...withLink, outcome: "unresolved", reason, identifiedAtMs: elapsed() };
   }
 

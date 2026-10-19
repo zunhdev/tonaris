@@ -5,11 +5,12 @@ import type { LinkResult } from "./chain";
 import type { Service } from "./links";
 import type { RequestRecord } from "./musicbrainz";
 
-const services: readonly Service[] = ["spotify", "apple-music", "qobuz"];
+const services: readonly Service[] = ["spotify", "apple-music", "qobuz", "tidal"];
 const serviceNames: Record<Service, string> = {
   spotify: "Spotify",
   "apple-music": "Apple Music",
   qobuz: "Qobuz",
+  tidal: "Tidal",
 };
 
 const percent = (part: number, whole: number) =>
