@@ -1,0 +1,3811 @@
+{
+  "results": [
+    {
+      "index": 0,
+      "input": "https://tidal.com/browse/album/348182611",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/348182611",
+            "https://tidal.com/browse/album/348182611",
+            "http://www.tidal.com/album/348182611",
+            "https://listen.tidal.com/album/348182611"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "348182611",
+        "albumId": "348182611",
+        "canonical": "https://tidal.com/album/348182611"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 387,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 1,
+      "input": "https://tidal.com/browse/album/361646891",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/361646891",
+            "https://tidal.com/browse/album/361646891",
+            "http://www.tidal.com/album/361646891",
+            "https://listen.tidal.com/album/361646891"
+          ],
+          "matched": [
+            "https://tidal.com/album/361646891"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "bd953c23-8c62-4b34-a196-335261efe242"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "361646891",
+        "albumId": "361646891",
+        "canonical": "https://tidal.com/album/361646891"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "bd953c23-8c62-4b34-a196-335261efe242",
+      "identifiedAtMs": 1153,
+      "release": {
+        "title": "Frailty",
+        "artistCredit": "Jane Remover",
+        "barcode": "193436274180",
+        "releaseGroupId": "a0d3725b-18cb-4189-b968-14bdf8948c04",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2021-11-12",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 13,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 2120,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 2,
+      "input": "https://tidal.com/browse/album/233192924",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/233192924",
+            "https://tidal.com/browse/album/233192924",
+            "http://www.tidal.com/album/233192924",
+            "https://listen.tidal.com/album/233192924"
+          ],
+          "matched": [
+            "https://tidal.com/album/233192924"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "4a97ff9c-dfd8-43c4-8ce9-9e9a54d92044"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "233192924",
+        "albumId": "233192924",
+        "canonical": "https://tidal.com/album/233192924"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "4a97ff9c-dfd8-43c4-8ce9-9e9a54d92044",
+      "identifiedAtMs": 3085,
+      "release": {
+        "title": "I Do Not Want What I Haven’t Got",
+        "artistCredit": "Sinéad O’Connor",
+        "barcode": "5054526647565",
+        "releaseGroupId": "9747bcfe-7c42-35ac-8c3e-7ecac9f1227b",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "1990-03-20",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 10,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 4165,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 3,
+      "input": "https://tidal.com/browse/album/360257277",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/360257277",
+            "https://tidal.com/browse/album/360257277",
+            "http://www.tidal.com/album/360257277",
+            "https://listen.tidal.com/album/360257277"
+          ],
+          "matched": [
+            "https://tidal.com/album/360257277"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "6843f0f0-1d8f-41b9-a84c-75b864d1d233"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "360257277",
+        "albumId": "360257277",
+        "canonical": "https://tidal.com/album/360257277"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "6843f0f0-1d8f-41b9-a84c-75b864d1d233",
+      "identifiedAtMs": 5178,
+      "release": {
+        "title": "Alva",
+        "artistCredit": "Mari Boine",
+        "barcode": "3617387542275",
+        "releaseGroupId": "6243d509-cf45-45bf-becd-7fafc22e7cfd",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2024-09-06",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 13,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 6206,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 4,
+      "input": "https://tidal.com/browse/album/35160352",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/35160352",
+            "https://tidal.com/browse/album/35160352",
+            "http://www.tidal.com/album/35160352",
+            "https://listen.tidal.com/album/35160352"
+          ],
+          "matched": [
+            "https://tidal.com/album/35160352"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "762fe386-cea5-4f9e-8a6d-104081e61b89"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "35160352",
+        "albumId": "35160352",
+        "canonical": "https://tidal.com/album/35160352"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "762fe386-cea5-4f9e-8a6d-104081e61b89",
+      "identifiedAtMs": 7096,
+      "release": {
+        "title": "Resolution",
+        "artistCredit": "Lamb of God",
+        "barcode": "886443279285",
+        "releaseGroupId": "3cc68275-4a0b-4a45-8871-8cccec423a99",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2012-01-24",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 14,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 8524,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 5,
+      "input": "https://tidal.com/browse/album/110769428",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/110769428",
+            "https://tidal.com/browse/album/110769428",
+            "http://www.tidal.com/album/110769428",
+            "https://listen.tidal.com/album/110769428"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "110769428",
+        "albumId": "110769428",
+        "canonical": "https://tidal.com/album/110769428"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 9111,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 6,
+      "input": "https://tidal.com/browse/album/165813921",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/165813921",
+            "https://tidal.com/browse/album/165813921",
+            "http://www.tidal.com/album/165813921",
+            "https://listen.tidal.com/album/165813921"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "165813921",
+        "albumId": "165813921",
+        "canonical": "https://tidal.com/album/165813921"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 10222,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 7,
+      "input": "https://tidal.com/browse/album/2044762",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/2044762",
+            "https://tidal.com/browse/album/2044762",
+            "http://www.tidal.com/album/2044762",
+            "https://listen.tidal.com/album/2044762"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "2044762",
+        "albumId": "2044762",
+        "canonical": "https://tidal.com/album/2044762"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 11145,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 8,
+      "input": "https://tidal.com/browse/album/401334539",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/401334539",
+            "https://tidal.com/browse/album/401334539",
+            "http://www.tidal.com/album/401334539",
+            "https://listen.tidal.com/album/401334539"
+          ],
+          "matched": [
+            "https://tidal.com/album/401334539"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "10e6bb15-4dee-4b0c-aa13-57e36dd52651"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "401334539",
+        "albumId": "401334539",
+        "canonical": "https://tidal.com/album/401334539"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "10e6bb15-4dee-4b0c-aa13-57e36dd52651",
+      "identifiedAtMs": 12482,
+      "release": {
+        "title": "Christmas (deluxe edition)",
+        "artistCredit": "Cher",
+        "barcode": "093624835233",
+        "releaseGroupId": "b2ddfd55-3b33-4e16-a128-ca2a2e0c54ce",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2023-10-20",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 19,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 13123,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 9,
+      "input": "https://tidal.com/browse/album/4644898",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/4644898",
+            "https://tidal.com/browse/album/4644898",
+            "http://www.tidal.com/album/4644898",
+            "https://listen.tidal.com/album/4644898"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "4644898",
+        "albumId": "4644898",
+        "canonical": "https://tidal.com/album/4644898"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 14063,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 10,
+      "input": "https://tidal.com/browse/album/119344281",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/119344281",
+            "https://tidal.com/browse/album/119344281",
+            "http://www.tidal.com/album/119344281",
+            "https://listen.tidal.com/album/119344281"
+          ],
+          "matched": [
+            "https://tidal.com/album/119344281"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "35e98dac-5bc3-432b-820e-a1bdc6931dc3"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "119344281",
+        "albumId": "119344281",
+        "canonical": "https://tidal.com/album/119344281"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "35e98dac-5bc3-432b-820e-a1bdc6931dc3",
+      "identifiedAtMs": 15084,
+      "release": {
+        "title": "Compliments Please",
+        "artistCredit": "Self Esteem",
+        "barcode": "00602508385148",
+        "releaseGroupId": "631f918e-288e-4c68-a445-6dc3f14097cd",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2019-03-01",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 17,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 16134,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 11,
+      "input": "https://tidal.com/browse/album/4917523",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/4917523",
+            "https://tidal.com/browse/album/4917523",
+            "http://www.tidal.com/album/4917523",
+            "https://listen.tidal.com/album/4917523"
+          ],
+          "matched": [
+            "https://tidal.com/album/4917523"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "3bdf4383-f1de-4368-862c-8a69da648367"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "4917523",
+        "albumId": "4917523",
+        "canonical": "https://tidal.com/album/4917523"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "3bdf4383-f1de-4368-862c-8a69da648367",
+      "identifiedAtMs": 17091,
+      "release": {
+        "title": "A Crow Left of the Murder…",
+        "artistCredit": "Incubus",
+        "barcode": "884977734911",
+        "releaseGroupId": "f8ecf610-a995-3bcd-bc0e-af93d4586d21",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2004-01-30",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 14,
+          "withRelationshipDates": 13,
+          "withEventDatesOnly": 0,
+          "span": [
+            "2003-10",
+            "2003-11"
+          ]
+        }
+      },
+      "enrichedAtMs": 18369,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 12,
+      "input": "https://tidal.com/browse/album/250495068",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/250495068",
+            "https://tidal.com/browse/album/250495068",
+            "http://www.tidal.com/album/250495068",
+            "https://listen.tidal.com/album/250495068"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "250495068",
+        "albumId": "250495068",
+        "canonical": "https://tidal.com/album/250495068"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 19069,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 13,
+      "input": "https://tidal.com/browse/album/131871199",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/131871199",
+            "https://tidal.com/browse/album/131871199",
+            "http://www.tidal.com/album/131871199",
+            "https://listen.tidal.com/album/131871199"
+          ],
+          "matched": [
+            "https://tidal.com/album/131871199"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "bd5c1570-31cf-4a51-baeb-19cbae4c1bb0"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "131871199",
+        "albumId": "131871199",
+        "canonical": "https://tidal.com/album/131871199"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "bd5c1570-31cf-4a51-baeb-19cbae4c1bb0",
+      "identifiedAtMs": 20158,
+      "release": {
+        "title": "Explicit Lyrics",
+        "artistCredit": "Ophélie Winter",
+        "barcode": "190295259594",
+        "releaseGroupId": "dd5f6f19-950f-3010-8947-375bebfc177a",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2002-11-05",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": false,
+        "recordingDates": {
+          "recordings": 22,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        },
+        "releaseGroupCover": true
+      },
+      "enrichedAtMs": 21381,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 14,
+      "input": "https://tidal.com/browse/album/88243428",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/88243428",
+            "https://tidal.com/browse/album/88243428",
+            "http://www.tidal.com/album/88243428",
+            "https://listen.tidal.com/album/88243428"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "88243428",
+        "albumId": "88243428",
+        "canonical": "https://tidal.com/album/88243428"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 22122,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 15,
+      "input": "https://tidal.com/browse/album/25841746",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/25841746",
+            "https://tidal.com/browse/album/25841746",
+            "http://www.tidal.com/album/25841746",
+            "https://listen.tidal.com/album/25841746"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "25841746",
+        "albumId": "25841746",
+        "canonical": "https://tidal.com/album/25841746"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 23075,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 16,
+      "input": "https://tidal.com/browse/album/107690653",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/107690653",
+            "https://tidal.com/browse/album/107690653",
+            "http://www.tidal.com/album/107690653",
+            "https://listen.tidal.com/album/107690653"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "107690653",
+        "albumId": "107690653",
+        "canonical": "https://tidal.com/album/107690653"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 24551,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 17,
+      "input": "https://tidal.com/browse/album/68685335",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/68685335",
+            "https://tidal.com/browse/album/68685335",
+            "http://www.tidal.com/album/68685335",
+            "https://listen.tidal.com/album/68685335"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "68685335",
+        "albumId": "68685335",
+        "canonical": "https://tidal.com/album/68685335"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 25073,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 18,
+      "input": "https://tidal.com/browse/album/247478983",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/247478983",
+            "https://tidal.com/browse/album/247478983",
+            "http://www.tidal.com/album/247478983",
+            "https://listen.tidal.com/album/247478983"
+          ],
+          "matched": [
+            "https://tidal.com/album/247478983"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "ed6fe09c-cb76-4ffc-97ca-d9992074b19f"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "247478983",
+        "albumId": "247478983",
+        "canonical": "https://tidal.com/album/247478983"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "ed6fe09c-cb76-4ffc-97ca-d9992074b19f",
+      "identifiedAtMs": 26257,
+      "release": {
+        "title": "And in the Darkness, Hearts Aglow",
+        "artistCredit": "Weyes Blood",
+        "barcode": "098787148565",
+        "releaseGroupId": "a392a1a8-8d91-4a79-82a4-0f7e894eb435",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2022-11-18",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 10,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 27285,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 19,
+      "input": "https://tidal.com/browse/album/115905874",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/115905874",
+            "https://tidal.com/browse/album/115905874",
+            "http://www.tidal.com/album/115905874",
+            "https://listen.tidal.com/album/115905874"
+          ],
+          "matched": [
+            "https://tidal.com/album/115905874"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "09aff2d8-a861-49e4-b502-eedd05ed5fe2"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "115905874",
+        "albumId": "115905874",
+        "canonical": "https://tidal.com/album/115905874"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "09aff2d8-a861-49e4-b502-eedd05ed5fe2",
+      "identifiedAtMs": 28094,
+      "release": {
+        "title": "GINGER",
+        "artistCredit": "BROCKHAMPTON",
+        "barcode": "886447853481",
+        "releaseGroupId": "52900bf8-e9bb-48e3-999c-e9645e4ddf30",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2019-08-20",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 12,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 29465,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 20,
+      "input": "https://tidal.com/browse/album/62300892",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/62300892",
+            "https://tidal.com/browse/album/62300892",
+            "http://www.tidal.com/album/62300892",
+            "https://listen.tidal.com/album/62300892"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "62300892",
+        "albumId": "62300892",
+        "canonical": "https://tidal.com/album/62300892"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 30212,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 21,
+      "input": "https://tidal.com/browse/album/184803352",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/184803352",
+            "https://tidal.com/browse/album/184803352",
+            "http://www.tidal.com/album/184803352",
+            "https://listen.tidal.com/album/184803352"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "184803352",
+        "albumId": "184803352",
+        "canonical": "https://tidal.com/album/184803352"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 31095,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 22,
+      "input": "https://tidal.com/browse/album/11457943",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/11457943",
+            "https://tidal.com/browse/album/11457943",
+            "http://www.tidal.com/album/11457943",
+            "https://listen.tidal.com/album/11457943"
+          ],
+          "matched": [
+            "https://tidal.com/album/11457943"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "8fbc13f6-1531-43f3-956c-70e608437d6b"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "11457943",
+        "albumId": "11457943",
+        "canonical": "https://tidal.com/album/11457943"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "8fbc13f6-1531-43f3-956c-70e608437d6b",
+      "identifiedAtMs": 32296,
+      "release": {
+        "title": "Le canzoni",
+        "artistCredit": "Fiorella Mannoia",
+        "barcode": "5099747554728",
+        "releaseGroupId": "3abf8ef6-e48b-31dc-911c-d6afd64a165b",
+        "primaryType": "Album",
+        "secondaryTypes": [
+          "Compilation"
+        ],
+        "firstReleaseDate": "1993-11-18",
+        "releaseType": "compilation",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 15,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 33216,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 23,
+      "input": "https://tidal.com/browse/album/14517526",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/14517526",
+            "https://tidal.com/browse/album/14517526",
+            "http://www.tidal.com/album/14517526",
+            "https://listen.tidal.com/album/14517526"
+          ],
+          "matched": [
+            "https://tidal.com/album/14517526"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "703f52c8-8dd8-47d4-a49b-6073c2bce59e"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "14517526",
+        "albumId": "14517526",
+        "canonical": "https://tidal.com/album/14517526"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "703f52c8-8dd8-47d4-a49b-6073c2bce59e",
+      "identifiedAtMs": 34435,
+      "release": {
+        "title": "19 par Patricia Kaas: 19 titrès essentiels pour un parfum de succès",
+        "artistCredit": "Patricia Kaas",
+        "barcode": "5099945747328",
+        "releaseGroupId": "0854a973-54ac-42ad-be66-b8cae326d400",
+        "primaryType": "Album",
+        "secondaryTypes": [
+          "Compilation"
+        ],
+        "firstReleaseDate": "2009-11-13",
+        "releaseType": "compilation",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 19,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 35240,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 24,
+      "input": "https://tidal.com/browse/album/70379361",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/70379361",
+            "https://tidal.com/browse/album/70379361",
+            "http://www.tidal.com/album/70379361",
+            "https://listen.tidal.com/album/70379361"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "70379361",
+        "albumId": "70379361",
+        "canonical": "https://tidal.com/album/70379361"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 36265,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 25,
+      "input": "https://tidal.com/browse/album/184924302",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/184924302",
+            "https://tidal.com/browse/album/184924302",
+            "http://www.tidal.com/album/184924302",
+            "https://listen.tidal.com/album/184924302"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "184924302",
+        "albumId": "184924302",
+        "canonical": "https://tidal.com/album/184924302"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 37082,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 26,
+      "input": "https://tidal.com/browse/album/86434226",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/86434226",
+            "https://tidal.com/browse/album/86434226",
+            "http://www.tidal.com/album/86434226",
+            "https://listen.tidal.com/album/86434226"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "86434226",
+        "albumId": "86434226",
+        "canonical": "https://tidal.com/album/86434226"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 38192,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 27,
+      "input": "https://tidal.com/browse/album/12197718",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/12197718",
+            "https://tidal.com/browse/album/12197718",
+            "http://www.tidal.com/album/12197718",
+            "https://listen.tidal.com/album/12197718"
+          ],
+          "matched": [
+            "https://tidal.com/album/12197718"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "e1ca49bf-4d92-4a40-b0c5-7d58abd01d1f"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "12197718",
+        "albumId": "12197718",
+        "canonical": "https://tidal.com/album/12197718"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "e1ca49bf-4d92-4a40-b0c5-7d58abd01d1f",
+      "identifiedAtMs": 39113,
+      "release": {
+        "title": "In Your Honor",
+        "artistCredit": "Foo Fighters",
+        "barcode": "828767967257",
+        "releaseGroupId": "304479f9-ea77-3299-8745-3985f05cfa13",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2005-06-10",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 20,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 40183,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 28,
+      "input": "https://tidal.com/browse/album/36300757",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/36300757",
+            "https://tidal.com/browse/album/36300757",
+            "http://www.tidal.com/album/36300757",
+            "https://listen.tidal.com/album/36300757"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "36300757",
+        "albumId": "36300757",
+        "canonical": "https://tidal.com/album/36300757"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 41090,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 29,
+      "input": "https://tidal.com/browse/album/70554769",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/70554769",
+            "https://tidal.com/browse/album/70554769",
+            "http://www.tidal.com/album/70554769",
+            "https://listen.tidal.com/album/70554769"
+          ],
+          "matched": [
+            "https://tidal.com/album/70554769"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "89b91cd8-ee0f-4667-a119-d3d6a7ffcc83"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "70554769",
+        "albumId": "70554769",
+        "canonical": "https://tidal.com/album/70554769"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "89b91cd8-ee0f-4667-a119-d3d6a7ffcc83",
+      "identifiedAtMs": 42116,
+      "release": {
+        "title": "3ème temps",
+        "artistCredit": "Grand Corps Malade",
+        "barcode": "00602557480610",
+        "releaseGroupId": "7f12e9cd-3320-460b-8f04-14825785891d",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2010-10-18",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 16,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 43217,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 30,
+      "input": "https://tidal.com/browse/album/81184979",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/81184979",
+            "https://tidal.com/browse/album/81184979",
+            "http://www.tidal.com/album/81184979",
+            "https://listen.tidal.com/album/81184979"
+          ],
+          "matched": [
+            "https://tidal.com/album/81184979"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "72fd8839-3164-48e5-8605-4dbd5bee35b4"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "81184979",
+        "albumId": "81184979",
+        "canonical": "https://tidal.com/album/81184979"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "72fd8839-3164-48e5-8605-4dbd5bee35b4",
+      "identifiedAtMs": 44114,
+      "release": {
+        "title": "Fragile",
+        "artistCredit": "Julie Zenatti",
+        "barcode": "886446860480",
+        "releaseGroupId": "33d2e7c9-a3b5-3f01-96bb-dd8271c64a8e",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2000-12-04",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 13,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 45241,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 31,
+      "input": "https://tidal.com/browse/album/111687449",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/111687449",
+            "https://tidal.com/browse/album/111687449",
+            "http://www.tidal.com/album/111687449",
+            "https://listen.tidal.com/album/111687449"
+          ],
+          "matched": [
+            "https://tidal.com/album/111687449"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "93017080-2850-4fbc-ba26-f14d8da043f9"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "111687449",
+        "albumId": "111687449",
+        "canonical": "https://tidal.com/album/111687449"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "93017080-2850-4fbc-ba26-f14d8da043f9",
+      "identifiedAtMs": 46116,
+      "release": {
+        "title": "Joytime III",
+        "artistCredit": "Marshmello",
+        "barcode": "735119136783",
+        "releaseGroupId": "58d6dd36-546e-4d2a-a2cd-86a25436d5b7",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2019-07-03",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 13,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 47141,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 32,
+      "input": "https://tidal.com/browse/album/255810",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/255810",
+            "https://tidal.com/browse/album/255810",
+            "http://www.tidal.com/album/255810",
+            "https://listen.tidal.com/album/255810"
+          ],
+          "matched": [
+            "https://tidal.com/album/255810"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "71b08bb8-ac6c-4790-95e0-a2ab43de3a28"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "255810",
+        "albumId": "255810",
+        "canonical": "https://tidal.com/album/255810"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "71b08bb8-ac6c-4790-95e0-a2ab43de3a28",
+      "identifiedAtMs": 48248,
+      "release": {
+        "title": "Train of Thought",
+        "artistCredit": "Dream Theater",
+        "barcode": "075596289160",
+        "releaseGroupId": "3eb5524e-34c6-31d8-97cc-fb98356825fb",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2003-10",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 7,
+          "withRelationshipDates": 7,
+          "withEventDatesOnly": 0,
+          "span": [
+            "2003-04",
+            "2003-09"
+          ]
+        }
+      },
+      "enrichedAtMs": 49199,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 33,
+      "input": "https://tidal.com/browse/album/158050350",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/158050350",
+            "https://tidal.com/browse/album/158050350",
+            "http://www.tidal.com/album/158050350",
+            "https://listen.tidal.com/album/158050350"
+          ],
+          "matched": [
+            "https://tidal.com/album/158050350"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "5c102cce-477f-4e15-843c-5940c1be879f"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "158050350",
+        "albumId": "158050350",
+        "canonical": "https://tidal.com/album/158050350"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "5c102cce-477f-4e15-843c-5940c1be879f",
+      "identifiedAtMs": 50113,
+      "release": {
+        "title": "S16",
+        "artistCredit": "Woodkid",
+        "barcode": "00602507109295",
+        "releaseGroupId": "0bbfaf56-d0d6-4ccc-98a1-f277a10d380f",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2020-10-16",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 11,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 51192,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 34,
+      "input": "https://tidal.com/browse/album/22353909",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/22353909",
+            "https://tidal.com/browse/album/22353909",
+            "http://www.tidal.com/album/22353909",
+            "https://listen.tidal.com/album/22353909"
+          ],
+          "matched": [
+            "https://tidal.com/album/22353909"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "2a3b9c38-4b79-4ab9-9257-bff19cf25434"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "22353909",
+        "albumId": "22353909",
+        "canonical": "https://tidal.com/album/22353909"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "2a3b9c38-4b79-4ab9-9257-bff19cf25434",
+      "identifiedAtMs": 52120,
+      "release": {
+        "title": "Om du vill vara med mig",
+        "artistCredit": "Melissa Horn",
+        "barcode": "886444067720",
+        "releaseGroupId": "c38ff9e4-8b81-4395-b9b5-963f2375ae84",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2013-09-30",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 9,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 53260,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 35,
+      "input": "https://tidal.com/browse/album/638864",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/638864",
+            "https://tidal.com/browse/album/638864",
+            "http://www.tidal.com/album/638864",
+            "https://listen.tidal.com/album/638864"
+          ],
+          "matched": [
+            "https://tidal.com/album/638864"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "61141bf3-0a4e-4320-9a4e-4a63c6ba443f"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "638864",
+        "albumId": "638864",
+        "canonical": "https://tidal.com/album/638864"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "61141bf3-0a4e-4320-9a4e-4a63c6ba443f",
+      "identifiedAtMs": 54113,
+      "release": {
+        "title": "Relish",
+        "artistCredit": "Joan Osborne",
+        "barcode": "00731452669926",
+        "releaseGroupId": "6c9c1c47-e34a-3eab-9ea5-1ce8cd875b41",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "1995-03-21",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 12,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 56212,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 36,
+      "input": "https://tidal.com/browse/album/212427033",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/212427033",
+            "https://tidal.com/browse/album/212427033",
+            "http://www.tidal.com/album/212427033",
+            "https://listen.tidal.com/album/212427033"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "212427033",
+        "albumId": "212427033",
+        "canonical": "https://tidal.com/album/212427033"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 58178,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 37,
+      "input": "https://tidal.com/browse/album/17159578",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/17159578",
+            "https://tidal.com/browse/album/17159578",
+            "http://www.tidal.com/album/17159578",
+            "https://listen.tidal.com/album/17159578"
+          ],
+          "matched": [
+            "https://tidal.com/album/17159578"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "95f41f5d-a67a-4566-9378-f2b2700e6a49"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "17159578",
+        "albumId": "17159578",
+        "canonical": "https://tidal.com/album/17159578"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "95f41f5d-a67a-4566-9378-f2b2700e6a49",
+      "identifiedAtMs": 59283,
+      "release": {
+        "title": "Superfly",
+        "artistCredit": "Superfly",
+        "barcode": "085365727267",
+        "releaseGroupId": "2bab3e35-06e1-3b8e-a3e6-2536945f88d6",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2007-04-04",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 13,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 60323,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 38,
+      "input": "https://tidal.com/browse/album/220646952",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/220646952",
+            "https://tidal.com/browse/album/220646952",
+            "http://www.tidal.com/album/220646952",
+            "https://listen.tidal.com/album/220646952"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "220646952",
+        "albumId": "220646952",
+        "canonical": "https://tidal.com/album/220646952"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 61180,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 39,
+      "input": "https://tidal.com/browse/album/34453659",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/34453659",
+            "https://tidal.com/browse/album/34453659",
+            "http://www.tidal.com/album/34453659",
+            "https://listen.tidal.com/album/34453659"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "34453659",
+        "albumId": "34453659",
+        "canonical": "https://tidal.com/album/34453659"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 62244,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 40,
+      "input": "https://tidal.com/browse/album/13223897",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/13223897",
+            "https://tidal.com/browse/album/13223897",
+            "http://www.tidal.com/album/13223897",
+            "https://listen.tidal.com/album/13223897"
+          ],
+          "matched": [
+            "https://tidal.com/album/13223897"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "b61268f4-6cfc-386a-b401-2f6527b3b572"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "13223897",
+        "albumId": "13223897",
+        "canonical": "https://tidal.com/album/13223897"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "b61268f4-6cfc-386a-b401-2f6527b3b572",
+      "identifiedAtMs": 64270,
+      "release": {
+        "title": "Sparks Fly",
+        "artistCredit": "Miranda Cosgrove",
+        "barcode": "886973104927",
+        "releaseGroupId": "ea0f433c-5b84-4bea-8f10-12eb7dcf039c",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2010-04-27",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 8,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 65284,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 41,
+      "input": "https://tidal.com/browse/album/56058462",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/56058462",
+            "https://tidal.com/browse/album/56058462",
+            "http://www.tidal.com/album/56058462",
+            "https://listen.tidal.com/album/56058462"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "56058462",
+        "albumId": "56058462",
+        "canonical": "https://tidal.com/album/56058462"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 66525,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 42,
+      "input": "https://tidal.com/browse/album/20420795",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/20420795",
+            "https://tidal.com/browse/album/20420795",
+            "http://www.tidal.com/album/20420795",
+            "https://listen.tidal.com/album/20420795"
+          ],
+          "matched": [
+            "https://tidal.com/album/20420795"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "f2950275-2fa1-4339-9a8c-a0e5fa4a78f4"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "20420795",
+        "albumId": "20420795",
+        "canonical": "https://tidal.com/album/20420795"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "f2950275-2fa1-4339-9a8c-a0e5fa4a78f4",
+      "identifiedAtMs": 67240,
+      "release": {
+        "title": "…Like Clockwork",
+        "artistCredit": "Queens of the Stone Age",
+        "barcode": "744861104056",
+        "releaseGroupId": "c92f73ee-527f-42ed-a556-fd615941e214",
+        "primaryType": "Album",
+        "secondaryTypes": [],
+        "firstReleaseDate": "2013-05-31",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 10,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 68293,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 43,
+      "input": "https://tidal.com/browse/album/209991981",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/209991981",
+            "https://tidal.com/browse/album/209991981",
+            "http://www.tidal.com/album/209991981",
+            "https://listen.tidal.com/album/209991981"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "209991981",
+        "albumId": "209991981",
+        "canonical": "https://tidal.com/album/209991981"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 69216,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 44,
+      "input": "https://tidal.com/browse/album/445931175",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/445931175",
+            "https://tidal.com/browse/album/445931175",
+            "http://www.tidal.com/album/445931175",
+            "https://listen.tidal.com/album/445931175"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "445931175",
+        "albumId": "445931175",
+        "canonical": "https://tidal.com/album/445931175"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 70377,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 45,
+      "input": "https://tidal.com/browse/album/20379095",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/20379095",
+            "https://tidal.com/browse/album/20379095",
+            "http://www.tidal.com/album/20379095",
+            "https://listen.tidal.com/album/20379095"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "20379095",
+        "albumId": "20379095",
+        "canonical": "https://tidal.com/album/20379095"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 71213,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 46,
+      "input": "https://tidal.com/browse/album/67255301",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/67255301",
+            "https://tidal.com/browse/album/67255301",
+            "http://www.tidal.com/album/67255301",
+            "https://listen.tidal.com/album/67255301"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "67255301",
+        "albumId": "67255301",
+        "canonical": "https://tidal.com/album/67255301"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 72214,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 47,
+      "input": "https://tidal.com/browse/album/439808683",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/439808683",
+            "https://tidal.com/browse/album/439808683",
+            "http://www.tidal.com/album/439808683",
+            "https://listen.tidal.com/album/439808683"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "439808683",
+        "albumId": "439808683",
+        "canonical": "https://tidal.com/album/439808683"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 73220,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 48,
+      "input": "https://tidal.com/browse/album/415211864",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/415211864",
+            "https://tidal.com/browse/album/415211864",
+            "http://www.tidal.com/album/415211864",
+            "https://listen.tidal.com/album/415211864"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "415211864",
+        "albumId": "415211864",
+        "canonical": "https://tidal.com/album/415211864"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 74312,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 49,
+      "input": "https://tidal.com/browse/album/35731313",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/35731313",
+            "https://tidal.com/browse/album/35731313",
+            "http://www.tidal.com/album/35731313",
+            "https://listen.tidal.com/album/35731313"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "35731313",
+        "albumId": "35731313",
+        "canonical": "https://tidal.com/album/35731313"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 75272,
+      "sample": "wikidata-tidal-in-mb"
+    },
+    {
+      "index": 50,
+      "input": "https://tidal.com/browse/album/500706253",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/500706253",
+            "https://tidal.com/browse/album/500706253",
+            "http://www.tidal.com/album/500706253",
+            "https://listen.tidal.com/album/500706253"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "500706253",
+        "albumId": "500706253",
+        "canonical": "https://tidal.com/album/500706253"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 76222,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 51,
+      "input": "https://tidal.com/browse/album/368311636",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/368311636",
+            "https://tidal.com/browse/album/368311636",
+            "http://www.tidal.com/album/368311636",
+            "https://listen.tidal.com/album/368311636"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "368311636",
+        "albumId": "368311636",
+        "canonical": "https://tidal.com/album/368311636"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 77214,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 52,
+      "input": "https://tidal.com/browse/album/195963960",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/195963960",
+            "https://tidal.com/browse/album/195963960",
+            "http://www.tidal.com/album/195963960",
+            "https://listen.tidal.com/album/195963960"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "195963960",
+        "albumId": "195963960",
+        "canonical": "https://tidal.com/album/195963960"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 78218,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 53,
+      "input": "https://tidal.com/browse/album/311227258",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/311227258",
+            "https://tidal.com/browse/album/311227258",
+            "http://www.tidal.com/album/311227258",
+            "https://listen.tidal.com/album/311227258"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "311227258",
+        "albumId": "311227258",
+        "canonical": "https://tidal.com/album/311227258"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 79215,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 54,
+      "input": "https://tidal.com/browse/album/20985986",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/20985986",
+            "https://tidal.com/browse/album/20985986",
+            "http://www.tidal.com/album/20985986",
+            "https://listen.tidal.com/album/20985986"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "20985986",
+        "albumId": "20985986",
+        "canonical": "https://tidal.com/album/20985986"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 80220,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 55,
+      "input": "https://tidal.com/browse/album/49976096",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/49976096",
+            "https://tidal.com/browse/album/49976096",
+            "http://www.tidal.com/album/49976096",
+            "https://listen.tidal.com/album/49976096"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "49976096",
+        "albumId": "49976096",
+        "canonical": "https://tidal.com/album/49976096"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 81222,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 56,
+      "input": "https://tidal.com/browse/album/2019722",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/2019722",
+            "https://tidal.com/browse/album/2019722",
+            "http://www.tidal.com/album/2019722",
+            "https://listen.tidal.com/album/2019722"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "2019722",
+        "albumId": "2019722",
+        "canonical": "https://tidal.com/album/2019722"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 82216,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 57,
+      "input": "https://tidal.com/browse/album/78276154",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/78276154",
+            "https://tidal.com/browse/album/78276154",
+            "http://www.tidal.com/album/78276154",
+            "https://listen.tidal.com/album/78276154"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "78276154",
+        "albumId": "78276154",
+        "canonical": "https://tidal.com/album/78276154"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 83220,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 58,
+      "input": "https://tidal.com/browse/album/83614807",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/83614807",
+            "https://tidal.com/browse/album/83614807",
+            "http://www.tidal.com/album/83614807",
+            "https://listen.tidal.com/album/83614807"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "83614807",
+        "albumId": "83614807",
+        "canonical": "https://tidal.com/album/83614807"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 84262,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 59,
+      "input": "https://tidal.com/browse/album/149170932",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/149170932",
+            "https://tidal.com/browse/album/149170932",
+            "http://www.tidal.com/album/149170932",
+            "https://listen.tidal.com/album/149170932"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "149170932",
+        "albumId": "149170932",
+        "canonical": "https://tidal.com/album/149170932"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 85221,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 60,
+      "input": "https://tidal.com/browse/album/23452021",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/23452021",
+            "https://tidal.com/browse/album/23452021",
+            "http://www.tidal.com/album/23452021",
+            "https://listen.tidal.com/album/23452021"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "23452021",
+        "albumId": "23452021",
+        "canonical": "https://tidal.com/album/23452021"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 86226,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 61,
+      "input": "https://tidal.com/browse/album/164859235",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/164859235",
+            "https://tidal.com/browse/album/164859235",
+            "http://www.tidal.com/album/164859235",
+            "https://listen.tidal.com/album/164859235"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "164859235",
+        "albumId": "164859235",
+        "canonical": "https://tidal.com/album/164859235"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 87221,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 62,
+      "input": "https://tidal.com/browse/album/58255315",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/58255315",
+            "https://tidal.com/browse/album/58255315",
+            "http://www.tidal.com/album/58255315",
+            "https://listen.tidal.com/album/58255315"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "58255315",
+        "albumId": "58255315",
+        "canonical": "https://tidal.com/album/58255315"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 88233,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 63,
+      "input": "https://tidal.com/browse/album/2019914",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/2019914",
+            "https://tidal.com/browse/album/2019914",
+            "http://www.tidal.com/album/2019914",
+            "https://listen.tidal.com/album/2019914"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "2019914",
+        "albumId": "2019914",
+        "canonical": "https://tidal.com/album/2019914"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 89318,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 64,
+      "input": "https://tidal.com/browse/album/81013231",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/81013231",
+            "https://tidal.com/browse/album/81013231",
+            "http://www.tidal.com/album/81013231",
+            "https://listen.tidal.com/album/81013231"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "81013231",
+        "albumId": "81013231",
+        "canonical": "https://tidal.com/album/81013231"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 90255,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 65,
+      "input": "https://tidal.com/browse/album/44574161",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/44574161",
+            "https://tidal.com/browse/album/44574161",
+            "http://www.tidal.com/album/44574161",
+            "https://listen.tidal.com/album/44574161"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "44574161",
+        "albumId": "44574161",
+        "canonical": "https://tidal.com/album/44574161"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 91225,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 66,
+      "input": "https://tidal.com/browse/album/95009173",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/95009173",
+            "https://tidal.com/browse/album/95009173",
+            "http://www.tidal.com/album/95009173",
+            "https://listen.tidal.com/album/95009173"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "95009173",
+        "albumId": "95009173",
+        "canonical": "https://tidal.com/album/95009173"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 92235,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 67,
+      "input": "https://tidal.com/browse/album/17671707",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/17671707",
+            "https://tidal.com/browse/album/17671707",
+            "http://www.tidal.com/album/17671707",
+            "https://listen.tidal.com/album/17671707"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "17671707",
+        "albumId": "17671707",
+        "canonical": "https://tidal.com/album/17671707"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 93237,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 68,
+      "input": "https://tidal.com/browse/album/79583428",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/79583428",
+            "https://tidal.com/browse/album/79583428",
+            "http://www.tidal.com/album/79583428",
+            "https://listen.tidal.com/album/79583428"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "79583428",
+        "albumId": "79583428",
+        "canonical": "https://tidal.com/album/79583428"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 94224,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 69,
+      "input": "https://tidal.com/browse/album/103825313",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/103825313",
+            "https://tidal.com/browse/album/103825313",
+            "http://www.tidal.com/album/103825313",
+            "https://listen.tidal.com/album/103825313"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "103825313",
+        "albumId": "103825313",
+        "canonical": "https://tidal.com/album/103825313"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 95236,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 70,
+      "input": "https://tidal.com/browse/album/297500024",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/297500024",
+            "https://tidal.com/browse/album/297500024",
+            "http://www.tidal.com/album/297500024",
+            "https://listen.tidal.com/album/297500024"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "297500024",
+        "albumId": "297500024",
+        "canonical": "https://tidal.com/album/297500024"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 96242,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 71,
+      "input": "https://tidal.com/browse/album/516464709",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/516464709",
+            "https://tidal.com/browse/album/516464709",
+            "http://www.tidal.com/album/516464709",
+            "https://listen.tidal.com/album/516464709"
+          ],
+          "matched": [
+            "https://tidal.com/album/516464709"
+          ],
+          "canonicalMatched": true,
+          "releaseIds": [
+            "2d19e5cd-ea7a-4ac0-a169-7d3b4379844a"
+          ],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 2,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "516464709",
+        "albumId": "516464709",
+        "canonical": "https://tidal.com/album/516464709"
+      },
+      "outcome": "confident",
+      "step": 2,
+      "releaseId": "2d19e5cd-ea7a-4ac0-a169-7d3b4379844a",
+      "identifiedAtMs": 97294,
+      "release": {
+        "title": "Open Your Heart or Die Trying",
+        "artistCredit": "Arcade Fire",
+        "barcode": "196873806198",
+        "releaseGroupId": "9bf673ad-c938-41c1-9920-2c00fccc82ed",
+        "primaryType": "Album",
+        "secondaryTypes": [
+          "Remix"
+        ],
+        "firstReleaseDate": "2026-04-18",
+        "releaseType": "album",
+        "isLive": false,
+        "coverFront": true,
+        "recordingDates": {
+          "recordings": 8,
+          "withRelationshipDates": 0,
+          "withEventDatesOnly": 0,
+          "span": null
+        }
+      },
+      "enrichedAtMs": 98293,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 72,
+      "input": "https://tidal.com/browse/album/278289496",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/278289496",
+            "https://tidal.com/browse/album/278289496",
+            "http://www.tidal.com/album/278289496",
+            "https://listen.tidal.com/album/278289496"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "278289496",
+        "albumId": "278289496",
+        "canonical": "https://tidal.com/album/278289496"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 99238,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 73,
+      "input": "https://tidal.com/browse/album/296400959",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/296400959",
+            "https://tidal.com/browse/album/296400959",
+            "http://www.tidal.com/album/296400959",
+            "https://listen.tidal.com/album/296400959"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "296400959",
+        "albumId": "296400959",
+        "canonical": "https://tidal.com/album/296400959"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 100260,
+      "sample": "wikidata-tidal-not-in-mb"
+    },
+    {
+      "index": 74,
+      "input": "https://tidal.com/browse/album/2019895",
+      "attempts": [
+        {
+          "step": 2,
+          "tried": [
+            "https://tidal.com/album/2019895",
+            "https://tidal.com/browse/album/2019895",
+            "http://www.tidal.com/album/2019895",
+            "https://listen.tidal.com/album/2019895"
+          ],
+          "matched": [],
+          "canonicalMatched": false,
+          "releaseIds": [],
+          "withoutRelease": 0
+        }
+      ],
+      "requests": 1,
+      "link": {
+        "service": "tidal",
+        "kind": "album",
+        "id": "2019895",
+        "albumId": "2019895",
+        "canonical": "https://tidal.com/album/2019895"
+      },
+      "outcome": "unresolved",
+      "reason": "the URL isn't in MusicBrainz",
+      "identifiedAtMs": 101288,
+      "sample": "wikidata-tidal-not-in-mb"
+    }
+  ],
+  "requests": [
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F348182611&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F348182611&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F348182611&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F348182611&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 384.519,
+      "queuedMs": 0.0008750000000006253,
+      "totalMs": 384.521292,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F361646891&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F361646891&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F361646891&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F361646891&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 148.36983400000008,
+      "queuedMs": 614.90975,
+      "totalMs": 763.2804580000002,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/bd953c23-8c62-4b34-a196-335261efe242?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 112.51575000000003,
+      "queuedMs": 850.1250419999999,
+      "totalMs": 962.6416670000001,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F233192924&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F233192924&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F233192924&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F233192924&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 80.01958300000024,
+      "queuedMs": 884.4480830000002,
+      "totalMs": 964.4687910000002,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/4a97ff9c-dfd8-43c4-8ce9-9e9a54d92044?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 158.7365420000001,
+      "queuedMs": 919.6477090000003,
+      "totalMs": 1078.385167,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F360257277&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F360257277&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F360257277&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F360257277&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 171.51650000000063,
+      "queuedMs": 840.0549170000004,
+      "totalMs": 1011.5727500000003,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/6843f0f0-1d8f-41b9-a84c-75b864d1d233?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 198.7057080000004,
+      "queuedMs": 828.6947500000006,
+      "totalMs": 1027.4017090000007,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F35160352&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F35160352&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F35160352&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F35160352&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 87.31537500000013,
+      "queuedMs": 800.5202920000002,
+      "totalMs": 887.8369590000002,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/762fe386-cea5-4f9e-8a6d-104081e61b89?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 514.3721669999995,
+      "queuedMs": 911.3018750000001,
+      "totalMs": 1425.6756669999995,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F110769428&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F110769428&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F110769428&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F110769428&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 100.59891599999901,
+      "queuedMs": 485.7321670000001,
+      "totalMs": 586.3345829999998,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F165813921&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F165813921&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F165813921&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F165813921&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 212.26375000000007,
+      "queuedMs": 898.5411669999994,
+      "totalMs": 1110.8064169999998,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F2044762&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F2044762&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F2044762&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F2044762&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 135.11729100000048,
+      "queuedMs": 786.7173330000005,
+      "totalMs": 921.8357080000005,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F401334539&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F401334539&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F401334539&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F401334539&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 470.9287920000006,
+      "queuedMs": 865.3160409999982,
+      "totalMs": 1336.246083,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/10e6bb15-4dee-4b0c-aa13-57e36dd52651?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 109.285249999999,
+      "queuedMs": 529.6116249999995,
+      "totalMs": 638.8978750000006,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F4644898&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F4644898&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F4644898&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F4644898&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 49.829125000000204,
+      "queuedMs": 889.4304999999986,
+      "totalMs": 939.2604579999988,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F119344281&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F119344281&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F119344281&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F119344281&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 70.55070899999919,
+      "queuedMs": 950.4529590000002,
+      "totalMs": 1021.0043339999993,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/35e98dac-5bc3-432b-820e-a1bdc6931dc3?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 118.898416,
+      "queuedMs": 930.2428750000017,
+      "totalMs": 1049.1422080000011,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F4917523&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F4917523&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F4917523&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F4917523&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 76.05424999999741,
+      "queuedMs": 880.447916000001,
+      "totalMs": 956.5026660000003,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/3bdf4383-f1de-4368-862c-8a69da648367?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 350.1801660000019,
+      "queuedMs": 924.3759160000009,
+      "totalMs": 1274.5568749999984,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F250495068&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F250495068&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F250495068&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F250495068&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 52.36066700000083,
+      "queuedMs": 647.4761660000004,
+      "totalMs": 699.8377499999988,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F131871199&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F131871199&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F131871199&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F131871199&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 139.29412500000035,
+      "queuedMs": 947.4379169999993,
+      "totalMs": 1086.7331669999985,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/bd5c1570-31cf-4a51-baeb-19cbae4c1bb0?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 197.9853329999969,
+      "queuedMs": 859.6025000000009,
+      "totalMs": 1057.588791000002,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F88243428&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F88243428&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F88243428&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F88243428&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 103.68845800000054,
+      "queuedMs": 637.4422909999994,
+      "totalMs": 741.1312909999979,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F25841746&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F25841746&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F25841746&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F25841746&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 55.46700000000055,
+      "queuedMs": 896.5255829999987,
+      "totalMs": 951.9941660000004,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F107690653&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F107690653&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F107690653&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F107690653&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 528.5979580000021,
+      "queuedMs": 945.3585410000014,
+      "totalMs": 1473.9577080000017,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F68685335&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F68685335&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F68685335&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F68685335&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 50.864541999999346,
+      "queuedMs": 470.5697909999981,
+      "totalMs": 521.4352499999986,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F247478983&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F247478983&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F247478983&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F247478983&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 233.44450000000143,
+      "queuedMs": 949.8482079999994,
+      "totalMs": 1183.2942079999993,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/ed6fe09c-cb76-4ffc-97ca-d9992074b19f?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 260.3284170000006,
+      "queuedMs": 766.9201250000006,
+      "totalMs": 1027.2492500000008,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F115905874&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F115905874&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F115905874&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F115905874&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 67.31379200000083,
+      "queuedMs": 740.9995409999974,
+      "totalMs": 808.3142079999998,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/09aff2d8-a861-49e4-b502-eedd05ed5fe2?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 436.71204099999886,
+      "queuedMs": 933.5035410000019,
+      "totalMs": 1370.2172500000015,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F62300892&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F62300892&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F62300892&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F62300892&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 182.54487500000323,
+      "queuedMs": 562.7249999999985,
+      "totalMs": 745.2719579999975,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F184803352&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F184803352&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F184803352&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F184803352&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 64.38587499999994,
+      "queuedMs": 815.671542,
+      "totalMs": 880.0585830000018,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F11457943&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F11457943&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F11457943&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F11457943&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 264.6668329999993,
+      "queuedMs": 934.890916999997,
+      "totalMs": 1199.5596669999977,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/8fbc13f6-1531-43f3-956c-70e608437d6b?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 184.91845799999282,
+      "queuedMs": 733.3010419999991,
+      "totalMs": 918.2207090000011,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F14517526&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F14517526&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F14517526&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F14517526&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 404.200208000002,
+      "queuedMs": 813.8984169999967,
+      "totalMs": 1218.1003339999952,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/703f52c8-8dd8-47d4-a49b-6073c2bce59e?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 209.52674999999726,
+      "queuedMs": 594.5283749999944,
+      "totalMs": 804.0558329999985,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F70379361&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F70379361&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F70379361&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F70379361&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 234.26670800000284,
+      "queuedMs": 789.5575000000026,
+      "totalMs": 1023.8254579999993,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F184924302&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F184924302&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F184924302&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F184924302&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 49.907333000002836,
+      "queuedMs": 765.069875000001,
+      "totalMs": 814.9789999999994,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F86434226&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F86434226&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F86434226&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F86434226&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 159.5124169999981,
+      "queuedMs": 949.0714159999989,
+      "totalMs": 1108.5943750000006,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F12197718&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F12197718&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F12197718&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F12197718&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 80.09429200000159,
+      "queuedMs": 840.038708,
+      "totalMs": 920.1340419999979,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/e1ca49bf-4d92-4a40-b0c5-7d58abd01d1f?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 149.29091699999844,
+      "queuedMs": 919.0663750000022,
+      "totalMs": 1068.3586250000008,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F36300757&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F36300757&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F36300757&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F36300757&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 54.035625000004075,
+      "queuedMs": 850.0399160000015,
+      "totalMs": 904.0771250000034,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F70554769&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F70554769&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F70554769&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F70554769&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 81.31466699999874,
+      "queuedMs": 944.1494160000002,
+      "totalMs": 1025.4655829999974,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/89b91cd8-ee0f-4667-a119-d3d6a7ffcc83?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 182.73250000000553,
+      "queuedMs": 917.2610830000049,
+      "totalMs": 1099.995041000002,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F81184979&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F81184979&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F81184979&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F81184979&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 76.46641600000294,
+      "queuedMs": 817.070375000003,
+      "totalMs": 893.5390409999964,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/72fd8839-3164-48e5-8605-4dbd5bee35b4?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 198.0279589999991,
+      "queuedMs": 921.0601660000029,
+      "totalMs": 1119.0899160000045,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F111687449&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F111687449&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F111687449&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F111687449&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 79.42575000000215,
+      "queuedMs": 793.0528340000019,
+      "totalMs": 872.4802090000012,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/93017080-2850-4fbc-ba26-f14d8da043f9?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 104.69124999999622,
+      "queuedMs": 919.3155830000032,
+      "totalMs": 1024.0085000000036,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F255810&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F255810&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F255810&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F255810&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 210.70279099999607,
+      "queuedMs": 895.0644160000011,
+      "totalMs": 1105.7684160000063,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/71b08bb8-ac6c-4790-95e0-a2ab43de3a28?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 160.67670799999905,
+      "queuedMs": 788.0511660000047,
+      "totalMs": 948.7289999999994,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F158050350&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F158050350&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F158050350&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F158050350&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 75.37608299999556,
+      "queuedMs": 837.8417079999999,
+      "totalMs": 913.2186250000013,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/5c102cce-477f-4e15-843c-5940c1be879f?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 152.77483300000313,
+      "queuedMs": 925.0518750000047,
+      "totalMs": 1077.827833000003,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F22353909&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F22353909&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F22353909&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F22353909&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 80.6645420000059,
+      "queuedMs": 847.0434999999998,
+      "totalMs": 927.7085000000006,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/2a3b9c38-4b79-4ab9-9257-bff19cf25434?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 220.44241599999805,
+      "queuedMs": 919.0422499999986,
+      "totalMs": 1139.4859169999982,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F638864&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F638864&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F638864&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F638864&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 72.43366699999751,
+      "queuedMs": 779.0398329999953,
+      "totalMs": 851.4742499999993,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/61141bf3-0a4e-4320-9a4e-4a63c6ba443f?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 134.0605829999986,
+      "queuedMs": 927.1674170000042,
+      "totalMs": 2098.071250000001,
+      "retries": 1,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F212427033&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F212427033&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F212427033&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F212427033&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 60.37033300000621,
+      "queuedMs": 865.0564159999994,
+      "totalMs": 1964.8994579999999,
+      "retries": 1,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F17159578&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F17159578&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F17159578&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F17159578&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 164.49804099999892,
+      "queuedMs": 940.0281660000037,
+      "totalMs": 1104.5263750000013,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/95f41f5d-a67a-4566-9378-f2b2700e6a49?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 204.27170900000056,
+      "queuedMs": 835.0347919999986,
+      "totalMs": 1039.3066249999974,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F220646952&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F220646952&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F220646952&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F220646952&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 59.8848749999961,
+      "queuedMs": 796.8627500000002,
+      "totalMs": 856.7480000000069,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F34453659&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F34453659&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F34453659&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F34453659&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 123.51691700000083,
+      "queuedMs": 939.5124580000047,
+      "totalMs": 1063.0295830000032,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F13223897&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F13223897&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F13223897&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F13223897&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 110.1737079999948,
+      "queuedMs": 875.1782500000045,
+      "totalMs": 2024.849500000004,
+      "retries": 1,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/b61268f4-6cfc-386a-b401-2f6527b3b572?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 125.04508299999725,
+      "queuedMs": 888.2211250000037,
+      "totalMs": 1013.2664999999979,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F56058462&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F56058462&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F56058462&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F56058462&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 365.19775000000664,
+      "queuedMs": 875.026082999997,
+      "totalMs": 1240.2241670000003,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F20420795&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F20420795&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F20420795&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F20420795&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 80.24762500000361,
+      "queuedMs": 634.041459,
+      "totalMs": 714.2894169999927,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/f2950275-2fa1-4339-9a8c-a0e5fa4a78f4?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 131.67462499999965,
+      "queuedMs": 920.0436249999912,
+      "totalMs": 1051.718624999994,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F209991981&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F209991981&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F209991981&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F209991981&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 54.18141599999217,
+      "queuedMs": 868.0375409999979,
+      "totalMs": 922.2191249999887,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F445931175&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F445931175&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F445931175&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F445931175&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 215.58170899999095,
+      "queuedMs": 945.0274169999902,
+      "totalMs": 1160.6094169999997,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F20379095&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F20379095&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F20379095&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F20379095&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 50.973542000007,
+      "queuedMs": 784.0251250000001,
+      "totalMs": 834.9988329999906,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F67255301&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F67255301&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F67255301&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F67255301&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 50.14108300000953,
+      "queuedMs": 950.0142090000008,
+      "totalMs": 1000.1555839999928,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F439808683&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F439808683&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F439808683&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F439808683&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 55.48583399999188,
+      "queuedMs": 950.0374590000138,
+      "totalMs": 1005.5235420000099,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F415211864&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F415211864&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F415211864&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F415211864&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 147.21229100000346,
+      "queuedMs": 944.0453330000018,
+      "totalMs": 1091.2580000000016,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F35731313&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F35731313&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F35731313&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F35731313&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 106.23862499999814,
+      "queuedMs": 853.030208000011,
+      "totalMs": 959.2690419999999,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F500706253&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F500706253&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F500706253&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F500706253&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 56.0266249999986,
+      "queuedMs": 893.0405419999879,
+      "totalMs": 949.0674999999901,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F368311636&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F368311636&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F368311636&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F368311636&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 47.75704099998984,
+      "queuedMs": 943.8875410000037,
+      "totalMs": 991.6449160000047,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F195963960&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F195963960&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F195963960&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F195963960&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 50.67479099999764,
+      "queuedMs": 951.8488329999964,
+      "totalMs": 1002.5239169999986,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F311227258&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F311227258&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F311227258&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F311227258&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 47.17087499999616,
+      "queuedMs": 949.039499999999,
+      "totalMs": 996.2107499999984,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F20985986&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F20985986&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F20985986&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F20985986&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 52.37295799999265,
+      "queuedMs": 952.0500830000092,
+      "totalMs": 1004.4235830000107,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F49976096&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F49976096&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F49976096&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F49976096&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 54.112584000002244,
+      "queuedMs": 947.0274579999968,
+      "totalMs": 1001.1402499999967,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F2019722&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F2019722&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F2019722&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F2019722&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 47.23337499999616,
+      "queuedMs": 946.0589580000087,
+      "totalMs": 993.2926250000019,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F78276154&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F78276154&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F78276154&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F78276154&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 51.065124999993714,
+      "queuedMs": 952.0289579999953,
+      "totalMs": 1003.0942919999943,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F83614807&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F83614807&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F83614807&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F83614807&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 92.04470800000126,
+      "queuedMs": 949.0557919999992,
+      "totalMs": 1041.1007500000123,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F149170932&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F149170932&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F149170932&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F149170932&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 49.24479199999769,
+      "queuedMs": 908.0456669999985,
+      "totalMs": 957.290875000006,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F23452021&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F23452021&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F23452021&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F23452021&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 54.48858299999847,
+      "queuedMs": 950.0957090000011,
+      "totalMs": 1004.5844999999972,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F164859235&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F164859235&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F164859235&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F164859235&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 48.65104199999769,
+      "queuedMs": 944.755999999994,
+      "totalMs": 993.407457999987,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F58255315&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F58255315&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F58255315&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F58255315&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 60.48587499999849,
+      "queuedMs": 950.041624999998,
+      "totalMs": 1010.5277090000018,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F2019914&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F2019914&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F2019914&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F2019914&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 145.77716700000747,
+      "queuedMs": 938.7753330000123,
+      "totalMs": 1084.552708000003,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F81013231&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F81013231&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F81013231&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F81013231&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 81.99100000000908,
+      "queuedMs": 854.0491249999905,
+      "totalMs": 936.0406249999942,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F44574161&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F44574161&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F44574161&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F44574161&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 50.31491699999606,
+      "queuedMs": 918.5344999999943,
+      "totalMs": 968.8496250000026,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F95009173&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F95009173&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F95009173&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F95009173&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 59.5427500000078,
+      "queuedMs": 949.0713749999995,
+      "totalMs": 1008.6144589999894,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F17671707&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F17671707&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F17671707&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F17671707&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 61.68658300000243,
+      "queuedMs": 938.8763749999925,
+      "totalMs": 1000.5635409999959,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F79583428&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F79583428&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F79583428&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F79583428&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 48.16783400000713,
+      "queuedMs": 937.4611250000016,
+      "totalMs": 985.6296250000014,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F103825313&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F103825313&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F103825313&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F103825313&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 60.099583000002895,
+      "queuedMs": 951.0649580000027,
+      "totalMs": 1011.1649579999939,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F297500024&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F297500024&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F297500024&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F297500024&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 65.77125000000524,
+      "queuedMs": 939.035458000013,
+      "totalMs": 1004.8070000000007,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F516464709&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F516464709&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F516464709&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F516464709&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 116.66370799999277,
+      "queuedMs": 934.0328749999899,
+      "totalMs": 1050.6967500000028,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/release/2d19e5cd-ea7a-4ac0-a169-7d3b4379844a?inc=release-groups+artist-credits+recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json",
+      "status": 200,
+      "ms": 115.09954199999629,
+      "queuedMs": 883.0630000000092,
+      "totalMs": 998.1629170000087,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F278289496&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F278289496&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F278289496&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F278289496&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 58.79429099999834,
+      "queuedMs": 885.0620830000116,
+      "totalMs": 943.8566250000003,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F296400959&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F296400959&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F296400959&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F296400959&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 80.98949999999604,
+      "queuedMs": 940.0514170000097,
+      "totalMs": 1021.041333000001,
+      "retries": 0,
+      "cached": false
+    },
+    {
+      "url": "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F2019895&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F2019895&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F2019895&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F2019895&inc=release-rels&fmt=json",
+      "status": 200,
+      "ms": 108.45937500000582,
+      "queuedMs": 918.0452079999959,
+      "totalMs": 1026.50499999999,
+      "retries": 0,
+      "cached": false
+    }
+  ]
+}

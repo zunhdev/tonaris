@@ -1,7 +1,7 @@
 // Step 0 of the TS-41 chain for the G1 spike: local, allowlisted parsing of pasted links (TS-40).
 // Spike code: the production parser is TON-39 (M3-01), which can take what this spike learns about real links.
 
-export type Service = "spotify" | "apple-music" | "qobuz";
+export type Service = "spotify" | "apple-music" | "qobuz" | "tidal";
 
 /** The part of `fetch` the spike uses, so tests can stand in for the network. */
 export type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
@@ -131,6 +131,27 @@ export function parseLink(input: string): ParseResult {
         id,
         ...(kind === "album" && { albumId: id }),
         canonical: `https://open.qobuz.com/${kind}/${id}`,
+      },
+    };
+  }
+
+  if (host === "tidal.com" || host === "www.tidal.com" || host === "listen.tidal.com") {
+    // /album/{id} and /track/{id}, with an optional /browse prefix and a share link's trailing /u. Ids are
+    // numeric. MusicBrainz stores https://tidal.com/album/{id}.
+    const [kind, id] = (parts[0] === "browse" ? parts.slice(1) : parts).filter(
+      (part) => part !== "u",
+    );
+    if ((kind !== "album" && kind !== "track") || !id || !/^\d+$/.test(id)) {
+      return { ok: false, reason: `Tidal ${kind ?? "root"} links aren't supported` };
+    }
+    return {
+      ok: true,
+      link: {
+        service: "tidal",
+        kind,
+        id,
+        ...(kind === "album" && { albumId: id }),
+        canonical: `https://tidal.com/${kind}/${id}`,
       },
     };
   }

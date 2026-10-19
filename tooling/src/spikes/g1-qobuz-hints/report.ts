@@ -1,9 +1,9 @@
-// The TON-99 tables: what the store pages gave, each rule's precision and recall on the labelled Qobuz links, what
-// the right albums' releases fail, and what the requests cost.
+// The TON-99 tables, for Qobuz or Tidal: what the store pages gave, each rule's precision and recall on the
+// labelled links, what the right albums' releases fail, and what the requests cost.
 
 import { percentile } from "../g1-musicbrainz/report";
 import type { MatchResult } from "./match";
-import type { QobuzRequest } from "./qobuz";
+import type { PageRequest } from "./qobuz";
 import { recommended, rules } from "./rules";
 
 const percent = (part: number, whole: number) =>
@@ -211,25 +211,29 @@ function examples(results: readonly MatchResult[], ruleName: string): string {
   return lines.join("\n");
 }
 
+/** The store's requests, by kind, in the order the report lists them. */
+export type RequestKinds = readonly (readonly [PageRequest["kind"], string])[];
+
+const qobuzKinds: RequestKinds = [
+  ["slug", "A: `/us-en/album/-/{id}`, redirect read"],
+  ["page", "B: the album page"],
+  ["robots", "robots.txt, once per run"],
+];
+
 function requests(
   results: readonly MatchResult[],
-  qobuz: readonly QobuzRequest[],
+  store: { host: string; requests: readonly PageRequest[]; kinds: RequestKinds },
   mbRequests: number,
 ) {
-  const kinds = [
-    ["slug", "A: `/us-en/album/-/{id}`, redirect read"],
-    ["page", "B: the album page"],
-    ["robots", "robots.txt, once per run"],
-  ] as const;
   const perLink = Map.groupBy(
     results.filter((r) => r.page),
     (r) => r.page?.requests ?? 0,
   );
   return [
     table(
-      ["Qobuz request", "Requests", "Statuses", "Time p50 / p95"],
-      kinds.map(([kind, name]) => {
-        const done = qobuz.filter((q) => q.kind === kind);
+      ["Store request", "Requests", "Statuses", "Time p50 / p95"],
+      store.kinds.map(([kind, name]) => {
+        const done = store.requests.filter((q) => q.kind === kind);
         const statuses = [...Map.groupBy(done, (q) => q.status)]
           .toSorted(([a], [b]) => a - b)
           .map(([status, group]) => `${status} × ${group.length}`)
@@ -238,7 +242,7 @@ function requests(
       }),
     ),
     "",
-    `Requests to www.qobuz.com per link: ${[...perLink]
+    `Requests to ${store.host} per link: ${[...perLink]
       .toSorted(([a], [b]) => a - b)
       .map(([count, group]) => `${count} for ${group.length} links`)
       .join(", ")}. ` +
@@ -256,8 +260,9 @@ function requests(
 
 export function buildReport(
   results: readonly MatchResult[],
-  qobuz: readonly QobuzRequest[],
+  storeRequests: readonly PageRequest[],
   mbRequests: number,
+  store: { host: string; kinds?: RequestKinds } = { host: "www.qobuz.com" },
 ): string {
   const misses = results.filter((r) => !r.knownByUrl);
   return [
@@ -291,7 +296,11 @@ export function buildReport(
     "",
     "## Requests",
     "",
-    requests(results, qobuz, mbRequests),
+    requests(
+      results,
+      { host: store.host, kinds: store.kinds ?? qobuzKinds, requests: storeRequests },
+      mbRequests,
+    ),
     "",
   ].join("\n");
 }

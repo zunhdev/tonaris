@@ -5090,7 +5090,7 @@
       "sample": "g2-qobuz-editions"
     }
   ],
-  "qobuz": [
+  "store": [
     {
       "kind": "robots",
       "status": 200,

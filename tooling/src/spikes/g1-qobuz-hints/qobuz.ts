@@ -7,12 +7,12 @@
 
 import { z } from "zod";
 
-import type { Fetcher, ParsedLink } from "../g1-musicbrainz/links";
+import type { Fetcher, ParsedLink, Service } from "../g1-musicbrainz/links";
 import { userAgent } from "../g1-musicbrainz/musicbrainz";
 
 const origin = "https://www.qobuz.com";
 
-/** The hints a store page gives. Qobuz shows no track count, and no barcode. */
+/** The hints a store page gives. Neither Qobuz nor Tidal shows a track count or a barcode. */
 export type QobuzHints = {
   /** The schema.org `MusicAlbum` name: the title without Qobuz's version note, such as "(Deluxe Edition)". */
   title: string;
@@ -24,6 +24,9 @@ export type QobuzHints = {
   date: string;
 };
 
+/** The hints of Qobuz's pages, and of the other stores whose pages give the same (TON-99, the Tidal spike). */
+export type StoreHints = QobuzHints;
+
 export type QobuzRequest = {
   kind: "robots" | "slug" | "page";
   /** 0 when the request timed out. */
@@ -32,14 +35,27 @@ export type QobuzRequest = {
   ms: number;
 };
 
+export type PageRequest = QobuzRequest;
+
 export type AlbumPage = {
   /** The slug the store redirected to, `-` for titles without Latin letters. */
   slug?: string;
+  /** Whether the link lacked a slug, so request A ran. */
+  slugRequested?: boolean;
   /** Requests this link took. */
   requests: number;
   hints?: QobuzHints;
   /** Why there are no hints. */
   problem?: string;
+};
+
+/** A store whose album pages give hints, one page per link. */
+export type StorePages = {
+  readonly service: Service;
+  readonly requests: readonly PageRequest[];
+  /** Whether robots.txt still allows album pages. If it stops, the requests stop (TS-41). */
+  albumPagesAllowed(): Promise<boolean>;
+  album(link: ParsedLink): Promise<AlbumPage>;
 };
 
 export type QobuzOptions = {
@@ -158,52 +174,17 @@ function albumPath(location: string, albumId: string): { slug: string; url: stri
 
 type Answer = { status: number; location: string | null; body: string };
 
-export class Qobuz {
-  readonly requests: QobuzRequest[] = [];
+/**
+ * Paced GETs with redirects off, timed to the end of their bodies, with Tonaris's User-Agent. A stalled connection
+ * once held a run for minutes, so a request that takes longer than the timeout is recorded with status 0 and throws.
+ */
+export class PacedGet {
+  readonly requests: PageRequest[] = [];
   private nextStart = 0;
 
   constructor(private readonly options: QobuzOptions = {}) {}
 
-  /** Whether robots.txt still allows album pages. If it stops, the requests stop (TS-41). */
-  async albumPagesAllowed(): Promise<boolean> {
-    const { status, body } = await this.get("robots", `${origin}/robots.txt`);
-    if (status !== 200) throw new Error(`robots.txt answered ${status}`);
-    return robotsAllows(body, "Tonaris", "/us-en/album/-/0");
-  }
-
-  /**
-   * Requests A and B for one link. A store link already has its slug, so it goes straight to its page; a stale
-   * slug redirects once. An open. or play. link asks `/us-en/album/-/{id}`, whose redirect names the slug and the
-   * page. A title with no Latin letters has the slug "-", so that answer is the page itself.
-   */
-  async album(link: ParsedLink): Promise<AlbumPage> {
-    const albumId = link.albumId ?? "";
-    let answer = link.slug
-      ? await this.get("page", `${origin}/${link.locale ?? "us-en"}/album/${link.slug}/${albumId}`)
-      : await this.get("slug", `${origin}/us-en/album/-/${albumId}`);
-    let requests = 1;
-    let slug = link.slug ?? (answer.status === 200 ? "-" : undefined);
-    if (answer.status === 301 || answer.status === 302) {
-      const target = albumPath(answer.location ?? "", albumId);
-      if (!target)
-        return { requests, problem: `a redirect away from the album (${answer.status})` };
-      slug = target.slug;
-      answer = await this.get("page", target.url);
-      requests++;
-    }
-    const found = slug ? { slug, requests } : { requests };
-    if (answer.status !== 200) return { ...found, problem: `the page answered ${answer.status}` };
-    const hints = extractHints(answer.body);
-    return hints
-      ? { ...found, hints }
-      : { ...found, problem: "no title, artist and date on the page" };
-  }
-
-  /**
-   * One paced GET with redirects off, timed to the end of its body. A stalled connection once held a run for
-   * minutes, so a request that takes longer than the timeout is recorded with status 0 and throws.
-   */
-  private async get(kind: QobuzRequest["kind"], url: string): Promise<Answer> {
+  async get(kind: PageRequest["kind"], url: string): Promise<Answer> {
     const wait = this.nextStart - performance.now();
     if (wait > 0) await (this.options.sleep ?? Bun.sleep)(wait);
     const startedAt = performance.now();
@@ -221,7 +202,63 @@ export class Qobuz {
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "TimeoutError")) throw error;
       this.requests.push({ kind, status: 0, ms: performance.now() - startedAt });
-      throw new Error(`www.qobuz.com didn't answer within ${timeoutMs / 1000} s`, { cause: error });
+      throw new Error(`${new URL(url).hostname} didn't answer within ${timeoutMs / 1000} s`, {
+        cause: error,
+      });
     }
+  }
+}
+
+export class Qobuz implements StorePages {
+  readonly service = "qobuz";
+  private readonly http: PacedGet;
+
+  constructor(options: QobuzOptions = {}) {
+    this.http = new PacedGet(options);
+  }
+
+  get requests(): readonly PageRequest[] {
+    return this.http.requests;
+  }
+
+  async albumPagesAllowed(): Promise<boolean> {
+    const { status, body } = await this.http.get("robots", `${origin}/robots.txt`);
+    if (status !== 200) throw new Error(`robots.txt answered ${status}`);
+    return robotsAllows(body, "Tonaris", "/us-en/album/-/0");
+  }
+
+  /**
+   * Requests A and B for one link. A store link already has its slug, so it goes straight to its page; a stale
+   * slug redirects once. An open. or play. link asks `/us-en/album/-/{id}`, whose redirect names the slug and the
+   * page. A title with no Latin letters has the slug "-", so that answer is the page itself.
+   */
+  async album(link: ParsedLink): Promise<AlbumPage> {
+    const albumId = link.albumId ?? "";
+    let answer = link.slug
+      ? await this.http.get(
+          "page",
+          `${origin}/${link.locale ?? "us-en"}/album/${link.slug}/${albumId}`,
+        )
+      : await this.http.get("slug", `${origin}/us-en/album/-/${albumId}`);
+    let requests = 1;
+    let slug = link.slug ?? (answer.status === 200 ? "-" : undefined);
+    if (answer.status === 301 || answer.status === 302) {
+      const target = albumPath(answer.location ?? "", albumId);
+      if (!target)
+        return { requests, problem: `a redirect away from the album (${answer.status})` };
+      slug = target.slug;
+      answer = await this.http.get("page", target.url);
+      requests++;
+    }
+    const found = {
+      ...(slug && { slug }),
+      requests,
+      ...(!link.slug && { slugRequested: true }),
+    };
+    if (answer.status !== 200) return { ...found, problem: `the page answered ${answer.status}` };
+    const hints = extractHints(answer.body);
+    return hints
+      ? { ...found, hints }
+      : { ...found, problem: "no title, artist and date on the page" };
   }
 }

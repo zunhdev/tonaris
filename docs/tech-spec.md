@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Status | Draft v0.1 |
-| Updated | 19 October 2026 |
+| Updated | 20 October 2026 |
 | Implements | [Product requirements](product-requirements.md) iteration 6 (`FR-`, `X-`, `Q-`, `AC-`, `G-` IDs) |
 | Companion | [Design spec](design-spec.md) (`DS-` IDs) |
 | Hosting | Creator-owned (current preference: Render, Frankfurt); see [section 13](#13-hosting-and-operations-creator-owned) |
@@ -311,7 +311,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
     - MusicBrainz's core data is CC0.
     - `itunes-lookup` values are facts the user confirmed. Their provenance lets them be found and removed if Apple ever asks.
   - `coverartarchive` gives the artwork URL, which is stored, agent-visible and exportable. The image is the rights holder's: it is shown only through the image proxy (TS-103) and never exported as a file (FR-08).
-  - Spotify and Qobuz values are never stored (TS-41), so they have no source.
+  - Spotify, Qobuz and Tidal values are never stored (TS-41), so they have no source.
 
 **TS-16 Personal ordering (Decided; FR-05.2, FR-05.4, FR-05.8).**
 
@@ -549,6 +549,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 | Spotify | `open.spotify.com/(intl-xx/)?(album\|track)/{id}` (strip `si` and other query parameters); `spotify:(album\|track):{id}`; `spotify.link/*` short links (see below) |
 | Apple Music | `music.apple.com/{sf}/album/{slug}/{id}(?i={songId})`, `music.apple.com/album/{id}`, `geo.music.apple.com/…` (same id). `?i=` is a track whose parent album id is already in the path. |
 | Qobuz | `www.qobuz.com/{locale}/album/{slug}/{id}`, `open.qobuz.com/(album\|track)/{id}`, `play.qobuz.com/album/{id}` |
+| Tidal | `tidal.com/(browse/)?(album\|track)/{id}`, `listen.tidal.com/(album\|track)/{id}`, `www.tidal.com/…`; a share link's trailing `/u` and `?u` are dropped. Canonical: `https://tidal.com/(album\|track)/{id}`, the form MusicBrainz stores ([Tidal spike](spikes/2026-10-20-g1-tidal.md)) |
 
 Short links are the only network resolution:
 
@@ -567,6 +568,11 @@ Two canonical URLs that refer to the same `{service, kind, id}` are equivalent a
 - **Qobuz.** There is no developer portal. The 2011 ToU requires granted keys, and the community practice of extracting app IDs breaks it ([ToU](https://static.qobuz.com/apps/api/QobuzAPI-TermsofUse.pdf)).
   - Keys aren't granted to individuals ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)).
   - Its legal notices forbid "any extraction or reuse" of the site's database, while robots.txt allows `/{locale}/album/` pages on www.qobuz.com and disallows open.qobuz.com and play.qobuz.com entirely.
+- **Tidal** (added 20 October 2026, [Tidal spike](spikes/2026-10-20-g1-tidal.md)). Its API could bridge identifiers: with client credentials, `/albums/{id}` returns `barcodeId` and `/tracks/{id}/relationships/albums` a track's album.
+  - Its [Developer Terms and Guidelines](https://developer.tidal.com/documentation/guidelines/guidelines-developer-guidelines) (3.0, 6 May 2024) license non-commercial apps only.
+  - Without written approval, they prohibit transferring data to another service, integrating with other services' content, and any use "in connection with any artificial intelligence or machine intelligence technologies".
+  - They require Tidal's logo beside its content, and forbid scraping for registered developers.
+  - The consumer terms also ban use in connection with AI. [robots.txt](https://tidal.com/robots.txt) allows album pages, which carry `noai`.
 - **Odesli.** Its public API was retired on 2026-07-31.
 
 Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export (FR-08) promises. Hence:
@@ -586,7 +592,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 | 1. Existing link | all | The same `{service, entity_id}` is already linked in the owner's collection, Trash included | Reuse that album (TS-44) |
 | 2. MusicBrainz URL lookup | album links; Apple track links, whose album id is in the path | `/ws/2/url?resource={canonical}&inc=release-rels` | One album → confident, however many of its releases the URL is linked to; several albums → `needs_input` with the candidates (TS-26); none → next step |
 | 3. Identifier bridge | Qobuz, Spotify | **Qobuz:** a 13-digit numeric album id is treated as a UPC. **Spotify:** Web API with client credentials, in an app owned by the creator (Premium). `Get Album` yields `external_ids.upc`; for a track link, `Get Track` yields the parent album id, which goes back through step 2 and then this step. The UPC drives a MusicBrainz barcode search. The [TON-15 report](spikes/2026-10-19-g1-spotify-bridge.md) proposes searching it as 12, 13 and 14 digits; this is decided in TON-25. | One album → confident; several albums → `needs_input`; none → next step |
-| 4. Apple hints | Apple | Public iTunes Lookup API (no key) supplies title, artist, release date, and track count as hints for an **automatic strict** MusicBrainz release search | Accepted only if the releases matching the hints belong to exactly one album. The criteria are proposed in the [TON-16 report](spikes/2026-10-19-g1-apple-hints.md): loose title and artist names, the release year or the album's original year, no track count. The [G2 spike](spikes/2026-10-19-g2-album-matching.md) adds that the search should cover official releases only, and skip singles unless Apple's title says " - Single": every ambiguous result so far came from a promotional EP, a bootleg or a single sharing the title. They are decided in TON-25. Several albums → `needs_input`; none → next step |
+| 4. Hints | Apple; Tidal | **Apple:** the public iTunes Lookup API (no key) supplies title, artist, release date, and track count as hints for an **automatic strict** MusicBrainz release search. **Tidal:** the album page's schema.org `MusicAlbum` name, artists and date, read transiently under the store-page rules below (decided 20 October 2026; measured in the [Tidal spike](spikes/2026-10-20-g1-tidal.md) with the same rule: 80% of labelled links, none wrong) | Accepted only if the releases matching the hints belong to exactly one album. The criteria are proposed in the [TON-16 report](spikes/2026-10-19-g1-apple-hints.md): loose title and artist names, the release year or the album's original year, no track count. The [G2 spike](spikes/2026-10-19-g2-album-matching.md) adds that the search should cover official releases only, and skip singles unless Apple's title says " - Single": every ambiguous result so far came from a promotional EP, a bootleg or a single sharing the title. They are decided in TON-25. Several albums → `needs_input`; none → next step |
 | 5. Manual entry | all | Form prefilled with the link and, for Apple, the hints (FR-02.4) | The user completes and saves |
 
 - **Spotify: identifiers only.** Spotify-derived values (the UPC, a parent album id) live only in memory for the duration of the job. They are never stored, logged, cached, sent to agents, or exported. Spotify titles and artists are never used as hints. Only MusicBrainz-sourced values, including MusicBrainz's barcode, are stored.
@@ -608,6 +614,11 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - **Hints:** the album page's title, artist and date, used only as transient hints for a strict MusicBrainz match. Nothing from the page is stored, and manual entry isn't prefilled from it.
   - Each request is user-initiated: one per pasted link, to www.qobuz.com only, never open. or play. It sends an honest User-Agent and follows no further links. There is no crawling or backfill.
   - The requests stop if robots.txt disallows album pages.
+- **Tidal: page hints, no API** (decided 20 October 2026, [Tidal spike](spikes/2026-10-20-g1-tidal.md)).
+  - Step 2 looks up the canonical album URL with the other forms MusicBrainz may hold. Tidal has no step 3.
+  - **Hints:** one `GET https://tidal.com/album/{id}` per pasted link, read as Qobuz's hints are (above). A redirect to the same album is followed once. Nothing from the page is stored, and manual entry isn't prefilled from it.
+  - **No developer registration.** Tidal's API isn't used, and registering would bind Tonaris to its developer terms' scraping ban, which would end the page hints.
+  - **Track links** name no album Tonaris may look up. They are explained and go to manual entry with the link kept (FR-02.3).
 - **No interactive catalog search.** The creator declined user-facing search. The PRD clarifies FR-06.7: automatic metadata-catalog lookups that identify a supplied link are allowed, while user-facing catalog search and streaming-link discovery are not.
 - **Rate limit.** MusicBrainz allows 1 request per second per IP, with a meaningful User-Agent ([rate limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)).
   - All MusicBrainz calls go through one global job queue (TS-90) paced at 1 request per second, with a 7-day cache keyed by URL, barcode, and MBID. A lookup keyed by a Spotify value is cached only when MusicBrainz finds it (Spotify rules above).
@@ -642,6 +653,13 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 - Most misses are pages missing in the `us-en` store: request B needs a store that sells the album.
 - Each link takes one or two requests to www.qobuz.com, of under 0.4 s each (p95), outside MusicBrainz's queue.
 
+*Spike results (20 October 2026):* [G1 Tidal spike](spikes/2026-10-20-g1-tidal.md).
+
+- Step 2 finds 46% of the Tidal albums MusicBrainz has, all right.
+- Tidal's page hints, under TON-99's recommended rule, identify 80% of labelled links (89% with hints), none wrong.
+- Together they identify 88% of albums MusicBrainz has.
+- Each link takes one page request, p95 0.7 s.
+
 *Still open (G1):*
 
 - the creator's final G1 decision after the spikes (TON-25);
@@ -653,7 +671,11 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - how often robots.txt is checked;
   - whether a capture an agent starts through MCP counts as user-initiated;
 - keeping "(Taylor's Version)" in titles for steps 4 of both Apple and Qobuz, whose title cleaning drops it today;
-- a timeout on every request to www.qobuz.com: one connection stalled for minutes in the spike.
+- a timeout on every request to www.qobuz.com: one connection stalled for minutes in the spike;
+- for Tidal:
+  - which region the page requests come from. A Tidal link has no locale, so the page answers for the server's region; 9 of 75 pages answered 404 in Finland;
+  - counting "(Standard)" as an edition note in the title cleaning, for Tidal and the others;
+  - the same robots.txt cadence, timeout and MCP questions as Qobuz's.
 
 The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-review.md), decided 19 October 2026.
 
@@ -661,8 +683,8 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 
 **TS-43 Service links and opening (Decided, with a spike; FR-06.5, FR-06.6).**
 
-- **Mobile:** open the canonical `https` URL. Universal and app links open the installed app (verified for Spotify album and track paths, Apple Music on Android, and Qobuz `open.`/`play.`), and fall back to the web otherwise.
-- **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior is unverified (M3 spike).
+- **Mobile:** open the canonical `https` URL. Universal and app links open the installed app (verified for Spotify album and track paths, Apple Music on Android, and Qobuz `open.`/`play.`; unverified for Tidal), and fall back to the web otherwise.
+- **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior and whether Tidal's desktop app has a link scheme are unverified (M3 spike).
 - The service is never switched (FR-06.6).
 
 **TS-44 Album matching (Decided 19 October 2026: identity is the album; evidence validated by the [G2 spike](spikes/2026-10-19-g2-album-matching.md) the same day; FR-02.3, FR-02.9, FR-02.10, FR-02.12, FR-14.3).**

@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Status | Draft v0.1 |
-| Updated | 19 October 2026 |
+| Updated | 20 October 2026 |
 | Source of truth for behavior | [Product requirements](product-requirements.md), iteration 6 |
 | Companion | [Tech spec](tech-spec.md) |
 | Decisions log | [Section 17](#17-design-decisions-log) |
@@ -139,7 +139,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 **DS-19 Iconography.**
 - **Lucide** at 16px with a 1.5 stroke; 14px inside dense rows and chips. It is consistent, tree-shakable, and matches the shadcn defaults.
-- **Services are named in plain text**: "Spotify", "Apple Music", "Qobuz". No logos, badges or brand colors (decided 19 October 2026, [G1 terms review](spikes/2026-10-19-g1-terms-review.md)): Spotify forbids pairing its brand with others', Apple allows only its own badge artwork, and Qobuz's logo needs its consent. No provider-sourced content needs attribution (G1).
+- **Services are named in plain text**: "Spotify", "Apple Music", "Qobuz", "Tidal". No logos, badges or brand colors (decided 19 October 2026, [G1 terms review](spikes/2026-10-19-g1-terms-review.md); Tidal added 20 October 2026, [Tidal spike](spikes/2026-10-20-g1-tidal.md)): Spotify forbids pairing its brand with others', Apple allows only its own badge artwork, Qobuz's logo needs its consent, and Tidal's marks belong to its developer program, which Tonaris doesn't use. No provider-sourced content needs attribution (G1).
 - Release types are written as text, not icons.
 - **Branding:** a text wordmark, "Tonaris" in Inter semibold. The favicon and app icon are a "T" mark on the accent color.
 
@@ -392,7 +392,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   4. Original release year
   5. Recording year or range (when Live)
   6. Artwork URL (with live preview)
-  7. Spotify / Apple Music / Qobuz links
+  7. Spotify / Apple Music / Qobuz / Tidal links
   8. Custom fields (+ Add field)
   9. Destination list
 - **Year rule** in the helper text: "Required: original release year — or, for live releases, the recording year or release year."
@@ -774,7 +774,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 | View | Copy | Action |
 | --- | --- | --- |
 | Root (first run) | "Start your collection — paste an album link or create a list." | New list |
-| List | "No albums yet. Paste a Spotify, Apple Music or Qobuz link." | Add album |
+| List | "No albums yet. Paste a Spotify, Apple Music, Qobuz or Tidal link." | Add album |
 | Unsorted | "Albums that aren't in any list show up here." | — |
 | Shared with me | "Collections people share with you appear here." | — |
 | Trash | "Nothing in Trash. Deleted items stay here for 30 days." | — |
@@ -793,7 +793,8 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 
 | Situation | Copy |
 | --- | --- |
-| Unsupported link | "This doesn't look like a Spotify, Apple Music or Qobuz album or track link." · Enter manually |
+| Unsupported link | "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link." · Enter manually |
+| Tidal track link | "Tonaris can't tell which album this Tidal track is on. Enter the album — the link is kept." · Enter manually |
 | Lookup failed | "Couldn't reach Apple Music. Your link is saved here — try again or enter details manually." |
 | Not permitted | "You can view this shared list but not change it." |
 | Name taken | "'Favorites' already exists in Metal. Choose another name." |

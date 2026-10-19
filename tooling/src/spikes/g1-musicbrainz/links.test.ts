@@ -64,6 +64,30 @@ describe("parseLink (TS-40)", () => {
     expect(parsed("https://open.qobuz.com/track/12345678")).not.toHaveProperty("albumId");
   });
 
+  test("Tidal album and track links, with /browse, listen. and a share link's /u", () => {
+    expect(parsed("https://tidal.com/browse/album/279764933")).toEqual({
+      service: "tidal",
+      kind: "album",
+      id: "279764933",
+      albumId: "279764933",
+      canonical: "https://tidal.com/album/279764933",
+    });
+    expect(parsed("https://listen.tidal.com/album/279764933").canonical).toBe(
+      "https://tidal.com/album/279764933",
+    );
+    expect(parsed("https://tidal.com/album/279764933/u").albumId).toBe("279764933");
+    expect(parsed("https://tidal.com/browse/track/279764934?u")).toEqual({
+      service: "tidal",
+      kind: "track",
+      id: "279764934",
+      canonical: "https://tidal.com/track/279764934",
+    });
+    expect(parseLink("https://tidal.com/browse/playlist/abc")).toEqual({
+      ok: false,
+      reason: "Tidal playlist links aren't supported",
+    });
+  });
+
   test("everything else is unsupported, with a reason the report can show", () => {
     expect(parseLink("https://www.youtube.com/watch?v=x")).toEqual({
       ok: false,
