@@ -1,0 +1,86 @@
+# The TON-99 sample: the G1 sample's Qobuz links (tooling/fixtures/g1-sample) plus 'g2-qobuz-editions', one
+# Qobuz edition per album of the G2 corpus, drawn by tooling/src/spikes/g1-qobuz-hints/sample.ts. labels.json
+# names each link's MusicBrainz release group.
+#   bun tooling/src/spikes/g1-qobuz-hints/run.ts tooling/fixtures/g1-qobuz/links.txt
+
+# sample: creator
+https://open.qobuz.com/album/tietg8e0jjdh8
+https://open.qobuz.com/album/c6zb0r5qcrqoa
+https://open.qobuz.com/album/capw1vifm759b
+https://open.qobuz.com/album/z96u0k0znz1xb
+https://open.qobuz.com/album/0884977423006
+
+# sample: wikidata-qobuz-in-mb
+https://open.qobuz.com/album/d4bpey5kkf9hc # Q832462
+https://open.qobuz.com/album/0060254799999 # Q6546132
+https://open.qobuz.com/album/0886444095280 # Q1766649
+https://open.qobuz.com/album/mgcel8njixy5b # Q2842103
+https://open.qobuz.com/album/vrya2g9g2szca # Q120357974
+https://open.qobuz.com/album/qrzshjf1rhktb # Q1060887
+https://open.qobuz.com/album/0603497866670 # Q7091941
+https://open.qobuz.com/album/c8f0bs8nq70uc # Q3010825
+https://open.qobuz.com/album/0075678265068 # Q2932009
+https://open.qobuz.com/album/0088807200374 # Q1508334
+https://open.qobuz.com/album/0888880696069 # Q283221
+https://open.qobuz.com/album/z9rzcky5afxpa # Q85775733
+https://open.qobuz.com/album/0744861104056 # Q8328875
+https://open.qobuz.com/album/0886444064385 # Q14567932
+https://open.qobuz.com/album/0060249868948 # Q284509
+
+# sample: wikidata-qobuz-not-in-mb
+https://open.qobuz.com/album/qfz0lw3p891mc # Q122418848
+https://open.qobuz.com/album/il3kcvbs0de83 # Q140001320
+https://open.qobuz.com/album/qz7xo3ta060tb # Q134614410
+https://open.qobuz.com/album/aa7odiq1cg78a # Q1686537
+
+# sample: g2-qobuz-editions
+https://www.qobuz.com/us-en/album/weezer-teal-album-weezer/mco0vy9isdq4a
+https://www.qobuz.com/us-en/album/-/oulc1w5vun56a
+https://open.qobuz.com/album/ycurs90b1g28a
+https://www.qobuz.com/gb-en/album/indigo-chris-brown/wfs0xqkq1iroa
+https://www.qobuz.com/gb-en/album/red-taylor-swift/sk75xq5q1k2jc
+https://play.qobuz.com/album/a7bocoz9gc19k
+https://www.qobuz.com/us-en/album/madonna-madonna/0093624790365
+https://www.qobuz.com/ch-de/album/isnt-anything-my-bloody-valentine/l8cpobwd8u12b
+https://www.qobuz.com/us-en/album/illenium-illenium/pjv3xyntol8ta?qref=dpa
+https://www.qobuz.com/us-en/album/with-sonny-boy-williamson-the-animals/0884385954895
+http://www.qobuz.com/nl-nl/album/punk-goes-pop-vol-4-multi-interpretes/0088807239330
+https://www.qobuz.com/us-en/album/weezer-green-album/0060694930452
+https://open.qobuz.com/album/pjb7nyfk2hvia
+https://www.qobuz.com/us-en/album/songs-about-jane-maroon-5/tni1mv9tnzv2b
+https://www.qobuz.com/us-en/album/dookie-green-day/0093624915713
+https://www.qobuz.com/album/psalms-of-extinction-pain/g0pbok5rb51fa
+https://www.qobuz.com/fi-en/album/-/r8361te6k0cic
+https://www.qobuz.com/us-en/album/_/y3d2nn38ot5fa
+https://www.qobuz.com/be-nl/album/invaders-must-die-the-prodigy/mukqsbtbin3mb
+https://www.qobuz.com/gb-en/album/animals-the-animals/0724385669958
+https://www.qobuz.com/gb-en/album/iii-chickenfoot/msywyz2hi1kfa
+https://www.qobuz.com/us-en/album/sznz-autumn-weezer/xwxlqkk8y2t0a
+https://play.qobuz.com/album/5034202025658
+http://www.qobuz.com/album/white-crosses-against-me/0191515275875
+https://www.qobuz.com/us-en/album/tommy-the-who/jkqx8twbdebsb
+https://www.qobuz.com/fr-fr/album/et-moi-et-moi-et-moi-jacques-dutronc/0888880362315
+https://www.qobuz.com/us-en/album/are-you-experienced-the-jimi-hendrix-experience/0884977413885
+https://www.qobuz.com/us-en/album/daughter-from-hell-gracie-abrams/e2txak6ww3xne
+http://www.qobuz.com/album/most-of-the-animals-the-animals/0724353829650
+https://www.qobuz.com/album/the-colour-in-anything-james-blake/0060254796504
+https://www.qobuz.com/album/ces-gens-la-jacques-brel/0060252748014
+https://www.qobuz.com/us-en/album/slipknot-slipknot/0016861865504
+https://www.qobuz.com/us-en/album/helloween-helloween/hp4qhwldhdu8b
+https://www.qobuz.com/us-en/album/blue-green-red-weezer/e7io1mq9w1g5b
+https://www.qobuz.com/it-it/album/rebel-heart-madonna/mvamwfs7ggy76
+https://www.qobuz.com/us-en/album/speak-now-taylor-swift/qsgwxoyd8dfmc
+https://www.qobuz.com/us-en/album/ive-got-a-tiger-by-the-tail-buck-owens-his-buckaroos/ywuvetwrsbxfb
+https://www.qobuz.com/us-en/album/nevermind-nirvana/m5pxsa1stxppa
+https://www.qobuz.com/de-de/album/the-sensual-world-2018-remaster-kate-bush/rrs0uy68ypb4a
+https://www.qobuz.com/gb-en/album/what-do-you-think-about-the-car-declan-mckenna/0886446197173
+https://www.qobuz.com/de-de/album/peter-gabriel-3-melt-peter-gabriel/uh28en7k1wu0b
+https://www.qobuz.com/fr-fr/album/the-final-countdown-expanded-edition-europe/0696998575721
+https://www.qobuz.com/gb-en/album/live-at-the-paramount-nirvana/moame3chxu2ia
+http://www.qobuz.com/album/weezer-white-album-weezer/0075679912787
+https://www.qobuz.com/gb-en/album/tchaikovsky-the-nutcracker-berliner-philharmoniker-mstislav-rostropovich/coqgvgopr7q26
+https://www.qobuz.com/us-en/album/weezer-30-weezer/u33fupz6693ea
+https://open.qobuz.com/album/id29re6slymta
+https://www.qobuz.com/nl-nl/album/ella-fitzgerald-sings-the-cole-porter-song-book-ella-fitzgerald/0060255741426
+https://www.qobuz.com/gb-en/album/dopamine-chamber-fontaines-dc/ktafrcmxfq3vc
+https://www.qobuz.com/us-en/album/-/ybo3lnns8dfwa

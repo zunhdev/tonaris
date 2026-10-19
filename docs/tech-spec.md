@@ -588,7 +588,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - No Apple artwork, previews or store URLs are kept.
   - Lookups stay under 20 a minute, and responses may be cached for a day.
   - The paid Apple Music API (Apple Developer Program) is not used.
-- **Qobuz store pages.** Permitted on 19 October 2026 ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)). Whether the chain uses them is decided in TON-25, after TON-14's slug proposal and TON-99's measurement.
+- **Qobuz store pages.** Permitted on 19 October 2026 ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)). Whether the chain uses them is decided in TON-25, after TON-14's slug proposal and the [TON-99 measurement](spikes/2026-10-19-g1-qobuz-hints.md).
   - **The slug:** one `GET www.qobuz.com/us-en/album/-/{id}` with manual redirects, reading only `Location`.
   - **Hints:** the album page's title, artist and date, used only as transient hints for a strict MusicBrainz match. Nothing from the page is stored, and manual entry isn't prefilled from it.
   - Each request is user-initiated: one per pasted link, to www.qobuz.com only, never open. or play. It sends an honest User-Agent and follows no further links. There is no crawling or backfill.
@@ -618,9 +618,27 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 - The report proposes the 14-digit barcode form, which waits for TON-25.
 - Its data-handling proposals were adopted in the [G1 terms review](spikes/2026-10-19-g1-terms-review.md): see the Spotify rules above.
 
+*Spike results (19 October 2026):* [G1 Qobuz hints spike](spikes/2026-10-19-g1-qobuz-hints.md).
+
+- A Qobuz step 4 works like Apple's. The hints are the store page's `MusicAlbum` name, the `Product` block's brand as artist, and the date's year.
+- TON-16's rule, restricted to official albums and EPs as the G2 spike proposed, identifies 68% of labelled Qobuz links (80% of those with hints), with no wrong album.
+- On the G1 sample's 24 Qobuz links, the chain then identifies 19, against 13 with steps 2 and 3.
+- The restriction removed the only wrong match, which came from the title cleaning dropping "(Taylor's Version)".
+- Most misses are pages missing in the `us-en` store: request B needs a store that sells the album.
+- Each link takes one or two requests to www.qobuz.com, of under 0.4 s each (p95), outside MusicBrainz's queue.
+
 *Still open (G1):*
 
-- the creator's final G1 decision after the spikes (TON-25).
+- the creator's final G1 decision after the spikes (TON-25);
+- whether step 4 also takes Qobuz page hints, with the rule the [TON-99 report](spikes/2026-10-19-g1-qobuz-hints.md) proposes (TON-25);
+- which store locale request B uses for open. and play. links, which carry none. `us-en` missed albums the creator's store sells;
+- the other Qobuz questions handed to TON-17:
+  - following Qobuz's own redirect to the album's page;
+  - reading request A's answer when it is already the page;
+  - how often robots.txt is checked;
+  - whether a capture an agent starts through MCP counts as user-initiated;
+- keeping "(Taylor's Version)" in titles for steps 4 of both Apple and Qobuz, whose title cleaning drops it today;
+- a timeout on every request to www.qobuz.com: one connection stalled for minutes in the spike.
 
 The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-review.md), decided 19 October 2026.
 

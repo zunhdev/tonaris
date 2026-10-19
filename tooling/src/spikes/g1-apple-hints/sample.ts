@@ -10,9 +10,7 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
 
-import { z } from "zod";
-
-import { userAgent } from "../g1-musicbrainz/musicbrainz";
+import { entity, sparql } from "../g1-musicbrainz/wikidata";
 
 const root = path.resolve(import.meta.dir, "../../../fixtures");
 const extraSize = 50;
@@ -30,24 +28,6 @@ const manualLabels: Record<string, string> = {
 
 export type Label = { releaseGroupIds: string[]; source: string };
 
-const bindingsSchema = z.object({
-  results: z.object({
-    bindings: z.array(z.record(z.string(), z.object({ value: z.string() }))),
-  }),
-});
-
-async function sparql(query: string) {
-  const url = new URL("https://query.wikidata.org/sparql");
-  url.searchParams.set("query", query);
-  url.searchParams.set("format", "json");
-  const response = await fetch(url, {
-    headers: { "User-Agent": userAgent, Accept: "application/sparql-results+json" },
-  });
-  if (!response.ok) throw new Error(`Wikidata answered ${response.status}`);
-  return bindingsSchema.parse(await response.json()).results.bindings;
-}
-
-const entity = (iri: string) => iri.replace("http://www.wikidata.org/entity/", "");
 const rank = (item: string) => createHash("md5").update(`tonaris-g1-apple:${item}`).digest("hex");
 
 // The Apple links of the G1 sample, by sample, with their Wikidata items.

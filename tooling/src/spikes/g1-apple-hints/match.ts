@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 import { urlCandidates } from "../g1-musicbrainz/chain";
-import { parseLink } from "../g1-musicbrainz/links";
+import { type ParsedLink, parseLink } from "../g1-musicbrainz/links";
 import type { MusicBrainz } from "../g1-musicbrainz/musicbrainz";
 import type { Itunes } from "./itunes";
 import {
@@ -56,6 +56,7 @@ const search = z.object({
         id: z.string(),
         title: z.string(),
         date: z.string().optional(),
+        status: z.string().optional(),
         "track-count": z.number().optional(),
         "artist-credit": z
           .array(
@@ -66,7 +67,11 @@ const search = z.object({
             }),
           )
           .optional(),
-        "release-group": z.object({ id: z.string(), title: z.string() }),
+        "release-group": z.object({
+          id: z.string(),
+          title: z.string(),
+          "primary-type": z.string().nullable().optional(),
+        }),
       }),
     )
     .default([]),
@@ -80,28 +85,13 @@ const groupSearch = z.object({
 /** A Lucene phrase: only quotes and backslashes need escaping inside one. */
 const phrase = (text: string) => `"${text.replaceAll(/["\\]/g, (c) => `\\${c}`)}"`;
 
-export async function matchLink(
-  index: number,
+/** The album a link truly is: its label, or the album of the release MusicBrainz links its URL to (step 2). */
+export async function urlTruth(
   input: string,
+  link: ParsedLink,
   labels: Readonly<Record<string, Label>>,
   mb: MusicBrainz,
-  itunes: Itunes,
-): Promise<MatchResult> {
-  const result: MatchResult = {
-    index,
-    input,
-    knownByUrl: false,
-    candidates: 0,
-    albumTitles: {},
-    decisions: {},
-  };
-  const parsed = parseLink(input);
-  if (!parsed.ok || !parsed.link.albumId)
-    return { ...result, error: parsed.ok ? "no album id" : parsed.reason };
-  const { link } = parsed;
-  const albumId = link.albumId ?? "";
-
-  // The truth: the label, or the album of the release MusicBrainz links this URL to.
+): Promise<{ knownByUrl: boolean; truth?: Label }> {
   const forms = urlCandidates(link);
   const lookup = urlLookup.parse(
     (await mb.get("url", {
@@ -114,40 +104,42 @@ export async function matchLink(
   const linked = ("urls" in lookup ? lookup.urls : [lookup])
     .flatMap((url) => url.relations ?? [])
     .flatMap((r) => (r["target-type"] === "release" && r.release ? [r.release.id] : []));
-  result.knownByUrl = linked.length > 0;
+  const knownByUrl = linked.length > 0;
   const label = labels[input];
-  if (label) result.truth = label;
-  else if (linked[0]) {
-    const release = releaseLookup.parse(
-      await mb.get(`release/${linked[0]}`, { inc: "release-groups" }),
-    );
-    result.truth = {
+  if (label) return { knownByUrl, truth: label };
+  if (!linked[0]) return { knownByUrl };
+  const release = releaseLookup.parse(
+    await mb.get(`release/${linked[0]}`, { inc: "release-groups" }),
+  );
+  return {
+    knownByUrl,
+    truth: {
       releaseGroupIds: [release["release-group"].id],
       source: "MusicBrainz URL relationship",
-    };
-  }
-
-  const hints = await itunes.hints(albumId, [...new Set([link.storefront ?? "us", "us", "gb"])]);
-  if (!hints)
-    return { ...result, error: "iTunes Lookup has no such album in the storefronts tried" };
-  result.hints = {
-    storefront: hints.storefront,
-    date: hints.date,
-    trackCount: hints.trackCount,
-    decorated: cleanTitle(hints.title) !== hints.title,
+    },
   };
+}
 
-  // One search wide enough for every rule: the clean title as a phrase also matches decorated titles. When the
-  // artist as Apple spells it finds nothing, such as "Mumiy Troll" for Мумий Тролль, search by title alone.
-  const title = phrase(searchTitle(hints.title));
+/**
+ * The MusicBrainz releases a store's title and artist find. One search is wide enough for every rule: the clean
+ * title as a phrase also matches decorated titles. When the artist as the store spells it finds nothing, such as
+ * "Mumiy Troll" for Мумий Тролль, it searches by title alone. Each candidate gets its album's first release date.
+ */
+export async function searchCandidates(
+  mb: MusicBrainz,
+  hintTitle: string,
+  hintArtist: string,
+): Promise<{ candidates: Candidate[]; fallbackSearch: boolean }> {
+  const title = phrase(searchTitle(hintTitle));
+  let fallbackSearch = false;
   let found = search.parse(
     await mb.get("release", {
-      query: `release:${title} AND artist:${phrase(firstArtist(hints.artist))}`,
+      query: `release:${title} AND artist:${phrase(firstArtist(hintArtist))}`,
       limit: "100",
     }),
   ).releases;
   if (found.length === 0) {
-    result.fallbackSearch = true;
+    fallbackSearch = true;
     found = search.parse(
       await mb.get("release", { query: `release:${title}`, limit: "100" }),
     ).releases;
@@ -172,10 +164,52 @@ export async function matchLink(
     releaseGroupId: r["release-group"].id,
     releaseGroupTitle: r["release-group"].title,
     firstReleaseDate: firstDates.get(r["release-group"].id) || undefined,
+    status: r.status,
+    primaryType: r["release-group"]["primary-type"] ?? undefined,
     artistNames: (r["artist-credit"] ?? []).flatMap((c) =>
       c.artist ? [c.name, c.artist.name, c.artist["sort-name"] ?? c.artist.name] : [c.name],
     ),
   }));
+  return { candidates, fallbackSearch };
+}
+
+export async function matchLink(
+  index: number,
+  input: string,
+  labels: Readonly<Record<string, Label>>,
+  mb: MusicBrainz,
+  itunes: Itunes,
+): Promise<MatchResult> {
+  const result: MatchResult = {
+    index,
+    input,
+    knownByUrl: false,
+    candidates: 0,
+    albumTitles: {},
+    decisions: {},
+  };
+  const parsed = parseLink(input);
+  if (!parsed.ok || !parsed.link.albumId)
+    return { ...result, error: parsed.ok ? "no album id" : parsed.reason };
+  const { link } = parsed;
+  const albumId = link.albumId ?? "";
+
+  const known = await urlTruth(input, link, labels, mb);
+  result.knownByUrl = known.knownByUrl;
+  if (known.truth) result.truth = known.truth;
+
+  const hints = await itunes.hints(albumId, [...new Set([link.storefront ?? "us", "us", "gb"])]);
+  if (!hints)
+    return { ...result, error: "iTunes Lookup has no such album in the storefronts tried" };
+  result.hints = {
+    storefront: hints.storefront,
+    date: hints.date,
+    trackCount: hints.trackCount,
+    decorated: cleanTitle(hints.title) !== hints.title,
+  };
+
+  const { candidates, fallbackSearch } = await searchCandidates(mb, hints.title, hints.artist);
+  if (fallbackSearch) result.fallbackSearch = true;
   result.candidates = candidates.length;
   for (const c of candidates) result.albumTitles[c.releaseGroupId] = c.releaseGroupTitle;
 
