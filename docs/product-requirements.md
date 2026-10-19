@@ -266,7 +266,7 @@ The rule applies to creation, renaming, moves, and recovery.
 - If the addition reuses an active record, that record's memberships are untouched.
 - A matched trashed album added without a destination is reactivated with no memberships (FR-14.4).
 
-**FR-02.3 Track links.** A track link resolves to the album of the release that specific link belongs to. For example, a track linked from a compilation adds that compilation, not some other album containing the song. Only that album is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
+**FR-02.3 Track links.** A track link resolves to the album of the release that specific link belongs to. For example, a track linked from a compilation adds that compilation, not some other album containing the song. A track from a single adds the single, which is Unclassified (FR-05.9; decided 19 October 2026). Only that album is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
 
 **FR-02.4 Manual entry.** A regular form adds an album without a lookup.
 
@@ -1023,6 +1023,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - Qobuz API keys aren't available to individuals; the "unverified" note is answered (section 8);
   - FR-08.8's open question is answered, and D3 and D7 are updated;
   - services are named in plain text, with no logos (design spec).
+- **Decision (19 October 2026), during the G2 album-matching spike** ([report](spikes/2026-10-19-g2-album-matching.md)): a track link from a single adds the single (FR-02.3), as the compilation example already implied.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);
