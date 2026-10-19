@@ -1,0 +1,410 @@
+{
+  "https://open.qobuz.com/album/c6zb0r5qcrqoa": {
+    "releaseGroupIds": [
+      "54dc2ea4-d3da-319d-8ee9-c2f4faf98581"
+    ],
+    "source": "manual MusicBrainz search, 19 October 2026"
+  },
+  "https://open.qobuz.com/album/z96u0k0znz1xb": {
+    "releaseGroupIds": [
+      "95959c5f-6011-4c20-b932-0a70b529e045"
+    ],
+    "source": "manual MusicBrainz search, 19 October 2026"
+  },
+  "https://open.qobuz.com/album/0884977423006": {
+    "releaseGroupIds": [
+      "da40e720-2097-3730-8a7f-0c2ddbff4a96"
+    ],
+    "source": "manual MusicBrainz search, 19 October 2026"
+  },
+  "https://open.qobuz.com/album/d4bpey5kkf9hc": {
+    "releaseGroupIds": [
+      "32faf671-3b3e-3271-b497-a0631605b0f6"
+    ],
+    "source": "Wikidata Q832462 P436"
+  },
+  "https://open.qobuz.com/album/0060254799999": {
+    "releaseGroupIds": [
+      "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf"
+    ],
+    "source": "Wikidata Q6546132 P436"
+  },
+  "https://open.qobuz.com/album/0886444095280": {
+    "releaseGroupIds": [
+      "79dabce4-71c2-34ce-9d5d-83f9442fb325"
+    ],
+    "source": "Wikidata Q1766649 P436"
+  },
+  "https://open.qobuz.com/album/mgcel8njixy5b": {
+    "releaseGroupIds": [
+      "a4c6be15-bfc4-4078-b80b-d9f03a4049b1"
+    ],
+    "source": "Wikidata Q2842103 P436"
+  },
+  "https://open.qobuz.com/album/vrya2g9g2szca": {
+    "releaseGroupIds": [
+      "a2d10e26-9e34-45b7-a47d-3f439dcb6291"
+    ],
+    "source": "Wikidata Q120357974 P436"
+  },
+  "https://open.qobuz.com/album/qrzshjf1rhktb": {
+    "releaseGroupIds": [
+      "9747bcfe-7c42-35ac-8c3e-7ecac9f1227b"
+    ],
+    "source": "Wikidata Q1060887 P436"
+  },
+  "https://open.qobuz.com/album/0603497866670": {
+    "releaseGroupIds": [
+      "4115ff42-4d79-3a95-a745-a07e66ff3c42"
+    ],
+    "source": "Wikidata Q7091941 P436"
+  },
+  "https://open.qobuz.com/album/c8f0bs8nq70uc": {
+    "releaseGroupIds": [
+      "eecbdbee-026b-3c45-ba03-ed451c4ee2d1"
+    ],
+    "source": "Wikidata Q3010825 P436"
+  },
+  "https://open.qobuz.com/album/0075678265068": {
+    "releaseGroupIds": [
+      "5eb19154-b687-3078-92cd-5cb45b06e2a7"
+    ],
+    "source": "Wikidata Q2932009 P436"
+  },
+  "https://open.qobuz.com/album/0088807200374": {
+    "releaseGroupIds": [
+      "6d4f73cb-9c02-33c5-ba06-c927a9b963ad"
+    ],
+    "source": "Wikidata Q1508334 P436"
+  },
+  "https://open.qobuz.com/album/0888880696069": {
+    "releaseGroupIds": [
+      "8e8a594f-2175-38c7-a871-abb68ec363e7"
+    ],
+    "source": "Wikidata Q283221 P436"
+  },
+  "https://open.qobuz.com/album/z9rzcky5afxpa": {
+    "releaseGroupIds": [
+      "27dbe512-f2b0-4519-b8ca-7e45ae06c100"
+    ],
+    "source": "Wikidata Q85775733 P436"
+  },
+  "https://open.qobuz.com/album/0744861104056": {
+    "releaseGroupIds": [
+      "c92f73ee-527f-42ed-a556-fd615941e214"
+    ],
+    "source": "Wikidata Q8328875 P436"
+  },
+  "https://open.qobuz.com/album/0886444064385": {
+    "releaseGroupIds": [
+      "05ad0e67-417a-44b0-b34d-e77bd843f279"
+    ],
+    "source": "Wikidata Q14567932 P436"
+  },
+  "https://open.qobuz.com/album/0060249868948": {
+    "releaseGroupIds": [
+      "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac"
+    ],
+    "source": "Wikidata Q284509 P436"
+  },
+  "https://www.qobuz.com/us-en/album/weezer-teal-album-weezer/mco0vy9isdq4a": {
+    "releaseGroupIds": [
+      "c27987a9-d3bb-4929-8526-d3507e92a041"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/-/oulc1w5vun56a": {
+    "releaseGroupIds": [
+      "67727253-f1c0-4243-9270-f9f1401c3b8c"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://open.qobuz.com/album/ycurs90b1g28a": {
+    "releaseGroupIds": [
+      "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/gb-en/album/indigo-chris-brown/wfs0xqkq1iroa": {
+    "releaseGroupIds": [
+      "087b3a7d-d532-44d9-b37a-84427677ddcd"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/gb-en/album/red-taylor-swift/sk75xq5q1k2jc": {
+    "releaseGroupIds": [
+      "a73cecde-0923-40ad-aad1-e8c24ba6c3d2"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://play.qobuz.com/album/a7bocoz9gc19k": {
+    "releaseGroupIds": [
+      "0419ba7c-f4a3-39d9-8741-fb26322ed89c"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/madonna-madonna/0093624790365": {
+    "releaseGroupIds": [
+      "cf44c73c-650d-3c67-9327-c99426ce464f"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/ch-de/album/isnt-anything-my-bloody-valentine/l8cpobwd8u12b": {
+    "releaseGroupIds": [
+      "55a73423-bf7d-3969-b1b2-c34c43140e1a"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/illenium-illenium/pjv3xyntol8ta?qref=dpa": {
+    "releaseGroupIds": [
+      "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/with-sonny-boy-williamson-the-animals/0884385954895": {
+    "releaseGroupIds": [
+      "e5d84d8d-4b50-4467-8b2c-95143dfa793c"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "http://www.qobuz.com/nl-nl/album/punk-goes-pop-vol-4-multi-interpretes/0088807239330": {
+    "releaseGroupIds": [
+      "690e3fc0-8862-4605-a3d3-eeed6ba6aed6"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/weezer-green-album/0060694930452": {
+    "releaseGroupIds": [
+      "923d5ba6-7eee-3bce-bcb2-c913b2bd69d4"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://open.qobuz.com/album/pjb7nyfk2hvia": {
+    "releaseGroupIds": [
+      "fa0b08c0-8118-486d-8201-8c1d01ba858a"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/songs-about-jane-maroon-5/tni1mv9tnzv2b": {
+    "releaseGroupIds": [
+      "93d5a1d1-73c0-34d3-b7f1-49473c48face"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/dookie-green-day/0093624915713": {
+    "releaseGroupIds": [
+      "314cffd4-daa5-3337-85e5-e54165a96113"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/album/psalms-of-extinction-pain/g0pbok5rb51fa": {
+    "releaseGroupIds": [
+      "f411b01e-8028-3db9-b35f-31fa650c4ff0"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/fi-en/album/-/r8361te6k0cic": {
+    "releaseGroupIds": [
+      "d2e4838d-90e1-471c-bda0-fd816dabb2d4"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/_/y3d2nn38ot5fa": {
+    "releaseGroupIds": [
+      "69eb9696-35c8-4463-aff5-952526213ce8"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/be-nl/album/invaders-must-die-the-prodigy/mukqsbtbin3mb": {
+    "releaseGroupIds": [
+      "dafbb45b-e06f-3a2b-b4fd-981d3d99a3a4"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/gb-en/album/animals-the-animals/0724385669958": {
+    "releaseGroupIds": [
+      "3131932b-bc2f-3c6a-a08c-23a5ae95ec27"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/gb-en/album/iii-chickenfoot/msywyz2hi1kfa": {
+    "releaseGroupIds": [
+      "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/sznz-autumn-weezer/xwxlqkk8y2t0a": {
+    "releaseGroupIds": [
+      "9bf88d97-678e-4ffc-b0d2-453323579eca"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://play.qobuz.com/album/5034202025658": {
+    "releaseGroupIds": [
+      "12c275f9-1156-4977-95a3-53957e090ee7"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "http://www.qobuz.com/album/white-crosses-against-me/0191515275875": {
+    "releaseGroupIds": [
+      "f8f1fe07-3e6e-491e-bd1e-34c51163600f"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/tommy-the-who/jkqx8twbdebsb": {
+    "releaseGroupIds": [
+      "0e587339-406a-3d21-8678-73e46e250379"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/fr-fr/album/et-moi-et-moi-et-moi-jacques-dutronc/0888880362315": {
+    "releaseGroupIds": [
+      "3f4041a9-d734-33f0-8bb1-45ed3a4ee778"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/are-you-experienced-the-jimi-hendrix-experience/0884977413885": {
+    "releaseGroupIds": [
+      "da40e720-2097-3730-8a7f-0c2ddbff4a96"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/daughter-from-hell-gracie-abrams/e2txak6ww3xne": {
+    "releaseGroupIds": [
+      "c4f1b0ff-54e4-4ee3-a722-4c30892997b7"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "http://www.qobuz.com/album/most-of-the-animals-the-animals/0724353829650": {
+    "releaseGroupIds": [
+      "ae49221c-0e0b-3228-86c6-c5f5685ba184"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/album/the-colour-in-anything-james-blake/0060254796504": {
+    "releaseGroupIds": [
+      "bd166f52-cc11-4554-8045-ada94e6b2911"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/album/ces-gens-la-jacques-brel/0060252748014": {
+    "releaseGroupIds": [
+      "40fa1a54-e679-31f1-a9fc-00ee649a9b74"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/slipknot-slipknot/0016861865504": {
+    "releaseGroupIds": [
+      "5140eef4-5b5d-309c-a3aa-5c5da107b1da"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/helloween-helloween/hp4qhwldhdu8b": {
+    "releaseGroupIds": [
+      "d0bcd889-f250-41e9-b8ae-4659177dd4f7"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/blue-green-red-weezer/e7io1mq9w1g5b": {
+    "releaseGroupIds": [
+      "9b8af98f-8214-32ee-9b05-96b8c557f7f0"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/it-it/album/rebel-heart-madonna/mvamwfs7ggy76": {
+    "releaseGroupIds": [
+      "ab88ca0b-da32-4e01-ae9b-198b0b7b8681"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/speak-now-taylor-swift/qsgwxoyd8dfmc": {
+    "releaseGroupIds": [
+      "ba1259eb-d41e-41c5-a70c-0e6fa73e6708"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/ive-got-a-tiger-by-the-tail-buck-owens-his-buckaroos/ywuvetwrsbxfb": {
+    "releaseGroupIds": [
+      "6d86b87e-43e5-3631-bb46-84cb65b3f303"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/nevermind-nirvana/m5pxsa1stxppa": {
+    "releaseGroupIds": [
+      "1b022e01-4da6-387b-8658-8678046e4cef"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/de-de/album/the-sensual-world-2018-remaster-kate-bush/rrs0uy68ypb4a": {
+    "releaseGroupIds": [
+      "ad555095-b0a6-42c8-87aa-8ba035d20e12"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/gb-en/album/what-do-you-think-about-the-car-declan-mckenna/0886446197173": {
+    "releaseGroupIds": [
+      "e96be39c-db4f-4137-90e9-dc7a623d8b27"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/de-de/album/peter-gabriel-3-melt-peter-gabriel/uh28en7k1wu0b": {
+    "releaseGroupIds": [
+      "fe9f06cd-a160-3114-85fd-102726dddc0b"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/fr-fr/album/the-final-countdown-expanded-edition-europe/0696998575721": {
+    "releaseGroupIds": [
+      "da4f2d37-3eb9-3d62-800d-88d345551ec9"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/gb-en/album/live-at-the-paramount-nirvana/moame3chxu2ia": {
+    "releaseGroupIds": [
+      "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "http://www.qobuz.com/album/weezer-white-album-weezer/0075679912787": {
+    "releaseGroupIds": [
+      "18fa1fe1-1cfd-431f-906d-a335f245d220"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/gb-en/album/tchaikovsky-the-nutcracker-berliner-philharmoniker-mstislav-rostropovich/coqgvgopr7q26": {
+    "releaseGroupIds": [
+      "5fe75120-028e-4157-b6c6-322e86dcf89d"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/weezer-30-weezer/u33fupz6693ea": {
+    "releaseGroupIds": [
+      "c7b245c9-8099-32ea-af95-893acedde2cf"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://open.qobuz.com/album/id29re6slymta": {
+    "releaseGroupIds": [
+      "4d9ec1c2-58ec-48a4-aa0a-916718adead0"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/nl-nl/album/ella-fitzgerald-sings-the-cole-porter-song-book-ella-fitzgerald/0060255741426": {
+    "releaseGroupIds": [
+      "dcc0d723-e27f-36e8-8438-dbbde7eb9a67"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/gb-en/album/dopamine-chamber-fontaines-dc/ktafrcmxfq3vc": {
+    "releaseGroupIds": [
+      "8897af6d-f344-4ad4-af70-83cb425d8397"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  },
+  "https://www.qobuz.com/us-en/album/-/ybo3lnns8dfwa": {
+    "releaseGroupIds": [
+      "c1a568c7-055c-374a-9d92-9ea077f2bf1f"
+    ],
+    "source": "G2 corpus: MusicBrainz URL relationship"
+  }
+}

@@ -1,0 +1,5641 @@
+{
+  "results": [
+    {
+      "index": 0,
+      "input": "https://open.qobuz.com/album/tietg8e0jjdh8",
+      "knownByUrl": true,
+      "candidates": 50,
+      "albumTitles": {
+        "f1afec0b-26dd-3db5-9aa1-c91229a74a24": "Bleach",
+        "e6a264a5-a8f3-3cd9-8f2c-df75ad4f6ea9": "1991-11-11: Markthalle, Hamburg, Germany",
+        "c588b459-9d25-3fb7-8418-2c7e8d0d0977": "Bleach Sessions",
+        "67f6a058-66cf-3c44-886c-c7acd254b5cb": "\"Master Reel\" Bleach Demos",
+        "b6139cd9-e8ab-35bc-b6ce-2bcdec864e70": "1989-07-08: Club Dreamerz, Chicago, IL, USA",
+        "99f00404-ebe9-3d0c-baa4-5f6cd35dee77": "\"Kurdt's Tape Side a\" Bleach Demos"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+          "releases": 43,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+          "releases": 43,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+          "releases": 41,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+          "releases": 41,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+          "releases": 41,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "1989-06-01",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "f1afec0b-26dd-3db5-9aa1-c91229a74a24"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "creator"
+    },
+    {
+      "index": 1,
+      "input": "https://open.qobuz.com/album/c6zb0r5qcrqoa",
+      "knownByUrl": false,
+      "candidates": 7,
+      "albumTitles": {
+        "54dc2ea4-d3da-319d-8ee9-c2f4faf98581": "Икра"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": true,
+        "date": "1997-11-21",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "54dc2ea4-d3da-319d-8ee9-c2f4faf98581"
+        ],
+        "source": "manual MusicBrainz search, 19 October 2026"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "creator"
+    },
+    {
+      "index": 2,
+      "input": "https://open.qobuz.com/album/capw1vifm759b",
+      "knownByUrl": true,
+      "candidates": 40,
+      "albumTitles": {
+        "e0fdb431-0109-420d-8a37-f99eaeb4d671": "BRAT",
+        "771dd0aa-c488-4801-abcf-cbbe34b4d0fb": "BRAT - Sessions",
+        "1eb5ec6f-8f49-466b-a855-4906be6e565a": "Brat and it’s completely different but also still brat",
+        "6273d05f-0cc0-4baf-af22-aa8f73ef97cf": "BRAT 2025 ARENA TOUR: Live from Brooklyn",
+        "7df92993-5166-4ebd-a6a0-de73c9add98a": "2025-06-28: BRAT: Glastonbury Festival of Contemporary Performing Arts, UK",
+        "f9dcc83d-3756-453b-8bee-e5de6bb35990": "Brat and it’s not the same because it’s the b-side in sessions"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0fdb431-0109-420d-8a37-f99eaeb4d671",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0fdb431-0109-420d-8a37-f99eaeb4d671",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0fdb431-0109-420d-8a37-f99eaeb4d671",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0fdb431-0109-420d-8a37-f99eaeb4d671",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0fdb431-0109-420d-8a37-f99eaeb4d671",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0fdb431-0109-420d-8a37-f99eaeb4d671",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2024-06-07",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "e0fdb431-0109-420d-8a37-f99eaeb4d671"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "creator"
+    },
+    {
+      "index": 3,
+      "input": "https://open.qobuz.com/album/z96u0k0znz1xb",
+      "knownByUrl": false,
+      "candidates": 22,
+      "albumTitles": {
+        "3c12a8a4-3768-4fe4-8f67-bb8484422ba9": "Tchaikovsky's Nutcracker",
+        "1deeabed-475d-434f-bb57-f9a88b1ac03a": "Tchaikovsky’s Nutcracker",
+        "c6e85427-cab9-4be8-ab27-7a3828bfe42c": "The Nutcracker Suite / Swan Lake Suite",
+        "65219cf0-da34-447f-bdec-b67588b91c03": "Tchaikovsky's Nutcracker Suite",
+        "05d675c8-12df-4948-a761-fe48b1a9251b": "Highlights from Tchaikovsky's Nutcracker",
+        "fc895f90-a6f9-378e-b49d-774b6c84a6c9": "The Nutcracker",
+        "2e8804bf-89d5-4515-a5c1-6cd9e085b197": "Classical Christmas Highlights from Tchaikovsky’s Nutcracker",
+        "91e524a4-b66e-4bbe-86f3-0b03ad2627a7": "Tchaikovsky Nutcracker Suite / Swan Lake",
+        "21a3e38a-b2a5-4233-8968-9175cced8a6f": "Suite from the ballet “The Nutcracker” / Overture in F major",
+        "1aefff5e-f0ff-4d2e-a5dc-eddd2286c9f7": "Tchaikovsky: Nutcracker, Sleeping Beauty & Swan Lake",
+        "809c4dd6-7270-4217-a94b-d936f1a1d166": "Tchaikovsky’s Nutcracker with The London Symphony Orchestra",
+        "3070fad7-c46a-4f5f-ac8d-bde2a8cbccff": "Berlioz: Symphonie Fantastique / Tchaikovsky: Nutcracker Suite",
+        "f20414be-ffc1-4b93-ae9e-01b997ff47d1": "Tchaikovsky: Nutcracker Suite / Grieg: Peer Gynt Suite",
+        "f78593c6-2978-4764-9c8e-fdfee099acfd": "Prokofiev: Peter and the Wolf / Tchaikovsky: Nutcracker Suite",
+        "dfb77b24-fac2-4c68-854f-bcd91da07933": "Invitation to the Ballet: Tchaikovsky’s Nutcracker Suite (Casse-Noisette)",
+        "3ccec7d6-a09d-30b0-a7c3-9cc6d5298c8b": "Christmas Favorites: Highlights from Handel's \"The Messiah\" and Tchaikovsky's \"The Nutcracker\"",
+        "27d50be3-76cc-4a4b-a80c-edf098d49bb4": "Schubert: Symphony no. 3 / Mendelssohn: Symphony no. 4 / Tchaikovsky: Nutcracker Suite",
+        "775ddd38-7272-48af-9d46-476e3d1bac09": "Tchaikovsky: Nutcracker Suite / Berlioz: Roman Carnival Overture / Wagner: Meistersinger Prelude",
+        "e9f9a91d-1a3b-49f2-afb8-9fe878a049af": "Britten: The Young Person’s Guide to the Orchestra / Tchaikovsky: Nutcracker Suite",
+        "b80bc840-280b-4ee0-8eff-c5bd084166ca": "Prokofiev: Peter and the Wolf, Op. 67 / Tchaikovsky: Nutcracker Suite, Op. 71a",
+        "d75cc1ad-16a3-48d5-940e-259906f4ae4e": "Chopin: Les Sylphides / Delibes: Sylvia Suite / Coppelia Suite / Tchaikovsky: Nutcracker Suite"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2010-10-22",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "95959c5f-6011-4c20-b932-0a70b529e045"
+        ],
+        "source": "manual MusicBrainz search, 19 October 2026"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "creator"
+    },
+    {
+      "index": 4,
+      "input": "https://open.qobuz.com/album/0884977423006",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "da40e720-2097-3730-8a7f-0c2ddbff4a96"
+        ],
+        "source": "manual MusicBrainz search, 19 October 2026"
+      },
+      "sample": "creator"
+    },
+    {
+      "index": 5,
+      "input": "https://open.qobuz.com/album/d4bpey5kkf9hc",
+      "knownByUrl": true,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "32faf671-3b3e-3271-b497-a0631605b0f6"
+        ],
+        "source": "Wikidata Q832462 P436"
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 6,
+      "input": "https://open.qobuz.com/album/0060254799999",
+      "knownByUrl": true,
+      "candidates": 3,
+      "albumTitles": {
+        "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf": "Light and Shade"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "1987-01-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "fa7ef74d-a9c1-3f1d-b304-a8bce32263bf"
+        ],
+        "source": "Wikidata Q6546132 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 7,
+      "input": "https://open.qobuz.com/album/0886444095280",
+      "knownByUrl": false,
+      "candidates": 100,
+      "albumTitles": {
+        "4e874dd7-fe08-489c-baae-518771b9f720": "Live Elvis! Elvis! Elvis!",
+        "5334291d-f8f1-39d7-b293-361c0d473191": "Elvis",
+        "79dabce4-71c2-34ce-9d5d-83f9442fb325": "Elvis",
+        "1f1c9bab-dfdf-31e5-91f6-f61100d10353": "Elvis",
+        "48e2926f-639a-4289-8303-451f1dadefc1": "Elvis",
+        "711ce319-1679-4943-8914-3169aa6279d2": "Elvis Elvis Elvis: 100 Greatest Hits",
+        "18f9b69d-5687-4ece-a636-b71f11424bba": "Elvis Christmas",
+        "6db80fd1-2784-3d87-a7a5-4b7efa54ff5a": "Love, Elvis",
+        "f9af7dc2-23bf-3e37-93d4-82f3a58d1dd9": "Just Elvis",
+        "d122fac5-2863-36ca-98f6-e143d5d07d71": "Strictly Elvis",
+        "2ebeec96-6ef7-3d4d-943c-0b4a2af1d7cc": "Elvis Presley",
+        "1ba2c1ff-8559-4e32-b365-f519178a97c6": "Viva Elvis",
+        "47782bd9-d824-44c5-8cc9-5174a30ace8a": "Elvis Forever",
+        "cb7d8fc2-abb8-4b12-ab37-a35dc2f5f85a": "Elvis Country",
+        "843f2dc5-2d6a-40b2-b525-a682fb8f9a7b": "Lovin’ Elvis",
+        "755ec54b-8632-4930-930d-0aaab9e55904": "Elvis Presley",
+        "53a9c991-1a5d-3613-8a06-4c02812c54d5": "Elvis 2",
+        "193cf96a-a73f-311a-a058-a31607af590e": "Essential Elvis",
+        "94827c6b-630b-4d35-a611-effc55857bbd": "Elvis 75",
+        "df883823-ca4b-392e-a622-329c757c3679": "Classic Elvis",
+        "aa1b1593-1d45-3c8d-9440-71cf569ea400": "LidRock: Elvis",
+        "0de9e945-dbf5-3338-9a99-51f11de0c38e": "Elvis Inspirational",
+        "40c090b7-cf63-33c2-9493-e15075a72035": "Elvis Now",
+        "6d715d61-26e5-3752-a137-8ede498e95f0": "Elvis 56",
+        "39d00ebe-ab6f-4b0d-afc9-29877be3e2cd": "Elvis 80",
+        "0521aa7e-dabd-44dd-8846-0aae691bb48d": "Elvis Presley",
+        "32ced87d-13e0-4be2-9c9e-6853eabe1275": "Legends: Elvis",
+        "e955ed91-e17c-462e-a340-17714b29b5ad": "Introducing Elvis",
+        "d12ff9ea-f573-4ae3-87b2-9b227a08fa49": "Elvis Sings...",
+        "01e9f928-9fe4-3153-9404-e6b2b1e95f34": "Elvis Country: I’m 10,000 Years Old",
+        "77bff8e3-0c38-3fc7-b048-94312d225e9a": "Elvis R&B",
+        "f4dd4741-a702-3257-b4d2-21f314697731": "Elvis Movies",
+        "7c491377-6f2f-4d61-a537-101ce4290b11": "Elvis Country",
+        "35271ae9-0a45-41fc-9418-afd0cfb8e4b0": "Elvis Presley",
+        "159fc950-0381-3bb6-b376-09693cc3ff36": "Always Elvis",
+        "f79a6462-6a97-408b-8d5f-471e3cda451c": "Elvis Presley",
+        "3e38ee9a-0a01-493e-b5fc-5de70576b4ca": "Elvis Gospel",
+        "43f0b221-9795-4798-aeb8-eab28fa3596a": "Elvis Gold",
+        "4541c751-7ac0-4f88-9ae6-b64fd8fa9b1e": "Elvis Presley",
+        "4c910442-28ea-4d93-b05e-bb141f2ec206": "Elvis Presley",
+        "c40e5d9b-f033-4e93-8e21-d7dc0277199d": "Elvis Presley",
+        "f8e91197-c268-4930-8eea-4b8a17d26e06": "Elvis Country",
+        "5a06e8c1-0894-4cfa-958c-1bc05979c3bc": "Elvis Presley",
+        "f4bae715-f53f-48b5-874e-6401c35a80a2": "Elvis Sails",
+        "a71054f1-f3c4-4ccc-b34a-897b4183a5fe": "Elvis Presley",
+        "4a873cc6-f06f-48ed-9cda-b5a77bb371ec": "Elvis Presley",
+        "f957d209-e914-3607-80c6-ac6870625849": "Elvis Presley Rare Interviews",
+        "f2387d83-c40c-47fc-b4a1-fffc67a2964a": "Essential Elvis: The First Movies",
+        "1a2a0b47-9a92-479a-8e35-d2caa316801a": "Elvis Presley",
+        "80844d80-9006-4f04-b76e-2ec709d8f3f6": "Elvis Forever",
+        "cbe077ee-4ac2-4acf-a1d0-33a106d48740": "Elvis Presley",
+        "6f0aa81a-117a-458d-9ff3-463e1f8fba05": "Elvis Rock",
+        "e41938d7-f341-487d-9077-a52ed297f6e1": "Elvis Christmas",
+        "ca8a39cf-3bd2-35eb-b443-808dbb16f871": "Early Elvis",
+        "b6d7b630-38d2-46b6-b2aa-f8d0bafcbdf1": "Elvis Live"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "79dabce4-71c2-34ce-9d5d-83f9442fb325",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "79dabce4-71c2-34ce-9d5d-83f9442fb325",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "79dabce4-71c2-34ce-9d5d-83f9442fb325",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "79dabce4-71c2-34ce-9d5d-83f9442fb325",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "79dabce4-71c2-34ce-9d5d-83f9442fb325",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 19,
+          "albums": 3
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "1956-10-19",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "79dabce4-71c2-34ce-9d5d-83f9442fb325"
+        ],
+        "source": "Wikidata Q1766649 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 8,
+      "input": "https://open.qobuz.com/album/mgcel8njixy5b",
+      "knownByUrl": true,
+      "candidates": 5,
+      "albumTitles": {
+        "a4c6be15-bfc4-4078-b80b-d9f03a4049b1": "Ambivalence Avenue",
+        "67cd2404-7a3e-4cf8-b6f0-4f7eb2f489e7": "Ambivalence Avenue / Fire Ant"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "a4c6be15-bfc4-4078-b80b-d9f03a4049b1",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2009-06-29",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "a4c6be15-bfc4-4078-b80b-d9f03a4049b1"
+        ],
+        "source": "Wikidata Q2842103 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 9,
+      "input": "https://open.qobuz.com/album/vrya2g9g2szca",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "a2d10e26-9e34-45b7-a47d-3f439dcb6291": "Sun Arcs"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "a2d10e26-9e34-45b7-a47d-3f439dcb6291",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "a2d10e26-9e34-45b7-a47d-3f439dcb6291",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "a2d10e26-9e34-45b7-a47d-3f439dcb6291",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "a2d10e26-9e34-45b7-a47d-3f439dcb6291",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "a2d10e26-9e34-45b7-a47d-3f439dcb6291",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "a2d10e26-9e34-45b7-a47d-3f439dcb6291",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2023-06-23",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "a2d10e26-9e34-45b7-a47d-3f439dcb6291"
+        ],
+        "source": "Wikidata Q120357974 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 10,
+      "input": "https://open.qobuz.com/album/qrzshjf1rhktb",
+      "knownByUrl": true,
+      "candidates": 18,
+      "albumTitles": {
+        "9747bcfe-7c42-35ac-8c3e-7ecac9f1227b": "I Do Not Want What I Haven’t Got"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "9747bcfe-7c42-35ac-8c3e-7ecac9f1227b",
+          "releases": 18,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "9747bcfe-7c42-35ac-8c3e-7ecac9f1227b",
+          "releases": 17,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "9747bcfe-7c42-35ac-8c3e-7ecac9f1227b",
+          "releases": 17,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "9747bcfe-7c42-35ac-8c3e-7ecac9f1227b",
+          "releases": 17,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "1990-03-20",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "9747bcfe-7c42-35ac-8c3e-7ecac9f1227b"
+        ],
+        "source": "Wikidata Q1060887 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 11,
+      "input": "https://open.qobuz.com/album/0603497866670",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "4115ff42-4d79-3a95-a745-a07e66ff3c42": "Once in a Lifetime"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4115ff42-4d79-3a95-a745-a07e66ff3c42",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4115ff42-4d79-3a95-a745-a07e66ff3c42",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4115ff42-4d79-3a95-a745-a07e66ff3c42",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "4115ff42-4d79-3a95-a745-a07e66ff3c42",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4115ff42-4d79-3a95-a745-a07e66ff3c42",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2003-11-17",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "4115ff42-4d79-3a95-a745-a07e66ff3c42"
+        ],
+        "source": "Wikidata Q7091941 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": false
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 12,
+      "input": "https://open.qobuz.com/album/c8f0bs8nq70uc",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "eecbdbee-026b-3c45-ba03-ed451c4ee2d1"
+        ],
+        "source": "Wikidata Q3010825 P436"
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 13,
+      "input": "https://open.qobuz.com/album/0075678265068",
+      "knownByUrl": false,
+      "candidates": 20,
+      "albumTitles": {
+        "5eb19154-b687-3078-92cd-5cb45b06e2a7": "CSN",
+        "7dad4bd8-35de-3144-bb6d-d3416fecbcad": "CSN",
+        "87d8b510-5124-481f-804c-361b213753c9": "CSN 2012"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "5eb19154-b687-3078-92cd-5cb45b06e2a7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "5eb19154-b687-3078-92cd-5cb45b06e2a7",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5eb19154-b687-3078-92cd-5cb45b06e2a7",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5eb19154-b687-3078-92cd-5cb45b06e2a7",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "5eb19154-b687-3078-92cd-5cb45b06e2a7",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 17,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "1977-06-17",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "5eb19154-b687-3078-92cd-5cb45b06e2a7"
+        ],
+        "source": "Wikidata Q2932009 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 14,
+      "input": "https://open.qobuz.com/album/0088807200374",
+      "knownByUrl": false,
+      "candidates": 20,
+      "albumTitles": {
+        "6d4f73cb-9c02-33c5-ba06-c927a9b963ad": "New Adventures in Hi‐Fi"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d4f73cb-9c02-33c5-ba06-c927a9b963ad",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d4f73cb-9c02-33c5-ba06-c927a9b963ad",
+          "releases": 20,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d4f73cb-9c02-33c5-ba06-c927a9b963ad",
+          "releases": 20,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d4f73cb-9c02-33c5-ba06-c927a9b963ad",
+          "releases": 20,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d4f73cb-9c02-33c5-ba06-c927a9b963ad",
+          "releases": 20,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "1996-09-09",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "6d4f73cb-9c02-33c5-ba06-c927a9b963ad"
+        ],
+        "source": "Wikidata Q1508334 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 15,
+      "input": "https://open.qobuz.com/album/0888880696069",
+      "knownByUrl": false,
+      "candidates": 100,
+      "albumTitles": {
+        "8e8a594f-2175-38c7-a871-abb68ec363e7": "Kind of Blue"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 95,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2009-01-15",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "8e8a594f-2175-38c7-a871-abb68ec363e7"
+        ],
+        "source": "Wikidata Q283221 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": false,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 16,
+      "input": "https://open.qobuz.com/album/z9rzcky5afxpa",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "27dbe512-f2b0-4519-b8ca-7e45ae06c100"
+        ],
+        "source": "Wikidata Q85775733 P436"
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 17,
+      "input": "https://open.qobuz.com/album/0744861104056",
+      "knownByUrl": true,
+      "candidates": 11,
+      "albumTitles": {
+        "c92f73ee-527f-42ed-a556-fd615941e214": "…Like Clockwork",
+        "45bc2baa-f293-423b-8dd8-b5b91907c2bc": "…Like Clockwork Tour Compilation (2013–2014)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "c92f73ee-527f-42ed-a556-fd615941e214",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c92f73ee-527f-42ed-a556-fd615941e214",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c92f73ee-527f-42ed-a556-fd615941e214",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c92f73ee-527f-42ed-a556-fd615941e214",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "c92f73ee-527f-42ed-a556-fd615941e214",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c92f73ee-527f-42ed-a556-fd615941e214",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2013-06-03",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c92f73ee-527f-42ed-a556-fd615941e214"
+        ],
+        "source": "Wikidata Q8328875 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 18,
+      "input": "https://open.qobuz.com/album/0886444064385",
+      "knownByUrl": true,
+      "candidates": 9,
+      "albumTitles": {
+        "05ad0e67-417a-44b0-b34d-e77bd843f279": "Paradise Valley"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "05ad0e67-417a-44b0-b34d-e77bd843f279",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "05ad0e67-417a-44b0-b34d-e77bd843f279",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "05ad0e67-417a-44b0-b34d-e77bd843f279",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "05ad0e67-417a-44b0-b34d-e77bd843f279",
+          "releases": 8,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "05ad0e67-417a-44b0-b34d-e77bd843f279",
+          "releases": 8,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "05ad0e67-417a-44b0-b34d-e77bd843f279",
+          "releases": 8,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2013-08-19",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "05ad0e67-417a-44b0-b34d-e77bd843f279"
+        ],
+        "source": "Wikidata Q14567932 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 19,
+      "input": "https://open.qobuz.com/album/0060249868948",
+      "knownByUrl": false,
+      "candidates": 14,
+      "albumTitles": {
+        "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac": "What Will the Neighbours Say?",
+        "05dafc0f-c0cf-43b4-ad5b-2e791bc0361d": "What Will the Neighbours Say? Live in Concert"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac",
+          "releases": 13,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac",
+          "releases": 13,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2004-01-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "3bbfbf33-3cd7-3a3e-8331-9d656e1178ac"
+        ],
+        "source": "Wikidata Q284509 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-in-mb"
+    },
+    {
+      "index": 20,
+      "input": "https://open.qobuz.com/album/qfz0lw3p891mc",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2023-09-08",
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-qobuz-not-in-mb"
+    },
+    {
+      "index": 21,
+      "input": "https://open.qobuz.com/album/il3kcvbs0de83",
+      "knownByUrl": true,
+      "candidates": 2,
+      "albumTitles": {
+        "9bf673ad-c938-41c1-9920-2c00fccc82ed": "Open Your Heart or Die Trying"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "9bf673ad-c938-41c1-9920-2c00fccc82ed",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "9bf673ad-c938-41c1-9920-2c00fccc82ed",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "9bf673ad-c938-41c1-9920-2c00fccc82ed",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "9bf673ad-c938-41c1-9920-2c00fccc82ed",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "9bf673ad-c938-41c1-9920-2c00fccc82ed",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "9bf673ad-c938-41c1-9920-2c00fccc82ed",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2026-05-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "9bf673ad-c938-41c1-9920-2c00fccc82ed"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-qobuz-not-in-mb"
+    },
+    {
+      "index": 22,
+      "input": "https://open.qobuz.com/album/qz7xo3ta060tb",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "40871145-8a3e-47cf-9268-ace456286691": "anthology"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "40871145-8a3e-47cf-9268-ace456286691",
+          "releases": 1,
+          "albums": 1
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "40871145-8a3e-47cf-9268-ace456286691",
+          "releases": 1,
+          "albums": 1
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "40871145-8a3e-47cf-9268-ace456286691",
+          "releases": 1,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "40871145-8a3e-47cf-9268-ace456286691",
+          "releases": 1,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "40871145-8a3e-47cf-9268-ace456286691",
+          "releases": 1,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "40871145-8a3e-47cf-9268-ace456286691",
+          "releases": 1,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2025-07-18",
+        "versioned": false
+      },
+      "sample": "wikidata-qobuz-not-in-mb"
+    },
+    {
+      "index": 23,
+      "input": "https://open.qobuz.com/album/aa7odiq1cg78a",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "4ee44223-a53c-4204-95a8-e0ba7cd12ac2": "Recht harmonisch"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ee44223-a53c-4204-95a8-e0ba7cd12ac2",
+          "releases": 1,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ee44223-a53c-4204-95a8-e0ba7cd12ac2",
+          "releases": 1,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ee44223-a53c-4204-95a8-e0ba7cd12ac2",
+          "releases": 1,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ee44223-a53c-4204-95a8-e0ba7cd12ac2",
+          "releases": 1,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2005-05-24",
+        "versioned": false
+      },
+      "sample": "wikidata-qobuz-not-in-mb"
+    },
+    {
+      "index": 24,
+      "input": "https://www.qobuz.com/us-en/album/weezer-teal-album-weezer/mco0vy9isdq4a",
+      "knownByUrl": true,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2019-01-24",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c27987a9-d3bb-4929-8526-d3507e92a041"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 25,
+      "input": "https://www.qobuz.com/us-en/album/-/oulc1w5vun56a",
+      "knownByUrl": true,
+      "candidates": 100,
+      "albumTitles": {
+        "a73cecde-0923-40ad-aad1-e8c24ba6c3d2": "Red",
+        "9a076153-ff33-4ea5-a53e-250c18fca001": "Red",
+        "43b6f255-7bba-4fd3-a73e-900de73981a7": "World Red Tour",
+        "67727253-f1c0-4243-9270-f9f1401c3b8c": "Red (Taylor’s version)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 7,
+          "albums": 3
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 7,
+          "albums": 3
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 7,
+          "albums": 3
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "ambiguous",
+          "releases": 3,
+          "albums": 2
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "ambiguous",
+          "releases": 3,
+          "albums": 2
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 71,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "date": "2021-11-12",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "67727253-f1c0-4243-9270-f9f1401c3b8c"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 26,
+      "input": "https://open.qobuz.com/album/ycurs90b1g28a",
+      "knownByUrl": true,
+      "candidates": 100,
+      "albumTitles": {
+        "4d9ec1c2-58ec-48a4-aa0a-916718adead0": "1989",
+        "148bfc79-6dc7-4d06-8108-c686398a8c94": "1989 [nightcore]",
+        "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a": "1989 (Taylor’s version)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 48,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2023-10-27",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 27,
+      "input": "https://www.qobuz.com/gb-en/album/indigo-chris-brown/wfs0xqkq1iroa",
+      "knownByUrl": true,
+      "candidates": 5,
+      "albumTitles": {
+        "087b3a7d-d532-44d9-b37a-84427677ddcd": "Indigo"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2019-06-28",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "087b3a7d-d532-44d9-b37a-84427677ddcd"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 28,
+      "input": "https://www.qobuz.com/gb-en/album/red-taylor-swift/sk75xq5q1k2jc",
+      "knownByUrl": true,
+      "candidates": 100,
+      "albumTitles": {
+        "a73cecde-0923-40ad-aad1-e8c24ba6c3d2": "Red",
+        "9a076153-ff33-4ea5-a53e-250c18fca001": "Red",
+        "43b6f255-7bba-4fd3-a73e-900de73981a7": "World Red Tour",
+        "67727253-f1c0-4243-9270-f9f1401c3b8c": "Red (Taylor’s version)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 56,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 96,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 96,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "a73cecde-0923-40ad-aad1-e8c24ba6c3d2",
+          "releases": 69,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "a73cecde-0923-40ad-aad1-e8c24ba6c3d2",
+          "releases": 69,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 71,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2012-10-02",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "a73cecde-0923-40ad-aad1-e8c24ba6c3d2"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 29,
+      "input": "https://play.qobuz.com/album/a7bocoz9gc19k",
+      "knownByUrl": true,
+      "candidates": 15,
+      "albumTitles": {
+        "0419ba7c-f4a3-39d9-8741-fb26322ed89c": "Shania Twain",
+        "6840aa07-9cc6-4b77-98a4-108dbb6f1917": "Shania Twain",
+        "d18d5f1a-5687-400a-a642-b718e17ba64e": "Celebrating Pride: Shania Twain",
+        "6baa7a86-c514-320d-9617-1a7266b51251": "Shania Twain Live!",
+        "0f689a97-dc01-3f51-9d3e-3c57145a4d69": "Shania Twain: Greatest Hits ’99",
+        "b50ba470-f6c2-4c9d-bc43-353216134858": "Women to the Front: Shania Twain",
+        "8e642c4b-f7da-4176-9a0f-4ab014f374c5": "The Louis Theroux Podcast, Series 1, #1, \"Shania Twain\""
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "0419ba7c-f4a3-39d9-8741-fb26322ed89c",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "0419ba7c-f4a3-39d9-8741-fb26322ed89c",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "0419ba7c-f4a3-39d9-8741-fb26322ed89c",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "0419ba7c-f4a3-39d9-8741-fb26322ed89c",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "0419ba7c-f4a3-39d9-8741-fb26322ed89c",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "0419ba7c-f4a3-39d9-8741-fb26322ed89c",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "1993-04-20",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "0419ba7c-f4a3-39d9-8741-fb26322ed89c"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 30,
+      "input": "https://www.qobuz.com/us-en/album/madonna-madonna/0093624790365",
+      "knownByUrl": true,
+      "candidates": 66,
+      "albumTitles": {
+        "cf44c73c-650d-3c67-9327-c99426ce464f": "Madonna",
+        "a07e8e68-15e3-452b-aff1-4f9d7ef50d4e": "Madonna",
+        "e6d5685a-88c4-476d-8ccb-48d1f7933631": "Madonna",
+        "79f6bed0-283b-3192-974d-543a3cf45ee6": "Pre-Madonna",
+        "60b0e3be-1d0c-44b4-8933-fbe03fb11c6d": "Madonna Secret Weapons",
+        "c7880960-f61d-466a-b29d-8d26f0bbf75b": "Madonna Tokyo 1987",
+        "7e242dab-3c78-4656-a9ef-53c2e7513281": "Madonna Nash",
+        "4c93a441-24a1-4087-8992-14ac584a7234": "Madonna Live, Volume 1",
+        "609edccb-b34b-4b73-b3ba-3ae1c1b0a6d7": "Live to Tell: Madonna",
+        "b133652d-b416-4e11-880e-75b9761b1dc0": "Madonna at Live Aid",
+        "c48e0d77-b723-4fff-8927-b15654a8fd24": "The Madonna Anthology (1979-81)",
+        "cf837966-eacb-364c-981d-f5ab6773191c": "Madonna - Interview Picture Disc",
+        "7985b445-61b0-448d-8674-f4c2d1a767b2": "Madonna Music Video DVD – Volume1",
+        "1ac1e8ba-ff48-43da-b1a5-9c6c31c81981": "Madonna Music Video DVD – Volume2",
+        "810f1451-059a-465c-9426-95aaa843c35d": "Madonna Music Video DVD – Volume3",
+        "21a97ef3-35b0-4514-864e-2cedcf916941": "Madonna - Best of I + II",
+        "6f5c8627-a37a-4dd8-85a2-28bedd9a1b3e": "I Love Madonna (Classic Mixes) (Volume 1)",
+        "9e5d3867-66b8-4bdf-bb74-ff06ebcea066": "Deadpool & Wolverine: Madonna's \"Like a Prayer\" EP",
+        "2d98fffb-ce9e-4652-ae2a-6a98bdb5306b": "Bitch I’m Madonna",
+        "3a38ecd1-dc6d-4b6e-a7fb-33d3fd6406e1": "Madonna at Live Aid (Live at John F. Kennedy Stadium, 13th July 1985)",
+        "0776ac6c-1f57-47a7-8439-f45c4920e60a": "Bitch I’m Madonna: The Remixes",
+        "c886a0e1-0b43-40dc-aad1-2a5d01dcfeac": "The Blessed Madonna at Kappa FuturFestival 2024",
+        "d883c522-dac3-4df9-a8cb-4be721276c0a": "Boiler Room: The Blessed Madonna in London, Sep 4, 2021",
+        "62f660e0-6224-434b-bf7a-7e23f6b9317c": "Levitating",
+        "3054ae70-176b-46cb-b231-8081a8c5280d": "Boiler Room: The Black Madonna, Streaming from Isolation, Mar 19, 2020",
+        "dfb9bc11-d227-4305-98c5-b4be81208de2": "Ripple (The Blessed Madonna's Godsquad Mix)",
+        "b3f0bcfc-9980-4dae-b07a-f0235948a23f": "Free (The Blessed Madonna remix)",
+        "160759a9-3fbd-4f05-9e66-a1842360471d": "Boiler Room: The Black Madonna at Gramaphone Records in Chicago, Mar 30, 2015",
+        "9500aa96-e15c-459b-a315-2c4409adf4d3": "Boiler Room: The Black Madonna b2b Mike Servito at Dekmantel, Amsterdam, Aug 6, 2016"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "cf44c73c-650d-3c67-9327-c99426ce464f",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "cf44c73c-650d-3c67-9327-c99426ce464f",
+          "releases": 30,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "cf44c73c-650d-3c67-9327-c99426ce464f",
+          "releases": 30,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "cf44c73c-650d-3c67-9327-c99426ce464f",
+          "releases": 29,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "cf44c73c-650d-3c67-9327-c99426ce464f",
+          "releases": 29,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 31,
+          "albums": 3
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1983-07-27",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "cf44c73c-650d-3c67-9327-c99426ce464f"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 31,
+      "input": "https://www.qobuz.com/ch-de/album/isnt-anything-my-bloody-valentine/l8cpobwd8u12b",
+      "knownByUrl": true,
+      "candidates": 23,
+      "albumTitles": {
+        "55a73423-bf7d-3969-b1b2-c34c43140e1a": "Isn’t Anything"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "55a73423-bf7d-3969-b1b2-c34c43140e1a",
+          "releases": 8,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "55a73423-bf7d-3969-b1b2-c34c43140e1a",
+          "releases": 22,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "55a73423-bf7d-3969-b1b2-c34c43140e1a",
+          "releases": 23,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "55a73423-bf7d-3969-b1b2-c34c43140e1a",
+          "releases": 22,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "55a73423-bf7d-3969-b1b2-c34c43140e1a",
+          "releases": 22,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "55a73423-bf7d-3969-b1b2-c34c43140e1a",
+          "releases": 22,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1988-11-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "55a73423-bf7d-3969-b1b2-c34c43140e1a"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 32,
+      "input": "https://www.qobuz.com/us-en/album/illenium-illenium/pjv3xyntol8ta?qref=dpa",
+      "knownByUrl": true,
+      "candidates": 7,
+      "albumTitles": {
+        "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6": "ILLENIUM",
+        "631b1b02-ebfb-4db7-884e-2a6f53d05832": "Illenium EP",
+        "69dddfd1-f347-4425-8a1a-57fd3b90b333": "ILLENIUM (Remixes)",
+        "4e283dda-b376-43e4-b6c9-b303527cb1ba": "Illenium Remix EP",
+        "6a163770-07b4-4d4d-979d-493d44ed5c2e": "ILLENIUM WE1 | Tomorrowland 2026"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2023-04-28",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "f714a7af-cb0a-4b3d-93ab-bb9fe680e2c6"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 33,
+      "input": "https://www.qobuz.com/us-en/album/with-sonny-boy-williamson-the-animals/0884385954895",
+      "knownByUrl": true,
+      "candidates": 5,
+      "albumTitles": {
+        "bd8e87e1-2f5a-3a3f-a739-3afb2a85b6b7": "Midnite Jazz & Blues: Pontiac Blues",
+        "b3381ecf-a620-4598-9b47-2e987416497f": "The Animals with Sonny Boy Williamson",
+        "e5d84d8d-4b50-4467-8b2c-95143dfa793c": "The Animals With Sonny Boy Williamson"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1977-01-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "e5d84d8d-4b50-4467-8b2c-95143dfa793c"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": true,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": true
+      },
+      "years": {
+        "original": false,
+        "release": false
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 34,
+      "input": "http://www.qobuz.com/nl-nl/album/punk-goes-pop-vol-4-multi-interpretes/0088807239330",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "690e3fc0-8862-4605-a3d3-eeed6ba6aed6"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 35,
+      "input": "https://www.qobuz.com/us-en/album/weezer-green-album/0060694930452",
+      "knownByUrl": false,
+      "candidates": 100,
+      "albumTitles": {
+        "9b8af98f-8214-32ee-9b05-96b8c557f7f0": "Weezer",
+        "18fa1fe1-1cfd-431f-906d-a335f245d220": "Weezer",
+        "c27987a9-d3bb-4929-8526-d3507e92a041": "Weezer",
+        "1a5ae023-9cd4-431d-8176-d93515e63549": "Weezer",
+        "923d5ba6-7eee-3bce-bcb2-c913b2bd69d4": "Weezer",
+        "c7b245c9-8099-32ea-af95-893acedde2cf": "Weezer",
+        "171245fd-a5ff-4551-857c-710ce0967f8f": "Weezer"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "923d5ba6-7eee-3bce-bcb2-c913b2bd69d4",
+          "releases": 16,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "923d5ba6-7eee-3bce-bcb2-c913b2bd69d4",
+          "releases": 24,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "923d5ba6-7eee-3bce-bcb2-c913b2bd69d4",
+          "releases": 24,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "923d5ba6-7eee-3bce-bcb2-c913b2bd69d4",
+          "releases": 23,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 95,
+          "albums": 7
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "date": "2001-05-15",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "923d5ba6-7eee-3bce-bcb2-c913b2bd69d4"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 36,
+      "input": "https://open.qobuz.com/album/pjb7nyfk2hvia",
+      "knownByUrl": true,
+      "candidates": 7,
+      "albumTitles": {
+        "fa0b08c0-8118-486d-8201-8c1d01ba858a": "Le Voyage dans la Lune"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa0b08c0-8118-486d-8201-8c1d01ba858a",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa0b08c0-8118-486d-8201-8c1d01ba858a",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa0b08c0-8118-486d-8201-8c1d01ba858a",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa0b08c0-8118-486d-8201-8c1d01ba858a",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa0b08c0-8118-486d-8201-8c1d01ba858a",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "fa0b08c0-8118-486d-8201-8c1d01ba858a",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2012-02-06",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "fa0b08c0-8118-486d-8201-8c1d01ba858a"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 37,
+      "input": "https://www.qobuz.com/us-en/album/songs-about-jane-maroon-5/tni1mv9tnzv2b",
+      "knownByUrl": true,
+      "candidates": 39,
+      "albumTitles": {
+        "93d5a1d1-73c0-34d3-b7f1-49473c48face": "Songs About Jane",
+        "055b33c3-5448-4c57-a6a2-e922dc970904": "A Few Songs About Jane",
+        "5ab76f0f-f8ea-46f8-9dd1-6592062a2bbb": "Songs About Jane + It Won’t Be Soon Before Long"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+          "releases": 31,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+          "releases": 31,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+          "releases": 30,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+          "releases": 30,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "93d5a1d1-73c0-34d3-b7f1-49473c48face",
+          "releases": 30,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2002-06-25",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "93d5a1d1-73c0-34d3-b7f1-49473c48face"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 38,
+      "input": "https://www.qobuz.com/us-en/album/dookie-green-day/0093624915713",
+      "knownByUrl": true,
+      "candidates": 40,
+      "albumTitles": {
+        "314cffd4-daa5-3337-85e5-e54165a96113": "Dookie",
+        "f98cf1f6-2659-3c88-b191-87741aa4b31e": "Dookie Demos",
+        "d12ae4a8-7723-4289-9f97-01f167092116": "Dookie Demastered",
+        "f6939814-a43b-4a92-a1ff-76cd82f54203": "Dookie (30th Anniversary 4-track demo)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "314cffd4-daa5-3337-85e5-e54165a96113",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "314cffd4-daa5-3337-85e5-e54165a96113",
+          "releases": 34,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "314cffd4-daa5-3337-85e5-e54165a96113",
+          "releases": 34,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "314cffd4-daa5-3337-85e5-e54165a96113",
+          "releases": 32,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "314cffd4-daa5-3337-85e5-e54165a96113",
+          "releases": 32,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 33,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1994-02-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "314cffd4-daa5-3337-85e5-e54165a96113"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 39,
+      "input": "https://www.qobuz.com/album/psalms-of-extinction-pain/g0pbok5rb51fa",
+      "knownByUrl": true,
+      "candidates": 4,
+      "albumTitles": {
+        "f411b01e-8028-3db9-b35f-31fa650c4ff0": "Psalms of Extinction"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "f411b01e-8028-3db9-b35f-31fa650c4ff0",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f411b01e-8028-3db9-b35f-31fa650c4ff0",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f411b01e-8028-3db9-b35f-31fa650c4ff0",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f411b01e-8028-3db9-b35f-31fa650c4ff0",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "f411b01e-8028-3db9-b35f-31fa650c4ff0",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f411b01e-8028-3db9-b35f-31fa650c4ff0",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2007-04-23",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "f411b01e-8028-3db9-b35f-31fa650c4ff0"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 40,
+      "input": "https://www.qobuz.com/fi-en/album/-/r8361te6k0cic",
+      "knownByUrl": false,
+      "candidates": 100,
+      "albumTitles": {
+        "63eba062-847c-3b73-8b0f-6baf27bba6fa": "Fearless",
+        "6a872b6d-749a-4443-a4f9-c3f6c90ee8a1": "Fearless",
+        "61001dbd-09a3-4348-9fcd-69c7971cb8b6": "Journey to Fearless"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "63eba062-847c-3b73-8b0f-6baf27bba6fa",
+          "releases": 6,
+          "albums": 1,
+          "correct": false
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "63eba062-847c-3b73-8b0f-6baf27bba6fa",
+          "releases": 6,
+          "albums": 1,
+          "correct": false
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "63eba062-847c-3b73-8b0f-6baf27bba6fa",
+          "releases": 6,
+          "albums": 1,
+          "correct": false
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "63eba062-847c-3b73-8b0f-6baf27bba6fa",
+          "releases": 63,
+          "albums": 1,
+          "correct": false
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "date": "2021-04-09",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "d2e4838d-90e1-471c-bda0-fd816dabb2d4"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": false,
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 41,
+      "input": "https://www.qobuz.com/us-en/album/_/y3d2nn38ot5fa",
+      "knownByUrl": true,
+      "candidates": 23,
+      "albumTitles": {
+        "69eb9696-35c8-4463-aff5-952526213ce8": "hopeless fountain kingdom",
+        "8fcae6b6-dfd8-40ab-bd6f-0a6545cbba33": "hopeless fountain kingdom (live from Webster Hall)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+          "releases": 21,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+          "releases": 21,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "69eb9696-35c8-4463-aff5-952526213ce8",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "date": "2017-06-02",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "69eb9696-35c8-4463-aff5-952526213ce8"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 42,
+      "input": "https://www.qobuz.com/be-nl/album/invaders-must-die-the-prodigy/mukqsbtbin3mb",
+      "knownByUrl": true,
+      "candidates": 40,
+      "albumTitles": {
+        "dafbb45b-e06f-3a2b-b4fd-981d3d99a3a4": "Invaders Must Die",
+        "aed4dac0-1f3b-303c-9805-56fa1ebf996e": "Invaders Must Die",
+        "31984ab6-1951-4eb6-b956-f082a1d4ae52": "Invaders Must Die Remixes +",
+        "80bf38a0-db3f-4ceb-83e1-369a393d8e8a": "Invaders Must Die / Thunder Remixes"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 30,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 33,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 33,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "dafbb45b-e06f-3a2b-b4fd-981d3d99a3a4",
+          "releases": 28,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "dafbb45b-e06f-3a2b-b4fd-981d3d99a3a4",
+          "releases": 28,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "dafbb45b-e06f-3a2b-b4fd-981d3d99a3a4",
+          "releases": 28,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2009-02-23",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "dafbb45b-e06f-3a2b-b4fd-981d3d99a3a4"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 43,
+      "input": "https://www.qobuz.com/gb-en/album/animals-the-animals/0724385669958",
+      "knownByUrl": true,
+      "candidates": 100,
+      "albumTitles": {
+        "df7a0e09-eb8b-4581-a361-b2975c1ee175": "The Animals",
+        "8d1ab736-4573-4317-8fc6-44cf94a2ae3f": "Animals Anthology",
+        "d52ad8bf-28ba-45a2-9a30-65460dd5308c": "The Animals",
+        "3131932b-bc2f-3c6a-a08c-23a5ae95ec27": "The Animals",
+        "ca211b65-a853-3bd5-a3a0-eb5e0a2224c5": "The Animals",
+        "6704f186-f0de-4f7a-8294-ea0469cd9667": "The Animals",
+        "164b6d72-512b-37f7-8288-ada5c9a976f0": "The Animals",
+        "3320d2a0-1146-43a0-840c-759798382765": "The Animals",
+        "02c24b08-94c8-4734-a8d1-f6837cd38211": "The Animals",
+        "db4f3d8a-c98d-4579-8212-109888ef39b6": "The Animals",
+        "8a98a17e-0687-3b3a-89d7-3d2de2dab3d0": "The Animals",
+        "87b57140-93c1-47df-bb9a-4d2c3f1014c9": "The Animals",
+        "ffce86dd-49b1-4315-be4a-827da360ce46": "The Animals",
+        "c8f76ea6-f7fd-31a5-89d6-41adf7098fba": "Absolute Animals 1964–1968",
+        "9be40bb1-98ec-4137-9514-dc21e7651c95": "The Animals Story",
+        "214fbfa7-57f5-3a97-8da0-fa6b14619526": "Animals Blues Years",
+        "2ec2e0c8-c531-3a17-a440-52770d32043a": "The Complete Animals",
+        "19dccd9e-5396-40c6-b838-97907e562331": "The Animals Live",
+        "3eebdd3c-62c8-30c8-b553-ab24a3064ddb": "The Animals on Tour",
+        "23653b51-3735-3015-9ae0-057aa3021349": "The Best of The Animals",
+        "bf7bfd2c-d244-4880-ab81-082150ea570a": "The Animals Is Here",
+        "1efc72ef-b4c9-454a-85fc-2424445fbd03": "Best of The Animals",
+        "81b18471-6101-41ab-952a-ebdf3c707ff8": "The Great Animals Live!",
+        "d64c71a4-a887-31ce-90c8-75f239732542": "The Best of the Animals",
+        "3394eef8-fd2f-36c8-af6e-285c4685b4bd": "The Singles+",
+        "ae49221c-0e0b-3228-86c6-c5f5685ba184": "The Most of the Animals",
+        "3e693417-b17b-4c62-97ac-744456e9e871": "The Most of the Animals",
+        "4317e8bb-300b-3eea-9448-20811f3babf2": "The Best of the Animals",
+        "0b0e4d48-8fc4-3eca-a139-57334ee99af2": "The Best of The Animals",
+        "9b69cb7b-b50e-43c3-affe-ad3dc323a420": "The Best of The Animals",
+        "2855c585-9e7f-373d-a360-9711c7a0e5c6": "In the Beginning",
+        "039c4035-4ee0-4f97-ae0d-f189f9677d0b": "An Introduction to The Animals",
+        "1528e394-b4a6-3888-b217-b1159f561cb5": "The Animals / Animal Tracks",
+        "72979603-41bd-4b9d-b784-f890a263b202": "The Best of The Animals",
+        "53ad7174-b0ce-47fd-a13d-4484488a478c": "The Very Best of The Animals",
+        "11f2d3e3-ad4d-43eb-b824-12b1f9411080": "The Ultimate Best of the Animals",
+        "77680fab-5530-492c-bec2-d6d9887083fb": "In the Beginning There Was the Early Animals",
+        "7465fe87-1371-4063-8d4d-d530ebb182b8": "The House of the Rising Sun: Best of the Animals",
+        "3930aaaa-6d9e-4f18-8c41-f32428f08d5f": "The Animals At Night",
+        "826294b0-64e0-4ec1-aab2-5a923f897893": "The Animals At Night",
+        "5e26a1da-a25b-4dd0-b8d7-41e6132cb13c": "Who Meet The Animals",
+        "3cac943e-5a30-3cb4-bc4a-a56963b1696f": "Eric Burdon & The Animals",
+        "66ffbafb-add5-3195-a800-3a95adc37bcf": "Eric Burdon and The Animals",
+        "975f8a1d-4dd8-45b4-97b7-a8e8a00283b4": "Eric Burdon and The Animals",
+        "b035206c-d4e7-4c24-a401-dfb5b604b46d": "Eric Burdon & The Animals",
+        "94246872-76fd-35db-acad-3e16d35fd364": "The Essential Eric Burdon and the Animals",
+        "bd8e87e1-2f5a-3a3f-a739-3afb2a85b6b7": "Midnite Jazz & Blues: Pontiac Blues",
+        "b3381ecf-a620-4598-9b47-2e987416497f": "The Animals with Sonny Boy Williamson",
+        "e5d84d8d-4b50-4467-8b2c-95143dfa793c": "The Animals With Sonny Boy Williamson",
+        "759a548e-4812-4ded-b16a-38ba2e617dbf": "The Best of Eric Burdon and the Animals",
+        "99e56785-e981-4732-a8b6-d3cd4464e25a": "The Very Best of Eric Burdon & The Animals",
+        "d19eb50f-1d74-44aa-8cce-380f0d766357": "The Greatest Hits of Eric Burdon and the Animals",
+        "2462b0d9-7d91-39ab-9971-402fa4e8b300": "The Best of Eric Burdon and the Animals: 1966–1968",
+        "a7b9be5e-26cc-3b5a-8c4b-3df1cdfcc145": "The Best of Eric Burdon and the Animals, Volume II",
+        "1e2584be-c5f1-38c0-a542-700bc090bfeb": "Good Times: The Best of Eric Burdon & The Animals",
+        "31644dfc-4489-40a7-918d-4ee06be62d4d": "Rock Generation Volume 2: The Animals 1963 + The Yardbirds 1964"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1983-01-01",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "3131932b-bc2f-3c6a-a08c-23a5ae95ec27"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": true,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": true
+      },
+      "years": {
+        "original": false,
+        "release": false
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 44,
+      "input": "https://www.qobuz.com/gb-en/album/iii-chickenfoot/msywyz2hi1kfa",
+      "knownByUrl": true,
+      "candidates": 16,
+      "albumTitles": {
+        "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08": "III",
+        "13ccf830-f2ee-41dd-9a6b-503110ab8ec6": "I+III+LV"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08",
+          "releases": 15,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08",
+          "releases": 15,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08",
+          "releases": 15,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08",
+          "releases": 15,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08",
+          "releases": 15,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2011-09-26",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "5ac0c4ff-24b2-452d-aefa-c0b2b7220c08"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 45,
+      "input": "https://www.qobuz.com/us-en/album/sznz-autumn-weezer/xwxlqkk8y2t0a",
+      "knownByUrl": true,
+      "candidates": 6,
+      "albumTitles": {
+        "9bf88d97-678e-4ffc-b0d2-453323579eca": "SZNZ: Autumn",
+        "5be0bb79-04aa-44ae-a632-6f7d25752970": "SZNZ: Autumn"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 4,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 6,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 6,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "ambiguous",
+          "releases": 6,
+          "albums": 2
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "ambiguous",
+          "releases": 6,
+          "albums": 2
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 6,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2022-09-22",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "9bf88d97-678e-4ffc-b0d2-453323579eca"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 46,
+      "input": "https://play.qobuz.com/album/5034202025658",
+      "knownByUrl": true,
+      "candidates": 5,
+      "albumTitles": {
+        "12c275f9-1156-4977-95a3-53957e090ee7": "Mixed Race"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "12c275f9-1156-4977-95a3-53957e090ee7",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2010-09-27",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "12c275f9-1156-4977-95a3-53957e090ee7"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 47,
+      "input": "http://www.qobuz.com/album/white-crosses-against-me/0191515275875",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "f8f1fe07-3e6e-491e-bd1e-34c51163600f"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 48,
+      "input": "https://www.qobuz.com/us-en/album/tommy-the-who/jkqx8twbdebsb",
+      "knownByUrl": true,
+      "candidates": 80,
+      "albumTitles": {
+        "0e587339-406a-3d21-8678-73e46e250379": "Tommy",
+        "01ee5a0e-ae87-44e2-806b-8b42bc987005": "Tommy Live",
+        "a7293289-e157-46e9-a238-c1876f8b533b": "Tommy’s Generation",
+        "9ef119c5-bb3f-36e4-83f2-13ea74e5fc1d": "The Tommy Demos",
+        "844c1dc4-2daf-4c08-982a-9f098e8dc3f2": "Tommy",
+        "fd099f3b-34aa-335c-b6df-351240d3a9f5": "Tommy: Original Broadway Cast Recording",
+        "198a0e1d-ffe7-3cc7-92f7-167758d33acf": "Tommy",
+        "a60088b7-a353-4f3e-b305-b733e1fbb3d3": "Tommy: Live at the Royal Albert Hall",
+        "9ebb37b6-ff5c-4481-bd0d-5089afb3fc9b": "Tommy and Quadrophenia Live With Special Guests",
+        "c9e0aec5-2351-4150-b6aa-af90adc576f2": "1970-07-07: Tommy Live at Tanglewood: Stockbridge, Massachusetts, USA"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "0e587339-406a-3d21-8678-73e46e250379",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "0e587339-406a-3d21-8678-73e46e250379",
+          "releases": 53,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "0e587339-406a-3d21-8678-73e46e250379",
+          "releases": 53,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "0e587339-406a-3d21-8678-73e46e250379",
+          "releases": 52,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "0e587339-406a-3d21-8678-73e46e250379",
+          "releases": 52,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "0e587339-406a-3d21-8678-73e46e250379",
+          "releases": 52,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1969-05-23",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "0e587339-406a-3d21-8678-73e46e250379"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 49,
+      "input": "https://www.qobuz.com/fr-fr/album/et-moi-et-moi-et-moi-jacques-dutronc/0888880362315",
+      "knownByUrl": true,
+      "candidates": 3,
+      "albumTitles": {
+        "c2a94ee1-9134-4374-bb1c-d16a6868ce9d": "Et moi et moi et moi",
+        "66b25092-930d-4ed3-8152-5403d369bc3f": "Et moi, et moi, et moi",
+        "3f4041a9-d734-33f0-8bb1-45ed3a4ee778": "Jacques Dutronc"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 3,
+          "albums": 3
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1966-06-30",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "3f4041a9-d734-33f0-8bb1-45ed3a4ee778"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 50,
+      "input": "https://www.qobuz.com/us-en/album/are-you-experienced-the-jimi-hendrix-experience/0884977413885",
+      "knownByUrl": true,
+      "candidates": 62,
+      "albumTitles": {
+        "932d34f2-f23b-4f27-873c-32e861295daa": "Fire / Are You Experienced",
+        "791fdbb8-b19c-4d33-9ba4-d2d2f35abec6": "Are You Experienced",
+        "da40e720-2097-3730-8a7f-0c2ddbff4a96": "Are You Experienced",
+        "0fc66b34-30b8-4293-9574-69a40afdd73a": "Are You Experienced Acetates-Demos-Outtakes",
+        "e679d4b5-e4fe-4142-a305-9036d7befa0e": "Are You Experienced The Sessions? Vol. 1",
+        "a18cc86c-41c1-46ac-acbb-b542850bdaab": "Are You Experienced The Sessions? Vol. 2",
+        "e01ade2a-831c-44ec-909f-f72b169d499d": "The Complete Are You Experienced Outtakes"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1967-05-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "da40e720-2097-3730-8a7f-0c2ddbff4a96"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 51,
+      "input": "https://www.qobuz.com/us-en/album/daughter-from-hell-gracie-abrams/e2txak6ww3xne",
+      "knownByUrl": true,
+      "candidates": 9,
+      "albumTitles": {
+        "c4f1b0ff-54e4-4ee3-a722-4c30892997b7": "Daughter from Hell"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+          "releases": 8,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+          "releases": 8,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f1b0ff-54e4-4ee3-a722-4c30892997b7",
+          "releases": 8,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2026-07-17",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c4f1b0ff-54e4-4ee3-a722-4c30892997b7"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 52,
+      "input": "http://www.qobuz.com/album/most-of-the-animals-the-animals/0724353829650",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "ae49221c-0e0b-3228-86c6-c5f5685ba184"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 53,
+      "input": "https://www.qobuz.com/album/the-colour-in-anything-james-blake/0060254796504",
+      "knownByUrl": true,
+      "candidates": 6,
+      "albumTitles": {
+        "bd166f52-cc11-4554-8045-ada94e6b2911": "The Colour in Anything"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "bd166f52-cc11-4554-8045-ada94e6b2911",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "bd166f52-cc11-4554-8045-ada94e6b2911",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "bd166f52-cc11-4554-8045-ada94e6b2911",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "bd166f52-cc11-4554-8045-ada94e6b2911",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "bd166f52-cc11-4554-8045-ada94e6b2911",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "bd166f52-cc11-4554-8045-ada94e6b2911",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2016-05-06",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "bd166f52-cc11-4554-8045-ada94e6b2911"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 54,
+      "input": "https://www.qobuz.com/album/ces-gens-la-jacques-brel/0060252748014",
+      "knownByUrl": true,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "40fa1a54-e679-31f1-a9fc-00ee649a9b74"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 55,
+      "input": "https://www.qobuz.com/us-en/album/slipknot-slipknot/0016861865504",
+      "knownByUrl": true,
+      "candidates": 46,
+      "albumTitles": {
+        "1419c33a-8e2a-40cf-8815-931fb6a47f0b": "Slipknot",
+        "5140eef4-5b5d-309c-a3aa-5c5da107b1da": "Slipknot",
+        "441eefcb-ee8d-3fe1-b6fd-dc9fce76d362": "Slipknot",
+        "b14aace2-8e8a-30fe-a558-74ee7dcfb452": "Maximum Slipknot: The Unauthorised Biography of Slipknot",
+        "f94e5b95-5a88-4829-984e-38593f129180": "Antennas to Hell",
+        "33639240-c076-3ccb-a9ae-f809244ffcbe": "Metal Guitar: Tribute to Slipknot"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "5140eef4-5b5d-309c-a3aa-5c5da107b1da",
+          "releases": 20,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "5140eef4-5b5d-309c-a3aa-5c5da107b1da",
+          "releases": 39,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5140eef4-5b5d-309c-a3aa-5c5da107b1da",
+          "releases": 39,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5140eef4-5b5d-309c-a3aa-5c5da107b1da",
+          "releases": 34,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "5140eef4-5b5d-309c-a3aa-5c5da107b1da",
+          "releases": 34,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 36,
+          "albums": 3
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1999-06-12",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "5140eef4-5b5d-309c-a3aa-5c5da107b1da"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 56,
+      "input": "https://www.qobuz.com/us-en/album/helloween-helloween/hp4qhwldhdu8b",
+      "knownByUrl": true,
+      "candidates": 21,
+      "albumTitles": {
+        "0c5d7649-d0b0-34ca-b985-a9ba58c88716": "Helloween",
+        "d0bcd889-f250-41e9-b8ae-4659177dd4f7": "Helloween",
+        "228f7f30-5dd2-3f16-8761-b65a14e0e18b": "Helloween / Walls of Jericho"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "d0bcd889-f250-41e9-b8ae-4659177dd4f7",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "d0bcd889-f250-41e9-b8ae-4659177dd4f7",
+          "releases": 12,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d0bcd889-f250-41e9-b8ae-4659177dd4f7",
+          "releases": 12,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d0bcd889-f250-41e9-b8ae-4659177dd4f7",
+          "releases": 12,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "d0bcd889-f250-41e9-b8ae-4659177dd4f7",
+          "releases": 12,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 17,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2021-06-18",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "d0bcd889-f250-41e9-b8ae-4659177dd4f7"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 57,
+      "input": "https://www.qobuz.com/us-en/album/blue-green-red-weezer/e7io1mq9w1g5b",
+      "knownByUrl": true,
+      "candidates": 1,
+      "albumTitles": {
+        "b8d012ce-bf65-466c-b8e4-150e3a4155bc": "Blue Green Red and Yellow"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2009-01-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "9b8af98f-8214-32ee-9b05-96b8c557f7f0"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 58,
+      "input": "https://www.qobuz.com/it-it/album/rebel-heart-madonna/mvamwfs7ggy76",
+      "knownByUrl": true,
+      "candidates": 34,
+      "albumTitles": {
+        "ab88ca0b-da32-4e01-ae9b-198b0b7b8681": "Rebel Heart",
+        "ed2eb236-ff77-497f-b9dc-ac0825008c16": "Rebel Heart",
+        "452a5dcd-6176-4e16-9e1e-ab45a395bb35": "Rebel Heart Tour",
+        "645a1f61-041b-4be1-bb80-00f199e02bee": "Rebel Heart Demos",
+        "012018bf-794b-432b-ae31-90971ab2ef12": "Rebel Heart Tour (Live from Japan)",
+        "b6b6a0fb-1ea7-44da-a2d4-7dd519773760": "Rebel Heart Tour (Live in Philadelphia)",
+        "366cca41-716a-4a13-a86d-4d5247c0e91c": "Rebel Heart Tour, TD Garden, Boston",
+        "64ad5b81-e53d-48f1-9d05-16e41bc4264f": "Rebel Heart Tour – Live in Montreal"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 18,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 21,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 21,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "ab88ca0b-da32-4e01-ae9b-198b0b7b8681",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "ab88ca0b-da32-4e01-ae9b-198b0b7b8681",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "ab88ca0b-da32-4e01-ae9b-198b0b7b8681",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2015-03-06",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "ab88ca0b-da32-4e01-ae9b-198b0b7b8681"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 59,
+      "input": "https://www.qobuz.com/us-en/album/speak-now-taylor-swift/qsgwxoyd8dfmc",
+      "knownByUrl": true,
+      "candidates": 100,
+      "albumTitles": {
+        "ba1259eb-d41e-41c5-a70c-0e6fa73e6708": "Speak Now",
+        "a8af83a9-4708-47e5-ac26-e411260ce838": "Speak Now",
+        "b9500a36-1202-4865-902b-3b458652da8e": "Speak Now",
+        "b81c9ea0-2717-4666-abfa-1c7bc91fee63": "Speak Now (Taylor’s version)",
+        "0441b1b2-de57-4a9a-b007-1f6e159921d5": "Speak Now (Taylor’s version)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 57,
+          "albums": 3
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 88,
+          "albums": 3
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 88,
+          "albums": 3
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "ba1259eb-d41e-41c5-a70c-0e6fa73e6708",
+          "releases": 65,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "ba1259eb-d41e-41c5-a70c-0e6fa73e6708",
+          "releases": 65,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 76,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2010-10-25",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "ba1259eb-d41e-41c5-a70c-0e6fa73e6708"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 60,
+      "input": "https://www.qobuz.com/us-en/album/ive-got-a-tiger-by-the-tail-buck-owens-his-buckaroos/ywuvetwrsbxfb",
+      "knownByUrl": true,
+      "candidates": 3,
+      "albumTitles": {
+        "6d86b87e-43e5-3631-bb46-84cb65b3f303": "I’ve Got a Tiger by the Tail"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d86b87e-43e5-3631-bb46-84cb65b3f303",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d86b87e-43e5-3631-bb46-84cb65b3f303",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d86b87e-43e5-3631-bb46-84cb65b3f303",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "6d86b87e-43e5-3631-bb46-84cb65b3f303",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1965-03-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "6d86b87e-43e5-3631-bb46-84cb65b3f303"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": true,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 61,
+      "input": "https://www.qobuz.com/us-en/album/nevermind-nirvana/m5pxsa1stxppa",
+      "knownByUrl": true,
+      "candidates": 100,
+      "albumTitles": {
+        "1b022e01-4da6-387b-8658-8678046e4cef": "Nevermind",
+        "21590daa-5b86-327d-b090-05f2546d2d4a": "Nevermind Sessions",
+        "f12e9382-7d56-4a07-8893-b0a44b288312": "Nevermind: The Singles",
+        "7973987b-aaf7-3f81-af21-811c74ba65ad": "1993-11-09: Stabler Arena, Lehigh University, Bethlehem, PA, USA"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "1b022e01-4da6-387b-8658-8678046e4cef",
+          "releases": 19,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "1b022e01-4da6-387b-8658-8678046e4cef",
+          "releases": 97,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "1b022e01-4da6-387b-8658-8678046e4cef",
+          "releases": 97,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "1b022e01-4da6-387b-8658-8678046e4cef",
+          "releases": 93,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "1b022e01-4da6-387b-8658-8678046e4cef",
+          "releases": 93,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "1b022e01-4da6-387b-8658-8678046e4cef",
+          "releases": 93,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1991-09-24",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "1b022e01-4da6-387b-8658-8678046e4cef"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 62,
+      "input": "https://www.qobuz.com/de-de/album/the-sensual-world-2018-remaster-kate-bush/rrs0uy68ypb4a",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "ad555095-b0a6-42c8-87aa-8ba035d20e12"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 63,
+      "input": "https://www.qobuz.com/gb-en/album/what-do-you-think-about-the-car-declan-mckenna/0886446197173",
+      "knownByUrl": true,
+      "candidates": 6,
+      "albumTitles": {
+        "e96be39c-db4f-4137-90e9-dc7a623d8b27": "What Do You Think About the Car?"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "e96be39c-db4f-4137-90e9-dc7a623d8b27",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2017-07-21",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "e96be39c-db4f-4137-90e9-dc7a623d8b27"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 64,
+      "input": "https://www.qobuz.com/de-de/album/peter-gabriel-3-melt-peter-gabriel/uh28en7k1wu0b",
+      "knownByUrl": true,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1980-05-01",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "fe9f06cd-a160-3114-85fd-102726dddc0b"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 65,
+      "input": "https://www.qobuz.com/fr-fr/album/the-final-countdown-expanded-edition-europe/0696998575721",
+      "knownByUrl": true,
+      "candidates": 41,
+      "albumTitles": {
+        "9954c556-3dda-47b2-90fb-ba7f1abb07cc": "The Final Countdown",
+        "da4f2d37-3eb9-3d62-800d-88d345551ec9": "The Final Countdown",
+        "8e0f0c00-7d5c-42e0-8a83-d8623729c52d": "The Final Countdown",
+        "b5cb4dab-8fe0-466a-b9d9-03aefe824bbc": "The Final Countdown",
+        "f5ffeae3-b9d4-3110-95e9-a5505ca5dc9b": "The Final Countdown 2000",
+        "8234f8c5-bb9b-42d1-ab1b-0e876063c5c8": "The Final Countdown Tour 1986",
+        "de3ec4ac-9967-466e-ae9e-07fe52e78806": "The Final Countdown / Cherokee / Superstitious",
+        "ae113c70-0877-4e23-a9fc-62cbfc38d138": "The Final Countdown: The Best of Europe",
+        "ec164ff1-8c9e-4926-acad-23291b06abcc": "The Final Countdown 2025",
+        "d685d51c-8b93-477b-856d-7cc0af14c112": "The Final Countdown 30th Anniversary Show (live at the Roundhouse)",
+        "b0d9ae37-a026-4ef3-b7e8-16b42b5a815e": "Europe - The Final Countdown Tour, Live in Sweden 1986 (20th Anniversary Edition)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 13,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 24,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 26,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "da4f2d37-3eb9-3d62-800d-88d345551ec9",
+          "releases": 21,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "da4f2d37-3eb9-3d62-800d-88d345551ec9",
+          "releases": 21,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 22,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1986-05-26",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "da4f2d37-3eb9-3d62-800d-88d345551ec9"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 66,
+      "input": "https://www.qobuz.com/gb-en/album/live-at-the-paramount-nirvana/moame3chxu2ia",
+      "knownByUrl": true,
+      "candidates": 7,
+      "albumTitles": {
+        "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7": "Live at the Paramount"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7",
+          "releases": 7,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2019-04-12",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "e0372c5a-1750-46ec-8f1b-4b76df1fe8e7"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": false,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 67,
+      "input": "http://www.qobuz.com/album/weezer-white-album-weezer/0075679912787",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2016-04-01",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "18fa1fe1-1cfd-431f-906d-a335f245d220"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 68,
+      "input": "https://www.qobuz.com/gb-en/album/tchaikovsky-the-nutcracker-berliner-philharmoniker-mstislav-rostropovich/coqgvgopr7q26",
+      "knownByUrl": true,
+      "candidates": 1,
+      "albumTitles": {
+        "5fe75120-028e-4157-b6c6-322e86dcf89d": "Tchaikovsky: The Nutcracker (Remastered 2026)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5fe75120-028e-4157-b6c6-322e86dcf89d",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5fe75120-028e-4157-b6c6-322e86dcf89d",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "5fe75120-028e-4157-b6c6-322e86dcf89d",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "5fe75120-028e-4157-b6c6-322e86dcf89d",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2026-10-09",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "5fe75120-028e-4157-b6c6-322e86dcf89d"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": false,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 69,
+      "input": "https://www.qobuz.com/us-en/album/weezer-30-weezer/u33fupz6693ea",
+      "knownByUrl": true,
+      "candidates": 3,
+      "albumTitles": {
+        "c7b245c9-8099-32ea-af95-893acedde2cf": "Weezer"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c7b245c9-8099-32ea-af95-893acedde2cf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c7b245c9-8099-32ea-af95-893acedde2cf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c7b245c9-8099-32ea-af95-893acedde2cf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "c7b245c9-8099-32ea-af95-893acedde2cf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c7b245c9-8099-32ea-af95-893acedde2cf",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "1994-05-10",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c7b245c9-8099-32ea-af95-893acedde2cf"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": false
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 70,
+      "input": "https://open.qobuz.com/album/id29re6slymta",
+      "knownByUrl": true,
+      "candidates": 100,
+      "albumTitles": {
+        "4d9ec1c2-58ec-48a4-aa0a-916718adead0": "1989",
+        "148bfc79-6dc7-4d06-8108-c686398a8c94": "1989 [nightcore]",
+        "1c4770b3-b7a3-4d44-a7a9-8e2dbb74b85a": "1989 (Taylor’s version)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d9ec1c2-58ec-48a4-aa0a-916718adead0",
+          "releases": 29,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d9ec1c2-58ec-48a4-aa0a-916718adead0",
+          "releases": 55,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d9ec1c2-58ec-48a4-aa0a-916718adead0",
+          "releases": 55,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d9ec1c2-58ec-48a4-aa0a-916718adead0",
+          "releases": 42,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d9ec1c2-58ec-48a4-aa0a-916718adead0",
+          "releases": 42,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 48,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 2,
+        "slugRequest": true,
+        "date": "2014-10-27",
+        "versioned": true
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "4d9ec1c2-58ec-48a4-aa0a-916718adead0"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 71,
+      "input": "https://www.qobuz.com/nl-nl/album/ella-fitzgerald-sings-the-cole-porter-song-book-ella-fitzgerald/0060255741426",
+      "knownByUrl": true,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "dcc0d723-e27f-36e8-8438-dbbde7eb9a67"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 72,
+      "input": "https://www.qobuz.com/gb-en/album/dopamine-chamber-fontaines-dc/ktafrcmxfq3vc",
+      "knownByUrl": true,
+      "candidates": 2,
+      "albumTitles": {
+        "8897af6d-f344-4ad4-af70-83cb425d8397": "Dopamine Chamber"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "8897af6d-f344-4ad4-af70-83cb425d8397",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "date": "2026-10-16",
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "8897af6d-f344-4ad4-af70-83cb425d8397"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "g2-qobuz-editions"
+    },
+    {
+      "index": 73,
+      "input": "https://www.qobuz.com/us-en/album/-/ybo3lnns8dfwa",
+      "knownByUrl": true,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "the page answered 404"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c1a568c7-055c-374a-9d92-9ea077f2bf1f"
+        ],
+        "source": "G2 corpus: MusicBrainz URL relationship"
+      },
+      "sample": "g2-qobuz-editions"
+    }
+  ],
+  "qobuz": [
+    {
+      "kind": "robots",
+      "status": 200,
+      "ms": 244.663292
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 35.130540999999994
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 27.177750000000287
+    },
+    {
+      "kind": "slug",
+      "status": 200,
+      "ms": 26.864916999998968
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.9185839999991
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 25.256874999999127
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 20.32220800000141
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 33.826458000003186
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.60150000000067
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 156.41600000000108
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 20.43108299999949
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 152.77820799999972
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 20.348290999998426
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 37.6272919999974
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.27695799999492
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 25.75170899999648
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 18.712166999997862
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 25.730541999997513
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 28.84337499999674
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 42.56079199999658
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.619958000002953
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 24.70770800000173
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 50.098250000002736
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 41.266499999997905
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.750041999999667
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 177.99058300000615
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 20.9007500000007
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 30.321374999999534
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.74754200001189
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 26.477332999987993
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.48833300000115
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 25.299499999993714
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.489749999993364
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 128.7045000000071
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.945999999996275
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 28.118583000003127
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.28895800000464
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 24.979209000011906
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.50870799999393
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 26.587375000002794
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 19.484040999988792
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 26.228166000000783
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 45.155165999996825
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 81.92708300000231
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 154.6615420000162
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 82.05400000000373
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 45.10624999998254
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 68.8588340000133
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 86.89749999999185
+    },
+    {
+      "kind": "page",
+      "status": 301,
+      "ms": 76.12091699999291
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 82.63574999998673
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 61.523999999975786
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 60.931042000011075
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 67.43170799998916
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 55.74204199999804
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 44.27487499997369
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 63.986791999981506
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 72.51395900000352
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 54.612042000022484
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 52.7989579999994
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 64.1033339999849
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 220.45183400000678
+    },
+    {
+      "kind": "page",
+      "status": 301,
+      "ms": 52.66349999999511
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 83.95695800002431
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 67.22308300001896
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 57.25466600002255
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 82.4052499999816
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 51.35295899998164
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 54.27545800001826
+    },
+    {
+      "kind": "page",
+      "status": 301,
+      "ms": 51.92308400000911
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 66.14712499995949
+    },
+    {
+      "kind": "page",
+      "status": 301,
+      "ms": 53.991125000000466
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 91.6856249999837
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 79.27449999999953
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 53.32912499998929
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 65.8379169999971
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 187.00624999997672
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 81.60291700001108
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 449.5705420000013
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 96.888416999951
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 211.11050000000978
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 210.93054100003792
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 166.40787499997532
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 191.5370830000029
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 115.54999999998836
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 246.05366600002162
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 101.0223330000299
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 178.38220799999544
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 245.438375000027
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 234.68770899996161
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 189.66383400000632
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 246.70100000000093
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 199.30166599998483
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 51.72166699997615
+    },
+    {
+      "kind": "page",
+      "status": 301,
+      "ms": 145.0462079999852
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 102.21470800001407
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 216.00391699996544
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 178.65345799998613
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 222.25304199999664
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 245.93874999997206
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 336.06849999999395
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 346.1261659999727
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 509.78087499999674
+    },
+    {
+      "kind": "slug",
+      "status": 301,
+      "ms": 166.9490409999853
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 267.286334000004
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 107.86250000004657
+    },
+    {
+      "kind": "page",
+      "status": 200,
+      "ms": 194.51104199996917
+    },
+    {
+      "kind": "page",
+      "status": 301,
+      "ms": 101.04375000001164
+    },
+    {
+      "kind": "page",
+      "status": 404,
+      "ms": 130.22087499999907
+    }
+  ],
+  "mbRequests": 205
+}

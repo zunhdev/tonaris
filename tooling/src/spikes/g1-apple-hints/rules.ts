@@ -7,6 +7,9 @@ import { searchKey } from "@tonaris/domain";
 
 import type { Hints } from "./itunes";
 
+/** What a rule compares: a store's hints. Qobuz pages (TON-99) give no track count. */
+export type MatchHints = Pick<Hints, "title" | "artist" | "date"> & { trackCount?: number };
+
 /** A MusicBrainz release from the search, with its release group's first release date when known. */
 export type Candidate = {
   id: string;
@@ -17,6 +20,9 @@ export type Candidate = {
   releaseGroupId: string;
   releaseGroupTitle: string;
   firstReleaseDate?: string | undefined;
+  /** The release's status, such as `Official` or `Bootleg`, and its release group's primary type. */
+  status?: string | undefined;
+  primaryType?: string | undefined;
   /** The credited names, the artists' names and their sort names ("Mumiy Troll'" for Мумий Тролль). */
   artistNames: string[];
 };
@@ -35,7 +41,7 @@ export type Rule = {
    * any credited name, artist name or sort name, letters and digits only.
    */
   artist: "full" | "first" | "names";
-  /** `near` allows one track more or fewer, such as a bonus track. */
+  /** `near` allows one track more or fewer, such as a bonus track. Hints without a count fail both. */
   tracks: "exact" | "near" | "any";
   /**
    * `release`: Apple's date starts with the release's date, at whatever precision MusicBrainz has it.
@@ -138,13 +144,15 @@ function artistsAgree(mode: Rule["artist"], apple: string, candidate: Candidate)
   return theirs.has(looseKey(apple)) || theirs.has(looseKey(firstArtist(apple)));
 }
 
-export function passes(rule: Rule, hints: Hints, candidate: Candidate): boolean {
+export function passes(rule: Rule, hints: MatchHints, candidate: Candidate): boolean {
   if (!titlesAgree(rule.title, hints.title, candidate.title)) return false;
   if (!artistsAgree(rule.artist, hints.artist, candidate)) return false;
 
-  const trackGap = Math.abs(hints.trackCount - candidate.trackCount);
-  if (rule.tracks === "exact" && trackGap !== 0) return false;
-  if (rule.tracks === "near" && trackGap > 1) return false;
+  if (rule.tracks !== "any") {
+    if (hints.trackCount === undefined) return false;
+    const trackGap = Math.abs(hints.trackCount - candidate.trackCount);
+    if (trackGap > (rule.tracks === "near" ? 1 : 0)) return false;
+  }
 
   const { date } = candidate;
   if (rule.date === "release") return Boolean(date && hints.date.startsWith(date));
@@ -165,7 +173,7 @@ export type Decision = {
 };
 
 /** Strict: accepted only when exactly one release, or for the album rules one release group, passes. */
-export function decide(rule: Rule, hints: Hints, candidates: readonly Candidate[]): Decision {
+export function decide(rule: Rule, hints: MatchHints, candidates: readonly Candidate[]): Decision {
   const passing = candidates.filter((c) => passes(rule, hints, c));
   const groups = [...new Set(passing.map((c) => c.releaseGroupId))];
   const counts = { releases: passing.length, albums: groups.length };
@@ -176,7 +184,7 @@ export function decide(rule: Rule, hints: Hints, candidates: readonly Candidate[
 }
 
 /** Which criteria every release of the right album fails: what keeps a strict rule from matching it. */
-export function failedCriteria(hints: Hints, rightReleases: readonly Candidate[]) {
+export function failedCriteria(hints: MatchHints, rightReleases: readonly Candidate[]) {
   const none = (test: (c: Candidate) => boolean) => !rightReleases.some(test);
   return {
     titleExact: none((c) => same(hints.title, c.title)),

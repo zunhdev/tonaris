@@ -1,4 +1,4 @@
-# The G1 spike's sample (TON-14), reused by TON-15 and TON-16. One link per line, as it would be pasted.
+# The G1 spike's sample (TON-14), reused by TON-15, TON-16 and TON-99. One link per line, as it would be pasted.
 #   bun tooling/src/spikes/g1-musicbrainz/run.ts tooling/fixtures/g1-sample/links.txt --cache
 # "creator" holds the creator's own links (18 October 2026). The wikidata-* samples were drawn by sample-wikidata.ts
 # the same day; each line's comment names its Wikidata item.
