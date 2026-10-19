@@ -571,7 +571,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 | 1. Existing link | all | The same `{service, entity_id}` is already linked in the owner's collection, Trash included | Reuse that album (TS-44) |
 | 2. MusicBrainz URL lookup | album links; Apple track links, whose album id is in the path | `/ws/2/url?resource={canonical}&inc=release-rels` | One album → confident, however many of its releases the URL is linked to; several albums → `needs_input` with the candidates (TS-26); none → next step |
 | 3. Identifier bridge | Qobuz, Spotify | **Qobuz:** a 13-digit numeric album id is treated as a UPC. **Spotify:** Web API with client credentials, in an app owned by the creator (Premium). `Get Album` yields `external_ids.upc`; for a track link, `Get Track` yields the parent album id, which goes back through step 2 and then this step. The UPC drives a MusicBrainz barcode search. The [TON-15 report](spikes/2026-10-19-g1-spotify-bridge.md) proposes searching it as 12, 13 and 14 digits; this is decided in TON-25. | One album → confident; several albums → `needs_input`; none → next step |
-| 4. Apple hints | Apple | Public iTunes Lookup API (no key) supplies title, artist, release date, and track count as hints for an **automatic strict** MusicBrainz release search | Accepted only if the releases matching the hints belong to exactly one album. The criteria are proposed in the [TON-16 report](spikes/2026-10-19-g1-apple-hints.md): loose title and artist names, the release year or the album's original year, no track count. They are decided in TON-25. Several albums → `needs_input`; none → next step |
+| 4. Apple hints | Apple | Public iTunes Lookup API (no key) supplies title, artist, release date, and track count as hints for an **automatic strict** MusicBrainz release search | Accepted only if the releases matching the hints belong to exactly one album. The criteria are proposed in the [TON-16 report](spikes/2026-10-19-g1-apple-hints.md): loose title and artist names, the release year or the album's original year, no track count. The [G2 spike](spikes/2026-10-19-g2-album-matching.md) adds that the search should cover official releases only, and skip singles unless Apple's title says " - Single": every ambiguous result so far came from a promotional EP, a bootleg or a single sharing the title. They are decided in TON-25. Several albums → `needs_input`; none → next step |
 | 5. Manual entry | all | Form prefilled with the link and, for Apple, the hints (FR-02.4) | The user completes and saves |
 
 - **Spotify: identifiers only.** Spotify-derived values (the UPC, a parent album id) live only in memory for the duration of the job. They are never stored, logged, cached, sent to agents, or exported. Spotify titles and artists are never used as hints. Only MusicBrainz-sourced values, including MusicBrainz's barcode, are stored.
@@ -632,7 +632,7 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 - **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior is unverified (M3 spike).
 - The service is never switched (FR-06.6).
 
-**TS-44 Album matching (Decided 19 October 2026: identity is the album; evidence validated by spike M1-G2; FR-02.9, FR-02.10, FR-02.12, FR-14.3).**
+**TS-44 Album matching (Decided 19 October 2026: identity is the album; evidence validated by the [G2 spike](spikes/2026-10-19-g2-album-matching.md) the same day; FR-02.3, FR-02.9, FR-02.10, FR-02.12, FR-14.3).**
 
 | Evidence | Outcome |
 | --- | --- |
@@ -642,10 +642,19 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 | Several albums fit the hints (TS-41 step 4) | **Uncertain**: needs confirmation (FR-02.9) |
 | Title/artist similarity only | Never a match. Treated as unrelated: a new record (FR-02.9) |
 
-- **MusicBrainz's grouping decides.** Tonaris follows it, even where it surprises. The TON-16 spike found two cases:
-  - MusicBrainz gives some remasters their own release group, such as *Tchaikovsky: The Nutcracker (Remastered 2026)*.
-  - It keeps some albums under two, such as Trust's *Idéal* and *Trust IV*.
-- **What G2 tests.** The corpus checks that remasters, deluxe editions, regional variants, reissues and track links resolve to the right album, and that different albums with the same title stay apart.
+- **MusicBrainz's grouping decides.** Tonaris follows it, even where it surprises.
+  - The [G2 spike](spikes/2026-10-19-g2-album-matching.md) checked 85 groups of an artist's albums that share a title (243 pairs). Keeping release groups apart never merged different albums.
+  - It kept one album under two release groups in 13 of the groups (15 pairs). These are editions with their own release group, such as *Nevermind (30th Anniversary Super Deluxe)*, the same release entered twice, and a compilation's regional editions. Trust's *Idéal* and *Trust IV*, and *Tchaikovsky: The Nutcracker (Remastered 2026)* found in TON-16, are two more.
+  - Tonaris keeps two records for these. A person can delete one, while a wrong merge would lose an album silently.
+- **Similarity is never evidence.** Title and artist alone would have merged different albums in 74 of those 85 groups. Examples: Weezer's seven *Weezer*s, re-recorded *Taylor's Version* albums, an album's EPs, and live albums named after studio ones.
+- **Editions resolve to their album.** 176 links to deluxe, remastered, anniversary, expanded, reissued and regional editions were identified through steps 3 and 4 alone.
+  - 125 found their album, none found a wrong one, and 3 went to confirmation.
+  - MusicBrainz relates each of 580 edition links to exactly one album, so step 2 is unambiguous.
+- **Track links** add the release they belong to (FR-02.3): a compilation, or a single, which is Unclassified (TS-45).
+- **Release group ids change (proposed by the G2 spike, decided in TON-25).** MusicBrainz merges release groups, and a lookup of a merged id returns the group it now belongs to. The spike's 141 albums included one merged id and one deleted one.
+  - When MusicBrainz answers with another id, enrichment replaces the stored `mb_release_group_id`.
+  - Matching compares a new link's album with saved albums whose old id was merged into it.
+  - A deleted release group (404) leaves the album unidentified, with its data.
 - Matching reads candidates for the owner, including trashed albums (FR-14.4), under the write lock.
 
 **TS-45 Classification mapping (Decided; FR-02.8, FR-05.9).**
