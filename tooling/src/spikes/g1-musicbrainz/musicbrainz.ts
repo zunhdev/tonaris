@@ -109,8 +109,9 @@ export class MusicBrainz {
         headers: { "User-Agent": userAgent, Accept: "application/json" },
       });
       if (response.status === 503 && retries < maxRetries) {
-        const header = response.headers.get("retry-after");
-        const retryAfter = header === null ? 2 ** retries : Number(header);
+        // When MusicBrainz's global limit refuses everyone it says `Retry-After: 0`, so back off regardless.
+        const header = Number(response.headers.get("retry-after") ?? 0);
+        const retryAfter = Math.max(header, 2 ** retries);
         this.nextStart = performance.now() + retryAfter * 1_000;
         // oxlint-disable-next-line no-await-in-loop
         await response.body?.cancel();
