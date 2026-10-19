@@ -103,7 +103,7 @@ The substantial first-version scope is accepted. Work is delivered in increments
 
 ### 2.5 Services and collection scope
 
-- **Launch services:** Spotify, Apple Music, Qobuz. Tonaris accepts links supplied by users or MCP clients. It resolves them, retrieves available metadata, matches them to saved albums, and opens saved links. People and client agents find links themselves; built-in catalog search and link discovery are out of scope (FR-06.7). Access and permitted use must be validated for all three services (**Open**, G1).
+- **Launch services:** Spotify, Apple Music, Qobuz. Tonaris accepts links supplied by users or MCP clients. It resolves them, retrieves available metadata, matches them to saved albums, and opens saved links. People and client agents find links themselves; built-in catalog search and link discovery are out of scope (FR-06.7). Permitted use was reviewed for all three services on 19 October 2026 (G1); final access paths follow the G1 decision.
 - **Independent collection.** Tonaris does not synchronize with streaming-service saved-album libraries in either direction. Saved Tonaris data still synchronizes across the user's devices (FR-09).
 - **Albums, not tracks.** Collection items are album/release records, including EPs, live albums, and compilations. Tracks are not collection items, and a track link resolves to its parent release (FR-02.3). The app and MCP use the same item scope.
 
@@ -313,7 +313,7 @@ This is enforced for manual entry, capture, MCP, and edits.
 - The album keeps its canonical title and original release year: a link to "Bleach (Deluxe Edition)" saves *Bleach* (1989).
 - Edition details aren't captured in this version. Custom fields can record them.
 
-**Open:** metadata access, permitted use, and matching feasibility (D3; G1, G2).
+**Open:** metadata access and matching feasibility (D3; G1, G2). Permitted use was decided in the G1 terms review (19 October 2026).
 
 ### FR-03 — Metadata and custom fields
 
@@ -560,7 +560,7 @@ The distinctions between *unknown*, *unused*, and *applied-empty* are preserved.
 
 **FR-08.7 Before account deletion.** The account-deletion warning offers an export first (FR-11.10).
 
-**FR-08.8 Independence from providers.** Saved metadata stays available for display and export without a fresh provider lookup. **Open:** provider terms may restrict exporting provider-derived data (G1). Any conflict comes back as an explicit product decision; fields are not silently dropped.
+**FR-08.8 Independence from providers.** Saved metadata stays available for display and export without a fresh provider lookup. No provider's terms restrict a saved field (G1 terms review, 19 October 2026): canonical metadata is public-domain, values the user confirms from Apple's hints are their data, and nothing from Spotify or Qobuz is saved. A future conflict comes back as an explicit product decision; fields are not silently dropped.
 
 ### FR-09 — Synchronization and concurrent edits
 
@@ -937,6 +937,13 @@ Resolve these gates before committing to the implementations they affect. Unrela
   - otherwise, manual entry.
 
   The final G1 decision follows the M1 spike and legal review (tech spec TS-41).
+- **Terms review (19 October 2026)** ([memo](spikes/2026-10-19-g1-terms-review.md)). The creator decided:
+  - Spotify's identifier bridge stays, as an accepted risk under strict rules: identifiers only, nothing kept, and an off switch. Spotify's terms bar transferring its data to other services, and they don't address identifier lookups;
+  - service links are the user's own input, so they appear in MCP responses and the export, Spotify's included;
+  - values the user confirms from Apple's hints are ordinary album data: saved, visible to agents, and exported;
+  - Qobuz store pages may be read for an album's address and, transiently, for hints. Nothing from them is saved, and manual entry isn't prefilled from them;
+  - Qobuz isn't asked for API keys: it doesn't grant them to individuals;
+  - services are named in plain text, with no logos or badges (design spec).
 
 **G2 Album matching (D2, D3).** Albums are identified, not editions (FR-02.12). Test real examples: remasters, deluxe editions, reissues, compilations, regional variants, identical titles, and track links. Each must resolve to the right album, and different albums with the same title must stay apart. Define the evidence for confident matches and when confirmation is needed; title/artist similarity alone is insufficient. Distinguish reissue dates from original-release and live-recording years. Chronology may need manual completion where providers lack it.
 
@@ -946,8 +953,8 @@ Resolve these gates before committing to the implementations they affect. Unrela
 
 - *Practical precedent.* [MusicBox's help](https://marcosatanaka.com/support/musicbox/musicbox-help.html) documents album and song URL imports from Apple Music and Spotify. It does not disclose how metadata is retrieved, cover Qobuz, or establish permissions for web, MCP, or export use.
 - *Spotify.* Development mode requires Premium for app owners and is capped at five authenticated users, and extended access is restrictive ([quota modes](https://developer.spotify.com/documentation/web-api/concepts/quota-modes)). Catalog-only [client-credentials access](https://developer.spotify.com/documentation/web-api/tutorials/client-credentials-flow) still needs validation. The [Developer Policy](https://developer.spotify.com/policy) restricts ingesting Spotify content into AI models, integration with other services, and data transfer. Do not assume Spotify-derived metadata can be used in MCP responses, cross-service enrichment, or exports. The [album response](https://developer.spotify.com/documentation/web-api/reference/get-an-album) gives release dates with year, month, or day precision.
-- *Apple Music.* Catalog access is through the [Apple Music API](https://developer.apple.com/documentation/AppleMusicAPI). Intended use, storage, and redistribution still need review.
-- *Qobuz.* The public [API terms](https://static.qobuz.com/apps/api/QobuzAPI-TermsofUse.pdf) require an issued key but date from 2011. Whether access is granted today is unverified.
+- *Apple Music.* Tonaris uses the public iTunes Lookup API, not the [Apple Music API](https://developer.apple.com/documentation/AppleMusicAPI), whose terms limit it to access to users' Apple Music subscriptions. Use, storage and redistribution were reviewed on 19 October 2026 (G1 terms review).
+- *Qobuz.* The public [API terms](https://static.qobuz.com/apps/api/QobuzAPI-TermsofUse.pdf) require an issued key and date from 2011. Keys aren't granted to individuals: Qobuz's replies quoted in 2022 and 2026 say so, and its only channel is for partners (G1 terms review).
 - Other metadata sources and manual enrichment merit evaluation. Neither is a confirmed substitute for three-service capture.
 
 **Standing risks.**
@@ -964,11 +971,11 @@ D1–D8 are stable references from earlier iterations, not eight unanswered ques
 | --- | --- | --- |
 | D1 | Audience, admission, capacity | Resource limits approved on 17 October 2026 (TS-18). Budget and hosting are creator-owned (FR-15.5). |
 | D2 | Identity, metadata, fields, chronology, grouping | Validate matching evidence (G2). Design defines controls, initial presentation, and group sequence. |
-| D3 | Capture and enrichment | Experiment direction set (G1). **Open:** final permitted-metadata decision after the M1 spike and legal review; artwork and export rights; link variants; regional constraints; album matching (G1, G2). |
+| D3 | Capture and enrichment | Experiment direction set (G1). Terms reviewed and decided on 19 October 2026, including artwork and export rights (G1). **Open:** final metadata decision after the M1 spikes; link variants; regional constraints; album matching (G1, G2). |
 | D4 | Sharing | Design: access controls, exposure previews, invitation presentation. |
 | D5 | Retention, Trash, export | Design and tech for FR-08 export. Import and restore are not planned. |
 | D6 | Quality | Performance targets are provisional until M1 measurements confirm them (Q-01). The test matrix is approved (Q-03). Backup retention, RPO/RTO, and historical-backup deletion treatment remain with the creator's hosting decisions (Q-04). |
-| D7 | MCP | **Open:** permitted metadata in agent responses (G1) and client authorization and approval boundaries (G3). |
+| D7 | MCP | Permitted metadata in agent responses decided on 19 October 2026: all saved metadata and service links (G1). **Open:** client authorization and approval boundaries (G3). |
 | D8 | Accounts and settings | Decided on 17 October 2026: admission invitations expire after 14 days, and account recovery relies on the creator's judgment, with a help page and contact address (TS-71, TS-73). |
 
 Provider investigation may require new product decisions. Bring conflicts back here with evidence and options. Never replace required services, remove MCP access, expose private data, or invent integration guarantees through implementation choices.
@@ -1008,6 +1015,14 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - **retired FR-02.7** (edition enrichment), and with it the edition label in manual entry, editable metadata, export and search (FR-02.4, FR-03.1, FR-03.2, FR-08.3, FR-12.4);
   - matching, conflicts and capacity are per album: FR-01.7, FR-02.1, FR-02.3, FR-02.9, FR-06.8, FR-14.3, FR-14.4, FR-15.2, AC-09, AC-10, AC-14, AC-18 and AC-29 changed to match. G2 is now *Album matching*;
   - live albums keep their recording-year chronology (FR-05.5, FR-05.6 unchanged).
+- **Decisions (19 October 2026), G1 terms review** ([memo](spikes/2026-10-19-g1-terms-review.md)):
+  - Spotify's identifier bridge is kept as an accepted risk, under strict rules (G1);
+  - service links, Spotify's included, appear in MCP responses and the export (G1, D7);
+  - confirmed values from Apple's hints are saved, visible to agents and exported (G1, FR-08.8);
+  - Qobuz store pages are read only transiently, and nothing from them is saved (G1);
+  - Qobuz API keys aren't available to individuals; the "unverified" note is answered (section 8);
+  - FR-08.8's open question is answered, and D3 and D7 are updated;
+  - services are named in plain text, with no logos (design spec).
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);
