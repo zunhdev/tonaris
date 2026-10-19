@@ -104,9 +104,7 @@ export type ProblemDetailsOptions = {
 export function problemDetails({
   logError = (error, path) => console.error(`Unhandled error on ${path}`, error),
 }: ProblemDetailsOptions = {}) {
-  // Typed `any` on purpose: a catch-all handler with a typed return would erase every route's response
-  // types for Eden (Elysia 2 beta).
-  const toProblem = ({ error, path }: { error: unknown; path: string }): any => {
+  const toProblem = ({ error, path }: { error: unknown; path: string }): Response => {
     if (error instanceof ProblemError) {
       return problemFor(error.status, error.code, path, { detail: error.detail }, error.headers);
     }

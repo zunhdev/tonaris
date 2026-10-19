@@ -107,7 +107,7 @@ bun run mail:test                               # send one email to Mailpit
 
 ### API contract
 
-The API (`apps/api`, Elysia 2 beta) serves every resource under `/v1` (TS-09):
+The API (`apps/api`, Elysia 2 RC) serves every resource under `/v1` (TS-09):
 
 - **Errors** are RFC 9457 problems (`application/problem+json`) with `type: "about:blank"`, the status phrase as `title`, and a TS-27 `code` such as `not_found`, `validation_failed` or `internal_error`. Validation problems list each invalid input in `errors`. Unexpected errors are logged and answered without details.
 - **OpenAPI 3.1** is generated from the routes' Zod schemas. After changing a route, run `bun run openapi:generate`, review the diff of `apps/api/openapi/v1.json` and commit it; `bun run openapi:check` fails while it is stale. Changes within `/v1` are additive only.
