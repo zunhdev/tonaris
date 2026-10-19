@@ -22,3 +22,33 @@ test("the Eden client calls /v1 on the API origin with the session cookie and ty
   expect(requested).toEqual(["http://api.test/v1/health"]);
   expect(credentials).toEqual(["include"]);
 });
+
+test("the Eden client types a route's error statuses as problems", async () => {
+  const problem = {
+    type: "about:blank",
+    title: "Unauthorized",
+    status: 401,
+    code: "unauthenticated",
+    instance: "/v1/me",
+  };
+  const fetcher: typeof fetch = Object.assign(
+    () =>
+      Promise.resolve(
+        Response.json(problem, {
+          status: 401,
+          headers: { "content-type": "application/problem+json" },
+        }),
+      ),
+    { preconnect: fetch.preconnect },
+  );
+  const api = createApiClient("http://api.test", { fetcher });
+
+  const { data, error } = await api.v1.me.get();
+
+  expect(data).toBeNull();
+  // `error` is typed by status from the route's `response` map: a 401 carries the Problem schema.
+  if (error?.status !== 401) throw new Error(`expected a 401, got ${error?.status}`);
+  const code: string = error.value.code;
+  expect(code).toBe("unauthenticated");
+  expect(error.value.instance).toBe("/v1/me");
+});

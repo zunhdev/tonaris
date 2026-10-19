@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@elysia/eden": "2.0.0-beta.6",
+    "@elysia/eden": "2.0.0-rc.0",
     "@tanstack/react-router": "1.170.45",
     "@tanstack/react-start": "1.169.3",
     "@tonaris/domain": "workspace:*",

@@ -38,7 +38,7 @@ The table records the verdicts.
 | **oxlint** | **Keep** | 1.x, with type-aware linting stable since 2026-07-22 (59/61 typescript-eslint rules) ([Oxc](https://oxc.rs/blog/2026-07-22-type-aware-linting-stable)). No ESLint. |
 | **oxfmt** | **Keep with conditions** | Still beta (0.73). Pin it. Enable `sortTailwindcss` and import sorting ([oxfmt beta](https://oxc.rs/blog/2026-02-24-oxfmt-beta)). If a blocking formatter bug appears, fall back to Prettier with the Tailwind plugin; the switch is a single CI step. |
 | **TanStack Start** | **Keep, ≥ 1.169.x, scoped** | 1.0 was released 2026-10-13. Versions before the CVE-2026-102989 fix are excluded: that is a critical XSS in server-function responses, fixed in start-server-core 1.169.39 ([advisory](https://tanstack.com/blog/tanstack-start-security-update-cve-2026-102989)). **Use:** routing, the UI shell, and SSR of public pages only. It is a client of the API like any other (TS-01). **Do not use:** server functions for data (TS-03). |
-| **Elysia v2 beta** | **Keep with conditions** | 2.0.0-beta.32. No RC yet, and plugins are still being migrated ([Elysia 2.0](https://elysiajs.com/blog/elysia-20)). Pin the exact beta. Run it as its own service, `tonaris-api`, on Elysia's Bun adapter (`app.listen`), because the same API serves the web app, MCP, and later native iOS and Android clients (TS-01). Routes stay thin over a framework-free domain package. Exit criteria are in TS-04. |
+| **Elysia v2** | **Keep: 2.0 RC, pinned** | 2.0.0-rc.0, released 19 October 2026 with `@elysia/eden`, `@elysia/openapi` and `@elysia/cors` ([Elysia 2.0](https://elysiajs.com/blog/elysia-20)). The [TON-19 spike](spikes/2026-10-20-elysia-2-viability.md) found every TS-04 exit criterion met. Pin the exact pre-release. Run it as its own service, `tonaris-api`, on Elysia's Bun adapter (`app.listen`), because the same API serves the web app, MCP, and later native iOS and Android clients (TS-01). Routes stay thin over a framework-free domain package. Exit criteria are in TS-04. |
 | **Drizzle** | **Keep: 1.0 RC, pinned** | Starting on 1.0-rc avoids a later v1 migration (Relational Queries v2, new migrations folder) ([upgrade](https://orm.drizzle.team/docs/upgrade-v1)). The Better Auth adapter supports `>=1.0.0-rc.1`. |
 | **Native Postgres driver** | **Replace for now: postgres.js** (confirmed by creator) | Open bugs rule out Bun.SQL today: Bun.SQL double-encodes JSON/JSONB on PG18 ([#28819](https://github.com/oven-sh/bun/issues/28819)), and Drizzle's bun-sql driver has JSONB serialization ([#6132](https://github.com/drizzle-team/drizzle-orm/issues/6132)) and timestamp-millisecond ([#5062](https://github.com/drizzle-team/drizzle-orm/issues/5062)) bugs. Use `drizzle-orm/postgres-js`, a mature TCP-native driver with `LISTEN/NOTIFY`. Switching back to `drizzle-orm/bun-sql` is a one-line change in `packages/db` once those issues close and round-trip tests pass. |
 | **Postgres** | **Keep: Postgres 18** | Managed or Dockerised is the creator's call (advisory note in TS-111). PG18 brings `casefold()`, `uuidv7()`, `NULLS NOT DISTINCT` (PG15+), and async I/O. |
@@ -61,7 +61,7 @@ Server latency is hidden except when confirmation fails.
 
 **Top stack risks**, all mitigated by M1 spikes:
 
-1. Elysia 2 beta churn.
+1. Elysia 2 churn before 2.0 is final. The RC passed the M1 spike (TON-19).
 2. TanStack DB API changes before 1.0.
 3. Regressions from the Bun 1.4 rewrite.
 4. Long-lived SSE through the host's proxy and HTTP/2 (TS-23).
@@ -153,7 +153,7 @@ SSR loaders call the API over the host's private network (`API_INTERNAL_URL`) wi
 - `apps/api/src/app.ts` builds the Elysia app; `apps/api/src/index.ts` calls `app.listen(PORT)` on the Bun adapter. Routes use Elysia 2's `(path, hook, handler)` order.
 - Resource routes are grouped under `/v1` (TS-09). Endpoints whose shape is set by external standards sit outside it: Better Auth and OAuth at `/auth/*`, `/.well-known/*`, and `/mcp`. So does the internal `/img`.
 - Elysia provides routing, Zod validation (Standard Schema), auth macros that resolve the principal (TS-30), RFC 9457 errors (native in v2), CORS (TS-102), and OpenAPI generation (TS-09). Business rules stay in `packages/domain`.
-- **Upgrade policy:** the exact beta is pinned and bumped at most every two weeks on a branch, after reading the changelog and passing the full suite.
+- **Upgrade policy:** the exact pre-release (now `2.0.0-rc.0`) is pinned and bumped at most every two weeks on a branch, after reading the changelog and passing the full suite.
 - **Exit criteria.** Fall back to Elysia 1.4, keeping the same standalone service shape, if by the end of M2 any of these holds:
   - Eden v2 can't type the web client from `type App` (TS-29);
   - OpenAPI 3.1 can't be generated from our Zod schemas, through either `@elysia/openapi` or the `z.toJSONSchema` fallback (TS-09);
@@ -161,6 +161,13 @@ SSR loaders call the API over the host's private network (`API_INTERNAL_URL`) wi
   - more than two breaking bumps have each cost over half a day.
 
   Because routes hold no business logic, the fallback is a contained rewrite of about 30 route files. The OpenAPI contract and the clients stay unchanged.
+- **Checked on 20 October 2026 ([TON-19](spikes/2026-10-20-elysia-2-viability.md)): go.** On `2.0.0-rc.0`, every exit criterion is met:
+  - Eden types data, problems and SSE streams;
+  - the OpenAPI document is unchanged;
+  - 1,000 SSE streams ran for 67 s with no drop;
+  - the bump from beta.32 took 5 minutes.
+
+  The criteria stay in force until the end of M2.
 
 **TS-05 Repository layout (Decided; Q-09).** Use a Bun workspace with few packages:
 
@@ -396,9 +403,17 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 - **Too old.** If the cursor predates retention, the server sends `event: reset` and the client re-bootstraps.
 - **Viewer invalidation.** When a change touches a shared subtree, the server publishes `event: shared-invalidate {rootId, ownerSeq}` to the viewer subscriptions for that root. Affected roots are found from the changed entity's lists and their ancestors (TS-31). The viewer client debounces for 250 ms, then refetches that root's snapshot. This is simple and correct at this scale; per-root deltas are a later optimization.
 - **Guests** subscribe at `GET /v1/s/:token/stream`, receiving the same invalidations for their single root.
-- **Keepalive.** A comment line goes out every 20 s, and `Bun.serve` is configured so SSE responses are not cut by `idleTimeout`. Hosts commonly drop connections on deploy (Render does); clients reconnect.
+- **Keepalive.** A comment line goes out every 20 s, and when nothing has been sent yet a first one starts the response at once.
+  - Bun closes connections after 10 s without traffic (`idleTimeout`), so each stream switches the timeout off for its own request, with `server.timeout(request, 0)`. Every other request keeps the default.
+  - Hosts commonly drop connections on deploy (Render does); clients reconnect.
+  - `apps/api/src/sse.ts` implements this ([TON-19](spikes/2026-10-20-elysia-2-viability.md)).
+- **Shutdown.** A graceful stop waits for open responses, so on shutdown the hub ends every stream first. Clients then reconnect to the new instance.
+  - Reconnects after a deploy arrive together. The stream should spread them: a per-connection `retry:` with jitter, or jitter in the client.
+- **Contract.** A stream route documents `text/event-stream` in `detail.responses`, pointing at its event schema registered as a component of the OpenAPI document. It declares no `response` schema: on a generator route, that breaks Eden's types and validates nothing.
 - **One stream per browser (web client only).** A leader tab, elected through BroadcastChannel and the Web Locks API, holds the single EventSource and fans events out to other tabs. This avoids HTTP/1.1 connection limits; most hosts terminate HTTP/2 at the edge regardless. It is a web-client optimization, not part of the protocol (TS-28).
-- **Spike (M1).** Verify that long-lived SSE responses pass through the chosen host's proxy unbuffered over HTTP/2, that `idleTimeout` on the Bun adapter doesn't cut them, and that clients resume cleanly after the deploy drop (30 s grace).
+- **Spike (M1).**
+  - The Bun adapter is verified: idle timeout, keepalive, resume from `Last-Event-ID`, shutdown, and 1,000 streams in one process ([TON-19](spikes/2026-10-20-elysia-2-viability.md)).
+  - Still open, on the chosen host: that long-lived responses pass through its proxy unbuffered over HTTP/2, and that clients resume cleanly after the deploy drop (30 s grace).
 - **Multiple instances (later).** The in-process bus becomes Postgres `LISTEN/NOTIFY` with a payload of `{account_id, seq}`. Delivery stays correct because clients always catch up by `seq`, so a notification lost during reconnection is harmless.
 
 **TS-24 Client store (Decided; Q-01, FR-09.3).**
