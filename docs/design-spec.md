@@ -52,7 +52,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - The root element carries `data-theme="dark"` and `color-scheme: dark`.
 - A future light theme only remaps the semantic layer. No component changes.
 - No theme switcher ships in v1.
-- Artwork, service logos, and status colors are tested against dark surfaces only for now.
+- Artwork and status colors are tested against dark surfaces only for now.
 
 *(Q-10)*
 
@@ -80,8 +80,8 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `status.danger` | 0.66 0.19 25 | Failures, destructive actions |
 | `status.info` | 0.72 0.11 240 | Neutral notices |
 
-- The accent hue is a cool violet-indigo (decided 17 October 2026). It stays distinct from Spotify green, Apple red, and Qobuz blue in service icons.
-- Brand colors appear only inside service logos.
+- The accent hue is a cool violet-indigo (decided 17 October 2026).
+- No service brand colors appear anywhere: services are named in text (DS-19).
 
 **DS-13 Typography.**
 - **Font.** Inter Variable, self-hosted woff2. Fallback stack: `Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif`. The system fallback renders saved text in scripts Inter doesn't cover, such as CJK. *(Section 2.3)*
@@ -139,7 +139,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 **DS-19 Iconography.**
 - **Lucide** at 16px with a 1.5 stroke; 14px inside dense rows and chips. It is consistent, tree-shakable, and matches the shadcn defaults.
-- **Service marks** use each service's official logo asset at 14–16px, following each brand's guidelines. Any attribution required for provider-sourced content is shown wherever that content appears (pending G1).
+- **Services are named in plain text**: "Spotify", "Apple Music", "Qobuz". No logos, badges or brand colors (decided 19 October 2026, [G1 terms review](spikes/2026-10-19-g1-terms-review.md)): Spotify forbids pairing its brand with others', Apple allows only its own badge artwork, and Qobuz's logo needs its consent. No provider-sourced content needs attribution (G1).
 - Release types are written as text, not icons.
 - **Branding:** a text wordmark, "Tonaris" in Inter semibold. The favicon and app icon are a "T" mark on the accent color.
 
@@ -180,7 +180,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 5. artist credit (`fg.secondary`);
 6. chronology year (tabular, DS-24);
 7. release type in text (`fg.tertiary`; hidden when grouped by type);
-8. service availability glyphs;
+8. the services the album has links for, by name in `fg.tertiary`, comma-separated and truncated with an ellipsis (DS-19);
 9. a trailing save-state slot (DS-80).
 
 On hover or focus a trailing "Open" button appears; it opens the service chooser (DS-25). Columns collapse from the right as the width shrinks: type, then services. *(FR-05, FR-06.5, FR-09.3)*
@@ -202,7 +202,7 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 
 A reissue's release date never appears in the year column. Tonaris saves albums, not editions (FR-02.12).
 
-**DS-25 Service-link chooser.** "Open in…" lists only the services that have a link, each with its logo and name ("Open in Spotify").
+**DS-25 Service-link chooser.** "Open in…" lists only the services that have a link, each by name in plain text ("Open in Spotify"), with no logos (DS-19).
 - **Desktop:** a popover anchored to the Open button or invoked with `O`. The first item is focused, and Enter opens it.
 - **Mobile:** a bottom sheet.
 - **No preselection** and no remembered choice. *(FR-06.5)*

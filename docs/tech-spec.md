@@ -293,12 +293,18 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 - A type change takes `EXISTS(SELECT 1 FROM album_field_values WHERE field_id = $1)` inside the owner's write lock. That check covers trashed albums too, because the rows survive trashing.
 - Option removal and field deletion compute their affected scope in the same transaction that executes them. The approval or confirmation carries a `scope_hash` of that scope (TS-64).
 
-**TS-15 Provenance and policy flags (Decided mechanism; policy values Proposed until G1).**
+**TS-15 Provenance and policy flags (Decided; policy values decided 19 October 2026 in the [G1 terms review](spikes/2026-10-19-g1-terms-review.md)).**
 
 - Every metadata write records `album_provenance(field, source)`.
 - `packages/providers/policy.ts` maps each source to the flags `{store, agentVisible, exportable, attribution}`.
 - The MCP serializer and the export builder call `policy.filter(album)`.
-- A field withheld by policy is replaced with an explicit marker such as `"withheld": "provider-policy"`. It is never silently dropped (FR-08.8). The creator decides in G1 whether any source may produce withheld fields at all.
+- A field withheld by policy is replaced with an explicit marker such as `"withheld": "provider-policy"`. It is never silently dropped (FR-08.8).
+- **Policy values.** No current source withholds anything. The marker stays for sources added later.
+  - `user`, `musicbrainz` and `itunes-lookup` are stored, agent-visible and exportable, with no attribution.
+    - MusicBrainz's core data is CC0.
+    - `itunes-lookup` values are facts the user confirmed. Their provenance lets them be found and removed if Apple ever asks.
+  - `coverartarchive` gives the artwork URL, which is stored, agent-visible and exportable. The image is the rights holder's: it is shown only through the image proxy (TS-103) and never exported as a file (FR-08).
+  - Spotify and Qobuz values are never stored (TS-41), so they have no source.
 
 **TS-16 Personal ordering (Decided; FR-05.2, FR-05.4, FR-05.8).**
 
@@ -537,13 +543,15 @@ Short links are the only network resolution:
 
 Two canonical URLs that refer to the same `{service, kind, id}` are equivalent and never conflict (FR-06.4).
 
-**TS-41 Identification and metadata strategy (Decided for the M1 experiment, 17 October 2026; final G1 decision after the spike and legal review; FR-02.1–FR-02.3, FR-02.8, FR-06.7, FR-08.8, FR-10.9).**
+**TS-41 Identification and metadata strategy (Decided for the M1 experiment, 17 October 2026; terms decided 19 October 2026; final G1 decision after the spikes; FR-02.1–FR-02.3, FR-02.8, FR-06.7, FR-08.8, FR-10.9).**
 
 *Evidence (provider research, 17 October 2026):*
 
 - **Spotify.** The [Developer Terms](https://developer.spotify.com/terms) and [Policy](https://developer.spotify.com/policy) forbid ingesting Spotify Content into AI models (Policy III.14), transferring it to third parties (Terms IV.2(e)), building databases of it or storing it indefinitely (IV.3), and integrating with other services' content (III.5). Development mode requires the owner to have Premium, allows 5 users, and removed `label` and the batch endpoints such as Get Several Albums ([migration guide](https://developer.spotify.com/documentation/web-api/tutorials/february-2026-migration-guide)). `external_ids.upc` was restored in March 2026 ([changelog](https://developer.spotify.com/documentation/web-api/references/changes/march-2026)). Since July 2026, development-mode quota is counted per developer account, across all its apps ([changelog](https://developer.spotify.com/documentation/web-api/references/changes/july-2026)). Extended quota requires an organization with 250k monthly active users.
-- **Apple.** MusicKit §3.3.6(D) limits API use to "facilitating access to Your end users' Apple Music subscriptions", and art and text may not be used apart from playback or playlists ([DPLA](https://developer.apple.com/support/terms/apple-developer-program-license-agreement/)).
+- **Apple.** MusicKit §3.3.6(D) limits API use to "facilitating access to Your end users' Apple Music subscriptions", and art and text may not be used apart from playback or playlists ([DPLA](https://developer.apple.com/support/terms/apple-developer-program-license-agreement/)). The public iTunes Lookup API is documented for "ID-based lookup … to create mappings between your content library and the digital catalog", at about 20 calls a minute ([Search API](https://performance-partners.apple.com/search-api)).
 - **Qobuz.** There is no developer portal. The 2011 ToU requires granted keys, and the community practice of extracting app IDs breaks it ([ToU](https://static.qobuz.com/apps/api/QobuzAPI-TermsofUse.pdf)).
+  - Keys aren't granted to individuals ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)).
+  - Its legal notices forbid "any extraction or reuse" of the site's database, while robots.txt allows `/{locale}/album/` pages on www.qobuz.com and disallows open.qobuz.com and play.qobuz.com entirely.
 - **Odesli.** Its public API was retired on 2026-07-31.
 
 Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export (FR-08) promises. Hence:
@@ -567,10 +575,27 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 | 5. Manual entry | all | Form prefilled with the link and, for Apple, the hints (FR-02.4) | The user completes and saves |
 
 - **Spotify: identifiers only.** Spotify-derived values (the UPC, a parent album id) live only in memory for the duration of the job. They are never stored, logged, cached, sent to agents, or exported. Spotify titles and artists are never used as hints. Only MusicBrainz-sourced values, including MusicBrainz's barcode, are stored.
-- **Apple hints.** Prefilled values carry provenance `itunes-lookup` until the user edits them (TS-15). Their policy flags stay pending legal review, so by default they are withheld from MCP and export with an explicit marker. The paid Apple Music API (Apple Developer Program) is not used.
+  - Sending the UPC to MusicBrainz is a transfer under a literal reading of Spotify's Policy III.9 and Terms IV.2.e. The creator accepted that risk on 19 October 2026, under the rules below ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)).
+  - **No cache entry keyed by a Spotify value** when MusicBrainz misses. A hit's key is MusicBrainz's own barcode or URL.
+  - **No Spotify values in errors or logs.** Query strings are stripped from MusicBrainz URLs in errors, logs, Sentry (TS-115) and the job's `last_error` (TS-90).
+  - **Fetched again on each attempt.** A retried job calls Spotify again, rather than keeping values in `jobs.payload`.
+  - **An off switch.** One setting skips step 3 for Spotify.
+  - **A daily health check.** One `Get Album` call checks that the token works (the owner's Premium subscription) and that `external_ids.upc` is still returned. The same call keeps the app in use for Terms IX.8.e.
+  - **No scraping.** open.spotify.com pages are never read (Terms IV.2.d.i).
+- **Apple hints.** Prefilled values carry provenance `itunes-lookup` until the user edits them (TS-15).
+  - Once the user confirms them, they are ordinary album data: stored, visible to agents and exported ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)).
+  - Only title, artist and date are prefilled. The track count is a hint only.
+  - No Apple artwork, previews or store URLs are kept.
+  - Lookups stay under 20 a minute, and responses may be cached for a day.
+  - The paid Apple Music API (Apple Developer Program) is not used.
+- **Qobuz store pages.** Permitted on 19 October 2026 ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)). Whether the chain uses them is decided in TON-25, after TON-14's slug proposal and TON-99's measurement.
+  - **The slug:** one `GET www.qobuz.com/us-en/album/-/{id}` with manual redirects, reading only `Location`.
+  - **Hints:** the album page's title, artist and date, used only as transient hints for a strict MusicBrainz match. Nothing from the page is stored, and manual entry isn't prefilled from it.
+  - Each request is user-initiated: one per pasted link, to www.qobuz.com only, never open. or play. It sends an honest User-Agent and follows no further links. There is no crawling or backfill.
+  - The requests stop if robots.txt disallows album pages.
 - **No interactive catalog search.** The creator declined user-facing search. The PRD clarifies FR-06.7: automatic metadata-catalog lookups that identify a supplied link are allowed, while user-facing catalog search and streaming-link discovery are not.
 - **Rate limit.** MusicBrainz allows 1 request per second per IP, with a meaningful User-Agent ([rate limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)).
-  - All MusicBrainz calls go through one global job queue (TS-90) paced at 1 request per second, with a 7-day cache keyed by URL, barcode, and MBID.
+  - All MusicBrainz calls go through one global job queue (TS-90) paced at 1 request per second, with a 7-day cache keyed by URL, barcode, and MBID. A lookup keyed by a Spotify value is cached only when MusicBrainz finds it (Spotify rules above).
   - Capture shows a pending enrichment state, and batches enrich progressively.
   - A self-hosted MusicBrainz mirror (nightly CC0 dumps) is the scale-out path.
 
@@ -590,16 +615,14 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 - Every album had a UPC, and every track link named its album.
 - The bridge identifies 55% of Spotify links. With step 2 first, the chain identifies 58%, against 37% for step 2 alone, with no wrong album.
 - Misses are editions MusicBrainz lacks.
-- The report proposes, for TON-25:
-  - the 14-digit barcode form;
-  - no cache entry keyed by a Spotify value on a miss;
-  - query strings stripped from MusicBrainz URLs in errors and logs;
-  - Spotify values derived again on each job attempt.
+- The report proposes the 14-digit barcode form, which waits for TON-25.
+- Its data-handling proposals were adopted in the [G1 terms review](spikes/2026-10-19-g1-terms-review.md): see the Spotify rules above.
 
 *Still open (G1):*
 
-- legal review of Spotify API use (Policy III.5, integration with other services' content; a production service on a development-mode app owned by the creator's Premium account) and of the iTunes Lookup terms;
-- the creator's final G1 decision after the spike.
+- the creator's final G1 decision after the spikes (TON-25).
+
+The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-review.md), decided 19 October 2026.
 
 **TS-42 Enrichment rule (Decided; FR-03.3).** Enrichment writes only fields that are currently null and records their provenance. Populated fields, including user-entered ones, are never overwritten. Retries and newly matched links follow the same rule.
 
