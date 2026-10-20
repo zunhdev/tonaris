@@ -17,11 +17,31 @@ export {
   type EmailTemplates,
   type RenderedEmail,
 } from "./email";
+export {
+  albumFields,
+  albumFieldsSchema,
+  albumProblem,
+  albumSchema,
+  releaseTypes,
+  type Album,
+  type AlbumField,
+  type AlbumFields,
+} from "./albums";
+export {
+  runCommand,
+  type ChangeInput,
+  type CollectionStore,
+  type CommandContext,
+  type CommandResult,
+  type StoredAlbum,
+} from "./commands";
+export { uuidv7, uuidv7Time } from "./ids";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
 export { caseFold, nameKey, searchKey, searchMatches } from "./normalize";
 export {
   errorCodes,
   errorCodeSchema,
+  failure,
   fieldConflictSchema,
   inputNeeds,
   invalidParamSchema,
@@ -29,6 +49,7 @@ export {
   outcomeStatuses,
   problemSchema,
   type ErrorCode,
+  type Failure,
   type FieldConflict,
   type Outcome,
   type OutcomeStatus,
@@ -42,3 +63,20 @@ export {
   type OperationScope,
 } from "./policies";
 export { actingUserId, mcpModes, type McpMode, type Principal } from "./principals";
+export {
+  bootstrapSchema,
+  changeOps,
+  changeSchema,
+  mutationResultSchema,
+  mutationSchema,
+  streamResetReasons,
+  streamResetSchema,
+  syncRetentionMs,
+  type Bootstrap,
+  type Change,
+  type ChangeOp,
+  type Mutation,
+  type MutationName,
+  type MutationResult,
+  type StreamReset,
+} from "./sync";

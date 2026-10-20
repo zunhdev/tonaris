@@ -5,6 +5,8 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
 
+import type { Database } from "@tonaris/db";
+
 import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
@@ -14,13 +16,15 @@ import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
 import { meRoutes } from "./routes/v1/me";
 import { csrfGuard, securityHeaders } from "./security";
+import { createSyncHub, databaseLog, type SyncHub } from "./sync/hub";
+import { syncRoutes } from "./sync/routes";
 
 export const healthSchema = z
   .object({ status: z.literal("ok") })
   .meta({ description: "The API is up." });
 
 /** The versioned contract (TS-09): additive changes only within /v1. */
-function v1(session: SessionGuard) {
+function v1(session: SessionGuard, sync: { db: Database; hub: SyncHub }) {
   return new Elysia({ prefix: "/v1" })
     .use(openApiJson)
     .get(
@@ -31,12 +35,16 @@ function v1(session: SessionGuard) {
       },
       () => ({ status: "ok" as const }),
     )
-    .use(meRoutes(session));
+    .use(meRoutes(session))
+    .use(syncRoutes(session, sync));
 }
 
 export type AppOptions = ProblemDetailsOptions & {
   config: ApiConfig;
   auth: Auth;
+  db: Database;
+  /** The change bus the streams listen on; the default serves this process (TS-23). Close it on shutdown. */
+  hub?: SyncHub;
   /** The sign-in limits; the default holds the TS-104 limits for this process. */
   limiter?: SignInLimiter;
 };
@@ -44,6 +52,8 @@ export type AppOptions = ProblemDetailsOptions & {
 export function createApp({
   config,
   auth,
+  db,
+  hub = createSyncHub({ log: databaseLog(db) }),
   limiter = createSignInLimiter(),
   ...problemOptions
 }: AppOptions) {
@@ -57,7 +67,7 @@ export function createApp({
       // The host's health check (TS-110), outside the versioned contract.
       .get("/healthz", { detail: { hide: true } }, () => "ok")
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
-      .use(v1(sessionGuard(auth)))
+      .use(v1(sessionGuard(auth), { db, hub }))
   );
 }
 

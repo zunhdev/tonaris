@@ -13,8 +13,9 @@ import { committedDocumentPath } from "./openapi";
 
 // These routes never reach the database or send email, so the pool never connects.
 const config = apiConfig({});
-const auth = createAuth({ config, db: createDatabase(), email: { send: () => Promise.resolve() } });
-const app = createApp({ config, auth });
+const db = createDatabase();
+const auth = createAuth({ config, db, email: { send: () => Promise.resolve() } });
+const app = createApp({ config, auth, db });
 const api = treaty(app);
 
 describe("/v1/health", () => {
@@ -60,7 +61,14 @@ describe("OpenAPI", () => {
       .parse(await response.json());
     expect(document.openapi).toBe("3.1.2");
     // Only the versioned contract: no /healthz, /auth/* or openapi.json itself.
-    expect(Object.keys(document.paths)).toEqual(["/v1/health", "/v1/me"]);
+    expect(Object.keys(document.paths)).toEqual([
+      "/v1/health",
+      "/v1/me",
+      "/v1/mutations",
+      "/v1/mutations/{id}",
+      "/v1/sync/bootstrap",
+      "/v1/sync/stream",
+    ]);
     expect(document.paths["/v1/health"]).toMatchObject({
       get: { responses: { default: { content: { "application/problem+json": {} } } } },
     });
@@ -75,6 +83,37 @@ describe("OpenAPI", () => {
           },
         },
       },
+    });
+  });
+
+  test("keeps null in a nullable enum", async () => {
+    const served: unknown = await (await app.handle("/v1/openapi.json")).json();
+    const { paths } = z
+      .object({ paths: z.record(z.string(), z.record(z.string(), z.unknown())) })
+      .parse(served);
+    const releaseType = z
+      .object({
+        requestBody: z.object({
+          content: z.object({
+            "application/json": z.object({
+              schema: z.object({
+                oneOf: z.array(
+                  z.object({
+                    properties: z.object({
+                      args: z.object({ properties: z.record(z.string(), z.unknown()) }),
+                    }),
+                  }),
+                ),
+              }),
+            }),
+          }),
+        }),
+      })
+      .parse(paths["/v1/mutations"]?.post).requestBody.content["application/json"].schema.oneOf[0]
+      ?.properties.args.properties.releaseType;
+    expect(releaseType).toEqual({
+      type: ["string", "null"],
+      enum: ["album", "ep", "compilation", null],
     });
   });
 

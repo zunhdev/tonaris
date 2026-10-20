@@ -22,6 +22,12 @@ function comment(text: string): Comment {
 
 type Result<Event> = IteratorResult<Event, undefined>;
 
+/** What a stream reads its events from: an `eventChannel`, or a source that pulls them itself (sync/hub.ts). */
+export type StreamSource<Event> = Pick<AsyncIterator<Event, undefined>, "next"> & {
+  /** Ends the source; a waiting `next()` returns done at once. */
+  end(): void;
+};
+
 export type EventChannel<Event> = AsyncIterator<Event, undefined> & {
   /** Queues an event for the stream. Pushes after the end are dropped. */
   push(event: Event): void;
@@ -82,7 +88,7 @@ export type EventStreamOptions = {
 
 /** The events of `source` as an SSE response body, kept alive and ended as above. */
 export async function* eventStream<Event extends SSEPayload>(
-  source: EventChannel<Event>,
+  source: StreamSource<Event>,
   { request, server, keepaliveMs = 20_000, signal }: EventStreamOptions,
 ): AsyncGenerator<Event | Comment, void> {
   server?.timeout(request, 0);

@@ -1,0 +1,402 @@
+// The sync protocol's conformance suite (TS-28): the endpoints driven as any client would drive them, on a
+// listening server and a fresh test schema. Bootstrap, write, stream, reconnect with a cursor, replay, conflict
+// and reset; FR-09 and FR-13 as the server must keep them. A native client is checked against the same scenarios.
+
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+
+import { changeLog, pruneSyncHistory } from "@tonaris/db";
+import {
+  bootstrapSchema,
+  mutationResultSchema,
+  syncRetentionMs,
+  uuidv7,
+  type Album,
+  type Bootstrap,
+  type Change,
+  type Mutation,
+  type MutationResult,
+} from "@tonaris/domain";
+
+import { createTestApp } from "../testing";
+
+let t: Awaited<ReturnType<typeof createTestApp>>;
+let base: string;
+
+beforeEach(async () => {
+  t = await createTestApp();
+  base = t.listen();
+});
+
+afterEach(async () => {
+  await t.drop();
+});
+
+type StreamEvent = { id?: string; event?: string; data?: unknown };
+
+/** Opens the owner stream and collects its events as they arrive. Bun has no EventSource, so this reads it. */
+async function connect(cookie: string, cursor?: { lastEventId?: number; after?: number }) {
+  const controller = new AbortController();
+  const query = cursor?.after === undefined ? "" : `?after=${cursor.after}`;
+  const response = await fetch(`${base}/v1/sync/stream${query}`, {
+    headers: {
+      cookie,
+      ...(cursor?.lastEventId === undefined ? {} : { "last-event-id": String(cursor.lastEventId) }),
+    },
+    signal: controller.signal,
+  });
+  const events: StreamEvent[] = [];
+  let ended = false;
+  const reading = (async () => {
+    if (!response.ok || !response.body) return;
+    const decoder = new TextDecoder();
+    let text = "";
+    try {
+      for await (const chunk of response.body) {
+        text += decoder.decode(chunk, { stream: true });
+        const blocks = text.split("\n\n");
+        text = blocks.pop() ?? "";
+        for (const block of blocks) {
+          const event: StreamEvent = {};
+          for (const line of block.split("\n")) {
+            const [field, ...rest] = line.split(": ");
+            const value = rest.join(": ");
+            if (field === "id") event.id = value;
+            if (field === "event") event.event = value;
+            if (field === "data") event.data = JSON.parse(value);
+          }
+          if (event.event) events.push(event);
+        }
+      }
+    } catch {
+      // Aborted by the test.
+    }
+    ended = true;
+  })();
+  return {
+    response,
+    events,
+    get ended() {
+      return ended;
+    },
+    /** The `seq` of each change event so far. */
+    seqs: () => events.filter((event) => event.event === "change").map((event) => Number(event.id)),
+    async until(check: () => boolean, ms = 2_000) {
+      const deadline = performance.now() + ms;
+      while (!check()) {
+        if (performance.now() > deadline) {
+          throw new Error(`stream ${ended ? "ended" : "timed out"} with ${JSON.stringify(events)}`);
+        }
+        // oxlint-disable-next-line no-await-in-loop
+        await Bun.sleep(5);
+      }
+    },
+    close: async () => {
+      controller.abort();
+      await reading;
+    },
+    finished: reading,
+  };
+}
+
+async function post(cookie: string, mutation: Mutation): Promise<MutationResult> {
+  const response = await t.call("/v1/mutations", { json: mutation, headers: { cookie } });
+  expect(response.status).toBe(200);
+  return mutationResultSchema.parse(await response.json());
+}
+
+async function bootstrap(cookie: string): Promise<Bootstrap> {
+  const response = await t.call("/v1/sync/bootstrap", { headers: { cookie } });
+  expect(response.status).toBe(200);
+  return bootstrapSchema.parse(await response.json());
+}
+
+const album = (values: Partial<Album> = {}): Album => ({
+  id: uuidv7(),
+  title: "Kind of Blue",
+  artistCredit: "Miles Davis",
+  releaseType: "album",
+  isLive: false,
+  originalYear: 1959,
+  recordingYearStart: null,
+  recordingYearEnd: null,
+  ...values,
+});
+
+const create = (args: Album = album()): Mutation => ({
+  mutationId: uuidv7(),
+  name: "album.create",
+  args,
+});
+
+const retitle = (id: string, title: string, from: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "album.update",
+  args: { id, title },
+  base: { title: from },
+});
+
+describe("bootstrap, write and stream (TS-24, FR-09.1)", () => {
+  test("a client bootstraps, writes, and receives its change from the bootstrap cursor", async () => {
+    const anna = await t.signIn("anna@example.com");
+    expect(await bootstrap(anna.cookie)).toEqual({ seq: 0, albums: [] });
+    const stream = await connect(anna.cookie, { after: 0 });
+    expect(stream.response.headers.get("content-type")).toBe("text/event-stream");
+
+    const args = album();
+    const mutation = create(args);
+    expect(await post(anna.cookie, mutation)).toEqual({
+      mutationId: mutation.mutationId,
+      outcome: { status: "confirmed", seq: 1, result: null },
+    });
+    await stream.until(() => stream.events.length === 1);
+    const change: Change = {
+      seq: 1,
+      entity: "album",
+      id: args.id,
+      op: "insert",
+      data: args,
+      mutationId: mutation.mutationId,
+    };
+    expect(stream.events).toEqual([{ id: "1", event: "change", data: change }]);
+    expect(await bootstrap(anna.cookie)).toEqual({ seq: 1, albums: [args] });
+    await stream.close();
+  });
+
+  test("every session of the account receives the change, and no other account does", async () => {
+    const annaWeb = await t.signIn("anna@example.com");
+    const annaPhone = await t.signIn("anna@example.com");
+    const ben = await t.signIn("ben@example.com");
+    expect(annaPhone.id).toBe(annaWeb.id);
+    const [phone, bens] = await Promise.all([connect(annaPhone.cookie), connect(ben.cookie)]);
+
+    await post(annaWeb.cookie, create());
+    await phone.until(() => phone.events.length === 1);
+    await post(ben.cookie, create());
+    await bens.until(() => bens.events.length === 1);
+    expect(phone.seqs()).toEqual([1]);
+    expect(bens.seqs()).toEqual([1]);
+    expect(bens.events[0]?.data).not.toEqual(phone.events[0]?.data);
+    await Promise.all([phone.close(), bens.close()]);
+  });
+
+  test("a burst of concurrent writes from two sessions reaches each stream complete and in order", async () => {
+    const one = await t.signIn("anna@example.com");
+    const two = await t.signIn("anna@example.com");
+    const streams = await Promise.all([connect(one.cookie), connect(two.cookie)]);
+
+    await Promise.all(
+      Array.from({ length: 30 }, (_, index) => post(index % 2 ? one.cookie : two.cookie, create())),
+    );
+    for (const stream of streams) {
+      // oxlint-disable-next-line no-await-in-loop
+      await stream.until(() => stream.events.length === 30);
+      expect(stream.seqs()).toEqual(Array.from({ length: 30 }, (_, index) => index + 1));
+    }
+    await Promise.all(streams.map((stream) => stream.close()));
+  });
+});
+
+describe("retries and reconciliation (TS-22, FR-13.5)", () => {
+  test("a mutation sent again gets the stored outcome and is applied once", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const stream = await connect(anna.cookie);
+    const mutation = create();
+    const [first, second] = await Promise.all([
+      post(anna.cookie, mutation),
+      post(anna.cookie, mutation),
+    ]);
+    const third = await post(anna.cookie, mutation);
+    expect(second).toEqual(first);
+    expect(third).toEqual(first);
+
+    await post(anna.cookie, create());
+    await stream.until(() => stream.events.length === 2);
+    expect(stream.seqs()).toEqual([1, 2]);
+    expect((await bootstrap(anna.cookie)).albums).toHaveLength(2);
+    await stream.close();
+  });
+
+  test("an unanswered mutation is looked up by its ID; others' and unknown IDs aren't found", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const ben = await t.signIn("ben@example.com");
+    const mutation = create();
+    const result = await post(anna.cookie, mutation);
+
+    const found = await t.call(`/v1/mutations/${mutation.mutationId}`, {
+      headers: { cookie: anna.cookie },
+    });
+    expect(found.status).toBe(200);
+    expect(await found.json()).toEqual(result);
+    for (const [cookie, id] of [
+      [ben.cookie, mutation.mutationId],
+      [anna.cookie, uuidv7()],
+    ] as const) {
+      // oxlint-disable-next-line no-await-in-loop
+      const missing = await t.call(`/v1/mutations/${id}`, { headers: { cookie } });
+      expect(missing.status).toBe(404);
+      // oxlint-disable-next-line no-await-in-loop
+      expect(await missing.json()).toMatchObject({ code: "not_found" });
+    }
+  });
+
+  test("a replay older than the idempotency records is expired, not run again", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const old: Mutation = {
+      ...create(),
+      mutationId: uuidv7(Date.now() - syncRetentionMs - 60_000),
+    };
+    const result = await post(anna.cookie, old);
+    expect(result.outcome).toMatchObject({
+      status: "failed",
+      code: "expired",
+      problem: { status: 410 },
+    });
+    expect((await bootstrap(anna.cookie)).albums).toEqual([]);
+  });
+});
+
+describe("conflicts (TS-21, FR-09.4)", () => {
+  test("a stale edit keeps the newer value and reports current, attempted and base", async () => {
+    const web = await t.signIn("anna@example.com");
+    const phone = await t.signIn("anna@example.com");
+    const args = album();
+    await post(web.cookie, create(args));
+    const stream = await connect(web.cookie, { lastEventId: 1 });
+
+    expect((await post(web.cookie, retitle(args.id, "A", "Kind of Blue"))).outcome.status).toBe(
+      "confirmed",
+    );
+    const stale = await post(phone.cookie, retitle(args.id, "B", "Kind of Blue"));
+    expect(stale.outcome).toEqual({
+      status: "conflict",
+      conflicts: [{ field: "title", current: "A", attempted: "B", base: "Kind of Blue" }],
+    });
+
+    // Independent fields of the same album both succeed.
+    const year: Mutation = {
+      mutationId: uuidv7(),
+      name: "album.update",
+      args: { id: args.id, originalYear: 1960 },
+      base: { originalYear: 1959 },
+    };
+    expect((await post(phone.cookie, year)).outcome.status).toBe("confirmed");
+
+    await stream.until(() => stream.events.length === 2);
+    expect(stream.events.map((event) => event.data)).toMatchObject([
+      { seq: 2, op: "update", data: { title: "A", originalYear: 1959 } },
+      { seq: 3, op: "update", data: { title: "A", originalYear: 1960 } },
+    ]);
+    expect((await bootstrap(web.cookie)).albums).toMatchObject([
+      { title: "A", originalYear: 1960 },
+    ]);
+    await stream.close();
+  });
+
+  test("a rejected mutation changes nothing and sends nothing on the stream (X-05)", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const stream = await connect(anna.cookie);
+    const result = await post(anna.cookie, create(album({ artistCredit: "" })));
+    expect(result.outcome).toMatchObject({
+      status: "failed",
+      code: "required_missing",
+      problem: { status: 422, errors: [{ path: "artistCredit", message: "Required" }] },
+    });
+    await post(anna.cookie, create());
+    await stream.until(() => stream.events.length === 1);
+    expect(stream.seqs()).toEqual([1]);
+    await stream.close();
+  });
+});
+
+describe("reconnecting (TS-23)", () => {
+  test("a stream resumes after Last-Event-ID with no gap and no repeat", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const first = await connect(anna.cookie);
+    await post(anna.cookie, create());
+    await post(anna.cookie, create());
+    await first.until(() => first.events.length === 2);
+    await first.close();
+
+    for (let index = 0; index < 3; index += 1) {
+      // oxlint-disable-next-line no-await-in-loop
+      await post(anna.cookie, create());
+    }
+    const resumed = await connect(anna.cookie, { lastEventId: 2, after: 0 });
+    await resumed.until(() => resumed.events.length === 3);
+    await post(anna.cookie, create());
+    await resumed.until(() => resumed.events.length === 4);
+    expect(resumed.seqs()).toEqual([3, 4, 5, 6]);
+    await resumed.close();
+  });
+
+  test("a cursor the log no longer reaches, or never had, gets reset and the stream ends", async () => {
+    const anna = await t.signIn("anna@example.com");
+    await post(anna.cookie, create());
+    await post(anna.cookie, create());
+    await t.db.update(changeLog).set({ createdAt: new Date(Date.now() - syncRetentionMs - 1_000) });
+    await pruneSyncHistory(t.db);
+
+    for (const [cursor, reason] of [
+      [0, "cursor_expired"],
+      [9, "cursor_unknown"],
+    ] as const) {
+      // oxlint-disable-next-line no-await-in-loop
+      const stream = await connect(anna.cookie, { lastEventId: cursor });
+      // oxlint-disable-next-line no-await-in-loop
+      await stream.finished;
+      expect(stream.events).toEqual([{ event: "reset", data: { reason } }]);
+    }
+
+    // After bootstrapping again, the new cursor streams normally.
+    const { seq } = await bootstrap(anna.cookie);
+    const stream = await connect(anna.cookie, { lastEventId: seq });
+    await post(anna.cookie, create());
+    await stream.until(() => stream.events.length === 1);
+    expect(stream.seqs()).toEqual([3]);
+    await stream.close();
+  });
+
+  test("shutting down ends every stream, so clients reconnect to the next instance", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const streams = await Promise.all([connect(anna.cookie), connect(anna.cookie)]);
+    await Bun.sleep(20);
+    expect(t.hub.size).toBe(2);
+    t.hub.close();
+    await Promise.all(streams.map((stream) => stream.finished));
+    expect(streams.every((stream) => stream.ended)).toBe(true);
+    expect(t.hub.size).toBe(0);
+  });
+});
+
+describe("refusals", () => {
+  test("signed-out clients get 401 problems from every sync endpoint", async () => {
+    const responses = await Promise.all([
+      fetch(`${base}/v1/sync/stream`),
+      t.call("/v1/sync/bootstrap"),
+      t.call("/v1/mutations", { json: create() }),
+      t.call(`/v1/mutations/${uuidv7()}`),
+    ]);
+    for (const response of responses) {
+      expect(response.status).toBe(401);
+      // oxlint-disable-next-line no-await-in-loop
+      expect(await response.json()).toMatchObject({ code: "unauthenticated" });
+    }
+  });
+
+  test("a malformed envelope or cursor is a validation problem", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const v4 = { ...create(), mutationId: crypto.randomUUID() };
+    const unknown = { mutationId: uuidv7(), name: "album.delete", args: {} };
+    for (const json of [v4, unknown, { ...create(), args: { title: 5 } }]) {
+      // oxlint-disable-next-line no-await-in-loop
+      const response = await t.call("/v1/mutations", { json, headers: { cookie: anna.cookie } });
+      expect(response.status).toBe(422);
+      // oxlint-disable-next-line no-await-in-loop
+      expect(await response.json()).toMatchObject({ code: "validation_failed" });
+    }
+    const stream = await fetch(`${base}/v1/sync/stream`, {
+      headers: { cookie: anna.cookie, "last-event-id": "-1" },
+    });
+    expect(stream.status).toBe(422);
+  });
+});

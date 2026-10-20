@@ -1,0 +1,132 @@
+// The sync protocol's endpoints (TS-20–TS-24, TS-28), one contract for the web app and native clients:
+// - POST /v1/mutations runs a mutation envelope and answers with its outcome, the same on every retry;
+// - GET /v1/mutations/{id} looks an outcome up, to reconcile one whose answer was lost (TS-22);
+// - GET /v1/sync/bootstrap is the account's data at a `seq`;
+// - GET /v1/sync/stream streams the changes after a cursor, as server-sent events.
+// Each accepts the session cookie today; bearer tokens for native apps and MCP arrive with TS-30 and TS-61.
+
+import { Elysia } from "elysia";
+import { z } from "zod";
+
+import { bootstrapSnapshot, executeMutation, findMutationResult, type Database } from "@tonaris/db";
+import {
+  bootstrapSchema,
+  mutationResultSchema,
+  mutationSchema,
+  problemSchema,
+} from "@tonaris/domain";
+
+import type { SessionGuard } from "../auth/plugin";
+import { ProblemError } from "../problem";
+import { eventStream } from "../sse";
+import type { SyncHub } from "./hub";
+
+const cursor = z
+  .string()
+  .regex(/^\d+$/)
+  .meta({ description: "The `seq` of the last change the client has." });
+
+export function syncRoutes(session: SessionGuard, { db, hub }: { db: Database; hub: SyncHub }) {
+  return new Elysia()
+    .use(session)
+    .post(
+      "/mutations",
+      {
+        signedIn: true,
+        body: mutationSchema,
+        response: { 200: mutationResultSchema, 401: problemSchema, 422: problemSchema },
+        detail: {
+          summary: "Run a mutation",
+          description:
+            "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22).",
+          tags: ["sync"],
+          operationId: "postMutation",
+        },
+      },
+      async ({ body, principal, account }) => {
+        const { result, changes } = await executeMutation(db, principal, body);
+        hub.publish(account.id, changes);
+        return result;
+      },
+    )
+    .get(
+      "/mutations/:id",
+      {
+        signedIn: true,
+        params: z.object({ id: z.uuid() }),
+        response: {
+          200: mutationResultSchema,
+          401: problemSchema,
+          404: problemSchema,
+          422: problemSchema,
+        },
+        detail: {
+          summary: "Get a mutation's outcome",
+          description:
+            "The stored outcome of a mutation this account sent, kept for 30 days (TS-22). A client whose request went unanswered reconciles with it.",
+          tags: ["sync"],
+          operationId: "getMutation",
+        },
+      },
+      async ({ params, account }) => {
+        const result = await findMutationResult(db, account.id, params.id);
+        if (!result)
+          throw new ProblemError(404, "not_found", "No mutation with this ID was received.");
+        return result;
+      },
+    )
+    .get(
+      "/sync/bootstrap",
+      {
+        signedIn: true,
+        response: { 200: bootstrapSchema, 401: problemSchema },
+        detail: {
+          summary: "Get the account's data",
+          description:
+            "The account's data and the `seq` it is current at (TS-24). Stream from that `seq` next.",
+          tags: ["sync"],
+          operationId: "getBootstrap",
+        },
+      },
+      ({ account }) => bootstrapSnapshot(db, account.id),
+    )
+    .get(
+      "/sync/stream",
+      {
+        signedIn: true,
+        headers: z.object({ "last-event-id": cursor.optional() }),
+        query: z.object({ after: cursor.optional() }),
+        detail: {
+          summary: "Stream the account's changes",
+          description:
+            "Server-sent events (TS-23): `change` events with `id` set to their `seq`, after `Last-Event-ID` (or `after` on a first connection), then live. `reset` means the cursor can't be continued: bootstrap again. Comment lines keep the connection alive.",
+          tags: ["sync"],
+          operationId: "streamChanges",
+          responses: {
+            200: {
+              description: "`change` and `reset` events",
+              // Component references: Zod's JSON Schema type doesn't fit openapi-types' schema objects.
+              content: {
+                "text/event-stream": {
+                  schema: {
+                    oneOf: [
+                      { $ref: "#/components/schemas/Change" },
+                      { $ref: "#/components/schemas/StreamReset" },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      async function* ({ request, server, headers, query, account }) {
+        const after = Number(headers["last-event-id"] ?? query.after ?? 0);
+        yield* eventStream(hub.subscribe(account.id, after), {
+          request,
+          server,
+          signal: hub.signal,
+        });
+      },
+    );
+}

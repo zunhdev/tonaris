@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@elysia/eden": "2.0.0-rc.0",
+    "@tanstack/db": "0.15.1",
     "@tanstack/react-router": "1.170.45",
     "@tanstack/react-start": "1.169.3",
     "@tonaris/domain": "workspace:*",
@@ -31,6 +32,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "tailwindcss": "4.3.3",
-    "vite": "8.3.4"
+    "vite": "8.3.4",
+    "zod": "4.6.7"
   }
 }
