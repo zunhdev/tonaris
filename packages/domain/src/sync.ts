@@ -3,6 +3,7 @@
 // (TON-20) syncs albums; each entity type M2 adds joins these unions.
 
 import { albumFieldsSchema, albumSchema } from "./albums";
+import { containerSchema, membershipSchema } from "./containers";
 import { outcomeSchema } from "./outcomes";
 import { z } from "./zod";
 
@@ -70,7 +71,12 @@ export type Change = z.infer<typeof changeSchema>;
 
 /** The owner's collection at `seq` (TS-24): a client then streams from that cursor. */
 export const bootstrapSchema = z
-  .object({ seq: z.int().nonnegative(), albums: z.array(albumSchema) })
+  .object({
+    seq: z.int().nonnegative(),
+    albums: z.array(albumSchema),
+    containers: z.array(containerSchema),
+    memberships: z.array(membershipSchema),
+  })
   .meta({ description: "A snapshot of the account's data at `seq` (TS-24)." });
 export type Bootstrap = z.infer<typeof bootstrapSchema>;
 

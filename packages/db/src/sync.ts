@@ -17,6 +17,7 @@ import {
   type Bootstrap,
   type Change,
   type CollectionStore,
+  type Container,
   type Mutation,
   type MutationResult,
   type Outcome,
@@ -24,7 +25,7 @@ import {
 } from "@tonaris/domain";
 
 import type { Database } from "./client";
-import { accountSync, albums, changeLog, mutations } from "./schema";
+import { accountSync, albums, changeLog, containers, memberships, mutations } from "./schema";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
@@ -235,7 +236,8 @@ export async function readChanges(
 
 /**
  * The account's collection and the `seq` it is current at (TS-24), from one snapshot: a write commits its
- * records and its `seq` together, so the snapshot sees both or neither.
+ * records and its `seq` together, so the snapshot sees both or neither. Trashed records come too, marked by
+ * nothing yet: Trash arrives with M5, and its views filter them.
  */
 export function bootstrapSnapshot(db: Database, accountId: string): Promise<Bootstrap> {
   return db.transaction(
@@ -249,7 +251,35 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .from(albums)
         .where(eq(albums.ownerId, accountId))
         .orderBy(asc(albums.id));
-      return { seq: sync?.seq ?? 0, albums: owned };
+      const folders: Container[] = await tx
+        .select({
+          id: containers.id,
+          kind: containers.kind,
+          parentId: containers.parentId,
+          name: containers.name,
+        })
+        .from(containers)
+        .where(eq(containers.ownerId, accountId))
+        .orderBy(asc(containers.id));
+      const entries = await tx
+        .select({
+          listId: memberships.listId,
+          albumId: memberships.albumId,
+          addedAt: memberships.addedAt,
+        })
+        .from(memberships)
+        .where(eq(memberships.ownerId, accountId))
+        .orderBy(asc(memberships.listId), asc(memberships.albumId));
+      return {
+        seq: sync?.seq ?? 0,
+        albums: owned,
+        containers: folders,
+        memberships: entries.map(({ listId, albumId, addedAt }) => ({
+          listId,
+          albumId,
+          addedAt: addedAt.toISOString(),
+        })),
+      };
     },
     { isolationLevel: "repeatable read", accessMode: "read only" },
   );

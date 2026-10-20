@@ -8,6 +8,8 @@ import { redact, testDatabaseUrl } from "./config";
 import { ensureDatabase } from "./create-database";
 import { migrateDatabase } from "./migrations";
 
+export { ensureDatabase };
+
 export type TestDatabase = {
   db: Database;
   /** The schema the tables live in; it is the connections' `search_path`. */

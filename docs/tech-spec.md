@@ -425,7 +425,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 
 **TS-24 Client store (Decided; Q-01, FR-09.3).**
 
-- **Bootstrap.** `GET /v1/sync/bootstrap` returns the owned collection, preferences, positions, field definitions, the Shared with me list, and a compact search index for each shared root (TS-50), all at `seq = N`.
+- **Bootstrap.** `GET /v1/sync/bootstrap` returns the owned collection, preferences, positions, field definitions, the Shared with me list, and a compact search index for each shared root (TS-50), all at `seq = N`. So far it carries albums, folders and lists, and list entries; the last two read-only until their commands arrive in M2 (TON-21).
 - **TanStack DB loading.** Each entity type is a custom sync collection, fed by one sync engine per client: it bootstraps, writes the snapshot to every collection and calls `markReady()`, then streams from the snapshot's `seq`. The stream replays the log from that cursor, so nothing has to be buffered, unlike the documented pattern for streams without replay ([TON-20](spikes/2026-10-20-sync-prototype.md)).
 - **Optimistic writes.** Collection handlers (`onInsert`, `onUpdate`, `onDelete`) or `createOptimisticAction` enqueue envelopes. Each handler resolves only after the stream has delivered `seq ≥ result.seq`, through our `awaitSeq`. After 15 s without that, the mutation shows as `unconfirmed`, and the handler keeps waiting, so the person's value stays on screen, marked, until it is reconciled. This avoids flicker. It is also how TanStack DB's 1.0 RC wants handlers: they return nothing and wait inside ([PR #2171](https://github.com/TanStack/db/pull/2171)). The pinned 0.15.1 accepts both.
 - **TanStack DB holds a collection's synced writes while any of its transactions persists** ([TON-20](spikes/2026-10-20-sync-prototype.md)). `awaitSeq` follows the engine's cursor, not TanStack DB's state, so a handler never waits on the change it holds. But a write that stays unconfirmed, as when offline, keeps other sessions' changes to that collection out of view until it settles. Offline there are none to show; back online the outbox retries at once. Keep one collection per entity type, so a stuck album write doesn't hold the containers.
@@ -1141,6 +1141,11 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 
 **TS-120 Performance targets (Provisional, adopted 17 October 2026; Q-01).** These are working targets, measured against the reference workload. M1 prototype measurements re-confirm them before they count for acceptance.
 
+- **Measured on 21 October 2026 ([TON-21](spikes/2026-10-21-q01-measurements.md)).** Every target with something to measure is met with room to spare, on both reference profiles. Confirming them is TON-25's.
+  - Measured: feedback, confirmation, propagation, list and sort switches, cold start.
+  - Not measurable yet: search, MCP search, guest pages and export.
+  - Recommended alongside: compress the API's JSON responses. The reference bootstrap is 2.33 MB uncompressed and 0.49 MB gzipped.
+
 *Reference workload:*
 
 - 5,000 owned albums in 250 lists and 60 folders, with a maximum depth of 6;
@@ -1177,7 +1182,7 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 | API contract | `bun test` against a running `apps/api` | Every `/v1` endpoint against the committed OpenAPI document; the sync-protocol conformance suite (TS-28); CORS, cookie, and bearer rules (TS-102) |
 | MCP contract | MCP SDK client against a local server | Every tool: modes, X-03 rejections, the approval round trip, partial batches |
 | End-to-end | Playwright: Chromium, Firefox, WebKit, plus iPhone and Pixel emulation; axe-core on key screens | The AC scenarios as specs, named `AC-xx` |
-| Performance | Workload generator plus Playwright traces and server timings | TS-120 |
+| Performance | Workload generator plus Playwright with Chrome's network and CPU throttling: `bun run --cwd apps/web test:perf` (`apps/web/perf/`, TON-21) | TS-120 |
 | Security | TS-106 fixtures; dependency audit | Q-05 |
 
 **TS-122 Verification matrix (Approved 17 October 2026; Q-03).**

@@ -138,7 +138,12 @@ const retitle = (id: string, title: string, from: string): Mutation => ({
 describe("bootstrap, write and stream (TS-24, FR-09.1)", () => {
   test("a client bootstraps, writes, and receives its change from the bootstrap cursor", async () => {
     const anna = await t.signIn("anna@example.com");
-    expect(await bootstrap(anna.cookie)).toEqual({ seq: 0, albums: [] });
+    expect(await bootstrap(anna.cookie)).toEqual({
+      seq: 0,
+      albums: [],
+      containers: [],
+      memberships: [],
+    });
     const stream = await connect(anna.cookie, { after: 0 });
     expect(stream.response.headers.get("content-type")).toBe("text/event-stream");
 
@@ -158,7 +163,7 @@ describe("bootstrap, write and stream (TS-24, FR-09.1)", () => {
       mutationId: mutation.mutationId,
     };
     expect(stream.events).toEqual([{ id: "1", event: "change", data: change }]);
-    expect(await bootstrap(anna.cookie)).toEqual({ seq: 1, albums: [args] });
+    expect(await bootstrap(anna.cookie)).toMatchObject({ seq: 1, albums: [args] });
     await stream.close();
   });
 

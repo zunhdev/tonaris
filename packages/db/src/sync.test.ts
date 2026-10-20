@@ -13,7 +13,15 @@ import {
   type Principal,
 } from "@tonaris/domain";
 
-import { accountSync, albums, changeLog, mutations, users } from "./schema";
+import {
+  accountSync,
+  albums,
+  changeLog,
+  containers,
+  memberships,
+  mutations,
+  users,
+} from "./schema";
 import {
   bootstrapSnapshot,
   executeMutation,
@@ -64,6 +72,17 @@ const retitle = (id: string, title: string, base: string): Mutation => ({
   args: { id, title },
   base: { title: base },
 });
+
+/** A container row, as the M2 commands will write it. */
+function container(
+  id: string,
+  ownerId: string,
+  kind: "folder" | "list",
+  parentId: string | null,
+  name: string,
+) {
+  return { id, ownerId, kind, parentId, name, nameKey: name.toLowerCase() };
+}
 
 async function changeCount(accountId: string): Promise<number> {
   const rows = await t.db.select().from(changeLog).where(eq(changeLog.accountId, accountId));
@@ -236,7 +255,43 @@ describe("the change log (TS-23)", () => {
 describe("bootstrapSnapshot (TS-24)", () => {
   test("is empty at seq 0 for a new account", async () => {
     const anna = await newPrincipal();
-    expect(await bootstrapSnapshot(t.db, anna.userId)).toEqual({ seq: 0, albums: [] });
+    expect(await bootstrapSnapshot(t.db, anna.userId)).toEqual({
+      seq: 0,
+      albums: [],
+      containers: [],
+      memberships: [],
+    });
+  });
+
+  test("carries the account's folders, lists and list entries", async () => {
+    const [anna, ben] = await Promise.all([newPrincipal(), newPrincipal()]);
+    const args = album();
+    await executeMutation(t.db, anna, create(args));
+    const folderId = uuidv7();
+    const listId = uuidv7();
+    await t.db
+      .insert(containers)
+      .values([
+        container(folderId, anna.userId, "folder", null, "Jazz"),
+        container(listId, anna.userId, "list", folderId, "Hard bop"),
+        container(uuidv7(), ben.userId, "list", null, "Ben's"),
+      ]);
+    const addedAt = new Date("2026-10-21T08:00:00.000Z");
+    await t.db
+      .insert(memberships)
+      .values({ listId, albumId: args.id, ownerId: anna.userId, addedAt });
+
+    const snapshot = await bootstrapSnapshot(t.db, anna.userId);
+    // In ID order; two UUIDv7s made in the same millisecond can come either way.
+    expect(snapshot.containers).toEqual(
+      [
+        { id: folderId, kind: "folder" as const, parentId: null, name: "Jazz" },
+        { id: listId, kind: "list" as const, parentId: folderId, name: "Hard bop" },
+      ].toSorted((a, b) => a.id.localeCompare(b.id)),
+    );
+    expect(snapshot.memberships).toEqual([
+      { listId, albumId: args.id, addedAt: "2026-10-21T08:00:00.000Z" },
+    ]);
   });
 
   test("returns only the account's albums, current at the seq it reports, even during writes", async () => {

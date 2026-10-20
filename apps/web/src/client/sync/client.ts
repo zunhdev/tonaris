@@ -3,6 +3,7 @@
 
 import { createAlbumCollection } from "./albums";
 import { createSyncEngine, type Fetch, type SyncEngineOptions } from "./engine";
+import { createContainerCollection, createMembershipCollection } from "./lists";
 import { createOutbox } from "./outbox";
 import { mutationSender } from "./transport";
 import { createSaveStates, createWriter } from "./writer";
@@ -30,17 +31,21 @@ export function createSyncClient(options: SyncClientOptions) {
   });
   const writer = createWriter({ outbox, engine, states, confirmWithinMs: options.confirmWithinMs });
   const albums = createAlbumCollection({ engine, writer });
+  const containers = createContainerCollection(engine);
+  const memberships = createMembershipCollection(engine);
 
   return {
     engine,
     outbox,
     states,
     albums,
+    containers,
+    memberships,
     start: () => engine.start(),
     async stop(): Promise<void> {
       engine.stop();
       outbox.stop();
-      await albums.cleanup();
+      await Promise.all([albums.cleanup(), containers.cleanup(), memberships.cleanup()]);
     },
   };
 }
