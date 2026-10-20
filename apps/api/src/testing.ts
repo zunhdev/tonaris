@@ -70,24 +70,26 @@ export function inSequence<T>(count: number, step: (index: number) => Promise<T>
   );
 }
 
-/** The app on its own test schema. `env` overrides the local configuration; call `drop()` afterwards. */
-export async function createTestApp(
-  options: {
-    env?: Record<string, string>;
-    limiter?: SignInLimiter;
-    hub?: Omit<SyncHubOptions, "log">;
-  } = {},
-) {
-  const database = await createTestDatabase();
+export type LocalAppOptions = {
+  env?: Record<string, string>;
+  limiter?: SignInLimiter;
+  hub?: Omit<SyncHubOptions, "log">;
+};
+
+/**
+ * The app on `db`, with email kept in memory: for tests and local tools such as the performance runs. `env`
+ * overrides the local configuration; `stop()` ends the streams and the server, and leaves the database.
+ */
+export function localApp(db: Database, options: LocalAppOptions = {}) {
   // Tests name the client address in X-Forwarded-For, as a proxy would.
   const config = apiConfig({ CLIENT_IP_HEADER: "x-forwarded-for", ...options.env });
   const email = memoryEmail();
-  const auth = createAuth({ config, db: database.db, email, logError: () => {} });
-  const hub = createSyncHub({ log: databaseLog(database.db), ...options.hub });
+  const auth = createAuth({ config, db, email, logError: () => {} });
+  const hub = createSyncHub({ log: databaseLog(db), ...options.hub });
   const app = createApp({
     config,
     auth,
-    db: database.db,
+    db,
     hub,
     limiter: options.limiter ?? createSignInLimiter(),
     logError: () => {},
@@ -119,8 +121,8 @@ export async function createTestApp(
    * is a new session. Returns the account's ID and the session cookie.
    */
   const signIn = async (address: string): Promise<{ id: string; cookie: string }> => {
-    const existing = await findUserByEmail(database.db, emailKey(address));
-    const id = existing?.id ?? (await insertUser(database.db, address));
+    const existing = await findUserByEmail(db, emailKey(address));
+    const id = existing?.id ?? (await insertUser(db, address));
     const arrived = email.next(address);
     await call("/auth/email-otp/send-verification-otp", {
       json: { email: address, type: "sign-in" },
@@ -137,17 +139,27 @@ export async function createTestApp(
     return { id, cookie };
   };
 
-  /** Listens on a free port, for clients that need a real connection such as streams. Returns the API origin. */
-  const listen = (): string => {
-    app.listen({ port: 0 });
+  /** Listens on `port` (default: a free one), for clients that need a real connection. Returns the origin. */
+  const listen = (port = 0): string => {
+    app.listen({ port });
     return (app.server?.url.href ?? "").replace(/\/$/, "");
   };
 
-  const drop = async () => {
-    // The streams end first, so the graceful stop lets every other request finish before the schema goes.
+  const stop = async () => {
+    // The streams end first, so the graceful stop lets every other request finish.
     hub.close();
     if (app.server) await app.stop();
+  };
+  return { app, auth, config, db, email, hub, call, signIn, listen, stop };
+}
+
+/** The app on its own test schema; call `drop()` afterwards. */
+export async function createTestApp(options: LocalAppOptions = {}) {
+  const database = await createTestDatabase();
+  const local = localApp(database.db, options);
+  const drop = async () => {
+    await local.stop();
     await database.drop();
   };
-  return { app, auth, config, db: database.db, email, hub, call, signIn, listen, drop };
+  return { ...local, drop };
 }

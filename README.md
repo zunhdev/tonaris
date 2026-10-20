@@ -60,6 +60,7 @@ bun run db:check                # migrations match the schema (drizzle-kit check
 bun run openapi:check           # the committed OpenAPI document matches the API routes
 bun test                        # all tests; the integration tests need the local Postgres
 bun run test:e2e                # Playwright browser tests of the web app (needs Node and Chromium)
+bun run --cwd apps/web test:perf  # TS-120 performance run on the reference workload; not part of check
 bun run build                   # production bundles: apps/api/dist (bin/*.js) and apps/web/dist
 ```
 

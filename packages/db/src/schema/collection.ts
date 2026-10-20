@@ -15,7 +15,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { releaseTypes } from "@tonaris/domain";
+import { containerKinds, releaseTypes } from "@tonaris/domain";
 
 import { users } from "./auth";
 import { instant, notBlank, oneOf, table, timestamps, trashStamp } from "./columns";
@@ -46,8 +46,6 @@ export const trashUnits = table(
     check("trash_units_kind_check", oneOf(t.kind, trashUnitKinds)),
   ],
 );
-
-export const containerKinds = ["folder", "list"] as const;
 
 /** Folders and lists, as an adjacency list queried with recursive CTEs (TS-31). */
 export const containers = table(

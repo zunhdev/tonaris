@@ -28,6 +28,14 @@ export {
   type AlbumFields,
 } from "./albums";
 export {
+  containerKinds,
+  containerSchema,
+  membershipSchema,
+  type Container,
+  type ContainerKind,
+  type Membership,
+} from "./containers";
+export {
   runCommand,
   type ChangeInput,
   type CollectionStore,
