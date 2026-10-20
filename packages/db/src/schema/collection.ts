@@ -15,6 +15,8 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { releaseTypes } from "@tonaris/domain";
+
 import { users } from "./auth";
 import { instant, notBlank, oneOf, table, timestamps, trashStamp } from "./columns";
 
@@ -84,8 +86,6 @@ export const containers = table(
     check("containers_trash_check", trashStamp(t.trashedAt, t.trashUnitId)),
   ],
 );
-
-export const releaseTypes = ["album", "ep", "compilation"] as const;
 
 /** Album records, shared by every list they appear in (FR-01.6). */
 export const albums = table(

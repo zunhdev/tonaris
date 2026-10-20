@@ -8,7 +8,7 @@ import { toOpenAPISchema } from "@elysia/openapi";
 import type { AnyElysia } from "elysia";
 import { z } from "zod";
 
-import { problemSchema } from "@tonaris/domain";
+import { changeSchema, problemSchema, streamResetSchema } from "@tonaris/domain";
 
 const openapiVersion = "3.1.2";
 export const committedDocumentPath = path.join(import.meta.dir, "../openapi/v1.json");
@@ -39,6 +39,27 @@ function isInlinedProblem(response: unknown, problem: string): boolean {
   return JSON.stringify(rest) === problem;
 }
 
+/**
+ * Puts `null` back into nullable enums. `toOpenAPISchema` turns Zod's `anyOf: [{enum}, {type: "null"}]` into
+ * `type: [..., "null"]` but keeps the enum without null, which would make null invalid for generated clients.
+ */
+function allowNullInEnums(value: unknown): void {
+  if (Array.isArray(value)) {
+    for (const item of value) allowNullInEnums(item);
+    return;
+  }
+  if (typeof value !== "object" || value === null) return;
+  if (
+    "type" in value &&
+    "enum" in value &&
+    Array.isArray(value.type) &&
+    Array.isArray(value.enum)
+  ) {
+    if (value.type.includes("null") && !value.enum.includes(null)) value.enum.push(null);
+  }
+  for (const child of Object.values(value)) allowNullInEnums(child);
+}
+
 /** Builds the document for the routes registered on `app`. */
 export function openApiDocument(app: AnyElysia) {
   const problem = JSON.stringify(jsonSchema(problemSchema));
@@ -49,6 +70,7 @@ export function openApiDocument(app: AnyElysia) {
     undefined,
     openapiVersion,
   );
+  allowNullInEnums(paths);
   // Every operation can answer with a problem; listing it once per operation keeps generated clients honest.
   // Error statuses a route declares with `problemSchema` point at the same component, as problem+json.
   for (const operations of Object.values(paths ?? {})) {
@@ -73,7 +95,13 @@ export function openApiDocument(app: AnyElysia) {
     paths,
     components: {
       ...components,
-      schemas: { ...components?.schemas, Problem: jsonSchema(problemSchema) },
+      // Problem, and the stream's events, which stream routes reference (TS-23).
+      schemas: {
+        ...components?.schemas,
+        Problem: jsonSchema(problemSchema),
+        Change: jsonSchema(changeSchema),
+        StreamReset: jsonSchema(streamResetSchema),
+      },
     },
   };
 }

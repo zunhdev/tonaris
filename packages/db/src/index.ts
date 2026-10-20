@@ -5,3 +5,12 @@ export { createDatabase, type Database } from "./client";
 export { databaseUrl, redact } from "./config";
 export { migrateDatabase, migrationsFolder } from "./migrations";
 export * from "./schema";
+export {
+  bootstrapSnapshot,
+  executeMutation,
+  findMutationResult,
+  headSeq,
+  pruneSyncHistory,
+  readChanges,
+  type ExecutedMutation,
+} from "./sync";

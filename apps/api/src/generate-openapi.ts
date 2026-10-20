@@ -17,7 +17,8 @@ import { committedDocumentPath, openApiDocument, serializeDocument } from "./ope
 export function generatedDocument(): string {
   const config = apiConfig({});
   const email = { send: () => Promise.resolve() };
-  const app = createApp({ config, auth: createAuth({ config, db: createDatabase(), email }) });
+  const db = createDatabase();
+  const app = createApp({ config, auth: createAuth({ config, db, email }), db });
   return serializeDocument(openApiDocument(app));
 }
 

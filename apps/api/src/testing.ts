@@ -1,7 +1,7 @@
 // Test helpers: the app on a fresh, migrated test schema (TS-121), with email captured in memory instead of sent.
 // Import from tests only.
 
-import { type Database, users } from "@tonaris/db";
+import { type Database, findUserByEmail, users } from "@tonaris/db";
 import { createTestDatabase } from "@tonaris/db/testing";
 import {
   emailKey,
@@ -16,6 +16,7 @@ import { createApp } from "./app";
 import { createAuth } from "./auth/auth";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import { apiConfig } from "./config";
+import { createSyncHub, databaseLog, type SyncHubOptions } from "./sync/hub";
 
 export type SentEmail = {
   template: EmailTemplate;
@@ -71,16 +72,23 @@ export function inSequence<T>(count: number, step: (index: number) => Promise<T>
 
 /** The app on its own test schema. `env` overrides the local configuration; call `drop()` afterwards. */
 export async function createTestApp(
-  options: { env?: Record<string, string>; limiter?: SignInLimiter } = {},
+  options: {
+    env?: Record<string, string>;
+    limiter?: SignInLimiter;
+    hub?: Omit<SyncHubOptions, "log">;
+  } = {},
 ) {
   const database = await createTestDatabase();
   // Tests name the client address in X-Forwarded-For, as a proxy would.
   const config = apiConfig({ CLIENT_IP_HEADER: "x-forwarded-for", ...options.env });
   const email = memoryEmail();
   const auth = createAuth({ config, db: database.db, email, logError: () => {} });
+  const hub = createSyncHub({ log: databaseLog(database.db), ...options.hub });
   const app = createApp({
     config,
     auth,
+    db: database.db,
+    hub,
     limiter: options.limiter ?? createSignInLimiter(),
     logError: () => {},
   });
@@ -106,6 +114,40 @@ export async function createTestApp(
     );
   };
 
-  const drop = () => database.drop();
-  return { app, auth, config, db: database.db, email, call, drop };
+  /**
+   * Signs `address` in with an emailed code, as a person would, creating the account the first time. Each call
+   * is a new session. Returns the account's ID and the session cookie.
+   */
+  const signIn = async (address: string): Promise<{ id: string; cookie: string }> => {
+    const existing = await findUserByEmail(database.db, emailKey(address));
+    const id = existing?.id ?? (await insertUser(database.db, address));
+    const arrived = email.next(address);
+    await call("/auth/email-otp/send-verification-otp", {
+      json: { email: address, type: "sign-in" },
+    });
+    const sent = await arrived;
+    if (!("code" in sent.data)) throw new Error(`Expected a code, got ${sent.template}`);
+    const response = await call("/auth/sign-in/email-otp", {
+      json: { email: address, otp: sent.data.code },
+    });
+    const cookie = response.headers
+      .getSetCookie()
+      .map((value) => value.split(";")[0])
+      .join("; ");
+    return { id, cookie };
+  };
+
+  /** Listens on a free port, for clients that need a real connection such as streams. Returns the API origin. */
+  const listen = (): string => {
+    app.listen({ port: 0 });
+    return (app.server?.url.href ?? "").replace(/\/$/, "");
+  };
+
+  const drop = async () => {
+    // The streams end first, so the graceful stop lets every other request finish before the schema goes.
+    hub.close();
+    if (app.server) await app.stop();
+    await database.drop();
+  };
+  return { app, auth, config, db: database.db, email, hub, call, signIn, listen, drop };
 }

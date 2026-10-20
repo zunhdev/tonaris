@@ -73,6 +73,8 @@ New dependencies are added with `bun add <name>` inside the package that uses th
 
 The browser tests run Playwright's test runner, which needs Node 20.19 or later and Chromium: `bunx playwright install chromium` once. They build the web app and serve it with `vite preview` on port 3100, next to an API on port 3101 (`apps/api/src/e2e-server.ts`) that runs on a fresh schema of `tonaris_test`. They sign in with codes from Mailpit, so **Postgres and Mailpit must be running** (see [Running locally](#running-locally)).
 
+The web app's sync client tests (`apps/web/src/client/sync`) run in `bun test` against the real API, which they start in a child process (`apps/api/src/test-server.ts`) on its own fresh schema of `tonaris_test`.
+
 ### Running locally
 
 Postgres and Mailpit run natively on your machine, not in Docker; Docker is only for deployment builds (TS-06). You need:

@@ -28,6 +28,41 @@ export const errorCodes = [
 export const errorCodeSchema = z.enum(errorCodes);
 export type ErrorCode = z.infer<typeof errorCodeSchema>;
 
+/** The HTTP status each code's problem carries, inside an outcome or as a response (TS-09). */
+const codeStatuses: Record<ErrorCode, number> = {
+  validation_failed: 422,
+  required_missing: 422,
+  name_conflict: 409,
+  capacity_exceeded: 409,
+  limit_exceeded: 409,
+  unauthenticated: 401,
+  permission_denied: 403,
+  app_only: 403,
+  not_found: 404,
+  trashed: 409,
+  cycle: 409,
+  invalid_destination: 409,
+  field_in_use: 409,
+  uncertain_match: 409,
+  unsupported_link: 422,
+  provider_unavailable: 503,
+  rate_limited: 429,
+  expired: 410,
+  internal_error: 500,
+};
+
+const statusTitles: Record<number, string> = {
+  401: "Unauthorized",
+  403: "Forbidden",
+  404: "Not Found",
+  409: "Conflict",
+  410: "Gone",
+  422: "Unprocessable Content",
+  429: "Too Many Requests",
+  500: "Internal Server Error",
+  503: "Service Unavailable",
+};
+
 /** One invalid input: where it is (`query.limit`, `body.title`) and what is wrong with it. */
 export const invalidParamSchema = z.object({ path: z.string(), message: z.string() });
 
@@ -71,7 +106,10 @@ export const fieldConflictSchema = z.object({
   field: z.string(),
   current: z.unknown(),
   attempted: z.unknown(),
-  base: z.unknown(),
+  base: z
+    .unknown()
+    .optional()
+    .meta({ description: "The value the change assumed; absent when it created the record." }),
 });
 export type FieldConflict = z.infer<typeof fieldConflictSchema>;
 
@@ -102,3 +140,26 @@ export const outcomeSchema = z.discriminatedUnion("status", [
   }),
 ]);
 export type Outcome = z.infer<typeof outcomeSchema>;
+
+export type Failure = Extract<Outcome, { status: "failed" }>;
+
+/** A `failed` outcome: nothing changed (X-05), and the problem says why. */
+export function failure(
+  code: ErrorCode,
+  detail: string,
+  errors?: z.infer<typeof invalidParamSchema>[],
+): Failure {
+  const status = codeStatuses[code];
+  return {
+    status: "failed",
+    code,
+    problem: {
+      type: "about:blank",
+      title: statusTitles[status] ?? "Error",
+      status,
+      code,
+      detail,
+      ...(errors ? { errors } : {}),
+    },
+  };
+}
