@@ -123,7 +123,6 @@ TS-71's custom endpoint stays.
   - email delivery status (`email_status`);
   - the daily expiry job;
   - the audit log.
-- **The refusal sentences** are proposals in DS-91 for the creator to confirm.
 
 ## Running it again
 

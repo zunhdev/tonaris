@@ -713,7 +713,7 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 3. An optional display-name step ("You can add this later").
 4. First-run empty state (DS-105).
 
-Invalid, revoked, expired, already-used, or paused invitations each get one plain sentence explaining the status, and nothing else. *Proposed in TON-24, for the creator to confirm:*
+Invalid, revoked, expired, already-used, or paused invitations each get one plain sentence explaining the status, and nothing else. *As built in TON-24:*
 - invalid: "This invitation link isn't valid.";
 - revoked: "This invitation has been withdrawn.";
 - expired: "This invitation has expired. Ask for a new one.";

@@ -103,7 +103,7 @@ The substantial first-version scope is accepted. Work is delivered in increments
 
 ### 2.5 Services and collection scope
 
-- **Launch services:** Spotify, Apple Music, Qobuz, Tidal (added 20 October 2026). Tonaris accepts links supplied by users or MCP clients. It resolves them, retrieves available metadata, matches them to saved albums, and opens saved links. People and client agents find links themselves; built-in catalog search and link discovery are out of scope (FR-06.7). Permitted use was reviewed for Spotify, Apple Music and Qobuz on 19 October 2026, and for Tidal on 20 October 2026 (G1); final access paths follow the G1 decision.
+- **Launch services:** Spotify, Apple Music, Qobuz, Tidal (added 20 October 2026). Tonaris accepts links supplied by users or MCP clients. It resolves them, retrieves available metadata, matches them to saved albums, and opens saved links. People and client agents find links themselves; built-in catalog search and link discovery are out of scope (FR-06.7). Permitted use was reviewed for Spotify, Apple Music and Qobuz on 19 October 2026, and for Tidal on 20 October 2026. The access paths were decided on 21 October 2026 (G1).
 - **Independent collection.** Tonaris does not synchronize with streaming-service saved-album libraries in either direction. Saved Tonaris data still synchronizes across the user's devices (FR-09).
 - **Albums, not tracks.** Collection items are album/release records, including EPs, live albums, and compilations. Tracks are not collection items, and a track link resolves to its parent release (FR-02.3). The app and MCP use the same item scope.
 
@@ -315,7 +315,7 @@ This is enforced for manual entry, capture, MCP, and edits.
 - The album keeps its canonical title and original release year: a link to "Bleach (Deluxe Edition)" saves *Bleach* (1989).
 - Edition details aren't captured in this version. Custom fields can record them.
 
-**Open:** metadata access and matching feasibility (D3; G1, G2). Permitted use was decided in the G1 terms review (19 October 2026).
+**Decided:** permitted use in the G1 terms review (19 October 2026), and metadata access (G1) and album matching (G2) on 21 October 2026.
 
 ### FR-03 — Metadata and custom fields
 
@@ -580,7 +580,7 @@ The distinctions between *unknown*, *unused*, and *applied-empty* are preserved.
 
 Resolution is a deliberate choice based on current state, under the usual permissions, scope, validation, and confirmations. There is no silent last-write-wins and no blind retry. Independent, non-overlapping changes proceed (FR-13.4). The policy covers collection content and personal preferences. Detection mechanisms are defined in the tech spec, and the review interaction in the design spec.
 
-**FR-09.5 Synchronization target.** **Pending approval:** a measured propagation-delay target (Q-01). Synchronization does not imply collaborative editing.
+**FR-09.5 Synchronization target.** Changes reach another session of the same account within 1 s, and a viewer or guest within 2.5 s (p95; Q-01, approved 21 October 2026). Synchronization does not imply collaborative editing.
 
 ### FR-10 — AI agent access through MCP
 
@@ -617,7 +617,7 @@ An approval never elevates a Read-only connection or enables an app-only operati
 
 Batch size alone never triggers confirmation.
 
-**FR-10.5 Agents supply links.** Client agents find links with their own capabilities and submit them. MCP applies the FR-02 rules and never discovers links (FR-06.7).
+**FR-10.5 Agents supply links.** Client agents find links with their own capabilities and submit them. MCP applies the FR-02 rules and never discovers links (FR-06.7). To identify a Qobuz or Tidal link an agent adds, Tonaris doesn't read the store's page (G1). A link it can't identify comes back asking the agent for the required information (FR-02.6), with the link kept.
 
 **FR-10.6 Approval-gated operations.** These require explicit user approval before execution:
 
@@ -819,20 +819,20 @@ Restoring or re-adding an album reuses its slot, even at capacity.
 
 Targets cover interaction feedback, browsing, sorting, search, synchronization, and export. The workload is 5,000 owned albums plus representative shared content, nesting, memberships, and fields. The measurement conditions (devices, browsers, network) are defined in the tech spec (TS-120).
 
-**Provisional (17 October 2026).** The creator adopted the targets below as working targets. They are confirmed with M1 prototype measurements and then marked approved. An unconfirmed target cannot pass acceptance.
+**Approved where measured (21 October 2026).** The creator adopted the targets below as working targets on 17 October 2026. On 21 October 2026, after the M1 prototype measurements ([report](spikes/2026-10-21-q01-measurements.md)), they approved those that could be measured, and the viewer target on an estimate. The rest stay provisional until they are measured. An unconfirmed target cannot pass acceptance.
 
-| Metric | Target (provisional) |
-| --- | --- |
-| Optimistic UI feedback after a local edit | ≤ 50 ms p95 |
-| Server confirmation of a single mutation | ≤ 400 ms p95 |
-| Propagation to another session of the same account | ≤ 1 s p95 |
-| Propagation to a viewer or guest | ≤ 2.5 s p95 |
-| Quick-search update per keystroke | ≤ 50 ms p95 |
-| MCP search, server time | ≤ 300 ms p95 |
-| Switching sort or grouping, or opening a list | ≤ 100 ms p95 (≤ 200 ms for a 5,000-album list) |
-| Workspace cold start to interactive, desktop | ≤ 2.5 s p75 |
-| Guest share page largest contentful paint, mobile | ≤ 2.5 s p75 |
-| Export of 5,000 albums | ≤ 3 s p95 |
+| Metric | Target | Status |
+| --- | --- | --- |
+| Optimistic UI feedback after a local edit | ≤ 50 ms p95 | Approved |
+| Server confirmation of a single mutation | ≤ 400 ms p95 | Approved |
+| Propagation to another session of the same account | ≤ 1 s p95 | Approved |
+| Propagation to a viewer or guest | ≤ 2.5 s p95 | Approved on an estimate; measured when sharing is built |
+| Quick-search update per keystroke | ≤ 50 ms p95 | Provisional |
+| MCP search, server time | ≤ 300 ms p95 | Provisional |
+| Switching sort or grouping, or opening a list | ≤ 100 ms p95 (≤ 200 ms for a 5,000-album list) | Approved |
+| Workspace cold start to interactive, desktop | ≤ 2.5 s p75 | Approved |
+| Guest share page largest contentful paint, mobile | ≤ 2.5 s p75 | Provisional |
+| Export of 5,000 albums | ≤ 3 s p95 | Provisional |
 
 **Q-02 Accessibility.** Core workflows on each supported device are usable with a keyboard and a screen reader. They include owned and shared browsing, search, service choice, account access, desktop editing and administration, guest views, confirmations, errors, and pending or saved states.
 
@@ -938,7 +938,7 @@ Resolve these gates before committing to the implementations they affect. Unrela
   - Apple's public lookup, as hints for a strict automatic MusicBrainz match;
   - otherwise, manual entry.
 
-  The final G1 decision follows the M1 spike and legal review (tech spec TS-41).
+  It became the final decision on 21 October 2026 (below).
 - **Terms review (19 October 2026)** ([memo](spikes/2026-10-19-g1-terms-review.md)). The creator decided:
   - Spotify's identifier bridge stays, as an accepted risk under strict rules: identifiers only, nothing kept, and an off switch. Spotify's terms bar transferring its data to other services, and they don't address identifier lookups;
   - service links are the user's own input, so they appear in MCP responses and the export, Spotify's included;
@@ -950,8 +950,23 @@ Resolve these gates before committing to the implementations they affect. Unrela
   - Tidal links are identified by MusicBrainz's URL lookup and, transiently, by hints from tidal.com's album page, under Qobuz's rules. One request per pasted link, nothing from the page is saved, and manual entry isn't prefilled from it;
   - Tidal's API isn't used. Without Tidal's written approval, its developer terms forbid sending its data to another service, combining it with other services, and any use in connection with AI;
   - Tidal track links go to manual entry with the link kept (FR-02.3).
+- **Final decision (21 October 2026).** After the M1 spikes, the creator closed G1:
+  - **The chain is final.** A pasted link is identified by:
+    1. MusicBrainz's URL lookup;
+    2. the barcode bridge, for Spotify and Qobuz;
+    3. hints for an automatic MusicBrainz match, from Apple's public lookup and from Qobuz's and Tidal's album pages;
+    4. otherwise, manual entry.
+  - **When a hint matches.** A hinted match is accepted only when exactly one official album or EP fits its title, artist and year; several go to confirmation (FR-02.9). Measured on real links, nothing was ever matched to a wrong album (tech spec TS-41).
+  - **Agents.** Captures an agent starts never read Qobuz's or Tidal's pages, because both reject AI use (FR-10.5).
+  - **Qobuz's store.** Qobuz links that name no store are looked up in the French store.
 
 **G2 Album matching (D2, D3).** Albums are identified, not editions (FR-02.12). Test real examples: remasters, deluxe editions, reissues, compilations, regional variants, identical titles, and track links. Each must resolve to the right album, and different albums with the same title must stay apart. Define the evidence for confident matches and when confirmation is needed; title/artist similarity alone is insufficient. Distinguish reissue dates from original-release and live-recording years. Chronology may need manual completion where providers lack it.
+
+- **Decided (21 October 2026)** ([report](spikes/2026-10-19-g2-album-matching.md)).
+  - **Identity.** An album is its MusicBrainz release group. Among 85 sets of same-title albums, this never merged two different albums, and none of 176 edition links reached a wrong album.
+  - **Splits.** An album MusicBrainz keeps under two release groups stays two records, which a person can tidy. That is the safe failure.
+  - **Similarity.** Title and artist similarity is never evidence: it would have merged different albums in 74 of the 85 sets.
+  - **Changed ids.** When MusicBrainz merges release groups, Tonaris follows the merge. When it deletes one, the album keeps its data but is no longer identified.
 
 **G3 MCP compatibility and verifiable approvals (D7).** Test one server with Claude web, ChatGPT web, and Codex desktop. Cover authentication, revocation, remote transport, scoped approvals, batches, and app-only restrictions. Choose an approval mechanism Tonaris can verify; an agent's claim that the user approved is not enough.
 
@@ -985,11 +1000,11 @@ D1–D8 are stable references from earlier iterations, not eight unanswered ques
 | ID | Area | Remaining work |
 | --- | --- | --- |
 | D1 | Audience, admission, capacity | Resource limits approved on 17 October 2026 (TS-18). Budget and hosting are creator-owned (FR-15.5). |
-| D2 | Identity, metadata, fields, chronology, grouping | Validate matching evidence (G2). Design defines controls, initial presentation, and group sequence. |
-| D3 | Capture and enrichment | Experiment direction set (G1). Terms reviewed and decided on 19 October 2026, including artwork and export rights (G1). **Open:** final metadata decision after the M1 spikes; link variants; regional constraints; album matching (G1, G2). |
+| D2 | Identity, metadata, fields, chronology, grouping | Matching evidence validated and decided on 21 October 2026 (G2). Design defines controls, initial presentation, and group sequence. |
+| D3 | Capture and enrichment | Terms decided on 19 October 2026, including artwork and export rights. Metadata strategy, link variants, store regions and album matching decided on 21 October 2026 (G1, G2). |
 | D4 | Sharing | Design: access controls, exposure previews, invitation presentation. |
 | D5 | Retention, Trash, export | Design and tech for FR-08 export. Import and restore are not planned. |
-| D6 | Quality | Performance targets are provisional until M1 measurements confirm them (Q-01). The test matrix is approved (Q-03). Backup retention, RPO/RTO, and historical-backup deletion treatment remain with the creator's hosting decisions (Q-04). |
+| D6 | Quality | Performance targets measured in M1 were approved on 21 October 2026. Search, MCP search, guest pages and export stay provisional until measured (Q-01). The test matrix is approved (Q-03). Backup retention, RPO/RTO, and historical-backup deletion treatment remain with the creator's hosting decisions (Q-04). |
 | D7 | MCP | Permitted metadata in agent responses decided on 19 October 2026: all saved metadata and service links (G1). Client authorization and approval boundaries were verified on 21 October 2026 (G3). |
 | D8 | Accounts and settings | Decided on 17 October 2026: admission invitations expire after 14 days, and account recovery relies on the creator's judgment, with a help page and contact address (TS-71, TS-73). |
 
@@ -998,7 +1013,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 ## 10. Readiness and maintenance
 
 - This baseline supports design, technical feasibility work, and delivery planning. It does not establish that all provider integrations are permitted. Investigate G1–G3 early.
-- Before first-version acceptance, record the remaining **Pending approval** items: confirmed performance targets, backup objectives, and historical-backup deletion treatment. Budget and hosting are creator-owned and are not tracked here.
+- Before first-version acceptance, record the remaining **Pending approval** items: the provisional performance targets (search, MCP search, guest pages, export), backup objectives, and historical-backup deletion treatment. Budget and hosting are creator-owned and are not tracked here.
 - The design spec, tech spec, Linear issues, and OpenSpec changes reference rule IDs. OpenSpec capability specs grow change by change from these rules; this document is not bulk-converted.
 - When evidence or a decision changes a promise, update this document first, add a change-log entry, and keep IDs stable.
 
@@ -1044,6 +1059,13 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - it is identified by MusicBrainz's URL lookup and transient page hints; its API isn't used (G1);
   - Tidal track links go to manual entry with the link kept (FR-02.3, AC-06);
   - nothing from Tidal is saved (FR-08.8).
+- **Decisions (21 October 2026), G1, G2 and Q-01**, from the M1 spike reports ([MusicBrainz](spikes/2026-10-18-g1-musicbrainz.md), [Apple](spikes/2026-10-19-g1-apple-hints.md), [Spotify](spikes/2026-10-19-g1-spotify-bridge.md), [Qobuz](spikes/2026-10-19-g1-qobuz-hints.md), [Tidal](spikes/2026-10-20-g1-tidal.md), [G2](spikes/2026-10-19-g2-album-matching.md), [Q-01](spikes/2026-10-21-q01-measurements.md)):
+  - **G1 is closed.** The identification chain is final, and Qobuz links use page hints too. A hinted match needs exactly one official album or EP fitting its title, artist and year.
+  - **Agents.** Captures an agent starts never read Qobuz's or Tidal's pages (FR-10.5).
+  - **Qobuz's store.** Qobuz links without a store use the French one.
+  - **G2 is closed.** Identity is the release group, and similarity never matches. Merged release groups are followed, and a deleted one leaves the album unidentified.
+  - **Q-01.** The measured targets are approved, with viewer propagation on an estimate; the rest stay provisional (FR-09.5).
+  - **Updated** section 2.5, FR-02's status, FR-09.5, FR-10.5, D2, D3 and D6.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);
