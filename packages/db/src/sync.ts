@@ -2,7 +2,7 @@
 // change log after a cursor, and the bootstrap snapshot. Commands come from packages/domain; this module
 // gives them a store on the transaction and records what they did.
 
-import { and, asc, eq, gt, lt } from "drizzle-orm";
+import { and, asc, count, eq, gt, isNull, lt, sql } from "drizzle-orm";
 
 import {
   actingUserId,
@@ -12,6 +12,8 @@ import {
   syncRetentionMs,
   uuidv7Time,
   failure,
+  maxContainerDepth,
+  nameKey,
   searchKey,
   type Album,
   type Bootstrap,
@@ -40,7 +42,18 @@ const albumColumns = {
   recordingYearEnd: albums.recordingYearEnd,
 };
 
-/** The domain's store on one transaction. Search keys are derived here, so every write keeps them (TS-12). */
+const containerColumns = {
+  id: containers.id,
+  kind: containers.kind,
+  parentId: containers.parentId,
+  name: containers.name,
+};
+
+/**
+ * The domain's store on one transaction. Search and name keys are derived here, so every write keeps them
+ * (TS-12). The hierarchy is walked with recursive CTEs (TS-31), cut off past the depth limit so that even a
+ * cycle in damaged data can't run away.
+ */
 function collectionStore(tx: Transaction): CollectionStore {
   return {
     async findAlbum(id) {
@@ -68,6 +81,75 @@ function collectionStore(tx: Transaction): CollectionStore {
             : { searchArtistKey: searchKey(values.artistCredit) }),
         })
         .where(eq(albums.id, id));
+    },
+
+    async findContainer(id) {
+      const [row] = await tx
+        .select({
+          ...containerColumns,
+          ownerId: containers.ownerId,
+          trashedAt: containers.trashedAt,
+        })
+        .from(containers)
+        .where(eq(containers.id, id));
+      if (!row) return undefined;
+      const { trashedAt, ...container } = row;
+      return { ...container, trashed: trashedAt !== null };
+    },
+    async containerPath(id) {
+      const rows = await tx.execute<{ id: string }>(sql`
+        with recursive path (id, parent_id, level) as (
+          select id, parent_id, 1 from ${containers} where id = ${id}
+          union all
+          select c.id, c.parent_id, path.level + 1
+          from ${containers} c join path on c.id = path.parent_id
+          where path.level <= ${maxContainerDepth}
+        )
+        select id from path order by level`);
+      return rows.map((row) => row.id);
+    },
+    async subtreeDepth(id) {
+      const [row] = await tx.execute<{ depth: number | null }>(sql`
+        with recursive tree (id, level) as (
+          select id, 1 from ${containers} where id = ${id} and trashed_at is null
+          union all
+          select c.id, tree.level + 1
+          from ${containers} c join tree on c.parent_id = tree.id
+          where c.trashed_at is null and tree.level <= ${maxContainerDepth}
+        )
+        select max(level)::int as depth from tree`);
+      return row?.depth ?? 0;
+    },
+    activeChildren(ownerId, parentId) {
+      return tx
+        .select(containerColumns)
+        .from(containers)
+        .where(
+          and(
+            eq(containers.ownerId, ownerId),
+            parentId === null ? isNull(containers.parentId) : eq(containers.parentId, parentId),
+            isNull(containers.trashedAt),
+          ),
+        );
+    },
+    async countContainers(ownerId) {
+      const [row] = await tx
+        .select({ count: count() })
+        .from(containers)
+        .where(eq(containers.ownerId, ownerId));
+      return row?.count ?? 0;
+    },
+    async insertContainer(container) {
+      await tx.insert(containers).values({ ...container, nameKey: nameKey(container.name) });
+    },
+    async updateContainer(id, values) {
+      await tx
+        .update(containers)
+        .set({
+          ...values,
+          ...(values.name === undefined ? {} : { nameKey: nameKey(values.name) }),
+        })
+        .where(eq(containers.id, id));
     },
   };
 }
@@ -150,14 +232,9 @@ export async function executeMutation(
     let outcome: Outcome =
       result.status === "applied" ? { status: "confirmed", seq, result: null } : result;
     if (result.status === "applied" && result.changes.length > 0) {
-      changes = result.changes.map(({ entity, id, op, data }, index) => ({
-        seq: seq + index + 1,
-        entity,
-        id,
-        op,
-        data,
-        mutationId,
-      }));
+      changes = result.changes.map((change, index) =>
+        Object.assign({ seq: seq + index + 1, mutationId }, change),
+      );
       const last = seq + changes.length;
       await tx.update(accountSync).set({ seq: last }).where(eq(accountSync.accountId, accountId));
       await tx.insert(changeLog).values(
@@ -252,12 +329,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .where(eq(albums.ownerId, accountId))
         .orderBy(asc(albums.id));
       const folders: Container[] = await tx
-        .select({
-          id: containers.id,
-          kind: containers.kind,
-          parentId: containers.parentId,
-          name: containers.name,
-        })
+        .select(containerColumns)
         .from(containers)
         .where(eq(containers.ownerId, accountId))
         .orderBy(asc(containers.id));

@@ -68,6 +68,7 @@ export {
   type Container,
   type ContainerKind,
   type Membership,
+  type StoredContainer,
 } from "./containers";
 export {
   runCommand,
@@ -78,6 +79,7 @@ export {
   type StoredAlbum,
 } from "./commands";
 export { uuidv7, uuidv7Time } from "./ids";
+export { maxContainerDepth, maxContainers, maxNameLength } from "./limits";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
 export { caseFold, nameKey, searchKey, searchMatches } from "./normalize";
 export {

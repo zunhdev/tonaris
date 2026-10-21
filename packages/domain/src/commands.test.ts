@@ -4,31 +4,19 @@
 import { describe, expect, test } from "bun:test";
 
 import type { Album, AlbumFields } from "./albums";
-import { runCommand, type CollectionStore, type StoredAlbum } from "./commands";
+import { runCommand, type StoredAlbum } from "./commands";
 import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
 import type { Mutation } from "./sync";
+import { memoryStore as memoryCollection } from "./testing";
 
 const owner = uuidv7();
 const anna: Principal = { kind: "user", userId: owner, role: "user", client: "web" };
 const other: Principal = { kind: "user", userId: uuidv7(), role: "user", client: "web" };
 
 function memoryStore(albums: StoredAlbum[] = []) {
-  const rows = new Map(albums.map((album) => [album.id, { ...album }]));
-  const store: CollectionStore = {
-    findAlbum: (id) => Promise.resolve(rows.has(id) ? { ...rows.get(id)! } : undefined),
-    insertAlbum: (album) => {
-      rows.set(album.id, { ...album });
-      return Promise.resolve();
-    },
-    updateAlbum: (id, values) => {
-      const row = rows.get(id)!;
-      const defined = Object.entries(values).filter(([, value]) => value !== undefined);
-      rows.set(id, { ...row, ...Object.fromEntries(defined) });
-      return Promise.resolve();
-    },
-  };
-  return { store, rows };
+  const memory = memoryCollection({ albums });
+  return { store: memory.store, rows: memory.albums };
 }
 
 const kindOfBlue = (values: Partial<AlbumFields> = {}): Album => ({

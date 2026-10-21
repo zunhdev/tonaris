@@ -225,7 +225,7 @@ docs/                      PRD, design spec, tech spec, audits, runbooks
 
 - **Prefix.** Every resource route is under `/v1`.
 - **OpenAPI 3.1.** The document is generated from the routes' Zod schemas with `@elysia/openapi`'s `toOpenAPISchema`; every operation also lists a `default` problem response. It is committed at `apps/api/openapi/v1.json` (`bun run openapi:generate`), served at `/v1/openapi.json` without a documentation UI, and checked with `bun run openapi:check` locally and in CI (TS-124).
-- **Compatibility.** Within v1, changes are additive only: new endpoints, new optional fields, and new enum values, which clients must tolerate. A removal or semantic change needs `/v2`. v1 stays available for a deprecation window, at least 6 months once native apps exist (they can't be force-updated), signalled with `Deprecation` and `Sunset` headers.
+- **Compatibility.** Within v1, changes are additive only: new endpoints, new optional fields, new enum values, and new members of a response's `oneOf`, such as a new entity on the change stream. Clients must tolerate all of them, so `oasdiff` reports a new `oneOf` member as a warning (`apps/api/openapi/oasdiff-levels.txt`, TON-26). A removal or semantic change needs `/v2`. v1 stays available for a deprecation window, at least 6 months once native apps exist (they can't be force-updated), signalled with `Deprecation` and `Sunset` headers.
 - **Conventions:**
   - errors are RFC 9457 `application/problem+json` carrying the TS-27 `code`: `type` is `about:blank`, `title` is the status phrase, `instance` is the request path, and `validation_failed` problems list each invalid input in `errors` (`{path, message}`). Invalid input answers 422 and an unparsable body 400. Unexpected errors answer 500 `internal_error` with no details in any environment;
   - lists use opaque cursor pagination (`?cursor=…&limit=…` → `nextCursor`);
@@ -334,7 +334,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 | Resource | Limit |
 | --- | --- |
 | Albums, including Trash | 5,000 |
-| Folders and lists | 2,000 |
+| Folders and lists, Trash included (decided 21 October 2026) | 2,000 |
 | Nesting depth | 32 |
 | List memberships | 50,000 |
 | Custom fields | 50 |
@@ -519,7 +519,8 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
   - Trees are small: at most 2,000 containers, with depth capped at 32 (TS-18).
   - All of an owner's writes are serialized anyway.
   - A closure table would require rewriting subtrees on every move.
-- **Cycle check:** reject a destination when it is in the moved node's subtree (a downward CTE). This runs under the owner lock.
+- **Cycle check:** reject a destination when the moved node is on the destination's path to the root. An upward CTE, at most 32 rows, finds that path, and its length is the destination's depth. This runs under the owner lock ([TON-26](../openspec/specs/collection-hierarchy/spec.md)).
+- **Depth:** a container at the root is at level 1. A create needs its parent below level 32. A move needs the destination's depth plus the moved subtree's height, from a downward CTE over its active descendants, to be at most 32. Trashed descendants don't count; recovery re-checks (TS-26).
 - **Viewer access:** a principal may read container C when some ancestor-or-self A of C satisfies all of:
   - A has an accepted grant for the principal or an active link matching the token;
   - every node on the path from A to C is active;

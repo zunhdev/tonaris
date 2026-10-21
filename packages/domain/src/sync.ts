@@ -1,6 +1,6 @@
 // The sync protocol's messages (TS-20–TS-28), shared by the API and every client: the mutation envelope, the
 // result the server answers with, the bootstrap snapshot and the change events on the stream. The prototype
-// (TON-20) syncs albums; each entity type M2 adds joins these unions.
+// (TON-20) synced albums; folders and lists joined in TON-26, and each entity type M2 adds joins these unions.
 
 import { albumFieldsSchema, albumSchema } from "./albums";
 import { containerSchema, membershipSchema } from "./containers";
@@ -35,9 +35,44 @@ export const albumUpdateSchema = z.object({
   base: albumFieldsSchema.partial(),
 });
 
+/**
+ * `container.create`: a folder or list at the root (`parentId` null) or in a folder, with the client's ID
+ * (TS-10), so a retried create can't make a second one (FR-01.1).
+ */
+export const containerCreateSchema = z.object({
+  mutationId,
+  name: z.literal("container.create"),
+  args: containerSchema.extend({ id: z.uuid({ version: "v7" }) }),
+});
+
+/** `container.rename`: `base.name` is the name the client last saw (TS-21, FR-01.3). */
+export const containerRenameSchema = z.object({
+  mutationId,
+  name: z.literal("container.rename"),
+  args: z.object({ id: z.uuid(), name: z.string() }),
+  base: z.object({ name: z.string() }),
+});
+
+/**
+ * `container.move`: to another folder, or to the root with `parentId` null. `base.parentId` is the parent the
+ * client last saw (TS-21). The container keeps its ID, so everything under it moves along (FR-01.4, FR-01.5).
+ */
+export const containerMoveSchema = z.object({
+  mutationId,
+  name: z.literal("container.move"),
+  args: z.object({ id: z.uuid(), parentId: z.uuid().nullable() }),
+  base: z.object({ parentId: z.uuid().nullable() }),
+});
+
 /** One write, from the app or MCP (TS-20). */
 export const mutationSchema = z
-  .discriminatedUnion("name", [albumCreateSchema, albumUpdateSchema])
+  .discriminatedUnion("name", [
+    albumCreateSchema,
+    albumUpdateSchema,
+    containerCreateSchema,
+    containerRenameSchema,
+    containerMoveSchema,
+  ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;
 export type MutationName = Mutation["name"];
@@ -63,6 +98,14 @@ export const changeSchema = z
       id: z.uuid(),
       op: z.enum(changeOps),
       data: albumSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
+      entity: z.literal("container"),
+      id: z.uuid(),
+      op: z.enum(changeOps),
+      data: containerSchema.nullable(),
       mutationId: z.uuid().nullable(),
     }),
   ])
