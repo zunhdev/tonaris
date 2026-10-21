@@ -11,10 +11,11 @@ import { apiConfig } from "./config";
 import { generatedDocument } from "./generate-openapi";
 import { committedDocumentPath } from "./openapi";
 
-// These routes never reach the database or send email, so the pool never connects.
+// These routes never reach the database or send email, so the pool never connects. Better Auth writes at
+// start-up, so it keeps its rows in memory.
 const config = apiConfig({});
 const db = createDatabase();
-const auth = createAuth({ config, db, email: { send: () => Promise.resolve() } });
+const auth = createAuth({ config, db: "in-memory", email: { send: () => Promise.resolve() } });
 const app = createApp({ config, auth, db });
 const api = treaty(app);
 
@@ -64,6 +65,8 @@ describe("OpenAPI", () => {
     expect(Object.keys(document.paths)).toEqual([
       "/v1/health",
       "/v1/me",
+      "/v1/connections",
+      "/v1/connections/{id}",
       "/v1/mutations",
       "/v1/mutations/{id}",
       "/v1/sync/bootstrap",

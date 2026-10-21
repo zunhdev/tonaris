@@ -1,11 +1,13 @@
 // `/sign-in` (DS-90): an email field and **Continue**. Every address gets the same next step, so the page reveals
-// nothing about who has an account; the email itself says when there is none.
+// nothing about who has an account; the email itself says when there is none. When the API's authorization
+// server sends someone here to connect an AI client (TS-61), signing in continues that request.
 
 import { authFailureMessage, requestSignInCode } from "@/features/account/auth-client";
 import { rememberSignIn } from "@/features/account/pending-sign-in";
 import { safeRedirect } from "@/features/account/redirect";
 import { signInTitleId } from "@/features/account/sign-in-card";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { authorizeContinuation } from "@/features/connections/oauth";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 
 import { emailKey } from "@tonaris/domain";
@@ -18,11 +20,15 @@ type Search = { redirect?: string };
 export const Route = createFileRoute("/sign-in/")({
   validateSearch: (search: Record<string, unknown>): Search =>
     typeof search.redirect === "string" ? { redirect: search.redirect } : {},
+  beforeLoad: ({ location }) => {
+    const continuation = authorizeContinuation(location.searchStr);
+    if (continuation) throw redirect({ to: "/sign-in", search: { redirect: continuation } });
+  },
   component: EmailStep,
 });
 
 function EmailStep() {
-  const { redirect } = Route.useSearch();
+  const { redirect: requested } = Route.useSearch();
   const navigate = useNavigate();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string>();
@@ -39,8 +45,8 @@ function EmailStep() {
       setError(authFailureMessage(result));
       return;
     }
-    rememberSignIn(email, safeRedirect(redirect));
-    await navigate({ to: "/sign-in/verify", search: { email, redirect } });
+    rememberSignIn(email, safeRedirect(requested));
+    await navigate({ to: "/sign-in/verify", search: { email, redirect: requested } });
   }
 
   return (

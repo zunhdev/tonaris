@@ -2,28 +2,83 @@
 // whose cookie both hosts see (TS-08). Sign-in never creates an account (FR-11.2): an unknown address gets an
 // email saying so instead of a code, and the response is the same either way (DS-90).
 
+import { cimd } from "@better-auth/cimd";
+import { fetchClientMetadataResource } from "@better-auth/cimd/node";
+import { mcp } from "@better-auth/mcp";
+import type { ClientMetadataResourceFetch } from "@better-auth/oauth-provider";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { memoryAdapter } from "better-auth/adapters/memory";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { emailOTP } from "better-auth/plugins";
+import { emailOTP, jwt } from "better-auth/plugins";
 
-import { authAccounts, type Database, sessions, users, verifications } from "@tonaris/db";
-import { emailKey, type EmailPort, signInCode, userRoles } from "@tonaris/domain";
+import {
+  authAccounts,
+  type Database,
+  jwks,
+  oauthAccessTokens,
+  oauthClientAssertions,
+  oauthClientResources,
+  oauthClients,
+  oauthConsents,
+  oauthRefreshTokens,
+  oauthResources,
+  sessions,
+  users,
+  verifications,
+} from "@tonaris/db";
+import { emailKey, type EmailPort, mcpScopes, signInCode, userRoles } from "@tonaris/domain";
 
 import type { ApiConfig } from "../config";
 
 const day = 24 * 60 * 60;
 
+/** The MCP endpoint (TS-60): the protected resource every MCP token is bound to (RFC 8707). */
+export function mcpResource(apiOrigin: string): string {
+  return `${apiOrigin}/mcp`;
+}
+
+/**
+ * The scopes MCP clients ask for: both modes' (TS-61), and `offline_access` for a refresh token. The consent
+ * page grants what the person chooses (`mcpScopesFor`).
+ */
+export const mcpRequestedScopes = [mcpScopes.read, mcpScopes.manage, "offline_access"] as const;
+
 /** The Better Auth endpoints that take an email; the address is replaced by its email key before they run. */
 const requestCodePath = "/email-otp/send-verification-otp";
 const signInPath = "/sign-in/email-otp";
 
+/** Better Auth's models, for the in-memory store (`db: "in-memory"`). */
+const memoryModels = [
+  "user",
+  "session",
+  "account",
+  "verification",
+  "jwks",
+  "oauthClient",
+  "oauthResource",
+  "oauthClientResource",
+  "oauthConsent",
+  "oauthRefreshToken",
+  "oauthAccessToken",
+  "oauthClientAssertion",
+];
+
 export type AuthOptions = {
   config: ApiConfig;
-  db: Database;
+  /**
+   * Where Better Auth keeps its rows. `in-memory` is for an app that serves no requests, such as the OpenAPI
+   * generator's: the OAuth provider writes its resource row at start-up, and that must not reach a database.
+   */
+  db: Database | "in-memory";
   email: EmailPort;
   /** Receives failures of work done after the response, such as sending email (default: `console.error`). */
   logError?: (error: unknown, context: string) => void;
+  /**
+   * Fetches a client's metadata document (CIMD). The default resolves the host once, refuses private
+   * addresses, pins the connection and never follows redirects; tests serve documents from memory.
+   */
+  fetchClientMetadata?: ClientMetadataResourceFetch;
 };
 
 /** The verify page link (DS-90). The code sits in the fragment, so it never reaches a server log or `Referer`. */
@@ -36,6 +91,7 @@ export function createAuth({
   db,
   email,
   logError = (error, context) => console.error(`Failed: ${context}`, error),
+  fetchClientMetadata = fetchClientMetadataResource,
 }: AuthOptions) {
   return betterAuth({
     appName: "Tonaris",
@@ -44,15 +100,26 @@ export function createAuth({
     secret: config.authSecret,
     // Better Auth checks the Origin of cookie-carrying requests against these.
     trustedOrigins: [config.webOrigin],
-    database: drizzleAdapter(db, {
-      provider: "pg",
-      schema: {
-        user: users,
-        session: sessions,
-        account: authAccounts,
-        verification: verifications,
-      },
-    }),
+    database:
+      db === "in-memory"
+        ? memoryAdapter(Object.fromEntries(memoryModels.map((model) => [model, []])))
+        : drizzleAdapter(db, {
+            provider: "pg",
+            schema: {
+              user: users,
+              session: sessions,
+              account: authAccounts,
+              verification: verifications,
+              jwks,
+              oauthClient: oauthClients,
+              oauthResource: oauthResources,
+              oauthClientResource: oauthClientResources,
+              oauthConsent: oauthConsents,
+              oauthRefreshToken: oauthRefreshTokens,
+              oauthAccessToken: oauthAccessTokens,
+              oauthClientAssertion: oauthClientAssertions,
+            },
+          }),
     user: {
       fields: { name: "displayName" },
       additionalFields: {
@@ -116,6 +183,29 @@ export function createAuth({
             link: signInLink(config.webOrigin, address, otp),
           });
         },
+      }),
+      // Signs MCP access tokens; JWKS at /auth/jwks. Sessions stay cookies, never JWTs.
+      jwt({ disableSettingJwtHeader: true }),
+      // The OAuth 2.1 authorization server for MCP (TS-61): access tokens are JWTs bound to `/mcp`, refresh
+      // tokens rotate. Sign-in and consent are pages of the web app; DCR stays on as the fallback to CIMD.
+      mcp({
+        resource: mcpResource(config.apiOrigin),
+        loginPage: `${config.webOrigin}/sign-in`,
+        consentPage: `${config.webOrigin}/oauth/consent`,
+        scopes: [...mcpRequestedScopes],
+        // Tokens always act for a person; no machine-to-machine `client_credentials`.
+        grantTypes: ["authorization_code", "refresh_token"],
+        accessTokenExpiresIn: 60 * 60,
+        refreshTokenExpiresIn: 30 * day,
+        allowDynamicClientRegistration: true,
+        allowUnauthenticatedClientRegistration: true,
+        // Native clients registering by DCR (older Codex or Claude Code) may leave `application_type` out.
+        clientRegistrationDefaultApplicationType: "infer",
+      }),
+      // Client ID Metadata Documents (MCP 2026-07-28): what Claude, ChatGPT and Codex prefer.
+      cimd({
+        fetchClientMetadataResource: fetchClientMetadata,
+        metadataProfile: "mcp-2026-07-28",
       }),
     ],
   });

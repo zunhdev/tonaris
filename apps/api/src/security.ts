@@ -31,19 +31,26 @@ function isJson(contentType: string | null): boolean {
 }
 
 /**
- * CSRF (TS-102). A write under /v1 or /auth must send JSON, which a cross-site HTML form can't, and which makes
- * browsers preflight it so CORS decides. One that carries cookies must also come from the web origin. On /v1, a
- * bearer request is authenticated by its token alone, so its cookies grant nothing and the origin doesn't matter.
- * GET requests never change anything, so they pass.
+ * The OAuth endpoints MCP clients post forms to (RFC 6749, RFC 7009). They authenticate the client and its
+ * code or token and never read the session, so the CSRF rule has nothing to protect there.
+ */
+const oauthFormEndpoints = new Set(["/auth/oauth2/token", "/auth/oauth2/revoke"]);
+
+/**
+ * CSRF (TS-102). A POST under /v1 or /auth must send JSON, which a cross-site HTML form can't, and which makes
+ * browsers preflight it so CORS decides. Other write methods (DELETE, PATCH, PUT) are always preflighted, with
+ * or without a body. A write that carries cookies must also come from the web origin. On /v1, a bearer request
+ * is authenticated by its token alone, so its cookies grant nothing and the origin doesn't matter. GET requests
+ * never change anything, and the OAuth form endpoints never use cookies, so they pass.
  */
 export function csrfGuard({ webOrigin }: Pick<ApiConfig, "webOrigin">) {
   return new Elysia({ name: "csrf-guard" }).onRequest(({ request }) => {
     const { pathname } = new URL(request.url);
     const isV1 = pathname.startsWith("/v1/");
     if (!isV1 && !pathname.startsWith("/auth/")) return;
-    if (safeMethods.has(request.method)) return;
+    if (safeMethods.has(request.method) || oauthFormEndpoints.has(pathname)) return;
 
-    if (!isJson(request.headers.get("content-type"))) {
+    if (request.method === "POST" && !isJson(request.headers.get("content-type"))) {
       throw new ProblemError(
         415,
         "validation_failed",

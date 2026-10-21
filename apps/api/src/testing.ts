@@ -13,7 +13,7 @@ import {
 } from "@tonaris/domain";
 
 import { createApp } from "./app";
-import { createAuth } from "./auth/auth";
+import { type AuthOptions, createAuth } from "./auth/auth";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import { apiConfig } from "./config";
 import { createSyncHub, databaseLog, type SyncHubOptions } from "./sync/hub";
@@ -74,6 +74,8 @@ export type LocalAppOptions = {
   env?: Record<string, string>;
   limiter?: SignInLimiter;
   hub?: Omit<SyncHubOptions, "log">;
+  /** Serves client metadata documents (CIMD) instead of fetching them. */
+  fetchClientMetadata?: AuthOptions["fetchClientMetadata"];
 };
 
 /**
@@ -84,7 +86,13 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
   // Tests name the client address in X-Forwarded-For, as a proxy would.
   const config = apiConfig({ CLIENT_IP_HEADER: "x-forwarded-for", ...options.env });
   const email = memoryEmail();
-  const auth = createAuth({ config, db, email, logError: () => {} });
+  const auth = createAuth({
+    config,
+    db,
+    email,
+    logError: () => {},
+    fetchClientMetadata: options.fetchClientMetadata,
+  });
   const hub = createSyncHub({ log: databaseLog(db), ...options.hub });
   const app = createApp({
     config,
@@ -157,6 +165,9 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
 export async function createTestApp(options: LocalAppOptions = {}) {
   const database = await createTestDatabase();
   const local = localApp(database.db, options);
+  // Better Auth's OAuth provider writes its resource row as it starts; let it finish before a test can drop the
+  // schema under it.
+  await local.auth.$context;
   const drop = async () => {
     await local.stop();
     await database.drop();

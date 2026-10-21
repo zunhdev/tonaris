@@ -56,6 +56,11 @@ describe("apiConfig", () => {
     );
   });
 
+  test("a host-only cookie when the API and the web app share one origin, as behind the TON-22 tunnel", () => {
+    const shared = "https://tonaris-test.trycloudflare.com";
+    expect(apiConfig({ WEB_ORIGIN: shared, API_ORIGIN: shared }).cookieDomain).toBeUndefined();
+  });
+
   test("no cookie domain for an IP address", () => {
     expect(
       apiConfig({ WEB_ORIGIN: "http://127.0.0.1:3000", API_ORIGIN: "http://127.0.0.1:3001" })
