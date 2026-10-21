@@ -1,14 +1,25 @@
 // What MCP needs from storage (TS-60–TS-63): the connection behind a token, the connection list and revocation
-// for Settings (TS-61), and the reads behind the first tools. Connections are Better Auth's consents (TS-30);
-// their scopes carry the mode (`mcpModeOf`).
+// for Settings (TS-61), and what the first tools read and write. Connections are Better Auth's consents (TS-30);
+// their scopes carry the mode (`mcpModeOf`). The writes (`addToList`, `trashAlbums`) are TON-23's minimal stand-ins
+// for the domain commands M2 and M5 bring, which also record them in the change log (TS-20).
 
-import { and, asc, count, desc, eq, isNull, notExists, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNull, notExists, or, sql } from "drizzle-orm";
 
-import { searchKey } from "@tonaris/domain";
+import {
+  albumDeletionScope,
+  scopeHash,
+  searchKey,
+  trashRetentionDays,
+  uuidv7,
+  type AlbumDeletionScope,
+  type AlbumDeletionTarget,
+  type ContainerKind,
+} from "@tonaris/domain";
 
 import type { Database } from "./client";
 import {
   albums,
+  approvals,
   containers,
   memberships,
   oauthAccessTokens,
@@ -17,6 +28,8 @@ import {
   oauthRefreshTokens,
   trashUnits,
 } from "./schema";
+
+type Executor = Database | Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export type ConnectionRow = {
   id: string;
@@ -170,4 +183,245 @@ export function searchAlbums(
     )
     .orderBy(asc(albums.searchArtistKey), asc(albums.searchTitleKey), asc(albums.id))
     .limit(limit);
+}
+
+export type ContainerRef = { id: string; kind: ContainerKind; name: string };
+
+export type ContainerListing =
+  | { kind: "root" | "folder"; container: ContainerRef | null; children: ContainerRef[] }
+  | { kind: "list"; container: ContainerRef; albums: AlbumMatch[]; totalAlbums: number }
+  | { kind: "missing" };
+
+/**
+ * What `list_container` shows (TS-63): the root's or a folder's active folders and lists, or a list's active
+ * albums, the first `limit` in the order they were added.
+ */
+export async function listContainer(
+  db: Database,
+  { ownerId, containerId, limit }: { ownerId: string; containerId?: string; limit: number },
+): Promise<ContainerListing> {
+  const ref = { id: containers.id, kind: containers.kind, name: containers.name };
+  const active = and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt));
+  let container: ContainerRef | null = null;
+  if (containerId) {
+    const [found] = await db
+      .select(ref)
+      .from(containers)
+      .where(and(active, eq(containers.id, containerId)));
+    if (!found) return { kind: "missing" };
+    container = found;
+  }
+  if (container?.kind === "list") {
+    const inList = and(
+      eq(memberships.listId, container.id),
+      eq(albums.ownerId, ownerId),
+      isNull(albums.trashedAt),
+    );
+    const rows = await db
+      .select({
+        id: albums.id,
+        title: albums.title,
+        artistCredit: albums.artistCredit,
+        originalYear: albums.originalYear,
+      })
+      .from(memberships)
+      .innerJoin(albums, eq(albums.id, memberships.albumId))
+      .where(inList)
+      .orderBy(asc(memberships.addedAt), asc(albums.id))
+      .limit(limit);
+    const [total] = await db
+      .select({ count: count() })
+      .from(memberships)
+      .innerJoin(albums, eq(albums.id, memberships.albumId))
+      .where(inList);
+    return { kind: "list", container, albums: rows, totalAlbums: total?.count ?? 0 };
+  }
+  const children = await db
+    .select(ref)
+    .from(containers)
+    .where(
+      and(active, container ? eq(containers.parentId, container.id) : isNull(containers.parentId)),
+    )
+    .orderBy(asc(containers.kind), asc(containers.nameKey));
+  return { kind: container ? "folder" : "root", container, children };
+}
+
+export type ListAddition = {
+  albumId: string;
+  status: "added" | "already_in_list" | "not_found";
+};
+
+/**
+ * Adds `albumIds` to the owner's active list `listId` (FR-01.6), each album once: an ordinary MCP batch with
+ * an outcome per album (FR-10.4, FR-10.9). Undefined when there is no such list.
+ */
+export async function addToList(
+  db: Database,
+  { ownerId, listId, albumIds }: { ownerId: string; listId: string; albumIds: readonly string[] },
+): Promise<ListAddition[] | undefined> {
+  return db.transaction(async (tx) => {
+    const [list] = await tx
+      .select({ id: containers.id })
+      .from(containers)
+      .where(
+        and(
+          eq(containers.id, listId),
+          eq(containers.ownerId, ownerId),
+          eq(containers.kind, "list"),
+          isNull(containers.trashedAt),
+        ),
+      );
+    if (!list) return undefined;
+    const found = await tx
+      .select({ id: albums.id })
+      .from(albums)
+      .where(
+        and(
+          eq(albums.ownerId, ownerId),
+          inArray(albums.id, [...albumIds]),
+          isNull(albums.trashedAt),
+        ),
+      );
+    const active = new Set(found.map((album) => album.id));
+    const added =
+      active.size === 0
+        ? []
+        : await tx
+            .insert(memberships)
+            .values([...active].map((albumId) => ({ listId, albumId, ownerId })))
+            .onConflictDoNothing()
+            .returning({ albumId: memberships.albumId });
+    const inserted = new Set(added.map((row) => row.albumId));
+    return albumIds.map((albumId) => ({
+      albumId,
+      status: inserted.has(albumId)
+        ? "added"
+        : active.has(albumId)
+          ? "already_in_list"
+          : "not_found",
+    }));
+  });
+}
+
+/**
+ * The owner's active albums among `albumIds`, each with the active lists it is in: what deleting them touches
+ * (FR-14.1). `lock` holds the albums until the transaction ends, so no list can gain one meanwhile (adding a
+ * membership needs a key-share lock on its album).
+ */
+export async function albumDeletionTargets(
+  db: Executor,
+  {
+    ownerId,
+    albumIds,
+    lock = false,
+  }: { ownerId: string; albumIds: readonly string[]; lock?: boolean },
+): Promise<AlbumDeletionTarget[]> {
+  const query = db
+    .select({ id: albums.id, title: albums.title, artist: albums.artistCredit })
+    .from(albums)
+    .where(
+      and(eq(albums.ownerId, ownerId), inArray(albums.id, [...albumIds]), isNull(albums.trashedAt)),
+    );
+  const found = lock ? await query.for("update") : await query;
+  if (found.length === 0) return [];
+  const lists = await db
+    .select({ albumId: memberships.albumId, id: containers.id, name: containers.name })
+    .from(memberships)
+    .innerJoin(containers, eq(containers.id, memberships.listId))
+    .where(
+      and(
+        inArray(
+          memberships.albumId,
+          found.map((album) => album.id),
+        ),
+        isNull(containers.trashedAt),
+      ),
+    );
+  return found.map(({ id, title, artist }) => ({
+    id,
+    title,
+    artist,
+    lists: lists
+      .filter((list) => list.albumId === id)
+      .map((list) => ({ id: list.id, name: list.name })),
+  }));
+}
+
+export type TrashResult =
+  | { status: "trashed"; albumIds: string[] }
+  /** The albums' scope no longer matches the approved one: ask again with `scope`. */
+  | { status: "scope_changed"; scope: AlbumDeletionScope }
+  /** The approval isn't approved, unused and unexpired for this connection any more. */
+  | { status: "not_approved" };
+
+/**
+ * Moves albums to Trash under an approval (FR-14.1, TS-64), in one transaction: the scope is computed again with
+ * the albums locked, the approval is used only if that scope still hashes as approved, and each album becomes a
+ * Trash unit of its own, expiring in 30 days.
+ */
+export function trashAlbums(
+  db: Database,
+  {
+    ownerId,
+    grantId,
+    approvalId,
+    albumIds,
+    now = new Date(),
+  }: {
+    ownerId: string;
+    grantId: string;
+    approvalId: string;
+    albumIds: readonly string[];
+    now?: Date;
+  },
+): Promise<TrashResult> {
+  return db.transaction(async (tx) => {
+    const targets = await albumDeletionTargets(tx, { ownerId, albumIds, lock: true });
+    const scope = albumDeletionScope(targets);
+    const used = await tx
+      .update(approvals)
+      .set({ status: "used", usedAt: now })
+      .where(
+        and(
+          eq(approvals.id, approvalId),
+          eq(approvals.grantId, grantId),
+          eq(approvals.status, "approved"),
+          isNull(approvals.usedAt),
+          gt(approvals.expiresAt, now),
+          eq(approvals.scopeHash, await scopeHash(scope)),
+        ),
+      )
+      .returning({ id: approvals.id });
+    if (used.length === 0) {
+      // Nothing was used. Only an approval that is otherwise usable failed on its scope.
+      const [approval] = await tx
+        .select()
+        .from(approvals)
+        .where(and(eq(approvals.id, approvalId), eq(approvals.grantId, grantId)));
+      const usable =
+        approval?.status === "approved" && approval.expiresAt.getTime() > now.getTime();
+      return usable && targets.length > 0
+        ? { status: "scope_changed", scope }
+        : { status: "not_approved" };
+    }
+    const expiresAt = new Date(now.getTime() + trashRetentionDays * 86_400_000);
+    const units = targets.map((album) => ({
+      id: uuidv7(),
+      ownerId,
+      kind: "album" as const,
+      rootId: album.id,
+      deletedAt: now,
+      expiresAt,
+    }));
+    await tx.insert(trashUnits).values(units);
+    await Promise.all(
+      units.map((unit) =>
+        tx
+          .update(albums)
+          .set({ trashedAt: now, trashUnitId: unit.id })
+          .where(eq(albums.id, unit.rootId)),
+      ),
+    );
+    return { status: "trashed", albumIds: targets.map((album) => album.id) };
+  });
 }

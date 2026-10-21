@@ -28,6 +28,30 @@ export {
   type AlbumFields,
 } from "./albums";
 export {
+  albumDeletionScope,
+  albumDeletionScopeSchema,
+  approvalConsequences,
+  approvalDecisionSchema,
+  approvalOperations,
+  approvalSchema,
+  approvalState,
+  approvalStates,
+  approvalStatuses,
+  approvalSummary,
+  approvalValidMinutes,
+  canonicalJson,
+  scopeHash,
+  trashRetentionDays,
+  type AlbumDeletionScope,
+  type AlbumDeletionTarget,
+  type Approval,
+  type ApprovalDecision,
+  type ApprovalOperation,
+  type ApprovalScope,
+  type ApprovalState,
+  type ApprovalStatus,
+} from "./approvals";
+export {
   containerKinds,
   containerSchema,
   membershipSchema,
@@ -79,6 +103,7 @@ export {
   mcpScopesFor,
   type Connection,
   type McpMode,
+  type McpPrincipal,
   type Principal,
 } from "./principals";
 export {

@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Status | Working baseline, iteration 6 |
-| Updated | 20 October 2026 |
+| Updated | 21 October 2026 |
 | Companion documents | [Design spec](design-spec.md) · [Tech spec](tech-spec.md) · [Audits](audits/) |
 | Change history | [Section 11](#11-change-log) |
 
@@ -632,7 +632,7 @@ Before asking, the agent presents the targets and consequences: shared-view effe
 - An approval covers only the described scope; an expanded scope needs a new approval.
 - Unapproved, declined, or cancelled operations change nothing.
 - Permission alone never substitutes for approval.
-- Tonaris must be able to verify the approval itself rather than trust an agent's claim. **Open:** mechanism (G3).
+- Tonaris must be able to verify the approval itself rather than trust an agent's claim. The owner approves the exact scope in Tonaris, on a page the agent links to. The operation runs only while its scope is unchanged, once, and within 30 minutes. This was verified in all three required clients on 21 October 2026 (G3).
 
 **FR-10.7 Trash through MCP.** Both modes can inspect Trash. Manage collection connections recover albums, lists, and hierarchies within the retention window under the app's rules (FR-01.13–FR-01.16, FR-07.10, FR-14), including asking the owner for a destination when needed. Expired or purged items are reported as unavailable, not recreated. Permanent removal stays app-only.
 
@@ -955,6 +955,14 @@ Resolve these gates before committing to the implementations they affect. Unrela
 
 **G3 MCP compatibility and verifiable approvals (D7).** Test one server with Claude web, ChatGPT web, and Codex desktop. Cover authentication, revocation, remote transport, scoped approvals, batches, and app-only restrictions. Choose an approval mechanism Tonaris can verify; an agent's claim that the user approved is not enough.
 
+- **Verified, 21 October 2026** ([connection report](spikes/2026-10-21-g3-mcp-oauth.md), [approval report](spikes/2026-10-21-g3-approvals.md)). Claude web, ChatGPT web on a Plus plan, and Codex each:
+  - connected, chose a permission mode and called tools;
+  - lost access at once when the connection was revoked;
+  - completed the approval round trip (FR-10.6).
+
+  Claude also asked again when the scope grew after approval, and treated an album title written as an instruction as data. ChatGPT Plus allows custom servers and write actions.
+- **Client prompts differ (FR-10.8).** Codex asks before any tool that isn't read-only, while ChatGPT Plus ran writes without asking under its default permission. Neither prompt replaces Tonaris's approval.
+
 **Context and references.**
 
 - *Practical precedent.* [MusicBox's help](https://marcosatanaka.com/support/musicbox/musicbox-help.html) documents album and song URL imports from Apple Music and Spotify. It does not disclose how metadata is retrieved, cover Qobuz, or establish permissions for web, MCP, or export use.
@@ -982,7 +990,7 @@ D1–D8 are stable references from earlier iterations, not eight unanswered ques
 | D4 | Sharing | Design: access controls, exposure previews, invitation presentation. |
 | D5 | Retention, Trash, export | Design and tech for FR-08 export. Import and restore are not planned. |
 | D6 | Quality | Performance targets are provisional until M1 measurements confirm them (Q-01). The test matrix is approved (Q-03). Backup retention, RPO/RTO, and historical-backup deletion treatment remain with the creator's hosting decisions (Q-04). |
-| D7 | MCP | Permitted metadata in agent responses decided on 19 October 2026: all saved metadata and service links (G1). **Open:** client authorization and approval boundaries (G3). |
+| D7 | MCP | Permitted metadata in agent responses decided on 19 October 2026: all saved metadata and service links (G1). Client authorization and approval boundaries were verified on 21 October 2026 (G3). |
 | D8 | Accounts and settings | Decided on 17 October 2026: admission invitations expire after 14 days, and account recovery relies on the creator's judgment, with a help page and contact address (TS-71, TS-73). |
 
 Provider investigation may require new product decisions. Bring conflicts back here with evidence and options. Never replace required services, remove MCP access, expose private data, or invent integration guarantees through implementation choices.

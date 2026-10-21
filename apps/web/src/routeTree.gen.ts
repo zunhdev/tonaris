@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspaceRouteImport } from './routes/_workspace'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
+import { Route as ApprovalsIdRouteImport } from './routes/approvals.$id'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
 import { Route as SignInIndexRouteImport } from './routes/sign-in.index'
@@ -37,6 +38,11 @@ const WorkspaceCRoute = WorkspaceCRouteImport.update({
   id: '/c',
   path: '/c',
   getParentRoute: () => WorkspaceRoute,
+} as any)
+const ApprovalsIdRoute = ApprovalsIdRouteImport.update({
+  id: '/approvals/$id',
+  path: '/approvals/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
   id: '/oauth/authorize',
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRouteWithChildren
   '/c': typeof WorkspaceCRoute
+  '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-in/verify': typeof SignInVerifyRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/c': typeof WorkspaceCRoute
+  '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-in/verify': typeof SignInVerifyRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   '/_workspace': typeof WorkspaceRouteWithChildren
   '/sign-in': typeof SignInRouteWithChildren
   '/_workspace/c': typeof WorkspaceCRoute
+  '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-in/verify': typeof SignInVerifyRoute
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/c'
+    | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/sign-in/verify'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/c'
+    | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/sign-in/verify'
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/_workspace'
     | '/sign-in'
     | '/_workspace/c'
+    | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/sign-in/verify'
@@ -133,6 +145,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
   SignInRoute: typeof SignInRouteWithChildren
+  ApprovalsIdRoute: typeof ApprovalsIdRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthConsentRoute: typeof OauthConsentRoute
 }
@@ -166,6 +179,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/c'
       preLoaderRoute: typeof WorkspaceCRouteImport
       parentRoute: typeof WorkspaceRoute
+    }
+    '/approvals/$id': {
+      id: '/approvals/$id'
+      path: '/approvals/$id'
+      fullPath: '/approvals/$id'
+      preLoaderRoute: typeof ApprovalsIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/oauth/authorize': {
       id: '/oauth/authorize'
@@ -236,6 +256,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   WorkspaceRoute: WorkspaceRouteWithChildren,
   SignInRoute: SignInRouteWithChildren,
+  ApprovalsIdRoute: ApprovalsIdRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthConsentRoute: OauthConsentRoute,
 }
