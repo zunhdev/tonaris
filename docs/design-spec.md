@@ -713,7 +713,14 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 3. An optional display-name step ("You can add this later").
 4. First-run empty state (DS-105).
 
-Invalid, revoked, expired, already-used, or paused invitations each get one plain sentence explaining the status, and nothing else.
+Invalid, revoked, expired, already-used, or paused invitations each get one plain sentence explaining the status, and nothing else. *Proposed in TON-24, for the creator to confirm:*
+- invalid: "This invitation link isn't valid.";
+- revoked: "This invitation has been withdrawn.";
+- expired: "This invitation has expired. Ask for a new one.";
+- already used: "This invitation has already been used. If you joined with it, sign in.";
+- paused: "Tonaris isn't accepting new members right now. Your invitation will work again when it reopens."
+
+**The code email** ("Your code to join Tonaris") links to `/join/:admissionToken#code=…`, which submits the code like the sign-in link does (DS-90).
 
 **DS-92 Settings layout.**
 - **Subnav:** Profile · Account · Preferences · Custom fields · Connections · Data.

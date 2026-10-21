@@ -9,6 +9,8 @@ export type EmailTemplates = {
   "sign-in-code": { code: string; link: string };
   /** Sent instead of a code when no account has the address, so the sign-in page reveals nothing (DS-90). */
   "sign-in-no-account": Record<string, never>;
+  /** The code that creates an invited account, plus a link to the invitation page that submits it (DS-91). */
+  "join-code": { code: string; link: string };
 };
 export type EmailTemplate = keyof EmailTemplates;
 
@@ -43,6 +45,19 @@ const renderers: { [T in EmailTemplate]: (data: EmailTemplates[T]) => RenderedEm
       "Tonaris is invite-only, so accounts are created from an invitation. If you have an account under a different address, sign in with that one.",
       "",
       ignoreLine,
+    ].join("\n"),
+  }),
+  "join-code": ({ code, link }) => ({
+    subject: "Your code to join Tonaris",
+    text: [
+      "Your code to join Tonaris is:",
+      "",
+      code,
+      "",
+      "Enter it on the invitation page, or open this link to join on this device:",
+      link,
+      "",
+      `The code works once and expires in ${signInCode.validMinutes} minutes. If you didn't ask to join Tonaris, you can ignore this email.`,
     ].join("\n"),
   }),
 };

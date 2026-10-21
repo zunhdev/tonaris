@@ -12,9 +12,10 @@ import { createSyncHub, databaseLog } from "./sync/hub";
 
 const config = apiConfig();
 const db = createDatabase();
-const auth = createAuth({ config, db, email: smtpEmail(config) });
+const email = smtpEmail(config);
+const auth = createAuth({ config, db, email });
 const hub = createSyncHub({ log: databaseLog(db) });
-const app = createApp({ config, auth, db, hub }).listen(config.port);
+const app = createApp({ config, auth, db, email, hub }).listen(config.port);
 
 console.log(`tonaris-api listening on ${app.server?.url.href}`);
 
