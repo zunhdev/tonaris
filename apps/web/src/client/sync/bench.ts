@@ -77,7 +77,7 @@ for (let index = 0; index < edits; index += 1) {
     const off = phone.engine.register({
       reset: () => {},
       apply: (change) => {
-        if (change.data?.title !== title) return;
+        if (change.entity !== "album" || change.data?.title !== title) return;
         propagation.push(performance.now() - startedAt);
         off();
         resolve();

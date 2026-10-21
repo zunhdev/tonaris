@@ -1,6 +1,12 @@
-// Folders, lists and list entries as clients hold them (TS-11, TS-24). Read-only in the sync protocol so far:
-// bootstrap carries them (TON-21); their commands and changes arrive with M2 (TON-26, TON-27).
+// Folders, lists and list entries as clients hold them (TS-11, TS-24), and the commands that create, rename and
+// move folders and lists (TON-26). List entries are read-only until their commands arrive (TON-27).
 
+import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
+import { maxContainerDepth, maxContainers, maxNameLength } from "./limits";
+import { findNameConflict, isBlankName } from "./names";
+import { failure, type Failure } from "./outcomes";
+import { authorizeWrite } from "./policies";
+import { actingUserId } from "./principals";
 import { z } from "./zod";
 
 export const containerKinds = ["folder", "list"] as const;
@@ -22,3 +28,218 @@ export const membershipSchema = z
   .object({ listId: z.uuid(), albumId: z.uuid(), addedAt: z.iso.datetime() })
   .meta({ description: "An album's entry in a list (FR-01.6)." });
 export type Membership = z.infer<typeof membershipSchema>;
+
+/** A container as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
+export type StoredContainer = Container & { ownerId: string; trashed: boolean };
+
+const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
+
+/** The container as clients see it. */
+function containerOf({ id, kind, parentId, name }: Container): Container {
+  return { id, kind, parentId, name };
+}
+
+/** Why `name`, already trimmed, can't name a folder or list, if it can't (X-06, TS-18). */
+function nameProblem(name: string): Failure | undefined {
+  if (isBlankName(name)) {
+    return failure("validation_failed", "Give the folder or list a name.", [
+      { path: "args.name", message: "Required" },
+    ]);
+  }
+  // Code points rather than graphemes: the limit bounds stored text, and a grapheme can hold any number of them.
+  // oxlint-disable-next-line no-misused-spread
+  if ([...name].length > maxNameLength) {
+    return failure("validation_failed", `Names can be at most ${maxNameLength} characters.`, [
+      { path: "args.name", message: `At most ${maxNameLength} characters` },
+    ]);
+  }
+  return undefined;
+}
+
+/**
+ * Where a container of `ownerId` may go: the root, or an active folder of theirs (FR-01.1, FR-01.4, FR-01.5).
+ * Answers the destination's path (empty for the root), or why it can't be one. A missing folder and someone
+ * else's get the same answer, so nobody can probe for other people's IDs.
+ */
+async function destinationPath(
+  parentId: string | null,
+  ownerId: string,
+  store: CollectionStore,
+): Promise<string[] | Failure> {
+  if (parentId === null) return [];
+  const parent = await store.findContainer(parentId);
+  if (!parent || parent.ownerId !== ownerId || parent.trashed) {
+    return failure(
+      "invalid_destination",
+      "That folder isn't available. Choose another folder or the top level.",
+    );
+  }
+  if (parent.kind === "list") {
+    return failure(
+      "invalid_destination",
+      "Lists can't hold folders or lists. Choose a folder or the top level.",
+    );
+  }
+  return store.containerPath(parentId);
+}
+
+const tooDeep = () =>
+  failure(
+    "limit_exceeded",
+    `Folders and lists can be nested up to ${maxContainerDepth} levels deep.`,
+  );
+
+/** The active sibling under `parentId` that already has `name`, as a rejection (FR-01.2, X-06). */
+async function siblingConflict(
+  name: string,
+  { ownerId, parentId, selfId }: { ownerId: string; parentId: string | null; selfId?: string },
+  store: CollectionStore,
+): Promise<Failure | undefined> {
+  const taken = findNameConflict(name, await store.activeChildren(ownerId, parentId), selfId);
+  if (!taken) return undefined;
+  const where = parentId === null ? "at the top level" : "in this folder";
+  return failure(
+    "name_conflict",
+    `There's already a ${taken.kind} named "${taken.name}" ${where}.`,
+    [{ path: "args.name", message: "Already used here" }],
+  );
+}
+
+/**
+ * Creates a folder or list with the client's ID (TS-10), at the root or in an active folder (FR-01.1). A create
+ * sent again without its idempotency record duplicates nothing (FR-13.5): the same values are already saved,
+ * and different ones are a conflict.
+ */
+export async function createContainer(
+  args: Container,
+  { principal, store }: CommandContext,
+): Promise<CommandResult> {
+  const ownerId = actingUserId(principal);
+  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "collection" });
+  if (!ownerId || !decision.allowed) {
+    return failure(
+      decision.allowed ? "permission_denied" : decision.code,
+      "You can't add folders or lists here.",
+    );
+  }
+  const container = containerOf({ ...args, name: args.name.trim() });
+  const problem = nameProblem(container.name);
+  if (problem) return problem;
+
+  const existing = await store.findContainer(container.id);
+  if (existing) {
+    if (existing.ownerId !== ownerId) {
+      return failure("validation_failed", "This ID is already in use.", [
+        { path: "args.id", message: "Already in use" },
+      ]);
+    }
+    const conflicts = (["kind", "parentId", "name"] as const)
+      .filter((field) => existing[field] !== container[field])
+      .map((field) => ({ field, current: existing[field], attempted: container[field] }));
+    return conflicts.length > 0 ? { status: "conflict", conflicts } : applied();
+  }
+
+  const path = await destinationPath(container.parentId, ownerId, store);
+  if (!Array.isArray(path)) return path;
+  if (path.length + 1 > maxContainerDepth) return tooDeep();
+  const taken = await siblingConflict(container.name, { ...container, ownerId }, store);
+  if (taken) return taken;
+  if ((await store.countContainers(ownerId)) >= maxContainers) {
+    return failure(
+      "limit_exceeded",
+      `You've reached ${maxContainers.toLocaleString("en")} folders and lists (including Trash). Permanently delete some from Trash to add more.`,
+    );
+  }
+
+  await store.insertContainer({ ...container, ownerId });
+  return applied({ entity: "container", id: container.id, op: "insert", data: container });
+}
+
+/** The owner's active container `id`, or why it can't be changed. */
+async function changeableContainer(
+  id: string,
+  { principal, store }: CommandContext,
+): Promise<StoredContainer | Failure> {
+  const container = await store.findContainer(id);
+  if (!container) return failure("not_found", "This folder or list doesn't exist.");
+  const decision = authorizeWrite(principal, { ownerId: container.ownerId, scope: "collection" });
+  if (!decision.allowed) return failure(decision.code, "You can't change this folder or list.");
+  if (container.trashed) {
+    return failure("trashed", "This folder or list is in Trash. Recover it to change it.");
+  }
+  return container;
+}
+
+/**
+ * Renames a folder or list whose name is still `base.name` (FR-01.3, TS-21). A case-only rename is allowed, and
+ * the new name must be free among its siblings (FR-01.2).
+ */
+export async function renameContainer(
+  { id, name }: { id: string; name: string },
+  base: { name: string },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const container = await changeableContainer(id, context);
+  if ("status" in container) return container;
+  const renamed = name.trim();
+  const problem = nameProblem(renamed);
+  if (problem) return problem;
+  if (container.name !== base.name) {
+    return {
+      status: "conflict",
+      conflicts: [{ field: "name", current: container.name, attempted: renamed, base: base.name }],
+    };
+  }
+  if (renamed === container.name) return applied();
+
+  const { ownerId, parentId } = container;
+  const taken = await siblingConflict(renamed, { ownerId, parentId, selfId: id }, context.store);
+  if (taken) return taken;
+
+  await context.store.updateContainer(id, { name: renamed });
+  const data = containerOf({ ...container, name: renamed });
+  return applied({ entity: "container", id, op: "update", data });
+}
+
+/**
+ * Moves a folder or list whose parent is still `base.parentId` to the root or another active folder (FR-01.4,
+ * FR-01.5, TS-21). It keeps its ID, so everything under it comes along and nothing is copied. A folder can't go
+ * into itself or anything under it, and nothing may end up deeper than 32 levels.
+ */
+export async function moveContainer(
+  { id, parentId }: { id: string; parentId: string | null },
+  base: { parentId: string | null },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const container = await changeableContainer(id, context);
+  if ("status" in container) return container;
+  if (container.parentId !== base.parentId) {
+    return {
+      status: "conflict",
+      conflicts: [
+        {
+          field: "parentId",
+          current: container.parentId,
+          attempted: parentId,
+          base: base.parentId,
+        },
+      ],
+    };
+  }
+  if (parentId === container.parentId) return applied();
+
+  const { store } = context;
+  const path = await destinationPath(parentId, container.ownerId, store);
+  if (!Array.isArray(path)) return path;
+  if (path.includes(id)) {
+    return failure("cycle", "A folder can't move into itself or a folder inside it.");
+  }
+  if (path.length + (await store.subtreeDepth(id)) > maxContainerDepth) return tooDeep();
+  const { ownerId, name } = container;
+  const taken = await siblingConflict(name, { ownerId, parentId, selfId: id }, store);
+  if (taken) return taken;
+
+  await store.updateContainer(id, { parentId });
+  const data = containerOf({ ...container, parentId });
+  return applied({ entity: "container", id, op: "update", data });
+}

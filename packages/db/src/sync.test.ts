@@ -6,9 +6,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { eq, sql } from "drizzle-orm";
 
 import {
+  maxContainerDepth,
+  maxContainers,
   syncRetentionMs,
   uuidv7,
   type Album,
+  type Container,
   type Mutation,
   type Principal,
 } from "@tonaris/domain";
@@ -20,6 +23,7 @@ import {
   containers,
   memberships,
   mutations,
+  trashUnits,
   users,
 } from "./schema";
 import {
@@ -60,7 +64,7 @@ const album = (values: Partial<Album> = {}): Album => ({
   ...values,
 });
 
-const create = (args: Album = album()): Mutation => ({
+const create = (args: Album = album()): Extract<Mutation, { name: "album.create" }> => ({
   mutationId: uuidv7(),
   name: "album.create",
   args,
@@ -328,5 +332,178 @@ describe("bootstrapSnapshot (TS-24)", () => {
       sql`select count(*)::int as count from mutations`,
     );
     expect(count).toBe(1);
+  });
+});
+
+/** Puts a container in Trash, in a unit of its own (TS-13). */
+async function trash(ownerId: string, id: string): Promise<void> {
+  const unitId = uuidv7();
+  const deletedAt = new Date();
+  await t.db.insert(trashUnits).values({
+    id: unitId,
+    ownerId,
+    kind: "folder",
+    rootId: id,
+    deletedAt,
+    expiresAt: new Date(deletedAt.getTime() + 30 * 86_400_000),
+  });
+  await t.db
+    .update(containers)
+    .set({ trashedAt: deletedAt, trashUnitId: unitId })
+    .where(eq(containers.id, id));
+}
+
+async function parentOf(id: string): Promise<string | null | undefined> {
+  const [row] = await t.db.select().from(containers).where(eq(containers.id, id));
+  return row?.parentId;
+}
+
+const createContainer = (args: Container): Mutation => ({
+  mutationId: uuidv7(),
+  name: "container.create",
+  args,
+});
+const moveContainer = (id: string, parentId: string | null, base: string | null): Mutation => ({
+  mutationId: uuidv7(),
+  name: "container.move",
+  args: { id, parentId },
+  base: { parentId: base },
+});
+const renameContainer = (id: string, name: string, base: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "container.rename",
+  args: { id, name },
+  base: { name: base },
+});
+const node = (
+  kind: Container["kind"],
+  name: string,
+  parentId: string | null = null,
+): Container => ({
+  id: uuidv7(),
+  kind,
+  parentId,
+  name,
+});
+
+/** Inserts `count` folders, each inside the one before; the last is `count` levels deep. */
+async function nestedFolders(ownerId: string, count: number): Promise<string[]> {
+  const ids = Array.from({ length: count }, () => uuidv7());
+  await t.db
+    .insert(containers)
+    .values(
+      ids.map((id, index) => container(id, ownerId, "folder", ids[index - 1] ?? null, `L${index}`)),
+    );
+  return ids;
+}
+
+describe("folders and lists (FR-01.1–FR-01.5, TS-31)", () => {
+  test("nested creates and a folder move: the subtree comes along, logged as one change", async () => {
+    const anna = await newPrincipal();
+    const jazz = node("folder", "Jazz");
+    const bebop = node("folder", "Bebop", jazz.id);
+    const hardBop = node("folder", "Hard bop", bebop.id);
+    const favorites = node("list", "Favorites", bebop.id);
+    for (const each of [jazz, bebop, hardBop, favorites]) {
+      // oxlint-disable-next-line no-await-in-loop
+      const { result } = await executeMutation(t.db, anna, createContainer(each));
+      expect(result.outcome.status).toBe("confirmed");
+    }
+
+    const moved = await executeMutation(t.db, anna, moveContainer(bebop.id, null, jazz.id));
+    expect(moved.result.outcome).toEqual({ status: "confirmed", seq: 5, result: null });
+    expect(moved.changes).toEqual([
+      {
+        seq: 5,
+        entity: "container",
+        id: bebop.id,
+        op: "update",
+        data: { ...bebop, parentId: null },
+        mutationId: moved.result.mutationId,
+      },
+    ]);
+    expect(await parentOf(bebop.id)).toBeNull();
+    expect(await parentOf(hardBop.id)).toBe(bebop.id);
+    expect(await parentOf(favorites.id)).toBe(bebop.id);
+    expect((await readChanges(t.db, anna.userId, 0, 10)).map((change) => change.entity)).toEqual(
+      Array.from({ length: 5 }, () => "container"),
+    );
+
+    const snapshot = await bootstrapSnapshot(t.db, anna.userId);
+    expect(snapshot.containers).toContainEqual({ ...bebop, parentId: null });
+  });
+
+  test("a cycle and a too-deep move are rejected without using a seq", async () => {
+    const anna = await newPrincipal();
+    const chain = await nestedFolders(anna.userId, maxContainerDepth);
+    const before = await headSeq(t.db, anna.userId);
+
+    const cycle = await executeMutation(t.db, anna, moveContainer(chain[0]!, chain[5]!, null));
+    expect(cycle.result.outcome).toMatchObject({ status: "failed", code: "cycle" });
+
+    // A folder holding one list, moved into the 31st level, would put the list at 33.
+    const moved = node("folder", "Moved");
+    await executeMutation(t.db, anna, createContainer(moved));
+    await executeMutation(t.db, anna, createContainer(node("list", "Leaf", moved.id)));
+    const afterCreates = await headSeq(t.db, anna.userId);
+    const deep = await executeMutation(t.db, anna, moveContainer(moved.id, chain[30]!, null));
+    expect(deep.result.outcome).toMatchObject({ status: "failed", code: "limit_exceeded" });
+    const deepest = chain.at(-1);
+    if (!deepest) throw new Error("The chain is empty.");
+    const inDeepest = await executeMutation(
+      t.db,
+      anna,
+      createContainer(node("list", "Too deep", deepest)),
+    );
+    expect(inDeepest.result.outcome).toMatchObject({ status: "failed", code: "limit_exceeded" });
+
+    expect(afterCreates).toBe(before + 2);
+    expect(await headSeq(t.db, anna.userId)).toBe(afterCreates);
+    expect(await parentOf(chain[0]!)).toBeNull();
+    expect(await parentOf(moved.id)).toBeNull();
+    // One level less fits.
+    const fits = await executeMutation(t.db, anna, moveContainer(moved.id, chain[29]!, null));
+    expect(fits.result.outcome.status).toBe("confirmed");
+  });
+
+  test("a container in Trash can't be changed, and reserves no name", async () => {
+    const anna = await newPrincipal();
+    const jazz = node("folder", "Jazz");
+    await executeMutation(t.db, anna, createContainer(jazz));
+    await trash(anna.userId, jazz.id);
+
+    const renamed = await executeMutation(t.db, anna, renameContainer(jazz.id, "Back", "Jazz"));
+    expect(renamed.result.outcome).toMatchObject({ status: "failed", code: "trashed" });
+    const again = await executeMutation(t.db, anna, createContainer(node("list", "JAZZ")));
+    expect(again.result.outcome.status).toBe("confirmed");
+  });
+
+  test("names collide case-insensitively among active siblings of either kind", async () => {
+    const anna = await newPrincipal();
+    await executeMutation(t.db, anna, createContainer(node("folder", "Jazz")));
+    const collision = await executeMutation(t.db, anna, createContainer(node("list", " jazz ")));
+    expect(collision.result.outcome).toMatchObject({ status: "failed", code: "name_conflict" });
+  });
+
+  test("the count includes Trash", async () => {
+    const anna = await newPrincipal();
+    const ids = Array.from({ length: maxContainers }, () => uuidv7());
+    await t.db
+      .insert(containers)
+      .values(ids.map((id, index) => container(id, anna.userId, "list", null, `List ${index}`)));
+    await trash(anna.userId, ids[0]!);
+
+    const over = await executeMutation(t.db, anna, createContainer(node("list", "One more")));
+    expect(over.result.outcome).toMatchObject({ status: "failed", code: "limit_exceeded" });
+    expect(await headSeq(t.db, anna.userId)).toBe(0);
+  });
+
+  test("a container mutation sent again replays its outcome", async () => {
+    const anna = await newPrincipal();
+    const mutation = createContainer(node("list", "Later"));
+    const first = await executeMutation(t.db, anna, mutation);
+    const replay = await executeMutation(t.db, anna, mutation);
+    expect(replay).toEqual({ result: first.result, changes: [], replayed: true });
+    expect(await changeCount(anna.userId)).toBe(1);
   });
 });

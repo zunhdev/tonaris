@@ -13,6 +13,7 @@ import {
   type Album,
   type Bootstrap,
   type Change,
+  type Container,
   type Mutation,
   type MutationResult,
 } from "@tonaris/domain";
@@ -370,6 +371,132 @@ describe("reconnecting (TS-23)", () => {
     await Promise.all(streams.map((stream) => stream.finished));
     expect(streams.every((stream) => stream.ended)).toBe(true);
     expect(t.hub.size).toBe(0);
+  });
+});
+
+const node = (
+  kind: Container["kind"],
+  name: string,
+  parentId: string | null = null,
+): Container => ({
+  id: uuidv7(),
+  kind,
+  parentId,
+  name,
+});
+const createContainer = (args: Container): Mutation => ({
+  mutationId: uuidv7(),
+  name: "container.create",
+  args,
+});
+
+const move = (id: string, parentId: string | null, from: string | null): Mutation => ({
+  mutationId: uuidv7(),
+  name: "container.move",
+  args: { id, parentId },
+  base: { parentId: from },
+});
+
+describe("folders and lists (FR-01.1–FR-01.5)", () => {
+  test("creates, renames and moves reach every session's stream and the next bootstrap", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const other = await t.signIn("anna@example.com");
+    const stream = await connect(other.cookie, { after: 0 });
+
+    const jazz = node("folder", "Jazz");
+    const favorites = node("list", "Favorites");
+    for (const each of [jazz, favorites]) {
+      // oxlint-disable-next-line no-await-in-loop
+      expect((await post(anna.cookie, createContainer(each))).outcome.status).toBe("confirmed");
+    }
+    const renamed = await post(anna.cookie, {
+      mutationId: uuidv7(),
+      name: "container.rename",
+      args: { id: favorites.id, name: "Desert island" },
+      base: { name: "Favorites" },
+    });
+    const moved = await post(anna.cookie, {
+      mutationId: uuidv7(),
+      name: "container.move",
+      args: { id: favorites.id, parentId: jazz.id },
+      base: { parentId: null },
+    });
+    expect(renamed.outcome).toEqual({ status: "confirmed", seq: 3, result: null });
+    expect(moved.outcome).toEqual({ status: "confirmed", seq: 4, result: null });
+
+    await stream.until(() => stream.seqs().length === 4);
+    expect(stream.events.map((event) => event.data)).toEqual([
+      expect.objectContaining({ entity: "container", op: "insert", data: jazz }),
+      expect.objectContaining({ entity: "container", op: "insert", data: favorites }),
+      expect.objectContaining({ op: "update", data: { ...favorites, name: "Desert island" } }),
+      expect.objectContaining({
+        op: "update",
+        data: { ...favorites, name: "Desert island", parentId: jazz.id },
+      }),
+    ]);
+    await stream.close();
+
+    const snapshot = await bootstrap(anna.cookie);
+    expect(snapshot.seq).toBe(4);
+    expect(snapshot.containers).toEqual(
+      expect.arrayContaining([jazz, { ...favorites, name: "Desert island", parentId: jazz.id }]),
+    );
+  });
+
+  test("each rejection has its code, changes nothing and sends nothing", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const jazz = node("folder", "Jazz");
+    const bebop = node("folder", "Bebop", jazz.id);
+    const later = node("list", "Later");
+    for (const each of [jazz, bebop, later]) {
+      // oxlint-disable-next-line no-await-in-loop
+      await post(anna.cookie, createContainer(each));
+    }
+    const stream = await connect(anna.cookie, { after: 3 });
+
+    const outcomes = await Promise.all(
+      [
+        createContainer(node("list", "jazz")),
+        move(jazz.id, bebop.id, null),
+        move(jazz.id, later.id, null),
+        move(bebop.id, jazz.id, uuidv7()),
+      ].map((mutation) => post(anna.cookie, mutation)),
+    );
+    expect(
+      outcomes.map(({ outcome }) => (outcome.status === "failed" ? outcome.code : outcome.status)),
+    ).toEqual(["name_conflict", "cycle", "invalid_destination", "conflict"]);
+    // 32 levels of folders: an empty folder moved into the last would be at 33.
+    const deep = Array.from({ length: 32 }, () => uuidv7());
+    let parentId: string | null = null;
+    for (const id of deep) {
+      // oxlint-disable-next-line no-await-in-loop
+      await post(anna.cookie, createContainer({ id, kind: "folder", parentId, name: "Level" }));
+      parentId = id;
+    }
+    const tooDeep = await post(anna.cookie, move(bebop.id, deep.at(-1)!, jazz.id));
+    expect(tooDeep.outcome).toMatchObject({ status: "failed", code: "limit_exceeded" });
+
+    const snapshot = await bootstrap(anna.cookie);
+    expect(snapshot.containers).toEqual(expect.arrayContaining([jazz, bebop, later]));
+    expect(snapshot.seq).toBe(3 + deep.length);
+    await stream.until(() => stream.seqs().length === deep.length);
+    expect(JSON.stringify(stream.events)).not.toContain(bebop.id);
+    await stream.close();
+  });
+
+  test("another account's folder can't be renamed or moved", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const ben = await t.signIn("ben@example.com");
+    const jazz = node("folder", "Jazz");
+    await post(anna.cookie, createContainer(jazz));
+    const result = await post(ben.cookie, {
+      mutationId: uuidv7(),
+      name: "container.rename",
+      args: { id: jazz.id, name: "Mine" },
+      base: { name: "Jazz" },
+    });
+    expect(result.outcome).toMatchObject({ status: "failed", code: "permission_denied" });
+    expect((await bootstrap(anna.cookie)).containers).toEqual([jazz]);
   });
 });
 

@@ -334,7 +334,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 | Resource | Limit |
 | --- | --- |
 | Albums, including Trash | 5,000 |
-| Folders and lists | 2,000 |
+| Folders and lists, Trash included (decided 21 October 2026) | 2,000 |
 | Nesting depth | 32 |
 | List memberships | 50,000 |
 | Custom fields | 50 |
@@ -519,7 +519,8 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
   - Trees are small: at most 2,000 containers, with depth capped at 32 (TS-18).
   - All of an owner's writes are serialized anyway.
   - A closure table would require rewriting subtrees on every move.
-- **Cycle check:** reject a destination when it is in the moved node's subtree (a downward CTE). This runs under the owner lock.
+- **Cycle check:** reject a destination when the moved node is on the destination's path to the root. An upward CTE, at most 32 rows, finds that path, and its length is the destination's depth. This runs under the owner lock ([TON-26](../openspec/specs/collection-hierarchy/spec.md)).
+- **Depth:** a container at the root is at level 1. A create needs its parent below level 32. A move needs the destination's depth plus the moved subtree's height, from a downward CTE over its active descendants, to be at most 32. Trashed descendants don't count; recovery re-checks (TS-26).
 - **Viewer access:** a principal may read container C when some ancestor-or-self A of C satisfies all of:
   - A has an accepted grant for the principal or an active link matching the token;
   - every node on the path from A to C is active;

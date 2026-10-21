@@ -3,6 +3,13 @@
 // A command decides; it never commits. Rejections change nothing (X-05).
 
 import { albumFields, albumProblem, type Album, type AlbumField, type AlbumFields } from "./albums";
+import {
+  createContainer,
+  moveContainer,
+  renameContainer,
+  type Container,
+  type StoredContainer,
+} from "./containers";
 import { failure, type FieldConflict, type Outcome } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { actingUserId, type Principal } from "./principals";
@@ -17,10 +24,26 @@ export type CollectionStore = {
   insertAlbum(album: StoredAlbum): Promise<void>;
   /** Sets the fields in `values`; fields left undefined keep their value. */
   updateAlbum(id: string, values: Partial<AlbumFields>): Promise<void>;
+
+  /** The folder or list with this ID, whoever owns it, in Trash or not. */
+  findContainer(id: string): Promise<StoredContainer | undefined>;
+  /** The container's ID and its ancestors' up to the root, nearest first: its level is the length (TS-31). */
+  containerPath(id: string): Promise<string[]>;
+  /** Levels of active containers from this one down, itself included: 1 for a list or an empty folder. */
+  subtreeDepth(id: string): Promise<number>;
+  /** The owner's active folders and lists directly under `parentId`; null is the root. */
+  activeChildren(ownerId: string, parentId: string | null): Promise<Container[]>;
+  /** The owner's folders and lists, those in Trash included (TS-18). */
+  countContainers(ownerId: string): Promise<number>;
+  insertContainer(container: Container & { ownerId: string }): Promise<void>;
+  /** Sets the fields in `values`; fields left undefined keep their value. */
+  updateContainer(id: string, values: Partial<Pick<Container, "name" | "parentId">>): Promise<void>;
 };
 
 /** A change for the account's log; the database layer gives it its `seq`. */
-export type ChangeInput = { entity: "album"; id: string; op: ChangeOp; data: Album | null };
+export type ChangeInput =
+  | { entity: "album"; id: string; op: ChangeOp; data: Album | null }
+  | { entity: "container"; id: string; op: ChangeOp; data: Container | null };
 
 export type CommandResult =
   | { status: "applied"; changes: ChangeInput[] }
@@ -30,7 +53,12 @@ export type CommandContext = { principal: Principal; store: CollectionStore };
 
 export function runCommand(mutation: Mutation, context: CommandContext): Promise<CommandResult> {
   if (mutation.name === "album.create") return createAlbum(mutation.args, context);
-  return updateAlbum(mutation.args, mutation.base, context);
+  if (mutation.name === "album.update") return updateAlbum(mutation.args, mutation.base, context);
+  if (mutation.name === "container.create") return createContainer(mutation.args, context);
+  if (mutation.name === "container.rename") {
+    return renameContainer(mutation.args, mutation.base, context);
+  }
+  return moveContainer(mutation.args, mutation.base, context);
 }
 
 const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });

@@ -5,17 +5,17 @@
 
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test";
 
-import { uuidv7, type Album } from "@tonaris/domain";
+import { uuidv7, type Album, type Mutation } from "@tonaris/domain";
 
 import type { SyncClient } from "./client";
-import { startApiServer, testClient, until, type TestServer } from "./testing";
+import { sessionFetch, startApiServer, testClient, until, type TestServer } from "./testing";
 import { MutationRejected, type SaveState } from "./writer";
 
 let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(10);
+  server = await startApiServer(11);
 }, 30_000);
 
 afterAll(async () => {
@@ -289,5 +289,37 @@ describe("the stream (TS-23)", () => {
     expect(restored.albums.toArray.map((each) => each.id).toSorted()).toEqual(
       [first.id, second.id].toSorted(),
     );
+  });
+});
+
+describe("folders and lists (FR-01.1, FR-01.3, FR-09.1)", () => {
+  test("another session's new and renamed lists appear without reloading", async () => {
+    const phone = await openClient(10, 1);
+    await phone.containers.preload();
+    const web = sessionFetch(server, server.accounts[10]?.sessions[0] ?? "");
+    const post = async (mutation: Mutation) => {
+      const response = await web.fetch(`${server.url}/v1/mutations`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(mutation),
+      });
+      expect(response.status).toBe(200);
+    };
+
+    const id = uuidv7();
+    await post({
+      mutationId: uuidv7(),
+      name: "container.create",
+      args: { id, kind: "list", parentId: null, name: "Favorites" },
+    });
+    await until(() => phone.containers.get(id)?.name === "Favorites", 3_000, "the new list");
+    await post({
+      mutationId: uuidv7(),
+      name: "container.rename",
+      args: { id, name: "Desert island" },
+      base: { name: "Favorites" },
+    });
+    await until(() => phone.containers.get(id)?.name === "Desert island", 3_000, "the rename");
+    expect(phone.containers.size).toBe(1);
   });
 });
