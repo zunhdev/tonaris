@@ -12,13 +12,15 @@ import { committedDocumentPath, openApiDocument, serializeDocument } from "./ope
 
 /**
  * The document as the current routes generate it, in its committed text form. The app is built on the local
- * defaults and never handles a request, so no database or mail server is needed.
+ * defaults and never handles a request, so no database or mail server is needed: the database client never
+ * connects, and Better Auth, which writes at start-up, keeps its rows in memory.
  */
 export function generatedDocument(): string {
   const config = apiConfig({});
   const email = { send: () => Promise.resolve() };
   const db = createDatabase();
-  const app = createApp({ config, auth: createAuth({ config, db, email }), db });
+  const auth = createAuth({ config, db: "in-memory", email });
+  const app = createApp({ config, auth, db });
   return serializeDocument(openApiDocument(app));
 }
 

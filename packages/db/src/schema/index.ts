@@ -4,6 +4,7 @@
 export * from "./auth";
 export * from "./collection";
 export * from "./fields";
+export * from "./oauth";
 export * from "./sharing";
 export * from "./sync";
 export * from "./views";

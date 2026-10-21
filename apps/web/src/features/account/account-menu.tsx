@@ -1,8 +1,9 @@
-// The account menu at the top of the sidebar (DS-31): the display name, or the email until there is one. Settings,
-// Admin and the shortcuts list join **Sign out** with their issues.
+// The account menu at the top of the sidebar (DS-31): the display name, or the email until there is one.
+// **Connections** leads to Settings → Connections (DS-86), the only settings page so far; Admin and the
+// shortcuts list join **Sign out** with their issues.
 
 import { useRouter } from "@tanstack/react-router";
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import { ChevronsUpDown, LogOut, Plug } from "lucide-react";
 import { useState } from "react";
 
 import type { Account } from "@tonaris/domain";
@@ -47,6 +48,10 @@ export function AccountMenu({ account }: { account: Account }) {
           <ChevronsUpDown strokeWidth={1.5} aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => void router.navigate({ to: "/settings/connections" })}>
+            <Plug strokeWidth={1.5} aria-hidden />
+            Connections
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void leave()}>
             <LogOut strokeWidth={1.5} aria-hidden />
             Sign out

@@ -3,6 +3,16 @@
 export { findCreator, findUserByEmail, insertCreator, type UserRow } from "./accounts";
 export { createDatabase, type Database } from "./client";
 export { databaseUrl, redact } from "./config";
+export {
+  collectionOverview,
+  findConnection,
+  listConnections,
+  revokeConnection,
+  searchAlbums,
+  type AlbumMatch,
+  type CollectionOverview,
+  type ConnectionRow,
+} from "./mcp";
 export { migrateDatabase, migrationsFolder } from "./migrations";
 export * from "./schema";
 export {

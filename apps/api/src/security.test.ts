@@ -97,6 +97,32 @@ describe("CSRF (TS-102)", () => {
     expect((await t.call("/v1/me", { headers: { cookie } })).status).toBe(200);
   });
 
+  test("a DELETE needs no body, since browsers preflight it anyway, but cookies still need the web origin", async () => {
+    const cookie = await signedIn("anna@example.com");
+    const revoke = (origin: string) =>
+      t.app.handle(
+        new Request(`${t.config.apiOrigin}/v1/connections/${Bun.randomUUIDv7()}`, {
+          method: "DELETE",
+          headers: { cookie, origin },
+        }),
+      );
+    expect((await revoke(t.config.webOrigin)).status).toBe(404);
+    expect((await revoke("https://evil.example")).status).toBe(403);
+  });
+
+  test("MCP clients post forms to the OAuth token endpoint", async () => {
+    const response = await t.app.handle(
+      new Request(`${t.config.apiOrigin}/auth/oauth2/token`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ grant_type: "authorization_code", code: "nope" }),
+      }),
+    );
+    // Better Auth's OAuth error, not the CSRF rule's 415.
+    expect(response.status).toBe(400);
+    expect(await response.json()).toHaveProperty("error");
+  });
+
   test("JSON writes from the web origin go through", async () => {
     const cookie = await signedIn("anna@example.com");
     const response = await t.call("/auth/sign-out", {

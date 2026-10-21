@@ -44,10 +44,10 @@ The table records the verdicts.
 | **Postgres** | **Keep: Postgres 18** | Managed or Dockerised is the creator's call (advisory note in TS-111). PG18 brings `casefold()`, `uuidv7()`, `NULLS NOT DISTINCT` (PG15+), and async I/O. |
 | **Hosting "like Render"** | **Creator-owned** | The creator chooses the host, region, and budget (current preference: Render, Frankfurt). This spec lists only the platform requirements (TS-110). |
 | **shadcn/ui** | **Keep: on Base UI** | Base UI has been the shadcn default since July 2026, and Radix is still available ([changelog](https://ui.shadcn.com/docs/changelog/2026-07-base-ui-default)). The design system owns the copied components; see the design spec. |
-| *(missing)* **Auth** | **Add Better Auth ≥ 1.7.10** | It covers email OTP, the admin role, and an OAuth 2.1 authorization server for MCP (`@better-auth/mcp` with CIMD, plus DCR as a fallback). The floor is 1.7.7 because of the critical advisory GHSA-965c-763c-88jm ([advisories](https://github.com/better-auth/better-auth/security/advisories)). TS-70. |
+| *(missing)* **Auth** | **Add Better Auth ≥ 1.7.10; 1.7.12 since TON-22** | It covers email OTP, the admin role, and an OAuth 2.1 authorization server for MCP (`@better-auth/mcp` with `@better-auth/cimd`, plus DCR as a fallback). The floor is 1.7.7 because of the critical advisory GHSA-965c-763c-88jm ([advisories](https://github.com/better-auth/better-auth/security/advisories)). The [TON-22 spike](spikes/2026-10-21-g3-mcp-oauth.md) connected Claude web, ChatGPT web and Codex through it. TS-61, TS-70. |
 | *(missing)* **Client sync / optimistic store** | **Add TanStack DB, pinned; 0.15.1 until the 1.0 RC is published** | Uses custom sync collections over our own SSE protocol ([mutations guide](https://tanstack.com/db/latest/docs/guides/mutations)). This is what makes the app feel like Linear; the framework choice matters far less. On 20 October 2026 no 1.0 RC was on npm ([PR #2171](https://github.com/TanStack/db/pull/2171) is still open), so the [TON-20 prototype](spikes/2026-10-20-sync-prototype.md) pinned 0.15.1 and wrote its handlers the RC's way. TS-24. |
 | *(missing)* **Validation** | **Add Zod 4** | One set of schemas shared by the domain, Elysia (Standard Schema), the forms, and the MCP SDK v2 (which needs zod ^4.2). |
-| *(missing)* **MCP** | **Add `@modelcontextprotocol/server` v2** | `createMcpHandler(...).fetch` runs natively on Bun and speaks the 2026-07-28 protocol. The stateless legacy fallback stays **on** for 2025-era clients ([changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)). TS-60. |
+| *(missing)* **MCP** | **Add `@modelcontextprotocol/server` v2, pinned (2.3.1)** | `createMcpHandler(...).fetch` runs natively on Bun and speaks the 2026-07-28 protocol. The stateless legacy fallback stays **on** for 2025-era clients ([changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)): Codex still speaks 2025 ([TON-22](spikes/2026-10-21-g3-mcp-oauth.md)). TS-60. |
 | *(missing)* **Email, jobs, observability, E2E** | **Add** | Email adapter (TS-72), Postgres job queue (TS-90), Sentry in its EU region plus structured logs and an uptime check (TS-115), Playwright with axe (TS-121). |
 | *(deferred)* WebSockets | **Use SSE for now** | The standalone API could use Elysia's `.ws()` on the Bun adapter, but push is one-directional. SSE resumes from a cursor with `Last-Event-ID`, is plain HTTP for native clients and proxies, and hosts commonly drop long connections on deploy anyway. WebSockets stay available if a bidirectional need appears. TS-23. |
 | *(rejected)* Zero / ElectricSQL | **Not adopted** | Zero 1.x is capable but adds a second stateful service and a logical-replication dependency. Electric Cloud is winding down ([Electric](https://electric.ax/blog/2026/08/11/electric-joining-databricks)). Our requirements (field-level conflict review, invalidation for guests and viewers) fit a small custom protocol better. |
@@ -759,23 +759,36 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 
 - `@modelcontextprotocol/server` v2: `createMcpHandler(factory).fetch`, mounted at `/mcp` on the API service (`https://api.tonaris.<tld>/mcp`, TS-08).
 - The server speaks the 2026-07-28 protocol, with the stateless legacy fallback **enabled**. Claude.ai lists auth support only up to the 2025-11-25 spec ([Claude connector auth](https://claude.com/docs/connectors/building/authentication)). Ignore Better Auth's suggestion to set `legacy: "reject"`.
+- **Checked in TON-22** ([spike](spikes/2026-10-21-g3-mcp-oauth.md)):
+  - Claude web and ChatGPT web speak 2026-07-28. Codex 0.162.1 uses the 2025 handshake, and so did Claude once after reconnecting, so the fallback is needed.
+  - Responses are single JSON bodies: the handler's default `auto` mode streams only when a tool sends notifications.
 - No server-initiated requests and no elicitation; Claude.ai and ChatGPT web don't support it.
 
 **TS-61 OAuth 2.1 authorization (Decided; FR-10.3, Q-06).**
 
 - **Hosts.** The issuer, every authorization-server endpoint (`/auth/*`, `/.well-known/oauth-authorization-server`), and the JWKS live on `api.tonaris.<tld>`. The login and consent pages (`/sign-in`, `/oauth/consent`, DS-85) are rendered by `tonaris-web` and complete the flow through the API.
-- **Plugins:** Better Auth `@better-auth/mcp` with `jwt()` and `@better-auth/cimd`.
+  - The issuer is `https://api.tonaris.<tld>/auth`, so RFC 8414 puts its metadata at `/.well-known/oauth-authorization-server/auth`. The root path serves the same document for 2025-03-26 clients.
+  - Sign-in that begins at an authorization request returns to `/oauth/authorize` with the client's request, which the API runs again with the new session (TON-22).
+- **Plugins:** Better Auth `@better-auth/mcp` with `jwt()` and `@better-auth/cimd` (metadata profile `mcp-2026-07-28`). The JWT plugin's session-token endpoint (`/auth/token`) isn't served, and its `set-auth-jwt` header is off.
 - **Discovery:**
   - RFC 9728 protected-resource metadata at `/.well-known/oauth-protected-resource` (served automatically);
   - RFC 8414 authorization-server metadata;
   - PKCE S256;
   - RFC 8707 `resource`, with the token audience set to `https://api.tonaris.<tld>/mcp` and validated on every call.
 - **Client registration:**
-  - Advertise `client_id_metadata_document_supported: true` with token auth method `none`. This is the path Claude.ai, ChatGPT (`https://chatgpt.com/oauth/client.json`), and Codex prefer.
-  - Keep DCR enabled as a fallback, rate-limited per IP.
+  - Advertise `client_id_metadata_document_supported: true` with token auth methods `none` and `private_key_jwt`. This is the path Claude.ai, ChatGPT (`https://chatgpt.com/oauth/client.json`), and Codex prefer; all three used it in TON-22.
+  - ChatGPT authenticates at the token endpoint with `private_key_jwt`, signed with the keys at its `jwks_uri`. Claude and Codex are public clients; Codex redirects to a loopback address on any port.
+  - Metadata documents are fetched once per host resolution, from public addresses only, without redirects (`@better-auth/cimd`'s transport).
+  - Keep DCR enabled as a fallback, limited to 10 registrations per IP per hour (proposed in TON-22, pending the creator's approval).
 - **Unauthenticated calls** get `401` with `WWW-Authenticate` pointing to the resource metadata, because Claude only starts sign-in on a 401. Authorization-server endpoints must respond within 10 s.
-- **Consent screen (Tonaris).** It shows the client name and redirect host and requires the user to **choose Read-only or Manage collection**, whatever scopes were requested. The chosen mode is stored on the grant.
+  - The challenge names the scopes to ask for: `collection:read collection:manage offline_access`. Better Auth leaves `offline_access` out of the resource metadata, and ChatGPT asks only for the scopes it is told about, so without it ChatGPT gets no refresh token (TON-22; confirmed with a fresh plugin in TON-23).
+- **Token checks.** The API verifies MCP tokens in-process against its own keys: signature, issuer, audience `/mcp`, expiry, `azp`, and any DPoP binding. Better Auth's `requireMcpAuth` would fetch the JWKS from the API's public URL over HTTP.
+- **Consent screen (Tonaris).** It shows the client name and redirect host and requires the user to **choose Read-only or Manage collection**. The chosen mode is stored on the grant.
+  - **The mode is stored as scopes:** `collection:read` for Read-only, plus `collection:manage` for Manage collection (`mcpScopes` in `packages/domain`). The page grants a subset of what the client asked for, and only that, so Manage needs a client that asked for `collection:manage`. Every client does, since the challenge and the resource metadata name it.
+  - **A grant is Better Auth's consent:** one per person and client. Authorizing again within it skips the page; `prompt=consent` shows it again.
 - **Connection management.** Settings lists each grant with its mode, created and last-used times, and a revoke action that deletes its tokens (FR-10.3, FR-11.13).
+  - `GET /v1/connections` and `DELETE /v1/connections/{id}` serve it (TON-22). Last-used times need a column of Tonaris's own (M9).
+  - **Revocation is immediate.** Access tokens are JWTs that live an hour, so every MCP call checks that the token's grant still exists. In TON-22, Claude and ChatGPT were refused on the next call and asked the person to reconnect.
 - **Tokens:**
 
   | Token | Lifetime | Rule |
@@ -783,7 +796,7 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
   | Access | 1 h | |
   | Refresh | 30 d | Rotating; reuse detection revokes the grant |
 
-**TS-62 Enforcement (Decided; FR-10.3, X-03).** The grant's `mode` is checked in the domain layer for every command:
+**TS-62 Enforcement (Decided; FR-10.3, X-03).** The grant's `mode` is checked in the domain layer for every command. An MCP request's mode is what both its token and its grant allow, so consenting again in a narrower mode also narrows tokens issued before:
 
 - Read-only grants can only call queries.
 - X-03 commands carry an `appOnly` flag and reject MCP principals with `app_only`, whatever the mode or approval.
@@ -1207,6 +1220,11 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
 
 *Open:* which ChatGPT plan allows write actions for personal accounts is unverified, so it needs testing (G3).
 
+- **TON-22** ran the first half of the script: connect, consent, the read tools and revocation, in all three clients ([spike](spikes/2026-10-21-g3-mcp-oauth.md)).
+  - **ChatGPT Plus can add a custom MCP server on the web**: `chatgpt.com/plugins` → Add, with no Developer mode toggle.
+  - Codex was checked through the CLI, which shares its MCP configuration with the desktop app.
+- **TON-23** runs the rest: writes, the approval round trip and the prompt-injection fixture, and whether Plus allows write actions.
+
 **TS-124 CI and CD (Decided; built in TON-11).** GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request to `main` and every push to it, in two jobs:
 
 - **Static checks:**
@@ -1342,7 +1360,7 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 | 3 | Performance targets | Provisional (TS-120); confirmed with M1 measurements before acceptance | Q-01 |
 | 4 | Backup objectives and deletion wording | Creator-owned: retention, RPO/RTO, and the drill schedule. The TS-114 wording must match the retention. | Q-04 |
 | 5 | Email provider | The creator picks one before the first real invitation (TS-72) | Q-06 |
-| 6 | ChatGPT web plan for write actions | Test in M1 G3 (TS-123) | G3 |
+| 6 | ChatGPT web plan for write actions | ChatGPT Plus can add a custom MCP server and read (TON-22); write actions are tested in TON-23 (TS-123) | G3 |
 | 7 | Elysia 2 go/no-go | End of M2 (TS-04) | — |
 
 **Creator-owned, outside these specs:** hosting provider and region, budget (FR-15.5), domains, and backup objectives (Q-04).

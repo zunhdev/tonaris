@@ -12,8 +12,10 @@ import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import type { ApiConfig } from "./config";
 import { webCors } from "./cors";
+import { mcpRoutes } from "./mcp/routes";
 import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
+import { connectionRoutes } from "./routes/v1/connections";
 import { meRoutes } from "./routes/v1/me";
 import { csrfGuard, securityHeaders } from "./security";
 import { createSyncHub, databaseLog, type SyncHub } from "./sync/hub";
@@ -36,6 +38,7 @@ function v1(session: SessionGuard, sync: { db: Database; hub: SyncHub }) {
       () => ({ status: "ok" as const }),
     )
     .use(meRoutes(session))
+    .use(connectionRoutes(session, { db: sync.db }))
     .use(syncRoutes(session, sync));
 }
 
@@ -57,6 +60,9 @@ export function createApp({
   limiter = createSignInLimiter(),
   ...problemOptions
 }: AppOptions) {
+  const logError =
+    problemOptions.logError ??
+    ((error: unknown, context: string) => console.error(`Failed: ${context}`, error));
   return (
     new Elysia({ name: "tonaris-api" })
       .use(problemDetails(problemOptions))
@@ -67,6 +73,7 @@ export function createApp({
       // The host's health check (TS-110), outside the versioned contract.
       .get("/healthz", { detail: { hide: true } }, () => "ok")
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
+      .use(mcpRoutes({ auth, db, config, logError }))
       .use(v1(sessionGuard(auth), { db, hub }))
   );
 }

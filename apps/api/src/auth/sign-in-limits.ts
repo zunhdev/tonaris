@@ -2,6 +2,8 @@
 // and 20 code requests and submissions together per IP address, each per 15 minutes. Counters live in memory,
 // as the API runs as a single instance. Better Auth's own limiter can't key by email and, without a trusted
 // client address, puts everyone in one bucket, so it is off.
+// The same limiter bounds open client registration for MCP (DCR, TS-61): 10 per IP address per hour, proposed
+// in TON-22 and pending the creator's approval.
 
 export type Limit = { max: number; windowMs: number };
 
@@ -13,6 +15,9 @@ export const signInLimits = {
   /** Code requests and code submissions per client address. */
   perIp: { max: 20, windowMs: fifteenMinutes },
 } satisfies Record<string, Limit>;
+
+/** Dynamic client registrations per client address (TS-61). Claude, ChatGPT and Codex use CIMD instead. */
+export const registrationLimit: Limit = { max: 10, windowMs: 60 * 60_000 };
 
 /** Hit times per key within a sliding window. */
 class SlidingWindow {
@@ -53,17 +58,22 @@ export type SignInLimiter = {
   codeRequest(emailKey: string | undefined, ip: string | undefined): number | undefined;
   /** Counts a code submission, or returns the seconds to wait. */
   codeSubmission(ip: string | undefined): number | undefined;
+  /** Counts a dynamic client registration, or returns the seconds to wait. */
+  clientRegistration(ip: string | undefined): number | undefined;
 };
 
 export function createSignInLimiter(
   limits: { perEmail: Limit; perIp: Limit } = signInLimits,
   now: () => number = Date.now,
+  registrations: Limit = registrationLimit,
 ): SignInLimiter {
   const byEmail = new SlidingWindow(limits.perEmail, now);
   const byIp = new SlidingWindow(limits.perIp, now);
+  const registrationsByIp = new SlidingWindow(registrations, now);
   const sweep = setInterval(() => {
     byEmail.sweep();
     byIp.sweep();
+    registrationsByIp.sweep();
   }, fifteenMinutes);
   sweep.unref();
 
@@ -84,5 +94,6 @@ export function createSignInLimiter(
         [byIp, ip],
       ]),
     codeSubmission: (ip) => take([[byIp, ip]]),
+    clientRegistration: (ip) => take([[registrationsByIp, ip]]),
   };
 }

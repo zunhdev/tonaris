@@ -70,7 +70,17 @@ export {
   type Decision,
   type OperationScope,
 } from "./policies";
-export { actingUserId, mcpModes, type McpMode, type Principal } from "./principals";
+export {
+  actingUserId,
+  connectionSchema,
+  mcpModeOf,
+  mcpModes,
+  mcpScopes,
+  mcpScopesFor,
+  type Connection,
+  type McpMode,
+  type Principal,
+} from "./principals";
 export {
   bootstrapSchema,
   changeOps,

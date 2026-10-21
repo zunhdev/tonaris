@@ -17,6 +17,9 @@ export const accounts = {
   resend: at("resend"),
   signOut: at("sign-out"),
   unsafe: at("unsafe"),
+  mcp: at("mcp-client"),
+  mcpCancel: at("mcp-cancel"),
+  mcpDefault: at("mcp-default"),
 } as const;
 
 /** An address with no account. */

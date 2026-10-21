@@ -12,7 +12,8 @@ export type ApiConfig = {
   webOrigin: string;
   /**
    * The parent domain the session cookie is scoped to (TS-08): the web app's host, since it is the apex. None
-   * for `localhost` or an IP address, where a host-only cookie already reaches every port.
+   * for `localhost` or an IP address, where a host-only cookie already reaches every port, or when both share
+   * one origin.
    */
   cookieDomain: string | undefined;
   authSecret: string;
@@ -54,7 +55,8 @@ export function apiConfig(env: Env = process.env): ApiConfig {
 
   const apiOrigin = origin("API_ORIGIN", value("API_ORIGIN"), production);
   const webOrigin = origin("WEB_ORIGIN", value("WEB_ORIGIN"), production);
-  const cookieDomain = parentDomain(webOrigin);
+  // One origin for both, behind a proxy that routes by path (the TON-22 tunnel): a host-only cookie reaches both.
+  const cookieDomain = apiOrigin === webOrigin ? undefined : parentDomain(webOrigin);
   if (cookieDomain && !new URL(apiOrigin).hostname.endsWith(`.${cookieDomain}`)) {
     throw new Error(
       `API_ORIGIN (${apiOrigin}) must be a subdomain of WEB_ORIGIN's host ${cookieDomain} so the session cookie reaches both (TS-08).`,
