@@ -93,6 +93,7 @@ describe("migrations", () => {
       "album_provenance",
       "album_service_links",
       "albums",
+      "approvals",
       "change_log",
       "containers",
       "field_definitions",

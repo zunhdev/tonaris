@@ -4,13 +4,13 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { z } from "zod";
 
-import { albums, oauthClients } from "@tonaris/db";
-import { mcpScopes, searchKey, type McpMode } from "@tonaris/domain";
+import { oauthClients } from "@tonaris/db";
+import { mcpScopes } from "@tonaris/domain";
 
 import { createTestApp } from "../testing";
+import { allScopes, mcpHarness, parseTokens, pkce, redirectUri } from "./testing";
 
 let t: Awaited<ReturnType<typeof createTestApp>>;
 
@@ -37,162 +37,23 @@ afterEach(async () => {
   await t.drop();
 });
 
-const redirectUri = "https://client.example/callback";
-const allScopes = `${mcpScopes.read} ${mcpScopes.manage} offline_access`;
-
-function mcpUrl(): string {
-  return `${t.config.apiOrigin}/mcp`;
-}
-
-/** A request from an MCP client: from its own servers, so no Origin and no cookie. */
-function clientCall(path: string, init: RequestInit = {}) {
-  return t.app.handle(new Request(`${t.config.apiOrigin}${path}`, init));
-}
-
-async function pkce() {
-  const verifier = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
-  return { verifier, challenge: Buffer.from(digest).toString("base64url") };
-}
-
-/** Registers a public client by DCR (RFC 7591), as the fallback to CIMD. Returns its client ID. */
-async function registerClient(name = "Test client", ip = "203.0.113.9"): Promise<string> {
-  const response = await clientCall("/auth/oauth2/register", {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-forwarded-for": ip },
-    body: JSON.stringify({
-      client_name: name,
-      redirect_uris: [redirectUri],
-      token_endpoint_auth_method: "none",
-      grant_types: ["authorization_code", "refresh_token"],
-      response_types: ["code"],
-    }),
-  });
-  expect(response.status).toBe(201);
-  const body: unknown = await response.json();
-  if (typeof body !== "object" || body === null || !("client_id" in body)) throw new Error("No ID");
-  return String(body.client_id);
-}
-
-function authorizeUrl(clientId: string, challenge: string, scope = allScopes): string {
-  const query = new URLSearchParams({
-    response_type: "code",
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    scope,
-    state: "state-1",
-    code_challenge: challenge,
-    code_challenge_method: "S256",
-    resource: mcpUrl(),
-  });
-  return `/auth/oauth2/authorize?${query.toString()}`;
-}
-
-/** The authorization request in the person's browser: signed in, it lands on the consent page. */
-async function authorize(cookie: string, clientId: string, challenge: string, scope?: string) {
-  const response = await t.call(authorizeUrl(clientId, challenge, scope), {
-    headers: { cookie, accept: "text/html" },
-    redirect: "manual",
-  });
-  expect(response.status).toBe(302);
-  return new URL(response.headers.get("location") ?? "");
-}
-
-/** The consent page's decision, as the web app posts it (DS-85). Returns the client's redirect. */
-async function consent(cookie: string, page: URL, mode: McpMode | "deny") {
-  const requested = page.searchParams.get("scope")?.split(" ") ?? [];
-  const scope = requested.filter((s) => mode === "manage" || s !== mcpScopes.manage).join(" ");
-  const response = await t.call("/auth/oauth2/consent", {
-    headers: { cookie },
-    json: { accept: mode !== "deny", scope, oauth_query: page.search.slice(1) },
-  });
-  expect(response.status).toBe(200);
-  const body: unknown = await response.json();
-  if (typeof body !== "object" || body === null || !("url" in body)) throw new Error("No URL");
-  return new URL(String(body.url));
-}
-
-const tokensSchema = z.object({
-  access_token: z.string(),
-  refresh_token: z.string().optional(),
-  scope: z.string(),
-});
-type Tokens = z.infer<typeof tokensSchema>;
+const {
+  mcpUrl,
+  clientCall,
+  registerClient,
+  authorizeUrl,
+  authorize,
+  consent,
+  tokenRequest,
+  connect,
+  mcpClient,
+  mcpPost,
+  insertAlbum,
+} = mcpHarness(() => t);
 
 const connectionsSchema = z.array(z.object({ id: z.string() }));
 
-async function tokenRequest(form: Record<string, string>) {
-  return clientCall("/auth/oauth2/token", {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(form),
-  });
-}
-
-async function exchange(clientId: string, code: string, verifier: string): Promise<Tokens> {
-  const response = await tokenRequest({
-    grant_type: "authorization_code",
-    code,
-    code_verifier: verifier,
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    resource: mcpUrl(),
-  });
-  expect(response.status).toBe(200);
-  return tokensSchema.parse(await response.json());
-}
-
-/** Signs `email` in, connects `clientId` in `mode`, and returns the tokens. */
-async function connect(email: string, clientId: string, mode: McpMode) {
-  const { id, cookie } = await t.signIn(email);
-  const { verifier, challenge } = await pkce();
-  const page = await authorize(cookie, clientId, challenge);
-  const redirect = await consent(cookie, page, mode);
-  const code = redirect.searchParams.get("code") ?? "";
-  return { userId: id, cookie, tokens: await exchange(clientId, code, verifier) };
-}
-
-/** An MCP client on `token`, speaking the 2026-07-28 protocol, or the 2025 one through the fallback. */
-async function mcpClient(token: string, era: "modern" | "legacy" = "modern") {
-  const client = new Client(
-    { name: "test", version: "1.0.0" },
-    era === "modern" ? { versionNegotiation: { mode: { pin: "2026-07-28" } } } : {},
-  );
-  await client.connect(
-    new StreamableHTTPClientTransport(new URL(mcpUrl()), {
-      fetch: (url, init) => t.app.handle(new Request(String(url), init)),
-      requestInit: { headers: { authorization: `Bearer ${token}` } },
-    }),
-  );
-  return client;
-}
-
-function mcpPost(token: string | undefined, body: unknown) {
-  return clientCall("/mcp", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      accept: "application/json, text/event-stream",
-      "mcp-protocol-version": "2025-06-18",
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  });
-}
-
 const listTools = { jsonrpc: "2.0", id: 1, method: "tools/list" };
-
-async function insertAlbum(ownerId: string, title: string, artistCredit: string, year: number) {
-  await t.db.insert(albums).values({
-    id: Bun.randomUUIDv7(),
-    ownerId,
-    title,
-    artistCredit,
-    originalYear: year,
-    searchTitleKey: searchKey(title),
-    searchArtistKey: searchKey(artistCredit),
-  });
-}
 
 describe("discovery (TS-61)", () => {
   test("the protected resource names /mcp, its authorization server and the mode scopes", async () => {
@@ -348,10 +209,21 @@ describe("the MCP server (TS-60, TS-63)", () => {
 
     const mcp = await mcpClient(tokens.access_token);
     const { tools } = await mcp.listTools();
-    expect(tools.map((tool) => tool.name).toSorted()).toEqual(["get_overview", "search"]);
+    // Read tools only (TS-62): the write tools are for Manage collection connections.
+    expect(tools.map((tool) => tool.name).toSorted()).toEqual([
+      "get_approval",
+      "get_overview",
+      "list_container",
+      "search",
+    ]);
     expect(tools.every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
 
     const overview = await mcp.callTool({ name: "get_overview", arguments: {} });
+    // Claude web reads only the text content, so it carries the structured data too (TON-23).
+    expect(overview.content).toContainEqual({
+      type: "text",
+      text: JSON.stringify(overview.structuredContent),
+    });
     expect(overview.structuredContent).toEqual({
       albums: 2,
       unsorted: 2,
@@ -405,7 +277,7 @@ describe("tokens (TS-61, TS-62)", () => {
       resource: mcpUrl(),
     });
     expect(response.status).toBe(200);
-    const refreshed = tokensSchema.parse(await response.json());
+    const refreshed = parseTokens(await response.json());
     expect(refreshed.refresh_token).not.toBe(tokens.refresh_token);
     expect((await mcpPost(refreshed.access_token, listTools)).status).toBe(200);
   });
@@ -436,7 +308,7 @@ describe("tokens (TS-61, TS-62)", () => {
       client_id: clientId,
       redirect_uri: redirectUri,
     });
-    const tokens = tokensSchema.parse(await response.json());
+    const tokens = parseTokens(await response.json());
     expect((await mcpPost(tokens.access_token, listTools)).status).toBe(401);
   });
 });

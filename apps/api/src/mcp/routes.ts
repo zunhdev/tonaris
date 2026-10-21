@@ -18,16 +18,16 @@ import { Elysia } from "elysia";
 import { errors as joseErrors, type JWTPayload } from "jose";
 
 import { type Database, findConnection } from "@tonaris/db";
-import { mcpModeOf, mcpScopes } from "@tonaris/domain";
+import { mcpModeOf, mcpScopes, type McpPrincipal } from "@tonaris/domain";
 
 import { type Auth, mcpResource } from "../auth/auth";
 import type { ApiConfig } from "../config";
-import { createMcpServer, type McpPrincipal } from "./server";
+import { createMcpServer } from "./server";
 
 export type McpRoutesOptions = {
   auth: Auth;
   db: Database;
-  config: Pick<ApiConfig, "apiOrigin">;
+  config: Pick<ApiConfig, "apiOrigin" | "webOrigin">;
   logError: (error: unknown, context: string) => void;
 };
 
@@ -136,7 +136,8 @@ export function mcpRoutes({ auth, db, config, logError }: McpRoutesOptions) {
   };
 
   const handler = createMcpHandler(
-    ({ authInfo }) => createMcpServer({ db, principal: principalOf(authInfo?.extra) }),
+    ({ authInfo }) =>
+      createMcpServer({ db, principal: principalOf(authInfo?.extra), webOrigin: config.webOrigin }),
     { onerror: (error) => logError(error, "MCP request") },
   );
 

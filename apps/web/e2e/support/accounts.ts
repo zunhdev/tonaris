@@ -20,6 +20,8 @@ export const accounts = {
   mcp: at("mcp-client"),
   mcpCancel: at("mcp-cancel"),
   mcpDefault: at("mcp-default"),
+  approver: at("approver"),
+  stranger: at("stranger"),
 } as const;
 
 /** An address with no account. */

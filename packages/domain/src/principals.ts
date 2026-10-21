@@ -53,6 +53,9 @@ export type Principal =
   /** Someone holding a share link: read access to one shared root and its subtree only. */
   | { kind: "guest"; linkId: string; rootId: string };
 
+/** An AI client's principal: the connection it acts through and that connection's mode. */
+export type McpPrincipal = Extract<Principal, { kind: "mcp" }>;
+
 /** The account a principal acts for, if any: guests act for nobody. */
 export function actingUserId(principal: Principal): string | undefined {
   return principal.kind === "guest" ? undefined : principal.userId;

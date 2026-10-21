@@ -15,6 +15,7 @@ import { webCors } from "./cors";
 import { mcpRoutes } from "./mcp/routes";
 import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
+import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
 import { meRoutes } from "./routes/v1/me";
 import { csrfGuard, securityHeaders } from "./security";
@@ -39,6 +40,7 @@ function v1(session: SessionGuard, sync: { db: Database; hub: SyncHub }) {
     )
     .use(meRoutes(session))
     .use(connectionRoutes(session, { db: sync.db }))
+    .use(approvalRoutes(session, { db: sync.db }))
     .use(syncRoutes(session, sync));
 }
 
