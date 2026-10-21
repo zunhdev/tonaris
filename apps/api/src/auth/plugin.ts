@@ -83,7 +83,8 @@ async function requestedEmail(request: Request): Promise<string | undefined> {
   return typeof body.email === "string" ? emailKey(body.email) : undefined;
 }
 
-function rateLimited(
+/** The 429 for a sign-in limit; admission's code endpoints share the limits (admission.ts). */
+export function rateLimited(
   retryAfterSeconds: number,
   detail = "Too many sign-in attempts. Try again later.",
 ): ProblemError {

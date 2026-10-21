@@ -1,6 +1,7 @@
 // The Drizzle schema: the authoritative data model (TS-11). drizzle-kit generates migrations from it (TS-17).
-// Admission, jobs and the audit log arrive with the issues that first use them.
+// Jobs and the audit log arrive with the issues that first use them.
 
+export * from "./admission";
 export * from "./approvals";
 export * from "./auth";
 export * from "./collection";

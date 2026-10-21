@@ -26,14 +26,15 @@ const config = apiConfig({
   API_ORIGIN: `http://localhost:${port}`,
   WEB_ORIGIN: process.env.WEB_ORIGIN ?? "http://localhost:3100",
 });
-const auth = createAuth({ config, db: database.db, email: smtpEmail(config) });
+const email = smtpEmail(config);
+const auth = createAuth({ config, db: database.db, email });
 // Every test signs in from 127.0.0.1, so the per-address limit would count the whole suite as one person.
 const limiter = createSignInLimiter({
   perEmail: signInLimits.perEmail,
   perIp: { ...signInLimits.perIp, max: 10_000 },
 });
 const hub = createSyncHub({ log: databaseLog(database.db) });
-const app = createApp({ config, auth, db: database.db, hub, limiter }).listen(port);
+const app = createApp({ config, auth, db: database.db, email, hub, limiter }).listen(port);
 console.log(`e2e API on ${app.server?.url.href}, schema ${database.schema}`);
 
 async function stop() {

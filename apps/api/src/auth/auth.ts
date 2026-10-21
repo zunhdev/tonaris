@@ -30,6 +30,7 @@ import {
 import { emailKey, type EmailPort, mcpScopes, signInCode, userRoles } from "@tonaris/domain";
 
 import type { ApiConfig } from "../config";
+import { recordingTransactions } from "./transaction";
 
 const day = 24 * 60 * 60;
 
@@ -103,8 +104,10 @@ export function createAuth({
     database:
       db === "in-memory"
         ? memoryAdapter(Object.fromEntries(memoryModels.map((model) => [model, []])))
-        : drizzleAdapter(db, {
+        : drizzleAdapter(recordingTransactions(db), {
             provider: "pg",
+            // Real transactions, which admission joins with its own queries (transaction.ts, TS-71).
+            transaction: true,
             schema: {
               user: users,
               session: sessions,

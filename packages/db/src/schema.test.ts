@@ -8,11 +8,13 @@ import postgres from "postgres";
 
 import {
   accountSync,
+  admissionInvitations,
   albums,
   changeLog,
   containers,
   memberships,
   mutations,
+  serviceState,
   sessions,
   trashUnits,
   users,
@@ -88,6 +90,7 @@ describe("migrations", () => {
       "__drizzle_migrations",
       "account",
       "account_sync",
+      "admission_invitations",
       "album_field_multi",
       "album_field_values",
       "album_provenance",
@@ -110,6 +113,7 @@ describe("migrations", () => {
       "oauth_resource",
       "positions",
       "saved_references",
+      "service_state",
       "session",
       "share_grants",
       "share_links",
@@ -412,5 +416,65 @@ describe("accounts", () => {
     await t.db.delete(albums).where(eq(albums.ownerId, userId));
     await t.db.delete(users).where(eq(users.id, userId));
     expect(await t.db.select().from(sessions).where(eq(sessions.id, session.id))).toEqual([]);
+  });
+});
+
+/** Inserts an admission invitation for invited@example.com, valid for 14 days. */
+async function invitation(
+  createdBy: string,
+  values: Partial<typeof admissionInvitations.$inferInsert> = {},
+) {
+  const row = {
+    id: id(),
+    emailKey: "invited@example.com",
+    tokenHash: Buffer.from(id()),
+    expiresAt: new Date(Date.now() + 14 * 86_400_000),
+    createdBy,
+    ...values,
+  };
+  await t.db.insert(admissionInvitations).values(row);
+  return row;
+}
+
+describe("admission", () => {
+  test("an address has at most one available invitation; used ones don't count", async () => {
+    const creator = await newUser({ role: "creator" });
+    const redeemer = await newUser();
+    await invitation(creator, { status: "redeemed", redeemedBy: redeemer, redeemedAt: new Date() });
+    await invitation(creator, { status: "revoked" });
+    await invitation(creator);
+    expect(await violation(invitation(creator))).toBe("admission_invitations_available_email_key");
+    expect(await violation(invitation(creator, { emailKey: "other@example.com" }))).toBeUndefined();
+  });
+
+  test("a redeemed invitation records when, and keeps it after its account is deleted", async () => {
+    const creator = await newUser({ role: "creator" });
+    const redeemer = await newUser();
+    expect(await violation(invitation(creator, { status: "redeemed", redeemedBy: redeemer }))).toBe(
+      "admission_invitations_redeemed_check",
+    );
+
+    const redeemed = await invitation(creator, {
+      status: "redeemed",
+      redeemedBy: redeemer,
+      redeemedAt: new Date(),
+    });
+    await t.db.delete(users).where(eq(users.id, redeemer));
+    const [kept] = await t.db
+      .select()
+      .from(admissionInvitations)
+      .where(eq(admissionInvitations.id, redeemed.id));
+    expect(kept).toMatchObject({ status: "redeemed", redeemedBy: null });
+  });
+
+  test("the service state is one row, with admissions open", async () => {
+    expect(
+      await t.db
+        .select({ id: serviceState.id, paused: serviceState.admissionsPaused })
+        .from(serviceState),
+    ).toEqual([{ id: 1, paused: false }]);
+    expect(await violation(t.db.insert(serviceState).values({ id: 2 }))).toBe(
+      "service_state_singleton_check",
+    );
   });
 });

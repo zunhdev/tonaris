@@ -20,7 +20,7 @@ export function generatedDocument(): string {
   const email = { send: () => Promise.resolve() };
   const db = createDatabase();
   const auth = createAuth({ config, db: "in-memory", email });
-  const app = createApp({ config, auth, db });
+  const app = createApp({ config, auth, db, email });
   return serializeDocument(openApiDocument(app));
 }
 

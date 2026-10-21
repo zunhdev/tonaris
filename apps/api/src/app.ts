@@ -6,7 +6,9 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 
 import type { Database } from "@tonaris/db";
+import type { EmailPort } from "@tonaris/domain";
 
+import { admissionRoutes } from "./auth/admission";
 import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
@@ -48,6 +50,8 @@ export type AppOptions = ProblemDetailsOptions & {
   config: ApiConfig;
   auth: Auth;
   db: Database;
+  /** Sends what Better Auth doesn't: the codes that create invited accounts (TS-71). */
+  email: EmailPort;
   /** The change bus the streams listen on; the default serves this process (TS-23). Close it on shutdown. */
   hub?: SyncHub;
   /** The sign-in limits; the default holds the TS-104 limits for this process. */
@@ -58,6 +62,7 @@ export function createApp({
   config,
   auth,
   db,
+  email,
   hub = createSyncHub({ log: databaseLog(db) }),
   limiter = createSignInLimiter(),
   ...problemOptions
@@ -74,6 +79,7 @@ export function createApp({
       .use(csrfGuard(config))
       // The host's health check (TS-110), outside the versioned contract.
       .get("/healthz", { detail: { hide: true } }, () => "ok")
+      .use(admissionRoutes({ auth, db, config, email, limiter, logError }))
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
       .use(mcpRoutes({ auth, db, config, logError }))
       .use(v1(sessionGuard(auth), { db, hub }))

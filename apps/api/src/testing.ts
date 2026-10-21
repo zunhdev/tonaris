@@ -98,6 +98,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     config,
     auth,
     db,
+    email,
     hub,
     limiter: options.limiter ?? createSignInLimiter(),
     logError: () => {},

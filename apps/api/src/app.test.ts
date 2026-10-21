@@ -15,8 +15,9 @@ import { committedDocumentPath } from "./openapi";
 // start-up, so it keeps its rows in memory.
 const config = apiConfig({});
 const db = createDatabase();
-const auth = createAuth({ config, db: "in-memory", email: { send: () => Promise.resolve() } });
-const app = createApp({ config, auth, db });
+const email = { send: () => Promise.resolve() };
+const auth = createAuth({ config, db: "in-memory", email });
+const app = createApp({ config, auth, db, email });
 const api = treaty(app);
 
 describe("/v1/health", () => {
