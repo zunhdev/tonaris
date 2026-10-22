@@ -8,6 +8,9 @@ import { databaseUrl } from "./config";
 
 export type Database = ReturnType<typeof createDatabase>;
 
+/** The handle inside `db.transaction(…)`, with the same query methods. */
+export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+
 /** Opens a connection pool. Close it with `db.$client.end()`. */
 export function createDatabase(url: string = databaseUrl(), options: postgres.Options<{}> = {}) {
   const client = postgres(url, { onnotice: () => {}, ...options });

@@ -1,6 +1,12 @@
 // Public entry point of @tonaris/db: schema, connections and migrations (TS-11, TS-17).
 
-export { findCreator, findUserByEmail, insertCreator, type UserRow } from "./accounts";
+export {
+  activeSessionIds,
+  findCreator,
+  findUserByEmail,
+  insertCreator,
+  type UserRow,
+} from "./accounts";
 export {
   admissionsPaused,
   admitAccount,
@@ -10,10 +16,9 @@ export {
   setAdmissionsPaused,
   type Admission,
   type AdmissionInvitationRow,
-  type Transaction,
 } from "./admission";
 export { createApproval, decideApproval, findApproval, type ApprovalRow } from "./approvals";
-export { createDatabase, type Database } from "./client";
+export { createDatabase, type Database, type Transaction } from "./client";
 export { databaseUrl, redact } from "./config";
 export {
   addToList,
@@ -33,6 +38,7 @@ export {
   type ListAddition,
   type TrashResult,
 } from "./mcp";
+export { runExclusively } from "./locks";
 export { migrateDatabase, migrationsFolder } from "./migrations";
 export * from "./schema";
 export {

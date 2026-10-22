@@ -415,6 +415,10 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - `apps/api/src/sse.ts` implements this ([TON-19](spikes/2026-10-20-elysia-2-viability.md)).
 - **Shutdown.** A graceful stop waits for open responses, so on shutdown the hub ends every stream first. Clients then reconnect to the new instance.
   - Reconnects after a deploy arrive together. The web client spreads them with full-jitter backoff: a first reconnect waits a random 0–500 ms ([TON-20](spikes/2026-10-20-sync-prototype.md)). `apps/api/src/index.ts` ends the streams on SIGTERM before the graceful stop.
+- **Sessions** (TON-29). A stream ends within 30 s once the session that opened it is signed out, revoked or expired.
+  - While streams are open, the hub checks all their sessions every 30 s, in one query, and ends the streams of those that no longer exist or have expired.
+  - The stream just ends, with no `reset`. The client's reconnect gets `401`, which it treats as signed out.
+  - `hub.endSessions(ids)` ends a session's streams at once. M8 will call it for the revocations that can't wait: email change, recovery and account deletion (TS-73, TS-74).
 - **Contract.** A stream route documents `text/event-stream` in `detail.responses`, pointing at its event schema registered as a component of the OpenAPI document. It declares no `response` schema: on a generator route, that breaks Eden's types and validates nothing.
 - **The web client reads the stream with `fetch`, not EventSource** ([TON-20](spikes/2026-10-20-sync-prototype.md)). With `fetch` it sees a refused stream's status (401), reconnects when nothing arrives for 45 s, spreads its reconnects with jittered backoff, and runs in tests. It sends the cursor in the query: a `Last-Event-ID` header makes a cross-origin request need a CORS preflight, which the API's rules refuse (TS-102), and Chromium then fails the fetch. An EventSource client would need `last-event-id` on the CORS allowlist.
 - **One stream per browser (web client only).** A leader tab, elected through BroadcastChannel and the Web Locks API, holds the single stream and fans events out to other tabs. This avoids HTTP/1.1 connection limits; most hosts terminate HTTP/2 at the edge regardless. It is a web-client optimization, not part of the protocol (TS-28).
@@ -427,6 +431,8 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 **TS-24 Client store (Decided; Q-01, FR-09.3).**
 
 - **Bootstrap.** `GET /v1/sync/bootstrap` returns the owned collection, preferences, positions, field definitions, the Shared with me list, and a compact search index for each shared root (TS-50), all at `seq = N`. So far it carries albums, folders and lists, and list entries, each with its commands (TON-20, TON-26, TON-27).
+  - Entries stay a flat list. Grouped by list, the reference bootstrap would be 1.90 MB instead of 2.32 MB raw, but 0.454 MB instead of 0.446 MB gzipped, so grouping gains nothing once compressed (TON-29).
+  - The API gzips it, as every JSON response of 1 KB or more, for clients that accept gzip (TS-120).
 - **TanStack DB loading.** Each entity type is a custom sync collection, fed by one sync engine per client: it bootstraps, writes the snapshot to every collection and calls `markReady()`, then streams from the snapshot's `seq`. The stream replays the log from that cursor, so nothing has to be buffered, unlike the documented pattern for streams without replay ([TON-20](spikes/2026-10-20-sync-prototype.md)).
 - **Optimistic writes.** Collection handlers (`onInsert`, `onUpdate`, `onDelete`) or `createOptimisticAction` enqueue envelopes. Each handler resolves only after the stream has delivered `seq ≥ result.seq`, through our `awaitSeq`. After 15 s without that, the mutation shows as `unconfirmed`, and the handler keeps waiting, so the person's value stays on screen, marked, until it is reconciled. This avoids flicker. It is also how TanStack DB's 1.0 RC wants handlers: they return nothing and wait inside ([PR #2171](https://github.com/TanStack/db/pull/2171)). The pinned 0.15.1 accepts both.
 - **TanStack DB holds a collection's synced writes while any of its transactions persists** ([TON-20](spikes/2026-10-20-sync-prototype.md)). `awaitSeq` follows the engine's cursor, not TanStack DB's state, so a handler never waits on the change it holds. But a write that stays unconfirmed, as when offline, keeps other sessions' changes to that collection out of view until it settles. Offline there are none to show; back online the outbox retries at once. Keep one collection per entity type, so a stuck album write doesn't hold the containers.
@@ -479,7 +485,7 @@ Error `code`s:
 
 **TS-28 Client-agnostic sync contract (Decided; FR-09, FR-13, PRD section 2.2 later platforms).** Bootstrap, the stream, and mutations form one documented protocol that any client implements. The web app is its first implementation.
 
-- **Documented** in `docs/api/sync-protocol.md` (written in M2) and in the OpenAPI document. It covers:
+- **Documented** in [`docs/api/sync-protocol.md`](api/sync-protocol.md) (written in TON-29) and in the OpenAPI document. It covers:
   - the envelope (TS-20) and CAS `base` (TS-21);
   - the outcome vocabulary (TS-27);
   - idempotency and reconciliation of unconfirmed outcomes (TS-22);
@@ -1011,7 +1017,11 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 **TS-90 Queue (Decided).** Jobs live in a Postgres `jobs` table.
 
 - Workers claim jobs with `SELECT … FOR UPDATE SKIP LOCKED` and run in the API service process.
-- Periodic schedules run only under `pg_try_advisory_lock(schedule_lock)`, which keeps them single-runner if a second instance ever exists.
+- Periodic schedules run only under an advisory lock named after the schedule, which keeps them single-runner if a second instance ever exists. Built in TON-29 (`apps/api/src/schedules.ts`):
+  - each run is one transaction that takes `pg_try_advisory_xact_lock(hashtext(name))` and skips the run if another holds it, so no pooled connection keeps a lock;
+  - each schedule first runs a minute after start, then on its interval;
+  - shutdown waits for a run in progress before the database closes;
+  - the `jobs` table and its workers arrive with the first queued job.
 - Retries use exponential backoff; dead jobs are visible in the admin UI.
 - No Redis or external queue.
 
@@ -1023,7 +1033,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | MusicBrainz enrichment queue | continuous, 1 req/s global | TS-41 |
 | Email send and retry | on demand | FR-07.5, FR-11.6 |
 | Account data deletion | on demand | FR-11.11 |
-| Expire approvals, idempotency records, change_log (> 30 d) | daily | TS-22, TS-64 |
+| Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), approvals with M9 | TS-22, TS-64 |
 | Expire admission invitations | daily | FR-11.6 |
 | Off-site backup | nightly, through the host's scheduler (TS-110) | TS-112 |
 
@@ -1201,7 +1211,9 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 - **Measured on 21 October 2026 ([TON-21](spikes/2026-10-21-q01-measurements.md)).** Every target with something to measure is met with room to spare, on both reference profiles. The creator approved them on 21 October 2026 (TON-25), with the viewer target on its estimate.
   - Approved: feedback, confirmation, both propagations, list and sort switches, cold start. M7 measures viewer propagation for real.
   - Provisional, with nothing to measure yet: quick search, MCP search, guest pages and export.
-- **The API compresses its JSON responses** with gzip, but not the event stream (TS-23). The reference bootstrap is 2.33 MB uncompressed and 0.49 MB gzipped, which is most of a cold start (TON-29).
+- **The API compresses its JSON responses** with gzip, but not the event stream (TS-23). The reference bootstrap is 2.33 MB uncompressed and 0.49 MB gzipped, which is most of a cold start.
+  - Built in TON-29 (`apps/api/src/compression.ts`): JSON and problem responses of 1 KB or more, for clients that accept gzip, with `Vary: Accept-Encoding`.
+  - In the API rather than at the host's edge, so it holds on any host (TS-110).
 
 *Reference workload:*
 

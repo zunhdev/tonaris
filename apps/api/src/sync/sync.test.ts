@@ -28,7 +28,8 @@ let t: Awaited<ReturnType<typeof createTestApp>>;
 let base: string;
 
 beforeEach(async () => {
-  t = await createTestApp();
+  // Sessions are checked often, so a signed-out session's stream ends within a test.
+  t = await createTestApp({ hub: { sessionCheckMs: 50 } });
   base = t.listen();
 });
 
@@ -394,6 +395,23 @@ describe("reconnecting (TS-23)", () => {
     await stream.until(() => stream.events.length === 1);
     expect(stream.seqs()).toEqual([3]);
     await stream.close();
+  });
+
+  test("signing out ends that session's stream, and its reconnect is refused", async () => {
+    const web = await t.signIn("anna@example.com");
+    const phone = await t.signIn("anna@example.com");
+    const leaving = await connect(web.cookie);
+    const staying = await connect(phone.cookie);
+
+    const signedOut = await t.call("/auth/sign-out", { json: {}, headers: { cookie: web.cookie } });
+    expect(signedOut.status).toBe(200);
+    await leaving.until(() => leaving.ended);
+    expect((await connect(web.cookie)).response.status).toBe(401);
+
+    await post(phone.cookie, create());
+    await staying.until(() => staying.seqs().length === 1);
+    expect(staying.ended).toBe(false);
+    await staying.close();
   });
 
   test("shutting down ends every stream, so clients reconnect to the next instance", async () => {

@@ -1,11 +1,12 @@
 // The change bus and its streams over an in-memory change log (TS-23): replay after a cursor, live changes in
-// order, recovery from gaps and slow clients by reading the log, and `reset` for cursors it can't continue.
+// order, recovery from gaps and slow clients by reading the log, `reset` for cursors it can't continue, and
+// streams that end with their session.
 
 import { describe, expect, test } from "bun:test";
 
 import type { Change } from "@tonaris/domain";
 
-import { type ChangeLog, createSyncHub, type SyncEvent } from "./hub";
+import { type ChangeLog, createSyncHub, type SessionCheck, type SyncEvent } from "./hub";
 
 const accountId = "anna";
 
@@ -213,5 +214,99 @@ describe("owner streams (TS-23)", () => {
     stream.end();
     expect(await waiting).toEqual({ done: true, value: undefined });
     expect(hub.size).toBe(0);
+  });
+});
+
+/** A session check over a set of live sessions, counting its calls, which can be made to fail. */
+function memorySessions(...live: string[]) {
+  const active = new Set(live);
+  let checks = 0;
+  let failing = false;
+  const sessions: SessionCheck = {
+    active(ids) {
+      checks += 1;
+      if (failing) return Promise.reject(new Error("database unavailable"));
+      return Promise.resolve(new Set(ids.filter((id) => active.has(id))));
+    },
+  };
+  return {
+    sessions,
+    end: (id: string) => active.delete(id),
+    fail: (on: boolean) => {
+      failing = on;
+    },
+    get checks() {
+      return checks;
+    },
+  };
+}
+
+describe("streams and their sessions (TS-23)", () => {
+  test("a stream whose session ends stops at the next check, and the others go on", async () => {
+    const memory = memoryLog();
+    const live = memorySessions("web", "phone");
+    const hub = createSyncHub({ log: memory.log, sessions: live.sessions, sessionCheckMs: 10 });
+    const web = hub.subscribe(accountId, 0, "web");
+    const phone = hub.subscribe(accountId, 0, "phone");
+    const waiting = web.next();
+
+    live.end("web");
+    expect(await waiting).toEqual({ done: true, value: undefined });
+    expect(hub.size).toBe(1);
+    hub.publish(accountId, memory.commit());
+    expect(seqs(await take(phone, 1))).toEqual([1]);
+    hub.close();
+  });
+
+  test("endSessions ends a session's streams at once", async () => {
+    const memory = memoryLog();
+    const hub = createSyncHub({ log: memory.log });
+    const first = hub.subscribe(accountId, 0, "web");
+    hub.subscribe(accountId, 0, "web");
+    const other = hub.subscribe(accountId, 0, "phone");
+    const waiting = first.next();
+    hub.endSessions(["web"]);
+    expect(await waiting).toEqual({ done: true, value: undefined });
+    expect(hub.size).toBe(1);
+    other.end();
+  });
+
+  test("check only while streams are open", async () => {
+    const memory = memoryLog();
+    const live = memorySessions("web");
+    const hub = createSyncHub({ log: memory.log, sessions: live.sessions, sessionCheckMs: 5 });
+    await Bun.sleep(30);
+    expect(live.checks).toBe(0);
+
+    const stream = hub.subscribe(accountId, 0, "web");
+    await Bun.sleep(30);
+    expect(live.checks).toBeGreaterThan(0);
+    stream.end();
+    const after = live.checks;
+    await Bun.sleep(30);
+    expect(live.checks).toBe(after);
+  });
+
+  test("keep the streams when a check fails", async () => {
+    const memory = memoryLog();
+    const live = memorySessions("web");
+    const failures: unknown[] = [];
+    const hub = createSyncHub({
+      log: memory.log,
+      sessions: live.sessions,
+      sessionCheckMs: 5,
+      logError: (error) => failures.push(error),
+    });
+    const stream = hub.subscribe(accountId, 0, "web");
+    live.fail(true);
+    live.end("web");
+    await Bun.sleep(30);
+    expect(failures.length).toBeGreaterThan(0);
+    expect(hub.size).toBe(1);
+
+    live.fail(false);
+    expect(await take(stream, 1)).toEqual([]);
+    expect(hub.size).toBe(0);
+    hub.close();
   });
 });

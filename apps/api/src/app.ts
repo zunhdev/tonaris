@@ -12,6 +12,7 @@ import { admissionRoutes } from "./auth/admission";
 import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
+import { compression } from "./compression";
 import type { ApiConfig } from "./config";
 import { webCors } from "./cors";
 import { mcpRoutes } from "./mcp/routes";
@@ -21,7 +22,7 @@ import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
 import { meRoutes } from "./routes/v1/me";
 import { csrfGuard, securityHeaders } from "./security";
-import { createSyncHub, databaseLog, type SyncHub } from "./sync/hub";
+import { databaseHub, type SyncHub } from "./sync/hub";
 import { syncRoutes } from "./sync/routes";
 
 export const healthSchema = z
@@ -63,7 +64,7 @@ export function createApp({
   auth,
   db,
   email,
-  hub = createSyncHub({ log: databaseLog(db) }),
+  hub = databaseHub(db),
   limiter = createSignInLimiter(),
   ...problemOptions
 }: AppOptions) {
@@ -74,6 +75,8 @@ export function createApp({
     new Elysia({ name: "tonaris-api" })
       .use(problemDetails(problemOptions))
       .use(securityHeaders())
+      // Before the routes, so it sees every response they give (TS-120).
+      .use(compression())
       // CORS answers preflights before the CSRF rule looks at a request.
       .use(webCors(config))
       .use(csrfGuard(config))

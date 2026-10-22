@@ -140,10 +140,11 @@ export function authRoutes({ auth, limiter, clientIpHeader }: AuthRoutesOptions)
 }
 
 /**
- * `signedIn: true` on a route requires a session and resolves `principal` (TS-30) and `account`. A renewed
- * session cookie is passed on, so the cookie rolls with the session (TS-70). Without a session, the route
- * answers 401 `unauthenticated`. A bearer request is judged by its token alone and never by cookies (TS-102).
- * MCP tokens are for /mcp only (TS-62) and native-app tokens don't exist yet (TS-30), so no token is valid here.
+ * `signedIn: true` on a route requires a session and resolves `principal` (TS-30), `account` and `sessionId`,
+ * which change streams end with (TS-23). A renewed session cookie is passed on, so the cookie rolls with the
+ * session (TS-70). Without a session, the route answers 401 `unauthenticated`. A bearer request is judged by its
+ * token alone and never by cookies (TS-102). MCP tokens are for /mcp only (TS-62) and native-app tokens don't
+ * exist yet (TS-30), so no token is valid here.
  */
 export function sessionGuard(auth: Auth) {
   return new Elysia({ name: "session-guard" }).macro({
@@ -174,7 +175,7 @@ export function sessionGuard(auth: Auth) {
           role: account.role,
           client: "web",
         };
-        return { principal, account };
+        return { principal, account, sessionId: session.session.id };
       },
     },
   });
