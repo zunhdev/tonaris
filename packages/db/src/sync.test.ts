@@ -13,6 +13,9 @@ import {
   syncRetentionMs,
   uuidv7,
   type Album,
+  type Batch,
+  type BatchItem,
+  type Change,
   type Container,
   type Mutation,
   type Principal,
@@ -31,6 +34,7 @@ import {
 } from "./schema";
 import {
   bootstrapSnapshot,
+  executeBatch,
   executeMutation,
   findMutationResult,
   headSeq,
@@ -712,5 +716,109 @@ describe("Unsorted (FR-01.9, FR-01.10, TS-13)", () => {
     const snapshot = await bootstrapSnapshot(t.db, anna.userId);
     expect(snapshot.memberships).toHaveLength(3);
     expect(snapshot.albums).toEqual(expect.arrayContaining([kindOfBlue, blueTrain]));
+  });
+});
+
+const listItem = (name: string, dependsOn?: string[]): BatchItem => ({
+  ...createContainer(node("list", name)),
+  ...(dependsOn && { dependsOn }),
+});
+const batchOf = (...items: BatchItem[]): Batch => ({ batchId: uuidv7(), items });
+
+/** The names of the account's lists, sorted. */
+async function listNames(accountId: string): Promise<string[]> {
+  const rows = await t.db.select().from(containers).where(eq(containers.ownerId, accountId));
+  return rows.map((row) => row.name).toSorted();
+}
+
+describe("executeBatch (TS-25, FR-13.4)", () => {
+  test("keeps the successes around a failed item, each committed on its own", async () => {
+    const anna = await newPrincipal();
+    await savedList(anna, "Taken");
+    const result = await executeBatch(
+      t.db,
+      anna,
+      batchOf(listItem("First"), listItem("taken"), listItem("Third")),
+    );
+    expect(result.items.map(({ outcome }) => outcome)).toEqual([
+      { status: "confirmed", seq: 2, result: null },
+      expect.objectContaining({ status: "failed", code: "name_conflict" }),
+      { status: "confirmed", seq: 3, result: null },
+    ]);
+    expect(await listNames(anna.userId)).toEqual(["First", "Taken", "Third"]);
+  });
+
+  test("skips the dependent of a failed item without using a seq, and records neither", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const list = node("list", "  ");
+    const blank: BatchItem = createContainer(list);
+    const addition: BatchItem = {
+      ...addEntry(list.id, kindOfBlue.id),
+      dependsOn: [blank.mutationId],
+    };
+
+    const result = await executeBatch(t.db, anna, batchOf(blank, addition));
+    expect(result.items[1]?.outcome).toEqual({
+      status: "skipped",
+      dependsOn: blank.mutationId,
+      because: "failed",
+    });
+    expect(await headSeq(t.db, anna.userId)).toBe(1);
+    expect(await findMutationResult(t.db, anna.userId, addition.mutationId)).toBeUndefined();
+  });
+
+  test("hands over each item's changes as it commits, in seq order", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const list = node("list", "Favorites");
+    const creation: BatchItem = createContainer(list);
+    const add: BatchItem = {
+      ...addEntry(list.id, kindOfBlue.id),
+      dependsOn: [creation.mutationId],
+    };
+    const handed: Change[][] = [];
+
+    await executeBatch(t.db, anna, batchOf(creation, add, listItem("Later")), {
+      onExecuted: (changes) => handed.push(changes),
+    });
+    expect(handed.map((changes) => changes.map((change) => [change.seq, change.entity]))).toEqual([
+      [[2, "container"]],
+      [[3, "membership"]],
+      [[4, "container"]],
+    ]);
+  });
+
+  test("a batch sent again applies nothing twice, and runs what didn't run", async () => {
+    const anna = await newPrincipal();
+    const first = listItem("First");
+    const blocked = listItem("Blocked", [first.mutationId]);
+    // The first attempt got as far as the first item.
+    const partial = await executeMutation(t.db, anna, first);
+    const sent = batchOf(first, blocked);
+
+    const again = await executeBatch(t.db, anna, sent);
+    expect(again.items.map(({ outcome }) => outcome)).toEqual([
+      partial.result.outcome,
+      { status: "confirmed", seq: 2, result: null },
+    ]);
+    const thirdTime = await executeBatch(t.db, anna, sent);
+    expect(thirdTime).toEqual(again);
+    expect(await listNames(anna.userId)).toEqual(["Blocked", "First"]);
+    expect(await headSeq(t.db, anna.userId)).toBe(2);
+  });
+
+  test("two copies of a batch at once apply each item once, and answer alike", async () => {
+    const anna = await newPrincipal();
+    const first = listItem("First");
+    const sent = batchOf(first, listItem("Second", [first.mutationId]), listItem("Third"));
+    const [one, two] = await Promise.all([
+      executeBatch(t.db, anna, sent),
+      executeBatch(t.db, anna, sent),
+    ]);
+    expect(two).toEqual(one);
+    expect(one.items.every(({ outcome }) => outcome.status === "confirmed")).toBe(true);
+    expect(await listNames(anna.userId)).toEqual(["First", "Second", "Third"]);
+    expect(await changeCount(anna.userId)).toBe(3);
   });
 });

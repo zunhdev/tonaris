@@ -8,6 +8,7 @@ import {
   actingUserId,
   changeSchema,
   outcomeSchema,
+  runBatch,
   runCommand,
   syncRetentionMs,
   uuidv7Time,
@@ -16,6 +17,8 @@ import {
   nameKey,
   searchKey,
   type Album,
+  type Batch,
+  type BatchResult,
   type Bootstrap,
   type Change,
   type CollectionStore,
@@ -301,6 +304,24 @@ export async function executeMutation(
       completedAt: new Date(),
     });
     return answer(outcome, changes);
+  });
+}
+
+/**
+ * Runs a batch's items in order (TS-25), each as its own `executeMutation`: its own transaction, under the
+ * owner's write lock, so a success stays committed whatever happens to later items. `onExecuted` gets each item's
+ * changes as soon as it commits, for the stream. Each item takes the time it runs at, unless `now` is given.
+ */
+export function executeBatch(
+  db: Database,
+  principal: Principal,
+  batch: Batch,
+  { now, onExecuted = () => {} }: { now?: Date; onExecuted?: (changes: Change[]) => void } = {},
+): Promise<BatchResult> {
+  return runBatch(batch, async (mutation) => {
+    const { result, changes } = await executeMutation(db, principal, mutation, now);
+    onExecuted(changes);
+    return result.outcome;
   });
 }
 

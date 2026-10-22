@@ -113,6 +113,19 @@ export const fieldConflictSchema = z.object({
 });
 export type FieldConflict = z.infer<typeof fieldConflictSchema>;
 
+/**
+ * Why a batch item was skipped: its prerequisite's status (TS-25). `pending` is a prerequisite still running, as a
+ * capture waiting on a provider will be.
+ */
+export const skipReasons = [
+  "failed",
+  "conflict",
+  "skipped",
+  "needs_input",
+  "needs_approval",
+  "pending",
+] as const;
+
 /** The choices a command asks for instead of guessing (TS-26). */
 export const inputNeeds = ["destination", "name", "match"] as const;
 
@@ -142,8 +155,10 @@ export const outcomeSchema = z.discriminatedUnion("status", [
   /** A batch item whose prerequisite did not succeed was not run (TS-25). */
   z.object({
     status: z.literal("skipped"),
-    dependsOn: z.string(),
-    because: z.enum(["failed", "skipped", "pending"]),
+    dependsOn: z
+      .string()
+      .meta({ description: "The `mutationId` of the first prerequisite not confirmed." }),
+    because: z.enum(skipReasons).meta({ description: "That prerequisite's status." }),
   }),
 ]);
 export type Outcome = z.infer<typeof outcomeSchema>;

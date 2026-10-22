@@ -6,11 +6,15 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import { changeLog, pruneSyncHistory } from "@tonaris/db";
 import {
+  batchResultSchema,
   bootstrapSchema,
   mutationResultSchema,
   syncRetentionMs,
   uuidv7,
   type Album,
+  type Batch,
+  type BatchItem,
+  type BatchResult,
   type Bootstrap,
   type Change,
   type Container,
@@ -222,6 +226,19 @@ describe("retries and reconciliation (TS-22, FR-13.5)", () => {
     await stream.close();
   });
 
+  test("five copies sent at once apply once, and all report the same outcome", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const stream = await connect(anna.cookie);
+    const mutation = create();
+    const results = await Promise.all(Array.from({ length: 5 }, () => post(anna.cookie, mutation)));
+    for (const result of results) expect(result).toEqual(results[0]!);
+
+    await post(anna.cookie, create());
+    await stream.until(() => stream.events.length === 2);
+    expect(stream.seqs()).toEqual([1, 2]);
+    await stream.close();
+  });
+
   test("an unanswered mutation is looked up by its ID; others' and unknown IDs aren't found", async () => {
     const anna = await t.signIn("anna@example.com");
     const ben = await t.signIn("ben@example.com");
@@ -296,6 +313,23 @@ describe("conflicts (TS-21, FR-09.4)", () => {
       { title: "A", originalYear: 1960 },
     ]);
     await stream.close();
+  });
+
+  test("two sessions saving the same field at once: exactly one is saved, the other is a conflict", async () => {
+    const web = await t.signIn("anna@example.com");
+    const phone = await t.signIn("anna@example.com");
+    const args = album();
+    await post(web.cookie, create(args));
+
+    const outcomes = await Promise.all([
+      post(web.cookie, retitle(args.id, "From the web", "Kind of Blue")),
+      post(phone.cookie, retitle(args.id, "From the phone", "Kind of Blue")),
+    ]);
+    const statuses = outcomes.map(({ outcome }) => outcome.status).toSorted();
+    expect(statuses).toEqual(["confirmed", "conflict"]);
+    const saved = (await bootstrap(web.cookie)).albums[0]?.title;
+    const loser = outcomes.find(({ outcome }) => outcome.status === "conflict")?.outcome;
+    expect(loser?.status === "conflict" && loser.conflicts[0]?.current).toBe(saved);
   });
 
   test("a rejected mutation changes nothing and sends nothing on the stream (X-05)", async () => {
@@ -592,12 +626,155 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
   });
 });
 
+async function postBatch(cookie: string, batch: Batch): Promise<BatchResult> {
+  const response = await t.call("/v1/batches", { json: batch, headers: { cookie } });
+  expect(response.status).toBe(200);
+  return batchResultSchema.parse(await response.json());
+}
+
+const batchOf = (...items: Batch["items"]): Batch => ({ batchId: uuidv7(), items });
+const after = (item: Mutation, prerequisite: Mutation): BatchItem => ({
+  ...item,
+  dependsOn: [prerequisite.mutationId],
+});
+
+/** Each item's status, or its error code when it failed. */
+const statusesOf = ({ items }: BatchResult) =>
+  items.map(({ outcome }) => (outcome.status === "failed" ? outcome.code : outcome.status));
+
+describe("batches (TS-25, FR-13.4)", () => {
+  test("a partial batch keeps its successes, and its changes reach another session", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const other = await t.signIn("anna@example.com");
+    await post(anna.cookie, createContainer(node("list", "Taken")));
+    const stream = await connect(other.cookie, { after: 1 });
+
+    const sent = batchOf(
+      createContainer(node("list", "First")),
+      createContainer(node("list", "TAKEN")),
+      createContainer(node("list", "Third")),
+    );
+    const result = await postBatch(anna.cookie, sent);
+    expect(result.batchId).toBe(sent.batchId);
+    expect(result.items.map(({ mutationId }) => mutationId)).toEqual(
+      sent.items.map(({ mutationId }) => mutationId),
+    );
+    expect(statusesOf(result)).toEqual(["confirmed", "name_conflict", "confirmed"]);
+
+    await stream.until(() => stream.seqs().length === 2);
+    expect(stream.events.map((event) => event.data)).toEqual([
+      expect.objectContaining({
+        seq: 2,
+        entity: "container",
+        data: expect.objectContaining({ name: "First" }),
+      }),
+      expect.objectContaining({
+        seq: 3,
+        entity: "container",
+        data: expect.objectContaining({ name: "Third" }),
+      }),
+    ]);
+    await stream.close();
+    expect((await bootstrap(anna.cookie)).containers.map(({ name }) => name).toSorted()).toEqual([
+      "First",
+      "Taken",
+      "Third",
+    ]);
+  });
+
+  test("an invalid item fails on its own, and the others run", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const unknown = { mutationId: uuidv7(), name: "album.delete", args: {} };
+    const result = await postBatch(
+      anna.cookie,
+      batchOf(create(), unknown, create(album({ title: "Blue Train" }))),
+    );
+    expect(statusesOf(result)).toEqual(["confirmed", "validation_failed", "confirmed"]);
+    expect(result.items[1]?.outcome).toMatchObject({ problem: { status: 422 } });
+    expect((await bootstrap(anna.cookie)).albums).toHaveLength(2);
+  });
+
+  test("an addition waits for its list: skipped when the create fails, run when it succeeds", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const kindOfBlue = album();
+    await post(anna.cookie, create(kindOfBlue));
+
+    const blank = node("list", " ");
+    const failing = createContainer(blank);
+    const skipped = await postBatch(
+      anna.cookie,
+      batchOf(failing, after(entry("membership.add", blank.id, kindOfBlue.id), failing)),
+    );
+    expect(skipped.items[1]?.outcome).toEqual({
+      status: "skipped",
+      dependsOn: failing.mutationId,
+      because: "failed",
+    });
+
+    const favorites = node("list", "Favorites");
+    const creating = createContainer(favorites);
+    const added = await postBatch(
+      anna.cookie,
+      batchOf(creating, after(entry("membership.add", favorites.id, kindOfBlue.id), creating)),
+    );
+    expect(statusesOf(added)).toEqual(["confirmed", "confirmed"]);
+    expect((await bootstrap(anna.cookie)).memberships).toEqual([
+      expect.objectContaining({ listId: favorites.id, albumId: kindOfBlue.id }),
+    ]);
+  });
+
+  test("an item follows the same rules as on its own", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const ben = await t.signIn("ben@example.com");
+    const bensList = node("list", "Ben's");
+    await post(ben.cookie, createContainer(bensList));
+    const kindOfBlue = album();
+    await post(anna.cookie, create(kindOfBlue));
+
+    const result = await postBatch(
+      anna.cookie,
+      batchOf(entry("membership.add", bensList.id, kindOfBlue.id)),
+    );
+    expect(statusesOf(result)).toEqual(["permission_denied"]);
+  });
+
+  test("a batch sent again replays every outcome and applies nothing twice", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const sent = batchOf(create(), createContainer(node("list", "Favorites")));
+    const first = await postBatch(anna.cookie, sent);
+    const again = await postBatch(anna.cookie, sent);
+    expect(again).toEqual(first);
+    const snapshot = await bootstrap(anna.cookie);
+    expect(snapshot.seq).toBe(2);
+    expect([snapshot.albums.length, snapshot.containers.length]).toEqual([1, 1]);
+  });
+
+  test("an empty or oversized batch, or one that repeats an ID, is refused and runs nothing", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const item = create();
+    const refused = [
+      batchOf(),
+      batchOf(...Array.from({ length: 201 }, () => create())),
+      batchOf(item, { ...create(), mutationId: item.mutationId }),
+    ];
+    for (const json of refused) {
+      // oxlint-disable-next-line no-await-in-loop
+      const response = await t.call("/v1/batches", { json, headers: { cookie: anna.cookie } });
+      expect(response.status).toBe(422);
+      // oxlint-disable-next-line no-await-in-loop
+      expect(await response.json()).toMatchObject({ code: "validation_failed" });
+    }
+    expect((await bootstrap(anna.cookie)).seq).toBe(0);
+  });
+});
+
 describe("refusals", () => {
   test("signed-out clients get 401 problems from every sync endpoint", async () => {
     const responses = await Promise.all([
       fetch(`${base}/v1/sync/stream`),
       t.call("/v1/sync/bootstrap"),
       t.call("/v1/mutations", { json: create() }),
+      t.call("/v1/batches", { json: batchOf(create()) }),
       t.call(`/v1/mutations/${uuidv7()}`),
     ]);
     for (const response of responses) {

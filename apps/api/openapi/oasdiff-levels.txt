@@ -1,1 +1,2 @@
 response-property-one-of-added warn
+response-property-enum-value-added warn

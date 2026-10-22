@@ -1,5 +1,6 @@
 // The sync protocol's endpoints (TS-20–TS-24, TS-28), one contract for the web app and native clients:
 // - POST /v1/mutations runs a mutation envelope and answers with its outcome, the same on every retry;
+// - POST /v1/batches runs up to 200 of them in order, each on its own, and answers with every item's outcome;
 // - GET /v1/mutations/{id} looks an outcome up, to reconcile one whose answer was lost (TS-22);
 // - GET /v1/sync/bootstrap is the account's data at a `seq`;
 // - GET /v1/sync/stream streams the changes after a cursor, as server-sent events.
@@ -8,8 +9,16 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { bootstrapSnapshot, executeMutation, findMutationResult, type Database } from "@tonaris/db";
 import {
+  bootstrapSnapshot,
+  executeBatch,
+  executeMutation,
+  findMutationResult,
+  type Database,
+} from "@tonaris/db";
+import {
+  batchResultSchema,
+  batchSchema,
   bootstrapSchema,
   mutationResultSchema,
   mutationSchema,
@@ -48,6 +57,25 @@ export function syncRoutes(session: SessionGuard, { db, hub }: { db: Database; h
         hub.publish(account.id, changes);
         return result;
       },
+    )
+    .post(
+      "/batches",
+      {
+        signedIn: true,
+        body: batchSchema,
+        response: { 200: batchResultSchema, 401: problemSchema, 422: problemSchema },
+        detail: {
+          summary: "Run a batch of mutations",
+          description:
+            "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice.",
+          tags: ["sync"],
+          operationId: "postBatch",
+        },
+      },
+      ({ body, principal, account }) =>
+        executeBatch(db, principal, body, {
+          onExecuted: (changes) => hub.publish(account.id, changes),
+        }),
     )
     .get(
       "/mutations/:id",

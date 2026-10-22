@@ -2452,15 +2452,20 @@
                               "const": "skipped"
                             },
                             "dependsOn": {
-                              "type": "string"
+                              "type": "string",
+                              "description": "The `mutationId` of the first prerequisite not confirmed."
                             },
                             "because": {
                               "type": "string",
                               "enum": [
                                 "failed",
+                                "conflict",
                                 "skipped",
+                                "needs_input",
+                                "needs_approval",
                                 "pending"
-                              ]
+                              ],
+                              "description": "That prerequisite's status."
                             }
                           },
                           "required": [
@@ -2479,6 +2484,471 @@
                   ],
                   "additionalProperties": false,
                   "description": "A mutation's outcome (TS-27)."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/batches": {
+      "post": {
+        "summary": "Run a batch of mutations",
+        "description": "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice.",
+        "tags": [
+          "sync"
+        ],
+        "operationId": "postBatch",
+        "requestBody": {
+          "description": "A batch of mutations (TS-25).",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "batchId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made by the client; the answer carries it."
+                  },
+                  "items": {
+                    "minItems": 1,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "mutationId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                        }
+                      },
+                      "required": [
+                        "mutationId"
+                      ],
+                      "additionalProperties": {},
+                      "description": "A `BatchItem` (`#/components/schemas/BatchItem`). Each item is validated on its own: one that isn't a valid `BatchItem` gets a `failed` outcome, and the others still run."
+                    }
+                  }
+                },
+                "required": [
+                  "batchId",
+                  "items"
+                ],
+                "description": "A batch of mutations (TS-25)."
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "batchId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made by the client; the answer carries it."
+                  },
+                  "items": {
+                    "minItems": 1,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "mutationId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                        }
+                      },
+                      "required": [
+                        "mutationId"
+                      ],
+                      "additionalProperties": {},
+                      "description": "A `BatchItem` (`#/components/schemas/BatchItem`). Each item is validated on its own: one that isn't a valid `BatchItem` gets a `failed` outcome, and the others still run."
+                    }
+                  }
+                },
+                "required": [
+                  "batchId",
+                  "items"
+                ],
+                "description": "A batch of mutations (TS-25)."
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "batchId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made by the client; the answer carries it."
+                  },
+                  "items": {
+                    "minItems": 1,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "mutationId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                        }
+                      },
+                      "required": [
+                        "mutationId"
+                      ],
+                      "additionalProperties": {},
+                      "description": "A `BatchItem` (`#/components/schemas/BatchItem`). Each item is validated on its own: one that isn't a valid `BatchItem` gets a `failed` outcome, and the others still run."
+                    }
+                  }
+                },
+                "required": [
+                  "batchId",
+                  "items"
+                ],
+                "description": "A batch of mutations (TS-25)."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Each item's outcome, in the order sent (TS-25).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "batchId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "mutationId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "outcome": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "const": "confirmed"
+                                  },
+                                  "seq": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "result": {
+                                    "description": "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); the others give null."
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "seq",
+                                  "result"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "const": "failed"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "enum": [
+                                      "validation_failed",
+                                      "required_missing",
+                                      "name_conflict",
+                                      "capacity_exceeded",
+                                      "limit_exceeded",
+                                      "unauthenticated",
+                                      "permission_denied",
+                                      "app_only",
+                                      "not_found",
+                                      "trashed",
+                                      "cycle",
+                                      "invalid_destination",
+                                      "field_in_use",
+                                      "uncertain_match",
+                                      "unsupported_link",
+                                      "provider_unavailable",
+                                      "rate_limited",
+                                      "expired",
+                                      "internal_error"
+                                    ]
+                                  },
+                                  "problem": {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "description": "`about:blank`: the status and `code` carry the meaning."
+                                      },
+                                      "title": {
+                                        "type": "string",
+                                        "description": "The HTTP status phrase."
+                                      },
+                                      "status": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "detail": {
+                                        "description": "What went wrong, for people.",
+                                        "type": "string"
+                                      },
+                                      "instance": {
+                                        "description": "The request path.",
+                                        "type": "string"
+                                      },
+                                      "code": {
+                                        "type": "string",
+                                        "enum": [
+                                          "validation_failed",
+                                          "required_missing",
+                                          "name_conflict",
+                                          "capacity_exceeded",
+                                          "limit_exceeded",
+                                          "unauthenticated",
+                                          "permission_denied",
+                                          "app_only",
+                                          "not_found",
+                                          "trashed",
+                                          "cycle",
+                                          "invalid_destination",
+                                          "field_in_use",
+                                          "uncertain_match",
+                                          "unsupported_link",
+                                          "provider_unavailable",
+                                          "rate_limited",
+                                          "expired",
+                                          "internal_error"
+                                        ],
+                                        "description": "Machine-readable error code (TS-27)."
+                                      },
+                                      "errors": {
+                                        "description": "Each invalid input, for `validation_failed`.",
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "path": {
+                                              "type": "string"
+                                            },
+                                            "message": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": [
+                                            "path",
+                                            "message"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "title",
+                                      "status",
+                                      "code"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "RFC 9457 problem details"
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "code",
+                                  "problem"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "const": "conflict"
+                                  },
+                                  "conflicts": {
+                                    "minItems": 1,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "field": {
+                                          "type": "string"
+                                        },
+                                        "current": {},
+                                        "attempted": {},
+                                        "base": {
+                                          "description": "The value the change assumed; absent when it created the record."
+                                        }
+                                      },
+                                      "required": [
+                                        "field",
+                                        "current",
+                                        "attempted"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "conflicts"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "const": "needs_input"
+                                  },
+                                  "need": {
+                                    "type": "string",
+                                    "enum": [
+                                      "destination",
+                                      "name",
+                                      "match"
+                                    ]
+                                  },
+                                  "candidates": {
+                                    "type": "array",
+                                    "items": {}
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "need",
+                                  "candidates"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "const": "needs_approval"
+                                  },
+                                  "approvalId": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "approvalId"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "const": "skipped"
+                                  },
+                                  "dependsOn": {
+                                    "type": "string",
+                                    "description": "The `mutationId` of the first prerequisite not confirmed."
+                                  },
+                                  "because": {
+                                    "type": "string",
+                                    "enum": [
+                                      "failed",
+                                      "conflict",
+                                      "skipped",
+                                      "needs_input",
+                                      "needs_approval",
+                                      "pending"
+                                    ],
+                                    "description": "That prerequisite's status."
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "dependsOn",
+                                  "because"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "mutationId",
+                          "outcome"
+                        ],
+                        "additionalProperties": false,
+                        "description": "A mutation's outcome (TS-27)."
+                      }
+                    }
+                  },
+                  "required": [
+                    "batchId",
+                    "items"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Each item's outcome, in the order sent (TS-25)."
                 }
               }
             }
@@ -2782,15 +3252,20 @@
                               "const": "skipped"
                             },
                             "dependsOn": {
-                              "type": "string"
+                              "type": "string",
+                              "description": "The `mutationId` of the first prerequisite not confirmed."
                             },
                             "because": {
                               "type": "string",
                               "enum": [
                                 "failed",
+                                "conflict",
                                 "skipped",
+                                "needs_input",
+                                "needs_approval",
                                 "pending"
-                              ]
+                              ],
+                              "description": "That prerequisite's status."
                             }
                           },
                           "required": [
@@ -3537,6 +4012,570 @@
         ],
         "additionalProperties": false,
         "description": "The `reset` event: bootstrap again, then stream from the new `seq` (TS-23)."
+      },
+      "BatchItem": {
+        "allOf": [
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "album.create"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "artistCredit": {
+                        "type": "string"
+                      },
+                      "releaseType": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "album",
+                              "ep",
+                              "compilation"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "isLive": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "originalYear": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "recordingYearStart": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "recordingYearEnd": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                      }
+                    },
+                    "required": [
+                      "title",
+                      "artistCredit",
+                      "releaseType",
+                      "isLive",
+                      "originalYear",
+                      "recordingYearStart",
+                      "recordingYearEnd",
+                      "id"
+                    ],
+                    "additionalProperties": false,
+                    "description": "An album record (FR-01.6)."
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "album.update"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "artistCredit": {
+                        "type": "string"
+                      },
+                      "releaseType": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "album",
+                              "ep",
+                              "compilation"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "isLive": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "originalYear": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "recordingYearStart": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "recordingYearEnd": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "artistCredit": {
+                        "type": "string"
+                      },
+                      "releaseType": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "album",
+                              "ep",
+                              "compilation"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "isLive": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "originalYear": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "recordingYearStart": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "recordingYearEnd": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9999
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "container.create"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "folder",
+                          "list"
+                        ]
+                      },
+                      "parentId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "kind",
+                      "parentId",
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "container.rename"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "container.move"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "parentId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "parentId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "parentId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "parentId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "membership.add"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "listId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "albumId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    },
+                    "required": [
+                      "listId",
+                      "albumId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "membership.remove"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "listId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "albumId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    },
+                    "required": [
+                      "listId",
+                      "albumId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "A mutation envelope (TS-20)."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "dependsOn": {
+                "description": "The `mutationId`s of earlier items in the batch that must be confirmed first.",
+                "maxItems": 200,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        ],
+        "description": "A mutation envelope in a batch (TS-25)."
       }
     }
   }

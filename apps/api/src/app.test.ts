@@ -71,6 +71,7 @@ describe("OpenAPI", () => {
       "/v1/approvals/{id}",
       "/v1/approvals/{id}/decision",
       "/v1/mutations",
+      "/v1/batches",
       "/v1/mutations/{id}",
       "/v1/sync/bootstrap",
       "/v1/sync/stream",
