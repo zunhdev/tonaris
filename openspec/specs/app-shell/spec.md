@@ -101,7 +101,7 @@ A folder path naming a list SHALL lead to the list's path, and the other way rou
 - **THEN** the view says the folder or list isn't available and links to the collection
 
 ### Requirement: Every view shows where it is
-Each collection view SHALL show its path from Collection as breadcrumbs, each ancestor a link, and its own name as the page heading and in the page title (FR-01.3, DS-29, DS-30). The root SHALL show "Collection" alone. Until the rows exist, each view SHALL summarize its contents, or show its empty state (DS-105).
+Each collection view SHALL show its path from Collection as breadcrumbs, each ancestor a link, and its own name as the page heading and in the page title (FR-01.3, DS-29, DS-30). The root SHALL show "Collection" alone. Below its header, each view SHALL show its contents, or its empty state when it holds nothing (DS-105).
 
 #### Scenario: Breadcrumbs for a nested list
 - **WHEN** an owner opens the list 'Doom' inside 'Metal'
