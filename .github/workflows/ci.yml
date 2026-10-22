@@ -61,8 +61,9 @@ jobs:
             "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/${archive}"
           echo "$OASDIFF_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" oasdiff
-          # A new member of a response's oneOf, such as a new entity on the change stream, is additive: clients
-          # must tolerate it (TS-09), so it is reported as a warning rather than failing the check.
+          # A new member of a response's oneOf, such as a new entity on the change stream, and a new value of a
+          # response enum, such as a TS-27 outcome reason, are additive: clients must tolerate them (TS-09), so
+          # they are reported as warnings rather than failing the check.
           "$RUNNER_TEMP/oasdiff" breaking "$RUNNER_TEMP/base.json" apps/api/openapi/v1.json --fail-on ERR \
             --severity-levels apps/api/openapi/oasdiff-levels.txt
       - name: Build both apps (the production bundles the images copy)
