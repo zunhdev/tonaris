@@ -640,6 +640,13 @@ The block never says "private" while another access path remains.
 - **Failures are kept in the browser like conflicts.** They stay in Activity across reloads until retried or dismissed.
 - **Restored writes raise no toast.** A write that was already failed or in conflict when the page loaded is carried by the indicator and Activity.
 
+*As built in TON-32:*
+- **More markers,** for a batch's writes (DS-84):
+  - *skipped*: a dashed circle in `fg.tertiary`;
+  - *needs input* and *needs approval*: a question circle in `status.warning`.
+- **In a batch report,** a completed write shows a check in `status.success`. A confirmed write still shows nothing elsewhere (DS-02).
+- **No toast of its own.** A write made with others in one action raises no toast. Its batch raises one (DS-84).
+
 **DS-81 Sync indicator and Activity.** The SyncIndicator sits in the sidebar footer, in the mobile account menu, and as a small dot on guest pages. Clicking it opens **Activity**: a popover listing pending, failed, conflict, and unconfirmed items, plus open batch reports. *(FR-09.3, section 2.3)*
 
 | Connection state | Indicator |
@@ -672,6 +679,12 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   - the indicator in the mobile account menu, and the dot on guest pages;
   - edit controls disabled offline, which use `useConnection()` once there are edit controls.
 
+*As built in TON-32:*
+- **Batch reports.** Activity lists the open batch reports with the writes made on their own, oldest first. A write made with others shows only in its report (DS-84).
+- **Size.** Activity is 384 px wide, and scrolls past 70% of the window's height.
+- **Opened at a report.** A report's toast opens Activity at that report, with its header focused.
+- **"{n} need review"** also counts skipped writes and those needing a choice.
+
 **DS-82 Live updates from elsewhere.** *(FR-09.1, FR-07.11)*
 - Rows changed by another session, agent, or owner get a 1.2s `accent.soft` background fade.
 - New rows appear without motion when off-screen.
@@ -693,11 +706,44 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   - The toasts have high priority, so Base UI renders them as alerts.
   - It keeps them out of the accessibility tree until F6 moves focus to them (DS-108).
 
+*As built in TON-32:*
+- **A batch that saves wholly** is announced politely: "{n} changes saved."
+- **A batch that doesn't** is announced by its toast, an alert.
+- **Later features** that announce their own outcome, such as a move's "Moved 5 lists to Metal", can replace the batch summary rather than add to it.
+
 **DS-84 BatchOutcomeReport.** Results are grouped in this order: **Needs you** (uncertain matches, destination or name choices, approvals) · **Failed** · **Skipped** · **Unconfirmed** · **Pending** · **Completed**.
 - Each item has its reason and its next action: Retry, Edit, Decide, or Enter manually.
 - Inputs are kept until the item is resolved or dismissed.
 - The report stays in Activity until dismissed.
 - Its header line is the summary sentence, e.g. "9 added · 2 need you · 1 failed".
+
+*As built in TON-32* (decided with the creator on 22 October 2026):
+- **What a batch is.** The writes of one action, such as creating several lists or adding several albums to a list.
+- **While it runs,** its report is in Activity, with its writes in their groups.
+- **When it closes by itself.** When every write saves, the report closes by itself, and its summary is announced (DS-83).
+- **When it stays.** When any write fails, is skipped or needs the person, the report stays until dismissed. It survives reloads, and keeps the inputs.
+- **The groups:**
+  - their headings are Needs you, Failed, Skipped, Waiting to confirm, Saving and Completed, each with its count;
+  - Completed is folded by default;
+  - a conflict is under Needs you, since it needs a decision.
+- **The summary sentence** leads with what saved, then follows the groups' order and leaves zero counts out, e.g. "2 saved · 1 failed · 1 skipped".
+- **The header** folds the report. Beside it:
+  - **Retry all**, for two or more failures;
+  - **Dismiss**, once the report stays.
+- **Each item** shows:
+  - its marker;
+  - its summary, e.g. "New list 'Doom'";
+  - its reason. A skipped item names what it waited for: "Waits for the folder 'Later', which couldn't be saved. Retry it to save this too."
+- **Next actions:**
+  - **Retry** for a failure. It makes the change again with the items skipped because of it, and the new writes take the old ones' place in the report. Nothing completed is sent again.
+  - **Review** for a conflict.
+  - **Edit**, **Decide** and **Enter manually** come with the editors, choices and capture (TON-38, M3, M5).
+- **The toast.** A batch that settles with anything unsaved raises one persistent toast instead of one per write:
+  - "Couldn't save 2 of 4 changes";
+  - the summary sentence;
+  - **View report**, which opens Activity at the report.
+
+  It closes once nothing settled in the report is left unsaved.
 
 *(FR-13.4, FR-02.10, FR-02.11)*
 
@@ -853,10 +899,26 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 | Name taken | "'Favorites' already exists in Metal. Choose another name." |
 | Service can't open | "Couldn't open Qobuz or its website for this album." |
 
+*As built in TON-32:*
+- **Name taken.** The server refuses a taken name with this copy, or "'Favorites' already exists at the top level. Choose another name." at the root.
+- **Without the server's explanation,** a failure shows its code's sentence, e.g.:
+  - "You're signed out. Sign in again to save this change.";
+  - "Too many changes at once. Wait a moment, then retry.";
+  - "Tonaris couldn't save this change. Try again."
+
+  The sentences live in `describe.ts`, one for every error code.
+
 **DS-108 Toasts.**
 - Shown bottom-right, at most 3 visible.
 - Durations: info 4s, undo 8s. Failures, conflicts, and anything needing a decision persist until dismissed.
 - Toasts pause on hover or focus, and are reachable with F6 and from Activity.
+
+*As built in TON-32:*
+- **One API.** Features raise toasts through `useNotify()`, which knows three kinds:
+  - **information**, gone after 4 s;
+  - **undo**, gone after 8 s. Its **Undo** undoes and closes it;
+  - **problem**, which stays until closed and is announced as an alert.
+- **Reachable from Activity.** Only problems persist, and what each reports (a failure, a conflict, a batch report) is always in Activity.
 
 *(FR-13.3)*
 

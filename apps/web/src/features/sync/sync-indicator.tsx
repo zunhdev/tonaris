@@ -1,11 +1,12 @@
 // The SyncIndicator (DS-29, DS-81) in the sidebar footer: a dot and a label for the connection and the saves, and
-// Activity, the popover it opens, listing every change not saved yet with its next step (FR-09.3). Its label
-// follows the first that applies:
+// Activity, the popover it opens, listing every change not saved yet with its next step (FR-09.3), and the batch
+// reports, which hold the changes made together (DS-84). Activity can also be opened at a report, from its toast.
+// Its label follows the first that applies:
 // offline, reconnecting, changes waiting to confirm, changes needing review, a save pending for 300 ms (DS-80).
 // Up to date, it shows the dot alone, and says so in its accessible name and tooltip (DS-115). The count of
 // changes needing review keeps failures and conflicts in view once their toasts are closed (DS-02).
 
-import type { SaveState } from "@/client/sync/writer";
+import type { BatchReport, SaveState } from "@/client/sync/writer";
 
 import { Button } from "@tonaris/ui/components/button";
 import {
@@ -17,10 +18,12 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useActivity } from "./activity";
+import { BatchOutcomeReport } from "./batch-report";
 import { describeWrite, reasonOf, statusLabels } from "./describe";
 import { namesOf, useSaveActions } from "./save-actions";
 import { SaveStateMarker } from "./save-state-marker";
-import { useDelayed, useOpenStates } from "./save-states";
+import { useDelayed, useOpenStates, useReports } from "./save-states";
 import { useConnection, useSyncClient } from "./sync-provider";
 
 const dots = {
@@ -34,13 +37,16 @@ const changes = (n: number) => (n === 1 ? "1 change" : `${n} changes`);
 export function SyncIndicator() {
   const connection = useConnection();
   const open = useOpenStates();
+  const reports = useReports();
+  const activity = useActivity();
   const saving = useDelayed(
     open.some((state) => state.status === "pending"),
     300,
   );
   const unconfirmed = open.filter((state) => state.status === "unconfirmed").length;
+  // Failed, in conflict, skipped, or needing a choice: settled, but not saved.
   const review = open.filter(
-    (state) => state.status === "failed" || state.status === "conflict",
+    (state) => state.status !== "pending" && state.status !== "unconfirmed",
   ).length;
 
   let tone: keyof typeof dots = "neutral";
@@ -70,7 +76,7 @@ export function SyncIndicator() {
   );
 
   return (
-    <Popover>
+    <Popover open={activity.open} onOpenChange={activity.setOpen}>
       {label ? (
         trigger
       ) : (
@@ -79,27 +85,58 @@ export function SyncIndicator() {
           <TooltipContent side="right">{quiet}</TooltipContent>
         </Tooltip>
       )}
-      <PopoverContent side="top" align="start" className="w-80">
-        <Activity open={open} connected={connection === "connected"} />
+      <PopoverContent
+        side="top"
+        align="start"
+        className="max-h-[min(70vh,var(--available-height))] w-96"
+        // Opened at a report, its header takes the focus, which also brings it into view.
+        initialFocus={() =>
+          (activity.report &&
+            document.querySelector<HTMLElement>(`[data-report="${activity.report}"]`)) ||
+          true
+        }
+      >
+        <Activity open={open} reports={reports} connected={connection === "connected"} />
       </PopoverContent>
     </Popover>
   );
 }
 
-/** Every change not saved yet, oldest first, each with what it was, its state and its next step (DS-81). */
-function Activity({ open, connected }: { open: readonly SaveState[]; connected: boolean }) {
+/**
+ * Every change not saved yet and every open batch report, oldest first (DS-81, DS-84). A change made with others is
+ * in its batch's report rather than on its own.
+ */
+function Activity({
+  open,
+  reports,
+  connected,
+}: {
+  open: readonly SaveState[];
+  reports: readonly BatchReport[];
+  connected: boolean;
+}) {
+  const entries = [
+    ...reports.map((report) => ({ since: report.since, report })),
+    ...open.flatMap((state) => (state.batch === undefined ? [{ since: state.since, state }] : [])),
+  ].toSorted((a, b) => a.since - b.since);
   return (
     <>
       <PopoverTitle>Activity</PopoverTitle>
-      {open.length === 0 ? (
+      {entries.length === 0 ? (
         <p className="mt-1 text-fg-secondary">
           {connected ? "All changes are saved." : "Nothing is waiting to be saved."}
         </p>
       ) : (
         <ul className="mt-2 flex flex-col gap-1">
-          {open.map((state) => (
-            <ActivityItem key={state.mutation.mutationId} state={state} />
-          ))}
+          {entries.map((entry) =>
+            "report" in entry ? (
+              <li key={entry.report.id}>
+                <BatchOutcomeReport report={entry.report} />
+              </li>
+            ) : (
+              <ActivityItem key={entry.state.mutation.mutationId} state={entry.state} />
+            ),
+          )}
         </ul>
       )}
     </>

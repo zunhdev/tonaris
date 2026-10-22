@@ -2,7 +2,7 @@
 // Rows use `useSaveState` for their marker and `aria-busy` (DS-83) and `useLiveHighlight` for changes made
 // elsewhere (DS-82); the album rows, the sidebar tree and the inspector wire them in (TON-33, TON-34, TON-38).
 
-import type { SaveState } from "@/client/sync/writer";
+import type { BatchReport, SaveState } from "@/client/sync/writer";
 import {
   useCallback,
   useEffect,
@@ -17,8 +17,9 @@ import type { OutcomeStatus } from "@tonaris/domain";
 import { useSyncClient } from "./sync-provider";
 
 const nothing: readonly SaveState[] = [];
+const noReports: readonly BatchReport[] = [];
 
-/** The writes not saved yet or waiting for the person, in the order they were made. */
+/** The writes not saved yet or waiting for the person, in the order they were made, batches' writes included. */
 export function useOpenStates(): readonly SaveState[] {
   const states = useSyncClient()?.states;
   const subscribe = useCallback(
@@ -29,10 +30,32 @@ export function useOpenStates(): readonly SaveState[] {
   return useSyncExternalStore(subscribe, snapshot);
 }
 
-/** The states a marker shows, most pressing first. */
-const shown: OutcomeStatus[] = ["conflict", "failed", "unconfirmed", "pending"];
+/** The open batch reports, oldest first (DS-84). */
+export function useReports(): readonly BatchReport[] {
+  const states = useSyncClient()?.states;
+  const subscribe = useCallback(
+    (listener: () => void) => states?.onChange(listener) ?? (() => {}),
+    [states],
+  );
+  const snapshot = useCallback(() => states?.reports() ?? noReports, [states]);
+  return useSyncExternalStore(subscribe, snapshot);
+}
 
-/** The save state a record's marker shows, if any: a conflict, a failure, then unconfirmed and pending writes. */
+/** The states a marker shows, most pressing first. */
+const shown: OutcomeStatus[] = [
+  "conflict",
+  "needs_input",
+  "needs_approval",
+  "failed",
+  "skipped",
+  "unconfirmed",
+  "pending",
+];
+
+/**
+ * The save state a record's marker shows, if any: a conflict or a choice to make, a failure or a skip, then
+ * unconfirmed and pending writes.
+ */
 export function useSaveState(key: string): OutcomeStatus | undefined {
   const open = useOpenStates();
   return useMemo(() => {

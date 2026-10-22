@@ -2,7 +2,8 @@
 // without the CSP nonce, so the CSP would block it (TS-101). Bottom-right on the toast layer 80 (DS-18), styled
 // like the other floating layers, at most 3 shown; timers pause on hover and focus, and F6 reaches them. A toast
 // carries its actions as data, so it can offer more than one. High-priority toasts are announced assertively
-// (DS-83).
+// (DS-83). Features raise toasts through a `notifier`, which holds DS-108's kinds: information for 4 s, undo for
+// 8 s, and problems (failures, conflicts, anything needing a decision) until closed.
 
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
 import { CircleAlert, TriangleAlert, X } from "lucide-react";
@@ -24,6 +25,75 @@ export type ToastManager = ReturnType<typeof createToastManager>;
 /** A manager to add and close toasts from anywhere; give it to the `Toaster`. */
 export function createToastManager() {
   return ToastPrimitive.createToastManager<ToastData>();
+}
+
+/** How long each kind of toast stays, in ms (DS-108). Problems stay until closed. */
+export const toastTimeouts = { info: 4_000, undo: 8_000 } as const;
+
+export type Notifier = ReturnType<typeof notifier>;
+
+/** DS-108's kinds of toast, each with its duration and priority, raised through `manager`. */
+export function notifier(manager: Pick<ToastManager, "add" | "close">) {
+  return {
+    /** Something worth knowing that needs nothing: gone after 4 s. */
+    info(title: string, description?: string): string {
+      return manager.add({
+        title,
+        ...(description === undefined ? {} : { description }),
+        timeout: toastTimeouts.info,
+        priority: "low",
+      });
+    },
+    /** A reversible action done: **Undo** for 8 s, which undoes it and closes the toast (DS-50). */
+    undo({ title, onUndo }: { title: string; onUndo: () => void }): string {
+      const id: string = manager.add({
+        title,
+        timeout: toastTimeouts.undo,
+        priority: "low",
+        data: {
+          actions: [
+            {
+              label: "Undo",
+              onClick: () => {
+                onUndo();
+                manager.close(id);
+              },
+            },
+          ],
+        },
+      });
+      return id;
+    },
+    /**
+     * A failure, a conflict or anything needing a decision: it stays until closed, and is announced assertively.
+     * What it reports must also be in Activity, so closing it loses nothing.
+     */
+    problem({
+      id,
+      title,
+      description,
+      tone,
+      actions,
+    }: {
+      id: string;
+      title: string;
+      description: string;
+      tone: NonNullable<ToastData["tone"]>;
+      actions: ToastAction[];
+    }): string {
+      return manager.add({
+        id,
+        title,
+        description,
+        timeout: 0,
+        priority: "high",
+        data: { tone, actions },
+      });
+    },
+    close(id: string): void {
+      manager.close(id);
+    },
+  };
 }
 
 /** Renders its children with the toasts `manager` adds, in the bottom-right viewport. */

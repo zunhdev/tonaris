@@ -3,7 +3,14 @@
 // back to the write itself for a record that was rolled back, such as a list whose creation failed. Plain and
 // specific, names in single quotes.
 
-import type { Container, ContainerKind, Mutation, Outcome, OutcomeStatus } from "@tonaris/domain";
+import type {
+  Container,
+  ContainerKind,
+  ErrorCode,
+  Mutation,
+  Outcome,
+  OutcomeStatus,
+} from "@tonaris/domain";
 
 /** The names the collections hold now. */
 export type Names = {
@@ -84,19 +91,56 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
   };
 }
 
-/** Why a failed write wasn't saved: the server's explanation, written for people (DS-107). */
+/**
+ * What each failure means when the server gives no explanation (FR-13.1, DS-107): plain and blameless, with one
+ * way forward. A code added later falls back to the general sentence (TS-09).
+ */
+const codeReasons: Record<ErrorCode, string> = {
+  validation_failed: "Some of this isn't valid. Check it and try again.",
+  required_missing: "Some required information is missing. Fill it in and try again.",
+  name_conflict: "That name is already used here. Choose another name.",
+  capacity_exceeded:
+    "Your collection is full. Permanently delete albums from Trash or remove albums to add more.",
+  limit_exceeded: "This would go past a limit. Remove something first, then try again.",
+  unauthenticated: "You're signed out. Sign in again to save this change.",
+  permission_denied: "You can't change this.",
+  app_only: "This can only be changed in the Tonaris app.",
+  not_found: "This no longer exists, so it can't be changed.",
+  trashed: "This is in Trash. Recover it to change it.",
+  cycle: "A folder can't go inside itself or a folder inside it. Choose another folder.",
+  invalid_destination: "That place isn't available. Choose another folder or the top level.",
+  field_in_use: "This field is still used. Remove it from its albums first.",
+  uncertain_match: "Tonaris isn't sure this is the same album. Choose whether it is.",
+  unsupported_link:
+    "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.",
+  provider_unavailable:
+    "Couldn't reach the music service. Try again, or enter the details manually.",
+  rate_limited: "Too many changes at once. Wait a moment, then retry.",
+  expired: "This change is too old to be retried. Check what's saved, then make it again.",
+  internal_error: "Tonaris couldn't save this change. Try again.",
+};
+
+const generalReason = "Tonaris couldn't save this change. Try again.";
+
+/**
+ * Why a failed write wasn't saved (FR-13.1, DS-107): the server's explanation, written for people, or else what
+ * its code means.
+ */
 export function reasonOf(outcome: Outcome | undefined): string {
-  return (
-    (outcome?.status === "failed" && outcome.problem.detail) || "Tonaris couldn't save this change."
-  );
+  if (outcome?.status !== "failed") return generalReason;
+  return outcome.problem.detail || (codeReasons[outcome.code] ?? generalReason);
 }
 
-/** A save state in words, beside its marker (DS-80, DS-115). */
-export const statusLabels: Partial<Record<OutcomeStatus, string>> = {
+/** A save state in words, beside its marker (DS-80, DS-84, DS-115). */
+export const statusLabels: Record<OutcomeStatus, string> = {
   pending: "Saving…",
   unconfirmed: "Waiting to confirm",
   failed: "Couldn't save",
   conflict: "Changed elsewhere",
+  skipped: "Skipped",
+  needs_input: "Needs your choice",
+  needs_approval: "Waiting for your approval",
+  confirmed: "Saved",
 };
 
 const fieldLabels: Record<string, string> = {

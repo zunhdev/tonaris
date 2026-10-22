@@ -1,5 +1,6 @@
 // What the client keeps in the browser across reloads (TS-22, TS-24): the outbox's unanswered writes, so a reload
-// or a closed tab doesn't lose them, and the conflicts and failures waiting for the person (FR-09.4, FR-13.2). One
+// or a closed tab doesn't lose them, and the conflicts, failures and batch reports waiting for the person (FR-09.4,
+// FR-13.2, FR-13.4). One
 // IndexedDB database per account, so another account signing in on the same browser never sees them. Collection data isn't kept: a reload
 // bootstraps again, and offline use isn't promised (PRD section 2.3).
 
@@ -9,6 +10,7 @@ import {
   errorCodeSchema,
   fieldConflictSchema,
   mutationSchema,
+  outcomeSchema,
   problemSchema,
 } from "@tonaris/domain";
 
@@ -44,6 +46,18 @@ const storedFailureSchema = outboxItemSchema.extend({
 /** A write the server rejected, kept until the person retries or dismisses it (FR-13.2, DS-80). */
 export type StoredFailure = z.infer<typeof storedFailureSchema>;
 
+const storedBatchSchema = z.object({
+  id: z.string(),
+  createdAt: z.number(),
+  items: z.array(outboxItemSchema.extend({ outcome: outcomeSchema })).min(1),
+});
+
+/**
+ * A batch report in which something didn't save, kept until dismissed (DS-84): its writes that have an outcome, in
+ * the order they were made. Writes still underway are the outbox's.
+ */
+export type StoredBatch = z.infer<typeof storedBatchSchema>;
+
 /** The records that are what they should be; one an older version left in another shape is skipped. */
 function valid<T>(schema: z.ZodType<T>, records: unknown[]): T[] {
   return records.flatMap((record) => {
@@ -63,17 +77,22 @@ export type SyncPersistence = {
   failures(): Promise<StoredFailure[]>;
   putFailure(failure: StoredFailure): Promise<void>;
   deleteFailure(mutationId: string): Promise<void>;
+  /** The kept batch reports, oldest first. */
+  batches(): Promise<StoredBatch[]>;
+  putBatch(batch: StoredBatch): Promise<void>;
+  deleteBatch(id: string): Promise<void>;
   /** Deletes everything kept for the account, as signing out does. */
   clear(): Promise<void>;
 };
 
-const byAge = (a: OutboxEntry, b: OutboxEntry) => a.createdAt - b.createdAt;
+const byAge = (a: { createdAt: number }, b: { createdAt: number }) => a.createdAt - b.createdAt;
 
 /** Kept in memory only: for tests, and for browsers where IndexedDB can't be opened. */
 export function memoryPersistence(): SyncPersistence {
   const entries = new Map<string, OutboxEntry>();
   const conflicts = new Map<string, StoredConflict>();
   const failures = new Map<string, StoredFailure>();
+  const batches = new Map<string, StoredBatch>();
   return {
     entries: () =>
       Promise.resolve([...entries.values()].map((entry) => structuredClone(entry)).toSorted(byAge)),
@@ -105,10 +124,21 @@ export function memoryPersistence(): SyncPersistence {
       failures.delete(mutationId);
       return Promise.resolve();
     },
+    batches: () =>
+      Promise.resolve([...batches.values()].map((batch) => structuredClone(batch)).toSorted(byAge)),
+    putBatch(batch) {
+      batches.set(batch.id, structuredClone(batch));
+      return Promise.resolve();
+    },
+    deleteBatch(id) {
+      batches.delete(id);
+      return Promise.resolve();
+    },
     clear() {
       entries.clear();
       conflicts.clear();
       failures.clear();
+      batches.clear();
       return Promise.resolve();
     },
   };
@@ -126,10 +156,11 @@ function settled<T>(request: IDBRequest<T>): Promise<T> {
 
 /**
  * Opens the database; `onClosed` runs when another tab deletes it (signing out) or upgrades it, which needs it
- * closed. Version 1 kept the outbox and conflicts; version 2 (TON-31) adds failures.
+ * closed. Version 1 kept the outbox and conflicts; version 2 (TON-31) adds failures, and version 3 (TON-32) batch
+ * reports.
  */
 function openDatabase(name: string, onClosed: () => void): Promise<IDBDatabase> {
-  const request = indexedDB.open(name, 2);
+  const request = indexedDB.open(name, 3);
   request.addEventListener("upgradeneeded", (event) => {
     const database = request.result;
     if (event.oldVersion < 1) {
@@ -138,6 +169,7 @@ function openDatabase(name: string, onClosed: () => void): Promise<IDBDatabase> 
     }
     if (event.oldVersion < 2)
       database.createObjectStore("failures", { keyPath: "mutation.mutationId" });
+    if (event.oldVersion < 3) database.createObjectStore("batches", { keyPath: "id" });
   });
   return settled(request).then((database) => {
     database.addEventListener("versionchange", () => {
@@ -159,7 +191,7 @@ export function indexedDbPersistence(accountId: string): SyncPersistence {
     }));
 
   async function inStore<T>(
-    store: "outbox" | "conflicts" | "failures",
+    store: "outbox" | "conflicts" | "failures" | "batches",
     mode: IDBTransactionMode,
     act: (objects: IDBObjectStore) => IDBRequest<T>,
   ): Promise<T> {
@@ -200,6 +232,14 @@ export function indexedDbPersistence(accountId: string): SyncPersistence {
       inStore("failures", "readwrite", (objects) => objects.put(failure)).then(() => undefined),
     deleteFailure: (mutationId) =>
       inStore("failures", "readwrite", (objects) => objects.delete(mutationId)),
+    batches: async () =>
+      valid(
+        storedBatchSchema,
+        await inStore("batches", "readonly", (objects) => objects.getAll()),
+      ).toSorted(byAge),
+    putBatch: (batch) =>
+      inStore("batches", "readwrite", (objects) => objects.put(batch)).then(() => undefined),
+    deleteBatch: (id) => inStore("batches", "readwrite", (objects) => objects.delete(id)),
     async clear() {
       if (opened) (await opened).close();
       opened = undefined;

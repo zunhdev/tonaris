@@ -1,5 +1,6 @@
 // Sends one outbox entry (TS-20, TS-25) and tells an answer from no answer. One write goes to POST /v1/mutations,
-// several to POST /v1/batches with the entry's ID as the batch's. A 200 carries the outcomes. A refusal with a
+// several to POST /v1/batches with the entry's ID as the batch's, each declaring the earlier writes it builds on
+// (dependencies.ts), so the same entry always sends the same body. A 200 carries the outcomes. A refusal with a
 // problem (4xx) means the request was judged and nothing changed (X-05), so every write in it failed. Anything
 // else — a network error, a timeout, a 5xx, a 408 or 429 — leaves the outcomes unknown, and the outbox sends the
 // same envelopes again (TS-22).
@@ -11,6 +12,7 @@ import {
   type Outcome,
 } from "@tonaris/domain";
 
+import { dependenciesOf } from "./dependencies";
 import type { Fetch } from "./engine";
 import type { Sent } from "./outbox";
 import type { OutboxEntry } from "./persistence";
@@ -27,11 +29,16 @@ export function entrySender(
     const mutations = items.map((item) => item.mutation);
     const [single] = mutations;
     const batch = mutations.length > 1 || !single;
+    const dependencies = dependenciesOf(mutations);
+    const envelopes = mutations.map((mutation, index) => {
+      const dependsOn = dependencies[index];
+      return dependsOn ? { ...mutation, dependsOn } : mutation;
+    });
     try {
       const response = await fetch(`${apiUrl}/v1/${batch ? "batches" : "mutations"}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(batch ? { batchId: id, items: mutations } : single),
+        body: JSON.stringify(batch ? { batchId: id, items: envelopes } : single),
         signal: AbortSignal.timeout(timeoutMs),
       });
       if (response.ok) {

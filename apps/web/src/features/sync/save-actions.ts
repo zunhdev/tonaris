@@ -1,9 +1,9 @@
-// The actions on a write that Activity, its toast and the conflict review share (DS-80, DS-81), provided by the
-// save-state layer, and the names they describe writes with.
+// The actions on a write or a batch report that Activity, toasts and the conflict review share (DS-80, DS-81,
+// DS-84), provided by the save-state layer, and the names they describe writes with.
 
 import type { SyncClient } from "@/client/sync/client";
 import type { Resubmitted } from "@/client/sync/resubmit";
-import type { SaveState } from "@/client/sync/writer";
+import type { BatchReport, SaveState } from "@/client/sync/writer";
 import { createContext, useContext } from "react";
 
 import type { Names } from "./describe";
@@ -16,6 +16,10 @@ export type SaveActions = {
   resubmit(state: SaveState): Resubmitted;
   /** Drops a failure, or keeps the current value of a conflict (Keep current). */
   dismiss(state: SaveState): void;
+  /** Retries a report's failed items `ids`, with the items that waited for them, into the report (DS-84). */
+  retry(report: BatchReport, ids: readonly string[]): Resubmitted[];
+  /** Dismisses a report and the inputs it kept. */
+  dismissReport(report: BatchReport): void;
 };
 
 export const SaveActionsContext = createContext<SaveActions | undefined>(undefined);
