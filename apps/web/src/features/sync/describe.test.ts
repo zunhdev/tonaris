@@ -2,7 +2,14 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { failure, uuidv7, type Album, type Container, type Mutation } from "@tonaris/domain";
+import {
+  errorCodes,
+  failure,
+  uuidv7,
+  type Album,
+  type Container,
+  type Mutation,
+} from "@tonaris/domain";
 
 import { describeWrite, fieldLabel, fieldValue, reasonOf, type Names } from "./describe";
 
@@ -131,6 +138,28 @@ describe("fields and reasons (DS-80, DS-107)", () => {
     expect(reasonOf(failure("name_conflict", "'Later' already exists in Collection."))).toBe(
       "'Later' already exists in Collection.",
     );
-    expect(reasonOf(undefined)).toBe("Tonaris couldn't save this change.");
+    expect(reasonOf(undefined)).toBe("Tonaris couldn't save this change. Try again.");
+  });
+
+  test("without an explanation, every code has a plain reason with a way forward (DS-107)", () => {
+    for (const code of errorCodes) {
+      const { problem } = failure(code, "");
+      const reason = reasonOf({
+        status: "failed",
+        code,
+        problem: { ...problem, detail: undefined },
+      });
+      expect(reason).not.toMatch(/error|oops|!/i);
+      expect(reason).not.toContain(code);
+      expect(reason).toMatch(/^[A-Z].*\.$/);
+    }
+    const { problem } = failure("rate_limited", "");
+    expect(
+      reasonOf({
+        status: "failed",
+        code: "rate_limited",
+        problem: { ...problem, detail: undefined },
+      }),
+    ).toBe("Too many changes at once. Wait a moment, then retry.");
   });
 });

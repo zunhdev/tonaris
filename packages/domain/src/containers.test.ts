@@ -176,9 +176,18 @@ describe("container.create (FR-01.1, FR-01.2)", () => {
     const result = await run(create({ kind: "list", parentId: null, name: "jazz" }));
     expect(codeOf(result)).toBe("name_conflict");
     expect(result.status === "failed" && result.problem.detail).toBe(
-      'There\'s already a folder named "Jazz" at the top level.',
+      "'Jazz' already exists at the top level. Choose another name.",
     );
     expect(containers.size).toBe(1);
+  });
+
+  test("a name taken in a folder names the folder (DS-107)", async () => {
+    const metal = folder("Metal");
+    const { run } = setup(metal, list("Favorites", metal.id));
+    const result = await run(create({ kind: "list", parentId: metal.id, name: "Favorites" }));
+    expect(result.status === "failed" && result.problem.detail).toBe(
+      "'Favorites' already exists in Metal. Choose another name.",
+    );
   });
 
   test("the same name under different parents", async () => {

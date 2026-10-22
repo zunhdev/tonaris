@@ -1,115 +1,28 @@
 // The save-state interface in a real browser (FR-09.3, FR-09.4, PRD section 2.3; DS-80 to DS-83): the
-// SyncIndicator, Activity, the toasts, the conflict review, the offline banner and the announcements. Until the
-// collection has rows (TON-33, TON-34), the tests make their edits through the page's sync client (`TEST_HOOKS`),
-// as the rows will. Each test signs in with its own account.
+// SyncIndicator, Activity, the toasts, the conflict review, the offline banner and the announcements. The edits go
+// through the page's sync client (support/workspace.ts). Each test signs in with its own account. Batch reports are
+// batch-report.e2e.ts.
 
-import { AxeBuilder } from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
-
-import { bootstrapSchema, uuidv7, type Container } from "@tonaris/domain";
+import { expect, test } from "@playwright/test";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import {
+  announcements,
+  conflictingRename,
+  created,
+  indicator,
+  insert,
+  list,
+  live,
+  openActivity,
+  rename,
+  savedNames,
+  toasts,
+  violations,
+} from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
-
-const webOrigin = "http://localhost:3100";
-
-const list = (name: string): Container => ({ id: uuidv7(), kind: "list", parentId: null, name });
-
-/** Waits until the page's sync client is connected. */
-async function live(page: Page): Promise<void> {
-  await page.waitForFunction(() => window.tonarisSync?.engine.status === "live");
-}
-
-/** The account's lists as the API has them. */
-async function savedNames(page: Page): Promise<string[]> {
-  const response = await page.request.get(`${apiUrl}/v1/sync/bootstrap`);
-  return bootstrapSchema
-    .parse(await response.json())
-    .containers.map((each) => each.name)
-    .toSorted();
-}
-
-/** Creates a list through the page's client, and waits until it is saved. */
-async function created(page: Page, name: string): Promise<Container> {
-  const value = list(name);
-  await page.evaluate(async (container) => {
-    await window.tonarisSync?.containers.insert(container).isPersisted.promise;
-  }, value);
-  return value;
-}
-
-/** Writes without waiting for the outcome, as the interface does. */
-async function insert(page: Page, ...values: Container[]): Promise<void> {
-  await page.evaluate((containers) => {
-    window.tonarisSync?.containers.insert(containers).isPersisted.promise.catch(() => {});
-  }, values);
-}
-
-async function rename(page: Page, id: string, name: string): Promise<void> {
-  await page.evaluate(
-    ([listId, to]) => {
-      window.tonarisSync?.containers
-        .update(listId, (draft) => {
-          draft.name = to;
-        })
-        .isPersisted.promise.catch(() => {});
-    },
-    [id, name] as const,
-  );
-}
-
-/** Renames a list from another session, through the API. */
-async function renameElsewhere(page: Page, id: string, from: string, to: string): Promise<void> {
-  const response = await page.request.post(`${apiUrl}/v1/mutations`, {
-    headers: { origin: webOrigin },
-    data: {
-      mutationId: uuidv7(),
-      name: "container.rename",
-      args: { id, name: to },
-      base: { name: from },
-    },
-  });
-  expect(response.status()).toBe(200);
-}
-
-/**
- * Renames a list in the page while another session renames it first: the page's write is held on its way until
- * the other is saved, so it meets the newer name and comes back as a conflict.
- */
-async function conflictingRename(page: Page, value: Container, mine: string, theirs: string) {
-  const held = Promise.withResolvers<void>();
-  await page.route(`${apiUrl}/v1/mutations`, async (route) => {
-    await held.promise;
-    await route.continue();
-  });
-  await rename(page, value.id, mine);
-  await renameElsewhere(page, value.id, value.name, theirs);
-  held.resolve();
-  await page.unrouteAll({ behavior: "wait" });
-}
-
-const indicator = (page: Page) => page.getByRole("button", { name: /^Sync status:/ });
-const activity = (page: Page) => page.getByRole("dialog", { name: "Activity" });
-const toasts = (page: Page) => page.locator('[data-slot="toast"]');
-const announcements = (page: Page) => page.locator('[data-slot="announcer"]');
-
-/** Axe's findings in `selector`, once its opening animation is over: mid-fade, its text is still faint. */
-async function violations(page: Page, selector: string) {
-  await page
-    .locator(selector)
-    .evaluate((element) =>
-      Promise.all(element.getAnimations({ subtree: true }).map((each) => each.finished)),
-    );
-  return (await new AxeBuilder({ page }).include(selector).analyze()).violations;
-}
-
-async function openActivity(page: Page) {
-  await indicator(page).click();
-  await expect(activity(page)).toBeVisible();
-  return activity(page);
-}
 
 test("a slow save shows Saving…, is listed in Activity, and settles with no state and no message", async ({
   page,
@@ -144,19 +57,27 @@ test("changes sent without an answer wait to confirm, never as saved, and are sa
   await live(page);
   await page.route(`${apiUrl}/v1/batches`, (route) => route.abort("internetdisconnected"));
 
-  // One action, two lists: one request, which goes unanswered.
+  // One action, two lists: one request, which goes unanswered. They are one batch, reported together (DS-84).
   await insert(page, list("Later"), list("Soon"));
   await expect(indicator(page)).toHaveAccessibleName("Sync status: 2 changes waiting to confirm");
   const panel = await openActivity(page);
-  await expect(panel.getByRole("listitem")).toHaveText([
-    "New list 'Later'Waiting to confirm",
-    "New list 'Soon'Waiting to confirm",
-  ]);
+  const report = panel.locator('[data-slot="batch-report"]');
+  await expect(report).toHaveCount(1);
+  await expect(report.getByRole("button", { name: "2 waiting to confirm" })).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  await expect(
+    report.getByRole("list", { name: "Waiting to confirm (2)" }).getByRole("listitem"),
+  ).toHaveText(["New list 'Later'", "New list 'Soon'"]);
   expect(await savedNames(page)).toEqual([]);
 
+  // Once answered and wholly saved, the report closes by itself, and only a polite summary is said.
   await page.unrouteAll({ behavior: "ignoreErrors" });
   await page.evaluate(() => window.tonarisSync?.outbox.wake());
   await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  await expect(panel).toContainText("All changes are saved.");
+  await expect(announcements(page)).toHaveText(["2 changes saved.", ""]);
   await expect(toasts(page)).toHaveCount(0);
   await expect.poll(() => savedNames(page)).toEqual(["Later", "Soon"]);
 });
@@ -170,7 +91,9 @@ test("a failed save is reported until dealt with, also after a reload, and Retry
 
   await insert(page, list("Later"));
   const toast = toasts(page).filter({ hasText: "Couldn't save the list 'Later'" });
-  await expect(toast).toContainText('There\'s already a list named "Later" at the top level.');
+  await expect(toast).toContainText(
+    "'Later' already exists at the top level. Choose another name.",
+  );
   await expect(
     page.getByRole("alert").filter({ hasText: "Couldn't save the list 'Later'" }),
   ).toBeAttached();
@@ -187,7 +110,7 @@ test("a failed save is reported until dealt with, also after a reload, and Retry
   const panel = await openActivity(page);
   const failed = panel.getByRole("listitem");
   await expect(failed).toHaveText(
-    /^New list 'Later'Couldn't save: There's already a list named "Later" at the top level\./,
+    /^New list 'Later'Couldn't save: 'Later' already exists at the top level\. Choose another name\./,
   );
   expect(await violations(page, '[data-slot="popover-content"]')).toEqual([]);
 

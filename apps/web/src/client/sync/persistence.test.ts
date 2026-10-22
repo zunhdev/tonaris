@@ -26,6 +26,15 @@ const rejected = () => ({
   outcome: failed("name_conflict", "'Favorites' already exists in Collection."),
 });
 
+const report = (createdAt: number) => ({
+  id: uuidv7(),
+  createdAt,
+  items: [
+    rejected(),
+    { ...rejected(), outcome: { status: "confirmed" as const, seq: 3, result: null } },
+  ],
+});
+
 describe("memoryPersistence", () => {
   test("keeps entries oldest first until deleted, and conflicts by mutation", async () => {
     const store = memoryPersistence();
@@ -61,9 +70,23 @@ describe("memoryPersistence", () => {
     expect(await store.failures()).toEqual([second]);
   });
 
+  test("keeps batch reports oldest first, replaced by ID, until deleted", async () => {
+    const store = memoryPersistence();
+    const [late, early] = [report(20), report(10)];
+    await store.putBatch(late);
+    await store.putBatch(early);
+    expect(await store.batches()).toEqual([early, late]);
+    const shorter = { ...late, items: late.items.slice(1) };
+    await store.putBatch(shorter);
+    expect(await store.batches()).toEqual([early, shorter]);
+    await store.deleteBatch(early.id);
+    expect(await store.batches()).toEqual([shorter]);
+  });
+
   test("clear() forgets everything", async () => {
     const store = memoryPersistence();
     await store.putEntry(entry(1));
+    await store.putBatch({ id: uuidv7(), createdAt: 1, items: [rejected()] });
     await store.putFailure({
       mutation: mutation(),
       key: "list",
@@ -72,5 +95,6 @@ describe("memoryPersistence", () => {
     await store.clear();
     expect(await store.entries()).toEqual([]);
     expect(await store.failures()).toEqual([]);
+    expect(await store.batches()).toEqual([]);
   });
 });

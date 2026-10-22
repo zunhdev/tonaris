@@ -18,7 +18,7 @@ import {
 
 import type { SyncClient } from "./client";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
-import { resubmit } from "./resubmit";
+import { resubmit, resubmitAll } from "./resubmit";
 import { memoryBrowser } from "./tabs";
 import { sessionFetch, startApiServer, testClient, until, type TestServer } from "./testing";
 import { MutationRejected, type SaveState } from "./writer";
@@ -27,7 +27,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(25);
+  server = await startApiServer(26);
 }, 30_000);
 
 afterAll(async () => {
@@ -735,5 +735,69 @@ describe("resubmitting (DS-80, FR-09.4, FR-13.2)", () => {
     };
     expect(resubmit(web, failedWrite(edit))).toBe("gone");
     expect(web.network.sent.length).toBe(before);
+  });
+});
+
+describe("batch reports (FR-13.4, FR-13.5, DS-84)", () => {
+  test("a partial batch keeps its successes, skips what built on a failure, and a retry inside the report saves the rest once", async () => {
+    const web = await openClient(25, 0);
+    await web.containers.preload();
+    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    await web.containers.insert(later).when("settled");
+
+    // One action: a folder whose name is taken, a list inside it, and another list.
+    const folder: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Later" };
+    const inside: Container = { id: uuidv7(), kind: "list", parentId: folder.id, name: "Doom" };
+    const soon: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Soon" };
+    const error = await web.containers
+      .insert([folder, inside, soon])
+      .when("settled")
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(MutationRejected);
+    const body = batchSchema.parse(JSON.parse(web.network.sent.at(-1) ?? "{}"));
+    const [folderWrite, insideWrite] = body.items.map((item) => item.mutationId);
+    expect(body.items.map((item) => item.dependsOn)).toEqual([undefined, [folderWrite], undefined]);
+
+    const [report] = web.states.reports();
+    expect(report?.kept).toBe(true);
+    expect(report?.items.map((item) => item.outcome)).toEqual([
+      expect.objectContaining({ status: "failed", code: "name_conflict" }),
+      { status: "skipped", dependsOn: folderWrite, because: "failed" },
+      expect.objectContaining({ status: "confirmed" }),
+    ]);
+    // The success stays; what failed or was skipped rolled back.
+    expect(web.containers.has(soon.id)).toBe(true);
+    expect(web.containers.has(folder.id) || web.containers.has(inside.id)).toBe(false);
+
+    await web.containers
+      .update(later.id, (draft) => {
+        draft.name = "Earlier";
+      })
+      .when("settled");
+    const sentBefore = web.network.sent.length;
+    const retried = (report?.items ?? []).filter(
+      (item) =>
+        item.mutation.mutationId === folderWrite || item.mutation.mutationId === insideWrite,
+    );
+    const results = web.states.within(report?.id ?? "", () => resubmitAll(web, retried));
+    expect(results).toEqual(["sent", "sent"]);
+    await until(
+      () => web.states.reports()[0]?.items.every((item) => item.status === "confirmed") ?? false,
+      3_000,
+      "the retried writes to be confirmed",
+    );
+
+    // Both went in one batch again, in the same report, and the list saved the first time wasn't sent again.
+    expect(web.network.sent.length).toBe(sentBefore + 1);
+    const again = batchSchema.parse(JSON.parse(web.network.sent.at(-1) ?? "{}"));
+    expect(again.items.map((item) => item.dependsOn)).toEqual([
+      undefined,
+      [again.items[0]?.mutationId],
+    ]);
+    expect(web.states.reports().map((each) => each.id)).toEqual([report?.id ?? ""]);
+    expect(web.states.reports()[0]?.items).toHaveLength(3);
+    expect(web.containers.get(inside.id)).toMatchObject({ parentId: folder.id, name: "Doom" });
+    const names = [...web.containers.values()].map((each) => each.name).toSorted();
+    expect(names).toEqual(["Doom", "Earlier", "Later", "Soon"]);
   });
 });

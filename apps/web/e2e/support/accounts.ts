@@ -35,6 +35,9 @@ export const accounts = {
   saveFailed: at("save-failed"),
   saveConflict: at("save-conflict"),
   saveOffline: at("save-offline"),
+  // Batch reports (batch-report.e2e.ts), one per test.
+  batchPartial: at("batch-partial"),
+  batchRetryAll: at("batch-retry-all"),
 } as const;
 
 /** An address with no account. */

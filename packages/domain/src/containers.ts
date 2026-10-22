@@ -91,12 +91,12 @@ async function siblingConflict(
 ): Promise<Failure | undefined> {
   const taken = findNameConflict(name, await store.activeChildren(ownerId, parentId), selfId);
   if (!taken) return undefined;
-  const where = parentId === null ? "at the top level" : "in this folder";
-  return failure(
-    "name_conflict",
-    `There's already a ${taken.kind} named "${taken.name}" ${where}.`,
-    [{ path: "args.name", message: "Already used here" }],
-  );
+  // Worded as DS-107 has it: the name, where it is taken, and one way forward.
+  const parent = parentId === null ? undefined : await store.findContainer(parentId);
+  const where = parent ? `in ${parent.name}` : "at the top level";
+  return failure("name_conflict", `'${taken.name}' already exists ${where}. Choose another name.`, [
+    { path: "args.name", message: "Already used here" },
+  ]);
 }
 
 /**

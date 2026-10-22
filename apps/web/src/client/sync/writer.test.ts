@@ -1,12 +1,13 @@
-// The save states on their own (DS-80, DS-81): what Activity lists, and the failures and conflicts kept in the
-// browser until the person deals with them (FR-09.4, FR-13.2). The writes themselves are covered in sync.test.ts.
+// The save states on their own (DS-80, DS-81, DS-84): what Activity lists, the failures and conflicts kept in the
+// browser until the person deals with them (FR-09.4, FR-13.2), and batch reports. The writes themselves are covered
+// in sync.test.ts.
 
 import { describe, expect, test } from "bun:test";
 
 import { failure, uuidv7, type Mutation, type Outcome } from "@tonaris/domain";
 
 import { memoryPersistence } from "./persistence";
-import { createSaveStates } from "./writer";
+import { createSaveStates, type BatchReport } from "./writer";
 
 const rename = (name: string): Mutation => ({
   mutationId: uuidv7(),
@@ -90,5 +91,112 @@ describe("save states (DS-80, DS-81)", () => {
     later.dismiss(attempt.mutationId);
     await Bun.sleep(1);
     expect(await persistence.failures()).toEqual([]);
+  });
+});
+
+const confirmed: Outcome = { status: "confirmed", seq: 1, result: null };
+const taken = failure("name_conflict", "'B' already exists at the top level. Choose another name.");
+
+/** Tracks `writes` as one transaction's, as the writer does. */
+function batchOf(states: ReturnType<typeof createSaveStates>, writes: Mutation[]) {
+  const batch = states.batchFor(writes.length);
+  for (const write of writes) states.track(write, write.mutationId, "pending", batch);
+  return batch;
+}
+
+describe("batch reports (FR-13.4, DS-84)", () => {
+  test("one write is no batch; two are, and the report closes by itself once both are confirmed", () => {
+    const states = createSaveStates();
+    expect(states.batchFor(1)).toBeUndefined();
+    const writes = [rename("A"), rename("B")];
+    const id = batchOf(states, writes);
+    const heard: [BatchReport, boolean][] = [];
+    states.onReport((report, closed) => heard.push([report, closed]));
+    expect(states.reports().map((report) => report.items.map((item) => item.status))).toEqual([
+      ["pending", "pending"],
+    ]);
+    // Its writes are listed for the indicator, each carrying its batch.
+    expect(states.open().map((state) => state.batch)).toEqual([id, id]);
+
+    for (const write of writes) states.settle(write.mutationId, confirmed);
+    expect(states.reports()).toEqual([]);
+    expect(heard.at(-1)?.[1]).toBe(true);
+    expect(heard.at(-1)?.[0].items.map((item) => item.status)).toEqual(["confirmed", "confirmed"]);
+  });
+
+  test("a report with a failure is kept, in the browser too, and comes back for the next page", async () => {
+    const persistence = memoryPersistence();
+    const states = createSaveStates({ persistence });
+    const writes = [rename("A"), rename("B"), rename("C")];
+    const id = batchOf(states, writes);
+    states.settle(writes[0]!.mutationId, confirmed);
+    states.settle(writes[1]!.mutationId, taken);
+    states.settle(writes[2]!.mutationId, {
+      status: "skipped",
+      dependsOn: writes[1]!.mutationId,
+      because: "failed",
+    });
+    expect(states.reports()).toMatchObject([{ id, kept: true }]);
+    await Bun.sleep(1);
+    // Kept in its report, not on its own.
+    expect(await persistence.failures()).toEqual([]);
+    expect((await persistence.batches()).map((batch) => batch.items.length)).toEqual([3]);
+
+    const later = createSaveStates({ persistence });
+    await later.restore();
+    expect(later.reports()).toMatchObject([
+      {
+        id,
+        kept: true,
+        items: [{ status: "confirmed" }, { status: "failed" }, { status: "skipped" }],
+      },
+    ]);
+    expect(later.open().map((state) => state.status)).toEqual(["failed", "skipped"]);
+
+    // Dismissing a write takes it out of its report, and dismissing the report deletes it.
+    later.dismiss(writes[2]!.mutationId);
+    expect(later.reports()[0]?.items.map((item) => item.status)).toEqual(["confirmed", "failed"]);
+    await Bun.sleep(1);
+    expect((await persistence.batches())[0]?.items.length).toBe(2);
+    later.dismissReport(id!);
+    expect(later.reports()).toEqual([]);
+    expect(later.open()).toEqual([]);
+    await Bun.sleep(1);
+    expect(await persistence.batches()).toEqual([]);
+  });
+
+  test("writes made within() a report join it, in place of the ones they retry", () => {
+    const states = createSaveStates();
+    const writes = [rename("A"), rename("B")];
+    const id = batchOf(states, writes);
+    states.settle(writes[0]!.mutationId, confirmed);
+    states.settle(writes[1]!.mutationId, taken);
+
+    const retry = rename("B");
+    states.within(id!, () => {
+      // A single write joins too.
+      states.track(retry, retry.mutationId, "pending", states.batchFor(1));
+    });
+    states.dismiss(writes[1]!.mutationId);
+    expect(states.batchFor(1)).toBeUndefined();
+    expect(states.reports()[0]?.items.map((item) => item.mutation.mutationId)).toEqual([
+      writes[0]!.mutationId,
+      retry.mutationId,
+    ]);
+
+    states.settle(retry.mutationId, confirmed);
+    // Kept once something didn't save, it stays until dismissed, now wholly saved.
+    expect(states.reports()).toMatchObject([{ id, kept: true }]);
+  });
+
+  test("dismissing a report leaves its writes still underway to go on on their own", () => {
+    const states = createSaveStates();
+    const writes = [rename("A"), rename("B")];
+    const id = batchOf(states, writes);
+    states.settle(writes[0]!.mutationId, taken);
+    states.dismissReport(id!);
+    expect(states.open().map((state) => [state.status, state.batch])).toEqual([
+      ["pending", undefined],
+    ]);
   });
 });
