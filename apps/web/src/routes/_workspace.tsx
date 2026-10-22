@@ -1,10 +1,11 @@
 // The signed-in workspace (TS-03): client-only. Every route below this pathless layout inherits `ssr: false`,
 // so the server sends just the document and the browser renders the shell and loads the collection once, through
-// the sync client (src/features/sync).
+// the sync client (src/features/sync), with what it says about saving around it.
 // It needs a session (FR-11.1): a signed-out visit goes to sign-in and comes back here afterwards.
 
 import { currentAccount } from "@/features/account/session";
 import { Shell } from "@/features/shell/shell";
+import { SaveStateLayer } from "@/features/sync/save-state-layer";
 import { SyncProvider } from "@/features/sync/sync-provider";
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
 
@@ -25,9 +26,11 @@ function WorkspaceLayout() {
   const { account } = Route.useRouteContext();
   return (
     <SyncProvider account={account}>
-      <Shell account={account}>
-        <Outlet />
-      </Shell>
+      <SaveStateLayer>
+        <Shell account={account}>
+          <Outlet />
+        </Shell>
+      </SaveStateLayer>
     </SyncProvider>
   );
 }

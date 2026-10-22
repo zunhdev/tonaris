@@ -1,9 +1,11 @@
 // One signed-in client's sync: the engine on the stream, the outbox for writes, the save states, and the
 // collections. The web app makes one per tab, for the signed-in account (src/features/sync). With tabs, the
 // account's tabs share one stream, and the outbox and the review queue are kept in the browser, so a reload loses
-// nothing: the next tab adopts what a gone tab left unsent (TS-22, TS-23).
+// nothing: the next tab adopts what a gone tab left unsent (TS-22, TS-23). The client also tells changes saved
+// elsewhere from this tab's own, for the views to highlight (DS-82).
 
 import { createAlbumCollection } from "./albums";
+import { createChangesElsewhere } from "./elsewhere";
 import { createSyncEngine, type Fetch, type SyncEngineOptions } from "./engine";
 import { createContainerCollection, createMembershipCollection } from "./lists";
 import { createOutbox } from "./outbox";
@@ -54,9 +56,12 @@ export function createSyncClient({
   const albums = createAlbumCollection({ engine, writer });
   const containers = createContainerCollection({ engine, writer });
   const memberships = createMembershipCollection({ engine, writer });
+  // After the collections, so a listener hears of a change once its record is in them.
+  const elsewhere = createChangesElsewhere({ engine, states });
 
   async function stop(): Promise<void> {
     clearInterval(adopting);
+    elsewhere.stop();
     engine.stop();
     outbox.stop();
     options.tabs?.close();
@@ -70,6 +75,7 @@ export function createSyncClient({
     albums,
     containers,
     memberships,
+    elsewhere,
     /** Loads the kept conflicts, takes over gone tabs' unsent writes, and connects. */
     start(): void {
       void states.restore();

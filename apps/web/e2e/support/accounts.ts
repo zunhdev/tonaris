@@ -29,6 +29,12 @@ export const accounts = {
   syncTabs: at("sync-tabs"),
   syncHandover: at("sync-handover"),
   syncSignOut: at("sync-leave"),
+  // The save-state interface (save-states.e2e.ts), one per test.
+  saveSlow: at("save-slow"),
+  saveUnanswered: at("save-unanswered"),
+  saveFailed: at("save-failed"),
+  saveConflict: at("save-conflict"),
+  saveOffline: at("save-offline"),
 } as const;
 
 /** An address with no account. */

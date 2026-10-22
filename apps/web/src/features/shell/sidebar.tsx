@@ -1,8 +1,8 @@
 // The sidebar (DS-31): the account menu, then the sections in order as placeholders, with the items that need M2
-// (the collection tree, counts, sharing, the sync indicator) still to come. Nothing here implies a state it
-// can't vouch for (DS-06), so there is no save status yet.
+// (the collection tree, counts, sharing) still to come, and the SyncIndicator in the footer.
 
 import { AccountMenu } from "@/features/account/account-menu";
+import { SyncIndicator } from "@/features/sync/sync-indicator";
 import { Link } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 
@@ -49,6 +49,9 @@ export function Sidebar({ account }: { account: Account }) {
           ))}
         </ul>
       </ScrollArea>
+      <div className="shrink-0 border-t border-subtle p-2">
+        <SyncIndicator />
+      </div>
     </nav>
   );
 }
