@@ -83,6 +83,7 @@ export function createAlbumCollection({ engine, writer }: { engine: SyncEngine; 
     },
     onInsert: ({ transaction }) =>
       writer.persist(
+        transaction,
         transaction.mutations.map((pending) => ({
           key: pending.key,
           mutation: { mutationId: uuidv7(), name: "album.create", args: albumOf(pending.modified) },
@@ -90,6 +91,7 @@ export function createAlbumCollection({ engine, writer }: { engine: SyncEngine; 
       ),
     onUpdate: ({ transaction }) =>
       writer.persist(
+        transaction,
         transaction.mutations.map((pending) => ({
           key: pending.key,
           mutation: {

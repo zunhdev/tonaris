@@ -19,3 +19,17 @@ function readApiUrl(): string {
 }
 
 export const apiUrl: string = readApiUrl();
+
+/**
+ * The `<meta>` that switches on hooks for the browser tests (TS-121): the root route renders it only when the
+ * server runs with `TEST_HOOKS=1`, as the e2e setup does, so the production build is the one under test.
+ */
+export const testHooksMeta = "tonaris:test-hooks";
+
+function readTestHooks(): boolean {
+  if (typeof document === "undefined") return process.env.TEST_HOOKS === "1";
+  return document.querySelector(`meta[name="${testHooksMeta}"]`) !== null;
+}
+
+/** Whether this page may expose internals to the browser tests. */
+export const testHooks: boolean = readTestHooks();

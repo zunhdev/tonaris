@@ -1,13 +1,24 @@
-// The sync client end to end (TON-20): TanStack DB collections in two sessions of one account, against the real
-// API and Postgres in a child process, with the network failing on demand. FR-09 and FR-13 as a person sees them:
-// optimistic writes that settle only once saved, conflicts kept for review, unconfirmed writes reconciled
-// without duplicates, and streams that resume or start over.
+// The sync client end to end (TON-20, TON-30): TanStack DB collections in sessions and tabs of one account, against
+// the real API and Postgres in a child process, with the network failing on demand. FR-09 and FR-13 as a person
+// sees them: optimistic writes that settle only once saved, conflicts kept for review across reloads, unconfirmed
+// writes reconciled without duplicates, also by the next tab, streams that resume or start over, and tabs sharing
+// one stream. The browser's own storage, locks and channel are covered by the e2e suite.
 
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test";
 
-import { membershipKey, uuidv7, type Album, type Mutation } from "@tonaris/domain";
+import {
+  batchSchema,
+  membershipKey,
+  mutationSchema,
+  uuidv7,
+  type Album,
+  type Container,
+  type Mutation,
+} from "@tonaris/domain";
 
 import type { SyncClient } from "./client";
+import { memoryPersistence, type SyncPersistence } from "./persistence";
+import { memoryBrowser } from "./tabs";
 import { sessionFetch, startApiServer, testClient, until, type TestServer } from "./testing";
 import { MutationRejected, type SaveState } from "./writer";
 
@@ -15,7 +26,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(12);
+  server = await startApiServer(21);
 }, 30_000);
 
 afterAll(async () => {
@@ -353,5 +364,267 @@ describe("list entries (FR-01.6, FR-01.8, FR-09.1)", () => {
     await post({ mutationId: uuidv7(), name: "membership.remove", args });
     await until(() => !phone.memberships.has(key), 3_000, "the removal");
     expect(phone.albums.get(kindOfBlue.id)?.title).toBe("Kind of Blue");
+  });
+});
+
+/** A started client in a tab of `browser`, for one of the server's accounts, keeping its writes in `persistence`. */
+async function openTab(
+  account: number,
+  browser: ReturnType<typeof memoryBrowser>,
+  persistence: SyncPersistence,
+): Promise<ReturnType<typeof testClient>> {
+  const { id, sessions } = server.accounts[account] ?? { id: "", sessions: [] };
+  const started = testClient(server, sessions[0] ?? "", {
+    tabs: browser.tab(id),
+    persistence,
+    adoptEveryMs: 50,
+  });
+  open.push(started);
+  await started.albums.preload();
+  return started;
+}
+
+/** Writes through the API as another session of `account`, as a phone would. */
+async function postAs(account: number, mutation: Mutation): Promise<void> {
+  const web = sessionFetch(server, server.accounts[account]?.sessions[1] ?? "");
+  const response = await web.fetch(`${server.url}/v1/mutations`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(mutation),
+  });
+  expect(response.status).toBe(200);
+}
+
+/** Makes `phone` miss the stream, then saves a new title from `web`: the phone's view is stale. */
+async function staleTitle(web: SyncClient, phone: ReturnType<typeof testClient>, id: string) {
+  await until(() => phone.albums.has(id));
+  phone.network.faults.noStream = true;
+  phone.network.cutStreams();
+  await web.albums
+    .update(id, (draft) => {
+      draft.title = "A";
+    })
+    .when("settled");
+}
+
+describe("rejected values (FR-09.3)", () => {
+  test("after a title conflict, a pending year edit never shows the rejected title, and still saves", async () => {
+    const web = await openClient(12, 0);
+    const phone = await openClient(12, 1);
+    const args = await saved(web);
+    await staleTitle(web, phone, args.id);
+
+    const title = phone.albums.update(args.id, (draft) => {
+      draft.title = "B";
+    });
+    phone.albums.update(args.id, (draft) => {
+      draft.originalYear = 1960;
+    });
+    expect(await title.when("settled").catch((caught: unknown) => caught)).toBeInstanceOf(
+      MutationRejected,
+    );
+    expect(phone.albums.get(args.id)?.title).toBe("Kind of Blue");
+
+    phone.network.faults.noStream = false;
+    await until(
+      () =>
+        phone.albums.get(args.id)?.originalYear === 1960 &&
+        phone.albums.get(args.id)?.title === "A",
+      3_000,
+      "the saved title and year",
+    );
+  });
+
+  test("a conflict waits for review in the next client on the same storage, until dismissed", async () => {
+    const persistence = memoryPersistence();
+    const web = await openClient(13, 0);
+    const phone = await openClient(13, 1, { persistence });
+    const args = await saved(web);
+    await staleTitle(web, phone, args.id);
+    const tx = phone.albums.update(args.id, (draft) => {
+      draft.title = "B";
+    });
+    await tx.when("settled").catch(() => {});
+    await phone.stop();
+
+    const later = await openClient(13, 1, { persistence });
+    await until(() => later.states.conflicts().length === 1, 3_000, "the kept conflict");
+    const [conflict] = later.states.conflicts();
+    expect(conflict?.outcome).toEqual({
+      status: "conflict",
+      conflicts: [{ field: "title", current: "A", attempted: "B", base: "Kind of Blue" }],
+    });
+    later.states.dismiss(conflict?.mutation.mutationId ?? "");
+    await Bun.sleep(1);
+    expect(await persistence.conflicts()).toEqual([]);
+  });
+});
+
+describe("folders, lists and entries (FR-09.3, TON-26, TON-27)", () => {
+  test("a list created, renamed and moved, and an album added and removed, each saved and seen elsewhere", async () => {
+    const web = await openClient(14, 0);
+    const phone = await openClient(14, 1);
+    await Promise.all([phone.containers.preload(), phone.memberships.preload()]);
+    const args = await saved(web);
+    const folder: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Jazz" };
+    const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Favorites" };
+
+    await web.containers.insert([folder, list]).when("settled");
+    expect(web.network.writes.at(-1)).toBe("batches");
+    await web.containers
+      .update(list.id, (draft) => {
+        draft.name = "Desert island";
+        draft.parentId = folder.id;
+      })
+      .when("settled");
+    await until(
+      () =>
+        phone.containers.get(list.id)?.name === "Desert island" &&
+        phone.containers.get(list.id)?.parentId === folder.id,
+      3_000,
+      "the renamed and moved list",
+    );
+
+    const key = membershipKey(list.id, args.id);
+    await web.memberships
+      .insert({ listId: list.id, albumId: args.id, addedAt: new Date().toISOString() })
+      .when("settled");
+    await until(() => phone.memberships.has(key), 3_000, "the entry");
+    await web.memberships.delete(key).when("settled");
+    await until(() => !phone.memberships.has(key), 3_000, "the removal");
+  });
+
+  test("a list named like a sibling rolls back, and the conflict is reported", async () => {
+    const web = await openClient(15, 0);
+    await web.containers.preload();
+    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    await web.containers.insert(later).when("settled");
+    const twin: Container = { ...later, id: uuidv7(), name: "later" };
+    const error = await web.containers
+      .insert(twin)
+      .when("settled")
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(MutationRejected);
+    expect(web.containers.has(twin.id)).toBe(false);
+    expect(error instanceof MutationRejected && error.outcome).toMatchObject({
+      code: "name_conflict",
+    });
+  });
+
+  test("three albums added in one action go as one batch, each settling on its own", async () => {
+    const web = await openClient(16, 0);
+    const three = [album({ title: "One" }), album({ title: "Two" }), album({ title: "Three" })];
+    await web.albums.insert(three).when("settled");
+    expect(web.network.writes).toEqual(["batches"]);
+    expect(three.every((each) => web.albums.has(each.id))).toBe(true);
+    const ids = batchSchema
+      .parse(JSON.parse(web.network.sent[0] ?? "{}"))
+      .items.map((item) => item.mutationId);
+    expect(ids.map((id) => web.states.get(id)?.status)).toEqual([
+      "confirmed",
+      "confirmed",
+      "confirmed",
+    ]);
+  });
+});
+
+describe("tabs sharing one stream (TS-23)", () => {
+  test("two tabs hold one stream, and a write from the follower settles in both", async () => {
+    const browser = memoryBrowser();
+    const persistence = memoryPersistence();
+    const first = await openTab(17, browser, persistence);
+    await until(() => first.engine.leading, 3_000, "the first tab to lead");
+    const second = await openTab(17, browser, persistence);
+    expect(second.engine.leading).toBe(false);
+
+    const args = album();
+    await second.albums.insert(args).when("settled");
+    await until(() => first.albums.has(args.id), 3_000, "the leader to show it");
+    expect(first.network.streamsOpened + second.network.streamsOpened).toBe(1);
+    expect(second.engine.status).toBe("live");
+  });
+
+  test("when the streaming tab closes, the other streams from its cursor and misses nothing", async () => {
+    const browser = memoryBrowser();
+    const persistence = memoryPersistence();
+    const first = await openTab(18, browser, persistence);
+    await until(() => first.engine.leading, 3_000, "the first tab to lead");
+    const second = await openTab(18, browser, persistence);
+    await first.stop();
+
+    const args = album();
+    await postAs(18, { mutationId: uuidv7(), name: "album.create", args });
+    await until(() => second.albums.has(args.id), 3_000, "the change after the handover");
+    expect(second.engine.leading).toBe(true);
+    expect(second.network.streamsOpened).toBe(1);
+  });
+
+  test("a closed tab's write whose answer was lost is sent again by the next tab, and applied once", async () => {
+    const browser = memoryBrowser();
+    const persistence = memoryPersistence();
+    const first = await openTab(19, browser, persistence);
+    // The server saves the album, but no answer ever comes back before the tab closes.
+    first.network.faults.dropAnswers = 1_000;
+    const args = album();
+    const tx = first.albums.insert(args);
+    tx.isPersisted.promise.catch(() => {});
+    await until(() => first.network.sent.length > 0, 3_000, "the send");
+    await first.stop();
+    expect(await persistence.entries()).toHaveLength(1);
+
+    const second = await openTab(19, browser, persistence);
+    const { mutationId } = mutationSchema.parse(JSON.parse(first.network.sent[0] ?? "{}"));
+    await until(
+      () => second.states.get(mutationId)?.status === "confirmed",
+      3_000,
+      "the reconciled write",
+    );
+    expect(second.albums.size).toBe(1);
+    expect(second.albums.get(args.id)?.title).toBe("Kind of Blue");
+    expect(await persistence.entries()).toEqual([]);
+  });
+
+  test("edits made while the API can't be reached go out in order once it can", async () => {
+    const web = await openClient(20, 0);
+    const phone = await openClient(20, 1);
+    await Promise.all([web.containers.preload(), phone.memberships.preload()]);
+    const args = await saved(web);
+    const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    await web.containers.insert(list).when("settled");
+
+    web.network.faults.offline = true;
+    web.network.cutStreams();
+    const renamed = web.containers.update(list.id, (draft) => {
+      draft.name = "Favorites";
+    });
+    const added = web.memberships.insert({
+      listId: list.id,
+      albumId: args.id,
+      addedAt: new Date().toISOString(),
+    });
+    const [renameId, addId] = [...web.outbox.queued].map((mutation) => mutation.mutationId);
+    await until(
+      () => web.states.get(renameId ?? "")?.status === "unconfirmed",
+      3_000,
+      "unconfirmed",
+    );
+    expect(web.containers.get(list.id)?.name).toBe("Favorites");
+
+    const before = web.network.sent.length;
+    web.network.faults.offline = false;
+    await Promise.all([renamed.when("settled"), added.when("settled")]);
+    const order = web.network.sent
+      .slice(before)
+      .map((body) => mutationSchema.parse(JSON.parse(body)).name);
+    expect(order.filter((name, index) => name !== order[index - 1])).toEqual([
+      "container.rename",
+      "membership.add",
+    ]);
+    expect(web.states.get(addId ?? "")?.status).toBe("confirmed");
+    await until(
+      () => phone.memberships.has(membershipKey(list.id, args.id)),
+      3_000,
+      "the entry elsewhere",
+    );
   });
 });

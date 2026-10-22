@@ -1,7 +1,7 @@
 // The document every route renders into. Workspace routes are client-only, but the server still sends this
 // shell, so even their first paint is dark (DS-11) and styled.
 
-import { apiUrl, apiUrlMeta } from "@/config";
+import { apiUrl, apiUrlMeta, testHooks, testHooksMeta } from "@/config";
 import { createRootRoute, HeadContent, Link, Scripts, useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
@@ -17,6 +17,7 @@ export const Route = createRootRoute({
       { title: "Tonaris" },
       // The API origin the server was configured with, for the browser (src/config.ts).
       { name: apiUrlMeta, content: apiUrl },
+      ...(testHooks ? [{ name: testHooksMeta, content: "on" }] : []),
     ],
     links: [{ rel: "stylesheet", href: stylesheet }],
   }),

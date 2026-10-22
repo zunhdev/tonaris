@@ -1,9 +1,11 @@
 // The signed-in workspace (TS-03): client-only. Every route below this pathless layout inherits `ssr: false`,
-// so the server sends just the document and the browser renders the shell and loads the collection once.
+// so the server sends just the document and the browser renders the shell and loads the collection once, through
+// the sync client (src/features/sync).
 // It needs a session (FR-11.1): a signed-out visit goes to sign-in and comes back here afterwards.
 
 import { currentAccount } from "@/features/account/session";
 import { Shell } from "@/features/shell/shell";
+import { SyncProvider } from "@/features/sync/sync-provider";
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
 
 import { Button } from "@tonaris/ui/components/button";
@@ -22,9 +24,11 @@ export const Route = createFileRoute("/_workspace")({
 function WorkspaceLayout() {
   const { account } = Route.useRouteContext();
   return (
-    <Shell account={account}>
-      <Outlet />
-    </Shell>
+    <SyncProvider account={account}>
+      <Shell account={account}>
+        <Outlet />
+      </Shell>
+    </SyncProvider>
   );
 }
 

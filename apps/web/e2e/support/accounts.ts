@@ -22,6 +22,13 @@ export const accounts = {
   mcpDefault: at("mcp-default"),
   approver: at("approver"),
   stranger: at("stranger"),
+  // The sync client in the browser (sync-client.e2e.ts), one per test.
+  syncReload: at("sync-reload"),
+  syncQueued: at("sync-queued"),
+  syncOffline: at("sync-offline"),
+  syncTabs: at("sync-tabs"),
+  syncHandover: at("sync-handover"),
+  syncSignOut: at("sync-leave"),
 } as const;
 
 /** An address with no account. */
