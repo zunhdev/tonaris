@@ -59,11 +59,11 @@ const sendStarted = new Map<string, number>();
 const answered = new Map<string, number>();
 // Times the POST round trip by watching the outbox report each mutation's answer.
 const send = web.outbox.enqueue.bind(web.outbox);
-web.outbox.enqueue = async (mutation) => {
-  sendStarted.set(mutation.mutationId, performance.now());
-  const outcome = await send(mutation);
-  answered.set(mutation.mutationId, performance.now());
-  return outcome;
+web.outbox.enqueue = async (items) => {
+  for (const { mutation } of items) sendStarted.set(mutation.mutationId, performance.now());
+  const outcomes = await send(items);
+  for (const { mutation } of items) answered.set(mutation.mutationId, performance.now());
+  return outcomes;
 };
 
 for (let index = 0; index < edits; index += 1) {

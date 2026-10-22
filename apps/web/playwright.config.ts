@@ -42,7 +42,8 @@ export default defineConfig({
     {
       command: `bun --bun vite build && bun --bun vite preview --port ${port} --strictPort`,
       url: `http://localhost:${port}/sign-in`,
-      env: { API_URL: apiUrl },
+      // The production build, with the sync client exposed to the tests (src/config.ts).
+      env: { API_URL: apiUrl, TEST_HOOKS: "1" },
       timeout: 120_000,
     },
   ],

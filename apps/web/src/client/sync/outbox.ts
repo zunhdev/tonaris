@@ -1,37 +1,59 @@
-// The client's outbox (TS-22): mutations go to the server one at a time, in the order they were made, so a later
-// change never overtakes the one it depends on (create a list, then add to it). A mutation sent without an
-// answer is unconfirmed: the outbox keeps it at the head and sends the same envelope again, after a backoff or as
-// soon as the connection is back. The server applies it once or returns the stored outcome, so the retry is how
-// an unconfirmed outcome is reconciled (FR-13.5). Persisting the queue to IndexedDB is TON-30's.
+// The client's outbox (TS-22): writes go to the server one entry at a time, in the order they were made, so a
+// later change never overtakes the one it depends on (create a list, then add to it). An entry is one transaction's
+// writes: one goes to POST /v1/mutations, several to POST /v1/batches (TS-25). An entry sent without an answer is
+// unconfirmed: the outbox keeps it at the head and sends the same envelopes again, after a backoff or as soon as
+// the connection is back. The server applies them once or returns the stored outcomes, so the retry is how an
+// unconfirmed outcome is reconciled (FR-13.5).
+// Entries are kept in the browser until answered, owned by this tab. A reloaded or closed tab's entries are adopted
+// by another tab of the account, which sends them on (`adopt`), so a reload loses no write.
 
-import type { Mutation, Outcome } from "@tonaris/domain";
+import { maxBatchItems, uuidv7, type Mutation, type Outcome } from "@tonaris/domain";
 
-/** What sending gave: the server's outcome, or no answer (a network error, a timeout, a 5xx). */
-export type Sent = { answered: Outcome } | { unanswered: unknown };
+import type { OutboxEntry, OutboxItem, SyncPersistence } from "./persistence";
+import type { TabCoordinator } from "./tabs";
 
-/** `pending` while queued or in flight; `unconfirmed` once a send went unanswered. */
+/** What sending an entry gave: each item's outcome, in order, or no answer (a network error, a timeout, a 5xx). */
+export type Sent = { answered: Outcome[] } | { unanswered: unknown };
+
+/** `pending` while queued or in flight; `unconfirmed` once a send went unanswered, or after adoption. */
 export type QueuedState = "pending" | "unconfirmed";
 
 export type OutboxOptions = {
-  send: (mutation: Mutation) => Promise<Sent>;
-  /** Delays between sends of an unanswered mutation: full jitter up to an exponential cap. */
+  send: (entry: OutboxEntry) => Promise<Sent>;
+  /** Where entries are kept until answered; without it, a reload loses them. */
+  persistence?: SyncPersistence;
+  /** This tab, which owns new entries and adopts gone tabs' (TS-23). */
+  tab?: Pick<TabCoordinator, "id" | "adopt">;
+  /** Delays between sends of an unanswered entry: full jitter up to an exponential cap. */
   backoff?: { minMs: number; maxMs: number };
   onState?: (mutation: Mutation, state: QueuedState) => void;
+  /** An entry adopted from a gone tab, with its outcomes once answered. */
+  onAdopted?: (entry: OutboxEntry, outcomes: Promise<Outcome[]>) => void;
+  /** Gets a failure to read or write the kept entries; sending goes on regardless. */
+  logError?: (error: unknown) => void;
 };
 
 export type Outbox = ReturnType<typeof createOutbox>;
 
-type Entry = { mutation: Mutation; resolve(outcome: Outcome): void };
+type Queued = { entry: OutboxEntry; stored: Promise<void>; resolve(outcomes: Outcome[]): void };
 
 export function createOutbox({
   send,
+  persistence,
+  tab,
   backoff = { minMs: 500, maxMs: 30_000 },
   onState = () => {},
+  onAdopted = () => {},
+  logError = (error) => console.error("The outbox couldn't use the browser's storage", error),
 }: OutboxOptions) {
-  const queue: Entry[] = [];
+  const owner = tab?.id ?? crypto.randomUUID();
+  const queue: Queued[] = [];
+  let sending: Queued | undefined;
   let draining = false;
   let stopped = false;
   let wake: (() => void) | undefined;
+  // Entries made in the same millisecond keep their order.
+  let lastCreated = 0;
 
   const rest = (attempt: number) =>
     new Promise<void>((resolve) => {
@@ -52,15 +74,21 @@ export function createOutbox({
     for (;;) {
       const head = queue[0];
       if (!head || stopped) break;
+      sending = head;
+      // Kept before it goes out, so a reload during the send can still reconcile it.
       // oxlint-disable-next-line no-await-in-loop
-      const sent = await send(head.mutation);
+      await head.stored;
+      // oxlint-disable-next-line no-await-in-loop
+      const sent = await send(head.entry);
+      sending = undefined;
       if ("answered" in sent) {
         queue.shift();
         attempt = 0;
+        persistence?.deleteEntry(head.entry.id).catch(logError);
         head.resolve(sent.answered);
         continue;
       }
-      onState(head.mutation, "unconfirmed");
+      for (const { mutation } of head.entry.items) onState(mutation, "unconfirmed");
       // oxlint-disable-next-line no-await-in-loop
       await rest(attempt);
       attempt += 1;
@@ -68,30 +96,87 @@ export function createOutbox({
     draining = false;
   }
 
+  /** Queues `entry`, at `index`; resolves with its outcomes, however many sends that takes. */
+  function queueEntry(entry: OutboxEntry, stored: Promise<void>, index = queue.length) {
+    return new Promise<Outcome[]>((resolve) => {
+      queue.splice(index, 0, { entry, stored, resolve });
+      void drain();
+    });
+  }
+
   return {
-    /** Queues `mutation`; resolves with the server's outcome, however many sends that takes. */
-    enqueue(mutation: Mutation): Promise<Outcome> {
-      return new Promise((resolve) => {
-        queue.push({ mutation, resolve });
-        onState(mutation, "pending");
-        void drain();
-      });
+    /**
+     * Queues one transaction's writes; resolves with each one's outcome, in order. More than a batch holds goes as
+     * consecutive entries.
+     */
+    async enqueue(items: readonly OutboxItem[]): Promise<Outcome[]> {
+      const sent: Promise<Outcome[]>[] = [];
+      for (let start = 0; start < items.length; start += maxBatchItems) {
+        lastCreated = Math.max(lastCreated + 0.001, Date.now());
+        const entry: OutboxEntry = {
+          id: uuidv7(),
+          tab: owner,
+          createdAt: lastCreated,
+          items: items.slice(start, start + maxBatchItems),
+        };
+        for (const { mutation } of entry.items) onState(mutation, "pending");
+        sent.push(
+          queueEntry(entry, persistence?.putEntry(entry).catch(logError) ?? Promise.resolve()),
+        );
+      }
+      return (await Promise.all(sent)).flat();
     },
 
-    /** Sends an unanswered mutation again now, as when the stream reconnects. */
+    /**
+     * Takes over the entries of this account's gone tabs, oldest first, and sends them before anything not yet
+     * sent. Each gone tab is adopted under its lock, so no entry is adopted twice.
+     */
+    async adopt(): Promise<void> {
+      if (!persistence || !tab || stopped) return;
+      try {
+        const gone = new Set(
+          (await persistence.entries()).map((entry) => entry.tab).filter((id) => id !== owner),
+        );
+        const adopted: OutboxEntry[] = [];
+        for (const id of gone) {
+          // oxlint-disable-next-line no-await-in-loop
+          await tab.adopt(id, async () => {
+            const theirs = (await persistence.entries()).filter((entry) => entry.tab === id);
+            for (const entry of theirs) {
+              const mine = { ...entry, tab: owner };
+              // oxlint-disable-next-line no-await-in-loop
+              await persistence.putEntry(mine);
+              adopted.push(mine);
+            }
+          });
+        }
+        // After the entry in flight, if any: it can't be called back.
+        const at = sending ? 1 : 0;
+        for (const [offset, entry] of adopted
+          .toSorted((a, b) => a.createdAt - b.createdAt)
+          .entries()) {
+          for (const { mutation } of entry.items) onState(mutation, "unconfirmed");
+          onAdopted(entry, queueEntry(entry, Promise.resolve(), at + offset));
+        }
+      } catch (error) {
+        logError(error);
+      }
+    },
+
+    /** Sends an unanswered entry again now, as when the stream reconnects. */
     wake(): void {
       wake?.();
     },
 
-    /** Stops sending. Queued mutations stay unsettled (a reload restores them, TON-30). */
+    /** Stops sending. Queued entries stay kept, for the next tab to adopt. */
     stop(): void {
       stopped = true;
       wake?.();
     },
 
-    /** The mutations not yet answered, oldest first. */
+    /** The writes not yet answered, oldest first. */
     get queued(): readonly Mutation[] {
-      return queue.map((entry) => entry.mutation);
+      return queue.flatMap(({ entry }) => entry.items.map((item) => item.mutation));
     },
   };
 }

@@ -1,12 +1,25 @@
 // The account menu at the top of the sidebar (DS-31): the display name, or the email until there is one.
 // **Connections** leads to Settings → Connections (DS-86), the only settings page so far; Admin and the
-// shortcuts list join **Sign out** with their issues.
+// shortcuts list join **Sign out** with their issues. Signing out deletes what this browser keeps for the account:
+// unsent changes and conflicts waiting for review. With changes still unsent, it asks first (decided 22 October
+// 2026).
 
+import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
 import { ChevronsUpDown, LogOut, Plug } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { Account } from "@tonaris/domain";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@tonaris/ui/components/alert-dialog";
 import { Button } from "@tonaris/ui/components/button";
 import {
   DropdownMenu,
@@ -21,18 +34,31 @@ import { forgetAccount } from "./session";
 
 export function AccountMenu({ account }: { account: Account }) {
   const router = useRouter();
+  const sync = useSyncClient();
   const [error, setError] = useState<string>();
+  /** The unsent changes the person is asked about, while the dialog is open. */
+  const [unsent, setUnsent] = useState<number>();
+  // Discarding changes can't be undone, so Cancel has the focus (DS-28).
+  const cancel = useRef<HTMLButtonElement>(null);
 
   async function leave() {
+    setUnsent(undefined);
     setError(undefined);
     const result = await signOut();
     if (!result.ok) {
       setError(authFailureMessage(result));
       return;
     }
+    await sync?.clear();
     forgetAccount();
     forgetSignIn();
     await router.navigate({ to: "/sign-in" });
+  }
+
+  function chooseSignOut() {
+    const waiting = sync?.unsent ?? 0;
+    if (waiting > 0) setUnsent(waiting);
+    else void leave();
   }
 
   return (
@@ -52,7 +78,7 @@ export function AccountMenu({ account }: { account: Account }) {
             <Plug strokeWidth={1.5} aria-hidden />
             Connections
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void leave()}>
+          <DropdownMenuItem onClick={chooseSignOut}>
             <LogOut strokeWidth={1.5} aria-hidden />
             Sign out
           </DropdownMenuItem>
@@ -63,6 +89,28 @@ export function AccountMenu({ account }: { account: Account }) {
           {error}
         </p>
       )}
+      <AlertDialog
+        open={unsent !== undefined}
+        onOpenChange={(open) => {
+          if (!open) setUnsent(undefined);
+        }}
+      >
+        <AlertDialogContent initialFocus={cancel}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out with unsaved changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {unsent === 1 ? "1 change hasn't" : `${unsent} changes haven't`} been saved yet.
+              Signing out discards {unsent === 1 ? "it" : "them"}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel ref={cancel}>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="danger" onClick={() => void leave()}>
+              Sign out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

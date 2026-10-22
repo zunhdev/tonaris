@@ -66,6 +66,8 @@
   --status-info: var(--blue-720);
   --focus: var(--accent-solid);
   --shadow-color: var(--black-a40);
+  /* Dims the page behind a dialog. */
+  --scrim: var(--black-a40);
 }
 
 /* 3. Component tokens: shadcn's variables, theme-independent because they point at semantic tokens */
@@ -167,6 +169,7 @@
   --color-status-danger: var(--status-danger);
   --color-status-info: var(--status-info);
   --color-focus: var(--focus);
+  --color-scrim: var(--scrim);
 
   /* Component tokens, for shadcn's components */
   --color-background: var(--background);

@@ -50,9 +50,9 @@ export type Faults = {
   offline: boolean;
   /** Stream requests fail, while mutations still go through. */
   noStream: boolean;
-  /** Mutation requests that fail before reaching the server. */
+  /** Write requests (a mutation or a batch) that fail before reaching the server. */
   failSends: number;
-  /** Mutation requests the server handles whose answer is lost on the way back. */
+  /** Write requests the server handles whose answer is lost on the way back. */
   dropAnswers: number;
 };
 
@@ -61,22 +61,28 @@ export function sessionFetch(server: TestServer, cookie: string) {
   const faults: Faults = { offline: false, noStream: false, failSends: 0, dropAnswers: 0 };
   const streams = new Set<AbortController>();
   const sent: string[] = [];
+  const writes: string[] = [];
+  let streamsOpened = 0;
 
   const fetcher: Fetch = async (url, init = {}) => {
     const headers = new Headers(init.headers);
     headers.set("cookie", cookie);
     headers.set("origin", server.webOrigin);
     const isStream = url.includes("/v1/sync/stream");
-    const isMutation = url.endsWith("/v1/mutations");
+    const isWrite = url.endsWith("/v1/mutations") || url.endsWith("/v1/batches");
     if (faults.offline || (isStream && faults.noStream)) throw new TypeError("Failed to fetch");
-    if (isMutation && faults.failSends > 0) {
+    if (isWrite && faults.failSends > 0) {
       faults.failSends -= 1;
       throw new TypeError("Failed to fetch");
     }
-    if (isMutation && typeof init.body === "string") sent.push(init.body);
+    if (isWrite && typeof init.body === "string") {
+      sent.push(init.body);
+      writes.push(url.slice(url.lastIndexOf("/") + 1));
+    }
+    if (isStream) streamsOpened += 1;
     if (!isStream) {
       const response = await fetch(url, { ...init, headers });
-      if (isMutation && faults.dropAnswers > 0) {
+      if (isWrite && faults.dropAnswers > 0) {
         faults.dropAnswers -= 1;
         await response.body?.cancel();
         throw new TypeError("The network connection was lost.");
@@ -97,8 +103,14 @@ export function sessionFetch(server: TestServer, cookie: string) {
   return {
     fetch: fetcher,
     faults,
-    /** The mutation bodies sent, retries included. */
+    /** The write bodies sent, retries included. */
     sent,
+    /** Which endpoint each sent write went to: `mutations` or `batches`. */
+    writes,
+    /** Stream connections opened, reconnects included. */
+    get streamsOpened(): number {
+      return streamsOpened;
+    },
     /** Cuts every open stream of this session. */
     cutStreams(): void {
       for (const cut of streams) cut.abort();
