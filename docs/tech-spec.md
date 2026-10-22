@@ -342,7 +342,8 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 | Names (containers, fields, options) | 200 characters |
 | Descriptions and text values | 2,000 characters |
 | Saved shared references | 100 |
-| MCP, per grant | 120 reads/min, 60 writes/min, batch ≤ 200, 4 concurrent requests |
+| Batch size, every client (decided 22 October 2026) | 200 items |
+| MCP, per grant | 120 reads/min, 60 writes/min, 4 concurrent requests |
 | Captures | 100 per hour |
 | Exports | 5 per hour |
 
@@ -367,7 +368,7 @@ type Mutation = {
 type Batch = { batchId: string; items: (Mutation & { dependsOn?: string[] })[] };
 ```
 
-`POST /v1/mutations` accepts a single mutation or a batch. Execution goes through these steps:
+`POST /v1/mutations` takes a single mutation, and `POST /v1/batches` a batch (TS-25). Two endpoints keep each request and response one shape for generated clients; TS-20 first planned one endpoint for both (changed in TON-28). A mutation goes through these steps:
 
 1. Authenticate the principal.
 2. Take the owner's write lock with `SELECT seq FROM account_sync … FOR UPDATE`; the row is created on first use. The row lock serializes that owner's writes, so commit order equals `seq` order. A copy of a mutation that arrives while the first is still running waits here.
@@ -434,7 +435,15 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 - **Conflicts.** The `conflict` outcome carries current and attempted values. The attempt is kept in a client-side **review queue**, which survives reload through IndexedDB, until the user resolves it (FR-09.4; design: conflict review).
 - **Viewers.** Shared roots are separate read-only collections, refilled on invalidation.
 
-**TS-25 Batches (Decided; FR-13.4).** A batch is a dependency graph. Items run in order, each in its own transaction. Independent successes commit and stay committed. An item whose `dependsOn` prerequisite failed, was skipped, or is pending is not run and is marked `skipped` with the reason. The response lists every item's status. Capacity is checked per item, so a batch that exceeds capacity reports exactly which items were not added (FR-15.3).
+**TS-25 Batches (Decided; FR-13.4; built in TON-28).** A batch is a dependency graph, sent to `POST /v1/batches` as `{batchId, items}` and answered with `{batchId, items: [{mutationId, outcome}]}` in the order sent.
+
+- **Size.** 1 to 200 items, from every client: the app, native clients and MCP (TS-18, decided 22 October 2026).
+- **Execution.** Items run in order, each as its own mutation: its own transaction under the owner's write lock (TS-20). Independent successes commit and stay committed. Each item's changes go to the stream as it commits, not when the batch ends. Other writes may run between items, and are judged like any write.
+- **Dependencies.** An item's `dependsOn` names earlier items of its batch. It runs only if each is `confirmed`. Otherwise it is `skipped`, naming the first prerequisite that wasn't and that prerequisite's status as `because`: `failed`, `conflict`, `skipped`, `needs_input` or `needs_approval`. Dependencies across requests don't exist; the outbox's order gives causality there (TS-22).
+- **Validation.** The frame is checked as a whole: a v7 `batchId`, 1–200 items, each with a v7 `mutationId` that no other item repeats. A batch that fails it is a 422 problem, and no item runs. Each item is then validated on its own, against the mutation envelope and for `dependsOn` naming earlier items. A bad item gets `failed` with `validation_failed` and paths within the item, while the others run. The OpenAPI document therefore gives the items loosely and the item schema as the `BatchItem` component.
+- **Records.** Items that ran are stored as mutations, so they replay and `GET /v1/mutations/{id}` finds them. Skipped and invalid items are not stored, so the same item can be sent again once its prerequisite is fixed. A batch sent again applies nothing twice: what ran replays, and the rest is judged again.
+- **Capacity** is checked per item, so a batch that exceeds capacity reports exactly which items were not added (FR-15.3).
+- `runBatch` (`packages/domain/src/batches.ts`) holds these rules, so MCP's batch tools (M9) reuse them. `executeBatch` (`packages/db/src/sync.ts`) runs them over `executeMutation`.
 
 **TS-26 Choices needing input (Decided; FR-01.15, FR-01.16, FR-02.9).** These commands return `needs_input` with the candidates instead of guessing:
 
@@ -455,7 +464,7 @@ The input is then resubmitted as a new mutation carrying the user's choice. Unre
 | `unconfirmed` | Outcome unknown (network) | "not yet confirmed", reconciling |
 | `needs_input` | A choice is required (TS-26) | inline choice |
 | `needs_approval` | MCP gated operation (TS-64) | approval page |
-| `skipped` | Batch dependency not met | per item, in the batch report |
+| `skipped` | Batch dependency not met: names the prerequisite and its status (`failed`, `conflict`, `skipped`, `needs_input`, `needs_approval`, `pending`; TS-25) | per item, in the batch report |
 
 Error `code`s:
 
@@ -862,7 +871,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 | --- | --- |
 | Read calls | 120 per minute |
 | Write calls | 60 per minute |
-| Batch size | ≤ 200 items |
+| Batch size | ≤ 200 items, as for every client (TS-18, TS-25) |
 | Concurrent requests | 4 |
 
 ---

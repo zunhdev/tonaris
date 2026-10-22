@@ -37,6 +37,7 @@ export { migrateDatabase, migrationsFolder } from "./migrations";
 export * from "./schema";
 export {
   bootstrapSnapshot,
+  executeBatch,
   executeMutation,
   findMutationResult,
   headSeq,

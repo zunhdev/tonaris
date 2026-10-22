@@ -62,6 +62,15 @@ export {
   type ApprovalStatus,
 } from "./approvals";
 export {
+  batchItemSchema,
+  batchResultSchema,
+  batchSchema,
+  runBatch,
+  type Batch,
+  type BatchItem,
+  type BatchResult,
+} from "./batches";
+export {
   containerKinds,
   containerSchema,
   type Container,
@@ -77,7 +86,13 @@ export {
   type StoredAlbum,
 } from "./commands";
 export { uuidv7, uuidv7Time } from "./ids";
-export { maxContainerDepth, maxContainers, maxMemberships, maxNameLength } from "./limits";
+export {
+  maxBatchItems,
+  maxContainerDepth,
+  maxContainers,
+  maxMemberships,
+  maxNameLength,
+} from "./limits";
 export { membershipKey, membershipSchema, type Membership } from "./memberships";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
 export { caseFold, nameKey, searchKey, searchMatches } from "./normalize";
@@ -91,6 +106,7 @@ export {
   outcomeSchema,
   outcomeStatuses,
   problemSchema,
+  skipReasons,
   type ErrorCode,
   type Failure,
   type FieldConflict,

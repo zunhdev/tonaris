@@ -8,7 +8,7 @@ import { toOpenAPISchema } from "@elysia/openapi";
 import type { AnyElysia } from "elysia";
 import { z } from "zod";
 
-import { changeSchema, problemSchema, streamResetSchema } from "@tonaris/domain";
+import { batchItemSchema, changeSchema, problemSchema, streamResetSchema } from "@tonaris/domain";
 
 const openapiVersion = "3.1.2";
 export const committedDocumentPath = path.join(import.meta.dir, "../openapi/v1.json");
@@ -95,12 +95,14 @@ export function openApiDocument(app: AnyElysia) {
     paths,
     components: {
       ...components,
-      // Problem, and the stream's events, which stream routes reference (TS-23).
+      // Problem, the stream's events, which stream routes reference (TS-23), and the batch item, which a batch's
+      // items are validated against one by one, so the route's own schema can't spell it out (TS-25).
       schemas: {
         ...components?.schemas,
         Problem: jsonSchema(problemSchema),
         Change: jsonSchema(changeSchema),
         StreamReset: jsonSchema(streamResetSchema),
+        BatchItem: jsonSchema(batchItemSchema),
       },
     },
   };
