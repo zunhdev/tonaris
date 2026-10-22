@@ -22,6 +22,7 @@ import { createEditing, placeFor, type Editing, type Editor } from "./editing";
 import { ancestorsOf, buildTree } from "./tree";
 
 type CollectionUi = {
+  accountId: string;
   editing: Editing;
   expanded: ReadonlySet<string>;
   setExpanded: (id: string, open: boolean) => void;
@@ -60,6 +61,7 @@ export function CollectionUiProvider({
 
   const value = useMemo<CollectionUi>(
     () => ({
+      accountId,
       editing,
       expanded,
       setExpanded: (id, open) =>
@@ -76,7 +78,7 @@ export function CollectionUiProvider({
         focused.current = id;
       },
     }),
-    [editing, expanded, update],
+    [accountId, editing, expanded, update],
   );
 
   return <CollectionUiContext value={value}>{children}</CollectionUiContext>;

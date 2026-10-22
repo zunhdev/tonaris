@@ -1,19 +1,25 @@
-// The collection views' frames (DS-30, DS-32, DS-105; FR-01.3): each view's header (breadcrumbs, its name as the
-// heading and in the page title) and, until TON-34's rows replace it, a one-line summary of what it holds, or its
-// empty state with one way forward. A folder link that names a list leads to the list, and the other way round; a
-// folder or list that doesn't exist says so, once the collection has loaded.
+// The collection views (DS-30, DS-32, DS-40, DS-105; FR-01.3, FR-05): each view's header (breadcrumbs, its name as
+// the heading and in the page title) over what it holds, or its empty state with one way forward. Folders and the
+// root show their folders and lists as rows; lists and Unsorted their albums as rows or cards, switched in the
+// header and kept per view on the device. A folder link that names a list leads to the list, and the other way
+// round; a folder or list that doesn't exist says so, once the collection has loaded.
 
 import { PageHeader } from "@/features/shell/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 
-import type { ContainerKind } from "@tonaris/domain";
+import type { Album, Container, ContainerKind } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
 
+import { AlbumCards } from "./album-cards";
+import { AlbumRows } from "./album-rows";
 import { useStartEditor } from "./collection-ui";
+import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
+import { LayoutSwitch, useLayout } from "./layout-switch";
+import { chronological } from "./order";
 import { ancestorsOf } from "./tree";
 
 /** Names the page "{title} · Tonaris": the view's name is only in the client store, so the route can't. */
@@ -23,8 +29,6 @@ function useDocumentTitle(title: string): void {
   }, [title]);
 }
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-
 function Body({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
@@ -33,11 +37,40 @@ function Body({ children }: { children: ReactNode }) {
   );
 }
 
-function Summary({ children }: { children: ReactNode }) {
+/** A folder's or the root's folders and lists, as rows (DS-41). */
+function ContainersBody({
+  containers,
+  label,
+}: {
+  containers: readonly Container[];
+  label: string;
+}) {
+  const { tree, counts } = useCollectionData();
   return (
-    <Body>
-      <p className="text-fg-secondary">{children}</p>
-    </Body>
+    <ContainerRows
+      containers={containers}
+      label={label}
+      albumCounts={counts}
+      childCounts={(folderId) => tree.children.get(folderId)?.length ?? 0}
+    />
+  );
+}
+
+/** A list's or Unsorted's albums, as rows or cards (DS-21, DS-22, DS-40), in chronological order until TON-35. */
+function AlbumsBody({
+  albums,
+  label,
+  layout,
+}: {
+  albums: readonly Album[];
+  label: string;
+  layout: "rows" | "grid";
+}) {
+  const ordered = useMemo(() => chronological(albums), [albums]);
+  return layout === "grid" ? (
+    <AlbumCards albums={ordered} label={label} />
+  ) : (
+    <AlbumRows albums={ordered} label={label} />
   );
 }
 
@@ -80,7 +113,7 @@ export function RootView() {
     <>
       <PageHeader title="Collection" />
       {!ready ? null : count > 0 ? (
-        <Summary>{plural(count, "folder or list", "folders and lists")}</Summary>
+        <ContainersBody containers={tree.roots} label="Collection" />
       ) : (
         <Empty
           text="Start your collection — paste an album link or create a list."
@@ -94,9 +127,15 @@ export function RootView() {
 const kindNames: Record<ContainerKind, string> = { folder: "Folder", list: "List" };
 
 export function ContainerView({ id, kind }: { id: string; kind: ContainerKind }) {
-  const { tree, counts, ready } = useCollectionData();
+  const { tree, ready, albumsById, entriesByList } = useCollectionData();
   const navigate = useNavigate();
   const container = tree.byId.get(id);
+  const [layout, setLayout] = useLayout(id);
+  const entries = entriesByList.get(id);
+  const albums = useMemo(
+    () => (entries ?? []).flatMap((entry) => albumsById.get(entry.albumId) ?? []),
+    [entries, albumsById],
+  );
   useDocumentTitle(container?.name ?? (ready ? "Not available" : kindNames[kind]));
 
   // A folder's path given a list, or a list's given a folder, leads to the right one (DS-32).
@@ -140,19 +179,18 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
 
   let body: ReactNode;
   if (container.kind === "folder") {
-    const inside = tree.children.get(id)?.length ?? 0;
+    const inside = tree.children.get(id) ?? [];
     body =
-      inside > 0 ? (
-        <Summary>{plural(inside, "folder or list", "folders and lists")}</Summary>
+      inside.length > 0 ? (
+        <ContainersBody containers={inside} label={container.name} />
       ) : (
         <Empty text="This folder is empty." action={<NewListButton parentId={id} />} />
       );
   } else {
-    const albums = counts.get(id) ?? 0;
     // Add album comes with capture and manual entry (M3, TON-38).
     body =
-      albums > 0 ? (
-        <Summary>{plural(albums, "album", "albums")}</Summary>
+      albums.length > 0 ? (
+        <AlbumsBody albums={albums} label={container.name} layout={layout} />
       ) : (
         <Empty text="No albums yet. Paste a Spotify, Apple Music, Qobuz or Tidal link." />
       );
@@ -160,20 +198,36 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
 
   return (
     <>
-      <PageHeader title={container.name} breadcrumbs={breadcrumbs} />
+      <PageHeader
+        title={container.name}
+        breadcrumbs={breadcrumbs}
+        actions={
+          container.kind === "list" && albums.length > 0 ? (
+            <LayoutSwitch layout={layout} onChange={setLayout} />
+          ) : undefined
+        }
+      />
       {body}
     </>
   );
 }
 
 export function UnsortedView() {
-  const { unsorted, ready } = useCollectionData();
+  const { unsortedAlbums, ready } = useCollectionData();
+  const [layout, setLayout] = useLayout("unsorted");
   useDocumentTitle("Unsorted");
   return (
     <>
-      <PageHeader title="Unsorted" />
-      {!ready ? null : unsorted > 0 ? (
-        <Summary>{plural(unsorted, "album", "albums")}</Summary>
+      <PageHeader
+        title="Unsorted"
+        actions={
+          unsortedAlbums.length > 0 ? (
+            <LayoutSwitch layout={layout} onChange={setLayout} />
+          ) : undefined
+        }
+      />
+      {!ready ? null : unsortedAlbums.length > 0 ? (
+        <AlbumsBody albums={unsortedAlbums} label="Unsorted" layout={layout} />
       ) : (
         <Empty text="Albums that aren't in any list show up here." />
       )}

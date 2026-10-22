@@ -70,7 +70,7 @@ export function Sidebar({
       <div className="flex shrink-0 items-center gap-1 pr-2 pl-2">
         <Link
           to="/c"
-          className="flex h-7 min-w-0 flex-1 items-center rounded-md px-2 text-small font-medium text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus aria-[current=page]:text-fg-primary"
+          className="flex h-7 min-w-0 flex-1 items-center rounded-md px-2 text-small font-medium text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-[current=page]:text-fg-primary"
         >
           Collection
         </Link>

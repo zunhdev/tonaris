@@ -59,7 +59,7 @@ export function Shell({ account, children }: { account: Account; children: React
             onResize={(width) => setLayout((current) => ({ ...current, width }))}
           />
         )}
-        <main aria-labelledby={pageTitleId} className="flex min-w-0 flex-col bg-panel">
+        <main aria-labelledby={pageTitleId} className="flex min-h-0 min-w-0 flex-col bg-panel">
           <OfflineBanner />
           {children}
         </main>
