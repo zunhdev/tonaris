@@ -152,7 +152,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - Never introduce an unstyled third-party component without wrapping it in the system.
 - Supporting libraries:
   - **cmdk** for the command palette;
-  - **Sonner** for toasts;
+  - **Base UI's Toast** for toasts. Sonner was named first, but it injects its stylesheet as a `<style>` element without the CSP nonce, which TS-101 blocks (changed in TON-31);
   - **TanStack Virtual** for long collections;
   - **dnd-kit** for drag-and-drop (it has a keyboard sensor);
   - **react-day-picker** for date fields.
@@ -167,7 +167,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | Overlays | Popover, DropdownMenu, ContextMenu, Tooltip | Menus at 28px rows with shortcut hints (`Kbd`) |
 | Dialogs | Dialog, AlertDialog | The standard confirmation dialog (DS-28) is built on AlertDialog |
 | Mobile overlays | Drawer / Sheet (bottom) | Service chooser, view options, album detail on mobile |
-| Feedback | Sonner, Skeleton, Progress, Badge | See DS-80 to DS-84 |
+| Feedback | Toast, Skeleton, Progress, Badge | See DS-80 to DS-84 |
 | Navigation | ScrollArea, Tabs, Separator | Tabs in Settings and Admin only |
 | Palette | Command (cmdk) | See DS-75 |
 
@@ -628,6 +628,18 @@ The block never says "private" while another access path remains.
 | *conflict* | The value rolls back to current. Warning icon. Persistent toast: "{What} changed while you were editing · **Review**" | Review opens the **ConflictView**: per field, **Current** (when it changed, and by which session or agent if known) beside **Yours**. Buttons: **Keep current**, which discards the attempt, and **Apply mine**, which resubmits against the current value |
 | *unconfirmed* | Cloud-off icon in the slot. The SyncIndicator shows "{n} changes waiting to confirm" | Resolved automatically on reconnect into *confirmed*, *failed*, or *conflict*. A toast appears only if something didn't succeed |
 
+*As built in TON-31:*
+- **Markers.** `SaveStateMarker` and `useSaveState(key)` are ready for rows, cards and the inspector, which wire them in with their own issues (TON-33, TON-34, TON-38). Until then, Activity shows each write's marker. A pending marker appears after 300 ms through CSS, so rows need no timers.
+- **The failed toast:** "Couldn't save {what}", with the server's reason and **Retry**. **Edit** and the inline reason on the field come with the editors (TON-33, TON-38).
+- **The conflict toast:** "{What} changed while you were editing", then "Your change wasn't saved. Review both versions to choose.", with **Review**.
+- **The ConflictView** is an alert dialog with a row per field: **Current** beside **Yours**.
+  - **Keep current** has the focus, since it changes nothing.
+  - **Apply mine** makes the change again through the collection, judged against the current value.
+  - Closing it leaves the conflict in Activity.
+  - When and by whom the current value changed isn't shown: the conflict outcome carries neither.
+- **Failures are kept in the browser like conflicts.** They stay in Activity across reloads until retried or dismissed.
+- **Restored writes raise no toast.** A write that was already failed or in conflict when the page loaded is carried by the indicator and Activity.
+
 **DS-81 Sync indicator and Activity.** The SyncIndicator sits in the sidebar footer, in the mobile account menu, and as a small dot on guest pages. Clicking it opens **Activity**: a popover listing pending, failed, conflict, and unconfirmed items, plus open batch reports. *(FR-09.3, section 2.3)*
 
 | Connection state | Indicator |
@@ -638,6 +650,28 @@ The block never says "private" while another access path remains.
 
 The tech spec defines the timing that separates *reconnecting* from *offline*.
 
+*As built in TON-31:*
+- **Offline** means the browser reports no network, or the stream has been down for 15 s (TS-24).
+- **Before the first connection,** the dot is neutral and the tooltip says "Connecting…".
+- **The label** follows the first state that applies:
+  1. offline;
+  2. reconnecting;
+  3. "{n} changes waiting to confirm";
+  4. "{n} need review", with a warning dot, while failures or conflicts wait (this keeps them in view once their toasts are closed, DS-02);
+  5. "Saving…".
+
+  A long label wraps rather than being cut off. The accessible name is "Sync status: {label}", or "Sync status: Up to date".
+- **Activity** lists each write with:
+  - its marker;
+  - a summary, e.g. "Rename 'Metal' to 'Doom'";
+  - its state, e.g. "Saving…", "Waiting to confirm", "Changed elsewhere", or "Couldn't save: {reason}";
+  - its actions: **Retry** and **Dismiss** for a failure, **Review** for a conflict.
+
+  Empty, it reads "All changes are saved.", or "Nothing is waiting to be saved." when not connected.
+- **Waiting for their surfaces:**
+  - the indicator in the mobile account menu, and the dot on guest pages;
+  - edit controls disabled offline, which use `useConnection()` once there are edit controls.
+
 **DS-82 Live updates from elsewhere.** *(FR-09.1, FR-07.11)*
 - Rows changed by another session, agent, or owner get a 1.2s `accent.soft` background fade.
 - New rows appear without motion when off-screen.
@@ -645,7 +679,19 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **Concurrent edit in an open field:** an open editor is never overwritten. FR-09.4 applies on commit.
 - **Item removed elsewhere:** an open inspector shows "This album was moved to Trash" (or "is no longer shared with you") with Close.
 
+*As built in TON-31:*
+- **Telling changes apart.** The client tells a change from elsewhere by the mutation that made it: one this tab didn't write.
+- **The highlight.** `useLiveHighlight(key, ref)` puts the `.live-update` class on the row for each such change: a 1.2 s fade, or a static tint under reduced motion.
+- **The rows** wire it in with their issues (TON-33, TON-34).
+
 **DS-83 Announcements.** A polite `aria-live` region announces mode switches, moves and reorders, batch completion summaries, and restores. An assertive region announces failures, conflicts, and going offline. Routine confirmed saves are not announced. Pending items set `aria-busy` on their row. *(Q-02)*
+
+*As built in TON-31:*
+- **The regions.** The workspace renders both regions from its first render, and features announce through `useAnnounce()`.
+- **Going offline** is announced as "You're offline. Changes can't be saved until the connection is back."
+- **Failures and conflicts** are announced by their toasts.
+  - The toasts have high priority, so Base UI renders them as alerts.
+  - It keeps them out of the accessibility tree until F6 moves focus to them (DS-108).
 
 **DS-84 BatchOutcomeReport.** Results are grouped in this order: **Needs you** (uncertain matches, destination or name choices, approvals) · **Failed** · **Skipped** · **Unconfirmed** · **Pending** · **Completed**.
 - Each item has its reason and its next action: Retry, Edit, Decide, or Enter manually.

@@ -2,15 +2,16 @@
 // here, as one outbox entry, and resolves only once the stream has delivered the change, so the optimistic value
 // gives way to the same saved value without a flicker. A rejection or a conflict throws, which rolls the optimistic
 // value back (FR-09.3); a conflict's attempt stays in the review queue, kept in the browser, until the person deals
-// with it (FR-09.4). Every write's state is kept for the save markers: pending, unconfirmed after 15 s or a send
-// without an answer, and the outcome once there is one. Success is never reported for an unconfirmed write
-// (FR-13.3). Writes adopted from a reloaded tab have no transaction: they show as unconfirmed until answered.
+// with it (FR-09.4), and so does a failure, until it is retried or dismissed (FR-13.2). Every write's state is kept
+// for the save markers and Activity (DS-80, DS-81): pending, unconfirmed after 15 s or a send without an answer,
+// and the outcome once there is one. Success is never reported for an unconfirmed write (FR-13.3). Writes adopted
+// from a reloaded tab have no transaction: they show as unconfirmed until answered.
 
 import type { Mutation, Outcome, OutcomeStatus } from "@tonaris/domain";
 
 import type { SyncEngine } from "./engine";
 import type { Outbox, QueuedState } from "./outbox";
-import type { OutboxEntry, OutboxItem, StoredConflict, SyncPersistence } from "./persistence";
+import type { OutboxEntry, OutboxItem, SyncPersistence } from "./persistence";
 
 export type SaveState = {
   mutation: Mutation;
@@ -18,6 +19,8 @@ export type SaveState = {
   key: string;
   status: OutcomeStatus;
   outcome?: Outcome;
+  /** When this page began tracking it, in ms since the epoch: a pending write is shown after 300 ms (DS-80). */
+  since: number;
 };
 
 /** Thrown from a collection handler when the server didn't apply a write; TanStack DB rolls back. */
@@ -30,9 +33,15 @@ export class MutationRejected extends Error {
 
 const settled = new Set<OutcomeStatus>(["confirmed", "failed", "conflict", "skipped"]);
 
+/** The states Activity lists: not saved yet, or waiting for the person (DS-81). */
+const listed = new Set<OutcomeStatus>(["pending", "unconfirmed", "failed", "conflict"]);
+
+/** What the person deals with: kept in the browser until retried, resolved or dismissed. */
+const kept = new Set<OutcomeStatus>(["failed", "conflict"]);
+
 export type SaveStates = ReturnType<typeof createSaveStates>;
 
-/** The save states, with the conflicts kept in `persistence` across reloads. */
+/** The save states, with the conflicts and failures kept in `persistence` across reloads. */
 export function createSaveStates({
   persistence,
   logError = (error: unknown) =>
@@ -40,8 +49,17 @@ export function createSaveStates({
 }: { persistence?: SyncPersistence; logError?: (error: unknown) => void } = {}) {
   const states = new Map<string, SaveState>();
   const listeners = new Set<(state: SaveState) => void>();
+  const changeListeners = new Set<() => void>();
+  /** `open()`'s answer until the next change, so React reads the same array while nothing changed. */
+  let opened: SaveState[] | undefined;
+
+  const changed = () => {
+    opened = undefined;
+    for (const listener of changeListeners) listener();
+  };
   const emit = (state: SaveState) => {
     for (const listener of listeners) listener(state);
+    changed();
   };
 
   const update = (mutationId: string, patch: Partial<SaveState>) => {
@@ -54,9 +72,18 @@ export function createSaveStates({
     emit(next);
   };
 
+  /** Keeps a failure or a conflict in the browser until the person deals with it. */
+  function keep({ mutation, key, outcome }: SaveState): void {
+    if (outcome?.status === "conflict") {
+      persistence?.putConflict({ mutation, key, outcome }).catch(logError);
+    } else if (outcome?.status === "failed") {
+      persistence?.putFailure({ mutation, key, outcome }).catch(logError);
+    }
+  }
+
   return {
     track(mutation: Mutation, key: string, status: QueuedState = "pending"): void {
-      const state = { mutation, key, status };
+      const state = { mutation, key, status, since: Date.now() };
       states.set(mutation.mutationId, state);
       emit(state);
     },
@@ -70,16 +97,26 @@ export function createSaveStates({
     settle(mutationId: string, outcome: Outcome): void {
       update(mutationId, { status: outcome.status, outcome });
       const state = states.get(mutationId);
-      if (state && outcome.status === "conflict") {
-        const conflict: StoredConflict = { mutation: state.mutation, key: state.key, outcome };
-        persistence?.putConflict(conflict).catch(logError);
-      }
+      if (state && kept.has(outcome.status)) keep(state);
     },
-    /** Loads the conflicts kept from earlier pages into the review queue. */
+    /** Loads the conflicts and failures kept from earlier pages. */
     async restore(): Promise<void> {
       try {
-        for (const { mutation, key, outcome } of (await persistence?.conflicts()) ?? []) {
-          const state: SaveState = { mutation, key, status: "conflict", outcome };
+        const [conflicts, failures] = await Promise.all([
+          persistence?.conflicts() ?? [],
+          persistence?.failures() ?? [],
+        ]);
+        const restored = [...conflicts, ...failures].toSorted((a, b) =>
+          a.mutation.mutationId < b.mutation.mutationId ? -1 : 1,
+        );
+        for (const { mutation, key, outcome } of restored) {
+          const state: SaveState = {
+            mutation,
+            key,
+            status: outcome.status,
+            outcome,
+            since: Date.now(),
+          };
           states.set(mutation.mutationId, state);
           emit(state);
         }
@@ -100,15 +137,35 @@ export function createSaveStates({
     conflicts(): SaveState[] {
       return [...states.values()].filter((state) => state.status === "conflict");
     },
-    /** Clears a reviewed conflict: the person kept the saved value or made a new change. */
+    /**
+     * What Activity lists (DS-81): writes pending, unconfirmed, failed or in conflict, in the order they were made.
+     * The same array until something changes.
+     */
+    open(): readonly SaveState[] {
+      // The map keeps the order writes were tracked in.
+      opened ??= [...states.values()].filter((state) => listed.has(state.status));
+      return opened;
+    },
+    /**
+     * Clears a failure or a conflict the person dealt with: they kept the saved value, retried, or made a new
+     * change.
+     */
     dismiss(mutationId: string): void {
-      if (states.get(mutationId)?.status !== "conflict") return;
+      const status = states.get(mutationId)?.status;
+      if (status === "conflict") persistence?.deleteConflict(mutationId).catch(logError);
+      else if (status === "failed") persistence?.deleteFailure(mutationId).catch(logError);
+      else return;
       states.delete(mutationId);
-      persistence?.deleteConflict(mutationId).catch(logError);
+      changed();
     },
     subscribe(listener: (state: SaveState) => void): () => void {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    /** Calls `listener` after any change, dismissals included, as React's external stores expect. */
+    onChange(listener: () => void): () => void {
+      changeListeners.add(listener);
+      return () => changeListeners.delete(listener);
     },
   };
 }

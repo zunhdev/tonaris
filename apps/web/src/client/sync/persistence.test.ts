@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { uuidv7, type Mutation } from "@tonaris/domain";
+import { failure as failed, uuidv7, type Mutation } from "@tonaris/domain";
 
 import { memoryPersistence, type OutboxEntry } from "./persistence";
 
@@ -18,6 +18,12 @@ const entry = (createdAt: number): OutboxEntry => ({
   tab: "tab",
   createdAt,
   items: [{ mutation: mutation(), key: "list" }],
+});
+
+const rejected = () => ({
+  mutation: mutation(),
+  key: "list",
+  outcome: failed("name_conflict", "'Favorites' already exists in Collection."),
 });
 
 describe("memoryPersistence", () => {
@@ -45,10 +51,26 @@ describe("memoryPersistence", () => {
     expect(await store.conflicts()).toEqual([]);
   });
 
+  test("keeps failures by mutation until deleted", async () => {
+    const store = memoryPersistence();
+    const [first, second] = [rejected(), rejected()];
+    await store.putFailure(first);
+    await store.putFailure(second);
+    expect(await store.failures()).toEqual([first, second]);
+    await store.deleteFailure(first.mutation.mutationId);
+    expect(await store.failures()).toEqual([second]);
+  });
+
   test("clear() forgets everything", async () => {
     const store = memoryPersistence();
     await store.putEntry(entry(1));
+    await store.putFailure({
+      mutation: mutation(),
+      key: "list",
+      outcome: failed("not_found", "Gone."),
+    });
     await store.clear();
     expect(await store.entries()).toEqual([]);
+    expect(await store.failures()).toEqual([]);
   });
 });

@@ -18,6 +18,7 @@ import {
 
 import type { SyncClient } from "./client";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
+import { resubmit } from "./resubmit";
 import { memoryBrowser } from "./tabs";
 import { sessionFetch, startApiServer, testClient, until, type TestServer } from "./testing";
 import { MutationRejected, type SaveState } from "./writer";
@@ -26,7 +27,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(21);
+  server = await startApiServer(25);
 }, 30_000);
 
 afterAll(async () => {
@@ -626,5 +627,113 @@ describe("tabs sharing one stream (TS-23)", () => {
       3_000,
       "the entry elsewhere",
     );
+  });
+});
+
+describe("changes from elsewhere (FR-09.1, DS-82)", () => {
+  test("another session's rename is reported as from elsewhere, and a client's own isn't", async () => {
+    const web = await openClient(21, 0);
+    const phone = await openClient(21, 1);
+    await Promise.all([web.containers.preload(), phone.containers.preload()]);
+    const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    await web.containers.insert(list).when("settled");
+    await until(() => phone.containers.has(list.id), 3_000, "the list");
+
+    const heard: string[] = [];
+    web.elsewhere.subscribe(list.id, () => heard.push("web"));
+    phone.elsewhere.subscribe(list.id, () => heard.push("phone"));
+    await web.containers
+      .update(list.id, (draft) => {
+        draft.name = "Soon";
+      })
+      .when("settled");
+    await until(() => phone.containers.get(list.id)?.name === "Soon", 3_000, "the rename");
+    expect(heard).toEqual(["phone"]);
+
+    await phone.containers
+      .update(list.id, (draft) => {
+        draft.name = "Now";
+      })
+      .when("settled");
+    await until(() => web.containers.get(list.id)?.name === "Now", 3_000, "the second rename");
+    expect(heard).toEqual(["phone", "web"]);
+  });
+});
+
+/** A failed write's state, for resubmitting. */
+const failedWrite = (mutation: Mutation): SaveState => ({
+  mutation,
+  key: "",
+  status: "failed",
+  since: Date.now(),
+});
+
+describe("resubmitting (DS-80, FR-09.4, FR-13.2)", () => {
+  test("Apply mine saves a conflicting title over the newer value, and clears the conflict", async () => {
+    const web = await openClient(22, 0);
+    const phone = await openClient(22, 1);
+    const args = await saved(web);
+    await staleTitle(web, phone, args.id);
+    await phone.albums
+      .update(args.id, (draft) => {
+        draft.title = "B";
+      })
+      .when("settled")
+      .catch(() => {});
+    phone.network.faults.noStream = false;
+    await until(() => phone.albums.get(args.id)?.title === "A", 3_000, "the newer title");
+
+    const [conflict] = phone.states.conflicts();
+    expect(conflict && resubmit(phone, conflict)).toBe("sent");
+    expect(phone.states.conflicts()).toEqual([]);
+    await until(() => web.albums.get(args.id)?.title === "B", 3_000, "the applied title");
+    await until(() => phone.states.open().length === 0, 3_000, "the write to be confirmed");
+  });
+
+  test("Retry saves a list whose name was taken, once the other list is renamed", async () => {
+    const web = await openClient(23, 0);
+    await web.containers.preload();
+    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    await web.containers.insert(later).when("settled");
+    const twin: Container = { ...later, id: uuidv7() };
+    await web.containers
+      .insert(twin)
+      .when("settled")
+      .catch(() => {});
+    const [failed] = web.states.open();
+    expect(failed?.outcome).toMatchObject({ status: "failed", code: "name_conflict" });
+
+    await web.containers
+      .update(later.id, (draft) => {
+        draft.name = "Soon";
+      })
+      .when("settled");
+    expect(failed && resubmit(web, failed)).toBe("sent");
+    await until(() => web.states.open().length === 0, 3_000, "the retried list to be confirmed");
+    expect(web.containers.get(twin.id)?.name).toBe("Later");
+  });
+
+  test("an attempt the records already hold sends nothing, and a gone record's is reported", async () => {
+    const web = await openClient(24, 0);
+    await web.containers.preload();
+    const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    await web.containers.insert(list).when("settled");
+    const before = web.network.sent.length;
+
+    const rename: Mutation = {
+      mutationId: uuidv7(),
+      name: "container.rename",
+      args: { id: list.id, name: "Later" },
+      base: { name: "Sooner" },
+    };
+    expect(resubmit(web, failedWrite(rename))).toBe("unchanged");
+    const edit: Mutation = {
+      mutationId: uuidv7(),
+      name: "album.update",
+      args: { id: uuidv7(), title: "B" },
+      base: { title: "A" },
+    };
+    expect(resubmit(web, failedWrite(edit))).toBe("gone");
+    expect(web.network.sent.length).toBe(before);
   });
 });

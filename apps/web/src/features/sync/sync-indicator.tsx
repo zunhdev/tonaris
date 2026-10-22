@@ -1,0 +1,147 @@
+// The SyncIndicator (DS-29, DS-81) in the sidebar footer: a dot and a label for the connection and the saves, and
+// Activity, the popover it opens, listing every change not saved yet with its next step (FR-09.3). Its label
+// follows the first that applies:
+// offline, reconnecting, changes waiting to confirm, changes needing review, a save pending for 300 ms (DS-80).
+// Up to date, it shows the dot alone, and says so in its accessible name and tooltip (DS-115). The count of
+// changes needing review keeps failures and conflicts in view once their toasts are closed (DS-02).
+
+import type { SaveState } from "@/client/sync/writer";
+
+import { Button } from "@tonaris/ui/components/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@tonaris/ui/components/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
+import { cn } from "@tonaris/ui/lib/utils";
+
+import { describeWrite, reasonOf, statusLabels } from "./describe";
+import { namesOf, useSaveActions } from "./save-actions";
+import { SaveStateMarker } from "./save-state-marker";
+import { useDelayed, useOpenStates } from "./save-states";
+import { useConnection, useSyncClient } from "./sync-provider";
+
+const dots = {
+  neutral: "bg-fg-tertiary",
+  warning: "bg-status-warning",
+  danger: "bg-status-danger",
+};
+
+const changes = (n: number) => (n === 1 ? "1 change" : `${n} changes`);
+
+export function SyncIndicator() {
+  const connection = useConnection();
+  const open = useOpenStates();
+  const saving = useDelayed(
+    open.some((state) => state.status === "pending"),
+    300,
+  );
+  const unconfirmed = open.filter((state) => state.status === "unconfirmed").length;
+  const review = open.filter(
+    (state) => state.status === "failed" || state.status === "conflict",
+  ).length;
+
+  let tone: keyof typeof dots = "neutral";
+  let label: string | undefined;
+  if (connection === "offline") [tone, label] = ["danger", "Offline — changes can't be saved"];
+  else if (connection === "reconnecting") [tone, label] = ["warning", "Reconnecting…"];
+  else if (unconfirmed > 0) label = `${changes(unconfirmed)} waiting to confirm`;
+  else if (review > 0)
+    [tone, label] = ["warning", `${review} need${review === 1 ? "s" : ""} review`];
+  else if (saving) label = "Saving…";
+  const quiet = connection === "connecting" ? "Connecting…" : "Up to date";
+
+  const trigger = (
+    <PopoverTrigger
+      // A long label wraps rather than hiding its end: "Offline — changes can't be saved".
+      render={
+        <Button
+          variant="ghost"
+          className="h-auto min-h-7 w-full justify-start py-1 text-left whitespace-normal"
+        />
+      }
+      aria-label={`Sync status: ${label ?? quiet}`}
+    >
+      <span aria-hidden className={cn("size-2 shrink-0 rounded-full", dots[tone])} />
+      {label && <span className="min-w-0">{label}</span>}
+    </PopoverTrigger>
+  );
+
+  return (
+    <Popover>
+      {label ? (
+        trigger
+      ) : (
+        <Tooltip>
+          <TooltipTrigger render={trigger} />
+          <TooltipContent side="right">{quiet}</TooltipContent>
+        </Tooltip>
+      )}
+      <PopoverContent side="top" align="start" className="w-80">
+        <Activity open={open} connected={connection === "connected"} />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Every change not saved yet, oldest first, each with what it was, its state and its next step (DS-81). */
+function Activity({ open, connected }: { open: readonly SaveState[]; connected: boolean }) {
+  return (
+    <>
+      <PopoverTitle>Activity</PopoverTitle>
+      {open.length === 0 ? (
+        <p className="mt-1 text-fg-secondary">
+          {connected ? "All changes are saved." : "Nothing is waiting to be saved."}
+        </p>
+      ) : (
+        <ul className="mt-2 flex flex-col gap-1">
+          {open.map((state) => (
+            <ActivityItem key={state.mutation.mutationId} state={state} />
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function ActivityItem({ state }: { state: SaveState }) {
+  const client = useSyncClient();
+  const actions = useSaveActions();
+  if (!client) return null;
+  const { summary } = describeWrite(state.mutation, namesOf(client));
+  const failed = state.status === "failed";
+  return (
+    <li className="flex items-start gap-2 rounded-md py-1" data-status={state.status}>
+      <span className="mt-1">
+        <SaveStateMarker status={state.status} delayed={false} labelled={false} />
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className="truncate text-fg-primary">{summary}</p>
+        <p className="text-small text-fg-secondary">
+          {statusLabels[state.status]}
+          {failed && `: ${reasonOf(state.outcome)}`}
+        </p>
+        {actions && (failed || state.status === "conflict") && (
+          <div className="mt-1 flex gap-2">
+            {failed ? (
+              <>
+                <Button size="sm" onClick={() => actions.resubmit(state)}>
+                  Retry
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => actions.dismiss(state)}>
+                  Dismiss
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => actions.review(state.mutation.mutationId)}>
+                Review
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </li>
+  );
+}

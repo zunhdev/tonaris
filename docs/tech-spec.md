@@ -450,7 +450,14 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - Rebasing them onto the current row, to avoid that brief disappearance, can come later without changing the store's contract.
 - **Failure.** A thrown handler rolls back the optimistic state (FR-09.3), and the UI gets the outcome (TS-27).
 - **Conflicts.** The `conflict` outcome carries current and attempted values. The attempt is kept in a client-side **review queue**, which survives reload through IndexedDB, until the user resolves it (FR-09.4; design: conflict review). Built in TON-30: the save states write each conflict to the account's database and delete it on `dismiss`.
-- **Connection states.** The engine reports `connecting`, `live`, `reconnecting` and `signed_out`; on `signed_out` the workspace goes to sign-in. The browser's `online` event cuts the reconnect delay short. Telling *reconnecting* from *offline*, as DS-81 asks, is the SyncIndicator's (TON-31).
+  - **Failures** are kept the same way, until retried or dismissed (FR-13.2, DS-80; TON-31). The database went to version 2 for their `failures` store.
+  - **Retry and Apply mine** make the change again through its collection (`resubmit.ts`). The new write is optimistic and takes its `base` from the current row, so it is judged against the current value (DS-80).
+- **Changes from elsewhere** (DS-82; TON-31). Each change on the stream names the `mutationId` that made it. One that isn't among this tab's writes came from another session, tab or agent, and the client tells that record's listeners, so the views can highlight it (`elsewhere.ts`).
+- **Connection states.** The engine reports `connecting`, `live`, `reconnecting` and `signed_out`; on `signed_out` the workspace goes to sign-in. The browser's `online` event cuts the reconnect delay short.
+- **Reconnecting or offline** (DS-81; built in TON-31, `connection.ts`). The workspace counts as offline when the browser reports no network, or when the stream has been down for 15 s; until then a drop is *reconnecting*.
+  - 15 s is the window a write gets before it shows as unconfirmed. Past it, nothing can be confirmed anyway.
+  - A deploy's reconnects, spread over the first half second (TS-23), never read as offline.
+  - The browser's `online` event restarts the window.
 - **Viewers.** Shared roots are separate read-only collections, refilled on invalidation.
 
 **TS-25 Batches (Decided; FR-13.4; built in TON-28).** A batch is a dependency graph, sent to `POST /v1/batches` as `{batchId, items}` and answered with `{batchId, items: [{mutationId, outcome}]}` in the order sent.
