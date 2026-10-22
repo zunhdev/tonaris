@@ -72,7 +72,9 @@ export {
 } from "./batches";
 export {
   containerKinds,
+  containerNameProblem,
   containerSchema,
+  nameTakenProblem,
   type Container,
   type ContainerKind,
   type StoredContainer,

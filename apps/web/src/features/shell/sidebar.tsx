@@ -1,23 +1,58 @@
-// The sidebar (DS-31): the account menu, then the sections in order as placeholders, with the items that need M2
-// (the collection tree, counts, sharing) still to come, and the SyncIndicator in the footer.
+// The sidebar (DS-30, DS-31): the wordmark and a button to hide it, the account menu, Search and Add album (their
+// issues come later), the collection's tree with a "+" menu for new lists and folders, and the SyncIndicator in
+// the footer. Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px.
 
 import { AccountMenu } from "@/features/account/account-menu";
+import { CollectionTree } from "@/features/collection/collection-tree";
+import { useStartEditor } from "@/features/collection/collection-ui";
 import { SyncIndicator } from "@/features/sync/sync-indicator";
+import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
+import { PanelLeftClose, Plus, Search } from "lucide-react";
+import { useRef, type KeyboardEvent, type PointerEvent } from "react";
 
-import type { Account } from "@tonaris/domain";
+import type { Account, ContainerKind } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@tonaris/ui/components/dropdown-menu";
 import { ScrollArea } from "@tonaris/ui/components/scroll-area";
 import { Separator } from "@tonaris/ui/components/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
 
-const sections = ["Unsorted", "Shared with me", "Trash"];
+import { clampWidth, sidebarWidths } from "./device";
+import { useShell } from "./shell-context";
 
-export function Sidebar({ account }: { account: Account }) {
+export function Sidebar({
+  account,
+  width,
+  onResize,
+}: {
+  account: Account;
+  width: number;
+  onResize: (width: number) => void;
+}) {
+  const { toggleSidebar } = useShell();
   return (
-    <nav aria-label="Sidebar" className="flex min-h-0 flex-col border-r border-subtle bg-app">
-      <div className="flex h-12 shrink-0 items-center px-4">
+    <nav
+      aria-label="Sidebar"
+      className="relative flex min-h-0 flex-col border-r border-subtle bg-app"
+    >
+      <div className="flex h-12 shrink-0 items-center justify-between pr-2 pl-4">
         <span className="text-title text-fg-primary">Tonaris</span>
+        <Tooltip>
+          <TooltipTrigger
+            render={<Button variant="ghost" size="icon" aria-label="Hide sidebar" />}
+            onClick={toggleSidebar}
+          >
+            <PanelLeftClose strokeWidth={1.5} aria-hidden />
+          </TooltipTrigger>
+          <TooltipContent side="right">Hide sidebar [</TooltipContent>
+        </Tooltip>
       </div>
       <AccountMenu account={account} />
       <div className="mt-1 flex flex-col gap-0.5 px-2">
@@ -32,26 +67,127 @@ export function Sidebar({ account }: { account: Account }) {
         </Button>
       </div>
       <Separator className="my-2" />
+      <div className="flex shrink-0 items-center gap-1 pr-2 pl-2">
+        <Link
+          to="/c"
+          className="flex h-7 min-w-0 flex-1 items-center rounded-md px-2 text-small font-medium text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus aria-[current=page]:text-fg-primary"
+        >
+          Collection
+        </Link>
+        <NewMenu />
+      </div>
       <ScrollArea className="min-h-0 flex-1">
-        <ul className="flex flex-col gap-0.5 px-2">
-          <li>
-            <Link
-              to="/c"
-              className="flex h-7 items-center rounded-md px-2.5 font-medium text-fg-secondary hover:bg-hover hover:text-fg-primary aria-[current=page]:bg-selected aria-[current=page]:text-fg-primary"
-            >
-              Collection
-            </Link>
-          </li>
-          {sections.map((section) => (
-            <li key={section} className="flex h-7 items-center px-2.5 text-fg-tertiary">
-              {section}
-            </li>
-          ))}
-        </ul>
+        <div className="px-2 pb-2">
+          <CollectionTree />
+        </div>
       </ScrollArea>
       <div className="shrink-0 border-t border-subtle p-2">
         <SyncIndicator />
       </div>
+      <ResizeHandle width={width} onResize={onResize} />
     </nav>
+  );
+}
+
+/** The "+" menu: a new list or folder, where N and ⇧N would make it (DS-78); disabled offline (DS-81). */
+function NewMenu() {
+  const startEditor = useStartEditor();
+  const offline = useConnection() === "offline";
+  /** Whether an item was chosen, so the menu leaves the focus with the new name's field. */
+  const chosen = useRef(false);
+
+  if (offline) {
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button variant="ghost" size="icon" aria-label="New list or folder" aria-disabled />
+          }
+        >
+          <Plus strokeWidth={1.5} aria-hidden />
+        </TooltipTrigger>
+        <TooltipContent side="right">You're offline</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  const choose = (kind: ContainerKind) => {
+    chosen.current = true;
+    startEditor({ mode: "new", kind });
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="icon" aria-label="New list or folder" />}
+      >
+        <Plus strokeWidth={1.5} aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-44"
+        finalFocus={() => {
+          const keep = !chosen.current;
+          chosen.current = false;
+          return keep;
+        }}
+      >
+        <DropdownMenuItem onClick={() => choose("list")}>
+          New list
+          <DropdownMenuShortcut>N</DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => choose("folder")}>
+          New folder
+          <DropdownMenuShortcut>⇧N</DropdownMenuShortcut>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+const step = 16;
+
+/** The sidebar's right edge (DS-30): a window splitter, dragged or moved with ← and →, Home and End. */
+function ResizeHandle({ width, onResize }: { width: number; onResize: (width: number) => void }) {
+  const drag = useRef<{ x: number; width: number } | undefined>(undefined);
+
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    const next = {
+      ArrowLeft: width - step,
+      ArrowRight: width + step,
+      Home: sidebarWidths.min,
+      End: sidebarWidths.max,
+    }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    onResize(clampWidth(next));
+  }
+
+  function onPointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (!drag.current) return;
+    onResize(clampWidth(drag.current.width + event.clientX - drag.current.x));
+  }
+
+  // A focusable window splitter, which an `hr` can't be.
+  return (
+    <div
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
+      role="separator"
+      aria-label="Resize sidebar"
+      aria-orientation="vertical"
+      aria-valuemin={sidebarWidths.min}
+      aria-valuemax={sidebarWidths.max}
+      aria-valuenow={width}
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId);
+        drag.current = { x: event.clientX, width };
+      }}
+      onPointerMove={onPointerMove}
+      onPointerUp={() => {
+        drag.current = undefined;
+      }}
+      className="absolute top-0 -right-1 bottom-0 w-2 cursor-col-resize outline-none hover:bg-accent-soft focus-visible:bg-accent-soft"
+    />
   );
 }

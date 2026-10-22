@@ -178,6 +178,11 @@ function ReportItem({
             <Button size="sm" onClick={onRetry}>
               Retry
             </Button>
+            {actions.canEdit(item) && (
+              <Button size="sm" variant="secondary" onClick={() => actions.edit(item)}>
+                Edit
+              </Button>
+            )}
           </div>
         )}
         {actions && item.status === "conflict" && (

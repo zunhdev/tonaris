@@ -10,6 +10,7 @@
 
 import type { SyncClient } from "@/client/sync/client";
 import { resubmit, resubmitAll } from "@/client/sync/resubmit";
+import { useStartEditor } from "@/features/collection/collection-ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { OutcomeStatus } from "@tonaris/domain";
@@ -40,6 +41,7 @@ export function SaveStateLayer({ children }: { children: ReactNode }) {
 
 function Feedback({ notify, children }: { notify: Notifier; children: ReactNode }) {
   const client = useSyncClient();
+  const startEditor = useStartEditor();
   const [reviewing, setReviewing] = useState<string>();
   const [activityOpen, setActivityOpen] = useState(false);
   const [shownReport, setShownReport] = useState<string>();
@@ -97,8 +99,24 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
       dismissReport(report) {
         client.states.dismissReport(report.id);
       },
+      canEdit({ status, mutation }) {
+        if (status !== "failed") return false;
+        if (mutation.name === "container.rename") return client.containers.has(mutation.args.id);
+        if (mutation.name !== "container.create") return false;
+        const { parentId } = mutation.args;
+        return parentId === null || client.containers.has(parentId);
+      },
+      edit({ mutation }) {
+        const replaces = mutation.mutationId;
+        if (mutation.name === "container.create") {
+          const { kind, parentId, name } = mutation.args;
+          startEditor({ mode: "create", kind, parentId, name, replaces });
+        } else if (mutation.name === "container.rename") {
+          startEditor({ mode: "rename", id: mutation.args.id, name: mutation.args.name, replaces });
+        }
+      },
     };
-  }, [client, notify]);
+  }, [client, notify, startEditor]);
 
   useSettledToasts(client, actions, notify);
   useReportFeedback(client, notify, showReport);
@@ -150,7 +168,12 @@ function useSettledToasts(
           title: `Couldn't save ${what}`,
           description: reasonOf(state.outcome),
           tone: "danger",
-          actions: [{ label: "Retry", onClick: () => actions.resubmit(state) }],
+          actions: [
+            { label: "Retry", onClick: () => actions.resubmit(state) },
+            ...(actions.canEdit(state)
+              ? [{ label: "Edit", onClick: () => actions.edit(state) }]
+              : []),
+          ],
         });
       } else if (state.status === "conflict") {
         notify.problem({

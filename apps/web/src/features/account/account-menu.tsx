@@ -1,12 +1,13 @@
 // The account menu at the top of the sidebar (DS-31): the display name, or the email until there is one.
-// **Connections** leads to Settings → Connections (DS-86), the only settings page so far; Admin and the
-// shortcuts list join **Sign out** with their issues. Signing out deletes what this browser keeps for the account:
+// **Connections** leads to Settings → Connections (DS-86), the only settings page so far, and **Keyboard
+// shortcuts** opens the reference (DS-78); Admin joins **Sign out** with its issue. Signing out deletes what this browser keeps for the account:
 // unsent changes and conflicts waiting for review. With changes still unsent, it asks first (decided 22 October
 // 2026).
 
+import { useShell } from "@/features/shell/shell-context";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
-import { ChevronsUpDown, LogOut, Plug } from "lucide-react";
+import { ChevronsUpDown, Keyboard, LogOut, Plug } from "lucide-react";
 import { useRef, useState } from "react";
 
 import type { Account } from "@tonaris/domain";
@@ -35,6 +36,7 @@ import { forgetAccount } from "./session";
 export function AccountMenu({ account }: { account: Account }) {
   const router = useRouter();
   const sync = useSyncClient();
+  const { openShortcuts } = useShell();
   const [error, setError] = useState<string>();
   /** The unsent changes the person is asked about, while the dialog is open. */
   const [unsent, setUnsent] = useState<number>();
@@ -77,6 +79,10 @@ export function AccountMenu({ account }: { account: Account }) {
           <DropdownMenuItem onClick={() => void router.navigate({ to: "/settings/connections" })}>
             <Plug strokeWidth={1.5} aria-hidden />
             Connections
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={openShortcuts}>
+            <Keyboard strokeWidth={1.5} aria-hidden />
+            Keyboard shortcuts
           </DropdownMenuItem>
           <DropdownMenuItem onClick={chooseSignOut}>
             <LogOut strokeWidth={1.5} aria-hidden />

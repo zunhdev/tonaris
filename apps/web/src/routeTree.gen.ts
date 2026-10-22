@@ -9,22 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspaceRouteImport } from './routes/_workspace'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as WorkspaceIndexRouteImport } from './routes/_workspace/index'
 import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
+import { Route as WorkspaceSharedRouteImport } from './routes/_workspace/shared'
+import { Route as WorkspaceTrashRouteImport } from './routes/_workspace/trash'
+import { Route as WorkspaceUnsortedRouteImport } from './routes/_workspace/unsorted'
 import { Route as ApprovalsIdRouteImport } from './routes/approvals.$id'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
 import { Route as SignInIndexRouteImport } from './routes/sign-in.index'
 import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
+import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$folderId'
+import { Route as WorkspaceLListIdRouteImport } from './routes/_workspace/l.$listId'
 import { Route as WorkspaceSettingsConnectionsRouteImport } from './routes/_workspace/settings.connections'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: '/_workspace',
   getParentRoute: () => rootRouteImport,
@@ -34,9 +34,29 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const WorkspaceCRoute = WorkspaceCRouteImport.update({
   id: '/c',
   path: '/c',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceSharedRoute = WorkspaceSharedRouteImport.update({
+  id: '/shared',
+  path: '/shared',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceTrashRoute = WorkspaceTrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceUnsortedRoute = WorkspaceUnsortedRouteImport.update({
+  id: '/unsorted',
+  path: '/unsorted',
   getParentRoute: () => WorkspaceRoute,
 } as any)
 const ApprovalsIdRoute = ApprovalsIdRouteImport.update({
@@ -64,6 +84,16 @@ const SignInVerifyRoute = SignInVerifyRouteImport.update({
   path: '/verify',
   getParentRoute: () => SignInRoute,
 } as any)
+const WorkspaceFFolderIdRoute = WorkspaceFFolderIdRouteImport.update({
+  id: '/f/$folderId',
+  path: '/f/$folderId',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceLListIdRoute = WorkspaceLListIdRouteImport.update({
+  id: '/l/$listId',
+  path: '/l/$listId',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const WorkspaceSettingsConnectionsRoute =
   WorkspaceSettingsConnectionsRouteImport.update({
     id: '/settings/connections',
@@ -72,37 +102,52 @@ const WorkspaceSettingsConnectionsRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof WorkspaceIndexRoute
   '/sign-in': typeof SignInRouteWithChildren
   '/c': typeof WorkspaceCRoute
+  '/shared': typeof WorkspaceSharedRoute
+  '/trash': typeof WorkspaceTrashRoute
+  '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/f/$folderId': typeof WorkspaceFFolderIdRoute
+  '/l/$listId': typeof WorkspaceLListIdRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/c': typeof WorkspaceCRoute
+  '/shared': typeof WorkspaceSharedRoute
+  '/trash': typeof WorkspaceTrashRoute
+  '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-in/verify': typeof SignInVerifyRoute
+  '/': typeof WorkspaceIndexRoute
   '/sign-in': typeof SignInIndexRoute
+  '/f/$folderId': typeof WorkspaceFFolderIdRoute
+  '/l/$listId': typeof WorkspaceLListIdRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_workspace': typeof WorkspaceRouteWithChildren
   '/sign-in': typeof SignInRouteWithChildren
   '/_workspace/c': typeof WorkspaceCRoute
+  '/_workspace/shared': typeof WorkspaceSharedRoute
+  '/_workspace/trash': typeof WorkspaceTrashRoute
+  '/_workspace/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-in/verify': typeof SignInVerifyRoute
+  '/_workspace/': typeof WorkspaceIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
+  '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
   '/_workspace/settings/connections': typeof WorkspaceSettingsConnectionsRoute
 }
 export interface FileRouteTypes {
@@ -111,38 +156,52 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/c'
+    | '/shared'
+    | '/trash'
+    | '/unsorted'
     | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/sign-in/verify'
     | '/sign-in/'
+    | '/f/$folderId'
+    | '/l/$listId'
     | '/settings/connections'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/c'
+    | '/shared'
+    | '/trash'
+    | '/unsorted'
     | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/sign-in/verify'
+    | '/'
     | '/sign-in'
+    | '/f/$folderId'
+    | '/l/$listId'
     | '/settings/connections'
   id:
     | '__root__'
-    | '/'
     | '/_workspace'
     | '/sign-in'
     | '/_workspace/c'
+    | '/_workspace/shared'
+    | '/_workspace/trash'
+    | '/_workspace/unsorted'
     | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/sign-in/verify'
+    | '/_workspace/'
     | '/sign-in/'
+    | '/_workspace/f/$folderId'
+    | '/_workspace/l/$listId'
     | '/_workspace/settings/connections'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
   SignInRoute: typeof SignInRouteWithChildren
   ApprovalsIdRoute: typeof ApprovalsIdRoute
@@ -152,13 +211,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_workspace': {
       id: '/_workspace'
       path: ''
@@ -173,11 +225,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_workspace/': {
+      id: '/_workspace/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof WorkspaceIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/c': {
       id: '/_workspace/c'
       path: '/c'
       fullPath: '/c'
       preLoaderRoute: typeof WorkspaceCRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/shared': {
+      id: '/_workspace/shared'
+      path: '/shared'
+      fullPath: '/shared'
+      preLoaderRoute: typeof WorkspaceSharedRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/trash': {
+      id: '/_workspace/trash'
+      path: '/trash'
+      fullPath: '/trash'
+      preLoaderRoute: typeof WorkspaceTrashRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/unsorted': {
+      id: '/_workspace/unsorted'
+      path: '/unsorted'
+      fullPath: '/unsorted'
+      preLoaderRoute: typeof WorkspaceUnsortedRouteImport
       parentRoute: typeof WorkspaceRoute
     }
     '/approvals/$id': {
@@ -215,6 +295,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInVerifyRouteImport
       parentRoute: typeof SignInRoute
     }
+    '/_workspace/f/$folderId': {
+      id: '/_workspace/f/$folderId'
+      path: '/f/$folderId'
+      fullPath: '/f/$folderId'
+      preLoaderRoute: typeof WorkspaceFFolderIdRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/l/$listId': {
+      id: '/_workspace/l/$listId'
+      path: '/l/$listId'
+      fullPath: '/l/$listId'
+      preLoaderRoute: typeof WorkspaceLListIdRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/settings/connections': {
       id: '/_workspace/settings/connections'
       path: '/settings/connections'
@@ -227,11 +321,23 @@ declare module '@tanstack/react-router' {
 
 interface WorkspaceRouteChildren {
   WorkspaceCRoute: typeof WorkspaceCRoute
+  WorkspaceSharedRoute: typeof WorkspaceSharedRoute
+  WorkspaceTrashRoute: typeof WorkspaceTrashRoute
+  WorkspaceUnsortedRoute: typeof WorkspaceUnsortedRoute
+  WorkspaceIndexRoute: typeof WorkspaceIndexRoute
+  WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
+  WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
   WorkspaceSettingsConnectionsRoute: typeof WorkspaceSettingsConnectionsRoute
 }
 
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceCRoute: WorkspaceCRoute,
+  WorkspaceSharedRoute: WorkspaceSharedRoute,
+  WorkspaceTrashRoute: WorkspaceTrashRoute,
+  WorkspaceUnsortedRoute: WorkspaceUnsortedRoute,
+  WorkspaceIndexRoute: WorkspaceIndexRoute,
+  WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
+  WorkspaceLListIdRoute: WorkspaceLListIdRoute,
   WorkspaceSettingsConnectionsRoute: WorkspaceSettingsConnectionsRoute,
 }
 
@@ -253,7 +359,6 @@ const SignInRouteWithChildren =
   SignInRoute._addFileChildren(SignInRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   WorkspaceRoute: WorkspaceRouteWithChildren,
   SignInRoute: SignInRouteWithChildren,
   ApprovalsIdRoute: ApprovalsIdRoute,

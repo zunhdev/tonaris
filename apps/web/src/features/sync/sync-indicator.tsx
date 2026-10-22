@@ -167,6 +167,11 @@ function ActivityItem({ state }: { state: SaveState }) {
                 <Button size="sm" onClick={() => actions.resubmit(state)}>
                   Retry
                 </Button>
+                {actions.canEdit(state) && (
+                  <Button size="sm" variant="secondary" onClick={() => actions.edit(state)}>
+                    Edit
+                  </Button>
+                )}
                 <Button size="sm" variant="ghost" onClick={() => actions.dismiss(state)}>
                   Dismiss
                 </Button>

@@ -33,8 +33,11 @@ function containerOf({ id, kind, parentId, name }: Container): Container {
   return { id, kind, parentId, name };
 }
 
-/** Why `name`, already trimmed, can't name a folder or list, if it can't (X-06, TS-18). */
-function nameProblem(name: string): Failure | undefined {
+/**
+ * Why `name`, already trimmed, can't name a folder or list, if it can't (X-06, TS-18). Clients check it before
+ * sending too, with the same words.
+ */
+export function containerNameProblem(name: string): Failure | undefined {
   if (isBlankName(name)) {
     return failure("validation_failed", "Give the folder or list a name.", [
       { path: "args.name", message: "Required" },
@@ -91,10 +94,17 @@ async function siblingConflict(
 ): Promise<Failure | undefined> {
   const taken = findNameConflict(name, await store.activeChildren(ownerId, parentId), selfId);
   if (!taken) return undefined;
-  // Worded as DS-107 has it: the name, where it is taken, and one way forward.
   const parent = parentId === null ? undefined : await store.findContainer(parentId);
-  const where = parent ? `in ${parent.name}` : "at the top level";
-  return failure("name_conflict", `'${taken.name}' already exists ${where}. Choose another name.`, [
+  return nameTakenProblem(taken.name, parent?.name ?? null);
+}
+
+/**
+ * The refusal of a name a sibling already has, worded as DS-107 has it: the name, where it is taken (in the folder
+ * named `parentName`, or at the top level), and one way forward. Clients check it before sending too.
+ */
+export function nameTakenProblem(takenName: string, parentName: string | null): Failure {
+  const where = parentName === null ? "at the top level" : `in ${parentName}`;
+  return failure("name_conflict", `'${takenName}' already exists ${where}. Choose another name.`, [
     { path: "args.name", message: "Already used here" },
   ]);
 }
@@ -117,7 +127,7 @@ export async function createContainer(
     );
   }
   const container = containerOf({ ...args, name: args.name.trim() });
-  const problem = nameProblem(container.name);
+  const problem = containerNameProblem(container.name);
   if (problem) return problem;
 
   const existing = await store.findContainer(container.id);
@@ -176,7 +186,7 @@ export async function renameContainer(
   const container = await changeableContainer(id, context);
   if ("status" in container) return container;
   const renamed = name.trim();
-  const problem = nameProblem(renamed);
+  const problem = containerNameProblem(renamed);
   if (problem) return problem;
   if (container.name !== base.name) {
     return {

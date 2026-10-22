@@ -231,6 +231,28 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 - Drop targets highlight with `accent.soft` during drags (DS-49).
 - Expansion state is per device and is not synced.
 
+*As built in TON-33:*
+- **One flat tree.** One ARIA tree labelled "Collection" holds the folders and lists, then Unsorted, Shared with me and Trash. Each item carries its level, position and set size, rather than nested groups.
+- **Items are links,** so Enter and a click open the view, and a view can open in a new tab.
+- **Order.** Siblings come in creation order, DS-44's fallback, until manual order (TON-36).
+- **Selection and focus.** The current view's item is selected, and its folders are expanded. There is one tab stop.
+- **Keys:**
+  - ↑ and ↓ move, and Home and End jump;
+  - → expands a folder or enters it, and ← collapses it or goes to its parent;
+  - Enter opens.
+- **The chevron** is for the pointer only.
+- **Type-ahead** waits 700 ms between letters, ignoring case and accents.
+  - Letters that are shortcuts act as shortcuts instead (DS-78; decided with the creator on 22 October 2026).
+  - Names starting with one are reached with the arrows, or ⌘K search once it exists.
+- **Counts:** lists and Unsorted show their album count, which screen readers hear as "Doom 2 albums".
+- **Save states:** each folder or list shows its save-state marker, is `aria-busy` while saving, and is highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+- **Expansion** is kept in `localStorage`, per account.
+- **Creating and renaming** happen in an inline editor in the tree:
+  - **F2** renames the focused folder or list;
+  - **N** and **⇧N** make a list or a folder inside the focused folder, the current view's, or the root;
+  - **Enter** saves, **Escape** cancels, and leaving the field saves a name or cancels a blank one;
+  - **A refused name** (blank, over 200 characters, or taken among its siblings) keeps the editor open with the domain's reason, and nothing is sent.
+
 *(FR-01.1, FR-01.3, Q-02)*
 
 **DS-28 Standard confirmation dialog.** Built on AlertDialog. It is used for every *confirmed* operation (X-07). *(X-07, FR-07.14)*
@@ -289,6 +311,12 @@ Typed confirmation is reserved for account deletion (DS-97).
 | Main view | flexible | — |
 | Inspector | 380px | Opens on demand (DS-46). Below 1100px wide it overlays the main view instead of splitting. |
 
+*As built in TON-33:*
+- **Resizing.** The sidebar's right edge is a window splitter. Drag it, or focus it and use ← and → (16 px a step), Home and End.
+- **Hiding.** A button in the sidebar's header hides it, as `[` does. "Show sidebar" in the view's header brings it back. Hiding the sidebar also hides the SyncIndicator, and problems still raise toasts.
+- **Kept per device:** the width and whether the sidebar is hidden.
+- **The view's header** shows the breadcrumbs (DS-29), then the view's name as its heading.
+
 *(FR-01.3, FR-12.2)*
 
 **DS-31 Sidebar contents, top to bottom.** *(FR-01.9, FR-01.12, FR-07.6, FR-07.13, FR-11.6, FR-12.2)*
@@ -304,6 +332,12 @@ Typed confirmation is reserved for account deletion (DS-97).
 9. **Footer:** the SyncIndicator.
 
 Shared containers in the user's own collection carry a sharing glyph: people, link, or both. Inherited sharing uses a dimmer glyph variant.
+
+*As built in TON-33:*
+- **Collection** is a heading link to the root, with a "+" menu: New list (N) and New folder (⇧N). Offline, the menu is disabled with "You're offline" (DS-81).
+- **Below the folders and lists,** the tree shows Unsorted with its count, then Shared with me and Trash, as placeholders until M7 and M5.
+- **Invitations** waits for sharing (M7).
+- **The account menu** has Keyboard shortcuts, which opens the reference (DS-78).
 
 **DS-32 Route map.** These are conceptual paths; final paths are decided in the tech spec. *(Section 2.2)*
 
@@ -326,6 +360,13 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 | `/help/recovery` | Lost-email help |
 
 Presentation choices are not in the URL; they are personal synced preferences (FR-11.8). Selection and the open inspector may be reflected in the URL for deep-linking (`?album=:id`).
+
+*As built in TON-33:*
+- **The routes so far:** `/`, `/c`, `/f/$folderId`, `/l/$listId`, `/unsorted`, `/trash` and `/shared`. The others come with their issues: `/a/…` (TON-38), `/invitations` and `/s/…` (M7), and the rest of Settings, `/admin`, `/join` and `/help` (M8).
+- **`/`** runs in the browser. It opens the collection view last visited on the device, per account, or `/c`.
+- **The wrong kind.** A folder's path given a list's ID leads to the list's path, and the other way round.
+- **A missing folder or list** reads "This folder or list isn't available.", with "Go to your collection".
+- **Page titles** are "{name} · Tonaris".
 
 ---
 
@@ -614,6 +655,16 @@ The block never says "private" while another access path remains.
 | G then H / U / T / S | Go to root / Unsorted / Trash / Settings | `[` | Toggle sidebar |
 | Esc | Close inspector or popover, clear selection | ⌘Enter | Submit form / open standalone |
 
+*As built in TON-33:*
+- **What works:**
+  - G then H, U, T or S, within 1.5 s. S goes to Settings → Connections, the only settings page yet;
+  - `[` and `?`;
+  - N and ⇧N, and F2 in the tree;
+  - the tree's arrows, Home, End and Enter.
+- **Shortcuts come before the tree's type-ahead** (DS-27).
+- **When they wait:** shortcuts are off in text fields, and inside dialogs, popovers and menus.
+- **The reference** lists the shortcuts that work; others join it with their issues.
+
 ---
 
 ## 12. Save states, sync, and live updates
@@ -878,6 +929,11 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 | Shared with me | "Collections people share with you appear here." | — |
 | Trash | "Nothing in Trash. Deleted items stay here for 30 days." | — |
 | Search | "No folders, lists, artists or albums match "{q}"." | — |
+
+*As built in TON-33*, until the rows (TON-34):
+- **Each view summarizes what it holds,** e.g. "2 folders and lists" or "12 albums".
+- **An empty folder** reads "This folder is empty." · New list.
+- **A list's** Add album waits for capture and manual entry (M3, TON-38).
 
 The root's first-run state also offers a secondary action, "Connect an AI assistant", which links to Settings → Connections.
 
