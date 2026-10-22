@@ -119,7 +119,14 @@ export const inputNeeds = ["destination", "name", "match"] as const;
 /** What the server reports for one mutation or batch item. */
 export const outcomeSchema = z.discriminatedUnion("status", [
   /** Committed at this `seq`; the client waits for the stream to reach it (TS-24). */
-  z.object({ status: z.literal("confirmed"), seq: z.int().nonnegative(), result: z.unknown() }),
+  z.object({
+    status: z.literal("confirmed"),
+    seq: z.int().nonnegative(),
+    result: z.unknown().meta({
+      description:
+        "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); the others give null.",
+    }),
+  }),
   /** Rejected; nothing changed (X-05). */
   z.object({ status: z.literal("failed"), code: errorCodeSchema, problem: problemSchema }),
   /** Field-level CAS mismatch; nothing changed (TS-21). */

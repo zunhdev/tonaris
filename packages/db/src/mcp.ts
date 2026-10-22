@@ -114,7 +114,7 @@ export async function collectionOverview(
   const [albumCounts] = await db
     .select({
       albums: count(),
-      // Unsorted: active albums in no active list (FR-01.6).
+      // Unsorted: active albums in no active list (FR-01.9). It is this query, never stored (TS-13).
       unsorted: sql<number>`count(*) filter (where ${notExists(
         db
           .select({ one: sql`1` })

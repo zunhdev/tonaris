@@ -345,6 +345,16 @@ describe("constraints", () => {
     ).toBe("albums_recording_years_check");
   });
 
+  test("albums hold no edition details (FR-02.12)", async () => {
+    const rows = await t.db.execute<{ column_name: string }>(
+      sql`select column_name from information_schema.columns where table_schema = ${t.schema} and table_name = 'albums'`,
+    );
+    const columns = rows.map((row) => row.column_name);
+    expect(columns).toContain("mb_release_group_id");
+    expect(columns).not.toContain("edition_label");
+    expect(columns).not.toContain("barcode");
+  });
+
   test("purging an album removes its memberships", async () => {
     const ownerId = await newUser();
     const listId = id();

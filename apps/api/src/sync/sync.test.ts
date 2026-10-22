@@ -500,6 +500,98 @@ describe("folders and lists (FR-01.1–FR-01.5)", () => {
   });
 });
 
+const entry = (
+  name: "membership.add" | "membership.remove",
+  listId: string,
+  albumId: string,
+): Mutation => ({ mutationId: uuidv7(), name, args: { listId, albumId } });
+
+describe("list entries (FR-01.6–FR-01.8)", () => {
+  test("an add, a re-add and a remove reach every session's stream and the next bootstrap", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const other = await t.signIn("anna@example.com");
+    const kindOfBlue = album();
+    const favorites = node("list", "Favorites");
+    await post(anna.cookie, create(kindOfBlue));
+    await post(anna.cookie, createContainer(favorites));
+    const stream = await connect(other.cookie, { after: 2 });
+
+    const added = await post(anna.cookie, entry("membership.add", favorites.id, kindOfBlue.id));
+    const again = await post(anna.cookie, entry("membership.add", favorites.id, kindOfBlue.id));
+    expect(added.outcome).toEqual({
+      status: "confirmed",
+      seq: 3,
+      result: { alreadyInList: false },
+    });
+    expect(again.outcome).toEqual({ status: "confirmed", seq: 3, result: { alreadyInList: true } });
+    const listed = await bootstrap(anna.cookie);
+    expect(listed.memberships).toEqual([
+      { listId: favorites.id, albumId: kindOfBlue.id, addedAt: expect.any(String) },
+    ]);
+
+    const removed = await post(
+      anna.cookie,
+      entry("membership.remove", favorites.id, kindOfBlue.id),
+    );
+    expect(removed.outcome).toEqual({ status: "confirmed", seq: 4, result: null });
+    await stream.until(() => stream.seqs().length === 2);
+    const key = `${favorites.id}:${kindOfBlue.id}`;
+    expect(stream.events.map((event) => event.data)).toEqual([
+      expect.objectContaining({
+        entity: "membership",
+        id: key,
+        op: "insert",
+        data: listed.memberships[0],
+      }),
+      expect.objectContaining({ entity: "membership", id: key, op: "delete", data: null }),
+    ]);
+    await stream.close();
+
+    const snapshot = await bootstrap(anna.cookie);
+    expect(snapshot.seq).toBe(4);
+    expect(snapshot.memberships).toEqual([]);
+    expect(snapshot.albums).toEqual([kindOfBlue]);
+  });
+
+  test("each rejection has its code, changes nothing and sends nothing", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const ben = await t.signIn("ben@example.com");
+    const kindOfBlue = album();
+    const bensAlbum = album({ title: "Debut" });
+    const jazz = node("folder", "Jazz");
+    const favorites = node("list", "Favorites");
+    for (const mutation of [
+      create(kindOfBlue),
+      createContainer(jazz),
+      createContainer(favorites),
+    ]) {
+      // oxlint-disable-next-line no-await-in-loop
+      await post(anna.cookie, mutation);
+    }
+    await post(ben.cookie, create(bensAlbum));
+    const stream = await connect(anna.cookie, { after: 3 });
+
+    const outcomes = await Promise.all([
+      post(anna.cookie, entry("membership.add", jazz.id, kindOfBlue.id)),
+      post(anna.cookie, entry("membership.add", favorites.id, bensAlbum.id)),
+      post(ben.cookie, entry("membership.add", favorites.id, bensAlbum.id)),
+    ]);
+    expect(
+      outcomes.map(({ outcome }) => (outcome.status === "failed" ? outcome.code : outcome.status)),
+    ).toEqual(["invalid_destination", "not_found", "permission_denied"]);
+
+    // A later change arrives first on the stream: the rejections sent nothing.
+    await post(anna.cookie, entry("membership.add", favorites.id, kindOfBlue.id));
+    await stream.until(() => stream.seqs().length === 1);
+    expect(stream.seqs()).toEqual([4]);
+    await stream.close();
+    expect((await bootstrap(anna.cookie)).memberships).toEqual([
+      expect.objectContaining({ listId: favorites.id, albumId: kindOfBlue.id }),
+    ]);
+    expect((await bootstrap(ben.cookie)).memberships).toEqual([]);
+  });
+});
+
 describe("refusals", () => {
   test("signed-out clients get 401 problems from every sync endpoint", async () => {
     const responses = await Promise.all([

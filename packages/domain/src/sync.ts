@@ -1,9 +1,11 @@
 // The sync protocol's messages (TS-20–TS-28), shared by the API and every client: the mutation envelope, the
 // result the server answers with, the bootstrap snapshot and the change events on the stream. The prototype
-// (TON-20) synced albums; folders and lists joined in TON-26, and each entity type M2 adds joins these unions.
+// (TON-20) synced albums; folders and lists joined in TON-26 and list entries in TON-27, and each entity type M2
+// adds joins these unions.
 
 import { albumFieldsSchema, albumSchema } from "./albums";
-import { containerSchema, membershipSchema } from "./containers";
+import { containerSchema } from "./containers";
+import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
 import { z } from "./zod";
 
@@ -64,6 +66,38 @@ export const containerMoveSchema = z.object({
   base: z.object({ parentId: z.uuid().nullable() }),
 });
 
+const entryArgs = z.object({ listId: z.uuid(), albumId: z.uuid() });
+
+/**
+ * `membership.add`: puts an album in a list (FR-01.6). An album already there keeps its entry, and the outcome's
+ * `result` says so (`MembershipAddResult`, FR-01.7). There is no `base`: an entry has nothing to edit.
+ */
+export const membershipAddSchema = z.object({
+  mutationId,
+  name: z.literal("membership.add"),
+  args: entryArgs,
+});
+
+/**
+ * `membership.remove`: takes an album out of a list. The album stays in the collection, in Unsorted when it is
+ * in no list (FR-01.8). Removing an entry that isn't there changes nothing.
+ */
+export const membershipRemoveSchema = z.object({
+  mutationId,
+  name: z.literal("membership.remove"),
+  args: entryArgs,
+});
+
+/** `membership.add`'s `result` in a `confirmed` outcome. */
+export const membershipAddResultSchema = z
+  .object({
+    alreadyInList: z.boolean().meta({
+      description: "The album was already in the list: its entry was kept unchanged (FR-01.7).",
+    }),
+  })
+  .meta({ description: "What `membership.add` reports (FR-01.7)." });
+export type MembershipAddResult = z.infer<typeof membershipAddResultSchema>;
+
 /** One write, from the app or MCP (TS-20). */
 export const mutationSchema = z
   .discriminatedUnion("name", [
@@ -72,6 +106,8 @@ export const mutationSchema = z
     containerCreateSchema,
     containerRenameSchema,
     containerMoveSchema,
+    membershipAddSchema,
+    membershipRemoveSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;
@@ -85,6 +121,8 @@ export type MutationResult = z.infer<typeof mutationResultSchema>;
 
 export const changeOps = ["insert", "update", "delete"] as const;
 export type ChangeOp = (typeof changeOps)[number];
+
+const uuidPattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
 /**
  * One committed change, as the stream sends it (TS-23). `seq` counts the account's changes without gaps, so a
@@ -106,6 +144,19 @@ export const changeSchema = z
       id: z.uuid(),
       op: z.enum(changeOps),
       data: containerSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
+      entity: z.literal("membership"),
+      id: z
+        .string()
+        .regex(new RegExp(`^${uuidPattern}:${uuidPattern}$`, "i"))
+        .meta({
+          description: "The list's ID and the album's, joined by a colon.",
+        }),
+      op: z.enum(changeOps),
+      data: membershipSchema.nullable(),
       mutationId: z.uuid().nullable(),
     }),
   ])

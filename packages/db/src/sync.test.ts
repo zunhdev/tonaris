@@ -8,6 +8,8 @@ import { eq, sql } from "drizzle-orm";
 import {
   maxContainerDepth,
   maxContainers,
+  maxMemberships,
+  membershipKey,
   syncRetentionMs,
   uuidv7,
   type Album,
@@ -16,6 +18,7 @@ import {
   type Principal,
 } from "@tonaris/domain";
 
+import { collectionOverview, listContainer, searchAlbums } from "./mcp";
 import {
   accountSync,
   albums,
@@ -505,5 +508,209 @@ describe("folders and lists (FR-01.1–FR-01.5, TS-31)", () => {
     const replay = await executeMutation(t.db, anna, mutation);
     expect(replay).toEqual({ result: first.result, changes: [], replayed: true });
     expect(await changeCount(anna.userId)).toBe(1);
+  });
+});
+
+const addEntry = (listId: string, albumId: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "membership.add",
+  args: { listId, albumId },
+});
+const removeEntry = (listId: string, albumId: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "membership.remove",
+  args: { listId, albumId },
+});
+
+/** Saves an album for `principal` through its command, and returns it. */
+async function savedAlbum(principal: Principal, title: string): Promise<Album> {
+  const args = album({ title });
+  const { result } = await executeMutation(t.db, principal, create(args));
+  expect(result.outcome.status).toBe("confirmed");
+  return args;
+}
+
+/** Creates a list at the root for `principal` through its command, and returns it. */
+async function savedList(principal: Principal, name: string): Promise<Container> {
+  const list = node("list", name);
+  const { result } = await executeMutation(t.db, principal, createContainer(list));
+  expect(result.outcome.status).toBe("confirmed");
+  return list;
+}
+
+describe("list entries (FR-01.6–FR-01.8)", () => {
+  test("an add is logged at the next seq with the server's time, and a retry replays it", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const favorites = await savedList(anna, "Favorites");
+    const now = new Date("2026-10-22T09:30:00.000Z");
+    const mutation = addEntry(favorites.id, kindOfBlue.id);
+
+    const added = await executeMutation(t.db, anna, mutation, now);
+    const entry = { listId: favorites.id, albumId: kindOfBlue.id, addedAt: now.toISOString() };
+    expect(added.result.outcome).toEqual({
+      status: "confirmed",
+      seq: 3,
+      result: { alreadyInList: false },
+    });
+    expect(added.changes).toEqual([
+      {
+        seq: 3,
+        entity: "membership",
+        id: membershipKey(favorites.id, kindOfBlue.id),
+        op: "insert",
+        data: entry,
+        mutationId: mutation.mutationId,
+      },
+    ]);
+    expect(await readChanges(t.db, anna.userId, 2, 10)).toEqual(added.changes);
+
+    const replay = await executeMutation(t.db, anna, mutation);
+    expect(replay).toEqual({ result: added.result, changes: [], replayed: true });
+    expect((await bootstrapSnapshot(t.db, anna.userId)).memberships).toEqual([entry]);
+  });
+
+  test("adding it again keeps its time, uses no seq and reports it as already in the list", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const favorites = await savedList(anna, "Favorites");
+    const first = new Date("2026-10-22T09:30:00.000Z");
+    await executeMutation(t.db, anna, addEntry(favorites.id, kindOfBlue.id), first);
+
+    const again = await executeMutation(
+      t.db,
+      anna,
+      addEntry(favorites.id, kindOfBlue.id),
+      new Date("2026-10-23T10:00:00.000Z"),
+    );
+    expect(again.result.outcome).toEqual({
+      status: "confirmed",
+      seq: 3,
+      result: { alreadyInList: true },
+    });
+    expect(again.changes).toEqual([]);
+    expect(await headSeq(t.db, anna.userId)).toBe(3);
+    expect((await bootstrapSnapshot(t.db, anna.userId)).memberships).toEqual([
+      { listId: favorites.id, albumId: kindOfBlue.id, addedAt: first.toISOString() },
+    ]);
+  });
+
+  test("a remove is logged as a delete, and the album stays", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const favorites = await savedList(anna, "Favorites");
+    await executeMutation(t.db, anna, addEntry(favorites.id, kindOfBlue.id));
+
+    const removed = await executeMutation(t.db, anna, removeEntry(favorites.id, kindOfBlue.id));
+    expect(removed.result.outcome).toEqual({ status: "confirmed", seq: 4, result: null });
+    expect(removed.changes).toEqual([
+      expect.objectContaining({
+        entity: "membership",
+        id: membershipKey(favorites.id, kindOfBlue.id),
+        op: "delete",
+        data: null,
+      }),
+    ]);
+    const snapshot = await bootstrapSnapshot(t.db, anna.userId);
+    expect(snapshot.memberships).toEqual([]);
+    expect(snapshot.albums).toEqual([kindOfBlue]);
+  });
+
+  test("an album in two lists is one record with two entries", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const favorites = await savedList(anna, "Favorites");
+    const lateNight = await savedList(anna, "Late night");
+    await executeMutation(t.db, anna, addEntry(favorites.id, kindOfBlue.id));
+    await executeMutation(t.db, anna, addEntry(lateNight.id, kindOfBlue.id));
+    await executeMutation(
+      t.db,
+      anna,
+      retitle(kindOfBlue.id, "Kind of Blue (Legacy)", "Kind of Blue"),
+    );
+
+    const snapshot = await bootstrapSnapshot(t.db, anna.userId);
+    expect(snapshot.albums).toEqual([{ ...kindOfBlue, title: "Kind of Blue (Legacy)" }]);
+    expect(snapshot.memberships.map((entry) => entry.listId).toSorted()).toEqual(
+      [favorites.id, lateNight.id].toSorted(),
+    );
+  });
+
+  test("the limit counts entries whose list is in Trash", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const lateNight = await savedList(anna, "Late night");
+    // 250 lists of 200 albums: 50,000 entries, made in SQL because one insert can't carry that many parameters.
+    await t.db.execute(sql`
+      insert into ${albums} (id, owner_id, title, artist_credit, original_year, search_title_key, search_artist_key)
+      select gen_random_uuid(), ${anna.userId}, 'Album ' || n, 'Artist', 2000, 'album ' || n, 'artist'
+      from generate_series(1, 200) n`);
+    await t.db.execute(sql`
+      insert into ${containers} (id, owner_id, kind, name, name_key)
+      select gen_random_uuid(), ${anna.userId}, 'list', 'Bulk ' || n, 'bulk ' || n
+      from generate_series(1, 250) n`);
+    await t.db.execute(sql`
+      insert into ${memberships} (list_id, album_id, owner_id)
+      select c.id, a.id, ${anna.userId}
+      from ${containers} c cross join ${albums} a
+      where c.name like 'Bulk %' and a.title like 'Album %'`);
+    const [bulk] = await t.db.select().from(containers).where(eq(containers.name, "Bulk 1"));
+    if (!bulk) throw new Error("The bulk lists weren't inserted.");
+    await trash(anna.userId, bulk.id);
+    expect(maxMemberships).toBe(50_000);
+
+    const before = await headSeq(t.db, anna.userId);
+    const over = await executeMutation(t.db, anna, addEntry(lateNight.id, kindOfBlue.id));
+    expect(over.result.outcome).toMatchObject({ status: "failed", code: "limit_exceeded" });
+    expect(await headSeq(t.db, anna.userId)).toBe(before);
+  });
+});
+
+describe("Unsorted (FR-01.9, FR-01.10, TS-13)", () => {
+  test("an album in no list is unsorted, counted and searchable; a list takes it out", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const favorites = await savedList(anna, "Favorites");
+    expect(await collectionOverview(t.db, anna.userId)).toMatchObject({ albums: 1, unsorted: 1 });
+
+    await executeMutation(t.db, anna, addEntry(favorites.id, kindOfBlue.id));
+    expect(await collectionOverview(t.db, anna.userId)).toMatchObject({ albums: 1, unsorted: 0 });
+
+    await executeMutation(t.db, anna, removeEntry(favorites.id, kindOfBlue.id));
+    expect(await collectionOverview(t.db, anna.userId)).toMatchObject({ albums: 1, unsorted: 1 });
+    const found = await searchAlbums(t.db, { ownerId: anna.userId, query: "kind of", limit: 10 });
+    expect(found.map((match) => match.id)).toEqual([kindOfBlue.id]);
+  });
+
+  test("a list in Trash keeps its albums: in their other lists, or in Unsorted", async () => {
+    const anna = await newPrincipal();
+    const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
+    const blueTrain = await savedAlbum(anna, "Blue Train");
+    const favorites = await savedList(anna, "Favorites");
+    const lateNight = await savedList(anna, "Late night");
+    for (const [list, each] of [
+      [favorites, kindOfBlue],
+      [lateNight, kindOfBlue],
+      [favorites, blueTrain],
+    ] as const) {
+      // oxlint-disable-next-line no-await-in-loop
+      await executeMutation(t.db, anna, addEntry(list.id, each.id));
+    }
+    expect(await collectionOverview(t.db, anna.userId)).toMatchObject({ albums: 2, unsorted: 0 });
+
+    await trash(anna.userId, favorites.id);
+    expect(await collectionOverview(t.db, anna.userId)).toMatchObject({ albums: 2, unsorted: 1 });
+    const stillListed = await listContainer(t.db, {
+      ownerId: anna.userId,
+      containerId: lateNight.id,
+      limit: 10,
+    });
+    expect(stillListed.kind === "list" && stillListed.albums.map((each) => each.id)).toEqual([
+      kindOfBlue.id,
+    ]);
+    // The entries stay, so recovering the list can restore them (TS-13).
+    const snapshot = await bootstrapSnapshot(t.db, anna.userId);
+    expect(snapshot.memberships).toHaveLength(3);
+    expect(snapshot.albums).toEqual(expect.arrayContaining([kindOfBlue, blueTrain]));
   });
 });

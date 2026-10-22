@@ -266,17 +266,6 @@ export const venues = [
   "Carnegie Hall",
 ] as const;
 
-export const editionLabels = [
-  "Remastered",
-  "2015 Remaster",
-  "Deluxe Edition",
-  "Expanded Edition",
-  "Anniversary Edition",
-  "Mono",
-  "Japanese Edition",
-  "Super Deluxe",
-] as const;
-
 export const noteTexts = [
   "Side B is the reason to own it",
   "Borrowed from the library",

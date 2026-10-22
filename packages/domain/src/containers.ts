@@ -1,5 +1,5 @@
-// Folders, lists and list entries as clients hold them (TS-11, TS-24), and the commands that create, rename and
-// move folders and lists (TON-26). List entries are read-only until their commands arrive (TON-27).
+// Folders and lists as clients hold them (TS-11, TS-24), and the commands that create, rename and move them
+// (TON-26). The albums in lists are memberships.ts.
 
 import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
 import { maxContainerDepth, maxContainers, maxNameLength } from "./limits";
@@ -22,12 +22,6 @@ export const containerSchema = z
   })
   .meta({ description: "A folder or list (FR-01.1)." });
 export type Container = z.infer<typeof containerSchema>;
-
-/** An album's entry in a list (FR-01.6). `addedAt` orders entries that have no manual position (TS-16). */
-export const membershipSchema = z
-  .object({ listId: z.uuid(), albumId: z.uuid(), addedAt: z.iso.datetime() })
-  .meta({ description: "An album's entry in a list (FR-01.6)." });
-export type Membership = z.infer<typeof membershipSchema>;
 
 /** A container as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
 export type StoredContainer = Container & { ownerId: string; trashed: boolean };
