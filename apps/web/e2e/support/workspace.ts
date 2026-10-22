@@ -4,7 +4,7 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
 
-import { bootstrapSchema, uuidv7, type Container } from "@tonaris/domain";
+import { bootstrapSchema, uuidv7, type Album, type Container } from "@tonaris/domain";
 
 import { apiUrl } from "./accounts";
 
@@ -143,4 +143,37 @@ export async function keptReports(page: Page): Promise<number> {
       database.close();
     }
   });
+}
+
+/** An album with Candlemass as its artist, made in 1986 unless `values` say otherwise. */
+export const album = (title: string, values: Partial<Album> = {}): Album => ({
+  id: uuidv7(),
+  title,
+  artistCredit: "Candlemass",
+  releaseType: "album",
+  isLive: false,
+  originalYear: 1986,
+  recordingYearStart: null,
+  recordingYearEnd: null,
+  ...values,
+});
+
+/** Adds `albums` through the page's client, in `listId` if given, and waits until they are saved. */
+export async function added(page: Page, albums: Album[], listId?: string): Promise<void> {
+  await page.evaluate(
+    async ({ owned, listId: into }) => {
+      const sync = window.tonarisSync;
+      if (!sync) throw new Error("No sync client on the page.");
+      await sync.albums.insert(owned).isPersisted.promise;
+      if (into) {
+        const entries = owned.map((each) => ({
+          listId: into,
+          albumId: each.id,
+          addedAt: new Date().toISOString(),
+        }));
+        await sync.memberships.insert(entries).isPersisted.promise;
+      }
+    },
+    { owned: albums, listId },
+  );
 }

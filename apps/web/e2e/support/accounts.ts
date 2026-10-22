@@ -43,6 +43,10 @@ export const accounts = {
   navRoutes: at("nav-routes"),
   navNames: at("nav-names"),
   navOffline: at("nav-offline"),
+  // The collection views (collection-views.e2e.ts), one per test.
+  viewsList: at("views-list"),
+  viewsFolder: at("views-folder"),
+  viewsLarge: at("views-large"),
 } as const;
 
 /** An address with no account. */

@@ -48,3 +48,13 @@ test("text falls back to system fonts for scripts Inter lacks", async ({ page })
   expect(family).toContain("system-ui");
   expect(family).toContain("sans-serif");
 });
+
+test("the keyboard focus ring shows: a 2px solid focus outline (DS-115)", async ({ page }) => {
+  await page.goto("/sign-in");
+  await page.getByLabel("Email").fill("someone@example.com");
+  await page.keyboard.press("Tab");
+  const continueButton = page.getByRole("button", { name: "Continue" });
+  await expect(continueButton).toBeFocused();
+  await expect(continueButton).toHaveCSS("outline-style", "solid");
+  await expect(continueButton).toHaveCSS("outline-width", "2px");
+});

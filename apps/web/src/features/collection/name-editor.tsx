@@ -128,7 +128,7 @@ export function NameEditor({
             else save();
           }}
           className={cn(
-            "h-6 min-w-0 flex-1 rounded-sm border border-strong bg-panel px-1.5 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus",
+            "h-6 min-w-0 flex-1 rounded-sm border border-strong bg-panel px-1.5 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
             refusal !== undefined && "border-status-danger",
           )}
         />

@@ -185,12 +185,37 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 On hover or focus a trailing "Open" button appears; it opens the service chooser (DS-25). Columns collapse from the right as the width shrinks: type, then services. *(FR-05, FR-06.5, FR-09.3)*
 
+*As built in TON-34:*
+- **Columns:** artwork with the title, artist, year, type and status.
+- **Narrowing:** the type collapses below 640 px of view width.
+- **Later columns:**
+  - the checkbox (TON-37);
+  - the drag handle (TON-36);
+  - the services, and the Open button (M4).
+- **The year** shows the original year, or a live recording range ("1978–1982"). The `rec.` prefix and fallback marker come with TON-35 (DS-24).
+- **Order:** until TON-35, albums are in DS-44's first-time default, chronological ascending. Ties go by title, then ID.
+- **Save states:** the status cell holds the save-state marker. The row is `aria-busy` while saving, and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+
 **DS-22 Album card.** This is the grid item. A square artwork tile (160–200px, responsive columns) sits over the title and artist, each truncated to one line, then the year. Save state appears as a corner badge. *(FR-05)*
+
+*As built in TON-34:*
+- **Sizes:** cards are at least 160 px wide, 16 px apart, and fill the row. They are about 200 px or less from 360 px of view width up.
+- **Virtualized by rows of cards.**
+- **Each card is a grid cell,** named by its title, artist and year. The save-state badge sits on the artwork's top-right corner.
 
 **DS-23 Artwork.**
 - A fixed-aspect box with lazy loading, `decoding="async"`, a `sizes`/`srcset` where the source allows it, and a 150ms fade-in.
 - **Fallback tile:** a neutral surface with the first letter of the title and a hue derived from a hash of the title, desaturated to stay calm. The same tile is used when artwork is missing, still loading, or fails to load. A failed load is never shown as an error. *(FR-03.4)*
 - **Alt text:** decorative (`alt=""`) in rows and cards, where the title is adjacent; "Cover of {title}" in the inspector and on guest album sheets.
+
+*As built in TON-34:*
+- **The tile:**
+  - the title's first grapheme, upper-cased;
+  - its hue is a 32-bit FNV-1a hash of the title, modulo 360;
+  - its colors are a calm, low-chroma OKLCH ground (L 0.33, C 0.04) with the letter at L 0.86;
+  - a blank title gets a neutral tile.
+- **Images** load lazily, fade in over 150 ms once loaded, and on error leave the tile.
+- **Albums carry no artwork yet** (capture, M3), so every album shows its tile.
 
 **DS-24 Chronology display.** *(FR-05.5, FR-05.6, FR-02.8)*
 
@@ -377,9 +402,29 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - The layout choice is saved with the view's other personal presentation choices.
 - Both layouts ship in v1 and are built together from the start (decided 17 October 2026).
 
+*As built in TON-34:*
+- **The switch:** a Rows | Grid control in the header of lists and Unsorted.
+- **Kept per view on the device** (decided with the creator on 22 October 2026), until TON-35's View options make it a synced preference.
+- **Folders and the root** show rows only.
+- **A grid for every layout.** Each is a virtualized ARIA grid that states its full row count (and, for cards, its column count), with a hidden header row for rows.
+- **Keyboard:**
+  - focus moves cell by cell with the arrows;
+  - J and K go to the next and previous row;
+  - Home and End go to the row's ends, and ⌘Home and ⌘End to the grid's;
+  - Page Up and Page Down move by a page.
+- **Measured:** at 5,000 albums, both layouts scroll at the display's rate (120 Hz on the test Mac), with no frame over 17 ms.
+
 *(FR-05.2)*
 
 **DS-41 Folder and root rows.** Each row shows the container icon (folder or list), name, a description excerpt (`fg.tertiary`, one line), the item count (albums for lists, children for folders), and a sharing glyph. When sorted by creation date, a date column appears. *(FR-01.3, FR-03.5, FR-05.1)*
+
+*As built in TON-34:*
+- **The cells:**
+  - the name cell, a link with the icon, name and save-state marker;
+  - the contents cell: "2 albums", or "3 folders and lists".
+- **Enter** opens the folder or list from either cell.
+- **Order:** creation order, as the tree, until manual order (TON-36).
+- **Later:** descriptions (M4) and sharing glyphs (M7).
 
 **DS-42 Lists and folders under each sort** *(handoff FR-05.1)*:
 - **Name and creation-date sorts:** folders first, then lists, each sorted by the selected key and direction. This is the filesystem convention and keeps hierarchy scannable.
@@ -664,6 +709,7 @@ The block never says "private" while another access path remains.
 - **Shortcuts come before the tree's type-ahead** (DS-27).
 - **When they wait:** shortcuts are off in text fields, and inside dialogs, popovers and menus.
 - **The reference** lists the shortcuts that work; others join it with their issues.
+- **TON-34 adds the views' grid keys:** J and K, arrows across a row, and ⌘Home and ⌘End. J and K belong to the grid, not to global shortcuts, so in the tree they stay type-ahead letters.
 
 ---
 
@@ -997,6 +1043,11 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 - **Status is never color-only:** states always combine an icon and text.
 - **Reduced motion** is honored (DS-17).
 - **Screen-reader walkthroughs** cover guest pages, failure states, and approval pages.
+
+*Fixed in TON-34:* the focus ring never showed, from TON-7 on.
+- **The cause.** Tailwind v4's `outline-none` sets the outline style to `none`, and `focus-visible:outline-2` inherits that style.
+- **The fix.** Every ring now adds `focus-visible:outline-solid`.
+- **The guard.** A browser test checks a keyboard-focused button and a focused card. axe doesn't check focus visibility.
 
 **DS-118 Perceived speed.** *(Q-01, FR-09.3)*
 - Apply locally first (DS-01).

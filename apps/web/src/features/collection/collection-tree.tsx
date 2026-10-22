@@ -62,7 +62,7 @@ function withEditor(rows: TreeRow[], editor: Editor | undefined): Row[] {
 }
 
 const rowClass =
-  "flex h-7 min-w-0 items-center gap-1.5 rounded-md pr-2 text-fg-secondary outline-none hover:bg-hover hover:text-fg-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus aria-selected:bg-selected aria-selected:text-fg-primary";
+  "flex h-7 min-w-0 items-center gap-1.5 rounded-md pr-2 text-fg-secondary outline-none hover:bg-hover hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-focus aria-selected:bg-selected aria-selected:text-fg-primary";
 
 /** The left padding that shows an item's level. */
 const indent = (level: number) => ({ paddingLeft: `${4 + (level - 1) * 12}px` });

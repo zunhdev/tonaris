@@ -15,11 +15,14 @@ export function PageHeader({
   title,
   icon,
   breadcrumbs,
+  actions,
 }: {
   title: string;
   icon?: ReactNode;
   /** The links to the view's ancestors, from Collection down; none for a top-level view. */
   breadcrumbs?: ReactNode[];
+  /** Controls at the header's end, such as the layout switch. */
+  actions?: ReactNode;
 }) {
   const { sidebarHidden, toggleSidebar } = useShell();
   return (
@@ -57,6 +60,7 @@ export function PageHeader({
       <h1 id={pageTitleId} className="min-w-0 truncate text-page text-fg-primary">
         {title}
       </h1>
+      {actions && <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>}
     </header>
   );
 }

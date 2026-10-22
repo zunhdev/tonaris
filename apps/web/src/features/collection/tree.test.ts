@@ -2,17 +2,9 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { uuidv7, type Album, type Container, type Membership } from "@tonaris/domain";
+import { uuidv7, type Container } from "@tonaris/domain";
 
-import {
-  albumCounts,
-  ancestorsOf,
-  buildTree,
-  typeAhead,
-  unsortedCount,
-  visibleRows,
-  type TreeRow,
-} from "./tree";
+import { ancestorsOf, buildTree, typeAhead, visibleRows, type TreeRow } from "./tree";
 
 const folder = (name: string, parentId: string | null = null): Container => ({
   id: uuidv7(),
@@ -27,23 +19,6 @@ const list = (name: string, parentId: string | null = null): Container => ({
 
 const label = (row: TreeRow) =>
   `${"  ".repeat(row.level - 1)}${row.type === "container" ? row.container.name : row.name} ${row.posInSet}/${row.setSize}`;
-
-const album = (title: string): Album => ({
-  id: uuidv7(),
-  title,
-  artistCredit: "Miles Davis",
-  releaseType: "album",
-  isLive: false,
-  originalYear: 1959,
-  recordingYearStart: null,
-  recordingYearEnd: null,
-});
-
-const entry = (listId: string, albumId: string): Membership => ({
-  listId,
-  albumId,
-  addedAt: "2026-10-22T00:00:00.000Z",
-});
 
 // Made in this order, so their IDs sort this way.
 const metal = folder("Metal");
@@ -81,23 +56,6 @@ describe("the sidebar tree (DS-27)", () => {
     expect(ancestorsOf(tree, deep.id).map((each) => each.name)).toEqual(["Metal", "Funeral"]);
     expect(ancestorsOf(tree, later.id)).toEqual([]);
     expect(ancestorsOf(tree, uuidv7())).toEqual([]);
-  });
-
-  test("lists count their albums, and Unsorted counts the albums in no list (FR-01.9)", () => {
-    const albums = ["One", "Two", "Three"].map(album);
-    const [first, second] = albums;
-    const memberships = [
-      entry(doom.id, first!.id),
-      entry(doom.id, second!.id),
-      entry(later.id, first!.id),
-    ];
-    expect(albumCounts(memberships)).toEqual(
-      new Map([
-        [doom.id, 2],
-        [later.id, 1],
-      ]),
-    );
-    expect(unsortedCount(albums, memberships)).toBe(1);
   });
 
   test("type-ahead finds the next name starting with the typed letters, ignoring case and accents", () => {

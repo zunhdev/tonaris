@@ -4,7 +4,7 @@
 // carry what the ARIA tree pattern needs in its flat form: level, position in the set, and set size. Pure, so the
 // tree's rules are tested without a DOM.
 
-import { searchKey, type Album, type Container, type Membership } from "@tonaris/domain";
+import { searchKey, type Container } from "@tonaris/domain";
 
 export type Tree = {
   /** The root's folders and lists, in order. */
@@ -92,22 +92,6 @@ export function ancestorsOf(tree: Tree, id: string): Container[] {
     parentId = parent.parentId;
   }
   return path;
-}
-
-/** How many albums each list holds. */
-export function albumCounts(memberships: Iterable<Membership>): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const { listId } of memberships) counts.set(listId, (counts.get(listId) ?? 0) + 1);
-  return counts;
-}
-
-/** How many albums are in no list: Unsorted (FR-01.9). */
-export function unsortedCount(albums: Iterable<Album>, memberships: Iterable<Membership>): number {
-  const listed = new Set<string>();
-  for (const { albumId } of memberships) listed.add(albumId);
-  let count = 0;
-  for (const { id } of albums) if (!listed.has(id)) count += 1;
-  return count;
 }
 
 const nameOf = (row: TreeRow) => (row.type === "container" ? row.container.name : row.name);

@@ -81,8 +81,11 @@ export const shortcutReference = [
   {
     title: "Moving around",
     keys: [
-      { keys: ["↑", "↓"], action: "Move in the sidebar" },
-      { keys: ["←", "→"], action: "Collapse or expand a folder" },
+      { keys: ["↑", "↓"], action: "Move in the sidebar or a view" },
+      { keys: ["J", "K"], action: "Next or previous row in a view" },
+      { keys: ["←", "→"], action: "Collapse or expand a folder; move across a row" },
+      { keys: ["⌘", "Home"], action: "First item in a view" },
+      { keys: ["⌘", "End"], action: "Last item in a view" },
       { keys: ["Enter"], action: "Open" },
       { keys: ["G", "H"], action: "Go to Collection" },
       { keys: ["G", "U"], action: "Go to Unsorted" },

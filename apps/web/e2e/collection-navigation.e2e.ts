@@ -119,7 +119,9 @@ test("folders and lists are created, renamed and walked by keyboard alone", asyn
   await page.keyboard.press("g");
   await page.keyboard.press("h");
   await expect(page).toHaveURL("/c");
-  await expect(page.getByText("1 folder or list")).toBeVisible();
+  await expect(page.getByRole("grid", { name: "Collection" }).getByRole("link")).toHaveText([
+    "Metal",
+  ]);
 
   // `[` hides and shows the sidebar; `?` opens the reference.
   await page.keyboard.press("[");
@@ -170,7 +172,7 @@ test("the tree and the sidebar's width are remembered on the device, and / retur
   await page.goto(`/l/${doomId}`);
   await live(page);
   await expect(item(page, "Doom 2 albums")).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("main").getByText("2 albums", { exact: true })).toBeVisible();
+  await expect(page.getByRole("grid", { name: "Doom" })).toHaveAttribute("aria-rowcount", "3");
 
   // A folder's path given a list leads to the list's; a missing one says so.
   await page.goto(`/f/${doomId}`);

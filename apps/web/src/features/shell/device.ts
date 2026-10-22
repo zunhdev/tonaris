@@ -72,3 +72,20 @@ export const lastView = {
     if (isCollectionPath(path)) write(`tonaris:last-view:${accountId}`, path);
   },
 };
+
+export type Layout = "rows" | "grid";
+
+/** How each list, and Unsorted, shows its albums (DS-40), per account, until TON-35 syncs it (FR-11.8). */
+export const viewLayouts = {
+  read(accountId: string, view: string): Layout {
+    const value = read(`tonaris:layouts:${accountId}`);
+    const stored = typeof value === "object" && value !== null ? Object.entries(value) : [];
+    return stored.some(([key, layout]) => key === view && layout === "grid") ? "grid" : "rows";
+  },
+  write(accountId: string, view: string, layout: Layout): void {
+    const value = read(`tonaris:layouts:${accountId}`);
+    const stored =
+      typeof value === "object" && value !== null ? Object.fromEntries(Object.entries(value)) : {};
+    write(`tonaris:layouts:${accountId}`, { ...stored, [view]: layout });
+  },
+};
