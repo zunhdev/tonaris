@@ -6,10 +6,12 @@
 // - after falling behind: a client that stops reading never holds more than `bufferLimit` changes in memory.
 // So delivery is correct even when a publish is lost, which is what lets a second instance swap the bus for
 // Postgres LISTEN/NOTIFY later. A cursor the log no longer reaches, or one it never had, ends with `reset`.
+// A stream also ends once the session that opened it is signed out, revoked or expired: while streams are open,
+// the hub checks their sessions every 30 s.
 
 import type { SSEPayload } from "elysia";
 
-import { headSeq, readChanges, type Database } from "@tonaris/db";
+import { activeSessionIds, headSeq, readChanges, type Database } from "@tonaris/db";
 import type { Change, StreamReset } from "@tonaris/domain";
 
 import type { StreamSource } from "../sse";
@@ -25,20 +27,36 @@ export type ChangeLog = {
 };
 
 /** The change log in the database. */
-export function databaseLog(db: Database): ChangeLog {
+function databaseLog(db: Database): ChangeLog {
   return {
     read: (accountId, after, limit) => readChanges(db, accountId, after, limit),
     head: (accountId) => headSeq(db, accountId),
   };
 }
 
+/** Which of the streams' sessions are still live (packages/db). */
+export type SessionCheck = { active(ids: readonly string[]): Promise<Set<string>> };
+
+/** The sessions in the database. */
+function databaseSessions(db: Database): SessionCheck {
+  return { active: (ids) => activeSessionIds(db, ids) };
+}
+
 export type SyncHubOptions = {
   log: ChangeLog;
+  /** Checks streams' sessions; without it, a stream lasts as long as its connection. */
+  sessions?: SessionCheck;
+  /** How often open streams' sessions are checked (TS-23). */
+  sessionCheckMs?: number;
+  /** Gets a failed session check; the streams stay open until the next one. */
+  logError?: (error: unknown) => void;
   /** Changes read from the log at a time. */
   pageSize?: number;
   /** Changes a stream holds for a slow client before it drops them and reads the log instead. */
   bufferLimit?: number;
 };
+
+type StreamSettings = Required<Pick<SyncHubOptions, "log" | "pageSize" | "bufferLimit">>;
 
 type Result = IteratorResult<SyncEvent, undefined>;
 const done: Result = { done: true, value: undefined };
@@ -65,8 +83,10 @@ class Subscription implements StreamSource<SyncEvent> {
 
   constructor(
     readonly accountId: string,
+    /** The session that opened the stream, if it has one to check. */
+    readonly sessionId: string | undefined,
     cursor: number,
-    private readonly options: Required<SyncHubOptions>,
+    private readonly options: StreamSettings,
     private readonly onEnd: () => void,
   ) {
     this.#cursor = cursor;
@@ -150,10 +170,58 @@ class Subscription implements StreamSource<SyncEvent> {
 
 export type SyncHub = ReturnType<typeof createSyncHub>;
 
+/** A hub on the database's change log and sessions. Close it on shutdown. */
+export function databaseHub(
+  db: Database,
+  options: Omit<SyncHubOptions, "log" | "sessions"> = {},
+): SyncHub {
+  return createSyncHub({ log: databaseLog(db), sessions: databaseSessions(db), ...options });
+}
+
 export function createSyncHub(options: SyncHubOptions) {
-  const settings = { pageSize: 500, bufferLimit: 1_000, ...options };
+  const {
+    sessions,
+    sessionCheckMs = 30_000,
+    logError = (error: unknown) => console.error("Checking stream sessions failed", error),
+    ...rest
+  } = options;
+  const settings: StreamSettings = { pageSize: 500, bufferLimit: 1_000, ...rest };
   const streams = new Map<string, Set<Subscription>>();
   const shutdown = new AbortController();
+  let checks: ReturnType<typeof setInterval> | undefined;
+
+  const openStreams = () =>
+    [...streams.values()].flatMap((subscriptions) => Array.from(subscriptions));
+  const endWhere = (ends: (subscription: Subscription) => boolean) => {
+    for (const subscription of openStreams().filter(ends)) subscription.end();
+  };
+
+  /** Ends the streams whose sessions are no longer live. */
+  async function checkSessions(): Promise<void> {
+    const ids = [
+      ...new Set(openStreams().flatMap(({ sessionId }) => (sessionId ? [sessionId] : []))),
+    ];
+    if (!sessions || ids.length === 0) return;
+    let active: Set<string>;
+    try {
+      active = await sessions.active(ids);
+    } catch (error) {
+      logError(error);
+      return;
+    }
+    endWhere(({ sessionId }) => sessionId !== undefined && !active.has(sessionId));
+  }
+
+  /** Checks sessions only while streams are open. */
+  function scheduleChecks(): void {
+    const any = streams.size > 0;
+    if (sessions && any && !checks) {
+      checks = setInterval(() => void checkSessions(), sessionCheckMs);
+    } else if (!any && checks) {
+      clearInterval(checks);
+      checks = undefined;
+    }
+  }
 
   return {
     /** Hands committed changes to the account's open streams (TS-20 step 6). */
@@ -162,16 +230,33 @@ export function createSyncHub(options: SyncHubOptions) {
       for (const stream of streams.get(accountId) ?? []) stream.offer(changes);
     },
 
-    /** A stream of the account's changes after `cursor`. It leaves the hub when it ends. */
-    subscribe(accountId: string, cursor: number): StreamSource<SyncEvent> {
-      const subscription: Subscription = new Subscription(accountId, cursor, settings, () => {
-        const open = streams.get(accountId);
-        open?.delete(subscription);
-        if (open?.size === 0) streams.delete(accountId);
-      });
-      const open = streams.get(accountId) ?? new Set();
-      streams.set(accountId, open.add(subscription));
+    /**
+     * A stream of the account's changes after `cursor`, opened by `sessionId`. It leaves the hub when it ends, and
+     * ends once that session is no longer live.
+     */
+    subscribe(accountId: string, cursor: number, sessionId?: string): StreamSource<SyncEvent> {
+      const subscription: Subscription = new Subscription(
+        accountId,
+        sessionId,
+        cursor,
+        settings,
+        () => {
+          const account = streams.get(accountId);
+          account?.delete(subscription);
+          if (account?.size === 0) streams.delete(accountId);
+          scheduleChecks();
+        },
+      );
+      const account = streams.get(accountId) ?? new Set();
+      streams.set(accountId, account.add(subscription));
+      scheduleChecks();
       return subscription;
+    },
+
+    /** Ends the streams of these sessions at once, as a revocation that can't wait for the next check does. */
+    endSessions(sessionIds: Iterable<string>): void {
+      const ending = new Set(sessionIds);
+      endWhere(({ sessionId }) => sessionId !== undefined && ending.has(sessionId));
     },
 
     /** Aborts on `close()`: every stream ends, so a graceful stop can complete (TS-23). */
@@ -179,6 +264,8 @@ export function createSyncHub(options: SyncHubOptions) {
 
     close(): void {
       shutdown.abort();
+      clearInterval(checks);
+      checks = undefined;
     },
 
     /** Open streams, for tests and diagnostics. */

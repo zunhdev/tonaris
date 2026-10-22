@@ -30,10 +30,8 @@ import {
   type Principal,
 } from "@tonaris/domain";
 
-import type { Database } from "./client";
+import type { Database, Transaction } from "./client";
 import { accountSync, albums, changeLog, containers, memberships, mutations } from "./schema";
-
-type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 const albumColumns = {
   id: albums.id,
@@ -412,8 +410,12 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
 /**
  * Removes change-log entries and idempotency records older than the retention window (TS-22, TS-23). A stream
  * cursor before the remaining log is then answered with `reset`, and a replay of a removed mutation is `expired`.
+ * The daily schedule runs it in its own transaction (TS-91).
  */
-export async function pruneSyncHistory(db: Database, now: Date = new Date()): Promise<void> {
+export async function pruneSyncHistory(
+  db: Database | Transaction,
+  now: Date = new Date(),
+): Promise<void> {
   const before = new Date(now.getTime() - syncRetentionMs);
   await db.delete(changeLog).where(lt(changeLog.createdAt, before));
   await db.delete(mutations).where(lt(mutations.receivedAt, before));

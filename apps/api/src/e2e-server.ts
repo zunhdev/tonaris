@@ -10,7 +10,7 @@ import { seedCreator } from "./auth/seed-creator";
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
 import { apiConfig } from "./config";
 import { smtpEmail } from "./email/smtp";
-import { createSyncHub, databaseLog } from "./sync/hub";
+import { databaseHub } from "./sync/hub";
 import { insertUser } from "./testing";
 
 const port = Number(process.env.PORT ?? 3101);
@@ -33,7 +33,7 @@ const limiter = createSignInLimiter({
   perEmail: signInLimits.perEmail,
   perIp: { ...signInLimits.perIp, max: 10_000 },
 });
-const hub = createSyncHub({ log: databaseLog(database.db) });
+const hub = databaseHub(database.db);
 const app = createApp({ config, auth, db: database.db, email, hub, limiter }).listen(port);
 console.log(`e2e API on ${app.server?.url.href}, schema ${database.schema}`);
 

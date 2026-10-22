@@ -16,7 +16,7 @@ import { createApp } from "./app";
 import { type AuthOptions, createAuth } from "./auth/auth";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import { apiConfig } from "./config";
-import { createSyncHub, databaseLog, type SyncHubOptions } from "./sync/hub";
+import { databaseHub, type SyncHubOptions } from "./sync/hub";
 
 export type SentEmail = {
   template: EmailTemplate;
@@ -73,7 +73,7 @@ export function inSequence<T>(count: number, step: (index: number) => Promise<T>
 export type LocalAppOptions = {
   env?: Record<string, string>;
   limiter?: SignInLimiter;
-  hub?: Omit<SyncHubOptions, "log">;
+  hub?: Omit<SyncHubOptions, "log" | "sessions">;
   /** Serves client metadata documents (CIMD) instead of fetching them. */
   fetchClientMetadata?: AuthOptions["fetchClientMetadata"];
 };
@@ -93,7 +93,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     logError: () => {},
     fetchClientMetadata: options.fetchClientMetadata,
   });
-  const hub = createSyncHub({ log: databaseLog(db), ...options.hub });
+  const hub = databaseHub(db, options.hub);
   const app = createApp({
     config,
     auth,

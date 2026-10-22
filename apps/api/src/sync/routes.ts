@@ -148,9 +148,9 @@ export function syncRoutes(session: SessionGuard, { db, hub }: { db: Database; h
           },
         },
       },
-      async function* ({ request, server, headers, query, account }) {
+      async function* ({ request, server, headers, query, account, sessionId }) {
         const after = Number(headers["last-event-id"] ?? query.after ?? 0);
-        yield* eventStream(hub.subscribe(account.id, after), {
+        yield* eventStream(hub.subscribe(account.id, after, sessionId), {
           request,
           server,
           signal: hub.signal,

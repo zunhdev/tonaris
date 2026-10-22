@@ -5,11 +5,8 @@ import { and, eq } from "drizzle-orm";
 
 import { invitationStatus, type AdmissionRefusal } from "@tonaris/domain";
 
-import type { Database } from "./client";
+import type { Database, Transaction } from "./client";
 import { admissionInvitations, serviceState, users } from "./schema";
-
-/** The transaction a caller opened; Better Auth's, for admission (apps/api/src/auth/transaction.ts). */
-export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export type AdmissionInvitationRow = typeof admissionInvitations.$inferSelect;
 
