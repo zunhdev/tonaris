@@ -20,6 +20,7 @@ import {
   type Change,
   type CollectionStore,
   type Container,
+  type Membership,
   type Mutation,
   type MutationResult,
   type Outcome,
@@ -49,6 +50,18 @@ const containerColumns = {
   name: containers.name,
 };
 
+const membershipColumns = {
+  listId: memberships.listId,
+  albumId: memberships.albumId,
+  addedAt: memberships.addedAt,
+};
+
+/** An entry as clients see it, with `addedAt` as the ISO string the protocol carries. */
+const membershipOf = (row: Omit<Membership, "addedAt"> & { addedAt: Date }): Membership => ({
+  ...row,
+  addedAt: row.addedAt.toISOString(),
+});
+
 /**
  * The domain's store on one transaction. Search and name keys are derived here, so every write keeps them
  * (TS-12). The hierarchy is walked with recursive CTEs (TS-31), cut off past the depth limit so that even a
@@ -57,11 +70,13 @@ const containerColumns = {
 function collectionStore(tx: Transaction): CollectionStore {
   return {
     async findAlbum(id) {
-      const [album] = await tx
-        .select({ ...albumColumns, ownerId: albums.ownerId })
+      const [row] = await tx
+        .select({ ...albumColumns, ownerId: albums.ownerId, trashedAt: albums.trashedAt })
         .from(albums)
         .where(eq(albums.id, id));
-      return album;
+      if (!row) return undefined;
+      const { trashedAt, ...album } = row;
+      return { ...album, trashed: trashedAt !== null };
     },
     async insertAlbum(album) {
       await tx.insert(albums).values({
@@ -151,6 +166,29 @@ function collectionStore(tx: Transaction): CollectionStore {
         })
         .where(eq(containers.id, id));
     },
+
+    async findMembership(listId, albumId) {
+      const [row] = await tx
+        .select(membershipColumns)
+        .from(memberships)
+        .where(and(eq(memberships.listId, listId), eq(memberships.albumId, albumId)));
+      return row && membershipOf(row);
+    },
+    async countMemberships(ownerId) {
+      const [row] = await tx
+        .select({ count: count() })
+        .from(memberships)
+        .where(eq(memberships.ownerId, ownerId));
+      return row?.count ?? 0;
+    },
+    async insertMembership({ addedAt, ...membership }) {
+      await tx.insert(memberships).values({ ...membership, addedAt: new Date(addedAt) });
+    },
+    async deleteMembership(listId, albumId) {
+      await tx
+        .delete(memberships)
+        .where(and(eq(memberships.listId, listId), eq(memberships.albumId, albumId)));
+    },
   };
 }
 
@@ -227,10 +265,11 @@ export async function executeMutation(
       );
     }
 
-    const result = await runCommand(mutation, { principal, store: collectionStore(tx) });
+    const result = await runCommand(mutation, { principal, store: collectionStore(tx), now });
     let changes: Change[] = [];
+    const reported = result.status === "applied" ? (result.result ?? null) : null;
     let outcome: Outcome =
-      result.status === "applied" ? { status: "confirmed", seq, result: null } : result;
+      result.status === "applied" ? { status: "confirmed", seq, result: reported } : result;
     if (result.status === "applied" && result.changes.length > 0) {
       changes = result.changes.map((change, index) =>
         Object.assign({ seq: seq + index + 1, mutationId }, change),
@@ -248,7 +287,7 @@ export async function executeMutation(
           mutationId,
         })),
       );
-      outcome = { status: "confirmed", seq: last, result: null };
+      outcome = { status: "confirmed", seq: last, result: reported };
     }
 
     await tx.insert(mutations).values({
@@ -334,11 +373,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .where(eq(containers.ownerId, accountId))
         .orderBy(asc(containers.id));
       const entries = await tx
-        .select({
-          listId: memberships.listId,
-          albumId: memberships.albumId,
-          addedAt: memberships.addedAt,
-        })
+        .select(membershipColumns)
         .from(memberships)
         .where(eq(memberships.ownerId, accountId))
         .orderBy(asc(memberships.listId), asc(memberships.albumId));
@@ -346,11 +381,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         seq: sync?.seq ?? 0,
         albums: owned,
         containers: folders,
-        memberships: entries.map(({ listId, albumId, addedAt }) => ({
-          listId,
-          albumId,
-          addedAt: addedAt.toISOString(),
-        })),
+        memberships: entries.map(membershipOf),
       };
     },
     { isolationLevel: "repeatable read", accessMode: "read only" },

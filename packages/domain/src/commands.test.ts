@@ -4,7 +4,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { Album, AlbumFields } from "./albums";
-import { runCommand, type StoredAlbum } from "./commands";
+import { runCommand } from "./commands";
 import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
 import type { Mutation } from "./sync";
@@ -14,7 +14,7 @@ const owner = uuidv7();
 const anna: Principal = { kind: "user", userId: owner, role: "user", client: "web" };
 const other: Principal = { kind: "user", userId: uuidv7(), role: "user", client: "web" };
 
-function memoryStore(albums: StoredAlbum[] = []) {
+function memoryStore(albums: (Album & { ownerId: string })[] = []) {
   const memory = memoryCollection({ albums });
   return { store: memory.store, rows: memory.albums };
 }
@@ -49,25 +49,29 @@ describe("album.create", () => {
       status: "applied",
       changes: [{ entity: "album", id: album.id, op: "insert", data: album }],
     });
-    expect(rows.get(album.id)).toEqual({ ...album, ownerId: owner });
+    expect(rows.get(album.id)).toEqual({ ...album, ownerId: owner, trashed: false });
   });
 
   test("needs a title, an artist and the applicable year (FR-02.6)", async () => {
     const { store, rows } = memoryStore();
     const result = await runCommand(
-      create(kindOfBlue({ title: "  ", originalYear: null, isLive: false })),
+      create(kindOfBlue({ title: "  ", artistCredit: "", originalYear: null, isLive: false })),
       { principal: anna, store },
     );
     expect(result.status).toBe("failed");
     if (result.status !== "failed") return;
     expect(result.code).toBe("required_missing");
     expect(result.problem.status).toBe(422);
-    expect(result.problem.errors?.map((error) => error.path)).toEqual(["title", "originalYear"]);
+    expect(result.problem.errors?.map((error) => error.path)).toEqual([
+      "title",
+      "artistCredit",
+      "originalYear",
+    ]);
     expect(rows.size).toBe(0);
   });
 
-  test("takes a live album's recording year as its year", async () => {
-    const { store } = memoryStore();
+  test("takes a live album's recording year as its year, and leaves its original year unknown", async () => {
+    const { store, rows } = memoryStore();
     const live = kindOfBlue({
       isLive: true,
       originalYear: null,
@@ -75,6 +79,23 @@ describe("album.create", () => {
       recordingYearEnd: 1964,
     });
     expect((await runCommand(create(live), { principal: anna, store })).status).toBe("applied");
+    expect(rows.get(live.id)?.originalYear).toBeNull();
+  });
+
+  test("doesn't take a recording year for an album that isn't live, or isn't known to be", async () => {
+    const { store, rows } = memoryStore();
+    for (const isLive of [false, null]) {
+      // oxlint-disable-next-line no-await-in-loop
+      const result = await runCommand(
+        create(kindOfBlue({ isLive, originalYear: null, recordingYearStart: 1959 })),
+        { principal: anna, store },
+      );
+      expect(result.status === "failed" && result.code).toBe("required_missing");
+      expect(result.status === "failed" && result.problem.errors).toEqual([
+        { path: "originalYear", message: "Required" },
+      ]);
+    }
+    expect(rows.size).toBe(0);
   });
 
   test("never duplicates an album created again (FR-13.5)", async () => {
@@ -232,6 +253,28 @@ describe("album.update: field-level compare-and-set (TS-21)", () => {
     );
     expect(result.status === "failed" && result.code).toBe("required_missing");
     expect(rows.get(album.id)?.artistCredit).toBe("Miles Davis");
+  });
+
+  test("rejects an edit that clears the only year", async () => {
+    const { album, store, rows } = saved();
+    const studio = await runCommand(
+      update(album.id, { originalYear: null }, { originalYear: 1959 }),
+      {
+        principal: anna,
+        store,
+      },
+    );
+    expect(studio.status === "failed" && studio.code).toBe("required_missing");
+
+    const live = kindOfBlue({ isLive: true, originalYear: null, recordingYearEnd: null });
+    rows.set(live.id, { ...live, ownerId: owner, trashed: false });
+    const cleared = await runCommand(
+      update(live.id, { recordingYearStart: null }, { recordingYearStart: 1959 }),
+      { principal: anna, store },
+    );
+    expect(cleared.status === "failed" && cleared.code).toBe("required_missing");
+    expect(rows.get(album.id)?.originalYear).toBe(1959);
+    expect(rows.get(live.id)?.recordingYearStart).toBe(1959);
   });
 
   test("refuses unknown albums and other people's", async () => {

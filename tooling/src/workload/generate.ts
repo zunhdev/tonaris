@@ -27,7 +27,6 @@ import { Random } from "./random";
 import {
   bandAdjectives,
   bandNouns,
-  editionLabels,
   firstNames,
   folderNames,
   folderQualifiers,
@@ -364,13 +363,9 @@ type AlbumDescription = Pick<
   | "originalYear"
   | "recordingYearStart"
   | "recordingYearEnd"
-  | "editionLabel"
   | "mbReleaseId"
   | "mbReleaseGroupId"
-  | "barcode"
 >;
-
-const digits = "0123456789";
 
 function describeAlbum(rng: Random, artists: readonly string[]): AlbumDescription {
   // A few artists have dozens of albums, most have a handful.
@@ -405,36 +400,20 @@ function describeAlbum(rng: Random, artists: readonly string[]): AlbumDescriptio
       recordingYearStart !== null && recordingYearStart < year && rng.chance(0.3)
         ? recordingYearStart + 1
         : null,
-    editionLabel: rng.chance(0.12) ? rng.pick(editionLabels) : null,
     mbReleaseId: identified ? rng.uuidv4() : null,
     mbReleaseGroupId: identified ? rng.uuidv4() : null,
-    barcode: rng.chance(0.6) ? rng.string(digits, rng.chance(0.8) ? 12 : 13) : null,
-  };
-}
-
-/** Another edition of an album already in the collection: same work, its own release (FR-02.9). */
-function reissue(rng: Random, original: AlbumDescription): AlbumDescription {
-  return {
-    ...original,
-    editionLabel: rng.pick(editionLabels.filter((label) => label !== original.editionLabel)),
-    mbReleaseId: original.mbReleaseGroupId ? rng.uuidv4() : null,
-    barcode: rng.chance(0.6) ? rng.string(digits, 13) : null,
   };
 }
 
 function buildAlbums(b: Builder, count: number): Album[] {
   const rng = b.rng.derive("albums");
   const time = spread(rng, count, start, end);
-  const descriptions: AlbumDescription[] = [];
   const made: Album[] = [];
   for (let i = 0; i < count; i++) {
     const createdAt = time(i);
-    const description =
-      descriptions.length > 0 && rng.chance(0.05)
-        ? reissue(rng, rng.pick(descriptions))
-        : describeAlbum(rng, b.artists);
+    // One record per album (FR-02.12): another edition of a saved album is that album, never a second record.
+    const description = describeAlbum(rng, b.artists);
     const album = { id: rng.uuidv7(createdAt), createdAt };
-    descriptions.push(description);
     made.push(album);
     b.rows.albums.push({
       id: album.id,

@@ -64,10 +64,8 @@ export {
 export {
   containerKinds,
   containerSchema,
-  membershipSchema,
   type Container,
   type ContainerKind,
-  type Membership,
   type StoredContainer,
 } from "./containers";
 export {
@@ -79,7 +77,8 @@ export {
   type StoredAlbum,
 } from "./commands";
 export { uuidv7, uuidv7Time } from "./ids";
-export { maxContainerDepth, maxContainers, maxNameLength } from "./limits";
+export { maxContainerDepth, maxContainers, maxMemberships, maxNameLength } from "./limits";
+export { membershipKey, membershipSchema, type Membership } from "./memberships";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
 export { caseFold, nameKey, searchKey, searchMatches } from "./normalize";
 export {
@@ -122,6 +121,7 @@ export {
   bootstrapSchema,
   changeOps,
   changeSchema,
+  membershipAddResultSchema,
   mutationResultSchema,
   mutationSchema,
   streamResetReasons,
@@ -130,6 +130,7 @@ export {
   type Bootstrap,
   type Change,
   type ChangeOp,
+  type MembershipAddResult,
   type Mutation,
   type MutationName,
   type MutationResult,

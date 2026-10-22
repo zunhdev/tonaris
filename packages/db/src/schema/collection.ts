@@ -85,7 +85,10 @@ export const containers = table(
   ],
 );
 
-/** Album records, shared by every list they appear in (FR-01.6). */
+/**
+ * Album records, shared by every list they appear in (FR-01.6). One per album, not per edition (FR-02.12):
+ * `mbReleaseGroupId` is its identity, and `mbReleaseId` only records the release a link resolved to (TS-11).
+ */
 export const albums = table(
   "albums",
   {
@@ -101,11 +104,9 @@ export const albums = table(
     originalYear: integer(),
     recordingYearStart: integer(),
     recordingYearEnd: integer(),
-    editionLabel: text(),
     artworkUrl: text(),
     mbReleaseId: uuid(),
     mbReleaseGroupId: uuid(),
-    barcode: text(),
     trashedAt: instant(),
     trashUnitId: uuid().references(() => trashUnits.id),
     // searchKey() of title and artist credit, stored so app, MCP and export search alike (TS-12).

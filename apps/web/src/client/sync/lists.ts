@@ -1,10 +1,17 @@
 // Folders, lists and list entries: read-only TanStack DB collections, filled from the bootstrap snapshot (TS-24).
-// Folders and lists also follow the stream, so another session's new, renamed and moved ones appear live
-// (TON-26). Writing them from this client, and list entries' changes, arrive with TON-27, TON-30 and TON-33.
+// They follow the stream, so another session's new, renamed and moved folders and lists (TON-26) and the albums
+// it adds to and removes from lists (TON-27) appear live. Writing them from this client arrives with TON-30,
+// TON-33 and TON-38.
 
 import { createCollection } from "@tanstack/db";
 
-import type { Bootstrap, Change, Container, Membership } from "@tonaris/domain";
+import {
+  membershipKey,
+  type Bootstrap,
+  type Change,
+  type Container,
+  type Membership,
+} from "@tonaris/domain";
 
 import type { SyncEngine } from "./engine";
 
@@ -78,6 +85,7 @@ export function createMembershipCollection(engine: SyncEngine) {
     engine,
     "memberships",
     (s) => s.memberships,
-    (m) => `${m.listId}:${m.albumId}`,
+    (m) => membershipKey(m.listId, m.albumId),
+    (change) => (change.entity === "membership" ? { key: change.id, row: change.data } : undefined),
   );
 }

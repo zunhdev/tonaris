@@ -10,18 +10,20 @@ import {
   type Container,
   type StoredContainer,
 } from "./containers";
+import { addMembership, removeMembership, type Membership } from "./memberships";
 import { failure, type FieldConflict, type Outcome } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { actingUserId, type Principal } from "./principals";
 import type { ChangeOp, Mutation } from "./sync";
 
-export type StoredAlbum = Album & { ownerId: string };
+/** An album as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
+export type StoredAlbum = Album & { ownerId: string; trashed: boolean };
 
 /** What commands read and write. The database layer implements it on the owner's write transaction. */
 export type CollectionStore = {
-  /** The album with this ID, whoever owns it. */
+  /** The album with this ID, whoever owns it, in Trash or not. */
   findAlbum(id: string): Promise<StoredAlbum | undefined>;
-  insertAlbum(album: StoredAlbum): Promise<void>;
+  insertAlbum(album: Album & { ownerId: string }): Promise<void>;
   /** Sets the fields in `values`; fields left undefined keep their value. */
   updateAlbum(id: string, values: Partial<AlbumFields>): Promise<void>;
 
@@ -38,18 +40,28 @@ export type CollectionStore = {
   insertContainer(container: Container & { ownerId: string }): Promise<void>;
   /** Sets the fields in `values`; fields left undefined keep their value. */
   updateContainer(id: string, values: Partial<Pick<Container, "name" | "parentId">>): Promise<void>;
+
+  /** The entry for this album in this list, whether or not either is in Trash. */
+  findMembership(listId: string, albumId: string): Promise<Membership | undefined>;
+  /** The owner's list entries, those whose list or album is in Trash included (TS-18). */
+  countMemberships(ownerId: string): Promise<number>;
+  insertMembership(membership: Membership & { ownerId: string }): Promise<void>;
+  deleteMembership(listId: string, albumId: string): Promise<void>;
 };
 
 /** A change for the account's log; the database layer gives it its `seq`. */
 export type ChangeInput =
   | { entity: "album"; id: string; op: ChangeOp; data: Album | null }
-  | { entity: "container"; id: string; op: ChangeOp; data: Container | null };
+  | { entity: "container"; id: string; op: ChangeOp; data: Container | null }
+  | { entity: "membership"; id: string; op: ChangeOp; data: Membership | null };
 
+/** `result` is what the mutation reports in its `confirmed` outcome, if anything, such as `MembershipAddResult`. */
 export type CommandResult =
-  | { status: "applied"; changes: ChangeInput[] }
+  | { status: "applied"; changes: ChangeInput[]; result?: unknown }
   | Extract<Outcome, { status: "failed" | "conflict" }>;
 
-export type CommandContext = { principal: Principal; store: CollectionStore };
+/** `now` is the time a command records, such as when an album joined a list; the current time if absent. */
+export type CommandContext = { principal: Principal; store: CollectionStore; now?: Date };
 
 export function runCommand(mutation: Mutation, context: CommandContext): Promise<CommandResult> {
   if (mutation.name === "album.create") return createAlbum(mutation.args, context);
@@ -58,14 +70,18 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "container.rename") {
     return renameContainer(mutation.args, mutation.base, context);
   }
-  return moveContainer(mutation.args, mutation.base, context);
+  if (mutation.name === "container.move") {
+    return moveContainer(mutation.args, mutation.base, context);
+  }
+  if (mutation.name === "membership.add") return addMembership(mutation.args, context);
+  return removeMembership(mutation.args, context);
 }
 
 const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
 
-/** The album as clients see it, without the owner. */
+/** The album as clients see it, without the owner and Trash state. */
 function albumOf(stored: StoredAlbum): Album {
-  const { ownerId: _, ...album } = stored;
+  const { ownerId: _, trashed: __, ...album } = stored;
   return album;
 }
 

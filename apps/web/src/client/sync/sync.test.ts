@@ -5,7 +5,7 @@
 
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test";
 
-import { uuidv7, type Album, type Mutation } from "@tonaris/domain";
+import { membershipKey, uuidv7, type Album, type Mutation } from "@tonaris/domain";
 
 import type { SyncClient } from "./client";
 import { sessionFetch, startApiServer, testClient, until, type TestServer } from "./testing";
@@ -15,7 +15,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(11);
+  server = await startApiServer(12);
 }, 30_000);
 
 afterAll(async () => {
@@ -321,5 +321,37 @@ describe("folders and lists (FR-01.1, FR-01.3, FR-09.1)", () => {
     });
     await until(() => phone.containers.get(id)?.name === "Desert island", 3_000, "the rename");
     expect(phone.containers.size).toBe(1);
+  });
+});
+
+describe("list entries (FR-01.6, FR-01.8, FR-09.1)", () => {
+  test("another session's added and removed albums show without reloading", async () => {
+    const phone = await openClient(11, 1);
+    await phone.memberships.preload();
+    const web = sessionFetch(server, server.accounts[11]?.sessions[0] ?? "");
+    const post = async (mutation: Mutation) => {
+      const response = await web.fetch(`${server.url}/v1/mutations`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(mutation),
+      });
+      expect(response.status).toBe(200);
+    };
+
+    const kindOfBlue = album();
+    const listId = uuidv7();
+    await post({ mutationId: uuidv7(), name: "album.create", args: kindOfBlue });
+    await post({
+      mutationId: uuidv7(),
+      name: "container.create",
+      args: { id: listId, kind: "list", parentId: null, name: "Favorites" },
+    });
+    const key = membershipKey(listId, kindOfBlue.id);
+    const args = { listId, albumId: kindOfBlue.id };
+    await post({ mutationId: uuidv7(), name: "membership.add", args });
+    await until(() => phone.memberships.has(key), 3_000, "the entry");
+    await post({ mutationId: uuidv7(), name: "membership.remove", args });
+    await until(() => !phone.memberships.has(key), 3_000, "the removal");
+    expect(phone.albums.get(kindOfBlue.id)?.title).toBe("Kind of Blue");
   });
 });
