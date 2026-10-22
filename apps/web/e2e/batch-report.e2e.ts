@@ -64,7 +64,7 @@ test("a batch that partly fails is reported once, by status, kept across a reloa
     "Completed (2)",
   ]);
   await expect(report(page).getByRole("list", { name: "Failed (1)" })).toHaveText(
-    "New folder 'Later''Later' already exists at the top level. Choose another name.Retry",
+    "New folder 'Later''Later' already exists at the top level. Choose another name.RetryEdit",
   );
   await expect(report(page).getByRole("list", { name: "Skipped (1)" })).toHaveText(
     "New list 'Doom'Waits for the folder 'Later', which couldn't be saved. Retry it to save this too.",

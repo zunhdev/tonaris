@@ -38,6 +38,11 @@ export const accounts = {
   // Batch reports (batch-report.e2e.ts), one per test.
   batchPartial: at("batch-partial"),
   batchRetryAll: at("batch-retry-all"),
+  // The sidebar tree and the collection routes (collection-navigation.e2e.ts), one per test.
+  navKeyboard: at("nav-keys"),
+  navRoutes: at("nav-routes"),
+  navNames: at("nav-names"),
+  navOffline: at("nav-offline"),
 } as const;
 
 /** An address with no account. */

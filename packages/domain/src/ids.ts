@@ -4,15 +4,27 @@
 
 const uuidv7Pattern = /^[\da-f]{8}-[\da-f]{4}-7[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i;
 
-/** A new UUIDv7 (RFC 9562): 48 bits of Unix milliseconds, then the version, the variant and random bits. */
+/** The millisecond of the last ID made here, and the counter within it. */
+let lastTime = -1;
+let counter = 0;
+
+/**
+ * A new UUIDv7 (RFC 9562): 48 bits of Unix milliseconds, then the version, a 12-bit counter, the variant and
+ * random bits. IDs made here in the same millisecond count up from a random start below 2,048 (RFC 9562's
+ * method 1), so they sort in the order they were made: the order the sidebar shows siblings in (DS-44).
+ */
 export function uuidv7(now: number = Date.now()): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
+  if (now === lastTime && counter < 0xfff) counter += 1;
+  else counter = (((bytes[6] ?? 0) & 0x07) << 8) | (bytes[7] ?? 0);
+  lastTime = now;
   let time = now;
   for (let index = 5; index >= 0; index -= 1) {
     bytes[index] = time % 256;
     time = Math.floor(time / 256);
   }
-  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x70;
+  bytes[6] = 0x70 | (counter >> 8);
+  bytes[7] = counter & 0xff;
   bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80;
   const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;

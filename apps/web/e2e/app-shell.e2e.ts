@@ -31,11 +31,14 @@ test.describe("rendering modes", () => {
   }) => {
     const html = await (await request.get("/c")).text();
     expect(html).toContain('data-theme="dark"');
-    expect(html).not.toContain("Your collection is empty");
+    expect(html).not.toContain("Start your collection");
     expect(html).not.toContain('aria-label="Sidebar"');
 
     await page.goto("/c");
-    await expect(page.getByText("Your collection is empty")).toBeVisible();
+    await expect(
+      page.getByText("Start your collection — paste an album link or create a list."),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "New list", exact: true })).toBeVisible();
   });
 
   test("sign-in arrives rendered", async ({ request }) => {

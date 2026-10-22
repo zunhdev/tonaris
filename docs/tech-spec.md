@@ -137,7 +137,7 @@ The web app, future native clients, and MCP all reach **the same commands** thro
 | Route group | Mode | Why |
 | --- | --- | --- |
 | `/s/$token/…` (guest share), `/sign-in…`, `/join/$token` (admission), `/approvals/$id` landing, `/help/recovery` | SSR (`ssr: true`) | Fast first paint on mobile and OG previews for shared links. These pages don't need a loaded workspace. |
-| Signed-in workspace: every other route in the DS-32 route map (`/c`, `/f/$id`, `/l/$id`, `/unsorted`, `/trash`, `/shared`, `/invitations`, `/settings/…`, `/admin/…`) | `ssr: false` (SPA) | The store bootstraps once per session, and SSR would duplicate data loading. |
+| Signed-in workspace: every other route in the DS-32 route map (`/`, `/c`, `/f/$id`, `/l/$id`, `/unsorted`, `/trash`, `/shared`, `/invitations`, `/settings/…`, `/admin/…`) | `ssr: false` (SPA) | The store bootstraps once per session, and SSR would duplicate data loading. `/` opens the view last visited on the device, which only the browser knows (TON-33). |
 
 Route paths follow the design spec's map (DS-32); this table only sets each route's rendering mode.
 
@@ -246,6 +246,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 - The server validates format and ownership and rejects IDs that already exist under another owner.
 - A create whose ID the same owner already has duplicates nothing: with the same values it is confirmed without a change, and with different ones it is a `conflict` ([TON-20](spikes/2026-10-20-sync-prototype.md)).
 - Public share tokens are separate random secrets (TS-32), never entity IDs.
+- **IDs made in the same millisecond still sort in the order they were made** (TON-33). `uuidv7()` counts up in the 12 bits after the version, from a random start below 2,048 (RFC 9562, method 1). Siblings with no manual order show in creation order (DS-44), even when made together in one batch.
 
 **TS-11 Core tables (Decided).**
 

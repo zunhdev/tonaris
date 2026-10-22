@@ -1,0 +1,121 @@
+// The sidebar tree's model (DS-27, DS-31, FR-01.3).
+
+import { describe, expect, test } from "bun:test";
+
+import { uuidv7, type Album, type Container, type Membership } from "@tonaris/domain";
+
+import {
+  albumCounts,
+  ancestorsOf,
+  buildTree,
+  typeAhead,
+  unsortedCount,
+  visibleRows,
+  type TreeRow,
+} from "./tree";
+
+const folder = (name: string, parentId: string | null = null): Container => ({
+  id: uuidv7(),
+  kind: "folder",
+  parentId,
+  name,
+});
+const list = (name: string, parentId: string | null = null): Container => ({
+  ...folder(name, parentId),
+  kind: "list",
+});
+
+const label = (row: TreeRow) =>
+  `${"  ".repeat(row.level - 1)}${row.type === "container" ? row.container.name : row.name} ${row.posInSet}/${row.setSize}`;
+
+const album = (title: string): Album => ({
+  id: uuidv7(),
+  title,
+  artistCredit: "Miles Davis",
+  releaseType: "album",
+  isLive: false,
+  originalYear: 1959,
+  recordingYearStart: null,
+  recordingYearEnd: null,
+});
+
+const entry = (listId: string, albumId: string): Membership => ({
+  listId,
+  albumId,
+  addedAt: "2026-10-22T00:00:00.000Z",
+});
+
+// Made in this order, so their IDs sort this way.
+const metal = folder("Metal");
+const doom = list("Doom", metal.id);
+const funeral = folder("Funeral", metal.id);
+const deep = list("Deep", funeral.id);
+const later = list("Later");
+
+describe("the sidebar tree (DS-27)", () => {
+  test("siblings come in creation order, and only expanded folders show what they hold", () => {
+    const tree = buildTree([later, deep, funeral, doom, metal]);
+    expect(visibleRows(tree, new Set()).map(label)).toEqual([
+      "Metal 1/5",
+      "Later 2/5",
+      "Unsorted 3/5",
+      "Shared with me 4/5",
+      "Trash 5/5",
+    ]);
+    expect(visibleRows(tree, new Set([metal.id, funeral.id])).map(label)).toEqual([
+      "Metal 1/5",
+      "  Doom 1/2",
+      "  Funeral 2/2",
+      "    Deep 1/1",
+      "Later 2/5",
+      "Unsorted 3/5",
+      "Shared with me 4/5",
+      "Trash 5/5",
+    ]);
+    // A folder inside a collapsed one stays hidden, even if expanded itself.
+    expect(visibleRows(tree, new Set([funeral.id])).map(label)).toHaveLength(5);
+  });
+
+  test("ancestors run from the root down", () => {
+    const tree = buildTree([metal, doom, funeral, deep, later]);
+    expect(ancestorsOf(tree, deep.id).map((each) => each.name)).toEqual(["Metal", "Funeral"]);
+    expect(ancestorsOf(tree, later.id)).toEqual([]);
+    expect(ancestorsOf(tree, uuidv7())).toEqual([]);
+  });
+
+  test("lists count their albums, and Unsorted counts the albums in no list (FR-01.9)", () => {
+    const albums = ["One", "Two", "Three"].map(album);
+    const [first, second] = albums;
+    const memberships = [
+      entry(doom.id, first!.id),
+      entry(doom.id, second!.id),
+      entry(later.id, first!.id),
+    ];
+    expect(albumCounts(memberships)).toEqual(
+      new Map([
+        [doom.id, 2],
+        [later.id, 1],
+      ]),
+    );
+    expect(unsortedCount(albums, memberships)).toBe(1);
+  });
+
+  test("type-ahead finds the next name starting with the typed letters, ignoring case and accents", () => {
+    const tree = buildTree([folder("Doom"), list("Dub"), list("Öxabäck"), list("drone")]);
+    const rows = visibleRows(tree, new Set());
+    const names = (index: number | undefined) => {
+      const row = index === undefined ? undefined : rows[index];
+      return row?.type === "container" ? row.container.name : row?.name;
+    };
+    // A repeated letter cycles through the rows starting with it, wrapping around.
+    expect(names(typeAhead(rows, 0, "d"))).toBe("Dub");
+    expect(names(typeAhead(rows, 1, "dd"))).toBe("drone");
+    expect(names(typeAhead(rows, 3, "d"))).toBe("Doom");
+    // More letters stay on a row that still matches.
+    expect(names(typeAhead(rows, 1, "du"))).toBe("Dub");
+    expect(names(typeAhead(rows, 0, "dr"))).toBe("drone");
+    expect(names(typeAhead(rows, 0, "oxa"))).toBe("Öxabäck");
+    expect(names(typeAhead(rows, 0, "un"))).toBe("Unsorted");
+    expect(typeAhead(rows, 0, "zz")).toBeUndefined();
+  });
+});

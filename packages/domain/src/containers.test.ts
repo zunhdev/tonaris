@@ -7,7 +7,12 @@ import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
 
 import { runCommand, type CommandResult } from "./commands";
-import type { Container, StoredContainer } from "./containers";
+import {
+  containerNameProblem,
+  nameTakenProblem,
+  type Container,
+  type StoredContainer,
+} from "./containers";
 import { uuidv7 } from "./ids";
 import { maxContainerDepth, maxContainers } from "./limits";
 import { nameKey } from "./normalize";
@@ -179,6 +184,20 @@ describe("container.create (FR-01.1, FR-01.2)", () => {
       "'Jazz' already exists at the top level. Choose another name.",
     );
     expect(containers.size).toBe(1);
+  });
+
+  test("the refusals clients check with before sending read as the commands' (DS-107)", () => {
+    expect(containerNameProblem("  ")?.problem.detail).toBe("Give the folder or list a name.");
+    expect(containerNameProblem("x".repeat(201))?.problem.detail).toBe(
+      "Names can be at most 200 characters.",
+    );
+    expect(containerNameProblem("Doom")).toBeUndefined();
+    expect(nameTakenProblem("Favorites", "Metal").problem.detail).toBe(
+      "'Favorites' already exists in Metal. Choose another name.",
+    );
+    expect(nameTakenProblem("Later", null).problem.detail).toBe(
+      "'Later' already exists at the top level. Choose another name.",
+    );
   });
 
   test("a name taken in a folder names the folder (DS-107)", async () => {

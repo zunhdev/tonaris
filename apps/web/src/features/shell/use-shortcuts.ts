@@ -1,0 +1,71 @@
+// The workspace's shortcuts at work (DS-78): one keydown listener, in the capture phase so that a key that is a
+// shortcut is claimed before the sidebar tree could type ahead with it (decided 22 October 2026). Keys typed in a
+// text field, or inside a dialog, popover or menu, are left alone.
+
+import { useCollectionUi, useStartEditor } from "@/features/collection/collection-ui";
+import { useConnection } from "@/features/sync/sync-provider";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
+
+import { createShortcutMatcher, type ShortcutAction } from "./shortcuts";
+
+const destinations: Partial<
+  Record<ShortcutAction, "/c" | "/unsorted" | "/trash" | "/settings/connections">
+> = {
+  "go-root": "/c",
+  "go-unsorted": "/unsorted",
+  "go-trash": "/trash",
+  "go-settings": "/settings/connections",
+};
+
+/** Whether `target` is inside a layer with keys of its own: a dialog, a popover or a menu. */
+function inLayer(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    target.closest('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]') !==
+      null
+  );
+}
+
+export function useShortcuts({
+  toggleSidebar,
+  openShortcuts,
+}: {
+  toggleSidebar: () => void;
+  openShortcuts: () => void;
+}): void {
+  const navigate = useNavigate();
+  const startEditor = useStartEditor();
+  const { editing } = useCollectionUi();
+  const offline = useConnection() === "offline";
+  // The latest of each, so the listener is installed once.
+  const latest = useRef({ navigate, startEditor, editing, offline, toggleSidebar, openShortcuts });
+  useEffect(() => {
+    latest.current = { navigate, startEditor, editing, offline, toggleSidebar, openShortcuts };
+  });
+
+  useEffect(() => {
+    const match = createShortcutMatcher();
+    const act = (action: ShortcutAction) => {
+      const now = latest.current;
+      const to = destinations[action];
+      if (to) void now.navigate({ to });
+      else if (action === "toggle-sidebar") now.toggleSidebar();
+      else if (action === "shortcuts") now.openShortcuts();
+      // Edit controls wait while offline (DS-81), and one editor is open at a time.
+      else if (!now.offline && !now.editing.current) {
+        now.startEditor({ mode: "new", kind: action === "new-folder" ? "folder" : "list" });
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || inLayer(event.target)) return;
+      const matched = match(event);
+      if (matched === undefined) return;
+      // Claimed: the tree doesn't type ahead with it, nor the browser act on it.
+      event.preventDefault();
+      if (matched !== "pending") act(matched);
+    };
+    window.addEventListener("keydown", onKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
+  }, []);
+}

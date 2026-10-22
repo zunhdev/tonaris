@@ -25,6 +25,15 @@ describe("UUIDv7 (TS-10)", () => {
     expect(earlier < later).toBe(true);
   });
 
+  test("made in the same millisecond, they still sort in the order they were made", () => {
+    const at = Date.UTC(2026, 9, 22, 21, 0, 0, 0);
+    const ids = Array.from({ length: 1_000 }, () => uuidv7(at));
+    expect(ids.toSorted()).toEqual(ids);
+    expect(new Set(ids.map(uuidv7Time))).toEqual(new Set([at]));
+    const quick = Array.from({ length: 1_000 }, () => uuidv7());
+    expect(quick.toSorted()).toEqual(quick);
+  });
+
   test("has no time for other UUIDs or strings", () => {
     expect(uuidv7Time(crypto.randomUUID())).toBeUndefined();
     expect(uuidv7Time("not-a-uuid")).toBeUndefined();

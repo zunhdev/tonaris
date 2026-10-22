@@ -20,6 +20,10 @@ export type SaveActions = {
   retry(report: BatchReport, ids: readonly string[]): Resubmitted[];
   /** Dismisses a report and the inputs it kept. */
   dismissReport(report: BatchReport): void;
+  /** Whether a failure can be edited: a folder or list's create or rename whose place still exists (DS-80). */
+  canEdit(state: SaveState): boolean;
+  /** Reopens the failed create or rename's editor with the name attempted; saving it clears the failure. */
+  edit(state: SaveState): void;
 };
 
 export const SaveActionsContext = createContext<SaveActions | undefined>(undefined);
