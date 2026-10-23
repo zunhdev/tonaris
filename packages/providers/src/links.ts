@@ -1,6 +1,6 @@
 // Step 0 of the identification chain (TS-41): pasted text, parsed locally against an allowlist (TS-40, Q-05).
 // Nothing here fetches, except `resolveShortLink()`, and only through the fetcher its caller passes. It imports
-// only the domain, so browsers can parse pasted links too.
+// only the domain, so browsers can parse pasted links too, through `@tonaris/providers/links`.
 
 import {
   failure,

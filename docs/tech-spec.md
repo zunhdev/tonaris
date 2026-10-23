@@ -1130,12 +1130,26 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
   - GET requests never mutate.
 - **Bearer principals ignore cookies.** A request carrying `Authorization: Bearer` (native app or MCP) is authenticated by the token alone, and any cookie is ignored: the `signedIn` guard never reads the session for it, and the origin rule doesn't apply to it on `/v1`. Until native-app and MCP tokens exist, no bearer token is valid (`401`). `/mcp` never reads cookies.
 
-**TS-103 SSRF guard and image proxy (Decided; Q-05, FR-03.4).** One `safeFetch` is used for short links, MusicBrainz, CAA, and the image proxy:
+**TS-103 SSRF guard and image proxy (Decided; the guard built in TON-40; Q-05, FR-03.4).** One `safeFetch` (`packages/providers/src/safe-fetch.ts`) is used for every outbound call: short links, MusicBrainz, CAA, iTunes Lookup, Spotify, the Qobuz and Tidal store pages, and the image proxy.
 
-- `https` only, on ports 443 and 80;
-- DNS resolved, and private, loopback, link-local, metadata, and CGNAT ranges rejected, including on every redirect hop;
-- at most 3 redirects, a 5 s timeout, and a 5 MB cap;
-- `image/*` only for the proxy.
+- **Only public https hosts:**
+  - `https` on its default port, with no credentials in the URL. (The earlier "ports 443 and 80" allowed nothing https uses.)
+  - Hosts are names. IP addresses, however written (`127.1`, `2130706433`, `[::1]`), and single labels such as `localhost` are refused.
+- **DNS, on every hop:** every address a host resolves to must be public, or the host is refused. Private, loopback, link-local (cloud metadata), CGNAT, multicast, documentation and other special-purpose ranges are rejected. So is IPv4 carried in IPv6, mapped or NAT64, when the IPv4 address is.
+- **No rebinding window:**
+  - the connection goes to the address that was checked, with the host's name for SNI, `Host` and the certificate check, so DNS can't answer differently in between;
+  - proxies from the environment are ignored, as they would resolve the host themselves;
+  - IPv4 goes first, and a `GET` or `HEAD` tries the next checked address if a connection fails.
+- **Redirects:**
+  - at most 3, each checked like the first request;
+  - none when the caller reads `Location` itself (`redirect: "manual"`), as short links and Qobuz's request A do;
+  - `Authorization` and `Cookie` never follow a redirect to another origin.
+- **Limits:**
+  - 5 s for the whole exchange, body included;
+  - a 5 MB cap on the decoded body;
+  - `image/*` only for the proxy (`contentTypes`).
+- **Requests** carry an honest User-Agent, `Tonaris/0.1 ( https://github.com/zunhdev/tonaris )`, unless the caller sets one.
+- **Failures** are `SafeFetchError`s with a reason: `url`, `address`, `dns`, `redirects`, `timeout`, `size`, `content_type` or `network`. Their messages leave out the query string (TS-41).
 
 The API service's `https://api.tonaris.<tld>/img/{hmac}/{b64url(url)}?w=…` serves artwork only for URLs the server itself signed when it serialized the album. The proxy:
 
@@ -1174,7 +1188,7 @@ There is no resizing in v1.
 
 - metadata containing XSS strings;
 - descriptions containing prompt-injection text;
-- SSRF URLs (IP literals, DNS rebinding, redirects to private ranges);
+- SSRF URLs (IP literals, DNS rebinding, redirects to private ranges), so far against `safeFetch` itself (`packages/providers/src/safe-fetch.test.ts`, TON-40);
 - oversized inputs;
 - Unicode confusables in names.
 

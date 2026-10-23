@@ -2,10 +2,11 @@
   "name": "@tonaris/providers",
   "version": "0.0.0",
   "private": true,
-  "description": "Link parsing, MusicBrainz and Cover Art Archive clients, and policy-gated provider adapters (TS-40, TS-41).",
+  "description": "Link parsing, the SSRF-guarded outbound fetch, MusicBrainz and Cover Art Archive clients, and policy-gated provider adapters (TS-40, TS-41, TS-103).",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./links": "./src/links.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
