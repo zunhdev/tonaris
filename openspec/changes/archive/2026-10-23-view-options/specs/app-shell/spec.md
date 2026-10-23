@@ -24,7 +24,7 @@ Shortcuts SHALL be off while a text field has focus. The reference SHALL also op
 - **THEN** the text is typed and nothing else happens
 
 ### Requirement: The sidebar shows the collection as a tree
-The sidebar SHALL show the owner's folders and lists as a tree, nested as saved, each level in the order its folder's view is sorted, and the top level in the root's (FR-01.3, DS-27, DS-31, decided 23 October 2026). Below them it SHALL show Unsorted, Shared with me and Trash. Lists and Unsorted SHALL show their album counts. The current view's item SHALL be selected, and its ancestors expanded. Expanded folders SHALL be remembered on the device. Changes from any session SHALL appear without reloading.
+The sidebar SHALL show the owner's folders and lists as a tree, nested as saved, each level in its view's sort (FR-01.3, DS-27, DS-31; decided 23 October 2026). Below them it SHALL show Unsorted, Shared with me and Trash. Lists and Unsorted SHALL show their album counts. The current view's item SHALL be selected, and its ancestors expanded. Expanded folders SHALL be remembered on the device. Changes from any session SHALL appear without reloading.
 
 #### Scenario: Nested folders and lists
 - **WHEN** an owner has a folder 'Metal' holding a list 'Doom' with two albums, and opens 'Doom'

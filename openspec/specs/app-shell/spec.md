@@ -59,7 +59,7 @@ Every workspace route SHALL require a signed-in session (FR-11.1). A signed-out 
 - **THEN** sign-in ignores it and lands on the collection instead
 
 ### Requirement: The sidebar shows the collection as a tree
-The sidebar SHALL show the owner's folders and lists as a tree, nested as saved, in creation order until a manual order exists (FR-01.3, DS-27, DS-31, DS-44). Below them it SHALL show Unsorted, Shared with me and Trash. Lists and Unsorted SHALL show their album counts. The current view's item SHALL be selected, and its ancestors expanded. Expanded folders SHALL be remembered on the device. Changes from any session SHALL appear without reloading.
+The sidebar SHALL show the owner's folders and lists as a tree, nested as saved, each level in its view's sort (FR-01.3, DS-27, DS-31; decided 23 October 2026). Below them it SHALL show Unsorted, Shared with me and Trash. Lists and Unsorted SHALL show their album counts. The current view's item SHALL be selected, and its ancestors expanded. Expanded folders SHALL be remembered on the device. Changes from any session SHALL appear without reloading.
 
 #### Scenario: Nested folders and lists
 - **WHEN** an owner has a folder 'Metal' holding a list 'Doom' with two albums, and opens 'Doom'
@@ -68,6 +68,10 @@ The sidebar SHALL show the owner's folders and lists as a tree, nested as saved,
 #### Scenario: Expansion is remembered
 - **WHEN** an owner expands a folder and reloads the page
 - **THEN** the folder is still expanded
+
+#### Scenario: The tree follows the root's sort
+- **WHEN** an owner sorts the root, holding the list 'Later' and the folder 'Metal', by Name
+- **THEN** the tree shows 'Metal' before 'Later', as the root's view does
 
 ### Requirement: The tree can be navigated by keyboard alone
 The tree SHALL follow the ARIA tree pattern with a single tab stop (DS-27, Q-02). ↑ and ↓ SHALL move between visible items, and Home and End to the first and last. → SHALL expand a folder or move to its first child, and ← collapse it or move to the parent. Enter SHALL open the item. Typing letters SHALL move to the next item whose name starts with them, ignoring case and accents. A letter that is a shortcut SHALL act as the shortcut instead (decided 22 October 2026).
@@ -113,8 +117,9 @@ Each collection view SHALL show its path from Collection as breadcrumbs, each an
 
 ### Requirement: Keyboard shortcuts move around the workspace
 The workspace SHALL offer DS-78's navigation shortcuts:
-- G then H, U, T or S for the root, Unsorted, Trash or Settings;
+- G then H, U, T or S for the root, Unsorted, Trash or Settings → Preferences;
 - `[` to hide or show the sidebar;
+- `V` for the current view's View options;
 - `?` for a reference of the shortcuts that work.
 
 Shortcuts SHALL be off while a text field has focus. The reference SHALL also open from the account menu.
@@ -122,6 +127,10 @@ Shortcuts SHALL be off while a text field has focus. The reference SHALL also op
 #### Scenario: Going to Unsorted
 - **WHEN** an owner presses G then U
 - **THEN** Unsorted opens
+
+#### Scenario: Going to Settings
+- **WHEN** an owner presses G then S
+- **THEN** Settings → Preferences opens
 
 #### Scenario: Shortcuts wait while typing
 - **WHEN** an owner types "g u" into a name field
@@ -133,3 +142,10 @@ The sidebar SHALL be resizable between 200 and 360 px, by dragging its edge or w
 #### Scenario: Resizing by keyboard
 - **WHEN** an owner focuses the sidebar's edge and presses → until it stops
 - **THEN** the sidebar is 360 px wide, also after a reload
+
+### Requirement: Settings has its own navigation
+Settings pages SHALL share a subnav listing the settings pages that exist, in DS-92's order, with the current page marked (DS-92). The account menu's Settings item SHALL open Settings → Preferences.
+
+#### Scenario: From Preferences to Connections
+- **WHEN** an owner opens Settings from the account menu, then Connections in the subnav
+- **THEN** Settings → Preferences opens first, then Settings → Connections, marked as the current page
