@@ -21,8 +21,8 @@
 
 ## 4. Checks
 
-- [ ] 4.1 Run the full `bun run check`, including `bun test` and `bun run test:e2e`, and verify it passes locally.
-- [ ] 4.2 Run `openspec validate musicbrainz-client --strict` and verify it passes.
+- [x] 4.1 Run the full `bun run check`, including `bun test` and `bun run test:e2e`, and verify it passes locally.
+- [x] 4.2 Run `openspec validate musicbrainz-client --strict` and verify it passes.
 
 ## Workflow follow-up
 
