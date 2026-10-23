@@ -1,0 +1,4209 @@
+{
+  "https://itunes.apple.com/lookup?id=254249657&country=us": {
+    "status": 200,
+    "body": {
+      "resultCount": 1,
+      "results": [
+        {
+          "wrapperType": "collection",
+          "collectionId": 254249657,
+          "artistName": "Trust",
+          "collectionName": "Idéal",
+          "trackCount": 9,
+          "releaseDate": "1983-01-01T00:00:00Z"
+        }
+      ]
+    }
+  },
+  "https://itunes.apple.com/lookup?id=268443097&country=fi": {
+    "status": 200,
+    "body": {
+      "resultCount": 1,
+      "results": [
+        {
+          "wrapperType": "track",
+          "collectionId": 268443092,
+          "artistName": "Miles Davis",
+          "collectionName": "Kind of Blue",
+          "releaseDate": "1959-08-17T07:00:00Z",
+          "trackCount": 5
+        }
+      ]
+    }
+  },
+  "https://itunes.apple.com/lookup?id=6809480000&country=fi": {
+    "status": 200,
+    "body": {
+      "resultCount": 1,
+      "results": [
+        {
+          "wrapperType": "collection",
+          "collectionId": 6809480000,
+          "artistName": "Berlin Philharmonic & Mstislav Rostropovich",
+          "collectionName": "Tchaikovsky: The Nutcracker (Remastered 2026)",
+          "trackCount": 8,
+          "releaseDate": "2026-10-09T07:00:00Z"
+        }
+      ]
+    }
+  },
+  "https://itunes.apple.com/lookup?id=869027888&country=fi": {
+    "status": 200,
+    "body": {
+      "resultCount": 1,
+      "results": [
+        {
+          "wrapperType": "collection",
+          "collectionId": 869027888,
+          "artistName": "Mumiy Troll",
+          "collectionName": "Икра (Deluxe)",
+          "trackCount": 15,
+          "releaseDate": "1997-11-21T08:00:00Z"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3A54dc2ea4-d3da-319d-8ee9-c2f4faf98581+OR+rgid%3Ab5f32f2b-dda1-43d6-9a94-c031bf373c19+OR+rgid%3A43877fdb-1206-46ba-afb4-929a0474f0ea&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 3,
+      "release-groups": [
+        {
+          "id": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+          "count": 7,
+          "title": "Икра",
+          "first-release-date": "1997-11-21",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Мумий Тролль",
+              "artist": {
+                "id": "f91b9b28-25b7-4064-81d1-f43163085770",
+                "name": "Мумий Тролль",
+                "sort-name": "Mumiy Troll'"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "05426c02-1b86-4c9f-b68e-4ca8e36b779c",
+              "title": "Икра",
+              "status": "Official"
+            },
+            {
+              "id": "efaf7825-f3cc-42d4-baac-fcfa0b214440",
+              "title": "Икра",
+              "status": "Official"
+            },
+            {
+              "id": "67ebe8aa-41e3-4986-b56e-481b40379b48",
+              "title": "Икра",
+              "status": "Official"
+            },
+            {
+              "id": "d768f402-e6ad-443b-9551-5c9e2f25ab9d",
+              "title": "Икра",
+              "status": "Official"
+            },
+            {
+              "id": "e06472e5-f443-48dd-95d7-efec4f9a576a",
+              "title": "Икра",
+              "status": "Official"
+            },
+            {
+              "id": "c9403e6f-2ae3-40d5-895a-bf0ca47bc21d",
+              "title": "Икра",
+              "status": "Official"
+            },
+            {
+              "id": "a140917f-3465-4be9-8629-358fce6ab601",
+              "title": "Икра",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "43877fdb-1206-46ba-afb4-929a0474f0ea",
+          "count": 1,
+          "title": "Чёрная икра",
+          "first-release-date": "2026-09-25",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "name": "DMON x ADONEL",
+              "artist": {
+                "id": "0a75509c-2c5f-4b13-83cb-e4414917f98c",
+                "name": "DMØN x ADØNEL",
+                "sort-name": "DMON x ADONEL"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "28d415de-2679-47b3-affe-c22d4a41eb00",
+              "title": "Чёрная икра",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "b5f32f2b-dda1-43d6-9a94-c031bf373c19",
+          "count": 1,
+          "title": "Икра",
+          "first-release-date": "2008",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Потап и Настя Каменских",
+              "artist": {
+                "id": "7dd5b87b-eb25-4cdc-b85f-9612f1f15ee0",
+                "name": "Потап и Настя",
+                "sort-name": "Potap & Nastya"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "b18a3ab8-0c7a-4aeb-96fd-48ec121fe778",
+              "title": "Икра",
+              "status": "Bootleg"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3A5aacff4c-7a06-44a3-b1db-1ec6393038ac+OR+rgid%3A06116135-e106-4757-b041-be4b4a304c9f&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 2,
+      "release-groups": [
+        {
+          "id": "5aacff4c-7a06-44a3-b1db-1ec6393038ac",
+          "count": 1,
+          "title": "Idéal",
+          "first-release-date": "1983",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "name": "Trust",
+              "artist": {
+                "id": "33d281da-d36f-4d22-9c4f-fa39f9718302",
+                "name": "Trust",
+                "sort-name": "Trust"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "635cb636-995d-420e-a06f-988c6d1fddcd",
+              "title": "Idéal",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "06116135-e106-4757-b041-be4b4a304c9f",
+          "count": 1,
+          "title": "Idéal",
+          "first-release-date": "1983",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Trust",
+              "artist": {
+                "id": "33d281da-d36f-4d22-9c4f-fa39f9718302",
+                "name": "Trust",
+                "sort-name": "Trust"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "bc4ee25e-186a-40f6-8b4b-476bcd111c5d",
+              "title": "Idéal",
+              "status": "Official"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3A60db66ba-34f8-4a1d-b91a-67e85cfcb269&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 1,
+      "release-groups": [
+        {
+          "id": "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
+          "count": 5,
+          "title": "Bright Future",
+          "first-release-date": "2024-03-22",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Adrianne Lenker",
+              "artist": {
+                "id": "763cb144-afdb-471e-bd86-d4f5b9b58641",
+                "name": "Adrianne Lenker",
+                "sort-name": "Lenker, Adrianne"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "69076af2-7eff-4800-bc7a-e410c6aa4474",
+              "title": "Bright Future",
+              "status": "Official"
+            },
+            {
+              "id": "0d5f067b-ca62-4a7c-950a-0af030c53df3",
+              "title": "Bright Future",
+              "status": "Official"
+            },
+            {
+              "id": "2cee7f4a-f625-48cc-a820-911ab6d679ed",
+              "title": "bright future",
+              "status": "Official"
+            },
+            {
+              "id": "ab35a6ae-4d6f-42b3-a7df-3dbb6c6c4d72",
+              "title": "Bright Future",
+              "status": "Official"
+            },
+            {
+              "id": "b4a95cda-b344-4d06-8f3b-63baafcd20ed",
+              "title": "Bright Future",
+              "status": "Official"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3A67727253-f1c0-4243-9270-f9f1401c3b8c+OR+rgid%3A37b64055-e022-45cf-a895-13534524528c+OR+rgid%3A92de1260-411c-4d22-8245-fcc670a7210e+OR+rgid%3A93b7ed89-f1e2-4c6c-a7dd-5003498063d9+OR+rgid%3A6d177a11-4072-40c6-94ee-254d3edeb4b7+OR+rgid%3A3a4c2b26-e58c-4581-9857-b9d7f8ec0b00&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 6,
+      "release-groups": [
+        {
+          "id": "93b7ed89-f1e2-4c6c-a7dd-5003498063d9",
+          "count": 5,
+          "title": "Red (Taylor’s version): The Slow Motion Chapter",
+          "first-release-date": "2022-01-25",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "a2dcfbd0-d540-41a4-939e-05b7ed2292f2",
+              "title": "Red (Taylor’s version): The Slow Motion Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "270a9b3e-037d-461a-91c7-7bb1961f0d30",
+              "title": "Red (Taylor’s version): The Slow Motion Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "f25cba28-1fd1-47d1-83c9-25cad6d02294",
+              "title": "Red (Taylor’s version): The Slow Motion Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "0bbc0081-6382-4224-b87c-78234f8885ad",
+              "title": "Red (Taylor’s version): The Slow Motion Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "53a1d6b6-85cd-4102-81fe-6e1125b29845",
+              "title": "Red (Taylor’s version): The Slow Motion Chapter",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "3a4c2b26-e58c-4581-9857-b9d7f8ec0b00",
+          "count": 6,
+          "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+          "first-release-date": "2022-01-18",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "176c2e7f-ff9b-4c88-8c69-b3609e3d9e50",
+              "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "f77de20a-3686-4738-8b7c-4093b993df6d",
+              "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "726a5552-cad6-404c-91e6-fe7491559993",
+              "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "3a8eed70-9891-4623-a4b0-53e0bebd7366",
+              "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "d3b81370-c8ae-436d-a179-b350e280daca",
+              "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "9e29b70d-b66f-4026-9e64-f52044ed2115",
+              "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "6d177a11-4072-40c6-94ee-254d3edeb4b7",
+          "count": 6,
+          "title": "Red (Taylor’s version): Could You Be the One Chapter",
+          "first-release-date": "2022-01-13",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "b5af81f7-6f60-4210-baef-9d73e3ef4ef7",
+              "title": "Red (Taylor’s version): Could You Be the One Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "7a710f75-b9fe-4636-bae3-82a63e974d91",
+              "title": "Red (Taylor’s version): Could You Be the One Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "0f672734-fa7e-43ea-b571-1efbb5e00633",
+              "title": "Red (Taylor’s version): Could You Be the One Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "7c3565d9-86bd-409a-af9a-2c2d6a4d3df0",
+              "title": "Red (Taylor’s version): Could You Be the One Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "e545d1df-f9a0-48c5-8e18-870283aeb7a4",
+              "title": "Red (Taylor’s version): Could You Be the One Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "88ee921b-8f12-4618-8515-fbb082569d69",
+              "title": "Red (Taylor’s version): Could You Be the One Chapter",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "92de1260-411c-4d22-8245-fcc670a7210e",
+          "count": 5,
+          "title": "Red (Taylor’s version): From the Vault Chapter",
+          "first-release-date": "2022-01-31",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "f6ea7eed-1dba-4655-bf5e-76719b035553",
+              "title": "Red (Taylor’s version): From the Vault Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "fe7d9aad-eabb-453d-a2f6-921572e91e7b",
+              "title": "Red (Taylor’s version): From the Vault Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "1e1eb854-5e0f-4799-bcd6-2594addf16eb",
+              "title": "Red (Taylor’s version): From the Vault Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "2293c152-aaca-454a-852b-717e108698e1",
+              "title": "Red (Taylor’s version): From the Vault Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "fe002f86-25bc-4698-83d8-1831156e81a8",
+              "title": "Red (Taylor’s version): From the Vault Chapter",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "37b64055-e022-45cf-a895-13534524528c",
+          "count": 6,
+          "title": "The More Red (Taylor’s version) Chapter",
+          "first-release-date": "2023-03-17",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "152e588a-f216-4f45-bf25-7831916c0bbf",
+              "title": "The More Red (Taylors version) Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "c1589d43-6a87-45f3-9de0-25f9d5189948",
+              "title": "The More Red (Taylor’s version) Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "03c4710f-6e60-48ed-8556-de433d8ffde9",
+              "title": "The More Red (Taylor’s version) Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "f9646774-a607-4e78-ac04-e64f95676047",
+              "title": "The More Red (Taylor’s version) Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "26107693-58d6-4787-afa5-b36a72ad46d5",
+              "title": "The More Red (Taylor’s version) Chapter",
+              "status": "Official"
+            },
+            {
+              "id": "48f17f41-17d2-4de8-badb-8af0868acb57",
+              "title": "The More Red (Taylor’s version) Chapter",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+          "count": 31,
+          "title": "Red (Taylor’s version)",
+          "first-release-date": "2021-11-11",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "2717556d-46aa-4816-ad18-8025d0992eeb",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "c8857b8f-2e44-4fdc-88c1-64cd916126fd",
+              "title": "Red (Taylor's Version) = 红（重制版）",
+              "status": "Official"
+            },
+            {
+              "id": "0854c381-be63-44c7-8695-0878330c4760",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "c9bef7c5-af1c-4835-9dab-8af2cd608ed5",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "24a85649-9e47-450e-906a-7ebb1d561ecf",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "94f0e37d-f7ed-44ff-942e-ff8fc7ce2e07",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "e67492c1-4dda-4b61-b624-ddeaff79cef0",
+              "title": "Red (Taylor’s version)",
+              "status": "Bootleg"
+            },
+            {
+              "id": "bee6611f-8fa2-4718-8ba0-65d9c5aa4745",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "cefe4b24-f918-4858-b3ff-08bca9e932ec",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "85adfda0-d6c1-41a8-9f54-d8e012d0264c",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "fece4ab5-f037-47e5-a794-0fc1ecdc5237",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "76304db6-806d-488e-b58d-af885ac18119",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "a722620b-83f0-4b5c-859d-02fa3f3066a3",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "a9415f2c-f756-41e2-bb11-1a5f4ca3b221",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "278c14df-8cc5-44c9-815a-35f57d64ce33",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "fec1de34-d57f-4764-870e-bd72104e9f36",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "7541ec9a-6a26-4e34-8d3b-5f8aa520012f",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "af947b8d-b4a9-4594-8032-61f7f33e1395",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "e0e52164-f06b-47df-8ae6-a59bea253585",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "19830957-83dc-4964-8123-72f10a142c9b",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "ed79bc58-bfa9-4e22-ab92-95e49d8079c7",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "904164c1-81f4-4672-9fc2-65c40650f62a",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "35ccb95e-de21-4d81-94d9-f5c60912cdf9",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "70d58561-707d-4238-ab41-fdd275f67087",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "600257c3-895b-4c01-a97a-496800ac2f13",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "6ca4cd6f-b777-47a4-a62d-6a708ae96b7e",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "9929d215-1001-4b53-aae8-83b92e370de8",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "92997628-cec6-463c-a325-40140d96e37e",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "0d22657f-22b7-467b-a2c0-6bef366b6202",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "2d14b56f-ea1c-491f-80a2-794baff03b2c",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            },
+            {
+              "id": "4040ed85-ef78-428b-b112-6b455f3f2e5b",
+              "title": "Red (Taylor’s version)",
+              "status": "Official"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3A798601d4-f28e-3835-b10c-1a00ecf773b8+OR+rgid%3Ab9e0be13-a88e-4d4a-a31a-f21c9c669915+OR+rgid%3A4e7b34de-0d87-356a-a3da-b21f769b7d4d+OR+rgid%3A7c62d5dd-39db-4d23-859c-1c9eff03ee83&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 4,
+      "release-groups": [
+        {
+          "id": "b9e0be13-a88e-4d4a-a31a-f21c9c669915",
+          "count": 1,
+          "title": "The Last In Line",
+          "first-release-date": "1984",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "28056629-955d-45c0-94ac-63ab7a6c1c81",
+              "title": "The Last In Line"
+            }
+          ]
+        },
+        {
+          "id": "4e7b34de-0d87-356a-a3da-b21f769b7d4d",
+          "count": 33,
+          "title": "Holy Diver",
+          "first-release-date": "1983-05-25",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "3f879ef6-67b7-42f1-b853-8f485d7d2b9c",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "0233476c-bffc-44f8-a789-e869664180ad",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "378d5dc2-e2d7-465a-bb11-2a68096ef642",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "9fc2ed02-5b33-4baf-a633-04a9ce9329cb",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "387ac5e9-2c9b-411a-b0ad-2c2e87262b4f",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "8ec52164-f332-4874-84e7-37f6763c0929",
+              "title": "Holy Diver"
+            },
+            {
+              "id": "06c0460a-d940-4f19-912d-0dd767829c27",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "da987273-2b41-315d-8f5b-befeafb15135",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "e2fd5eed-23d0-42bc-9cee-bbe5f526c592",
+              "title": "The Last In Line",
+              "status": "Official"
+            },
+            {
+              "id": "814153f5-315a-32db-af7f-04b1934d33d8",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "bcafb5ed-ae6f-4b29-a678-339effe17810",
+              "title": "Holy Diver"
+            },
+            {
+              "id": "9a4745bc-a5a9-4de4-bc1c-3939eb931ea6",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "29216312-ac8e-479c-8360-fab271a94c01",
+              "title": "Holy Diver (Deluxe Edition)",
+              "status": "Official"
+            },
+            {
+              "id": "87b6d714-afd7-4ba6-aca5-237a04c20e09",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "c53071eb-042a-4d47-b272-1e3e8775af2e",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "99cf502b-3fda-4a45-9e07-5bed598ec3b1",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "f53d71a7-f181-4b0c-9805-ff059daf8122",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "0c3ccca8-29a6-4014-a124-ccbd309bc66d",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "cd36f384-e233-45aa-bf62-15deb56e3ad6",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "92da1d67-bd65-4747-86cf-b0921a4872df",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "a5348ed4-c1ea-4ace-8b13-786bc28f281a",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "7ceae606-19cb-402d-8595-67b2e778c811",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "1ea68254-c925-46a7-885b-6c2e0e98d2ea",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "1323a325-86ee-4521-9e80-3976594237ba",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "254a7d97-75a6-4567-9578-18409a69fdd5",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "b35ae348-33a6-3cad-9407-3b48caafcd43",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "62c3d056-024b-4ab1-bb88-2fa1704a23ba",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "825b061d-ac8d-418a-96c3-d22a0d5bf87e",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "24fd33f1-81ff-469d-b9f2-e81dfebadd2c",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "fa0e1622-ee39-4dfb-955d-b7b73f09be25",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "c42365af-8534-391f-b1fc-67455ba553b9",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "b872a36d-6dee-4264-8a73-0023fb540da0",
+              "title": "Holy Diver",
+              "status": "Official"
+            },
+            {
+              "id": "d3286287-1e5c-47a8-b6c5-95e745c0416f",
+              "title": "Holy Diver",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "7c62d5dd-39db-4d23-859c-1c9eff03ee83",
+          "count": 1,
+          "title": "The Last in Line / Sacred Heart",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "36027f61-7f84-427d-8ab0-9f548f7b66dc",
+              "title": "The Last in Line / Sacred Heart"
+            }
+          ]
+        },
+        {
+          "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+          "count": 24,
+          "title": "The Last in Line",
+          "first-release-date": "1984-07-13",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "b1e38306-a843-4481-bdfc-a8553cacd845",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "60a1dbae-e05b-40af-939b-42974700488d",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "e3024ac3-eca9-44d4-8db6-467e5c22894f",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "6763b6d3-a8bf-4ff0-b1db-f0801d22f75f",
+              "title": "The Last In Line (Deluxe Edition)",
+              "status": "Official"
+            },
+            {
+              "id": "83947705-e0cf-44cf-a4b2-71d9ade82b28",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "689045ea-e36e-4cf7-bcf6-123df9b21665",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "a6426fac-94d9-42dc-a6e5-7925a3902006",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "8fbee431-1993-4078-b4f2-1beb8185afb8",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "23c13884-9c96-4233-b069-e1d1efb149ce",
+              "title": "The Last in Line",
+              "status": "Promotion"
+            },
+            {
+              "id": "2723069a-d9a2-3c11-b43c-bc899e00c46d",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "f70e327c-059d-48f9-bad7-83817732c175",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "acfd193d-cd0f-4a5b-a469-110c106f0a4e",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "ecfba470-e417-4d15-b0af-c32f407b74fc",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "60e151f7-105f-45e1-b767-12d72e3cba50",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "98319c10-100f-4934-9b19-9b77bb3055e7",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "70c6e8c8-f4ac-4d6a-810c-582f002b3704",
+              "title": "The Last In Line",
+              "status": "Official"
+            },
+            {
+              "id": "58047a25-3a2f-47a6-8031-a7943a5b807e",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "71103128-0a9d-41af-b117-9aab2202610c",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "48dd9fef-8e5a-43b5-9316-f56a65f3f6f1",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "c132ef76-503d-4b80-890f-fe128a94a8e1",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "fd086ea8-cf74-4450-8e07-6a7d60f39c5a",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "16cbf9ba-2e38-3893-9f23-f8567e26c18b",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "43d9699a-85b2-4365-91cd-e3c7e6ad001d",
+              "title": "The Last in Line",
+              "status": "Official"
+            },
+            {
+              "id": "a8fa45b6-47ac-44f6-a6c1-46a91b91ef05",
+              "title": "The Last in Line",
+              "status": "Official"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3A95959c5f-6011-4c20-b932-0a70b529e045&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 1,
+      "release-groups": [
+        {
+          "id": "95959c5f-6011-4c20-b932-0a70b529e045",
+          "count": 7,
+          "title": "The Nutcracker",
+          "first-release-date": "2010-10-01",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "joinphrase": "; ",
+              "name": "Tchaikovsky",
+              "artist": {
+                "id": "9ddd7abc-9e1b-471d-8031-583bc6bc8be9",
+                "name": "Пётр Ильич Чайковский",
+                "sort-name": "Tchaikovsky, Pyotr Ilyich"
+              }
+            },
+            {
+              "joinphrase": ", ",
+              "name": "Berliner Philharmoniker",
+              "artist": {
+                "id": "dea28aa9-1086-4ffa-8739-0ccc759de1ce",
+                "name": "Berliner Philharmoniker",
+                "sort-name": "Berliner Philharmoniker"
+              }
+            },
+            {
+              "name": "Simon Rattle",
+              "artist": {
+                "id": "80c3bce9-0b54-409c-aa10-3b0c7dbbc597",
+                "name": "Simon Rattle",
+                "sort-name": "Rattle, Simon"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "67e3d065-01c5-454a-aa1f-ca687fb93232",
+              "title": "Tchaikovsky: The Nutcracker",
+              "status": "Official"
+            },
+            {
+              "id": "b073e96b-e1ec-48da-9202-685eea86c2ce",
+              "title": "The Nutcracker",
+              "status": "Official"
+            },
+            {
+              "id": "4eeb12a6-3de8-47c0-a93e-1498ac0956ce",
+              "title": "The Nutcracker",
+              "status": "Official"
+            },
+            {
+              "id": "521bd804-3b69-4436-b0a5-7654b5cf9c31",
+              "title": "The Nutcracker",
+              "status": "Official"
+            },
+            {
+              "id": "9567f26d-ad76-494a-957b-2d0f1751a0fb",
+              "title": "The Nutcracker",
+              "status": "Official"
+            },
+            {
+              "id": "b2f4b6e5-e114-4e6e-ad18-879976885304",
+              "title": "The Nutcracker",
+              "status": "Official"
+            },
+            {
+              "id": "2f129296-8895-4477-853e-cccc56d5c86b",
+              "title": "The Nutcracker",
+              "status": "Official"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3Acd526339-785e-4ccd-abc1-8d374bd6d68d+OR+rgid%3A8268d959-db46-4015-9dc4-4c95a2a2761f+OR+rgid%3Aa56f1250-ecc4-4077-9146-771dbd6f4745+OR+rgid%3A0e61ea15-fd97-4ce9-8c7d-f97830381512+OR+rgid%3Ad8e13584-70ea-4071-9a8b-157b89e92b2b+OR+rgid%3A6c958576-04b0-459a-b1dc-582e7fc11763+OR+rgid%3Ad393ee5b-b0f1-4072-a1cb-d3257b3c24da+OR+rgid%3A43f15aac-cd83-4dce-97c3-b2fc5937d44d&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 8,
+      "release-groups": [
+        {
+          "id": "d393ee5b-b0f1-4072-a1cb-d3257b3c24da",
+          "count": 1,
+          "title": "Nothing Like It in the World",
+          "first-release-date": "2000-08-01",
+          "primary-type": "Other",
+          "artist-credit": [
+            {
+              "joinphrase": " read by ",
+              "name": "Stephen E. Ambrose",
+              "artist": {
+                "id": "8e687115-095a-4a22-8862-e6cec287af4d",
+                "name": "Stephen E. Ambrose",
+                "sort-name": "Ambrose, Stephen E."
+              }
+            },
+            {
+              "name": "Jeffrey DeMunn",
+              "artist": {
+                "id": "97371a66-4d7d-4242-9cd9-c89e662a7164",
+                "name": "Jeffrey DeMunn",
+                "sort-name": "DeMunn, Jeffrey"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "4bf90df7-024a-4e79-997a-ac81f9f1dd08",
+              "title": "Nothing Like It in the World",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "cd526339-785e-4ccd-abc1-8d374bd6d68d",
+          "count": 1,
+          "title": "Nothing Like It",
+          "first-release-date": "2017-10-04",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Courtney Farren",
+              "artist": {
+                "id": "d69c61ed-582d-4b23-bdb5-4be23e4dfc48",
+                "name": "Courtney Farren",
+                "sort-name": "Farren, Courtney"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "2f64f87b-ece7-443e-a918-3577a0289cb1",
+              "title": "Nothing Like It",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "8268d959-db46-4015-9dc4-4c95a2a2761f",
+          "count": 1,
+          "title": "Nothing Like It",
+          "first-release-date": "2020-11-13",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Another Me",
+              "artist": {
+                "id": "51cc9582-6db9-46df-aac1-d07da043bba1",
+                "name": "Another Me",
+                "sort-name": "Another Me"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "6a008f4b-57b3-4205-88eb-6145c13d3ac9",
+              "title": "Nothing Like It",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "d8e13584-70ea-4071-9a8b-157b89e92b2b",
+          "count": 1,
+          "title": "There’s Nothing Like It",
+          "first-release-date": "2022-08-16",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "name": "Arahi",
+              "artist": {
+                "id": "5506714c-7a7c-4e89-8142-44591656be5b",
+                "name": "Arahi",
+                "sort-name": "Arahi"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "a6b6d28f-11ab-4478-8625-73b6621a60bf",
+              "title": "There’s Nothing Like It",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "a56f1250-ecc4-4077-9146-771dbd6f4745",
+          "count": 1,
+          "title": "Nothing Like It",
+          "first-release-date": "2025-07-18",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Raj",
+              "artist": {
+                "id": "0bdedd71-038a-4bf9-94d5-c5a8ce4e1b21",
+                "name": "Raj",
+                "sort-name": "Raj"
+              }
+            },
+            {
+              "name": "Noé Mina",
+              "artist": {
+                "id": "9e7a5dd6-a0c0-4c7e-a7c2-e0f9c38b132c",
+                "name": "Noé Mina",
+                "sort-name": "Mina, Noé"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "d591eafb-3ad0-4a0a-975c-002c3cb4da8c",
+              "title": "Nothing Like It",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "43f15aac-cd83-4dce-97c3-b2fc5937d44d",
+          "count": 1,
+          "title": "Nothing Like It in the World: The Men Who Built the Transcontinental Railroad, 1863-1869",
+          "primary-type": "Other",
+          "artist-credit": [
+            {
+              "joinphrase": " narrated by ",
+              "name": "Stephen E. Ambrose",
+              "artist": {
+                "id": "8e687115-095a-4a22-8862-e6cec287af4d",
+                "name": "Stephen E. Ambrose",
+                "sort-name": "Ambrose, Stephen E."
+              }
+            },
+            {
+              "name": "Barrett Whitener",
+              "artist": {
+                "id": "9ec98f9f-45d1-4b29-a629-df2cdebb84ee",
+                "name": "Barrett Whitener",
+                "sort-name": "Whitener, Barrett"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "0259bca2-ba31-4f6c-b3df-21fb0642eb0c",
+              "title": "Nothing Like It in the World: The Men Who Built the Transcontinental Railroad, 1863-1869",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "6c958576-04b0-459a-b1dc-582e7fc11763",
+          "count": 1,
+          "title": "Ain't Nothing Like It",
+          "first-release-date": "2019-03-01",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "name": "KLYMVX",
+              "artist": {
+                "id": "3ed4c001-959c-4d6c-a0de-27dbbb6463fb",
+                "name": "KLYMVX",
+                "sort-name": "KLYMVX"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "a18b1f5a-c97e-4472-8fec-4bd6ddf7a986",
+              "title": "Ain't Nothing Like It",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "0e61ea15-fd97-4ce9-8c7d-f97830381512",
+          "count": 1,
+          "title": "Nothing Like It",
+          "first-release-date": "2026-07-31",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "name": "christnotme",
+              "artist": {
+                "id": "fff441ad-2ce2-4911-b1b1-4b550d662087",
+                "name": "christnotme",
+                "sort-name": "christnotme"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "7356ac41-3746-4d40-b426-bc5de6c06397",
+              "title": "Nothing Like It"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=barcode%3A884977423006+OR+barcode%3A0884977423006+OR+barcode%3A00884977423006&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 0,
+      "releases": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=barcode%3A886443927087+OR+barcode%3A0886443927087+OR+barcode%3A00886443927087&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 1,
+      "releases": [
+        {
+          "id": "5000a285-b67e-4cfc-b54b-2b98f1810d2e",
+          "count": 1,
+          "title": "Random Access Memories",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Daft Punk",
+              "artist": {
+                "id": "056e4f3e-d505-4dad-8ec1-d04f521cbb56",
+                "name": "Daft Punk",
+                "sort-name": "Daft Punk"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "aa997ea0-2936-40bd-884d-3af8a0e064dc",
+            "title": "Random Access Memories",
+            "primary-type": "Album"
+          },
+          "date": "2013-05-17",
+          "barcode": "886443927087"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22%D0%98%D0%BA%D1%80%D0%B0%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 9,
+      "releases": [
+        {
+          "id": "d768f402-e6ad-443b-9551-5c9e2f25ab9d",
+          "count": 1,
+          "title": "Икра",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Мумий Тролль",
+              "artist": {
+                "id": "f91b9b28-25b7-4064-81d1-f43163085770",
+                "name": "Мумий Тролль",
+                "sort-name": "Mumiy Troll'"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+            "title": "Икра",
+            "primary-type": "Album"
+          },
+          "date": "2008",
+          "barcode": "4601250352114"
+        },
+        {
+          "id": "05426c02-1b86-4c9f-b68e-4ca8e36b779c",
+          "count": 1,
+          "title": "Икра",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Мумий Тролль",
+              "artist": {
+                "id": "f91b9b28-25b7-4064-81d1-f43163085770",
+                "name": "Мумий Тролль",
+                "sort-name": "Mumiy Troll'"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+            "title": "Икра",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "018736120701"
+        },
+        {
+          "id": "67ebe8aa-41e3-4986-b56e-481b40379b48",
+          "count": 1,
+          "title": "Икра",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Мумий Тролль",
+              "artist": {
+                "id": "f91b9b28-25b7-4064-81d1-f43163085770",
+                "name": "Мумий Тролль",
+                "sort-name": "Mumiy Troll'"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+            "title": "Икра",
+            "primary-type": "Album"
+          },
+          "date": "1997-11-21",
+          "barcode": "4601228000399"
+        },
+        {
+          "id": "efaf7825-f3cc-42d4-baac-fcfa0b214440",
+          "count": 1,
+          "title": "Икра",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Мумий Тролль",
+              "artist": {
+                "id": "f91b9b28-25b7-4064-81d1-f43163085770",
+                "name": "Мумий Тролль",
+                "sort-name": "Mumiy Troll'"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+            "title": "Икра",
+            "primary-type": "Album"
+          }
+        },
+        {
+          "id": "c9403e6f-2ae3-40d5-895a-bf0ca47bc21d",
+          "count": 1,
+          "title": "Икра",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Мумий Тролль",
+              "artist": {
+                "id": "f91b9b28-25b7-4064-81d1-f43163085770",
+                "name": "Мумий Тролль",
+                "sort-name": "Mumiy Troll'"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+            "title": "Икра",
+            "primary-type": "Album"
+          },
+          "date": "2000",
+          "barcode": ""
+        },
+        {
+          "id": "e06472e5-f443-48dd-95d7-efec4f9a576a",
+          "count": 1,
+          "title": "Икра",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Мумий Тролль",
+              "artist": {
+                "id": "f91b9b28-25b7-4064-81d1-f43163085770",
+                "name": "Мумий Тролль",
+                "sort-name": "Mumiy Troll'"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+            "title": "Икра",
+            "primary-type": "Album"
+          },
+          "date": "2008",
+          "barcode": "4601250352121"
+        },
+        {
+          "id": "a140917f-3465-4be9-8629-358fce6ab601",
+          "count": 2,
+          "title": "Икра",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Мумий Тролль",
+              "artist": {
+                "id": "f91b9b28-25b7-4064-81d1-f43163085770",
+                "name": "Мумий Тролль",
+                "sort-name": "Mumiy Troll'"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "54dc2ea4-d3da-319d-8ee9-c2f4faf98581",
+            "title": "Икра",
+            "primary-type": "Album"
+          },
+          "date": "2018-12-10",
+          "barcode": "5017742003607"
+        },
+        {
+          "id": "b18a3ab8-0c7a-4aeb-96fd-48ec121fe778",
+          "count": 1,
+          "title": "Икра",
+          "status": "Bootleg",
+          "artist-credit": [
+            {
+              "name": "Потап и Настя Каменских",
+              "artist": {
+                "id": "7dd5b87b-eb25-4cdc-b85f-9612f1f15ee0",
+                "name": "Потап и Настя",
+                "sort-name": "Potap & Nastya"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "b5f32f2b-dda1-43d6-9a94-c031bf373c19",
+            "title": "Икра",
+            "primary-type": "Album"
+          },
+          "date": "2008"
+        },
+        {
+          "id": "28d415de-2679-47b3-affe-c22d4a41eb00",
+          "count": 1,
+          "title": "Чёрная икра",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "DMON x ADONEL",
+              "artist": {
+                "id": "0a75509c-2c5f-4b13-83cb-e4414917f98c",
+                "name": "DMØN x ADØNEL",
+                "sort-name": "DMON x ADONEL"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "43877fdb-1206-46ba-afb4-929a0474f0ea",
+            "title": "Чёрная икра",
+            "primary-type": "Single"
+          },
+          "date": "2026-09-25",
+          "barcode": "5064133089108"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22%D0%98%D0%BA%D1%80%D0%B0%22+AND+artist%3A%22Mumiy+Troll%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 0,
+      "releases": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Bright+Future%22+AND+artist%3A%22Adrianne+Lenker%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 5,
+      "releases": [
+        {
+          "id": "2cee7f4a-f625-48cc-a820-911ab6d679ed",
+          "count": 1,
+          "title": "bright future",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Adrianne Lenker",
+              "artist": {
+                "id": "763cb144-afdb-471e-bd86-d4f5b9b58641",
+                "name": "Adrianne Lenker",
+                "sort-name": "Lenker, Adrianne"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
+            "title": "Bright Future",
+            "primary-type": "Album"
+          },
+          "date": "2024-03-22",
+          "barcode": "191400064928"
+        },
+        {
+          "id": "b4a95cda-b344-4d06-8f3b-63baafcd20ed",
+          "count": 1,
+          "title": "Bright Future",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Adrianne Lenker",
+              "artist": {
+                "id": "763cb144-afdb-471e-bd86-d4f5b9b58641",
+                "name": "Adrianne Lenker",
+                "sort-name": "Lenker, Adrianne"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
+            "title": "Bright Future",
+            "primary-type": "Album"
+          },
+          "date": "2024-03-22",
+          "barcode": "191400064966"
+        },
+        {
+          "id": "ab35a6ae-4d6f-42b3-a7df-3dbb6c6c4d72",
+          "count": 1,
+          "title": "Bright Future",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Adrianne Lenker",
+              "artist": {
+                "id": "763cb144-afdb-471e-bd86-d4f5b9b58641",
+                "name": "Adrianne Lenker",
+                "sort-name": "Lenker, Adrianne"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
+            "title": "Bright Future",
+            "primary-type": "Album"
+          },
+          "date": "2024-03-22",
+          "barcode": "191400064959"
+        },
+        {
+          "id": "0d5f067b-ca62-4a7c-950a-0af030c53df3",
+          "count": 1,
+          "title": "Bright Future",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Adrianne Lenker",
+              "artist": {
+                "id": "763cb144-afdb-471e-bd86-d4f5b9b58641",
+                "name": "Adrianne Lenker",
+                "sort-name": "Lenker, Adrianne"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
+            "title": "Bright Future",
+            "primary-type": "Album"
+          },
+          "date": "2024-03-22"
+        },
+        {
+          "id": "69076af2-7eff-4800-bc7a-e410c6aa4474",
+          "count": 1,
+          "title": "Bright Future",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Adrianne Lenker",
+              "artist": {
+                "id": "763cb144-afdb-471e-bd86-d4f5b9b58641",
+                "name": "Adrianne Lenker",
+                "sort-name": "Lenker, Adrianne"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
+            "title": "Bright Future",
+            "primary-type": "Album"
+          },
+          "barcode": "0191400064911"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Id%C3%A9al%22+AND+artist%3A%22Trust%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 2,
+      "releases": [
+        {
+          "id": "635cb636-995d-420e-a06f-988c6d1fddcd",
+          "count": 1,
+          "title": "Idéal",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Trust",
+              "artist": {
+                "id": "33d281da-d36f-4d22-9c4f-fa39f9718302",
+                "name": "Trust",
+                "sort-name": "Trust"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "5aacff4c-7a06-44a3-b1db-1ec6393038ac",
+            "title": "Idéal",
+            "primary-type": "Single"
+          },
+          "date": "1983",
+          "barcode": ""
+        },
+        {
+          "id": "bc4ee25e-186a-40f6-8b4b-476bcd111c5d",
+          "count": 1,
+          "title": "Idéal",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Trust",
+              "artist": {
+                "id": "33d281da-d36f-4d22-9c4f-fa39f9718302",
+                "name": "Trust",
+                "sort-name": "Trust"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "06116135-e106-4757-b041-be4b4a304c9f",
+            "title": "Idéal",
+            "primary-type": "Album"
+          }
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Nothing+Like+It%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 8,
+      "releases": [
+        {
+          "id": "2f64f87b-ece7-443e-a918-3577a0289cb1",
+          "count": 1,
+          "title": "Nothing Like It",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Courtney Farren",
+              "artist": {
+                "id": "d69c61ed-582d-4b23-bdb5-4be23e4dfc48",
+                "name": "Courtney Farren",
+                "sort-name": "Farren, Courtney"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "cd526339-785e-4ccd-abc1-8d374bd6d68d",
+            "title": "Nothing Like It",
+            "primary-type": "EP"
+          },
+          "date": "2017-10-04",
+          "barcode": ""
+        },
+        {
+          "id": "6a008f4b-57b3-4205-88eb-6145c13d3ac9",
+          "count": 1,
+          "title": "Nothing Like It",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Another Me",
+              "artist": {
+                "id": "51cc9582-6db9-46df-aac1-d07da043bba1",
+                "name": "Another Me",
+                "sort-name": "Another Me"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "8268d959-db46-4015-9dc4-4c95a2a2761f",
+            "title": "Nothing Like It",
+            "primary-type": "EP"
+          },
+          "date": "2020-11-13",
+          "barcode": "4056813204698"
+        },
+        {
+          "id": "d591eafb-3ad0-4a0a-975c-002c3cb4da8c",
+          "count": 1,
+          "title": "Nothing Like It",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Raj",
+              "artist": {
+                "id": "0bdedd71-038a-4bf9-94d5-c5a8ce4e1b21",
+                "name": "Raj",
+                "sort-name": "Raj"
+              }
+            },
+            {
+              "name": "Noé Mina",
+              "artist": {
+                "id": "9e7a5dd6-a0c0-4c7e-a7c2-e0f9c38b132c",
+                "name": "Noé Mina",
+                "sort-name": "Mina, Noé"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "a56f1250-ecc4-4077-9146-771dbd6f4745",
+            "title": "Nothing Like It",
+            "primary-type": "Single"
+          },
+          "date": "2025-07-18",
+          "barcode": "1963623281296"
+        },
+        {
+          "id": "7356ac41-3746-4d40-b426-bc5de6c06397",
+          "count": 1,
+          "title": "Nothing Like It",
+          "artist-credit": [
+            {
+              "name": "christnotme",
+              "artist": {
+                "id": "fff441ad-2ce2-4911-b1b1-4b550d662087",
+                "name": "christnotme",
+                "sort-name": "christnotme"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "0e61ea15-fd97-4ce9-8c7d-f97830381512",
+            "title": "Nothing Like It",
+            "primary-type": "Single"
+          },
+          "date": "2026-07-31"
+        },
+        {
+          "id": "a6b6d28f-11ab-4478-8625-73b6621a60bf",
+          "count": 1,
+          "title": "There’s Nothing Like It",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Arahi",
+              "artist": {
+                "id": "5506714c-7a7c-4e89-8142-44591656be5b",
+                "name": "Arahi",
+                "sort-name": "Arahi"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "d8e13584-70ea-4071-9a8b-157b89e92b2b",
+            "title": "There’s Nothing Like It",
+            "primary-type": "Single"
+          },
+          "date": "2022-08-16",
+          "barcode": ""
+        },
+        {
+          "id": "a18b1f5a-c97e-4472-8fec-4bd6ddf7a986",
+          "count": 1,
+          "title": "Ain't Nothing Like It",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "KLYMVX",
+              "artist": {
+                "id": "3ed4c001-959c-4d6c-a0de-27dbbb6463fb",
+                "name": "KLYMVX",
+                "sort-name": "KLYMVX"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "6c958576-04b0-459a-b1dc-582e7fc11763",
+            "title": "Ain't Nothing Like It",
+            "primary-type": "Single"
+          },
+          "date": "2019-03-01",
+          "barcode": "886447542811"
+        },
+        {
+          "id": "4bf90df7-024a-4e79-997a-ac81f9f1dd08",
+          "count": 6,
+          "title": "Nothing Like It in the World",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " read by ",
+              "name": "Stephen E. Ambrose",
+              "artist": {
+                "id": "8e687115-095a-4a22-8862-e6cec287af4d",
+                "name": "Stephen E. Ambrose",
+                "sort-name": "Ambrose, Stephen E."
+              }
+            },
+            {
+              "name": "Jeffrey DeMunn",
+              "artist": {
+                "id": "97371a66-4d7d-4242-9cd9-c89e662a7164",
+                "name": "Jeffrey DeMunn",
+                "sort-name": "DeMunn, Jeffrey"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "d393ee5b-b0f1-4072-a1cb-d3257b3c24da",
+            "title": "Nothing Like It in the World",
+            "primary-type": "Other"
+          },
+          "date": "2000-08-01",
+          "barcode": "9780743506465"
+        },
+        {
+          "id": "0259bca2-ba31-4f6c-b3df-21fb0642eb0c",
+          "count": 15,
+          "title": "Nothing Like It in the World: The Men Who Built the Transcontinental Railroad, 1863-1869",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " narrated by ",
+              "name": "Stephen E. Ambrose",
+              "artist": {
+                "id": "8e687115-095a-4a22-8862-e6cec287af4d",
+                "name": "Stephen E. Ambrose",
+                "sort-name": "Ambrose, Stephen E."
+              }
+            },
+            {
+              "name": "Barrett Whitener",
+              "artist": {
+                "id": "9ec98f9f-45d1-4b29-a629-df2cdebb84ee",
+                "name": "Barrett Whitener",
+                "sort-name": "Whitener, Barrett"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "43f15aac-cd83-4dce-97c3-b2fc5937d44d",
+            "title": "Nothing Like It in the World: The Men Who Built the Transcontinental Railroad, 1863-1869",
+            "primary-type": "Other"
+          }
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Nothing+Like+It%22+AND+artist%3A%22Nobody+Known%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 0,
+      "releases": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Red+%28Taylor%27s+Version%29%22+AND+artist%3A%22Taylor+Swift%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 58,
+      "releases": [
+        {
+          "id": "600257c3-895b-4c01-a97a-496800ac2f13",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602445187959"
+        },
+        {
+          "id": "94f0e37d-f7ed-44ff-942e-ff8fc7ce2e07",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602438993857"
+        },
+        {
+          "id": "0d22657f-22b7-467b-a2c0-6bef366b6202",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438737628"
+        },
+        {
+          "id": "9929d215-1001-4b53-aae8-83b92e370de8",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602445068036"
+        },
+        {
+          "id": "85adfda0-d6c1-41a8-9f54-d8e012d0264c",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602445195855"
+        },
+        {
+          "id": "92997628-cec6-463c-a325-40140d96e37e",
+          "count": 4,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438633258"
+        },
+        {
+          "id": "0854c381-be63-44c7-8695-0878330c4760",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-13",
+          "barcode": "4988031460504"
+        },
+        {
+          "id": "e67492c1-4dda-4b61-b624-ddeaff79cef0",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Bootleg",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-11",
+          "barcode": ""
+        },
+        {
+          "id": "278c14df-8cc5-44c9-815a-35f57d64ce33",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438737635"
+        },
+        {
+          "id": "2717556d-46aa-4816-ad18-8025d0992eeb",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438737628"
+        },
+        {
+          "id": "a9415f2c-f756-41e2-bb11-1a5f4ca3b221",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12"
+        },
+        {
+          "id": "6ca4cd6f-b777-47a4-a62d-6a708ae96b7e",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602445068050"
+        },
+        {
+          "id": "e0e52164-f06b-47df-8ae6-a59bea253585",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "4988031460498"
+        },
+        {
+          "id": "a722620b-83f0-4b5c-859d-02fa3f3066a3",
+          "count": 4,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438633265"
+        },
+        {
+          "id": "24a85649-9e47-450e-906a-7ebb1d561ecf",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2022-11",
+          "barcode": "9787883345305"
+        },
+        {
+          "id": "ed79bc58-bfa9-4e22-ab92-95e49d8079c7",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438797295"
+        },
+        {
+          "id": "c9bef7c5-af1c-4835-9dab-8af2cd608ed5",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602445187966"
+        },
+        {
+          "id": "7541ec9a-6a26-4e34-8d3b-5f8aa520012f",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-12-23",
+          "barcode": "602438737628"
+        },
+        {
+          "id": "76304db6-806d-488e-b58d-af885ac18119",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-12-15",
+          "barcode": "602438737635"
+        },
+        {
+          "id": "4040ed85-ef78-428b-b112-6b455f3f2e5b",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602438519347"
+        },
+        {
+          "id": "35ccb95e-de21-4d81-94d9-f5c60912cdf9",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-15",
+          "barcode": "00602445237807"
+        },
+        {
+          "id": "fece4ab5-f037-47e5-a794-0fc1ecdc5237",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602445195756"
+        },
+        {
+          "id": "cefe4b24-f918-4858-b3ff-08bca9e932ec",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021",
+          "barcode": "602438737635"
+        },
+        {
+          "id": "70d58561-707d-4238-ab41-fdd275f67087",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602438993864"
+        },
+        {
+          "id": "bee6611f-8fa2-4718-8ba0-65d9c5aa4745",
+          "count": 4,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438633265"
+        },
+        {
+          "id": "af947b8d-b4a9-4594-8032-61f7f33e1395",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12"
+        },
+        {
+          "id": "2d14b56f-ea1c-491f-80a2-794baff03b2c",
+          "count": 1,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "00602438519330"
+        },
+        {
+          "id": "904164c1-81f4-4672-9fc2-65c40650f62a",
+          "count": 2,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438737628"
+        },
+        {
+          "id": "19830957-83dc-4964-8123-72f10a142c9b",
+          "count": 4,
+          "title": "Red (Taylor’s version)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2021-11-12",
+          "barcode": "602438633258"
+        },
+        {
+          "id": "03c4710f-6e60-48ed-8556-de433d8ffde9",
+          "count": 1,
+          "title": "The More Red (Taylor’s version) Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "37b64055-e022-45cf-a895-13534524528c",
+            "title": "The More Red (Taylor’s version) Chapter",
+            "primary-type": "EP"
+          },
+          "barcode": "00602455556370"
+        },
+        {
+          "id": "c1589d43-6a87-45f3-9de0-25f9d5189948",
+          "count": 1,
+          "title": "The More Red (Taylor’s version) Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "37b64055-e022-45cf-a895-13534524528c",
+            "title": "The More Red (Taylor’s version) Chapter",
+            "primary-type": "EP"
+          },
+          "barcode": "00602455556455"
+        },
+        {
+          "id": "f9646774-a607-4e78-ac04-e64f95676047",
+          "count": 1,
+          "title": "The More Red (Taylor’s version) Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "37b64055-e022-45cf-a895-13534524528c",
+            "title": "The More Red (Taylor’s version) Chapter",
+            "primary-type": "EP"
+          },
+          "barcode": "00602455556417"
+        },
+        {
+          "id": "26107693-58d6-4787-afa5-b36a72ad46d5",
+          "count": 1,
+          "title": "The More Red (Taylor’s version) Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "37b64055-e022-45cf-a895-13534524528c",
+            "title": "The More Red (Taylor’s version) Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2023-03-17",
+          "barcode": "00602455556783"
+        },
+        {
+          "id": "48f17f41-17d2-4de8-badb-8af0868acb57",
+          "count": 1,
+          "title": "The More Red (Taylor’s version) Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "37b64055-e022-45cf-a895-13534524528c",
+            "title": "The More Red (Taylor’s version) Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2023-03-17",
+          "barcode": "00602455556776"
+        },
+        {
+          "id": "152e588a-f216-4f45-bf25-7831916c0bbf",
+          "count": 1,
+          "title": "The More Red (Taylors version) Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "37b64055-e022-45cf-a895-13534524528c",
+            "title": "The More Red (Taylor’s version) Chapter",
+            "primary-type": "EP"
+          },
+          "barcode": "00602455556424"
+        },
+        {
+          "id": "2293c152-aaca-454a-852b-717e108698e1",
+          "count": 1,
+          "title": "Red (Taylor’s version): From the Vault Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "92de1260-411c-4d22-8245-fcc670a7210e",
+            "title": "Red (Taylor’s version): From the Vault Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-31",
+          "barcode": "00602445438716"
+        },
+        {
+          "id": "0bbc0081-6382-4224-b87c-78234f8885ad",
+          "count": 1,
+          "title": "Red (Taylor’s version): The Slow Motion Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "93b7ed89-f1e2-4c6c-a7dd-5003498063d9",
+            "title": "Red (Taylor’s version): The Slow Motion Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-25",
+          "barcode": "00602445438662"
+        },
+        {
+          "id": "270a9b3e-037d-461a-91c7-7bb1961f0d30",
+          "count": 1,
+          "title": "Red (Taylor’s version): The Slow Motion Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "93b7ed89-f1e2-4c6c-a7dd-5003498063d9",
+            "title": "Red (Taylor’s version): The Slow Motion Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-25",
+          "barcode": "00602445438679"
+        },
+        {
+          "id": "53a1d6b6-85cd-4102-81fe-6e1125b29845",
+          "count": 1,
+          "title": "Red (Taylor’s version): The Slow Motion Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "93b7ed89-f1e2-4c6c-a7dd-5003498063d9",
+            "title": "Red (Taylor’s version): The Slow Motion Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-25",
+          "barcode": "00602445438693"
+        },
+        {
+          "id": "f25cba28-1fd1-47d1-83c9-25cad6d02294",
+          "count": 1,
+          "title": "Red (Taylor’s version): The Slow Motion Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "93b7ed89-f1e2-4c6c-a7dd-5003498063d9",
+            "title": "Red (Taylor’s version): The Slow Motion Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-25",
+          "barcode": "00602445438617"
+        },
+        {
+          "id": "fe002f86-25bc-4698-83d8-1831156e81a8",
+          "count": 1,
+          "title": "Red (Taylor’s version): From the Vault Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "92de1260-411c-4d22-8245-fcc670a7210e",
+            "title": "Red (Taylor’s version): From the Vault Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-31",
+          "barcode": "00602445438761"
+        },
+        {
+          "id": "1e1eb854-5e0f-4799-bcd6-2594addf16eb",
+          "count": 1,
+          "title": "Red (Taylor’s version): From the Vault Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "92de1260-411c-4d22-8245-fcc670a7210e",
+            "title": "Red (Taylor’s version): From the Vault Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-31",
+          "barcode": "00602445438723"
+        },
+        {
+          "id": "a2dcfbd0-d540-41a4-939e-05b7ed2292f2",
+          "count": 1,
+          "title": "Red (Taylor’s version): The Slow Motion Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "93b7ed89-f1e2-4c6c-a7dd-5003498063d9",
+            "title": "Red (Taylor’s version): The Slow Motion Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-25",
+          "barcode": "00602445438686"
+        },
+        {
+          "id": "fe7d9aad-eabb-453d-a2f6-921572e91e7b",
+          "count": 1,
+          "title": "Red (Taylor’s version): From the Vault Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "92de1260-411c-4d22-8245-fcc670a7210e",
+            "title": "Red (Taylor’s version): From the Vault Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-31",
+          "barcode": "00602445438747"
+        },
+        {
+          "id": "f6ea7eed-1dba-4655-bf5e-76719b035553",
+          "count": 1,
+          "title": "Red (Taylor’s version): From the Vault Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "92de1260-411c-4d22-8245-fcc670a7210e",
+            "title": "Red (Taylor’s version): From the Vault Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-31",
+          "barcode": "00602445438709"
+        },
+        {
+          "id": "0f672734-fa7e-43ea-b571-1efbb5e00633",
+          "count": 1,
+          "title": "Red (Taylor’s version): Could You Be the One Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "6d177a11-4072-40c6-94ee-254d3edeb4b7",
+            "title": "Red (Taylor’s version): Could You Be the One Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-13",
+          "barcode": "00602445438426"
+        },
+        {
+          "id": "7a710f75-b9fe-4636-bae3-82a63e974d91",
+          "count": 1,
+          "title": "Red (Taylor’s version): Could You Be the One Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "6d177a11-4072-40c6-94ee-254d3edeb4b7",
+            "title": "Red (Taylor’s version): Could You Be the One Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-13",
+          "barcode": "00602445438457"
+        },
+        {
+          "id": "e545d1df-f9a0-48c5-8e18-870283aeb7a4",
+          "count": 1,
+          "title": "Red (Taylor’s version): Could You Be the One Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "6d177a11-4072-40c6-94ee-254d3edeb4b7",
+            "title": "Red (Taylor’s version): Could You Be the One Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-13",
+          "barcode": "00602445438433"
+        },
+        {
+          "id": "7c3565d9-86bd-409a-af9a-2c2d6a4d3df0",
+          "count": 1,
+          "title": "Red (Taylor’s version): Could You Be the One Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "6d177a11-4072-40c6-94ee-254d3edeb4b7",
+            "title": "Red (Taylor’s version): Could You Be the One Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-13",
+          "barcode": "00602445438396"
+        },
+        {
+          "id": "b5af81f7-6f60-4210-baef-9d73e3ef4ef7",
+          "count": 1,
+          "title": "Red (Taylor’s version): Could You Be the One Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "6d177a11-4072-40c6-94ee-254d3edeb4b7",
+            "title": "Red (Taylor’s version): Could You Be the One Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-13"
+        },
+        {
+          "id": "88ee921b-8f12-4618-8515-fbb082569d69",
+          "count": 1,
+          "title": "Red (Taylor’s version): Could You Be the One Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "6d177a11-4072-40c6-94ee-254d3edeb4b7",
+            "title": "Red (Taylor’s version): Could You Be the One Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-13",
+          "barcode": "00602445438440"
+        },
+        {
+          "id": "9e29b70d-b66f-4026-9e64-f52044ed2115",
+          "count": 1,
+          "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "3a4c2b26-e58c-4581-9857-b9d7f8ec0b00",
+            "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-18",
+          "barcode": "00602445438532"
+        },
+        {
+          "id": "726a5552-cad6-404c-91e6-fe7491559993",
+          "count": 1,
+          "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "3a4c2b26-e58c-4581-9857-b9d7f8ec0b00",
+            "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-18"
+        },
+        {
+          "id": "176c2e7f-ff9b-4c88-8c69-b3609e3d9e50",
+          "count": 1,
+          "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "3a4c2b26-e58c-4581-9857-b9d7f8ec0b00",
+            "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-18",
+          "barcode": "00602445438464"
+        },
+        {
+          "id": "3a8eed70-9891-4623-a4b0-53e0bebd7366",
+          "count": 1,
+          "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "3a4c2b26-e58c-4581-9857-b9d7f8ec0b00",
+            "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-18",
+          "barcode": "00602445438471"
+        },
+        {
+          "id": "f77de20a-3686-4738-8b7c-4093b993df6d",
+          "count": 1,
+          "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "3a4c2b26-e58c-4581-9857-b9d7f8ec0b00",
+            "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-18",
+          "barcode": "00602445438495"
+        },
+        {
+          "id": "d3b81370-c8ae-436d-a179-b350e280daca",
+          "count": 1,
+          "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "3a4c2b26-e58c-4581-9857-b9d7f8ec0b00",
+            "title": "Red (Taylor’s version): She Wrote a Song About Me Chapter",
+            "primary-type": "EP"
+          },
+          "date": "2022-01-18",
+          "barcode": "00602445438488"
+        },
+        {
+          "id": "c8857b8f-2e44-4fdc-88c1-64cd916126fd",
+          "count": 4,
+          "title": "Red (Taylor's Version) = 红（重制版）",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Taylor Swift",
+              "artist": {
+                "id": "20244d07-534f-4eff-b4d4-930878889970",
+                "name": "Taylor Swift",
+                "sort-name": "Swift, Taylor"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67727253-f1c0-4243-9270-f9f1401c3b8c",
+            "title": "Red (Taylor’s version)",
+            "primary-type": "Album"
+          },
+          "date": "2022",
+          "barcode": "9787883345312"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Tchaikovsky%3A+The+Nutcracker%22+AND+artist%3A%22Berlin+Philharmonic%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 1,
+      "releases": [
+        {
+          "id": "67e3d065-01c5-454a-aa1f-ca687fb93232",
+          "count": 1,
+          "title": "Tchaikovsky: The Nutcracker",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Berlin Philharmonic",
+              "artist": {
+                "id": "dea28aa9-1086-4ffa-8739-0ccc759de1ce",
+                "name": "Berliner Philharmoniker",
+                "sort-name": "Berliner Philharmoniker"
+              }
+            },
+            {
+              "name": "Sir Simon Rattle",
+              "artist": {
+                "id": "80c3bce9-0b54-409c-aa10-3b0c7dbbc597",
+                "name": "Simon Rattle",
+                "sort-name": "Rattle, Simon"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "95959c5f-6011-4c20-b932-0a70b529e045",
+            "title": "The Nutcracker",
+            "primary-type": "Album"
+          },
+          "date": "2010-10-01"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22The+Last+in+Line%22+AND+artist%3A%22Dio%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 27,
+      "releases": [
+        {
+          "id": "a8fa45b6-47ac-44f6-a6c1-46a91b91ef05",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984",
+          "barcode": "075992510042"
+        },
+        {
+          "id": "48dd9fef-8e5a-43b5-9316-f56a65f3f6f1",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2018-01-09",
+          "barcode": "603497864492"
+        },
+        {
+          "id": "c132ef76-503d-4b80-890f-fe128a94a8e1",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984-07-13"
+        },
+        {
+          "id": "ecfba470-e417-4d15-b0af-c32f407b74fc",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1993-10-21",
+          "barcode": "4988011338366"
+        },
+        {
+          "id": "acfd193d-cd0f-4a5b-a469-110c106f0a4e",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984",
+          "barcode": "422822366100"
+        },
+        {
+          "id": "71103128-0a9d-41af-b117-9aab2202610c",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984",
+          "barcode": "07599251002"
+        },
+        {
+          "id": "58047a25-3a2f-47a6-8031-a7943a5b807e",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1991-04-25",
+          "barcode": "4988011325939"
+        },
+        {
+          "id": "70c6e8c8-f4ac-4d6a-810c-582f002b3704",
+          "count": 1,
+          "title": "The Last In Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2002-11-13",
+          "barcode": "4988005317186"
+        },
+        {
+          "id": "98319c10-100f-4934-9b19-9b77bb3055e7",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2012-11-27",
+          "barcode": "780014214623"
+        },
+        {
+          "id": "2723069a-d9a2-3c11-b43c-bc899e00c46d",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "075992510028"
+        },
+        {
+          "id": "fd086ea8-cf74-4450-8e07-6a7d60f39c5a",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984-08-29"
+        },
+        {
+          "id": "16cbf9ba-2e38-3893-9f23-f8567e26c18b",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984",
+          "barcode": "042282236623"
+        },
+        {
+          "id": "f70e327c-059d-48f9-bad7-83817732c175",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2016-07-22"
+        },
+        {
+          "id": "23c13884-9c96-4233-b069-e1d1efb149ce",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Promotion",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "barcode": ""
+        },
+        {
+          "id": "28056629-955d-45c0-94ac-63ab7a6c1c81",
+          "count": 1,
+          "title": "The Last In Line",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "b9e0be13-a88e-4d4a-a31a-f21c9c669915",
+            "title": "The Last In Line",
+            "primary-type": "Single"
+          },
+          "date": "1984"
+        },
+        {
+          "id": "a6426fac-94d9-42dc-a6e5-7925a3902006",
+          "count": 2,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2023-05-05",
+          "barcode": "602567188636"
+        },
+        {
+          "id": "e3024ac3-eca9-44d4-8db6-467e5c22894f",
+          "count": 2,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2012",
+          "barcode": "602527760988"
+        },
+        {
+          "id": "689045ea-e36e-4cf7-bcf6-123df9b21665",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984"
+        },
+        {
+          "id": "83947705-e0cf-44cf-a4b2-71d9ade82b28",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1992"
+        },
+        {
+          "id": "e2fd5eed-23d0-42bc-9cee-bbe5f526c592",
+          "count": 1,
+          "title": "The Last In Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "4e7b34de-0d87-356a-a3da-b21f769b7d4d",
+            "title": "Holy Diver",
+            "primary-type": "Album"
+          },
+          "date": "1984",
+          "barcode": ""
+        },
+        {
+          "id": "8fbee431-1993-4078-b4f2-1beb8185afb8",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984",
+          "barcode": "075992510028"
+        },
+        {
+          "id": "43d9699a-85b2-4365-91cd-e3c7e6ad001d",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2007-12-19",
+          "barcode": "4988005498885"
+        },
+        {
+          "id": "60e151f7-105f-45e1-b767-12d72e3cba50",
+          "count": 2,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2012-03-20",
+          "barcode": "602527760988"
+        },
+        {
+          "id": "60a1dbae-e05b-40af-939b-42974700488d",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "075992510028"
+        },
+        {
+          "id": "b1e38306-a843-4481-bdfc-a8553cacd845",
+          "count": 1,
+          "title": "The Last in Line",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "1984",
+          "barcode": "0208313289255"
+        },
+        {
+          "id": "6763b6d3-a8bf-4ff0-b1db-f0801d22f75f",
+          "count": 2,
+          "title": "The Last In Line (Deluxe Edition)",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "798601d4-f28e-3835-b10c-1a00ecf773b8",
+            "title": "The Last in Line",
+            "primary-type": "Album"
+          },
+          "date": "2012-01-01",
+          "barcode": "602527760988"
+        },
+        {
+          "id": "36027f61-7f84-427d-8ab0-9f548f7b66dc",
+          "count": 1,
+          "title": "The Last in Line / Sacred Heart",
+          "artist-credit": [
+            {
+              "name": "Dio",
+              "artist": {
+                "id": "c55193fb-f5d2-4839-a263-4c044fca1456",
+                "name": "Dio",
+                "sort-name": "Dio"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "7c62d5dd-39db-4d23-859c-1c9eff03ee83",
+            "title": "The Last in Line / Sacred Heart",
+            "primary-type": "Album"
+          }
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release/1f0c1ac6-2bb3-4ec5-91ee-e6e086abdcde?inc=release-groups&fmt=json": {
+    "status": 200,
+    "body": {
+      "status": "Official",
+      "date": "2009-11-02",
+      "id": "1f0c1ac6-2bb3-4ec5-91ee-e6e086abdcde",
+      "title": "Bleach",
+      "barcode": "098787083460",
+      "release-group": {
+        "title": "Bleach",
+        "primary-type": "Album",
+        "id": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+        "first-release-date": "1989-08-08"
+      }
+    }
+  },
+  "https://musicbrainz.org/ws/2/release/4c8af71f-5746-4981-92d7-0d6c64db1155?inc=release-groups&fmt=json": {
+    "status": 200,
+    "body": {
+      "status": "Official",
+      "title": "Kind of Blue",
+      "id": "4c8af71f-5746-4981-92d7-0d6c64db1155",
+      "date": "2011-11-08",
+      "barcode": "5099749522428",
+      "release-group": {
+        "title": "Kind of Blue",
+        "primary-type": "Album",
+        "id": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+        "first-release-date": "1959-08-17"
+      }
+    }
+  },
+  "https://musicbrainz.org/ws/2/release/683dd246-f69a-42aa-9e39-4de5f0b88e34?inc=release-groups&fmt=json": {
+    "status": 200,
+    "body": {
+      "status": "Official",
+      "title": "doing",
+      "date": "2014-04-11",
+      "id": "683dd246-f69a-42aa-9e39-4de5f0b88e34",
+      "barcode": "4988013935051",
+      "release-group": {
+        "first-release-date": "1996-05-17",
+        "primary-type": "Album",
+        "id": "1fc45f68-7542-45de-8514-66b566af473d",
+        "title": "doing"
+      }
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.apple.com%2Ffi%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fus%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fgb%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fde%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Ffr%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fjp%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fca%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fau%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fnl%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fse%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fit%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fes%2Falbum%2F268443092&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 1,
+      "urls": [
+        {
+          "id": "9b202431-2e5f-47a6-b0e9-aba5929cb0bb",
+          "relations": [
+            {
+              "release": {
+                "id": "4c8af71f-5746-4981-92d7-0d6c64db1155",
+                "status": null,
+                "date": "2011-11-08",
+                "barcode": "5099749522428",
+                "title": "Kind of Blue"
+              },
+              "target-type": "release"
+            },
+            {
+              "target-type": "release",
+              "release": {
+                "status": null,
+                "id": "4c8af71f-5746-4981-92d7-0d6c64db1155",
+                "date": "2011-11-08",
+                "barcode": "5099749522428",
+                "title": "Kind of Blue"
+              }
+            }
+          ],
+          "resource": "https://music.apple.com/us/album/268443092"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.apple.com%2Ffi%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fus%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fgb%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fde%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Ffr%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fjp%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fca%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fau%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fnl%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fse%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fit%2Falbum%2F6809480000&resource=https%3A%2F%2Fmusic.apple.com%2Fes%2Falbum%2F6809480000&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "urls": [],
+      "url-count": 0
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.apple.com%2Ffi%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fus%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fgb%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fde%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Ffr%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fjp%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fca%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fau%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fnl%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fse%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fit%2Falbum%2F869027888&resource=https%3A%2F%2Fmusic.apple.com%2Fes%2Falbum%2F869027888&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 0,
+      "urls": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.apple.com%2Fus%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fgb%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fde%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Ffr%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fjp%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fca%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fau%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fnl%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fse%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fit%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Fes%2Falbum%2F254249657&resource=https%3A%2F%2Fmusic.apple.com%2Ffi%2Falbum%2F254249657&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 0,
+      "urls": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fopen.qobuz.com%2Falbum%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Ffr-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fus-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fgb-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fde-de%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fit-it%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fes-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fnl-nl%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fbe-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fbe-nl%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fch-de%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fch-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fat-de%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Flu-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fie-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Ffi-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fse-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fdk-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fno-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fau-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fnz-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fca-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fca-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fjp-ja%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fbr-pt%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fmx-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Far-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fcl-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fco-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fplay.qobuz.com%2Falbum%2F0884977423006&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 0,
+      "urls": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fopen.qobuz.com%2Falbum%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Ffr-fr%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fus-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fgb-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fde-de%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fit-it%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fes-es%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fnl-nl%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fbe-fr%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fbe-nl%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fch-de%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fch-fr%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fat-de%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Flu-fr%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fie-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Ffi-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fse-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fdk-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fno-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fau-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fnz-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fca-en%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fca-fr%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fjp-ja%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fbr-pt%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fmx-es%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Far-es%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fcl-es%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fwww.qobuz.com%2Fco-es%2Falbum%2Fbleach-nirvana%2Ftietg8e0jjdh8&resource=https%3A%2F%2Fplay.qobuz.com%2Falbum%2Ftietg8e0jjdh8&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "urls": [
+        {
+          "resource": "https://www.qobuz.com/album/bleach-nirvana/tietg8e0jjdh8",
+          "id": "05b2e27d-6e07-4b87-aa83-f9bb45abd75a",
+          "relations": [
+            {
+              "release": {
+                "title": "Bleach",
+                "barcode": "098787083460",
+                "status": null,
+                "date": "2009-11-02",
+                "id": "1f0c1ac6-2bb3-4ec5-91ee-e6e086abdcde"
+              },
+              "target-type": "release"
+            }
+          ]
+        }
+      ],
+      "url-count": 1
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fopen.qobuz.com%2Falbum%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Ffr-fr%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fus-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fgb-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fde-de%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fit-it%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fes-es%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fnl-nl%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fbe-fr%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fbe-nl%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fch-de%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fch-fr%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fat-de%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Flu-fr%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fie-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Ffi-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fse-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fdk-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fno-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fau-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fnz-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fca-en%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fca-fr%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fjp-ja%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fbr-pt%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fmx-es%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Far-es%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fcl-es%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fwww.qobuz.com%2Fco-es%2Falbum%2Fred-taylors-version-taylor-swift%2Fzzzzzzzzzzzzz&resource=https%3A%2F%2Fplay.qobuz.com%2Falbum%2Fzzzzzzzzzzzzz&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 0,
+      "urls": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fopen.spotify.com%2Falbum%2F0000000000000000000000&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 404,
+    "body": {
+      "error": "Not Found"
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fopen.spotify.com%2Falbum%2F32NZSslCL03dkXyILrrbGe&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "id": "b30c7297-5b96-41e6-be6f-00ccc502380b",
+      "resource": "https://open.spotify.com/album/32NZSslCL03dkXyILrrbGe",
+      "relations": [
+        {
+          "release": {
+            "id": "683dd246-f69a-42aa-9e39-4de5f0b88e34",
+            "status": null,
+            "date": "2014-04-11",
+            "barcode": "4988013935051",
+            "title": "doing"
+          },
+          "target-type": "release"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fopen.spotify.com%2Falbum%2F3333333333333333333333&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 404,
+    "body": {
+      "error": "Not Found"
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F34453659&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F34453659&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F34453659&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F34453659&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "urls": [],
+      "url-count": 0
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Ftidal.com%2Falbum%2F348182611&resource=https%3A%2F%2Ftidal.com%2Fbrowse%2Falbum%2F348182611&resource=http%3A%2F%2Fwww.tidal.com%2Falbum%2F348182611&resource=https%3A%2F%2Flisten.tidal.com%2Falbum%2F348182611&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "urls": [],
+      "url-count": 0
+    }
+  }
+}

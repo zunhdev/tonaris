@@ -96,6 +96,7 @@ export {
   maxNameLength,
 } from "./limits";
 export {
+  linkEntityId,
   linkKinds,
   sameLink,
   serviceNames,

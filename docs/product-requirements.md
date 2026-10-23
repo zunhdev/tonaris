@@ -268,7 +268,7 @@ The rule applies to creation, renaming, moves, and recovery.
 
 **FR-02.3 Track links.** A track link resolves to the album of the release that specific link belongs to. For example, a track linked from a compilation adds that compilation, not some other album containing the song. A track from a single adds the single, which is Unclassified (FR-05.9; decided 19 October 2026). Only that album is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
 
-- A Tidal track link names no album Tonaris may look up (G1). It is explained, and manual entry opens with the link kept as the album's Tidal link (decided 20 October 2026).
+- Tidal and Qobuz track links name no album Tonaris may look up (G1). Such a link is explained, and manual entry opens with the link kept as the album's link for that service (decided 20 October 2026 for Tidal, 24 October 2026 for Qobuz).
 
 **FR-02.4 Manual entry.** A regular form adds an album without a lookup.
 
@@ -879,7 +879,7 @@ These are representative observable checks, not a test plan. Passing them does n
 | AC-03 | Organize containers | Create root and nested lists and folders, and rename them without sibling collisions across types. Descriptions are editable, visible live to viewers, kept through moves and recovery, and not searched. | FR-01.1–FR-01.3, FR-03.5, FR-12.4 |
 | AC-04 | Move folders and lists | Moves keep identity, contents, descriptions, direct shares, and preferences without copying. Cycles, invalid destinations, and collisions are rejected with nothing changed. Inherited access updates. | FR-01.4–FR-01.5, FR-07.9 |
 | AC-05 | Reuse albums across lists | One album's metadata and fields are shared across lists. Re-adding keeps one entry and position. Removing the last membership keeps the album in counted, searchable Unsorted. | FR-01.6–FR-01.9, FR-15.2 |
-| AC-06 | Capture supplied links | Valid album links from all four services resolve. Track links add their actual parent release, except Tidal's, which go to manual entry with the link kept (FR-02.3). Failures preserve input, explain the problem, and offer manual entry. | FR-02.1, FR-02.3, FR-02.5 |
+| AC-06 | Capture supplied links | Valid album links from all four services resolve. Track links add their actual parent release, except Tidal's and Qobuz's, which go to manual entry with the link kept (FR-02.3). Failures preserve input, explain the problem, and offer manual entry. | FR-02.1, FR-02.3, FR-02.5 |
 | AC-07 | Save without a list | Capture, manual entry, and MCP can omit a list. New unlisted albums appear in Unsorted, reused records keep memberships, and a matched trashed record reactivates with only the requested memberships. | FR-02.2, FR-14.4 |
 | AC-08 | Complete required information | Manual entry shows all fields and requires title, artist credit, and applicable year. The same minimum applies to capture, MCP, and edits. Incomplete input is preserved, never saved invalid or invented. | FR-02.4, FR-02.6 |
 | AC-09 | Identify and match albums | A link to any edition identifies the album, with its canonical title and original year. Confident matches reuse records, and uncertain matches wait unchanged while independent items proceed. | FR-02.9–FR-02.10, FR-02.12 |
@@ -959,6 +959,7 @@ Resolve these gates before committing to the implementations they affect. Unrela
   - **When a hint matches.** A hinted match is accepted only when exactly one official album or EP fits its title, artist and year; several go to confirmation (FR-02.9). Measured on real links, nothing was ever matched to a wrong album (tech spec TS-41).
   - **Agents.** Captures an agent starts never read Qobuz's or Tidal's pages, because both reject AI use (FR-10.5).
   - **Qobuz's store.** Qobuz links that name no store are looked up in the French store.
+- **Qobuz track links (24 October 2026, TON-42).** Nothing permitted names a Qobuz track's album: Qobuz has no API for Tonaris, the terms review covers album pages only, and MusicBrainz links Qobuz albums, not tracks. The creator decided they go to manual entry with the link kept, like Tidal's (FR-02.3, AC-06).
 
 **G2 Album matching (D2, D3).** Albums are identified, not editions (FR-02.12). Test real examples: remasters, deluxe editions, reissues, compilations, regional variants, identical titles, and track links. Each must resolve to the right album, and different albums with the same title must stay apart. Define the evidence for confident matches and when confirmation is needed; title/artist similarity alone is insufficient. Distinguish reissue dates from original-release and live-recording years. Chronology may need manual completion where providers lack it.
 
@@ -1059,6 +1060,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - it is identified by MusicBrainz's URL lookup and transient page hints; its API isn't used (G1);
   - Tidal track links go to manual entry with the link kept (FR-02.3, AC-06);
   - nothing from Tidal is saved (FR-08.8).
+- **Decision (24 October 2026), Qobuz track links** (TON-42): they go to manual entry with the link kept, like Tidal's, as nothing permitted names their album (FR-02.3, AC-06, section 8).
 - **Decisions (21 October 2026), G1, G2 and Q-01**, from the M1 spike reports ([MusicBrainz](spikes/2026-10-18-g1-musicbrainz.md), [Apple](spikes/2026-10-19-g1-apple-hints.md), [Spotify](spikes/2026-10-19-g1-spotify-bridge.md), [Qobuz](spikes/2026-10-19-g1-qobuz-hints.md), [Tidal](spikes/2026-10-20-g1-tidal.md), [G2](spikes/2026-10-19-g2-album-matching.md), [Q-01](spikes/2026-10-21-q01-measurements.md)):
   - **G1 is closed.** The identification chain is final, and Qobuz links use page hints too. A hinted match needs exactly one official album or EP fitting its title, artist and year.
   - **Agents.** Captures an agent starts never read Qobuz's or Tidal's pages (FR-10.5).

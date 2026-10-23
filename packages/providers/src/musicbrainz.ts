@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 
+import { PacedQueue, realClock } from "./paced-queue";
 import { ProviderUnavailableError, type ProviderCache } from "./provider-cache";
 import { safeFetch, SafeFetchError, type SafeFetchInit } from "./safe-fetch";
 
@@ -103,24 +104,21 @@ export class MusicBrainz {
   private readonly cache: ProviderCache;
   private readonly fetch: NonNullable<MusicBrainzOptions["fetch"]>;
   private readonly now: () => number;
-  private readonly sleep: (ms: number) => Promise<void>;
-  /** The end of the queue: each turn waits for the one before it. */
-  private queue: Promise<void> = Promise.resolve();
-  /** When the next turn may start, moved on by each start and by every backoff. */
-  private nextStart = 0;
+  /** MusicBrainz's 1 request a second, for every lookup of this process. */
+  private readonly queue: PacedQueue;
   /** Requests in flight by URL, so identical lookups share one. */
   private readonly inFlight = new Map<string, Promise<unknown>>();
 
   constructor({
     cache,
     fetch = safeFetch,
-    now = Date.now,
-    sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    now = realClock.now,
+    sleep = realClock.sleep,
   }: MusicBrainzOptions) {
     this.cache = cache;
     this.fetch = fetch;
     this.now = now;
-    this.sleep = sleep;
+    this.queue = new PacedQueue(musicBrainzIntervalMs, { now, sleep });
   }
 
   /**
@@ -301,29 +299,9 @@ export class MusicBrainz {
     return request;
   }
 
-  /** Waits for this request's turn. */
-  private turn(): Promise<void> {
-    const turn = this.startAfter(this.queue);
-    // A turn never fails, but the chain mustn't break if one did.
-    this.queue = turn.catch(() => {});
-    return turn;
-  }
-
-  /** Waits for the turn before, then for the start time, and marks when the next may start. */
-  private async startAfter(previous: Promise<void>): Promise<void> {
-    await previous;
-    // A busy answer can move the start on while this turn sleeps, so it looks again after each sleep.
-    for (let wait = this.nextStart - this.now(); wait > 0; wait = this.nextStart - this.now()) {
-      // oxlint-disable-next-line no-await-in-loop
-      await this.sleep(wait);
-    }
-    this.nextStart = this.now() + musicBrainzIntervalMs;
-  }
-
   /** Holds the whole queue back after a busy answer: MusicBrainz's limit is everyone's. */
   private backOff(retry: number, retryAfter: string | null): void {
-    const seconds = Math.max(Number(retryAfter) || 0, 2 ** retry);
-    this.nextStart = Math.max(this.nextStart, this.now() + seconds * 1_000);
+    this.queue.holdFor(Math.max(Number(retryAfter) || 0, 2 ** retry) * 1_000);
   }
 
   private async send(url: URL): Promise<unknown> {
@@ -333,7 +311,7 @@ export class MusicBrainz {
     for (let retry = 0; retry <= musicBrainzMaxRetries; retry++) {
       // Each attempt waits for its turn after the one before, by design.
       // oxlint-disable-next-line no-await-in-loop
-      await this.turn();
+      await this.queue.turn();
       let response: Response;
       try {
         // oxlint-disable-next-line no-await-in-loop

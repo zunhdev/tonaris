@@ -2,6 +2,26 @@
 // TS-103).
 
 export { isPublicAddress } from "./addresses";
+export { cleanTitle, matchHints, type Candidate, type HintMatch, type Hints } from "./hints";
+export {
+  createIdentifier,
+  identificationOutcome,
+  unidentifiedReasons,
+  type AlbumCandidate,
+  type Identification,
+  type IdentifierDeps,
+  type Identifier,
+  type IdentifyContext,
+  type Prefill,
+} from "./identify";
+export {
+  ItunesLookup,
+  itunesCacheMs,
+  itunesIntervalMs,
+  type AppleAlbum,
+  type ItunesOptions,
+} from "./itunes";
+export { barcodeForms, urlForms } from "./link-forms";
 export {
   MusicBrainz,
   musicBrainzIntervalMs,
@@ -14,6 +34,15 @@ export {
   type UrlTarget,
 } from "./musicbrainz";
 export { memoryCache, ProviderUnavailableError, type ProviderCache } from "./provider-cache";
+export { PacedQueue, realClock, type Clock } from "./paced-queue";
+export { Spotify, type SpotifyOptions } from "./spotify";
+export {
+  StorePages,
+  robotsAllows,
+  extractQobuzHints,
+  extractTidalHints,
+  type StorePagesOptions,
+} from "./store-pages";
 export {
   maxLinkLength,
   maxShortLinkHops,

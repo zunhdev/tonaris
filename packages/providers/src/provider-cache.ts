@@ -10,7 +10,11 @@ export type ProviderCache = {
 };
 
 /** A cache in this process's memory, for tests and tooling. */
-export function memoryCache(): ProviderCache & { size(): number } {
+export function memoryCache(): ProviderCache & {
+  size(): number;
+  /** Everything kept, expired or not: for tests that check what a lookup left behind. */
+  entries(): [string, unknown][];
+} {
   const entries = new Map<string, { value: unknown; expiresAt: number }>();
   return {
     async get(keys, now) {
@@ -27,6 +31,7 @@ export function memoryCache(): ProviderCache & { size(): number } {
       }
     },
     size: () => entries.size,
+    entries: () => [...entries].map(([key, { value }]) => [key, value]),
   };
 }
 
@@ -37,7 +42,7 @@ export function memoryCache(): ProviderCache & { size(): number } {
 export class ProviderUnavailableError extends Error {
   override name = "ProviderUnavailableError";
   constructor(
-    readonly provider: "musicbrainz" | "coverartarchive",
+    readonly provider: "musicbrainz" | "coverartarchive" | "itunes" | "spotify" | "qobuz" | "tidal",
     message: string,
     options?: ErrorOptions,
   ) {

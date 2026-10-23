@@ -256,7 +256,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `containers` | `id`, `owner_id`, `kind` (`folder`\|`list`), `parent_id` (null = root), `name`, `name_key`, `description`, `trashed_at`, `trash_unit_id` | Partial unique index `(owner_id, coalesce(parent_id, nil UUID), name_key) WHERE trashed_at IS NULL`, so root-level names collide too; drizzle-kit can't emit `NULLS NOT DISTINCT` on a partial index. No foreign key on `parent_id`: a container trashed on its own keeps its parent's id after that parent is purged, so recovery can see the parent is missing (FR-01.15). CHECK: name not blank. Depth ≤ 32 enforced in the move/create command (TS-31). | FR-01.1–FR-01.5, X-06 |
 | `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `artwork_url`, `mb_release_group_id`, `mb_release_id`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live IS TRUE AND recording_year_start IS NOT NULL)`. (`IS TRUE`, because a null `is_live` would make the expression null, which a CHECK accepts.) CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. One record per album (FR-02.12): `mb_release_group_id` is the album's identity (TS-44), and `mb_release_id` only records the release a link resolved to. There is no edition label or barcode: TON-27 dropped `edition_label` and `barcode`. | FR-02.6, FR-02.8, FR-02.12, FR-05.5 |
 | `album_provenance` | `album_id`, `field`, `source` (`user`\|`musicbrainz`\|`coverartarchive`\|`itunes-lookup`), `source_ref`, `retrieved_at`. PK `(album_id, field)` | Policy flags are *derived* from `source` through a versioned policy map in `packages/providers` (TS-15). Spotify-derived values are never stored, so there is no `spotify` source (TS-41). | G1, FR-08.8 |
-| `album_service_links` | `album_id`, `owner_id` (copied from the album), `service`, `url` (canonical), `entity_id`. PK `(album_id, service)` | One current link per service. Index on `(owner_id, service, entity_id)` for matching. | FR-06.2–FR-06.4 |
+| `album_service_links` | `album_id`, `owner_id` (copied from the album), `service`, `url` (canonical), `entity_id`: the album's id when the link names one, else `track:{id}` (`linkEntityId()`, TON-42). PK `(album_id, service)` | One current link per service. Index on `(owner_id, service, entity_id)` for matching. | FR-06.2–FR-06.4 |
 | `memberships` | `list_id`, `album_id`, `owner_id`, `added_at`. PK `(list_id, album_id)` | A membership is *effective* when both list and album are active. Rows survive the trashing of either side (TS-13). | FR-01.6–FR-01.10, FR-14.2 |
 | `field_definitions` | `id`, `owner_id`, `name`, `name_key`, `type` | Unique `(owner_id, name_key)` | FR-03.6, FR-03.9 |
 | `field_options` | `id`, `field_id`, `label`, `label_key`, `sort_key` | Unique `(field_id, label_key)` | FR-03.14–FR-03.16 |
@@ -496,7 +496,8 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 
 - recovery without a valid parent;
 - name collisions on recovery;
-- uncertain matches.
+- uncertain matches;
+- links capture can't identify, asking for the album's title, artist and year (`details`, added in TON-42; FR-02.3, FR-10.5).
 
 The input is then resubmitted as a new mutation carrying the user's choice. Unresolved inputs keep the item in its current state; for example, Trash expiry keeps running (FR-01.16).
 
@@ -667,7 +668,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 | Step | Applies to | What happens | Result |
 | --- | --- | --- | --- |
 | 0. Parse | all | Local allowlisted parsing (TS-40) into `{service, kind, id}` | Unsupported input → FR-02.3 error |
-| 1. Existing link | all | The same `{service, entity_id}` is already linked in the owner's collection, Trash included | Reuse that album (TS-44) |
+| 1. Existing link | all | The same `{service, entity_id}` is already linked in the owner's collection, Trash included. The entity id is the album's id when the link names one, else `track:{id}` | Reuse that album (TS-44) |
 | 2. MusicBrainz URL lookup | album links; Apple track links. A `?i=` link's album id is in the path. A `/song/` link's comes from one iTunes Lookup by song id, its `collectionId` (decided 24 October 2026). | `/ws/2/url?inc=release-rels`, asking in one request for every form MusicBrainz may store the link in, since editors paste them as they find them ([TON-14](spikes/2026-10-18-g1-musicbrainz.md)): the canonical URL; for Apple, the album under the common storefronts; for Qobuz, `open.`, `play.`, the locale-less store URL, and the store URL under the common locales with the slug from request A (below); for Tidal, its other link forms | One album → confident, however many of its releases the URL is linked to; several albums → `needs_input` with the candidates (TS-26); none → next step |
 | 3. Identifier bridge | Qobuz, Spotify | **Qobuz:** a 13-digit numeric album id is treated as a UPC. **Spotify:** Web API with client credentials, in an app owned by the creator (Premium). `Get Album` yields `external_ids.upc`; for a track link, `Get Track` yields the parent album id, which goes back through step 2 and then this step. The UPC drives a MusicBrainz barcode search, in one query for all its forms: as given, as 12 digits (UPC-A, without a leading 0) and as 14 digits (GTIN-14, with leading zeros). Only exact barcode matches count. Spotify writes some UPCs as GTIN-14s, and Qobuz's ids match only as UPC-A ([TON-14](spikes/2026-10-18-g1-musicbrainz.md), [TON-15](spikes/2026-10-19-g1-spotify-bridge.md)). | One album → confident; several albums → `needs_input`; none → next step |
 | 4. Hints | Apple, Qobuz, Tidal; app captures only for Qobuz and Tidal (below) | Hints for an automatic MusicBrainz release search. **Apple:** the public iTunes Lookup API (no key) supplies title, artist, release date, and track count. **Qobuz:** the album page's schema.org `MusicAlbum` name, the `Product` block's brand as the artist, and the date. **Tidal:** the album page's `MusicAlbum` name, artists and date. Qobuz and Tidal pages are read transiently, under the store-page rules below | Accepted only if exactly one album passes this rule (decided 21 October 2026; [TON-16](spikes/2026-10-19-g1-apple-hints.md), [G2 spike](spikes/2026-10-19-g2-album-matching.md)): the search is by cleaned title and first artist, then by title alone; titles agree on letters and digits after case and accent folding; the artist is one of the release's credited, artist or sort names; the year is the release's or the album's first year; the track count is ignored; only official releases of albums and EPs count, plus singles when Apple's title says " - Single". Measured: 66% of labelled Apple links, 68% of Qobuz and 80% of Tidal, none wrong. Several albums → `needs_input`; none → next step |
@@ -704,8 +705,35 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - **Hints:** one `GET https://tidal.com/album/{id}` per pasted link, read as Qobuz's hints are (above). A redirect to the same album is followed once. Nothing from the page is stored, and manual entry isn't prefilled from it.
   - **No developer registration.** Tidal's API isn't used, and registering would bind Tonaris to its developer terms' scraping ban, which would end the page hints.
   - **Track links** name no album Tonaris may look up. They are explained and go to manual entry with the link kept (FR-02.3).
+- **Qobuz track links** go to manual entry with the link kept, as Tidal's do (decided by the creator on 24 October 2026, TON-42). Nothing permitted names their album: Qobuz has no API for Tonaris, the terms review covers album pages only, and MusicBrainz links Qobuz albums, not tracks.
   - **Region.** A Tidal link carries no region, so the page answers for the server's. A 404 goes on to manual entry with the link kept: 9 of 75 pages answered 404 in Finland during the spike.
   - The same 5 s timeout and daily robots.txt check as Qobuz's.
+- **As built in TON-42** (`identify()` in `packages/providers/src/identify.ts`):
+  - **The answer.** It is linked, identified (a release group, with the step), ambiguous (candidates), unidentified (a reason, and Apple's hints as prefill), or failed. `identificationOutcome()` gives TS-27's outcome:
+    - ambiguous → `needs_input` (`match`);
+    - unidentified → `needs_input` (`details`), carrying the link, the reason and any prefill;
+    - failed → the failure: `unsupported_link`, or `provider_unavailable`.
+  - **Step 4's cleaning.** It drops trailing notes naming an edition (deluxe, remaster, edition, expanded, anniversary, bonus, version, mono, stereo, reissue, special, collector's, legacy, super, explicit, clean, standard). A note naming a re-recording stays: `{name}'s Version` or "re-recorded".
+  - **Step 4's search.**
+    - It runs `release:"…" AND artist:"…"`, and `release:"…"` alone when that finds nothing.
+    - It fetches the albums' first dates with one `rgid:` search.
+    - Searches aren't cached.
+  - **Store pages:**
+    - one request a second per host;
+    - robots.txt kept a day in `provider_cache`, and one that can't be read allows nothing;
+    - a 404 or a redirect to another album gives no hints;
+    - a 5xx, 429, 403 or timeout fails as `provider_unavailable`.
+  - **iTunes Lookup:**
+    - one call every 3 s;
+    - only the title, artist, date, track count and album id kept, for a day;
+    - the link's storefront, then `us` and `gb`.
+  - **Spotify:**
+    - client credentials, `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` in the API's settings;
+    - `SPOTIFY_BRIDGE=off`, or missing credentials, turns the bridge off;
+    - one call every 250 ms, with 429s waited out;
+    - errors name the call, never an id;
+    - the daily health check is `spotify-health`, on *Random Access Memories*.
+  - **Tests** replay recorded MusicBrainz and iTunes answers (`packages/providers/fixtures/identify/`) for the spikes' step-4 cases.
 - **No interactive catalog search.** The creator declined user-facing search. The PRD clarifies FR-06.7: automatic metadata-catalog lookups that identify a supplied link are allowed, while user-facing catalog search and streaming-link discovery are not.
 - **Rate limit.** MusicBrainz allows 1 request per second per IP, with a meaningful User-Agent ([rate limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)).
   - **One queue per process** (built in TON-41: `MusicBrainz` in `packages/providers/src/musicbrainz.ts`). Every MusicBrainz request waits its turn, and turns start at least 1 s apart, start to start. The API makes one client and shares it, so captures, enrichment and batches all queue together.
@@ -1106,6 +1134,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Trash expiry sweep | hourly | FR-01.17, FR-14.5 |
 | MusicBrainz enrichment queue | continuous, 1 req/s global, in the API process (TON-41) | TS-41 |
 | Expire provider answers (> 7 d) | daily (`prune-provider-cache`) | TS-41 |
+| Spotify bridge health check | daily (`spotify-health`), while the bridge is on (TON-42) | TS-41 |
 | Email send and retry | on demand | FR-07.5, FR-11.6 |
 | Account data deletion | on demand | FR-11.11 |
 | Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), approvals with M9 | TS-22, TS-64 |

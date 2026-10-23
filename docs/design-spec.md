@@ -635,6 +635,16 @@ Presentation choices are not in the URL; they are personal synced preferences (F
     | An album or track link whose id looks cut off | "This Spotify link looks incomplete. Copy it again from Spotify." |
     | A short link that leads nowhere | "This Spotify short link doesn't lead to an album or track." |
     | A short link Spotify didn't answer | "Couldn't reach Spotify to open this short link. Try again." |
+
+  - **Reasons for links that go to manual entry** (TS-41), *as built in TON-42*. The form opens with the link kept, and for Apple with iTunes Lookup's title, artist and year:
+
+    | Case | Reason |
+    | --- | --- |
+    | No step identified the album | "Tonaris couldn't find this album in MusicBrainz. Enter its details; the link is kept." |
+    | A Qobuz or Tidal track link | "A Tidal track link doesn't say which album it's on. Enter the album's details; the link is kept." (with the service's name) |
+    | A Spotify track with the bridge off | "Tonaris can't ask Spotify which album this track is on right now. Enter the album's details; the link is kept." |
+    | The service no longer has it | "Spotify doesn't have this anymore. Check the link, or enter the album's details." (with the service's name) |
+    | A source that can't be reached (`provider_unavailable`) | "Couldn't reach MusicBrainz. Try again, or enter the details manually." (with the source's name) |
 - **Outcome toasts**, replacing the row where relevant:
 
   | Outcome | Toast |

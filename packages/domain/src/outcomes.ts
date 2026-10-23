@@ -126,8 +126,11 @@ export const skipReasons = [
   "pending",
 ] as const;
 
-/** The choices a command asks for instead of guessing (TS-26). */
-export const inputNeeds = ["destination", "name", "match"] as const;
+/**
+ * The choices a command asks for instead of guessing (TS-26). `details` asks for an album's title, artist and year,
+ * when a link can't be identified (FR-02.3, FR-10.5).
+ */
+export const inputNeeds = ["destination", "name", "match", "details"] as const;
 
 /** What the server reports for one mutation or batch item. */
 export const outcomeSchema = z.discriminatedUnion("status", [
