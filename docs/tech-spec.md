@@ -264,7 +264,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `album_field_multi` | `album_id`, `field_id`, `option_id`. PK over all three | Multiple-choice selections. The parent `album_field_values` row marks the field as applied. | FR-03.10, FR-03.17 |
 | `view_prefs` | `person_id`, `view_key` (`root`\|`unsorted`\|container id), `sort_mode` (`year`\|`name`\|`created`\|`manual`), `sort_dir`, `grouped`, `layout` (`rows`\|`grid`, DS-40). PK `(person_id, view_key)` | Remembered choices; null follows the account default. CHECK: `sort_mode` and `sort_dir` are set and cleared together, as one choice. A row with every choice cleared is deleted (TON-35). | FR-05.2–FR-05.4, FR-11.7 |
 | `account_settings` | `account_id` PK, `list_sort_mode`, `list_sort_dir`, `folder_sort_mode`, `folder_sort_dir`, `grouped`, `layout` | Account defaults, complete once saved, each with a CHECK. No row means DS-44's first-time defaults (`appViewDefaults`, TON-35). | FR-11.7, FR-11.8 |
-| `positions` | `person_id`, `view_key`, `item_id`, `key text` (fractional index). PK `(person_id, view_key, item_id)` | Personal manual order, for owners and signed-in viewers alike (TS-16) | FR-05.2, FR-07.17 |
+| `positions` | `person_id`, `view_key`, `item_id`, `key text` (fractional index). PK `(person_id, view_key, item_id)` | Personal manual order, for owners and signed-in viewers alike (TS-16). Keys compare bytewise (`COLLATE "C"`). Written by `order.set`, and by DS-51's placement in the commands (TON-36). | FR-05.2, FR-07.17 |
 | `trash_units` | `id`, `owner_id`, `kind`, `root_id`, `deleted_at`, `expires_at`, `tombstones jsonb` | `tombstones` records purged albums as `{id, title, artist}` for skip reporting | FR-01.13–FR-01.17 |
 | `share_links` | `id`, `container_id`, `token_hash bytea`, `created_at`, `revoked_at` | At most one active link per container (partial unique index) | FR-07.16 |
 | `share_grants` | `id`, `container_id`, `grantee_id`, `status` (`pending`\|`accepted`\|`declined`\|`withdrawn`\|`revoked`), `email_status` | Partial unique index on `(container_id, grantee_id)` for pending and accepted grants | FR-07.4–FR-07.7 |
@@ -323,6 +323,17 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 - An item with no key sorts after keyed items by `added_at`. Where new items land follows DS-51: the top of Unsorted, the end of a list.
 - Grouped views reuse the same keys and filter by group (FR-05.8).
 - Guests keep keys in memory only (FR-11.9).
+
+*As built in TON-36:*
+- **`order.set`** writes one move: every key it needs, as one dependent change. Its `base` holds each item's key before, so the same item moved from two sessions is a conflict, and different items both apply (FR-09.4). Every item must be in the view.
+- **The first move past unarranged items** keys them first, in their fallback order. That is one mutation writing up to the view's size; afterwards a move writes one key.
+- **Placement is kept by the commands,** for the owner (DS-51):
+  - an album leaving its last list gets a key at the top of Unsorted;
+  - a new album does too, once Unsorted has keys. Unarranged, Unsorted's fallback, newest first, already puts it at the top;
+  - joining a list deletes an album's Unsorted key, and leaving one deletes its key there;
+  - a moved folder or list loses its key in the old parent;
+  - new items in lists, folders and the root stay unkeyed: last.
+- **Fallback orders:** a list's albums by `added_at`, Unsorted's newest first, folders and lists in creation order.
 
 **TS-17 Migrations (Decided).**
 

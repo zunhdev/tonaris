@@ -19,7 +19,8 @@ import { Artwork } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
 import type { ReleaseGroup, Section } from "./order";
-import { useGridFocus, useWidth } from "./use-grid";
+import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
+import type { ViewMoves } from "./use-rearrange";
 
 const minCard = 160;
 const gap = 16;
@@ -53,11 +54,15 @@ export function AlbumCards({
   label,
   collapsed,
   onToggle,
+  moves,
 }: {
   sections: readonly Section<Album>[];
   label: string;
+  viewKey: string;
   collapsed: ReadonlySet<ReleaseGroup>;
   onToggle: (group: ReleaseGroup) => void;
+  /** Cards are rearranged by keyboard; the drag handle is a row's (DS-21). */
+  moves: ViewMoves;
 }) {
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
@@ -95,8 +100,27 @@ export function AlbumCards({
   useEffect(() => virtualizer.measure(), [virtualizer, rowSize, items]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
   const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? rowSize) / rowSize));
+  const rearrange = useMemo<GridRearrange>(
+    () => ({
+      itemAt: ({ row, col }) => {
+        const item = items[row];
+        return item?.type === "cards" ? item.albums[col]?.id : undefined;
+      },
+      cellOf: (id) => {
+        for (const [row, item] of items.entries()) {
+          if (item.type !== "cards") continue;
+          const col = item.albums.findIndex((album) => album.id === id);
+          if (col !== -1) return { row, col };
+        }
+        return undefined;
+      },
+      move: moves.move,
+    }),
+    [items, moves],
+  );
   const { onKeyDown, cellProps } = useGridFocus({
     grid,
+    rearrange,
     shape: {
       rows: items.length,
       columns: (row) => {

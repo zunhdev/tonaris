@@ -3,7 +3,7 @@
 // Choices belong to the person, never to the content, and follow the same conflict policy as content (FR-09.4):
 // each write names the values it replaces.
 
-import type { CommandContext, CommandResult } from "./commands";
+import type { CollectionStore, CommandContext, CommandResult } from "./commands";
 import { failure, type FieldConflict, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { actingUserId } from "./principals";
@@ -93,7 +93,7 @@ function staleFields<Fields extends object>(
 }
 
 /** Why `base` doesn't name the prior value of exactly the fields in `changed`, if it doesn't. */
-function baseProblem<Field extends string>(
+export function baseProblem<Field extends string>(
   fields: readonly Field[],
   changed: readonly Field[],
   base: Partial<Record<Field, unknown>>,
@@ -111,17 +111,42 @@ function baseProblem<Field extends string>(
   );
 }
 
-/** The person a preference write is for, or why it can't be made. Guests and read-only agents change nothing. */
-function personOf({ principal }: CommandContext): string | Failure {
+/**
+ * The person a presentation write is for, or why it can't be made. Guests and read-only agents change nothing.
+ * `refusal` says what they can't do.
+ */
+export function personOf(
+  { principal }: CommandContext,
+  refusal = "You can't change view options here.",
+): string | Failure {
   const personId = actingUserId(principal);
   const decision = authorizeWrite(principal, { ownerId: personId ?? "", scope: "collection" });
   if (!personId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "You can't change view options here.",
-    );
+    return failure(decision.allowed ? "permission_denied" : decision.code, refusal);
   }
   return personId;
+}
+
+/** What a view holds: albums for a list and Unsorted, folders and lists for a folder and the root. */
+export type ViewItems = "albums" | "containers";
+
+/**
+ * What the view `viewKey` holds, if it is the person's: the root, Unsorted, or a folder or list of theirs (sharing
+ * adds the containers shared with them, M7). One in Trash is still theirs, so a choice queued meanwhile isn't lost.
+ * A missing folder and someone else's get the same answer.
+ */
+export async function viewKindOf(
+  viewKey: string,
+  personId: string,
+  store: CollectionStore,
+): Promise<ViewItems | Failure> {
+  if (viewKey === "root") return "containers";
+  if (viewKey === "unsorted") return "albums";
+  const container = await store.findContainer(viewKey);
+  if (!container || container.ownerId !== personId) {
+    return failure("not_found", "This folder or list isn't available.");
+  }
+  return container.kind === "folder" ? "containers" : "albums";
 }
 
 const nothingChanged = () =>
@@ -131,9 +156,8 @@ const nothingChanged = () =>
 
 /**
  * Remembers or clears a person's choices for one view (FR-05.2, FR-11.7). A field left out stays as it is, and null
- * clears it back to the account default. The sort is one choice: its mode and direction change together. A folder's
- * or list's view must be of the person's own (sharing adds the containers shared with them, M7); one in Trash is
- * still theirs, so a choice queued meanwhile isn't lost. Clearing every field forgets the view.
+ * clears it back to the account default. The sort is one choice: its mode and direction change together. The view
+ * must be the person's (`viewKindOf`). Clearing every field forgets the view.
  */
 export async function setView(
   { viewKey, ...values }: Partial<ViewPrefsFields> & { viewKey: string },
@@ -144,14 +168,9 @@ export async function setView(
   if (typeof personId !== "string") return personId;
   const { store } = context;
 
-  let folders = viewKey === "root";
-  if (viewKey !== "root" && viewKey !== "unsorted") {
-    const container = await store.findContainer(viewKey);
-    if (!container || container.ownerId !== personId) {
-      return failure("not_found", "This folder or list isn't available.");
-    }
-    folders = container.kind === "folder";
-  }
+  const kind = await viewKindOf(viewKey, personId, store);
+  if (typeof kind !== "string") return kind;
+  const folders = kind === "containers";
 
   const changed = viewPrefsFields.filter((field) => values[field] !== undefined);
   if (changed.length === 0) return nothingChanged();

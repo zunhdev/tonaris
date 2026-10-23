@@ -1,7 +1,7 @@
 // The workspace's keyboard shortcuts (DS-78), as a pure matcher from key presses to actions, so their rules are
 // tested without a DOM. G starts a sequence: G then H, U, T or S within 1.5 s goes to the root, Unsorted, Trash or
 // Settings → Preferences. Single keys: `[` hides or shows the sidebar, `?` opens the reference, N and ⇧N make a new
-// list or folder, and V opens the view's View options.
+// list or folder, V opens the view's View options, and M moves the focused folder or list.
 // Nothing matches while a text field has focus, nor with ⌘, Ctrl or Alt held. Shortcuts come before the tree's
 // type-ahead (decided 22 October 2026): a matched key is claimed, and the tree types ahead only with the others.
 
@@ -14,7 +14,8 @@ export type ShortcutAction =
   | "shortcuts"
   | "new-list"
   | "new-folder"
-  | "view-options";
+  | "view-options"
+  | "move";
 
 /** What the matcher reads of a `KeyboardEvent`. */
 export type KeyPress = {
@@ -49,6 +50,7 @@ const singles: Record<string, ShortcutAction> = {
   n: "new-list",
   N: "new-folder",
   v: "view-options",
+  m: "move",
 };
 
 /**
@@ -97,13 +99,23 @@ export const shortcutReference = [
       { keys: ["["], action: "Hide or show the sidebar" },
     ],
   },
-  { title: "Views", keys: [{ keys: ["V"], action: "View options" }] },
+  {
+    title: "Views",
+    keys: [
+      { keys: ["V"], action: "View options" },
+      { keys: ["⌥", "↑"], action: "Move up, in manual order" },
+      { keys: ["⌥", "↓"], action: "Move down, in manual order" },
+      { keys: ["⌥", "⇧", "↑"], action: "Move to the top" },
+      { keys: ["⌥", "⇧", "↓"], action: "Move to the bottom" },
+    ],
+  },
   {
     title: "Folders and lists",
     keys: [
       { keys: ["N"], action: "New list" },
       { keys: ["⇧", "N"], action: "New folder" },
       { keys: ["F2"], action: "Rename" },
+      { keys: ["M"], action: "Move to…" },
     ],
   },
   { title: "Help", keys: [{ keys: ["?"], action: "Keyboard shortcuts" }] },

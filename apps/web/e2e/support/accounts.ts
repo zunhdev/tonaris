@@ -52,6 +52,12 @@ export const accounts = {
   syncViews: at("sync-views"),
   sortFolders: at("sort-folders"),
   seedLayout: at("seed-layout"),
+  // Manual order and moves (manual-order.e2e.ts), one per test.
+  arrangeKeys: at("arrange-keys"),
+  arrangeDrag: at("arrange-drag"),
+  arrangePlaces: at("arrange-places"),
+  arrangeMoves: at("arrange-moves"),
+  arrangeSync: at("arrange-sync"),
 } as const;
 
 /** An address with no account. */

@@ -1,9 +1,12 @@
 // The desktop shell (DS-30): sidebar, main view and, once an item is opened, the inspector. Until then the
 // inspector takes no space. Each pane is a named landmark (Q-02). The sidebar is 240 px wide by default, resizable
 // from 200 to 360 px and hideable with `[`, both kept on this device. Offline, a banner tops the main view (DS-81).
-// The workspace's shortcuts and their reference live here (DS-78).
+// The workspace's shortcuts and their reference live here (DS-78), and so do dragging, which spans the sidebar and
+// the view, and "Move to…" (DS-49).
 
 import { useCollectionUi } from "@/features/collection/collection-ui";
+import { DragProvider } from "@/features/collection/drag";
+import { MoveDialog } from "@/features/collection/move";
 import { OfflineBanner } from "@/features/sync/offline-banner";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
@@ -46,25 +49,30 @@ export function Shell({ account, children }: { account: Account; children: React
 
   return (
     <ShellContext value={control}>
-      <div
-        className="grid h-dvh bg-app"
-        style={{
-          gridTemplateColumns: layout.hidden ? "minmax(0,1fr)" : `${layout.width}px minmax(0,1fr)`,
-        }}
-      >
-        {!layout.hidden && (
-          <Sidebar
-            account={account}
-            width={layout.width}
-            onResize={(width) => setLayout((current) => ({ ...current, width }))}
-          />
-        )}
-        <main aria-labelledby={pageTitleId} className="flex min-h-0 min-w-0 flex-col bg-panel">
-          <OfflineBanner />
-          {children}
-        </main>
-      </div>
+      <DragProvider>
+        <div
+          className="grid h-dvh bg-app"
+          style={{
+            gridTemplateColumns: layout.hidden
+              ? "minmax(0,1fr)"
+              : `${layout.width}px minmax(0,1fr)`,
+          }}
+        >
+          {!layout.hidden && (
+            <Sidebar
+              account={account}
+              width={layout.width}
+              onResize={(width) => setLayout((current) => ({ ...current, width }))}
+            />
+          )}
+          <main aria-labelledby={pageTitleId} className="flex min-h-0 min-w-0 flex-col bg-panel">
+            <OfflineBanner />
+            {children}
+          </main>
+        </div>
+      </DragProvider>
       <ShortcutReference open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <MoveDialog />
     </ShellContext>
   );
 }

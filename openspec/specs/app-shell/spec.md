@@ -120,6 +120,7 @@ The workspace SHALL offer DS-78's navigation shortcuts:
 - G then H, U, T or S for the root, Unsorted, Trash or Settings → Preferences;
 - `[` to hide or show the sidebar;
 - `V` for the current view's View options;
+- `M` to move the focused folder or list;
 - `?` for a reference of the shortcuts that work.
 
 Shortcuts SHALL be off while a text field has focus. The reference SHALL also open from the account menu.

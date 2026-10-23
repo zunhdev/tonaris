@@ -1,10 +1,12 @@
 // The sidebar (DS-30, DS-31): the wordmark and a button to hide it, the account menu, Search and Add album (their
 // issues come later), the collection's tree with a "+" menu for new lists and folders, and the SyncIndicator in
-// the footer. Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px.
+// the footer. Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a
+// dragged folder or list, to move it to the root (DS-49).
 
 import { AccountMenu } from "@/features/account/account-menu";
 import { CollectionTree } from "@/features/collection/collection-tree";
 import { useStartEditor } from "@/features/collection/collection-ui";
+import { useDestination } from "@/features/collection/drag";
 import { SyncIndicator } from "@/features/sync/sync-indicator";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
@@ -23,6 +25,7 @@ import {
 import { ScrollArea } from "@tonaris/ui/components/scroll-area";
 import { Separator } from "@tonaris/ui/components/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
+import { cn } from "@tonaris/ui/lib/utils";
 
 import { clampWidth, sidebarWidths } from "./device";
 import { useShell } from "./shell-context";
@@ -68,12 +71,7 @@ export function Sidebar({
       </div>
       <Separator className="my-2" />
       <div className="flex shrink-0 items-center gap-1 pr-2 pl-2">
-        <Link
-          to="/c"
-          className="flex h-7 min-w-0 flex-1 items-center rounded-md px-2 text-small font-medium text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-[current=page]:text-fg-primary"
-        >
-          Collection
-        </Link>
+        <CollectionLink />
         <NewMenu />
       </div>
       <ScrollArea className="min-h-0 flex-1">
@@ -189,5 +187,22 @@ function ResizeHandle({ width, onResize }: { width: number; onResize: (width: nu
       }}
       className="absolute top-0 -right-1 bottom-0 w-2 cursor-col-resize outline-none hover:bg-accent-soft focus-visible:bg-accent-soft"
     />
+  );
+}
+
+/** Collection, the root: a link, and the place a dragged folder or list moves to the top level. */
+function CollectionLink() {
+  const { setNodeRef, over } = useDestination(null);
+  return (
+    <Link
+      ref={setNodeRef}
+      to="/c"
+      className={cn(
+        "flex h-7 min-w-0 flex-1 items-center rounded-md px-2 text-small font-medium text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-[current=page]:text-fg-primary",
+        over && "bg-accent-soft text-fg-primary",
+      )}
+    >
+      Collection
+    </Link>
   );
 }

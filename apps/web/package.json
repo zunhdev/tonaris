@@ -14,6 +14,7 @@
     "test:perf": "playwright test --config playwright.perf.config.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "6.3.1",
     "@elysia/eden": "2.0.0-rc.0",
     "@tanstack/db": "0.15.1",
     "@tanstack/react-db": "0.5.11",
@@ -22,6 +23,7 @@
     "@tanstack/react-virtual": "3.14.21",
     "@tonaris/domain": "workspace:*",
     "@tonaris/ui": "workspace:*",
+    "fractional-indexing": "4.0.0",
     "lucide-react": "1.59.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"

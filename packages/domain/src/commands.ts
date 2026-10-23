@@ -13,9 +13,10 @@ import {
 import { addMembership, removeMembership, type Membership } from "./memberships";
 import { failure, type FieldConflict, type Outcome } from "./outcomes";
 import { authorizeWrite } from "./policies";
+import { placeAtTop, setOrder, type Position } from "./positions";
 import { actingUserId, type Principal } from "./principals";
 import type { ChangeOp, Mutation } from "./sync";
-import { setDefaults, setView, type ViewDefaults, type ViewPrefs } from "./views";
+import { setDefaults, setView, type ViewDefaults, type ViewItems, type ViewPrefs } from "./views";
 
 /** An album as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
 export type StoredAlbum = Album & { ownerId: string; trashed: boolean };
@@ -58,6 +59,26 @@ export type CollectionStore = {
   findDefaults(personId: string): Promise<ViewDefaults | undefined>;
   /** Inserts or replaces the person's account defaults. */
   saveDefaults(personId: string, defaults: ViewDefaults): Promise<void>;
+
+  /** The person's keys for these items in the view, by item ID (TS-16). */
+  findPositions(
+    personId: string,
+    viewKey: string,
+    itemIds: readonly string[],
+  ): Promise<Map<string, string>>;
+  /** Inserts or replaces the person's key for `position.itemId` in `position.viewKey`. */
+  savePosition(personId: string, position: Position): Promise<void>;
+  /** Deletes the person's key for the item in the view; answers whether there was one. */
+  deletePosition(personId: string, viewKey: string, itemId: string): Promise<boolean>;
+  /** The smallest of the person's keys in the view, compared bytewise, if they have any. */
+  firstKey(personId: string, viewKey: string): Promise<string | undefined>;
+  /**
+   * The IDs of what the view holds now: a list's active albums, Unsorted's (the person's active albums in no active
+   * list), or a folder's or the root's active folders and lists.
+   */
+  viewItems(personId: string, viewKey: string, kind: ViewItems): Promise<Set<string>>;
+  /** Whether the album is in any active list. If not, it is in Unsorted (TS-13). */
+  inActiveList(albumId: string): Promise<boolean>;
 };
 
 /** A change for the account's log; the database layer gives it its `seq`. */
@@ -66,7 +87,8 @@ export type ChangeInput =
   | { entity: "container"; id: string; op: ChangeOp; data: Container | null }
   | { entity: "membership"; id: string; op: ChangeOp; data: Membership | null }
   | { entity: "view"; id: string; op: ChangeOp; data: ViewPrefs | null }
-  | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults };
+  | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults }
+  | { entity: "position"; id: string; op: ChangeOp; data: Position | null };
 
 /** `result` is what the mutation reports in its `confirmed` outcome, if anything, such as `MembershipAddResult`. */
 export type CommandResult =
@@ -89,6 +111,7 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "membership.add") return addMembership(mutation.args, context);
   if (mutation.name === "membership.remove") return removeMembership(mutation.args, context);
   if (mutation.name === "view.set") return setView(mutation.args, mutation.base, context);
+  if (mutation.name === "order.set") return setOrder(mutation.args, mutation.base, context);
   return setDefaults(mutation.args, mutation.base, context);
 }
 
@@ -134,7 +157,13 @@ async function createAlbum(
   }
 
   await store.insertAlbum({ ...args, ownerId });
-  return applied({ entity: "album", id: args.id, op: "insert", data: args });
+  // A new album is in no list yet, so it enters Unsorted, at the top (DS-51). Until Unsorted is arranged, its
+  // fallback order, newest first, already puts it there.
+  const arranged = (await store.firstKey(ownerId, "unsorted")) !== undefined;
+  return applied(
+    { entity: "album", id: args.id, op: "insert", data: args },
+    ...(arranged ? [await placeAtTop(store, ownerId, "unsorted", args.id)] : []),
+  );
 }
 
 /**

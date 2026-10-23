@@ -153,6 +153,28 @@ describe("view options (DS-49, DS-94)", () => {
   });
 });
 
+describe("manual order (DS-49)", () => {
+  test("a move is named by its view, and a place by its item", () => {
+    expect(
+      write({
+        name: "order.set",
+        args: { viewKey: later.id, keys: { [blue.id]: "a0" } },
+        base: { [blue.id]: null },
+      }),
+    ).toEqual({
+      summary: "Arrange 'Later'",
+      what: "the order of 'Later'",
+      subject: "The order of 'Later'",
+    });
+    expect(fieldLabel(blue.id, names)).toBe("Place of 'Kind of Blue'");
+    expect(fieldLabel(jazz.id, names)).toBe("Place of 'Jazz'");
+    expect(fieldLabel(uuidv7())).toBe("Place of an item");
+    expect(fieldValue(blue.id, "a0", names)).toBe("Placed elsewhere");
+    expect(fieldValue(blue.id, "Zz", names, "attempted")).toBe("Your place");
+    expect(fieldValue(blue.id, null, names)).toBe("Not arranged");
+  });
+});
+
 describe("fields and reasons (DS-80, DS-107)", () => {
   test("values read as people would write them", () => {
     expect(fieldLabel("artistCredit")).toBe("Artist");

@@ -1,7 +1,8 @@
 // The sidebar tree's shared state (DS-27, DS-78): the inline editor, the expanded folders (kept per device) and the
 // tree item that has focus. The tree, the shortcuts, the views and the save-state layer's Edit all start editors
 // through it, so there is one editor at a time; the shell shows a hidden sidebar when one starts. The view shown
-// registers how to open its View options, for `V` (DS-49).
+// registers how to open its View options, for `V` (DS-49). `M` moves the focused folder or list: the tree's, else a
+// view row's, else the view's own (DS-49).
 
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useParams } from "@tanstack/react-router";
@@ -36,6 +37,13 @@ type CollectionUi = {
   openViewOptions: () => void;
   /** Registers how the current view opens its View options; undefined when it goes. */
   setViewOptionsOpener: (open: (() => void) | undefined) => void;
+  /** The folder or list whose row in a view has focus, while one has. */
+  focusedRow: () => string | undefined;
+  setFocusedRow: (id: string | undefined) => void;
+  /** The folder or list "Move to…" is open for, if it is open (DS-49). */
+  moving: string | undefined;
+  startMove: (id: string) => void;
+  endMove: () => void;
 };
 
 const CollectionUiContext = createContext<CollectionUi | undefined>(undefined);
@@ -51,6 +59,8 @@ export function CollectionUiProvider({
   const [expanded, setExpandedState] = useState(() => expandedFolders.read(accountId));
   const focused = useRef<string | undefined>(undefined);
   const viewOptions = useRef<(() => void) | undefined>(undefined);
+  const focusedRow = useRef<string | undefined>(undefined);
+  const [moving, setMoving] = useState<string | undefined>(undefined);
 
   const update = useCallback(
     (change: (current: Set<string>) => void) => {
@@ -87,8 +97,15 @@ export function CollectionUiProvider({
       setViewOptionsOpener: (open) => {
         viewOptions.current = open;
       },
+      focusedRow: () => focusedRow.current,
+      setFocusedRow: (id) => {
+        focusedRow.current = id;
+      },
+      moving,
+      startMove: setMoving,
+      endMove: () => setMoving(undefined),
     }),
-    [accountId, editing, expanded, update],
+    [accountId, editing, expanded, update, moving],
   );
 
   return <CollectionUiContext value={value}>{children}</CollectionUiContext>;

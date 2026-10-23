@@ -78,13 +78,13 @@ export function ConflictView({
                 {outcome.conflicts.map((conflict) => (
                   <tr key={conflict.field} className="border-t border-subtle align-top">
                     <th scope="row" className="py-1.5 pr-2 font-medium text-fg-secondary">
-                      {fieldLabel(conflict.field)}
+                      {fieldLabel(conflict.field, names)}
                     </th>
                     <td className="py-1.5 pr-2 break-words">
                       {fieldValue(conflict.field, conflict.current, names)}
                     </td>
                     <td className="py-1.5 break-words">
-                      {fieldValue(conflict.field, conflict.attempted, names)}
+                      {fieldValue(conflict.field, conflict.attempted, names, "attempted")}
                     </td>
                   </tr>
                 ))}

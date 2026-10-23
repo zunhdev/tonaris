@@ -2,7 +2,11 @@
 // shortcut is claimed before the sidebar tree could type ahead with it (decided 22 October 2026). Keys typed in a
 // text field, or inside a dialog, popover or menu, are left alone.
 
-import { useCollectionUi, useStartEditor } from "@/features/collection/collection-ui";
+import {
+  useCollectionUi,
+  useStartEditor,
+  useViewContainerId,
+} from "@/features/collection/collection-ui";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
@@ -36,7 +40,9 @@ export function useShortcuts({
 }): void {
   const navigate = useNavigate();
   const startEditor = useStartEditor();
-  const { editing, openViewOptions } = useCollectionUi();
+  const ui = useCollectionUi();
+  const { editing, openViewOptions } = ui;
+  const viewId = useViewContainerId();
   const offline = useConnection() === "offline";
   // The latest of each, so the listener is installed once.
   const latest = useRef({
@@ -47,6 +53,8 @@ export function useShortcuts({
     toggleSidebar,
     openShortcuts,
     openViewOptions,
+    ui,
+    viewId,
   });
   useEffect(() => {
     latest.current = {
@@ -57,6 +65,8 @@ export function useShortcuts({
       toggleSidebar,
       openShortcuts,
       openViewOptions,
+      ui,
+      viewId,
     };
   });
 
@@ -70,6 +80,12 @@ export function useShortcuts({
       else if (action === "shortcuts") now.openShortcuts();
       // Choosing how a view looks isn't an edit, so it works offline (X-04).
       else if (action === "view-options") now.openViewOptions();
+      // Moving is an edit: it waits while offline (DS-81), as N does. It moves the focused tree item, else the
+      // focused folder or list row of a view, else the folder or list the view shows.
+      else if (action === "move") {
+        const target = now.ui.focused() ?? now.ui.focusedRow() ?? now.viewId;
+        if (!now.offline && !now.editing.current && target !== undefined) now.ui.startMove(target);
+      }
       // Edit controls wait while offline (DS-81), and one editor is open at a time.
       else if (!now.offline && !now.editing.current) {
         now.startEditor({ mode: "new", kind: action === "new-folder" ? "folder" : "list" });

@@ -97,6 +97,7 @@ export {
 } from "./limits";
 export { membershipKey, membershipSchema, type Membership } from "./memberships";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
+export { isOrderKey, maxOrderItems, positionKey, positionSchema, type Position } from "./positions";
 export { caseFold, nameKey, searchKey, searchMatches } from "./normalize";
 export {
   errorCodes,
@@ -168,6 +169,7 @@ export {
   viewPrefsFields,
   viewPrefsFieldsSchema,
   viewPrefsSchema,
+  type ViewItems,
   type FolderSortMode,
   type ListSortMode,
   type SortDirection,

@@ -345,7 +345,7 @@ const envelope = (viewKey: string) => ({
 
 describe("the protocol", () => {
   test("the bootstrap carries the remembered views and the complete defaults", () => {
-    const snapshot = { seq: 0, albums: [], containers: [], memberships: [] };
+    const snapshot = { seq: 0, albums: [], containers: [], memberships: [], positions: [] };
     expect(bootstrapSchema.safeParse(snapshot).success).toBe(false);
     const views: ViewPrefs[] = [
       { viewKey: "root", sortMode: "name", sortDir: "asc", grouped: null, layout: null },
