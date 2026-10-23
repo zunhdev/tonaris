@@ -3,6 +3,18 @@
 
 export { isPublicAddress } from "./addresses";
 export {
+  MusicBrainz,
+  musicBrainzIntervalMs,
+  musicBrainzMaxRetries,
+  providerCacheMs,
+  type BarcodeRelease,
+  type CachePolicy,
+  type MusicBrainzEntity,
+  type MusicBrainzOptions,
+  type UrlTarget,
+} from "./musicbrainz";
+export { memoryCache, ProviderUnavailableError, type ProviderCache } from "./provider-cache";
+export {
   maxLinkLength,
   maxShortLinkHops,
   parseLink,

@@ -2,7 +2,13 @@
 // advisory lock named after it, so a second instance skips a run rather than overlapping it. Queued jobs with
 // retries (the `jobs` table) arrive with the work that needs them, such as email retries and MusicBrainz lookups.
 
-import { pruneSyncHistory, runExclusively, type Database, type Transaction } from "@tonaris/db";
+import {
+  pruneProviderCache,
+  pruneSyncHistory,
+  runExclusively,
+  type Database,
+  type Transaction,
+} from "@tonaris/db";
 
 export type Schedule = {
   /** Names the advisory lock too, so it must be unique. */
@@ -19,6 +25,19 @@ export const pruneSyncHistorySchedule: Schedule = {
   everyMs: day,
   run: (tx, now) => pruneSyncHistory(tx, now),
 };
+
+/** Provider answers past their 7 days (TS-41), so the cache doesn't grow without end. */
+export const pruneProviderCacheSchedule: Schedule = {
+  name: "prune-provider-cache",
+  everyMs: day,
+  run: (tx, now) => pruneProviderCache(tx, now),
+};
+
+/** Every schedule the API runs. */
+export const apiSchedules: readonly Schedule[] = [
+  pruneSyncHistorySchedule,
+  pruneProviderCacheSchedule,
+];
 
 /** Runs `schedule` once, unless another instance is running it. Answers whether it ran. */
 export function runSchedule(

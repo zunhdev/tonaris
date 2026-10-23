@@ -40,6 +40,7 @@ export {
 } from "./mcp";
 export { runExclusively } from "./locks";
 export { migrateDatabase, migrationsFolder } from "./migrations";
+export { providerCacheStore, pruneProviderCache } from "./provider-cache";
 export * from "./schema";
 export {
   bootstrapSnapshot,
