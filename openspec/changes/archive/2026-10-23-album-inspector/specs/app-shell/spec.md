@@ -24,17 +24,17 @@ A folder path naming a list SHALL lead to the list's path, and the other way rou
 - **THEN** the page shows the album, as the inspector does
 
 ### Requirement: Keyboard shortcuts move around the workspace
-The workspace SHALL offer DS-78's navigation shortcuts:
-- G then H, U, T or S for the root, Unsorted, Trash or Settings → Preferences;
-- `[` to hide or show the sidebar;
-- `V` for the current view's View options;
-- `M` to move the focused folder or list;
-- `E` to switch between Viewing and Editing mode;
-- `L` to add the open or focused album to a list;
-- `Esc` to close the album inspector;
-- `?` for a reference of the shortcuts that work.
+The workspace SHALL offer DS-78's shortcuts:
+- G then H, U, T or S: the root, Unsorted, Trash, Settings → Preferences;
+- `[`: hide or show the sidebar;
+- `V`: View options;
+- `M`: move the focused folder or list;
+- `E`: Viewing or Editing mode;
+- `L`: add the open or focused album to a list;
+- `Esc`: close the album inspector;
+- `?`: the reference of working shortcuts, also in the account menu.
 
-Shortcuts SHALL be off while a text field has focus. The reference SHALL also open from the account menu.
+Shortcuts SHALL be off while a text field has focus.
 
 #### Scenario: Going to Unsorted
 - **WHEN** an owner presses G then U

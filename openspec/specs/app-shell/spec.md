@@ -92,9 +92,10 @@ The tree SHALL follow the ARIA tree pattern with a single tab stop (DS-27, Q-02)
 Collection views SHALL use DS-32's paths (TS-03):
 - `/c` for the root;
 - `/f/{folderId}` and `/l/{listId}` for folders and lists;
-- `/unsorted`, `/trash` and `/shared`.
+- `/unsorted`, `/trash` and `/shared`;
+- `?album={albumId}` on a view for its open inspector, and `/a/{albumId}` for an album on its own page.
 
-A folder path naming a list SHALL lead to the list's path, and the other way round. A folder or list that doesn't exist or isn't the person's SHALL show that it isn't available, with a way back to the collection.
+A folder path naming a list SHALL lead to the list's path, and the other way round. A folder, list or album that doesn't exist or isn't the person's SHALL show that it isn't available, with a way back to the collection.
 
 #### Scenario: A list opened by a folder path
 - **WHEN** an owner opens `/f/{id}` where `{id}` is one of their lists
@@ -103,6 +104,10 @@ A folder path naming a list SHALL lead to the list's path, and the other way rou
 #### Scenario: A missing folder
 - **WHEN** an owner opens `/f/{id}` for an ID with no folder of theirs
 - **THEN** the view says the folder or list isn't available and links to the collection
+
+#### Scenario: An album's own page
+- **WHEN** an owner opens `/a/{id}` for one of their albums
+- **THEN** the page shows the album, as the inspector does
 
 ### Requirement: Every view shows where it is
 Each collection view SHALL show its path from Collection as breadcrumbs, each ancestor a link, and its own name as the page heading and in the page title (FR-01.3, DS-29, DS-30). The root SHALL show "Collection" alone. Below its header, each view SHALL show its contents, or its empty state when it holds nothing (DS-105).
@@ -116,15 +121,17 @@ Each collection view SHALL show its path from Collection as breadcrumbs, each an
 - **THEN** the view says "Start your collection — paste an album link or create a list." and offers New list
 
 ### Requirement: Keyboard shortcuts move around the workspace
-The workspace SHALL offer DS-78's navigation shortcuts:
-- G then H, U, T or S for the root, Unsorted, Trash or Settings → Preferences;
-- `[` to hide or show the sidebar;
-- `V` for the current view's View options;
-- `M` to move the focused folder or list;
-- `E` to switch between Viewing and Editing mode;
-- `?` for a reference of the shortcuts that work.
+The workspace SHALL offer DS-78's shortcuts:
+- G then H, U, T or S: the root, Unsorted, Trash, Settings → Preferences;
+- `[`: hide or show the sidebar;
+- `V`: View options;
+- `M`: move the focused folder or list;
+- `E`: Viewing or Editing mode;
+- `L`: add the open or focused album to a list;
+- `Esc`: close the album inspector;
+- `?`: the reference of working shortcuts, also in the account menu.
 
-Shortcuts SHALL be off while a text field has focus. The reference SHALL also open from the account menu.
+Shortcuts SHALL be off while a text field has focus.
 
 #### Scenario: Going to Unsorted
 - **WHEN** an owner presses G then U
