@@ -1,13 +1,13 @@
 // The account menu at the top of the sidebar (DS-31): the display name, or the email until there is one.
-// **Connections** leads to Settings → Connections (DS-86), the only settings page so far, and **Keyboard
-// shortcuts** opens the reference (DS-78); Admin joins **Sign out** with its issue. Signing out deletes what this browser keeps for the account:
+// **Settings** leads to Settings → Preferences, the first settings page built (DS-92), and **Keyboard shortcuts**
+// opens the reference (DS-78); Admin joins **Sign out** with its issue. Signing out deletes what this browser keeps for the account:
 // unsent changes and conflicts waiting for review. With changes still unsent, it asks first (decided 22 October
 // 2026).
 
 import { useShell } from "@/features/shell/shell-context";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
-import { ChevronsUpDown, Keyboard, LogOut, Plug } from "lucide-react";
+import { ChevronsUpDown, Keyboard, LogOut, Settings } from "lucide-react";
 import { useRef, useState } from "react";
 
 import type { Account } from "@tonaris/domain";
@@ -76,9 +76,9 @@ export function AccountMenu({ account }: { account: Account }) {
           <ChevronsUpDown strokeWidth={1.5} aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={() => void router.navigate({ to: "/settings/connections" })}>
-            <Plug strokeWidth={1.5} aria-hidden />
-            Connections
+          <DropdownMenuItem onClick={() => void router.navigate({ to: "/settings/preferences" })}>
+            <Settings strokeWidth={1.5} aria-hidden />
+            Settings
           </DropdownMenuItem>
           <DropdownMenuItem onClick={openShortcuts}>
             <Keyboard strokeWidth={1.5} aria-hidden />

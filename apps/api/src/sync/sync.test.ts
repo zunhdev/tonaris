@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import { changeLog, pruneSyncHistory } from "@tonaris/db";
 import {
+  appViewDefaults,
   batchResultSchema,
   bootstrapSchema,
   mutationResultSchema,
@@ -20,6 +21,7 @@ import {
   type Container,
   type Mutation,
   type MutationResult,
+  type ViewPrefs,
 } from "@tonaris/domain";
 
 import { createTestApp } from "../testing";
@@ -149,6 +151,8 @@ describe("bootstrap, write and stream (TS-24, FR-09.1)", () => {
       albums: [],
       containers: [],
       memberships: [],
+      views: [],
+      defaults: appViewDefaults,
     });
     const stream = await connect(anna.cookie, { after: 0 });
     expect(stream.response.headers.get("content-type")).toBe("text/event-stream");
@@ -659,6 +663,73 @@ const after = (item: Mutation, prerequisite: Mutation): BatchItem => ({
 /** Each item's status, or its error code when it failed. */
 const statusesOf = ({ items }: BatchResult) =>
   items.map(({ outcome }) => (outcome.status === "failed" ? outcome.code : outcome.status));
+
+describe("view choices and defaults (FR-11.7, FR-11.8, FR-09.2)", () => {
+  test("a choice and a default reach the person's other session and the next bootstrap, and nobody else's", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const other = await t.signIn("anna@example.com");
+    const ben = await t.signIn("ben@example.com");
+    const doom = node("list", "Doom");
+    await post(anna.cookie, createContainer(doom));
+    const stream = await connect(other.cookie, { after: 1 });
+    const bens = await connect(ben.cookie, { after: 0 });
+
+    const sorted = await post(anna.cookie, {
+      mutationId: uuidv7(),
+      name: "view.set",
+      args: { viewKey: doom.id, sortMode: "name", sortDir: "desc" },
+      base: { sortMode: null, sortDir: null },
+    });
+    expect(sorted.outcome).toEqual({ status: "confirmed", seq: 2, result: null });
+    const defaulted = await post(anna.cookie, {
+      mutationId: uuidv7(),
+      name: "defaults.set",
+      args: { layout: "grid" },
+      base: { layout: "rows" },
+    });
+    expect(defaulted.outcome).toEqual({ status: "confirmed", seq: 3, result: null });
+
+    await stream.until(() => stream.seqs().length === 2);
+    const prefs: ViewPrefs = {
+      viewKey: doom.id,
+      sortMode: "name",
+      sortDir: "desc",
+      grouped: null,
+      layout: null,
+    };
+    expect(stream.events.map((event) => event.data)).toEqual([
+      expect.objectContaining({ entity: "view", id: doom.id, op: "insert", data: prefs }),
+      expect.objectContaining({
+        entity: "defaults",
+        op: "update",
+        data: expect.objectContaining({ layout: "grid" }),
+      }),
+    ]);
+    await stream.close();
+    await bens.close();
+    expect(bens.seqs()).toEqual([]);
+
+    const snapshot = await bootstrap(anna.cookie);
+    expect(snapshot.views).toEqual([prefs]);
+    expect(snapshot.defaults.layout).toBe("grid");
+    expect((await bootstrap(ben.cookie)).defaults.layout).toBe("rows");
+  });
+
+  test("another person's list can't take a choice", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const ben = await t.signIn("ben@example.com");
+    const doom = node("list", "Doom");
+    await post(anna.cookie, createContainer(doom));
+    const refused = await post(ben.cookie, {
+      mutationId: uuidv7(),
+      name: "view.set",
+      args: { viewKey: doom.id, layout: "grid" },
+      base: { layout: null },
+    });
+    expect(refused.outcome).toMatchObject({ status: "failed", code: "not_found" });
+    expect((await bootstrap(ben.cookie)).views).toEqual([]);
+  });
+});
 
 describe("batches (TS-25, FR-13.4)", () => {
   test("a partial batch keeps its successes, and its changes reach another session", async () => {

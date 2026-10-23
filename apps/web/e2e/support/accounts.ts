@@ -47,6 +47,11 @@ export const accounts = {
   viewsList: at("views-list"),
   viewsFolder: at("views-folder"),
   viewsLarge: at("views-large"),
+  // Sorting, grouping, View options and defaults (view-options.e2e.ts), one per test.
+  orderViews: at("order-views"),
+  syncViews: at("sync-views"),
+  sortFolders: at("sort-folders"),
+  seedLayout: at("seed-layout"),
 } as const;
 
 /** An address with no account. */

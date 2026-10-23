@@ -7,6 +7,7 @@ import { albumFieldsSchema, albumSchema } from "./albums";
 import { containerSchema } from "./containers";
 import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
+import { viewDefaultsSchema, viewKeySchema, viewPrefsFieldsSchema, viewPrefsSchema } from "./views";
 import { z } from "./zod";
 
 /**
@@ -88,6 +89,26 @@ export const membershipRemoveSchema = z.object({
   args: entryArgs,
 });
 
+/**
+ * `view.set`: remembers or clears a person's choices for one view (FR-11.7). A field left out stays; null clears it
+ * back to the account default. The sort's mode and direction change together. `base` holds the prior value of every
+ * field in `args`, null for one not set (TS-21, FR-09.4). Clearing every field forgets the view.
+ */
+export const viewSetSchema = z.object({
+  mutationId,
+  name: z.literal("view.set"),
+  args: viewPrefsFieldsSchema.partial().extend({ viewKey: viewKeySchema }),
+  base: viewPrefsFieldsSchema.partial(),
+});
+
+/** `defaults.set`: changes some of a person's account defaults; `base` holds their prior values (TS-21). */
+export const defaultsSetSchema = z.object({
+  mutationId,
+  name: z.literal("defaults.set"),
+  args: viewDefaultsSchema.partial(),
+  base: viewDefaultsSchema.partial(),
+});
+
 /** `membership.add`'s `result` in a `confirmed` outcome. */
 export const membershipAddResultSchema = z
   .object({
@@ -108,6 +129,8 @@ export const mutationSchema = z
     containerMoveSchema,
     membershipAddSchema,
     membershipRemoveSchema,
+    viewSetSchema,
+    defaultsSetSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;
@@ -159,6 +182,22 @@ export const changeSchema = z
       data: membershipSchema.nullable(),
       mutationId: z.uuid().nullable(),
     }),
+    z.object({
+      seq: z.int().positive(),
+      entity: z.literal("view"),
+      id: viewKeySchema,
+      op: z.enum(changeOps),
+      data: viewPrefsSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
+      entity: z.literal("defaults"),
+      id: z.uuid().meta({ description: "The account's ID." }),
+      op: z.enum(changeOps),
+      data: viewDefaultsSchema,
+      mutationId: z.uuid().nullable(),
+    }),
   ])
   .meta({ description: "A committed change on the account's stream (TS-23)." });
 export type Change = z.infer<typeof changeSchema>;
@@ -170,6 +209,10 @@ export const bootstrapSchema = z
     albums: z.array(albumSchema),
     containers: z.array(containerSchema),
     memberships: z.array(membershipSchema),
+    views: z.array(viewPrefsSchema).meta({ description: "The person's remembered view choices." }),
+    defaults: viewDefaultsSchema.meta({
+      description: "The person's account defaults, DS-44's until they save their own.",
+    }),
   })
   .meta({ description: "A snapshot of the account's data at `seq` (TS-24)." });
 export type Bootstrap = z.infer<typeof bootstrapSchema>;

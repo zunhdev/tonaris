@@ -262,7 +262,8 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `field_options` | `id`, `field_id`, `label`, `label_key`, `sort_key` | Unique `(field_id, label_key)` | FR-03.14–FR-03.16 |
 | `album_field_values` | `album_id`, `field_id`, `text_value`, `number_value numeric`, `date_value date`, `bool_value`, `option_id` (FK `ON DELETE SET NULL`). PK `(album_id, field_id)` | **Row present = applied**; row with all values null = **applied-empty**; no row = **unused**. CHECK: at most one value column is set, matching the type. | FR-03.7, FR-03.8, FR-03.10 |
 | `album_field_multi` | `album_id`, `field_id`, `option_id`. PK over all three | Multiple-choice selections. The parent `album_field_values` row marks the field as applied. | FR-03.10, FR-03.17 |
-| `view_prefs` | `person_id`, `view_key` (`root`\|`unsorted`\|container id), `sort_mode`, `sort_dir`, `grouped`, `layout` (`rows`\|`grid`, DS-40) | Remembered choices. Account defaults live in `account_settings`. | FR-05.2–FR-05.4, FR-11.7 |
+| `view_prefs` | `person_id`, `view_key` (`root`\|`unsorted`\|container id), `sort_mode` (`year`\|`name`\|`created`\|`manual`), `sort_dir`, `grouped`, `layout` (`rows`\|`grid`, DS-40). PK `(person_id, view_key)` | Remembered choices; null follows the account default. CHECK: `sort_mode` and `sort_dir` are set and cleared together, as one choice. A row with every choice cleared is deleted (TON-35). | FR-05.2–FR-05.4, FR-11.7 |
+| `account_settings` | `account_id` PK, `list_sort_mode`, `list_sort_dir`, `folder_sort_mode`, `folder_sort_dir`, `grouped`, `layout` | Account defaults, complete once saved, each with a CHECK. No row means DS-44's first-time defaults (`appViewDefaults`, TON-35). | FR-11.7, FR-11.8 |
 | `positions` | `person_id`, `view_key`, `item_id`, `key text` (fractional index). PK `(person_id, view_key, item_id)` | Personal manual order, for owners and signed-in viewers alike (TS-16) | FR-05.2, FR-07.17 |
 | `trash_units` | `id`, `owner_id`, `kind`, `root_id`, `deleted_at`, `expires_at`, `tombstones jsonb` | `tombstones` records purged albums as `{id, title, artist}` for skip reporting | FR-01.13–FR-01.17 |
 | `share_links` | `id`, `container_id`, `token_hash bytea`, `created_at`, `revoked_at` | At most one active link per container (partial unique index) | FR-07.16 |
@@ -389,6 +390,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 - Fields not named in `base` are never compared, so independent edits to different fields of the same album both succeed.
 - Fields submitted together are treated as one dependent change. Inline edits therefore send one field per mutation, while forms such as manual album edit send their changed fields together.
 - Structural commands use the same mechanism: a move carries the old `parent_id`, a position change the old key, a delete `trashed_at: null`.
+- Personal preferences use it too, since FR-09.4 covers them: `view.set` and `defaults.set` carry the prior value of each choice they change, with null for a choice not made yet (TON-35).
 - Uniqueness and capacity are checked under the write lock and fail with `name_conflict` or `capacity_exceeded`. Those are rejections (X-05), not conflicts.
 
 **TS-22 Idempotency and unconfirmed outcomes (Decided; FR-13.3, FR-13.5, section 2.3 of the PRD).**
@@ -439,7 +441,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 
 **TS-24 Client store (Decided; Q-01, FR-09.3).**
 
-- **Bootstrap.** `GET /v1/sync/bootstrap` returns the owned collection, preferences, positions, field definitions, the Shared with me list, and a compact search index for each shared root (TS-50), all at `seq = N`. So far it carries albums, folders and lists, and list entries, each with its commands (TON-20, TON-26, TON-27).
+- **Bootstrap.** `GET /v1/sync/bootstrap` returns the owned collection, preferences, positions, field definitions, the Shared with me list, and a compact search index for each shared root (TS-50), all at `seq = N`. So far it carries albums, folders and lists, list entries, and the person's view choices and account defaults, each with its commands (TON-20, TON-26, TON-27, TON-35).
   - Entries stay a flat list. Grouped by list, the reference bootstrap would be 1.90 MB instead of 2.32 MB raw, but 0.454 MB instead of 0.446 MB gzipped, so grouping gains nothing once compressed (TON-29).
   - The API gzips it, as every JSON response of 1 KB or more, for clients that accept gzip (TS-120).
 - **TanStack DB loading.** Each entity type is a custom sync collection, fed by one sync engine per client: it bootstraps, writes the snapshot to every collection and calls `markReady()`, then streams from the snapshot's `seq`. The stream replays the log from that cursor, so nothing has to be buffered, unlike the documented pattern for streams without replay ([TON-20](spikes/2026-10-20-sync-prototype.md)).

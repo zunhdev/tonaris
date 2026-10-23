@@ -22,6 +22,11 @@ function referenced(mutation: Mutation): (string | null)[] {
   }
   if (mutation.name === "container.create") return [mutation.args.parentId];
   if (mutation.name === "container.move") return [mutation.args.id, mutation.args.parentId];
+  if (mutation.name === "view.set") {
+    const { viewKey } = mutation.args;
+    return viewKey === "root" || viewKey === "unsorted" ? [] : [viewKey];
+  }
+  if (mutation.name === "defaults.set") return [];
   return [mutation.args.listId, mutation.args.albumId];
 }
 

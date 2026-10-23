@@ -1,6 +1,7 @@
 // The workspace's keyboard shortcuts (DS-78), as a pure matcher from key presses to actions, so their rules are
 // tested without a DOM. G starts a sequence: G then H, U, T or S within 1.5 s goes to the root, Unsorted, Trash or
-// Settings. Single keys: `[` hides or shows the sidebar, `?` opens the reference, N and ⇧N make a new list or folder.
+// Settings → Preferences. Single keys: `[` hides or shows the sidebar, `?` opens the reference, N and ⇧N make a new
+// list or folder, and V opens the view's View options.
 // Nothing matches while a text field has focus, nor with ⌘, Ctrl or Alt held. Shortcuts come before the tree's
 // type-ahead (decided 22 October 2026): a matched key is claimed, and the tree types ahead only with the others.
 
@@ -12,7 +13,8 @@ export type ShortcutAction =
   | "toggle-sidebar"
   | "shortcuts"
   | "new-list"
-  | "new-folder";
+  | "new-folder"
+  | "view-options";
 
 /** What the matcher reads of a `KeyboardEvent`. */
 export type KeyPress = {
@@ -46,6 +48,7 @@ const singles: Record<string, ShortcutAction> = {
   "?": "shortcuts",
   n: "new-list",
   N: "new-folder",
+  v: "view-options",
 };
 
 /**
@@ -94,6 +97,7 @@ export const shortcutReference = [
       { keys: ["["], action: "Hide or show the sidebar" },
     ],
   },
+  { title: "Views", keys: [{ keys: ["V"], action: "View options" }] },
   {
     title: "Folders and lists",
     keys: [

@@ -24,6 +24,7 @@ import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
 import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$folderId'
 import { Route as WorkspaceLListIdRouteImport } from './routes/_workspace/l.$listId'
 import { Route as WorkspaceSettingsConnectionsRouteImport } from './routes/_workspace/settings.connections'
+import { Route as WorkspaceSettingsPreferencesRouteImport } from './routes/_workspace/settings.preferences'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: '/_workspace',
@@ -100,6 +101,12 @@ const WorkspaceSettingsConnectionsRoute =
     path: '/settings/connections',
     getParentRoute: () => WorkspaceRoute,
   } as any)
+const WorkspaceSettingsPreferencesRoute =
+  WorkspaceSettingsPreferencesRouteImport.update({
+    id: '/settings/preferences',
+    path: '/settings/preferences',
+    getParentRoute: () => WorkspaceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof WorkspaceIndexRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
+  '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
 }
 export interface FileRoutesByTo {
   '/c': typeof WorkspaceCRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
+  '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
   '/_workspace/settings/connections': typeof WorkspaceSettingsConnectionsRoute
+  '/_workspace/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/f/$folderId'
     | '/l/$listId'
     | '/settings/connections'
+    | '/settings/preferences'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/c'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/f/$folderId'
     | '/l/$listId'
     | '/settings/connections'
+    | '/settings/preferences'
   id:
     | '__root__'
     | '/_workspace'
@@ -199,6 +211,7 @@ export interface FileRouteTypes {
     | '/_workspace/f/$folderId'
     | '/_workspace/l/$listId'
     | '/_workspace/settings/connections'
+    | '/_workspace/settings/preferences'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceSettingsConnectionsRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/settings/preferences': {
+      id: '/_workspace/settings/preferences'
+      path: '/settings/preferences'
+      fullPath: '/settings/preferences'
+      preLoaderRoute: typeof WorkspaceSettingsPreferencesRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
   }
 }
 
@@ -328,6 +348,7 @@ interface WorkspaceRouteChildren {
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
   WorkspaceSettingsConnectionsRoute: typeof WorkspaceSettingsConnectionsRoute
+  WorkspaceSettingsPreferencesRoute: typeof WorkspaceSettingsPreferencesRoute
 }
 
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
@@ -339,6 +360,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,
   WorkspaceSettingsConnectionsRoute: WorkspaceSettingsConnectionsRoute,
+  WorkspaceSettingsPreferencesRoute: WorkspaceSettingsPreferencesRoute,
 }
 
 const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(

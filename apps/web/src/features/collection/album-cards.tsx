@@ -1,6 +1,7 @@
 // Album cards (DS-22): a list's or Unsorted's albums as a virtualized ARIA grid of square artwork tiles, at least
 // 160 px wide in responsive columns, over the title, artist and year, with the save state as a corner badge. Each
-// virtual row is a row of cards; the grid states every row and column (DS-115).
+// virtual row is a row of cards; the grid states every row and column (DS-115). Grouped, each group starts with its
+// header on a row of its own, the one in view sticking at the top (DS-43).
 
 // Virtualized rows are absolutely positioned, which table elements can't be without overriding their display, and
 // that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -9,13 +10,15 @@
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { Album } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { Artwork } from "./artwork";
-import { yearLabel } from "./order";
+import { ChronologyYear } from "./chronology-year";
+import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
+import type { ReleaseGroup, Section } from "./order";
 import { useGridFocus, useWidth } from "./use-grid";
 
 const minCard = 160;
@@ -24,33 +27,84 @@ const padding = 24;
 /** The title, artist and year under the artwork. */
 const textHeight = 68;
 
-export function AlbumCards({ albums, label }: { albums: readonly Album[]; label: string }) {
+type Item =
+  | { type: "header"; group: ReleaseGroup; count: number }
+  | { type: "cards"; albums: Album[] };
+
+/** The grid's rows: each group's header, then its albums in rows of `columns` unless collapsed. */
+function itemsOf(
+  sections: readonly Section<Album>[],
+  collapsed: ReadonlySet<ReleaseGroup>,
+  columns: number,
+): Item[] {
+  return sections.flatMap(({ group, albums }) => {
+    const rows: Item[] = [];
+    for (let start = 0; start < albums.length; start += columns) {
+      rows.push({ type: "cards", albums: albums.slice(start, start + columns) });
+    }
+    if (group === undefined) return rows;
+    const header: Item = { type: "header", group, count: albums.length };
+    return collapsed.has(group) ? [header] : [header, ...rows];
+  });
+}
+
+export function AlbumCards({
+  sections,
+  label,
+  collapsed,
+  onToggle,
+}: {
+  sections: readonly Section<Album>[];
+  label: string;
+  collapsed: ReadonlySet<ReleaseGroup>;
+  onToggle: (group: ReleaseGroup) => void;
+}) {
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
   const inner = Math.max(0, useWidth(scroller) - 2 * padding);
   const columns = Math.max(1, Math.floor((inner + gap) / (minCard + gap)));
   const card = Math.floor((inner - gap * (columns - 1)) / columns);
-  const rows = Math.ceil(albums.length / columns);
   const rowSize = card + textHeight + gap;
+  const items = useMemo(
+    () => itemsOf(sections, collapsed, columns),
+    [sections, collapsed, columns],
+  );
+  const headers = useMemo(
+    () => items.flatMap((item, index) => (item.type === "header" ? [index] : [])),
+    [items],
+  );
+  const { rangeExtractor, isStuck } = useStickyHeader(headers);
   // TanStack Virtual re-renders on scroll by design; the app isn't compiled with React Compiler, which the rule is
   // about.
   // oxlint-disable-next-line react/incompatible-library
   const virtualizer = useVirtualizer({
-    count: rows,
+    count: items.length,
     getScrollElement: () => scroller.current,
-    estimateSize: () => rowSize,
+    estimateSize: (index) => (items[index]?.type === "header" ? headerHeight : rowSize),
+    getItemKey: (index) => {
+      const item = items[index];
+      if (item?.type === "header") return `group:${item.group}`;
+      return item?.albums[0]?.id ?? index;
+    },
     overscan: 3,
     paddingStart: gap,
     paddingEnd: gap,
+    rangeExtractor,
   });
-  useEffect(() => virtualizer.measure(), [virtualizer, rowSize]);
+  useEffect(() => virtualizer.measure(), [virtualizer, rowSize, items]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
-  const lastRow = albums.length - columns * (rows - 1);
   const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? rowSize) / rowSize));
   const { onKeyDown, cellProps } = useGridFocus({
     grid,
-    shape: { rows, columns: (row) => (row === rows - 1 ? lastRow : columns), page },
+    shape: {
+      rows: items.length,
+      columns: (row) => {
+        const item = items[row];
+        return item?.type === "cards" ? item.albums.length : 1;
+      },
+      page,
+    },
     reveal,
   });
 
@@ -61,7 +115,7 @@ export function AlbumCards({ albums, label }: { albums: readonly Album[]; label:
           ref={grid}
           role="grid"
           aria-label={label}
-          aria-rowcount={rows}
+          aria-rowcount={items.length}
           aria-colcount={columns}
           // Its cards take the focus; the grid itself only when clicked between them.
           tabIndex={-1}
@@ -69,25 +123,53 @@ export function AlbumCards({ albums, label }: { albums: readonly Album[]; label:
           className="relative"
           style={{ height: virtualizer.getTotalSize(), marginInline: padding }}
         >
-          {virtualizer.getVirtualItems().map((item) => (
-            <div
-              key={item.key}
-              role="row"
-              aria-rowindex={item.index + 1}
-              className="absolute inset-x-0 flex"
-              style={{ transform: `translateY(${item.start}px)`, gap }}
-            >
-              {albums.slice(item.index * columns, (item.index + 1) * columns).map((album, col) => (
-                <AlbumCard
-                  key={album.id}
-                  album={album}
-                  width={card}
-                  col={col}
-                  {...cellProps(item.index, col)}
-                />
-              ))}
-            </div>
-          ))}
+          {virtualizer.getVirtualItems().map((virtual) => {
+            const item = items[virtual.index];
+            if (!item) return null;
+            if (item.type === "header") {
+              return (
+                <div
+                  key={virtual.key}
+                  role="row"
+                  aria-rowindex={virtual.index + 1}
+                  className="inset-x-0 flex items-stretch bg-panel"
+                  style={{
+                    height: headerHeight,
+                    ...placement(isStuck(virtual.index), virtual.start),
+                  }}
+                >
+                  <div role="gridcell" aria-colspan={columns} className="flex min-w-0">
+                    <GroupHeader
+                      group={item.group}
+                      count={item.count}
+                      collapsed={collapsed.has(item.group)}
+                      onToggle={onToggle}
+                      {...cellProps(virtual.index, 0)}
+                    />
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div
+                key={virtual.key}
+                role="row"
+                aria-rowindex={virtual.index + 1}
+                className="absolute inset-x-0 top-0 flex"
+                style={{ transform: `translateY(${virtual.start}px)`, gap }}
+              >
+                {item.albums.map((album, col) => (
+                  <AlbumCard
+                    key={album.id}
+                    album={album}
+                    width={card}
+                    col={col}
+                    {...cellProps(virtual.index, col)}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -127,7 +209,9 @@ function AlbumCard({
       </span>
       <span className="mt-1 truncate font-medium text-fg-primary">{album.title}</span>
       <span className={cn("truncate text-small text-fg-secondary")}>{album.artistCredit}</span>
-      <span className="text-small text-fg-tertiary tabular-nums">{yearLabel(album)}</span>
+      <span className="flex text-small text-fg-tertiary">
+        <ChronologyYear album={album} />
+      </span>
     </div>
   );
 }

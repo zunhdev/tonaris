@@ -4,6 +4,7 @@
 
 import { api } from "@/api";
 import { apiUrl } from "@/config";
+import { SettingsNav } from "@/features/settings/settings-nav";
 import { PageHeader } from "@/features/shell/page-header";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
@@ -50,6 +51,7 @@ function Connections() {
   return (
     <>
       <PageHeader title="Connections" />
+      <SettingsNav />
       <div className="flex max-w-2xl flex-col gap-6 p-6">
         <section aria-labelledby="server-url" className="flex flex-col gap-1.5">
           <h2 id="server-url" className="text-title text-fg-primary">

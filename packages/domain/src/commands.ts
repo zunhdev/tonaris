@@ -15,6 +15,7 @@ import { failure, type FieldConflict, type Outcome } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { actingUserId, type Principal } from "./principals";
 import type { ChangeOp, Mutation } from "./sync";
+import { setDefaults, setView, type ViewDefaults, type ViewPrefs } from "./views";
 
 /** An album as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
 export type StoredAlbum = Album & { ownerId: string; trashed: boolean };
@@ -47,13 +48,25 @@ export type CollectionStore = {
   countMemberships(ownerId: string): Promise<number>;
   insertMembership(membership: Membership & { ownerId: string }): Promise<void>;
   deleteMembership(listId: string, albumId: string): Promise<void>;
+
+  /** The person's remembered choices for the view, if they made any (FR-11.7). */
+  findViewPrefs(personId: string, viewKey: string): Promise<ViewPrefs | undefined>;
+  /** Inserts or replaces the person's choices for `prefs.viewKey`. */
+  saveViewPrefs(personId: string, prefs: ViewPrefs): Promise<void>;
+  deleteViewPrefs(personId: string, viewKey: string): Promise<void>;
+  /** The account defaults the person saved, if they saved any. */
+  findDefaults(personId: string): Promise<ViewDefaults | undefined>;
+  /** Inserts or replaces the person's account defaults. */
+  saveDefaults(personId: string, defaults: ViewDefaults): Promise<void>;
 };
 
 /** A change for the account's log; the database layer gives it its `seq`. */
 export type ChangeInput =
   | { entity: "album"; id: string; op: ChangeOp; data: Album | null }
   | { entity: "container"; id: string; op: ChangeOp; data: Container | null }
-  | { entity: "membership"; id: string; op: ChangeOp; data: Membership | null };
+  | { entity: "membership"; id: string; op: ChangeOp; data: Membership | null }
+  | { entity: "view"; id: string; op: ChangeOp; data: ViewPrefs | null }
+  | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults };
 
 /** `result` is what the mutation reports in its `confirmed` outcome, if anything, such as `MembershipAddResult`. */
 export type CommandResult =
@@ -74,7 +87,9 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
     return moveContainer(mutation.args, mutation.base, context);
   }
   if (mutation.name === "membership.add") return addMembership(mutation.args, context);
-  return removeMembership(mutation.args, context);
+  if (mutation.name === "membership.remove") return removeMembership(mutation.args, context);
+  if (mutation.name === "view.set") return setView(mutation.args, mutation.base, context);
+  return setDefaults(mutation.args, mutation.base, context);
 }
 
 const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });

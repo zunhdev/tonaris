@@ -9,13 +9,19 @@
 import {
   albumFields,
   membershipKey,
+  unsetView,
+  viewDefaultsFields,
+  viewPrefsFields,
   type Album,
   type Container,
   type Membership,
   type Mutation,
+  type ViewDefaults,
+  type ViewPrefs,
 } from "@tonaris/domain";
 
 import type { SyncClient } from "./client";
+import { defaultsKey } from "./views";
 import type { SaveState } from "./writer";
 
 /**
@@ -24,7 +30,7 @@ import type { SaveState } from "./writer";
  */
 export type Resubmitted = "sent" | "unchanged" | "gone";
 
-type Collections = Pick<SyncClient, "albums" | "containers" | "memberships">;
+type Collections = Pick<SyncClient, "albums" | "containers" | "memberships" | "views" | "defaults">;
 
 type Call =
   | "album.insert"
@@ -32,7 +38,11 @@ type Call =
   | "container.insert"
   | "container.update"
   | "entry.insert"
-  | "entry.delete";
+  | "entry.delete"
+  | "view.insert"
+  | "view.update"
+  | "view.delete"
+  | "defaults.update";
 
 /** The collection calls that make the changes again, in the order of each call's first change. */
 function plan() {
@@ -45,6 +55,10 @@ function plan() {
     containerUpdates: new Map<string, Partial<Container>>(),
     entryInserts: [] as Membership[],
     entryDeletes: [] as string[],
+    viewInserts: [] as ViewPrefs[],
+    viewUpdates: new Map<string, Partial<ViewPrefs>>(),
+    viewDeletes: [] as string[],
+    defaultsUpdate: {} as Partial<ViewDefaults>,
     /** Notes that `call` is needed; answers `sent`. */
     needs(call: Call): "sent" {
       if (!order.includes(call)) order.push(call);
@@ -82,7 +96,7 @@ export function resubmitAll(
 
 /** Adds `mutation`'s change to `planned`, unless the records already hold it or its record is gone. */
 function remake(
-  { albums, containers, memberships }: Collections,
+  { albums, containers, memberships, views, defaults }: Collections,
   mutation: Mutation,
   planned: Plan,
 ): Resubmitted {
@@ -125,6 +139,43 @@ function remake(
     planned.containerUpdates.set(args.id, { ...planned.containerUpdates.get(args.id), ...change });
     return planned.needs("container.update");
   }
+  if (mutation.name === "view.set") {
+    const { viewKey, ...attempted } = mutation.args;
+    if (viewKey !== "root" && viewKey !== "unsorted" && !containers.has(viewKey)) return "gone";
+    const saved = views.get(viewKey);
+    const current = saved ?? unsetView(viewKey);
+    const changes: Partial<ViewPrefs> = {};
+    for (const field of viewPrefsFields) {
+      if (attempted[field] !== undefined && attempted[field] !== current[field]) {
+        Object.assign(changes, { [field]: attempted[field] });
+      }
+    }
+    if (Object.keys(changes).length === 0) return "unchanged";
+    const target = { ...current, ...changes };
+    if (viewPrefsFields.every((field) => target[field] === null)) {
+      planned.viewDeletes.push(viewKey);
+      return planned.needs("view.delete");
+    }
+    if (!saved) {
+      planned.viewInserts.push(target);
+      return planned.needs("view.insert");
+    }
+    planned.viewUpdates.set(viewKey, { ...planned.viewUpdates.get(viewKey), ...changes });
+    return planned.needs("view.update");
+  }
+  if (mutation.name === "defaults.set") {
+    const current = defaults.get(defaultsKey);
+    if (!current) return "gone";
+    const changes: Partial<ViewDefaults> = {};
+    for (const field of viewDefaultsFields) {
+      const value = mutation.args[field];
+      if (value !== undefined && value !== current[field])
+        Object.assign(changes, { [field]: value });
+    }
+    if (Object.keys(changes).length === 0) return "unchanged";
+    Object.assign(planned.defaultsUpdate, changes);
+    return planned.needs("defaults.update");
+  }
   const { listId, albumId } = mutation.args;
   const key = membershipKey(listId, albumId);
   if (mutation.name === "membership.add") {
@@ -148,7 +199,11 @@ function applyTo<Row>(rows: Map<string, Partial<Row>>) {
 }
 
 /** Makes one call: one transaction, so one batch when it holds several changes. */
-function make({ albums, containers, memberships }: Collections, planned: Plan, call: Call): void {
+function make(
+  { albums, containers, memberships, views, defaults }: Collections,
+  planned: Plan,
+  call: Call,
+): void {
   if (call === "album.insert") sent(albums.insert(planned.albumInserts));
   else if (call === "album.update") {
     sent(albums.update([...planned.albumUpdates.keys()], applyTo(planned.albumUpdates)));
@@ -158,7 +213,18 @@ function make({ albums, containers, memberships }: Collections, planned: Plan, c
       containers.update([...planned.containerUpdates.keys()], applyTo(planned.containerUpdates)),
     );
   } else if (call === "entry.insert") sent(memberships.insert(planned.entryInserts));
-  else sent(memberships.delete(planned.entryDeletes));
+  else if (call === "entry.delete") sent(memberships.delete(planned.entryDeletes));
+  else if (call === "view.insert") sent(views.insert(planned.viewInserts));
+  else if (call === "view.update") {
+    sent(views.update([...planned.viewUpdates.keys()], applyTo(planned.viewUpdates)));
+  } else if (call === "view.delete") sent(views.delete(planned.viewDeletes));
+  else {
+    sent(
+      defaults.update(defaultsKey, (draft) => {
+        Object.assign(draft, planned.defaultsUpdate);
+      }),
+    );
+  }
 }
 
 /** The new writes report their own outcomes in the save states; a rejection is expected there, not here. */

@@ -6,6 +6,7 @@ import { and, asc, count, eq, gt, isNull, lt, sql } from "drizzle-orm";
 
 import {
   actingUserId,
+  appViewDefaults,
   changeSchema,
   outcomeSchema,
   runBatch,
@@ -28,10 +29,21 @@ import {
   type MutationResult,
   type Outcome,
   type Principal,
+  type ViewDefaults,
+  type ViewPrefs,
 } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
-import { accountSync, albums, changeLog, containers, memberships, mutations } from "./schema";
+import {
+  accountSettings,
+  accountSync,
+  albums,
+  changeLog,
+  containers,
+  memberships,
+  mutations,
+  viewPrefs,
+} from "./schema";
 
 const albumColumns = {
   id: albums.id,
@@ -55,6 +67,23 @@ const membershipColumns = {
   listId: memberships.listId,
   albumId: memberships.albumId,
   addedAt: memberships.addedAt,
+};
+
+const viewPrefsColumns = {
+  viewKey: viewPrefs.viewKey,
+  sortMode: viewPrefs.sortMode,
+  sortDir: viewPrefs.sortDir,
+  grouped: viewPrefs.grouped,
+  layout: viewPrefs.layout,
+};
+
+const defaultsColumns = {
+  listSortMode: accountSettings.listSortMode,
+  listSortDir: accountSettings.listSortDir,
+  folderSortMode: accountSettings.folderSortMode,
+  folderSortDir: accountSettings.folderSortDir,
+  grouped: accountSettings.grouped,
+  layout: accountSettings.layout,
 };
 
 /** An entry as clients see it, with `addedAt` as the ISO string the protocol carries. */
@@ -189,6 +218,38 @@ function collectionStore(tx: Transaction): CollectionStore {
       await tx
         .delete(memberships)
         .where(and(eq(memberships.listId, listId), eq(memberships.albumId, albumId)));
+    },
+
+    async findViewPrefs(personId, viewKey) {
+      const [row] = await tx
+        .select(viewPrefsColumns)
+        .from(viewPrefs)
+        .where(and(eq(viewPrefs.personId, personId), eq(viewPrefs.viewKey, viewKey)));
+      return row;
+    },
+    async saveViewPrefs(personId, { viewKey, ...choices }) {
+      await tx
+        .insert(viewPrefs)
+        .values({ personId, viewKey, ...choices })
+        .onConflictDoUpdate({ target: [viewPrefs.personId, viewPrefs.viewKey], set: choices });
+    },
+    async deleteViewPrefs(personId, viewKey) {
+      await tx
+        .delete(viewPrefs)
+        .where(and(eq(viewPrefs.personId, personId), eq(viewPrefs.viewKey, viewKey)));
+    },
+    async findDefaults(personId) {
+      const [row] = await tx
+        .select(defaultsColumns)
+        .from(accountSettings)
+        .where(eq(accountSettings.accountId, personId));
+      return row;
+    },
+    async saveDefaults(personId, defaults) {
+      await tx
+        .insert(accountSettings)
+        .values({ accountId: personId, ...defaults })
+        .onConflictDoUpdate({ target: accountSettings.accountId, set: defaults });
     },
   };
 }
@@ -370,9 +431,9 @@ export async function readChanges(
 }
 
 /**
- * The account's collection and the `seq` it is current at (TS-24), from one snapshot: a write commits its
- * records and its `seq` together, so the snapshot sees both or neither. Trashed records come too, marked by
- * nothing yet: Trash arrives with M5, and its views filter them.
+ * The account's collection, its remembered view choices and its defaults, and the `seq` they are current at (TS-24),
+ * from one snapshot: a write commits its records and its `seq` together, so the snapshot sees both or neither.
+ * Trashed records come too, marked by nothing yet: Trash arrives with M5, and its views filter them.
  */
 export function bootstrapSnapshot(db: Database, accountId: string): Promise<Bootstrap> {
   return db.transaction(
@@ -396,11 +457,22 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .from(memberships)
         .where(eq(memberships.ownerId, accountId))
         .orderBy(asc(memberships.listId), asc(memberships.albumId));
+      const views: ViewPrefs[] = await tx
+        .select(viewPrefsColumns)
+        .from(viewPrefs)
+        .where(eq(viewPrefs.personId, accountId))
+        .orderBy(asc(viewPrefs.viewKey));
+      const [defaults]: ViewDefaults[] = await tx
+        .select(defaultsColumns)
+        .from(accountSettings)
+        .where(eq(accountSettings.accountId, accountId));
       return {
         seq: sync?.seq ?? 0,
         albums: owned,
         containers: folders,
         memberships: entries.map(membershipOf),
+        views,
+        defaults: defaults ?? appViewDefaults,
       };
     },
     { isolationLevel: "repeatable read", accessMode: "read only" },

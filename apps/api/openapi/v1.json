@@ -1255,6 +1255,250 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "view.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "sortMode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual",
+                              null
+                            ]
+                          },
+                          "sortDir": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "asc",
+                              "desc",
+                              null
+                            ]
+                          },
+                          "grouped": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "layout": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "rows",
+                              "grid",
+                              null
+                            ]
+                          },
+                          "viewKey": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "root",
+                                  "unsorted"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              }
+                            ],
+                            "description": "`root`, `unsorted`, or a folder's or list's ID."
+                          }
+                        },
+                        "required": [
+                          "viewKey"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "sortMode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual",
+                              null
+                            ]
+                          },
+                          "sortDir": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "asc",
+                              "desc",
+                              null
+                            ]
+                          },
+                          "grouped": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "layout": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "rows",
+                              "grid",
+                              null
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "listSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "manual"
+                            ]
+                          },
+                          "listSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "folderSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          "folderSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "grouped": {
+                            "type": "boolean"
+                          },
+                          "layout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          }
+                        }
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "listSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "manual"
+                            ]
+                          },
+                          "listSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "folderSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          "folderSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "grouped": {
+                            "type": "boolean"
+                          },
+                          "layout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -1727,6 +1971,250 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "view.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "sortMode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual",
+                              null
+                            ]
+                          },
+                          "sortDir": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "asc",
+                              "desc",
+                              null
+                            ]
+                          },
+                          "grouped": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "layout": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "rows",
+                              "grid",
+                              null
+                            ]
+                          },
+                          "viewKey": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "root",
+                                  "unsorted"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              }
+                            ],
+                            "description": "`root`, `unsorted`, or a folder's or list's ID."
+                          }
+                        },
+                        "required": [
+                          "viewKey"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "sortMode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual",
+                              null
+                            ]
+                          },
+                          "sortDir": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "asc",
+                              "desc",
+                              null
+                            ]
+                          },
+                          "grouped": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "layout": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "rows",
+                              "grid",
+                              null
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "listSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "manual"
+                            ]
+                          },
+                          "listSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "folderSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          "folderSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "grouped": {
+                            "type": "boolean"
+                          },
+                          "layout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          }
+                        }
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "listSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "manual"
+                            ]
+                          },
+                          "listSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "folderSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          "folderSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "grouped": {
+                            "type": "boolean"
+                          },
+                          "layout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -2198,6 +2686,250 @@
                       "mutationId",
                       "name",
                       "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "view.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "sortMode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual",
+                              null
+                            ]
+                          },
+                          "sortDir": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "asc",
+                              "desc",
+                              null
+                            ]
+                          },
+                          "grouped": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "layout": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "rows",
+                              "grid",
+                              null
+                            ]
+                          },
+                          "viewKey": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "root",
+                                  "unsorted"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              }
+                            ],
+                            "description": "`root`, `unsorted`, or a folder's or list's ID."
+                          }
+                        },
+                        "required": [
+                          "viewKey"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "sortMode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual",
+                              null
+                            ]
+                          },
+                          "sortDir": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "asc",
+                              "desc",
+                              null
+                            ]
+                          },
+                          "grouped": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "layout": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "rows",
+                              "grid",
+                              null
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "listSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "manual"
+                            ]
+                          },
+                          "listSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "folderSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          "folderSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "grouped": {
+                            "type": "boolean"
+                          },
+                          "layout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          }
+                        }
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "listSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "manual"
+                            ]
+                          },
+                          "listSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "folderSortMode": {
+                            "type": "string",
+                            "enum": [
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          "folderSortDir": {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          "grouped": {
+                            "type": "boolean"
+                          },
+                          "layout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
                     ]
                   }
                 ],
@@ -3494,13 +4226,146 @@
                         "additionalProperties": false,
                         "description": "An album's entry in a list (FR-01.6)."
                       }
+                    },
+                    "views": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sortMode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual",
+                              null
+                            ]
+                          },
+                          "sortDir": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "asc",
+                              "desc",
+                              null
+                            ]
+                          },
+                          "grouped": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "layout": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "rows",
+                              "grid",
+                              null
+                            ]
+                          },
+                          "viewKey": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "root",
+                                  "unsorted"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              }
+                            ],
+                            "description": "`root`, `unsorted`, or a folder's or list's ID."
+                          }
+                        },
+                        "required": [
+                          "sortMode",
+                          "sortDir",
+                          "grouped",
+                          "layout",
+                          "viewKey"
+                        ],
+                        "additionalProperties": false,
+                        "description": "A person's remembered choices for one view (FR-11.7)."
+                      },
+                      "description": "The person's remembered view choices."
+                    },
+                    "defaults": {
+                      "type": "object",
+                      "properties": {
+                        "listSortMode": {
+                          "type": "string",
+                          "enum": [
+                            "year",
+                            "name",
+                            "manual"
+                          ]
+                        },
+                        "listSortDir": {
+                          "type": "string",
+                          "enum": [
+                            "asc",
+                            "desc"
+                          ]
+                        },
+                        "folderSortMode": {
+                          "type": "string",
+                          "enum": [
+                            "name",
+                            "created",
+                            "manual"
+                          ]
+                        },
+                        "folderSortDir": {
+                          "type": "string",
+                          "enum": [
+                            "asc",
+                            "desc"
+                          ]
+                        },
+                        "grouped": {
+                          "type": "boolean"
+                        },
+                        "layout": {
+                          "type": "string",
+                          "enum": [
+                            "rows",
+                            "grid"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "listSortMode",
+                        "listSortDir",
+                        "folderSortMode",
+                        "folderSortDir",
+                        "grouped",
+                        "layout"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The person's account defaults, DS-44's until they save their own."
                     }
                   },
                   "required": [
                     "seq",
                     "albums",
                     "containers",
-                    "memberships"
+                    "memberships",
+                    "views",
+                    "defaults"
                   ],
                   "additionalProperties": false,
                   "description": "A snapshot of the account's data at `seq` (TS-24)."
@@ -3969,6 +4834,258 @@
                     "type": "null"
                   }
                 ]
+              },
+              "mutationId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "seq",
+              "entity",
+              "id",
+              "op",
+              "data",
+              "mutationId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "entity": {
+                "type": "string",
+                "const": "view"
+              },
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "root",
+                      "unsorted"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                ],
+                "description": "`root`, `unsorted`, or a folder's or list's ID."
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "sortMode": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "sortDir": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "grouped": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "layout": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "viewKey": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "root",
+                              "unsorted"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        ],
+                        "description": "`root`, `unsorted`, or a folder's or list's ID."
+                      }
+                    },
+                    "required": [
+                      "sortMode",
+                      "sortDir",
+                      "grouped",
+                      "layout",
+                      "viewKey"
+                    ],
+                    "additionalProperties": false,
+                    "description": "A person's remembered choices for one view (FR-11.7)."
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "mutationId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "seq",
+              "entity",
+              "id",
+              "op",
+              "data",
+              "mutationId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "entity": {
+                "type": "string",
+                "const": "defaults"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "description": "The account's ID."
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "listSortMode": {
+                    "type": "string",
+                    "enum": [
+                      "year",
+                      "name",
+                      "manual"
+                    ]
+                  },
+                  "listSortDir": {
+                    "type": "string",
+                    "enum": [
+                      "asc",
+                      "desc"
+                    ]
+                  },
+                  "folderSortMode": {
+                    "type": "string",
+                    "enum": [
+                      "name",
+                      "created",
+                      "manual"
+                    ]
+                  },
+                  "folderSortDir": {
+                    "type": "string",
+                    "enum": [
+                      "asc",
+                      "desc"
+                    ]
+                  },
+                  "grouped": {
+                    "type": "boolean"
+                  },
+                  "layout": {
+                    "type": "string",
+                    "enum": [
+                      "rows",
+                      "grid"
+                    ]
+                  }
+                },
+                "required": [
+                  "listSortMode",
+                  "listSortDir",
+                  "folderSortMode",
+                  "folderSortDir",
+                  "grouped",
+                  "layout"
+                ],
+                "additionalProperties": false,
+                "description": "A person's account defaults for presentation (FR-11.7)."
               },
               "mutationId": {
                 "anyOf": [
@@ -4552,6 +5669,274 @@
                   "mutationId",
                   "name",
                   "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "view.set"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "sortMode": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "sortDir": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "grouped": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "layout": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "viewKey": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "root",
+                              "unsorted"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        ],
+                        "description": "`root`, `unsorted`, or a folder's or list's ID."
+                      }
+                    },
+                    "required": [
+                      "viewKey"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "sortMode": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "year",
+                              "name",
+                              "created",
+                              "manual"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "sortDir": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "asc",
+                              "desc"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "grouped": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "layout": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "defaults.set"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "listSortMode": {
+                        "type": "string",
+                        "enum": [
+                          "year",
+                          "name",
+                          "manual"
+                        ]
+                      },
+                      "listSortDir": {
+                        "type": "string",
+                        "enum": [
+                          "asc",
+                          "desc"
+                        ]
+                      },
+                      "folderSortMode": {
+                        "type": "string",
+                        "enum": [
+                          "name",
+                          "created",
+                          "manual"
+                        ]
+                      },
+                      "folderSortDir": {
+                        "type": "string",
+                        "enum": [
+                          "asc",
+                          "desc"
+                        ]
+                      },
+                      "grouped": {
+                        "type": "boolean"
+                      },
+                      "layout": {
+                        "type": "string",
+                        "enum": [
+                          "rows",
+                          "grid"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "listSortMode": {
+                        "type": "string",
+                        "enum": [
+                          "year",
+                          "name",
+                          "manual"
+                        ]
+                      },
+                      "listSortDir": {
+                        "type": "string",
+                        "enum": [
+                          "asc",
+                          "desc"
+                        ]
+                      },
+                      "folderSortMode": {
+                        "type": "string",
+                        "enum": [
+                          "name",
+                          "created",
+                          "manual"
+                        ]
+                      },
+                      "folderSortDir": {
+                        "type": "string",
+                        "enum": [
+                          "asc",
+                          "desc"
+                        ]
+                      },
+                      "grouped": {
+                        "type": "boolean"
+                      },
+                      "layout": {
+                        "type": "string",
+                        "enum": [
+                          "rows",
+                          "grid"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
                 ],
                 "additionalProperties": false
               }

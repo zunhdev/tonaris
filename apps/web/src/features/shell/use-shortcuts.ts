@@ -10,12 +10,12 @@ import { useEffect, useRef } from "react";
 import { createShortcutMatcher, type ShortcutAction } from "./shortcuts";
 
 const destinations: Partial<
-  Record<ShortcutAction, "/c" | "/unsorted" | "/trash" | "/settings/connections">
+  Record<ShortcutAction, "/c" | "/unsorted" | "/trash" | "/settings/preferences">
 > = {
   "go-root": "/c",
   "go-unsorted": "/unsorted",
   "go-trash": "/trash",
-  "go-settings": "/settings/connections",
+  "go-settings": "/settings/preferences",
 };
 
 /** Whether `target` is inside a layer with keys of its own: a dialog, a popover or a menu. */
@@ -36,12 +36,28 @@ export function useShortcuts({
 }): void {
   const navigate = useNavigate();
   const startEditor = useStartEditor();
-  const { editing } = useCollectionUi();
+  const { editing, openViewOptions } = useCollectionUi();
   const offline = useConnection() === "offline";
   // The latest of each, so the listener is installed once.
-  const latest = useRef({ navigate, startEditor, editing, offline, toggleSidebar, openShortcuts });
+  const latest = useRef({
+    navigate,
+    startEditor,
+    editing,
+    offline,
+    toggleSidebar,
+    openShortcuts,
+    openViewOptions,
+  });
   useEffect(() => {
-    latest.current = { navigate, startEditor, editing, offline, toggleSidebar, openShortcuts };
+    latest.current = {
+      navigate,
+      startEditor,
+      editing,
+      offline,
+      toggleSidebar,
+      openShortcuts,
+      openViewOptions,
+    };
   });
 
   useEffect(() => {
@@ -52,6 +68,8 @@ export function useShortcuts({
       if (to) void now.navigate({ to });
       else if (action === "toggle-sidebar") now.toggleSidebar();
       else if (action === "shortcuts") now.openShortcuts();
+      // Choosing how a view looks isn't an edit, so it works offline (X-04).
+      else if (action === "view-options") now.openViewOptions();
       // Edit controls wait while offline (DS-81), and one editor is open at a time.
       else if (!now.offline && !now.editing.current) {
         now.startEditor({ mode: "new", kind: action === "new-folder" ? "folder" : "list" });
