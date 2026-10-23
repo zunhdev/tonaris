@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
+import { cn } from "@tonaris/ui/lib/utils";
 
 import { useShell } from "./shell-context";
 
@@ -16,17 +17,25 @@ export function PageHeader({
   icon,
   breadcrumbs,
   actions,
+  editing = false,
 }: {
   title: string;
   icon?: ReactNode;
   /** The links to the view's ancestors, from Collection down; none for a top-level view. */
   breadcrumbs?: ReactNode[];
-  /** Controls at the header's end, such as the layout switch. */
+  /** Controls at the header's end, such as the mode toggle and View options. */
   actions?: ReactNode;
+  /** Editing mode tints the bottom border, so the mode is visible at a glance (DS-45). */
+  editing?: boolean;
 }) {
   const { sidebarHidden, toggleSidebar } = useShell();
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2 border-b border-subtle px-6">
+    <header
+      className={cn(
+        "flex h-12 shrink-0 items-center gap-2 border-b px-6",
+        editing ? "border-accent-solid" : "border-subtle",
+      )}
+    >
       {sidebarHidden && (
         <Tooltip>
           <TooltipTrigger

@@ -31,6 +31,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useMoveContainer } from "./move";
 import { canMoveInto } from "./tree";
@@ -97,6 +98,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
   const [indicator, setIndicator] = useState<Indicator | undefined>(undefined);
   const drops = useRef(new Map<string, ViewMoves["drop"]>());
   const move = useMoveContainer();
+  const { enterEditing } = useMode();
 
   const registerDrop = useCallback((viewKey: string, drop: ViewMoves["drop"]) => {
     drops.current.set(viewKey, drop);
@@ -157,7 +159,11 @@ export function DragProvider({ children }: { children: ReactNode }) {
           end();
           if (!isDragItem(item)) return;
           if (isDestination(over)) {
-            if (item.kind === "container") move(item.id, over.parentId);
+            // A move is an edit: it switches to Editing first (DS-45, decided 23 October 2026).
+            if (item.kind === "container") {
+              enterEditing();
+              move(item.id, over.parentId);
+            }
             return;
           }
           const target = rowTargetOf(event);

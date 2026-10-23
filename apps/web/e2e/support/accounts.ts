@@ -58,6 +58,11 @@ export const accounts = {
   arrangePlaces: at("arrange-places"),
   arrangeMoves: at("arrange-moves"),
   arrangeSync: at("arrange-sync"),
+  // Viewing and Editing modes (editing-modes.e2e.ts), one per test.
+  modeSwitch: at("mode-switch"),
+  modeIntent: at("mode-intent"),
+  modeLeave: at("mode-leave"),
+  modeCells: at("mode-cells"),
 } as const;
 
 /** An address with no account. */
