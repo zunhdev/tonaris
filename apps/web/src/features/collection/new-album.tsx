@@ -1,0 +1,410 @@
+// The manual entry form (DS-47, FR-02.4): "New album", every album field in order, with the ones whose features come
+// later shown as such (artwork with link capture, decided 23 October 2026; links and custom fields with M4), and a
+// destination list. Title, artist and the applicable year are required (FR-02.6); fields are checked when left and
+// on submit, each error shown at its field and, on submit, summarized at the top. Nothing incomplete is saved and
+// nothing invented (AC-08). ⌘Enter saves; Esc or closing asks before discarding what was typed. Saving creates the
+// album, then its entry in the list, through the collections, so save states apply; Edit on a failed save reopens it
+// as it was entered.
+
+import { useAnnounce } from "@/features/sync/announcer";
+import { useSaveActions } from "@/features/sync/save-actions";
+import { useSyncClient } from "@/features/sync/sync-provider";
+import {
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@tonaris/ui/components/alert-dialog";
+import { Button } from "@tonaris/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@tonaris/ui/components/dialog";
+import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
+import { Switch } from "@tonaris/ui/components/switch";
+import { cn } from "@tonaris/ui/lib/utils";
+
+import {
+  albumOfForm,
+  formProblems,
+  isFormDirty,
+  type AlbumForm,
+  type FormField,
+} from "./album-form";
+import { useCollectionUi, type NewAlbumDraft } from "./collection-ui";
+import { useCollectionData } from "./data";
+import { ancestorsOf } from "./tree";
+
+const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation" | "unknown">[] = [
+  { value: "album", label: "Album" },
+  { value: "ep", label: "EP" },
+  { value: "compilation", label: "Compilation" },
+  { value: "unknown", label: "Unknown" },
+];
+
+const formFields: readonly FormField[] = ["title", "artistCredit", "originalYear", "recording"];
+
+const fieldNames: Record<FormField, string> = {
+  title: "Title",
+  artistCredit: "Artist",
+  originalYear: "Original release year",
+  recording: "Recording year or range",
+};
+
+/** The time an entry is made; the server records its own (TON-27). */
+const now = () => new Date().toISOString();
+
+export function NewAlbumDialog() {
+  const { newAlbum, endNewAlbum } = useCollectionUi();
+  // Each opening starts from its own draft.
+  const [opened, setOpened] = useState(0);
+  const [shown, setShown] = useState<NewAlbumDraft | undefined>(undefined);
+  if (newAlbum !== shown) {
+    setShown(newAlbum);
+    if (newAlbum) setOpened((count) => count + 1);
+  }
+  return newAlbum ? <NewAlbumForm key={opened} draft={newAlbum} onDone={endNewAlbum} /> : null;
+}
+
+function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => void }) {
+  const client = useSyncClient();
+  const announce = useAnnounce();
+  const actions = useSaveActions();
+  const { tree } = useCollectionData();
+  const [form, setForm] = useState<AlbumForm>(draft.form);
+  const [touched, setTouched] = useState<ReadonlySet<FormField>>(new Set());
+  const [submitted, setSubmitted] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const summaryId = useId();
+  const problems = formProblems(form);
+  const shownProblems: Partial<Record<FormField, string>> = {};
+  for (const field of formFields) {
+    if (problems[field] && (submitted || touched.has(field)))
+      shownProblems[field] = problems[field];
+  }
+
+  const lists = useMemo(
+    () =>
+      [...tree.byId.values()]
+        .filter((container) => container.kind === "list")
+        .map((list) => ({
+          id: list.id,
+          label: [...ancestorsOf(tree, list.id).map((folder) => folder.name), list.name].join(
+            " › ",
+          ),
+        }))
+        .toSorted((a, b) => a.label.localeCompare(b.label)),
+    [tree],
+  );
+
+  const set = (values: Partial<AlbumForm>) => setForm((current) => ({ ...current, ...values }));
+  const touch = (field: FormField) =>
+    setTouched((current) => (current.has(field) ? current : new Set([...current, field])));
+
+  function requestClose() {
+    if (isFormDirty(form)) setConfirming(true);
+    else onDone();
+  }
+
+  function submit(event?: FormEvent) {
+    event?.preventDefault();
+    setSubmitted(true);
+    const album = albumOfForm(form);
+    if (!album || !client) {
+      // The first field with a problem takes the focus; the summary is announced.
+      const first = formFields.find((field) => problems[field]);
+      formRef.current?.querySelector<HTMLInputElement>(`[name="${first}"]`)?.focus();
+      return;
+    }
+    client.albums.insert(album).isPersisted.promise.catch(() => {});
+    if (form.listId !== null) {
+      client.memberships
+        .insert({ listId: form.listId, albumId: album.id, addedAt: now() })
+        .isPersisted.promise.catch(() => {});
+    }
+    // The failed writes it makes again go, with their toasts.
+    for (const id of draft.replaces ?? []) {
+      const replaced = client.states.get(id);
+      if (replaced) actions?.dismiss(replaced);
+    }
+    announce(`Added ${album.title}`);
+    onDone();
+  }
+
+  const problemCount = Object.keys(problems).length;
+  return (
+    <>
+      <Dialog
+        open
+        onOpenChange={(open) => {
+          if (!open) requestClose();
+        }}
+      >
+        <DialogContent className="max-w-[560px]" initialFocus={titleRef}>
+          <DialogHeader>
+            <DialogTitle>New album</DialogTitle>
+            <DialogDescription>
+              Title, artist and a year are required. Everything else can wait.
+            </DialogDescription>
+          </DialogHeader>
+          {/* ⌘Enter submits from any field of the form (DS-47). */}
+          {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+          <form
+            ref={formRef}
+            noValidate
+            className="flex flex-col gap-4"
+            onSubmit={submit}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) submit(event);
+            }}
+          >
+            {submitted && problemCount > 0 && (
+              <div
+                id={summaryId}
+                role="alert"
+                className="rounded-md border border-status-danger px-3 py-2"
+              >
+                <p className="text-small text-status-danger">
+                  {problemCount === 1 ? "Check 1 field:" : `Check ${problemCount} fields:`}{" "}
+                  {formFields
+                    .filter((field) => problems[field])
+                    .map((field) => fieldNames[field])
+                    .join(", ")}
+                  .
+                </p>
+              </div>
+            )}
+
+            <TextField
+              name="title"
+              label="Title"
+              required
+              value={form.title}
+              problem={shownProblems.title}
+              onChange={(title) => set({ title })}
+              onBlur={() => touch("title")}
+              inputRef={titleRef}
+            />
+            <TextField
+              name="artistCredit"
+              label="Artist"
+              required
+              value={form.artistCredit}
+              problem={shownProblems.artistCredit}
+              onChange={(artistCredit) => set({ artistCredit })}
+              onBlur={() => touch("artistCredit")}
+            />
+
+            <div className="flex items-end gap-4">
+              <Labelled label="Release type" className="flex-1">
+                {(id) => (
+                  <SegmentedControl
+                    aria-labelledby={id}
+                    options={releaseTypeOptions}
+                    value={form.releaseType ?? "unknown"}
+                    onValueChange={(value) =>
+                      set({ releaseType: value === "unknown" ? null : value })
+                    }
+                  />
+                )}
+              </Labelled>
+              <Labelled label="Live">
+                {(id) => (
+                  <Switch
+                    aria-labelledby={id}
+                    checked={form.isLive}
+                    onCheckedChange={(isLive) => set({ isLive })}
+                    className="mb-1.5"
+                  />
+                )}
+              </Labelled>
+            </div>
+
+            <p className="text-small text-fg-tertiary">
+              Required: original release year — or, for live releases, the recording year or release
+              year.
+            </p>
+            <TextField
+              name="originalYear"
+              label="Original release year"
+              inputMode="numeric"
+              value={form.originalYear}
+              problem={shownProblems.originalYear}
+              onChange={(originalYear) => set({ originalYear })}
+              onBlur={() => touch("originalYear")}
+            />
+            {form.isLive && (
+              <TextField
+                name="recording"
+                label="Recording year or range"
+                placeholder="1978–1982"
+                value={form.recording}
+                problem={shownProblems.recording}
+                onChange={(recording) => set({ recording })}
+                onBlur={() => touch("recording")}
+              />
+            )}
+
+            <Placeholder label="Artwork">Artwork arrives with link capture.</Placeholder>
+            <Placeholder label="Links">
+              Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture.
+            </Placeholder>
+            <Placeholder label="Custom fields">
+              Custom fields arrive in a later version.
+            </Placeholder>
+
+            <Labelled label="List">
+              {(id) => (
+                <select
+                  aria-labelledby={id}
+                  value={form.listId ?? ""}
+                  onChange={(event) => set({ listId: event.target.value || null })}
+                  className="h-8 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+                >
+                  <option value="">No list (goes to Unsorted)</option>
+                  {lists.map((list) => (
+                    <option key={list.id} value={list.id}>
+                      {list.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Labelled>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" onClick={requestClose}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" aria-keyshortcuts="Meta+Enter">
+                Add album
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={confirming} onOpenChange={setConfirming}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard this album?</AlertDialogTitle>
+            <AlertDialogDescription>What you entered isn't saved.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirming(false);
+                onDone();
+              }}
+            >
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+function TextField({
+  name,
+  label,
+  value,
+  problem,
+  required = false,
+  onChange,
+  onBlur,
+  inputRef,
+  ...rest
+}: {
+  name: FormField;
+  label: string;
+  value: string;
+  problem: string | undefined;
+  required?: boolean;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
+  inputMode?: "numeric";
+  placeholder?: string;
+}) {
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-small text-fg-secondary">
+        {label}
+        {required && <span aria-hidden> *</span>}
+      </label>
+      <input
+        ref={inputRef}
+        id={id}
+        name={name}
+        value={value}
+        required={required}
+        aria-invalid={problem !== undefined}
+        aria-describedby={problem === undefined ? undefined : `${id}-problem`}
+        onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
+        className={cn(
+          "h-8 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+          problem !== undefined && "border-status-danger",
+        )}
+        {...rest}
+      />
+      {problem !== undefined && (
+        <p id={`${id}-problem`} className="text-small text-status-danger">
+          {problem}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function Labelled({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: (id: string) => ReactNode;
+}) {
+  const id = useId();
+  return (
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <span id={id} className="text-small text-fg-secondary">
+        {label}
+      </span>
+      {children(id)}
+    </div>
+  );
+}
+
+/** A field whose feature comes later, shown so the form lists every field (AC-08). */
+function Placeholder({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-small text-fg-secondary">{label}</span>
+      <p className="text-small text-fg-tertiary">{children}</p>
+    </div>
+  );
+}

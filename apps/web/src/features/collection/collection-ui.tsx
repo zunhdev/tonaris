@@ -22,6 +22,7 @@ import {
 import type { ContainerKind } from "@tonaris/domain";
 
 import { editMode, expandedFolders, type Mode } from "../shell/device";
+import { emptyForm, type AlbumForm } from "./album-form";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
 import { ancestorsOf, buildTree } from "./tree";
 
@@ -55,7 +56,21 @@ type CollectionUi = {
    * whether the editor closed; answers the unregister function.
    */
   registerEditor: (commit: () => boolean) => () => void;
+  /** The album whose row or card in a view has focus, while one has: what L adds to a list. */
+  focusedAlbum: () => string | undefined;
+  setFocusedAlbum: (id: string | undefined) => void;
+  /** The album "Add to list…" is open for, if it is open (DS-46). */
+  addingToList: string | undefined;
+  startAddToList: (albumId: string) => void;
+  endAddToList: () => void;
+  /** The manual entry form, while it is open (DS-47). */
+  newAlbum: NewAlbumDraft | undefined;
+  startNewAlbum: (draft: NewAlbumDraft) => void;
+  endNewAlbum: () => void;
 };
+
+/** The manual entry form's starting values, and the failed writes it makes again, if Edit opened it. */
+export type NewAlbumDraft = { form: AlbumForm; replaces?: readonly string[] };
 
 const CollectionUiContext = createContext<CollectionUi | undefined>(undefined);
 
@@ -75,6 +90,9 @@ export function CollectionUiProvider({
   const [stored, setStored] = useState<Mode>(() => editMode.read(accountId));
   const narrow = useNarrowScreen();
   const editors = useRef(new Set<() => boolean>());
+  const focusedAlbum = useRef<string | undefined>(undefined);
+  const [addingToList, setAddingToList] = useState<string | undefined>(undefined);
+  const [newAlbum, setNewAlbum] = useState<NewAlbumDraft | undefined>(undefined);
 
   const update = useCallback(
     (change: (current: Set<string>) => void) => {
@@ -134,8 +152,18 @@ export function CollectionUiProvider({
         editors.current.add(commit);
         return () => editors.current.delete(commit);
       },
+      focusedAlbum: () => focusedAlbum.current,
+      setFocusedAlbum: (id) => {
+        focusedAlbum.current = id;
+      },
+      addingToList,
+      startAddToList: setAddingToList,
+      endAddToList: () => setAddingToList(undefined),
+      newAlbum,
+      startNewAlbum: setNewAlbum,
+      endNewAlbum: () => setNewAlbum(undefined),
     }),
-    [accountId, editing, expanded, update, moving, stored, narrow],
+    [accountId, editing, expanded, update, moving, stored, narrow, addingToList, newAlbum],
   );
 
   return <CollectionUiContext value={value}>{children}</CollectionUiContext>;
@@ -158,6 +186,20 @@ export function useEditor(): Editor | undefined {
 export function useViewContainerId(): string | undefined {
   const params = useParams({ strict: false });
   return params.folderId ?? params.listId;
+}
+
+/**
+ * Opens the manual entry form (DS-47), going to the list on view, if one is, switching to Editing first, since adding
+ * is an edit (DS-45).
+ */
+export function useStartNewAlbum(): () => void {
+  const { enterEditing } = useMode();
+  const { startNewAlbum } = useCollectionUi();
+  const listId = useParams({ strict: false }).listId ?? null;
+  return useCallback(() => {
+    enterEditing();
+    startNewAlbum({ form: emptyForm(listId) });
+  }, [enterEditing, startNewAlbum, listId]);
 }
 
 /**

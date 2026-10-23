@@ -1,7 +1,8 @@
 // Album cards (DS-22): a list's or Unsorted's albums as a virtualized ARIA grid of square artwork tiles, at least
 // 160 px wide in responsive columns, over the title, artist and year, with the save state as a corner badge. Each
 // virtual row is a row of cards; the grid states every row and column (DS-115). Grouped, each group starts with its
-// header on a row of its own, the one in view sticking at the top (DS-43).
+// header on a row of its own, the one in view sticking at the top (DS-43). A click or Enter opens a card's album in the
+// inspector (DS-46).
 
 // Virtualized rows are absolutely positioned, which table elements can't be without overriding their display, and
 // that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -18,6 +19,7 @@ import { cn } from "@tonaris/ui/lib/utils";
 import { Artwork } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
+import { useAlbumOpening } from "./inspector-state";
 import type { ReleaseGroup, Section } from "./order";
 import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
@@ -118,9 +120,11 @@ export function AlbumCards({
     }),
     [items, moves],
   );
+  const opening = useAlbumOpening(rearrange.itemAt);
   const { onKeyDown, cellProps } = useGridFocus({
     grid,
     rearrange,
+    onActivate: opening.onActivate,
     shape: {
       rows: items.length,
       columns: (row) => {
@@ -144,6 +148,7 @@ export function AlbumCards({
           // Its cards take the focus; the grid itself only when clicked between them.
           tabIndex={-1}
           onKeyDown={onKeyDown}
+          {...opening.gridProps}
           className="relative"
           style={{ height: virtualizer.getTotalSize(), marginInline: padding }}
         >

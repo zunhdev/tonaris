@@ -1,11 +1,11 @@
-// The sidebar (DS-30, DS-31): the wordmark and a button to hide it, the account menu, Search and Add album (their
-// issues come later), the collection's tree with a "+" menu for new lists and folders, and the SyncIndicator in
+// The sidebar (DS-30, DS-31): the wordmark and a button to hide it, the account menu, Search (its issue comes later)
+// and Add album, which opens the manual entry form until capture arrives (DS-47), the collection's tree with a "+" menu for new lists and folders, and the SyncIndicator in
 // the footer. Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a
 // dragged folder or list, to move it to the root (DS-49).
 
 import { AccountMenu } from "@/features/account/account-menu";
 import { CollectionTree } from "@/features/collection/collection-tree";
-import { useStartEditor } from "@/features/collection/collection-ui";
+import { useStartEditor, useStartNewAlbum } from "@/features/collection/collection-ui";
 import { useDestination } from "@/features/collection/drag";
 import { SyncIndicator } from "@/features/sync/sync-indicator";
 import { useConnection } from "@/features/sync/sync-provider";
@@ -64,10 +64,7 @@ export function Sidebar({
           Search
           <kbd className="ml-auto text-micro text-fg-tertiary">⌘K</kbd>
         </Button>
-        <Button variant="ghost" className="justify-start" disabled>
-          <Plus strokeWidth={1.5} aria-hidden />
-          Add album
-        </Button>
+        <AddAlbumButton />
       </div>
       <Separator className="my-2" />
       <div className="flex shrink-0 items-center gap-1 pr-2 pl-2">
@@ -204,5 +201,28 @@ function CollectionLink() {
     >
       Collection
     </Link>
+  );
+}
+
+/** Add album: the manual entry form, for now (DS-47). Adding is an edit, so it waits while offline (DS-81). */
+function AddAlbumButton() {
+  const startNewAlbum = useStartNewAlbum();
+  const offline = useConnection() === "offline";
+  if (offline) {
+    return (
+      <Tooltip>
+        <TooltipTrigger render={<Button variant="ghost" className="justify-start" aria-disabled />}>
+          <Plus strokeWidth={1.5} aria-hidden />
+          Add album
+        </TooltipTrigger>
+        <TooltipContent side="right">You're offline</TooltipContent>
+      </Tooltip>
+    );
+  }
+  return (
+    <Button variant="ghost" className="justify-start" onClick={startNewAlbum}>
+      <Plus strokeWidth={1.5} aria-hidden />
+      Add album
+    </Button>
   );
 }

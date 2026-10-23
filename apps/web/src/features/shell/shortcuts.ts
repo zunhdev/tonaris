@@ -1,8 +1,8 @@
 // The workspace's keyboard shortcuts (DS-78), as a pure matcher from key presses to actions, so their rules are
 // tested without a DOM. G starts a sequence: G then H, U, T or S within 1.5 s goes to the root, Unsorted, Trash or
 // Settings → Preferences. Single keys: `[` hides or shows the sidebar, `?` opens the reference, N and ⇧N make a new
-// list or folder, V opens the view's View options, M moves the focused folder or list, and E switches between
-// Viewing and Editing mode.
+// list or folder, V opens the view's View options, M moves the focused folder or list, E switches between Viewing
+// and Editing mode, and L adds the open or focused album to a list. Esc closing the inspector is the inspector's.
 // Nothing matches while a text field has focus, nor with ⌘, Ctrl or Alt held. Shortcuts come before the tree's
 // type-ahead (decided 22 October 2026): a matched key is claimed, and the tree types ahead only with the others.
 
@@ -17,7 +17,8 @@ export type ShortcutAction =
   | "new-folder"
   | "view-options"
   | "move"
-  | "toggle-mode";
+  | "toggle-mode"
+  | "add-to-list";
 
 /** What the matcher reads of a `KeyboardEvent`. */
 export type KeyPress = {
@@ -39,6 +40,16 @@ export function isTextField(target: unknown): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
+/** Whether `target` is inside a layer with keys of its own: a dialog, a popover or a menu. */
+export function inLayer(target: unknown): boolean {
+  return (
+    typeof Element !== "undefined" &&
+    target instanceof Element &&
+    target.closest('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]') !==
+      null
+  );
+}
+
 const goTo: Record<string, ShortcutAction> = {
   h: "go-root",
   u: "go-unsorted",
@@ -54,6 +65,7 @@ const singles: Record<string, ShortcutAction> = {
   v: "view-options",
   m: "move",
   e: "toggle-mode",
+  l: "add-to-list",
 };
 
 /**
@@ -94,7 +106,8 @@ export const shortcutReference = [
       { keys: ["←", "→"], action: "Collapse or expand a folder; move across a row" },
       { keys: ["⌘", "Home"], action: "First item in a view" },
       { keys: ["⌘", "End"], action: "Last item in a view" },
-      { keys: ["Enter"], action: "Open" },
+      { keys: ["Enter"], action: "Open; open an album in the inspector" },
+      { keys: ["Esc"], action: "Close the inspector" },
       { keys: ["G", "H"], action: "Go to Collection" },
       { keys: ["G", "U"], action: "Go to Unsorted" },
       { keys: ["G", "T"], action: "Go to Trash" },
@@ -112,6 +125,10 @@ export const shortcutReference = [
       { keys: ["⌥", "⇧", "↑"], action: "Move to the top" },
       { keys: ["⌥", "⇧", "↓"], action: "Move to the bottom" },
     ],
+  },
+  {
+    title: "Albums",
+    keys: [{ keys: ["L"], action: "Add to list…" }],
   },
   {
     title: "Folders and lists",

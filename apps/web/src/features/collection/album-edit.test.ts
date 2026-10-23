@@ -4,7 +4,7 @@ import { describe, expect, test } from "bun:test";
 
 import { uuidv7, type Album } from "@tonaris/domain";
 
-import { albumEdit, cellText } from "./album-edit";
+import { albumChoice, albumEdit, cellText } from "./album-edit";
 
 const album = (values: Partial<Album> = {}): Album => ({
   id: uuidv7(),
@@ -108,5 +108,47 @@ describe("the year (DS-24)", () => {
       kind: "save",
       values: { originalYear: 1980 },
     });
+  });
+});
+
+describe("the inspector's chronology (DS-46)", () => {
+  test("the original year and the recording years are edited each on their own", () => {
+    const rainbow = live({ originalYear: 1984, recordingYearStart: null, recordingYearEnd: null });
+    expect(cellText(rainbow, "recording")).toBe("");
+    expect(cellText(rainbow, "originalYear")).toBe("1984");
+    expect(albumEdit(rainbow, "recording", "1978–1982")).toEqual({
+      kind: "save",
+      values: { recordingYearStart: 1978, recordingYearEnd: 1982 },
+    });
+    expect(albumEdit(rainbow, "originalYear", "1985")).toEqual({
+      kind: "save",
+      values: { originalYear: 1985 },
+    });
+    // Live with a recording year, the original year can go.
+    expect(albumEdit(live(), "originalYear", "")).toEqual({
+      kind: "save",
+      values: { originalYear: null },
+    });
+    expect(albumEdit(album(), "originalYear", "")).toEqual({
+      kind: "refuse",
+      reason: "Give the album a year.",
+    });
+  });
+
+  test("Live off without an original year is refused, and the release type is saved", () => {
+    const recordedOnly = live({ originalYear: null });
+    expect(albumChoice(recordedOnly, { isLive: false })).toEqual({
+      kind: "refuse",
+      reason: "Give the album a year.",
+    });
+    expect(albumChoice(album(), { isLive: true })).toEqual({
+      kind: "save",
+      values: { isLive: true },
+    });
+    expect(albumChoice(album(), { releaseType: "ep" })).toEqual({
+      kind: "save",
+      values: { releaseType: "ep" },
+    });
+    expect(albumChoice(album(), { releaseType: "album" })).toEqual({ kind: "unchanged" });
   });
 });

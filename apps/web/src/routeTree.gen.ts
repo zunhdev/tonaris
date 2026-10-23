@@ -21,6 +21,7 @@ import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
 import { Route as SignInIndexRouteImport } from './routes/sign-in.index'
 import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
+import { Route as WorkspaceAAlbumIdRouteImport } from './routes/_workspace/a.$albumId'
 import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$folderId'
 import { Route as WorkspaceLListIdRouteImport } from './routes/_workspace/l.$listId'
 import { Route as WorkspaceSettingsConnectionsRouteImport } from './routes/_workspace/settings.connections'
@@ -85,6 +86,11 @@ const SignInVerifyRoute = SignInVerifyRouteImport.update({
   path: '/verify',
   getParentRoute: () => SignInRoute,
 } as any)
+const WorkspaceAAlbumIdRoute = WorkspaceAAlbumIdRouteImport.update({
+  id: '/a/$albumId',
+  path: '/a/$albumId',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const WorkspaceFFolderIdRoute = WorkspaceFFolderIdRouteImport.update({
   id: '/f/$folderId',
   path: '/f/$folderId',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/': typeof WorkspaceIndexRoute
   '/sign-in': typeof SignInIndexRoute
+  '/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/_workspace/': typeof WorkspaceIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/_workspace/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
   '/_workspace/settings/connections': typeof WorkspaceSettingsConnectionsRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/oauth/consent'
     | '/sign-in/verify'
     | '/sign-in/'
+    | '/a/$albumId'
     | '/f/$folderId'
     | '/l/$listId'
     | '/settings/connections'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/'
     | '/sign-in'
+    | '/a/$albumId'
     | '/f/$folderId'
     | '/l/$listId'
     | '/settings/connections'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/_workspace/'
     | '/sign-in/'
+    | '/_workspace/a/$albumId'
     | '/_workspace/f/$folderId'
     | '/_workspace/l/$listId'
     | '/_workspace/settings/connections'
@@ -308,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInVerifyRouteImport
       parentRoute: typeof SignInRoute
     }
+    '/_workspace/a/$albumId': {
+      id: '/_workspace/a/$albumId'
+      path: '/a/$albumId'
+      fullPath: '/a/$albumId'
+      preLoaderRoute: typeof WorkspaceAAlbumIdRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/f/$folderId': {
       id: '/_workspace/f/$folderId'
       path: '/f/$folderId'
@@ -345,6 +364,7 @@ interface WorkspaceRouteChildren {
   WorkspaceTrashRoute: typeof WorkspaceTrashRoute
   WorkspaceUnsortedRoute: typeof WorkspaceUnsortedRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
+  WorkspaceAAlbumIdRoute: typeof WorkspaceAAlbumIdRoute
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
   WorkspaceSettingsConnectionsRoute: typeof WorkspaceSettingsConnectionsRoute
@@ -357,6 +377,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceTrashRoute: WorkspaceTrashRoute,
   WorkspaceUnsortedRoute: WorkspaceUnsortedRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
+  WorkspaceAAlbumIdRoute: WorkspaceAAlbumIdRoute,
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,
   WorkspaceSettingsConnectionsRoute: WorkspaceSettingsConnectionsRoute,

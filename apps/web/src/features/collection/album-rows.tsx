@@ -1,8 +1,9 @@
 // Album rows (DS-21): a list's or Unsorted's albums as a virtualized ARIA grid of 36 px rows, each with its artwork
 // tile, title, artist, year and release type, and its save state. The type collapses first as the view narrows, and
 // is hidden while the view is grouped by it. Grouped, each group starts with its header, the one in view sticking
-// at the top (DS-43). In Editing mode, the title, artist and year cells edit inline (DS-45): Enter or a double-click
-// opens one, and F2 the title, switching to Editing first. The checkbox and the services and Open button (M4) join
+// at the top (DS-43). A click, or Enter in Viewing mode, opens the album in the inspector (DS-46). In Editing mode,
+// the title, artist and year cells edit inline (DS-45): Enter or a double-click opens one, and F2 the title,
+// switching to Editing first. The checkbox and the services and Open button (M4) join
 // these columns later. Each row is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 
 // Virtualized rows are absolutely positioned CSS grid rows, which table elements can't be without overriding their
@@ -34,6 +35,7 @@ import { ChronologyYear } from "./chronology-year";
 import { useCollectionUi, useMode } from "./collection-ui";
 import { useRowDrag } from "./drag";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
+import { useAlbumOpening } from "./inspector-state";
 import type { ReleaseGroup, Section } from "./order";
 import { cellAt, useGridFocus, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
@@ -43,10 +45,13 @@ const rowHeight = 36;
 /** The cells that edit inline, by column: title, artist and year (DS-45). */
 const editableCells: readonly AlbumCell[] = ["title", "artistCredit", "year"];
 
-const cellNames: Record<AlbumCell, string> = {
+/** Each editor's name, for its accessible label: "Title of 'Nightfall'". */
+export const cellNames: Record<AlbumCell, string> = {
   title: "Title",
   artistCredit: "Artist",
   year: "Year",
+  originalYear: "Original release year",
+  recording: "Recording year or range",
 };
 
 /** The cell being edited inline: its album, its value as typed, and why that was refused, if it was. */
@@ -168,6 +173,7 @@ export function AlbumRows({
     }),
     [items, moves],
   );
+  const opening = useAlbumOpening(rearrange.itemAt);
   const { onKeyDown, cellProps, focusCell } = useGridFocus({
     grid,
     shape: {
@@ -176,6 +182,7 @@ export function AlbumRows({
       page,
     },
     reveal,
+    onActivate: opening.onActivate,
     rearrange,
   });
 
@@ -269,6 +276,7 @@ export function AlbumRows({
         aria-rowcount={items.length + 1}
         aria-colcount={columns}
         onKeyDown={onGridKeyDown}
+        {...opening.gridProps}
         onDoubleClick={(event) => {
           // A double-click on an editable cell opens its editor, in Editing mode.
           const at = cellAt(event.target);

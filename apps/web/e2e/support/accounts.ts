@@ -63,6 +63,13 @@ export const accounts = {
   modeIntent: at("mode-intent"),
   modeLeave: at("mode-leave"),
   modeCells: at("mode-cells"),
+  // The album inspector and manual entry (album-inspector.e2e.ts), one per test.
+  inspectorOpen: at("inspector-open"),
+  inspectorEdit: at("inspector-edit"),
+  inspectorLists: at("inspector-lists"),
+  entryRequired: at("entry-required"),
+  entryIntoList: at("entry-into-list"),
+  albumPage: at("album-page"),
 } as const;
 
 /** An address with no account. */

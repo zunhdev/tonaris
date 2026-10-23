@@ -1,14 +1,26 @@
-// The desktop shell (DS-30): sidebar, main view and, once an item is opened, the inspector. Until then the
-// inspector takes no space. Each pane is a named landmark (Q-02). The sidebar is 240 px wide by default, resizable
-// from 200 to 360 px and hideable with `[`, both kept on this device. Offline, a banner tops the main view (DS-81).
-// The workspace's shortcuts and their reference live here (DS-78), and so do dragging, which spans the sidebar and
-// the view, and "Move to…" (DS-49).
+// The desktop shell (DS-30): sidebar, main view and, once an album is opened, the inspector, 380 px wide beside the
+// view, or over it below 1100 px. Until then the inspector takes no space. Each pane is a named landmark (Q-02). The
+// sidebar is 240 px wide by default, resizable from 200 to 360 px and hideable with `[`, both kept on this device.
+// Offline, a banner tops the main view (DS-81). The workspace's shortcuts and their reference live here (DS-78), and
+// so do dragging, which spans the sidebar and the view, "Move to…" (DS-49), "Add to list…" (DS-46) and the manual
+// entry form (DS-47).
 
+import { AddToListDialog } from "@/features/collection/add-to-list";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { DragProvider } from "@/features/collection/drag";
+import { AlbumInspector } from "@/features/collection/inspector";
+import { useInspector } from "@/features/collection/inspector-state";
 import { MoveDialog } from "@/features/collection/move";
+import { NewAlbumDialog } from "@/features/collection/new-album";
 import { OfflineBanner } from "@/features/sync/offline-banner";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
 import type { Account } from "@tonaris/domain";
 
@@ -19,10 +31,30 @@ import { ShortcutReference } from "./shortcut-reference";
 import { Sidebar } from "./sidebar";
 import { useShortcuts } from "./use-shortcuts";
 
+const wideQuery = "(min-width: 1100px)";
+
+const subscribeWide = (listener: () => void) => {
+  const query = globalThis.matchMedia?.(wideQuery);
+  query?.addEventListener("change", listener);
+  return () => query?.removeEventListener("change", listener);
+};
+
+/** Whether the window is wide enough for the inspector beside the view (DS-30). */
+function useWideScreen(): boolean {
+  return useSyncExternalStore(
+    subscribeWide,
+    () => globalThis.matchMedia?.(wideQuery).matches ?? true,
+    () => true,
+  );
+}
+
 export function Shell({ account, children }: { account: Account; children: ReactNode }) {
   const [layout, setLayout] = useState(() => sidebarLayout.read());
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const { editing } = useCollectionUi();
+  const { albumId } = useInspector();
+  const wide = useWideScreen();
+  const beside = albumId !== undefined && wide;
 
   useEffect(() => sidebarLayout.write(layout), [layout]);
 
@@ -53,9 +85,13 @@ export function Shell({ account, children }: { account: Account; children: React
         <div
           className="grid h-dvh bg-app"
           style={{
-            gridTemplateColumns: layout.hidden
-              ? "minmax(0,1fr)"
-              : `${layout.width}px minmax(0,1fr)`,
+            gridTemplateColumns: [
+              layout.hidden ? undefined : `${layout.width}px`,
+              "minmax(0,1fr)",
+              beside ? "380px" : undefined,
+            ]
+              .filter(Boolean)
+              .join(" "),
           }}
         >
           {!layout.hidden && (
@@ -69,10 +105,13 @@ export function Shell({ account, children }: { account: Account; children: React
             <OfflineBanner />
             {children}
           </main>
+          {albumId !== undefined && <AlbumInspector overlay={!wide} />}
         </div>
       </DragProvider>
       <ShortcutReference open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <MoveDialog />
+      <AddToListDialog />
+      <NewAlbumDialog />
     </ShellContext>
   );
 }
