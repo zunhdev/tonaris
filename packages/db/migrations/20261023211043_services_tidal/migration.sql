@@ -1,0 +1,1 @@
+ALTER TABLE "album_service_links" DROP CONSTRAINT "album_service_links_service_check", ADD CONSTRAINT "album_service_links_service_check" CHECK ("service" in ('spotify', 'apple-music', 'qobuz', 'tidal'));

@@ -11,6 +11,7 @@ import {
   accountSync,
   admissionInvitations,
   albums,
+  albumServiceLinks,
   changeLog,
   containers,
   memberships,
@@ -346,6 +347,32 @@ describe("constraints", () => {
           .values(album(ownerId, { recordingYearStart: 1964, recordingYearEnd: 1963 })),
       ),
     ).toBe("albums_recording_years_check");
+  });
+
+  test("service links are for the four services (FR-02.1)", async () => {
+    const ownerId = await newUser();
+    const saved = album(ownerId);
+    await t.db.insert(albums).values(saved);
+    expect(
+      await violation(
+        t.db.insert(albumServiceLinks).values({
+          albumId: saved.id,
+          ownerId,
+          service: "tidal",
+          url: "https://tidal.com/album/279764933",
+          entityId: "279764933",
+        }),
+      ),
+    ).toBeUndefined();
+    // A service outside the type, as a client could send.
+    expect(
+      await violation(
+        t.db.execute(
+          sql`insert into ${albumServiceLinks} (album_id, owner_id, service, url, entity_id)
+            values (${saved.id}, ${ownerId}, 'deezer', 'https://www.deezer.com/album/302127', '302127')`,
+        ),
+      ),
+    ).toBe("album_service_links_service_check");
   });
 
   test("albums hold no edition details (FR-02.12)", async () => {

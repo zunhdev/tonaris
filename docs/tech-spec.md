@@ -603,22 +603,38 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 
 ## 6. Capture, metadata, and matching (G1, G2)
 
-**TS-40 Link parsing (Decided; FR-02.1, FR-02.3, FR-06.4, Q-05).** Pasted text is parsed **locally** by allowlisted patterns into `{service, kind: album|track, id, storefront?, trackId?}`. Arbitrary URLs are never fetched.
+**TS-40 Link parsing (Decided; built in TON-39; FR-02.1, FR-02.3, FR-06.4, Q-05).** Pasted text is parsed **locally** by allowlisted patterns (`parseLink()` in `packages/providers/src/links.ts`) into `{service, kind: album|track, id, albumId?, storefront?, locale?, slug?, url}`. Arbitrary URLs are never fetched.
 
-| Service | Accepted forms (normalized to a canonical URL) |
-| --- | --- |
-| Spotify | `open.spotify.com/(intl-xx/)?(album\|track)/{id}` (strip `si` and other query parameters); `spotify:(album\|track):{id}`; `spotify.link/*` short links (see below) |
-| Apple Music | `music.apple.com/{sf}/album/{slug}/{id}(?i={songId})`, `music.apple.com/album/{id}`, `geo.music.apple.com/…` (same id). `?i=` is a track whose parent album id is already in the path. |
-| Qobuz | `www.qobuz.com/{locale}/album/{slug}/{id}`, `open.qobuz.com/(album\|track)/{id}`, `play.qobuz.com/album/{id}` |
-| Tidal | `tidal.com/(browse/)?(album\|track)/{id}`, `listen.tidal.com/(album\|track)/{id}`, `www.tidal.com/…`; a share link's trailing `/u` and `?u` are dropped. Canonical: `https://tidal.com/(album\|track)/{id}`, the form MusicBrainz stores ([Tidal spike](spikes/2026-10-20-g1-tidal.md)) |
+- **`id`** is what the link names: the album, or the track.
+- **`albumId`** is the album's id when the link names it: album links, and Apple `?i=` links.
+- **`url`** is the canonical URL. Every query parameter but Apple's `i` is dropped, and so is the fragment.
+- **`locale` and `slug`** are a Qobuz store link's, for request A (TS-41).
 
-Short links are the only network resolution:
+| Service | Accepted forms | Canonical URL |
+| --- | --- | --- |
+| Spotify | `open.spotify.com/(intl-xx/)?(album\|track)/{id}`, with `si` and other query parameters dropped; `spotify:(album\|track):{id}`; `spotify.link/*` and `spotify.app.link/*` short links (below) | `https://open.spotify.com/(album\|track)/{id}` |
+| Apple Music | On `music.apple.com` and `geo.music.apple.com`, each with or without the storefront and slug: `/{sf}/album/{slug}/{id}`; the same with `?i={songId}`, a track whose album id is in the path; `/{sf}/song/{slug}/{songId}`, a track that names no album (accepted 24 October 2026; TS-41 step 2 finds its album) | `https://music.apple.com/{sf}/album/{id}`, `…/album/{albumId}?i={songId}` or `…/{sf}/song/{songId}`. The storefront stays as pasted. A link without one stays without, so Apple picks the store. |
+| Qobuz | `www.qobuz.com/{locale}/album/{slug}/{id}`, also without the locale or `www.`; `open.qobuz.com/(album\|track)/{id}`; `play.qobuz.com/(album\|track)/{id}` | `https://open.qobuz.com/(album\|track)/{id}`, which hands over to the app (FR-06.6). Ids are lowercased, as they are base 36. |
+| Tidal | `tidal.com/(browse/)?(album\|track)/{id}`, `listen.tidal.com/…`, `www.tidal.com/…`; a share link's trailing `/u` and `?u` are dropped | `https://tidal.com/(album\|track)/{id}`, the form MusicBrainz stores ([Tidal spike](spikes/2026-10-20-g1-tidal.md)) |
 
-- one `GET` with `redirect: manual`;
-- the `Location` must be on the allowlist;
-- at most 3 hops, through the SSRF guard (TS-103).
+**Hostile input (Q-05):**
 
-Two canonical URLs that refer to the same `{service, kind, id}` are equivalent and never conflict (FR-06.4).
+- input is trimmed, and at most 2,048 characters;
+- only `https` and `http` links are read, and `http` canonicalises to `https`;
+- a link with credentials, or a port other than the default, is unsupported;
+- hosts match the allowlist exactly, and ids match their service's pattern.
+
+**Unsupported input** fails with `unsupported_link` and a reason (FR-02.3, DS-48). The reason says whether the input isn't a link of the four services at all, is a service's link that isn't an album or track, or has an id that looks incomplete.
+
+**Short links** are the only network resolution (`resolveShortLink()`):
+
+- one `GET` per hop, with `redirect: manual`;
+- the `Location` must be on the allowlist: another short link, or `open.spotify.com`, whose album or track ends the walk. Any other host is never requested;
+- at most 3 hops, through the SSRF guard (TS-103). The resolver takes the fetcher as an argument, and production passes `safeFetch`;
+- the walk fails as unsupported on a redirect to anything but a Spotify album or track, an answer without a redirect, or a fourth hop. An unknown code redirects to `https://open.spotify.com/` (checked 24 October 2026);
+- a failed request, a `5xx` or a `429` is `provider_unavailable`, so it can be retried.
+
+**Equivalence (FR-06.4).** Two links with the same `{service, kind, id}` are equivalent and never conflict, whatever their canonical URLs. This is `sameLink()` in `packages/domain/src/links.ts`, beside `streamingServices`, which `album_service_links.service` uses.
 
 **TS-41 Identification and metadata strategy (Decided: the experiment on 17 October 2026, the terms on 19 October 2026, and the final G1 decision on 21 October 2026 in TON-25; FR-02.1–FR-02.3, FR-02.8, FR-06.7, FR-08.8, FR-10.9).**
 
@@ -651,7 +667,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 | --- | --- | --- | --- |
 | 0. Parse | all | Local allowlisted parsing (TS-40) into `{service, kind, id}` | Unsupported input → FR-02.3 error |
 | 1. Existing link | all | The same `{service, entity_id}` is already linked in the owner's collection, Trash included | Reuse that album (TS-44) |
-| 2. MusicBrainz URL lookup | album links; Apple track links, whose album id is in the path | `/ws/2/url?inc=release-rels`, asking in one request for every form MusicBrainz may store the link in, since editors paste them as they find them ([TON-14](spikes/2026-10-18-g1-musicbrainz.md)): the canonical URL; for Apple, the album under the common storefronts; for Qobuz, `open.`, `play.`, the locale-less store URL, and the store URL under the common locales with the slug from request A (below); for Tidal, its other link forms | One album → confident, however many of its releases the URL is linked to; several albums → `needs_input` with the candidates (TS-26); none → next step |
+| 2. MusicBrainz URL lookup | album links; Apple track links. A `?i=` link's album id is in the path. A `/song/` link's comes from one iTunes Lookup by song id, its `collectionId` (decided 24 October 2026). | `/ws/2/url?inc=release-rels`, asking in one request for every form MusicBrainz may store the link in, since editors paste them as they find them ([TON-14](spikes/2026-10-18-g1-musicbrainz.md)): the canonical URL; for Apple, the album under the common storefronts; for Qobuz, `open.`, `play.`, the locale-less store URL, and the store URL under the common locales with the slug from request A (below); for Tidal, its other link forms | One album → confident, however many of its releases the URL is linked to; several albums → `needs_input` with the candidates (TS-26); none → next step |
 | 3. Identifier bridge | Qobuz, Spotify | **Qobuz:** a 13-digit numeric album id is treated as a UPC. **Spotify:** Web API with client credentials, in an app owned by the creator (Premium). `Get Album` yields `external_ids.upc`; for a track link, `Get Track` yields the parent album id, which goes back through step 2 and then this step. The UPC drives a MusicBrainz barcode search, in one query for all its forms: as given, as 12 digits (UPC-A, without a leading 0) and as 14 digits (GTIN-14, with leading zeros). Only exact barcode matches count. Spotify writes some UPCs as GTIN-14s, and Qobuz's ids match only as UPC-A ([TON-14](spikes/2026-10-18-g1-musicbrainz.md), [TON-15](spikes/2026-10-19-g1-spotify-bridge.md)). | One album → confident; several albums → `needs_input`; none → next step |
 | 4. Hints | Apple, Qobuz, Tidal; app captures only for Qobuz and Tidal (below) | Hints for an automatic MusicBrainz release search. **Apple:** the public iTunes Lookup API (no key) supplies title, artist, release date, and track count. **Qobuz:** the album page's schema.org `MusicAlbum` name, the `Product` block's brand as the artist, and the date. **Tidal:** the album page's `MusicAlbum` name, artists and date. Qobuz and Tidal pages are read transiently, under the store-page rules below | Accepted only if exactly one album passes this rule (decided 21 October 2026; [TON-16](spikes/2026-10-19-g1-apple-hints.md), [G2 spike](spikes/2026-10-19-g2-album-matching.md)): the search is by cleaned title and first artist, then by title alone; titles agree on letters and digits after case and accent folding; the artist is one of the release's credited, artist or sort names; the year is the release's or the album's first year; the track count is ignored; only official releases of albums and EPs count, plus singles when Apple's title says " - Single". Measured: 66% of labelled Apple links, 68% of Qobuz and 80% of Tidal, none wrong. Several albums → `needs_input`; none → next step |
 | 5. Manual entry | all | Form prefilled with the link and, for Apple, the hints (FR-02.4) | The user completes and saves |
@@ -674,7 +690,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - Once the user confirms them, they are ordinary album data: stored, visible to agents and exported ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)).
   - Only title, artist and date are prefilled. The track count is a hint only.
   - No Apple artwork, previews or store URLs are kept.
-  - Lookups stay under 20 a minute, and responses may be cached for a day.
+  - Lookups, including step 2's for `/song/` links, stay under 20 a minute, and responses may be cached for a day.
   - The paid Apple Music API (Apple Developer Program) is not used.
 - **Qobuz store pages.** Permitted on 19 October 2026 ([G1 terms review](spikes/2026-10-19-g1-terms-review.md)), and used by the chain since the G1 decision of 21 October 2026 ([TON-99 measurement](spikes/2026-10-19-g1-qobuz-hints.md)).
   - **Request A, the slug:** for open. and play. links, one `GET www.qobuz.com/fr-fr/album/-/{id}` with manual redirects, reading only `Location`. Those links carry no store, so they use `fr-fr`, Qobuz's home store (decided 21 October 2026); `us-en` missed albums European stores sell. Store links keep their own store.

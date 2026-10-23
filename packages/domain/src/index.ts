@@ -95,6 +95,15 @@ export {
   maxMemberships,
   maxNameLength,
 } from "./limits";
+export {
+  linkKinds,
+  sameLink,
+  serviceNames,
+  streamingServices,
+  type LinkKind,
+  type LinkRef,
+  type StreamingService,
+} from "./links";
 export { membershipKey, membershipSchema, type Membership } from "./memberships";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
 export { isOrderKey, maxOrderItems, positionKey, positionSchema, type Position } from "./positions";

@@ -626,6 +626,15 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **`C` or "+ Add album"** opens a capture popover. It has a multi-line input (one link per line), a destination combobox, and an "Enter manually" link that opens DS-47.
 - **Inline progress:** each link becomes a placeholder row at its insertion point, showing skeleton artwork and "Resolving link…". The row becomes the real album on success.
   - **Failure:** the row turns into an inline error row with the reason and three actions: **Retry**, **Enter manually** (pre-filled), and **Dismiss**. The pasted link is preserved until dismissed.
+  - **Reasons for links that can't be read** (TS-40), *as built in TON-39*:
+
+    | Case | Reason |
+    | --- | --- |
+    | Not a link of the four services | "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link." |
+    | A service's link that isn't an album or track | "Only Spotify album and track links can be added." (with the service's name) |
+    | An album or track link whose id looks cut off | "This Spotify link looks incomplete. Copy it again from Spotify." |
+    | A short link that leads nowhere | "This Spotify short link doesn't lead to an album or track." |
+    | A short link Spotify didn't answer | "Couldn't reach Spotify to open this short link. Try again." |
 - **Outcome toasts**, replacing the row where relevant:
 
   | Outcome | Toast |
