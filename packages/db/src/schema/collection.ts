@@ -15,7 +15,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { containerKinds, releaseTypes } from "@tonaris/domain";
+import { containerKinds, releaseTypes, streamingServices } from "@tonaris/domain";
 
 import { users } from "./auth";
 import { instant, notBlank, oneOf, table, timestamps, trashStamp } from "./columns";
@@ -156,8 +156,6 @@ export const albumProvenance = table(
     check("album_provenance_source_check", oneOf(t.source, provenanceSources)),
   ],
 );
-
-export const streamingServices = ["spotify", "apple-music", "qobuz"] as const;
 
 /** At most one current link per service and album (FR-06.2). */
 export const albumServiceLinks = table(

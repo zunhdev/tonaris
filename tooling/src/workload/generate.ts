@@ -431,11 +431,11 @@ function buildAlbums(b: Builder, count: number): Album[] {
 type Service = Insert<typeof albumServiceLinks>["service"];
 
 const base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-const services: readonly Service[] = ["spotify", "apple-music", "qobuz"];
+const services: readonly Service[] = ["spotify", "apple-music", "qobuz", "tidal"];
 
 /** The link the album was captured from, sometimes a second service's too (FR-06.2). */
 function addServiceLinks(b: Builder, rng: Random, album: Album, title: string): void {
-  const primary = rng.pickWeighted(services, [0.5, 0.3, 0.2]);
+  const primary = rng.pickWeighted(services, [0.45, 0.25, 0.15, 0.15]);
   const linked = rng.chance(0.15)
     ? [primary, rng.pick(services.filter((service) => service !== primary))]
     : [primary];
@@ -469,6 +469,10 @@ const serviceLink: Record<
   qobuz: (rng) => {
     const entityId = rng.string("0123456789abcdefghijklmnopqrstuvwxyz", 13);
     return { entityId, url: `https://open.qobuz.com/album/${entityId}` };
+  },
+  tidal: (rng) => {
+    const entityId = String(rng.int(1_000_000, 499_999_999));
+    return { entityId, url: `https://tidal.com/album/${entityId}` };
   },
 };
 
