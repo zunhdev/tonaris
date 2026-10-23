@@ -4,6 +4,7 @@
 
 import {
   useCollectionUi,
+  useMode,
   useStartEditor,
   useViewContainerId,
 } from "@/features/collection/collection-ui";
@@ -43,6 +44,7 @@ export function useShortcuts({
   const ui = useCollectionUi();
   const { editing, openViewOptions } = ui;
   const viewId = useViewContainerId();
+  const mode = useMode();
   const offline = useConnection() === "offline";
   // The latest of each, so the listener is installed once.
   const latest = useRef({
@@ -55,6 +57,7 @@ export function useShortcuts({
     openViewOptions,
     ui,
     viewId,
+    mode,
   });
   useEffect(() => {
     latest.current = {
@@ -67,6 +70,7 @@ export function useShortcuts({
       openViewOptions,
       ui,
       viewId,
+      mode,
     };
   });
 
@@ -84,7 +88,13 @@ export function useShortcuts({
       // focused folder or list row of a view, else the folder or list the view shows.
       else if (action === "move") {
         const target = now.ui.focused() ?? now.ui.focusedRow() ?? now.viewId;
-        if (!now.offline && !now.editing.current && target !== undefined) now.ui.startMove(target);
+        if (!now.offline && !now.editing.current && target !== undefined) {
+          // Edit intent switches to Editing first (DS-45).
+          now.mode.enterEditing();
+          now.ui.startMove(target);
+        }
+      } else if (action === "toggle-mode") {
+        now.mode.choose(now.mode.editing ? "view" : "edit");
       }
       // Edit controls wait while offline (DS-81), and one editor is open at a time.
       else if (!now.offline && !now.editing.current) {

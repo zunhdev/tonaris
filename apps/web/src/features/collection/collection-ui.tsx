@@ -2,8 +2,10 @@
 // tree item that has focus. The tree, the shortcuts, the views and the save-state layer's Edit all start editors
 // through it, so there is one editor at a time; the shell shows a hidden sidebar when one starts. The view shown
 // registers how to open its View options, for `V` (DS-49). `M` moves the focused folder or list: the tree's, else a
-// view row's, else the view's own (DS-49).
+// view row's, else the view's own (DS-49). The mode, Viewing or Editing, is kept here too (DS-45): leaving Editing
+// first commits every open inline editor, and stays if one refuses its value.
 
+import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useParams } from "@tanstack/react-router";
 import {
@@ -19,7 +21,7 @@ import {
 
 import type { ContainerKind } from "@tonaris/domain";
 
-import { expandedFolders } from "../shell/device";
+import { editMode, expandedFolders, type Mode } from "../shell/device";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
 import { ancestorsOf, buildTree } from "./tree";
 
@@ -44,6 +46,15 @@ type CollectionUi = {
   moving: string | undefined;
   startMove: (id: string) => void;
   endMove: () => void;
+  /** Viewing or Editing (DS-45); always Viewing on a narrow screen, which is for browsing (FR-04.1). */
+  mode: Mode;
+  /** Switches the mode; answers whether it did. Leaving Editing commits the open inline editors first. */
+  setMode: (next: Mode) => boolean;
+  /**
+   * Registers an open inline editor's commit, which saves a valid value or keeps a refused one open and answers
+   * whether the editor closed; answers the unregister function.
+   */
+  registerEditor: (commit: () => boolean) => () => void;
 };
 
 const CollectionUiContext = createContext<CollectionUi | undefined>(undefined);
@@ -61,6 +72,9 @@ export function CollectionUiProvider({
   const viewOptions = useRef<(() => void) | undefined>(undefined);
   const focusedRow = useRef<string | undefined>(undefined);
   const [moving, setMoving] = useState<string | undefined>(undefined);
+  const [stored, setStored] = useState<Mode>(() => editMode.read(accountId));
+  const narrow = useNarrowScreen();
+  const editors = useRef(new Set<() => boolean>());
 
   const update = useCallback(
     (change: (current: Set<string>) => void) => {
@@ -104,8 +118,24 @@ export function CollectionUiProvider({
       moving,
       startMove: setMoving,
       endMove: () => setMoving(undefined),
+      mode: narrow ? "view" : stored,
+      setMode: (next) => {
+        if (next === stored) return true;
+        if (next === "view") {
+          // Every editor commits, so each refused one shows its error.
+          const closed = [...editors.current].map((commit) => commit());
+          if (closed.includes(false)) return false;
+        }
+        editMode.write(accountId, next);
+        setStored(next);
+        return true;
+      },
+      registerEditor: (commit) => {
+        editors.current.add(commit);
+        return () => editors.current.delete(commit);
+      },
     }),
-    [accountId, editing, expanded, update, moving],
+    [accountId, editing, expanded, update, moving, stored, narrow],
   );
 
   return <CollectionUiContext value={value}>{children}</CollectionUiContext>;
@@ -135,6 +165,7 @@ export function useViewContainerId(): string | undefined {
  * folder that `placeFor` names when no parent is given.
  */
 export function useStartEditor(): (editor: Editor | { mode: "new"; kind: ContainerKind }) => void {
+  const { enterEditing } = useMode();
   const client = useSyncClient();
   const ui = useCollectionUi();
   const viewId = useViewContainerId();
@@ -160,8 +191,53 @@ export function useStartEditor(): (editor: Editor | { mode: "new"; kind: Contain
         const path = ancestorsOf(tree, shown).map((folder) => folder.id);
         ui.expand(editor.mode === "create" ? [...path, shown] : path);
       }
+      // Naming and renaming are edits: they switch to Editing first (DS-45).
+      enterEditing();
       ui.editing.start(editor);
     },
-    [client, ui, viewId],
+    [client, ui, viewId, enterEditing],
   );
+}
+
+const narrowQuery = "(max-width: 767px)";
+
+/** Whether the screen is narrower than the desktop app (DS-110): there the app is for browsing. */
+function useNarrowScreen(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      const query = globalThis.matchMedia?.(narrowQuery);
+      query?.addEventListener("change", listener);
+      return () => query?.removeEventListener("change", listener);
+    },
+    () => globalThis.matchMedia?.(narrowQuery).matches ?? false,
+  );
+}
+
+/**
+ * Viewing and Editing mode, with what switching says (DS-45, DS-83): edit intent switches to Editing first and
+ * announces "Editing mode on"; the toggle and E switch either way. Leaving Editing commits the open inline editors,
+ * and stays if one refuses its value. The mode is interface state only: switching sends nothing and changes no
+ * permission (FR-04.2).
+ */
+export function useMode() {
+  const { mode, setMode } = useCollectionUi();
+  const announce = useAnnounce();
+
+  /** Edit intent: switches to Editing before the edit starts. */
+  const enterEditing = useCallback(() => {
+    if (mode === "view" && setMode("edit")) announce("Editing mode on");
+  }, [mode, setMode, announce]);
+
+  /** The toggle and E; answers whether the mode is now `next`. */
+  const choose = useCallback(
+    (next: Mode) => {
+      if (next === mode) return true;
+      if (!setMode(next)) return false;
+      announce(next === "edit" ? "Editing mode on" : "Editing mode off");
+      return true;
+    },
+    [mode, setMode, announce],
+  );
+
+  return { mode, editing: mode === "edit", enterEditing, choose };
 }

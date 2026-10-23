@@ -1,8 +1,9 @@
 // Album rows (DS-21): a list's or Unsorted's albums as a virtualized ARIA grid of 36 px rows, each with its artwork
 // tile, title, artist, year and release type, and its save state. The type collapses first as the view narrows, and
 // is hidden while the view is grouped by it. Grouped, each group starts with its header, the one in view sticking
-// at the top (DS-43). The checkbox and drag handle (TON-37, TON-36) and the services and Open button (M4) join these
-// columns later. Each row is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+// at the top (DS-43). In Editing mode, the title, artist and year cells edit inline (DS-45): Enter or a double-click
+// opens one, and F2 the title, switching to Editing first. The checkbox and the services and Open button (M4) join
+// these columns later. Each row is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 
 // Virtualized rows are absolutely positioned CSS grid rows, which table elements can't be without overriding their
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -10,22 +11,46 @@
 
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
+import { useVirtualizer, type Range } from "@tanstack/react-virtual";
 import { GripVertical } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 
 import type { Album } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { isTextField } from "../shell/shortcuts";
+import { albumEdit, cellText, type AlbumCell } from "./album-edit";
 import { Artwork } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
+import { useCollectionUi, useMode } from "./collection-ui";
 import { useRowDrag } from "./drag";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
 import type { ReleaseGroup, Section } from "./order";
-import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
+import { cellAt, useGridFocus, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
+
+/** The cells that edit inline, by column: title, artist and year (DS-45). */
+const editableCells: readonly AlbumCell[] = ["title", "artistCredit", "year"];
+
+const cellNames: Record<AlbumCell, string> = {
+  title: "Title",
+  artistCredit: "Artist",
+  year: "Year",
+};
+
+/** The cell being edited inline: its album, its value as typed, and why that was refused, if it was. */
+type CellEdit = { albumId: string; cell: AlbumCell; draft: string; refusal?: string };
 /** Below this width, the type column collapses (DS-21). */
 const typeFrom = 640;
 
@@ -86,6 +111,31 @@ export function AlbumRows({
     [items],
   );
   const { rangeExtractor, isStuck } = useStickyHeader(headers);
+  const client = useSyncClient();
+  const offline = useConnection() === "offline";
+  const { editing, enterEditing } = useMode();
+  const { registerEditor } = useCollectionUi();
+  // The edit lives here, not in the row, so that scrolling can't lose it; the ref is what the handlers read.
+  const [cellEdit, setCellEditState] = useState<CellEdit | undefined>(undefined);
+  const current = useRef<CellEdit | undefined>(undefined);
+  const setCellEdit = useCallback((next: CellEdit | undefined) => {
+    current.current = next;
+    setCellEditState(next);
+  }, []);
+  const editRow =
+    cellEdit === undefined
+      ? -1
+      : items.findIndex((item) => item.type === "album" && item.album.id === cellEdit.albumId);
+  // The edited row stays drawn while the view scrolls.
+  const extractRange = useCallback(
+    (range: Range) => {
+      const indexes = rangeExtractor(range);
+      return editRow === -1 || indexes.includes(editRow)
+        ? indexes
+        : [...indexes, editRow].toSorted((a, b) => a - b);
+    },
+    [rangeExtractor, editRow],
+  );
   // TanStack Virtual re-renders on scroll by design; the app isn't compiled with React Compiler, which the rule is
   // about.
   // oxlint-disable-next-line react/incompatible-library
@@ -98,7 +148,7 @@ export function AlbumRows({
       return item?.type === "header" ? `group:${item.group}` : (item?.album.id ?? index);
     },
     overscan: 10,
-    rangeExtractor,
+    rangeExtractor: extractRange,
   });
   // Headers and rows differ in height, so offsets change whenever the items do.
   useEffect(() => virtualizer.measure(), [virtualizer, items]);
@@ -118,7 +168,7 @@ export function AlbumRows({
     }),
     [items, moves],
   );
-  const { onKeyDown, cellProps } = useGridFocus({
+  const { onKeyDown, cellProps, focusCell } = useGridFocus({
     grid,
     shape: {
       rows: items.length,
@@ -128,6 +178,82 @@ export function AlbumRows({
     reveal,
     rearrange,
   });
+
+  const albumAt = (id: string) => {
+    const item = items.find((each) => each.type === "album" && each.album.id === id);
+    return item?.type === "album" ? item.album : undefined;
+  };
+
+  /** Opens a cell's editor; edits wait while offline (DS-81). */
+  function startEdit(album: Album, cell: AlbumCell) {
+    if (offline || !client) return;
+    setCellEdit({ albumId: album.id, cell, draft: cellText(album, cell) });
+  }
+
+  /** Closes the editor and gives its cell the focus back. */
+  function closeEdit(edit: CellEdit) {
+    setCellEdit(undefined);
+    const row = items.findIndex((item) => item.type === "album" && item.album.id === edit.albumId);
+    if (row !== -1) focusCell({ row, col: editableCells.indexOf(edit.cell) });
+  }
+
+  /** Saves the edit, or shows why it can't be saved; whether the editor closed. */
+  function commitEdit(): boolean {
+    const edit = current.current;
+    if (!edit) return true;
+    const album = albumAt(edit.albumId);
+    if (!album) {
+      setCellEdit(undefined);
+      return true;
+    }
+    const result = albumEdit(album, edit.cell, edit.draft);
+    if (result.kind === "refuse") {
+      setCellEdit({ ...edit, refusal: result.reason });
+      return false;
+    }
+    if (result.kind === "save" && client) {
+      // One update from the values it replaces (TS-21); the save-state layer reports one that isn't saved.
+      client.albums
+        .update(album.id, (draft) => {
+          Object.assign(draft, result.values);
+        })
+        .isPersisted.promise.catch(() => {});
+    }
+    closeEdit(edit);
+    return true;
+  }
+
+  // Leaving Editing mode commits an open editor first, and stays if it refuses (DS-45).
+  const commitLatest = useRef(commitEdit);
+  useEffect(() => {
+    commitLatest.current = commitEdit;
+  });
+  const open = cellEdit !== undefined;
+  useEffect(() => {
+    if (!open) return undefined;
+    return registerEditor(() => {
+      const closed = commitLatest.current();
+      if (!closed) grid.current?.querySelector<HTMLInputElement>("[data-cell-editor]")?.focus();
+      return closed;
+    });
+  }, [open, registerEditor]);
+
+  /** Enter opens a cell's editor in Editing mode; F2 opens the title's, switching to Editing first. */
+  function onGridKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (!isTextField(event.target) && (event.key === "Enter" || event.key === "F2")) {
+      const at = cellAt(event.target);
+      const item = at && items[at.row];
+      const cell = event.key === "F2" ? "title" : at && editableCells[at.col];
+      if (item?.type === "album" && cell && (editing || event.key === "F2") && !offline) {
+        event.preventDefault();
+        if (event.key === "F2") enterEditing();
+        startEdit(item.album, cell);
+        return;
+      }
+    }
+    onKeyDown(event);
+  }
+
   const template = showType
     ? "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_7rem_6.5rem_1.5rem]"
     : "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_7rem_1.5rem]";
@@ -142,7 +268,14 @@ export function AlbumRows({
         tabIndex={-1}
         aria-rowcount={items.length + 1}
         aria-colcount={columns}
-        onKeyDown={onKeyDown}
+        onKeyDown={onGridKeyDown}
+        onDoubleClick={(event) => {
+          // A double-click on an editable cell opens its editor, in Editing mode.
+          const at = cellAt(event.target);
+          const item = at && items[at.row];
+          const which = at && editableCells[at.col];
+          if (editing && item?.type === "album" && which) startEdit(item.album, which);
+        }}
         className="px-4"
       >
         <div role="rowgroup" className="sr-only">
@@ -188,12 +321,22 @@ export function AlbumRows({
                 key={item.album.id}
                 album={item.album}
                 viewKey={viewKey}
-                manual={moves.manual}
+                manual={moves.handles}
                 index={virtual.index}
                 top={virtual.start}
                 template={template}
                 showType={showType}
                 cellProps={cellProps}
+                edit={cellEdit?.albumId === item.album.id ? cellEdit : undefined}
+                onDraft={(draft) => {
+                  const edit = current.current;
+                  if (edit) setCellEdit({ ...edit, draft, refusal: undefined });
+                }}
+                onCommit={commitEdit}
+                onCancel={() => {
+                  const edit = current.current;
+                  if (edit) closeEdit(edit);
+                }}
               />
             );
           })}
@@ -215,6 +358,10 @@ function AlbumRow({
   template,
   showType,
   cellProps,
+  edit,
+  onDraft,
+  onCommit,
+  onCancel,
 }: {
   album: Album;
   viewKey: string;
@@ -225,8 +372,23 @@ function AlbumRow({
   template: string;
   showType: boolean;
   cellProps: ReturnType<typeof useGridFocus>["cellProps"];
+  /** This row's cell being edited, if one is. */
+  edit: CellEdit | undefined;
+  onDraft: (draft: string) => void;
+  onCommit: () => boolean;
+  onCancel: () => void;
 }) {
   const row = useRef<HTMLDivElement>(null);
+  const editor = (which: AlbumCell) =>
+    edit?.cell === which ? (
+      <CellEditor
+        label={`${cellNames[which]} of '${album.title}'`}
+        edit={edit}
+        onDraft={onDraft}
+        onCommit={onCommit}
+        onCancel={onCancel}
+      />
+    ) : undefined;
   useLiveHighlight(album.id, row);
   const status = useSaveState(album.id);
   const drag = useRowDrag({ kind: "album", id: album.id, name: album.title, viewKey }, manual);
@@ -241,7 +403,7 @@ function AlbumRow({
   const cells = [
     <div key="title" role="gridcell" className={cn(cell, "gap-2.5 pr-3")} {...cellProps(index, 0)}>
       <Artwork title={album.title} className="size-7" letterClassName="text-small" />
-      <span className="truncate text-fg-primary">{album.title}</span>
+      {editor("title") ?? <span className="truncate text-fg-primary">{album.title}</span>}
     </div>,
     <div
       key="artist"
@@ -249,7 +411,7 @@ function AlbumRow({
       className={cn(cell, "pr-3 text-fg-secondary")}
       {...cellProps(index, 1)}
     >
-      <span className="truncate">{album.artistCredit}</span>
+      {editor("artistCredit") ?? <span className="truncate">{album.artistCredit}</span>}
     </div>,
     <div
       key="year"
@@ -257,7 +419,7 @@ function AlbumRow({
       className={cn(cell, "pr-3 text-fg-secondary")}
       {...cellProps(index, 2)}
     >
-      <ChronologyYear album={album} />
+      {editor("year") ?? <ChronologyYear album={album} />}
     </div>,
     ...(showType
       ? [
@@ -331,5 +493,64 @@ export function DropLine({ side }: { side: "before" | "after" }) {
         side === "before" ? "-top-px" : "-bottom-px",
       )}
     />
+  );
+}
+
+/**
+ * An inline cell editor (DS-45): Enter saves and Escape discards; leaving the field saves a valid value. A refused
+ * value stays, with its reason under the cell, and nothing is sent (X-05).
+ */
+function CellEditor({
+  label,
+  edit,
+  onDraft,
+  onCommit,
+  onCancel,
+}: {
+  label: string;
+  edit: CellEdit;
+  onDraft: (draft: string) => void;
+  onCommit: () => boolean;
+  onCancel: () => void;
+}) {
+  const errorId = useId();
+  return (
+    <span className="relative flex min-w-0 flex-1">
+      <input
+        // The editor opens where the person asked for it, so it takes the focus.
+        // oxlint-disable-next-line jsx-a11y/no-autofocus
+        autoFocus
+        data-cell-editor
+        aria-label={label}
+        aria-invalid={edit.refusal !== undefined}
+        aria-describedby={edit.refusal === undefined ? undefined : errorId}
+        value={edit.draft}
+        onChange={(event) => onDraft(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onCommit();
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            onCancel();
+          }
+        }}
+        onBlur={onCommit}
+        // A double-click inside the field selects text; it doesn't reopen the editor.
+        onDoubleClick={(event) => event.stopPropagation()}
+        className={cn(
+          "h-7 min-w-0 flex-1 rounded-sm border border-strong bg-panel px-1.5 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+          edit.refusal !== undefined && "border-status-danger",
+        )}
+      />
+      {edit.refusal !== undefined && (
+        <span
+          id={errorId}
+          className="absolute top-full left-0 z-20 mt-1 rounded-md bg-raised px-2 py-1 text-small whitespace-nowrap text-status-danger shadow-floating"
+        >
+          {edit.refusal}
+        </span>
+      )}
+    </span>
   );
 }

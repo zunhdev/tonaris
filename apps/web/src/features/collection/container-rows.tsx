@@ -131,7 +131,7 @@ export function ContainerRows({
                 count={count}
                 created={showCreated ? created(container.id) : undefined}
                 viewKey={viewKey}
-                manual={moves.manual}
+                manual={moves.handles}
                 index={item.index}
                 top={item.start}
                 cellProps={cellProps}

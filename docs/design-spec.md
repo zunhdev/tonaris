@@ -206,6 +206,21 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
   - It is pointer only and hidden from assistive technology. ⌥↑ and ⌥↓ do the same from the keyboard (DS-03).
 - **Folder and root rows** have the same handle (DS-41).
 
+*As built in TON-37:*
+- **Drag handles show in Editing mode only,** under Manual sort. In Viewing mode, ⌥↑ and ⌥↓ still rearrange.
+- **In Editing mode, the title, artist and year cells edit inline:**
+  - **Opening:** Enter on the cell, or a double-click. F2 opens the title from either mode, switching to Editing first.
+  - **The year** edits what the cell shows: the original year; a live album's recording year or range, "1978–1982" with any dash; or, for a live album without one, the release year it falls back to.
+  - **Saving:** Enter or leaving the field saves, as one `album.update` from the replaced values (TS-21). Escape discards.
+  - **Refusals** stay in the field, under the cell, and nothing is sent:
+    - "Give the album a title.";
+    - "Give the album an artist.";
+    - "Give the album a year.";
+    - "Enter the year as four digits, such as 1986.";
+    - "The recording period ends before it starts."
+  - **Offline,** cells don't open (DS-81).
+  - **Cards** aren't edited inline; the inspector will edit them (TON-38).
+
 **DS-22 Album card.** This is the grid item. A square artwork tile (160–200px, responsive columns) sits over the title and artist, each truncated to one line, then the year. Save state appears as a corner badge. *(FR-05)*
 
 *As built in TON-34:*
@@ -517,6 +532,18 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Leaving editing mode** with an inline edit open: a valid value is committed (normal save states apply); an invalid value keeps the editor open with its error, and the mode does not switch until the user fixes or discards it.
 - **No toggle** appears for viewers of shared content (a "View only · Shared by {name}" pill instead) or on mobile.
 
+*As built in TON-37:*
+- **The toggle** is a segmented control labelled "Mode", `View | Edit`, before View options in the header of the root, folders, lists and Unsorted. E switches it, outside text fields.
+- **The mode is kept on the device** as `tonaris:mode:<accountId>`, Viewing when unset. Below 768 px, the toggle is hidden and the mode reads as Viewing.
+- **Announcements:** switching announces "Editing mode on" or "Editing mode off", politely.
+- **Edit intent** switches to Editing first: N, ⇧N and the "+" menu, "New list" in an empty view, F2 in the tree and on an album row, Edit on a failed write, M, and a drop that moves a folder or list onto the tree (decided with the creator on 23 October 2026).
+- **Leaving Editing** commits every open inline editor, the tree's name editor included, as leaving its field would:
+  - a valid value is saved, and the mode switches;
+  - a blank new name is discarded;
+  - a refused value keeps its editor open, focused, with its error, and the mode stays.
+- **Unchanged in both modes:** keyboard rearranging, View options, and opening folders and lists. Selection checkboxes and "+ Add album" come with selection and capture.
+- **Interface state only:** switching sends nothing, and the server judges every write the same (FR-04.2).
+
 **DS-46 Album inspector.** It opens with Enter or a click on a row, shows the album at `?album=:id`, and Esc closes it. With the inspector open, J/K moves to the next or previous album. Sections, top to bottom: *(FR-03.1–FR-03.4, FR-06.2–FR-06.4, FR-01.6, FR-01.8, FR-14.1)*
 
 1. **Artwork** (240px), title and artist credit.
@@ -600,7 +627,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 *As built in TON-36:*
 - **Rearranging,** under Manual sort only:
   - **Keyboard:** ⌥↑ and ⌥↓ move the focused item by one, and ⌥⇧↑ and ⌥⇧↓ to the top or bottom, in rows and cards. Focus follows the item.
-  - **Pointer:** a row's drag handle. A 2 px `accent.solid` line shows where it would land, and an overlay with its name follows the pointer.
+  - **Pointer:** a row's drag handle, in Editing mode (TON-37). A 2 px `accent.solid` line shows where it would land, and an overlay with its name follows the pointer.
   - **Grouped,** an item moves among its own group's items, in the one arrangement (FR-05.8).
   - **Each move is announced** politely: "Moved {name} to position {n} of {total}", counted within the group when grouped.
   - **Under another sort,** ⌥↑ or ⌥↓ moves nothing. An info toast says "Rearranging works in manual order", with "Switch to manual order".
@@ -803,6 +830,7 @@ The block never says "private" while another access path remains.
 - **TON-34 adds the views' grid keys:** J and K, arrows across a row, and ⌘Home and ⌘End. J and K belong to the grid, not to global shortcuts, so in the tree they stay type-ahead letters.
 - **TON-35 adds V,** which opens the current view's View options; it works offline, since choosing isn't an edit. **G then S** now goes to Settings → Preferences.
 - **TON-36 adds M,** "Move to…", which waits while offline like N, and ⌥↑ / ⌥↓, with ⇧ for the ends, in the views' grids. The reference lists them.
+- **TON-37 adds E,** which switches between Viewing and Editing, and F2 on an album row, which edits its title. M now switches to Editing first.
 
 ---
 

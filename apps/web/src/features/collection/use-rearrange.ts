@@ -88,6 +88,8 @@ export function useRearrange(
 /** What a view's grid needs to rearrange its items: whether it is in manual order, and the moves themselves. */
 export type ViewMoves = {
   manual: boolean;
+  /** Whether rows show drag handles: in manual order, in Editing mode (DS-45). */
+  handles: boolean;
   /** ⌥↑ / ⌥↓ on an item, with ⇧ for the ends; answers whether it moved. */
   move: (id: string, to: Direction) => boolean;
   /** A drop of an item before or after another; answers whether it moved. */

@@ -1,6 +1,6 @@
-// What the workspace remembers on this device, not synced (DS-27, DS-30, DS-32, DS-43): which folders are expanded,
-// the sidebar's width and whether it is hidden, the last collection view visited, and, for the tab's session, which
-// groups are collapsed. Kept in localStorage and sessionStorage, which can be missing or refuse writes (private
+// What the workspace remembers on this device, not synced (DS-27, DS-30, DS-32, DS-43, DS-45): which folders are
+// expanded, the sidebar's width and whether it is hidden, the last collection view visited, Viewing or Editing mode,
+// and, for the tab's session, which groups are collapsed. Kept in localStorage and sessionStorage, which can be missing or refuse writes (private
 // modes, blocked storage): then nothing is remembered, and nothing fails.
 
 const storageOf = (session: boolean): Storage | undefined => {
@@ -107,5 +107,17 @@ export const collapsedGroups = {
   },
   write(accountId: string, viewKey: string, groups: ReadonlySet<string>): void {
     write(`tonaris:collapsed:${accountId}:${viewKey}`, [...groups], true);
+  },
+};
+
+export type Mode = "view" | "edit";
+
+/** Viewing or Editing mode, app-wide (DS-45): kept on this device, per account, and not synced. */
+export const editMode = {
+  read(accountId: string): Mode {
+    return read(`tonaris:mode:${accountId}`) === "edit" ? "edit" : "view";
+  },
+  write(accountId: string, mode: Mode): void {
+    write(`tonaris:mode:${accountId}`, mode);
   },
 };

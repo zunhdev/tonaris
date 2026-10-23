@@ -12,6 +12,7 @@ import {
   type RefObject,
 } from "react";
 
+import { isTextField } from "../shell/shortcuts";
 import { nextCell, type Cell, type GridShape } from "./grid-keys";
 import type { Direction } from "./order";
 
@@ -43,7 +44,7 @@ export function useWidth(ref: RefObject<HTMLElement | null>): number {
 const cellSelector = (cell: Cell) => `[data-cell="${cell.row}:${cell.col}"]`;
 
 /** The cell `target` is in, from its `data-cell` address. */
-function cellAt(target: EventTarget): Cell | undefined {
+export function cellAt(target: EventTarget): Cell | undefined {
   const address =
     target instanceof Element ? target.closest("[data-cell]")?.getAttribute("data-cell") : null;
   const [row, col] = (address ?? "").split(":").map(Number);
@@ -111,7 +112,8 @@ export function useGridFocus({
   });
 
   function onKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (event.defaultPrevented) return;
+    // Keys typed into a cell's editor are the editor's: letters, arrows, Home and End.
+    if (event.defaultPrevented || isTextField(event.target)) return;
     if (rearrange && event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
       event.preventDefault();
       const up = event.key === "ArrowUp";
@@ -145,5 +147,5 @@ export function useGridFocus({
     };
   }
 
-  return { onKeyDown, cellProps };
+  return { onKeyDown, cellProps, focusCell };
 }

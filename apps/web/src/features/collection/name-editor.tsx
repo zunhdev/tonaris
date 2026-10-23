@@ -2,15 +2,17 @@
 // DS-78). Enter saves and Escape cancels; leaving the field saves a name, or cancels a blank one. A name the domain
 // would refuse (blank, too long, or taken among its siblings) keeps the editor open with the reason, and nothing is
 // sent (X-05, DS-107). Saving goes through the collection like any edit, so save states apply (DS-80); an editor
-// opened by Edit on a failed write dismisses that failure once it saves.
+// opened by Edit on a failed write dismisses that failure once it saves. Leaving Editing mode commits it as leaving
+// the field does, and a refused name keeps the mode (DS-45).
 
 import { useSaveActions } from "@/features/sync/save-actions";
 import { useSyncClient } from "@/features/sync/sync-provider";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { uuidv7, type ContainerKind } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useCollectionUi } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { nameRefusal, type Editor } from "./editing";
 import { ContainerIcon } from "./icons";
@@ -35,7 +37,30 @@ export function NameEditor({
   const [name, setName] = useState(editor?.name ?? "");
   const [refusal, setRefusal] = useState<string>();
   const closed = useRef(false);
+  const input = useRef<HTMLInputElement>(null);
   const errorId = useId();
+  const { registerEditor } = useCollectionUi();
+  // What leaving the field does, for leaving Editing mode: the latest of it, registered once.
+  const commit = useRef<() => boolean>(() => true);
+  useEffect(
+    () =>
+      registerEditor(() => {
+        const closedNow = commit.current();
+        if (!closedNow) input.current?.focus();
+        return closedNow;
+      }),
+    [registerEditor],
+  );
+  useEffect(() => {
+    commit.current = () => {
+      if (!editor || closed.current) return true;
+      if (name.trim() === "") {
+        cancel();
+        return true;
+      }
+      return save();
+    };
+  });
   if (!editor) return null;
 
   const renaming = editor.mode === "rename" ? data.tree.byId.get(editor.id) : undefined;
@@ -105,6 +130,7 @@ export function NameEditor({
           // The editor opens where the person asked for it, so it takes the focus.
           // oxlint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
+          ref={input}
           aria-label={label}
           aria-invalid={refusal !== undefined}
           aria-describedby={refusal === undefined ? undefined : errorId}

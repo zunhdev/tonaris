@@ -133,7 +133,9 @@ async function drag(page: Page, from: Locator, to: Locator, y = 0.5): Promise<vo
 const rowOf = (page: Page, gridName: string, name: string) =>
   grid(page, gridName).getByRole("row").filter({ hasText: name });
 
-test("a row is rearranged by dragging its handle, in manual order only", async ({ page }) => {
+test("a row is rearranged by dragging its handle, in manual order and Editing mode", async ({
+  page,
+}) => {
   await signIn(page, accounts.arrangeDrag);
   await live(page);
   const doom = await created(page, "Doom");
@@ -147,6 +149,8 @@ test("a row is rearranged by dragging its handle, in manual order only", async (
   // Sorted by year, rows have no handle.
   await expect(grid(page, "Doom").locator('[data-slot="drag-handle"]')).toHaveCount(0);
   await chooseSort(page, "Manual");
+  // Handles show in Editing mode (DS-45).
+  await page.getByRole("radiogroup", { name: "Mode" }).getByRole("radio", { name: "Edit" }).click();
   await expect(grid(page, "Doom").locator('[data-slot="drag-handle"]')).toHaveCount(3);
   expect(await violations(page, '[role="grid"]')).toEqual([]);
 

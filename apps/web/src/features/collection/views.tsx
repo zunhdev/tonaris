@@ -18,10 +18,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/
 import { AlbumCards } from "./album-cards";
 import { AlbumRows } from "./album-rows";
 import { useStartEditor } from "./collection-ui";
+import { useMode } from "./collection-ui";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
 import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
+import { ModeSwitch } from "./mode-switch";
 import { sections, sortAlbums, type Direction } from "./order";
 import { ancestorsOf } from "./tree";
 import { usePresentation } from "./use-presentation";
@@ -58,6 +60,7 @@ function ContainersBody({
 }) {
   const { tree, counts } = useCollectionData();
   const { presentation, choose } = usePresentation(viewKey, "containers");
+  const { editing } = useMode();
   const rearrange = useRearrange(viewKey, {
     manual: presentation.sortMode === "manual",
     toManual: () => choose({ sortMode: "manual" }),
@@ -68,10 +71,11 @@ function ContainersBody({
     const nameOf = (id: string) => tree.byId.get(id)?.name ?? "the folder or list";
     return {
       manual: rearrange.manual,
+      handles: rearrange.manual && editing,
       move: (id: string, to: Direction) => rearrange.move(sequence, sequence, id, to, nameOf(id)),
       drop: (id, place) => rearrange.drop(sequence, sequence, id, place, nameOf(id)),
     };
-  }, [containers, tree, rearrange]);
+  }, [containers, tree, rearrange, editing]);
   useDropHandler(viewKey, moves.drop);
   return (
     <ContainerRows
@@ -121,6 +125,7 @@ function AlbumsBody({
 }) {
   const { keys } = useCollectionData();
   const { presentation, choose } = usePresentation(viewKey, "albums");
+  const { editing } = useMode();
   const { sortMode, sortDir, grouped, layout } = presentation;
   const viewKeys = keys.get(viewKey);
   const manualOrder = useMemo(
@@ -150,14 +155,46 @@ function AlbumsBody({
       manualOrder.find((album) => album.id === id)?.title ?? "the album";
     return {
       manual: rearrange.manual,
+      handles: rearrange.manual && editing,
       move: (id, to) => rearrange.move(sequence, groupOf(id), id, to, nameOf(id)),
       drop: (id, place) => rearrange.drop(sequence, groupOf(id), id, place, nameOf(id)),
     };
-  }, [manualOrder, shown, rearrange]);
+  }, [manualOrder, shown, rearrange, editing]);
   useDropHandler(viewKey, moves.drop);
   const [collapsed, toggle] = useCollapsedGroups(viewKey);
   const props = { sections: shown, label, viewKey, collapsed, onToggle: toggle, moves };
   return layout === "grid" ? <AlbumCards {...props} /> : <AlbumRows {...props} />;
+}
+
+/**
+ * A collection view's header: its path and name, the mode toggle with Editing's tint (DS-45), and View options
+ * (DS-49).
+ */
+function ViewHeader({
+  title,
+  breadcrumbs,
+  viewKey,
+  kind,
+}: {
+  title: string;
+  breadcrumbs?: ReactNode[];
+  viewKey: string;
+  kind: "albums" | "containers";
+}) {
+  const { editing } = useMode();
+  return (
+    <PageHeader
+      title={title}
+      breadcrumbs={breadcrumbs}
+      editing={editing}
+      actions={
+        <>
+          <ModeSwitch />
+          <ViewOptions key={viewKey} viewKey={viewKey} kind={kind} />
+        </>
+      }
+    />
+  );
 }
 
 /** An empty view: one sentence and at most one action (DS-105). */
@@ -197,7 +234,7 @@ export function RootView() {
   const count = tree.roots.length;
   return (
     <>
-      <PageHeader title="Collection" actions={<ViewOptions viewKey="root" kind="containers" />} />
+      <ViewHeader title="Collection" viewKey="root" kind="containers" />
       {!ready ? null : count > 0 ? (
         <ContainersBody containers={tree.roots} label="Collection" viewKey="root" />
       ) : (
@@ -280,16 +317,11 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
 
   return (
     <>
-      <PageHeader
+      <ViewHeader
         title={container.name}
         breadcrumbs={breadcrumbs}
-        actions={
-          <ViewOptions
-            key={id}
-            viewKey={id}
-            kind={container.kind === "folder" ? "containers" : "albums"}
-          />
-        }
+        viewKey={id}
+        kind={container.kind === "folder" ? "containers" : "albums"}
       />
       {body}
     </>
@@ -302,7 +334,7 @@ export function UnsortedView() {
   useDocumentTitle("Unsorted");
   return (
     <>
-      <PageHeader title="Unsorted" actions={<ViewOptions viewKey="unsorted" kind="albums" />} />
+      <ViewHeader title="Unsorted" viewKey="unsorted" kind="albums" />
       {!ready ? null : albums.length > 0 ? (
         <AlbumsBody albums={albums} label="Unsorted" viewKey="unsorted" />
       ) : (
