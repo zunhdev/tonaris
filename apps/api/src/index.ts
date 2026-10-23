@@ -8,7 +8,7 @@ import { createApp } from "./app";
 import { createAuth } from "./auth/auth";
 import { apiConfig } from "./config";
 import { smtpEmail } from "./email/smtp";
-import { pruneSyncHistorySchedule, startSchedules } from "./schedules";
+import { apiSchedules, startSchedules } from "./schedules";
 import { databaseHub } from "./sync/hub";
 
 const config = apiConfig();
@@ -17,7 +17,7 @@ const email = smtpEmail(config);
 const auth = createAuth({ config, db, email });
 const hub = databaseHub(db);
 const app = createApp({ config, auth, db, email, hub }).listen(config.port);
-const schedules = startSchedules(db, [pruneSyncHistorySchedule]);
+const schedules = startSchedules(db, apiSchedules);
 
 console.log(`tonaris-api listening on ${app.server?.url.href}`);
 

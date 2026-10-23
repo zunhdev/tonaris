@@ -275,6 +275,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `admission_invitations` | `id`, `email_key`, `token_hash bytea`, `status` (`available`\|`redeemed`\|`revoked`\|`expired`), `expires_at`, `created_by`, `redeemed_by`, `redeemed_at`, `email_status` | Partial unique index on `email_key` for available invitations. `redeemed_at` is set exactly when the status is `redeemed`. `redeemed_by` becomes null when its account is deleted, so the redemption stays on record ([TON-24](spikes/2026-10-21-admission-gate.md)) | FR-11.6 |
 | `service_state` | singleton: `admissions_paused` | Its one row is inserted by its migration, with admissions open | FR-11.2 |
 | `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error` | | TS-90 |
+| `provider_cache` | `key` (PK, namespaced: `musicbrainz:url:{url}`), `value jsonb`, `expires_at` (indexed) | MusicBrainz and Cover Art Archive answers for 7 days; pruned daily. No user data (TS-41, TON-41). | TS-41 |
 | `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions | FR-11.5–FR-11.6 |
 | Better Auth tables | `user`, `session`, `account`, `verification`; later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
 
@@ -707,8 +708,24 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - The same 5 s timeout and daily robots.txt check as Qobuz's.
 - **No interactive catalog search.** The creator declined user-facing search. The PRD clarifies FR-06.7: automatic metadata-catalog lookups that identify a supplied link are allowed, while user-facing catalog search and streaming-link discovery are not.
 - **Rate limit.** MusicBrainz allows 1 request per second per IP, with a meaningful User-Agent ([rate limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)).
-  - All MusicBrainz calls go through one global job queue (TS-90) paced at 1 request per second, with a 7-day cache keyed by URL, barcode, and MBID. A lookup keyed by a Spotify value is cached only when MusicBrainz finds it (Spotify rules above).
-  - A 503 from MusicBrainz means "retry later", whatever its cause: it answers so at times even well under the limit. The job retries with backoff rather than failing ([TON-14](spikes/2026-10-18-g1-musicbrainz.md)).
+  - **One queue per process** (built in TON-41: `MusicBrainz` in `packages/providers/src/musicbrainz.ts`). Every MusicBrainz request waits its turn, and turns start at least 1 s apart, start to start. The API makes one client and shares it, so captures, enrichment and batches all queue together.
+    - A request's turn passes once it starts, so a slow answer doesn't hold the queue: MusicBrainz limits rate, not concurrency.
+    - Identical requests in flight share one.
+    - It is in-process, not one `jobs` row per request. A capture asks several dependent questions, and its durable retries belong to the capture's job (TS-90).
+    - If the API ever runs as more than one instance, the next start moves to Postgres, as TS-104's limits would.
+  - **A 7-day cache keyed by URL, barcode and MBID** (`provider_cache`):
+    - URL and barcode lookups ask for every form in one request. Each form is kept on its own: a hit under MusicBrainz's own spelling of the URL or barcode, and a miss as an empty entry.
+    - A lookup keyed by a Spotify value is cached only when MusicBrainz finds it (Spotify rules above). Callers say so with a required `cacheMisses` option.
+    - A lookup sends no request when every form is kept, or when one is kept as found. Otherwise a Spotify lookup, whose misses aren't kept, would never be answered from the cache.
+    - MBID lookups and the Cover Art Archive's front keep 404s too.
+    - Searches from step 4's hints aren't kept, as nothing from a store page may be.
+    - Expired entries are pruned daily (TS-91).
+  - **A 503 from MusicBrainz means "retry later",** whatever its cause: it answers so at times even well under the limit ([TON-14](spikes/2026-10-18-g1-musicbrainz.md)).
+    - 503s, 502s, 504s and failed connections are retried after `max(Retry-After, 2^n)` seconds: 1, 2, 4, 8.
+    - The wait holds back the whole queue.
+    - After 4 retries the lookup throws `ProviderUnavailableError`. The capture's job retries later, and its outcome is `provider_unavailable`.
+    - Messages name the path, never the query.
+  - **The Cover Art Archive** is asked with `HEAD …/release-group/{mbid}/front-500` and redirects not followed. A redirect means a front, kept as that stable address. It is archive.org's service, outside MusicBrainz's limit, so it isn't queued.
   - Every outbound request in the chain has a timeout: MusicBrainz, Spotify, iTunes Lookup and the store pages.
   - Capture shows a pending enrichment state, and batches enrich progressively.
   - A self-hosted MusicBrainz mirror (nightly CC0 dumps) is the scale-out path.
@@ -1077,6 +1094,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
   - each run is one transaction that takes `pg_try_advisory_xact_lock(hashtext(name))` and skips the run if another holds it, so no pooled connection keeps a lock;
   - each schedule first runs a minute after start, then on its interval;
   - shutdown waits for a run in progress before the database closes;
+  - `prune-provider-cache` joined `prune-sync-history` in TON-41;
   - the `jobs` table and its workers arrive with the first queued job.
 - Retries use exponential backoff; dead jobs are visible in the admin UI.
 - No Redis or external queue.
@@ -1086,7 +1104,8 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Job | Schedule | Rules |
 | --- | --- | --- |
 | Trash expiry sweep | hourly | FR-01.17, FR-14.5 |
-| MusicBrainz enrichment queue | continuous, 1 req/s global | TS-41 |
+| MusicBrainz enrichment queue | continuous, 1 req/s global, in the API process (TON-41) | TS-41 |
+| Expire provider answers (> 7 d) | daily (`prune-provider-cache`) | TS-41 |
 | Email send and retry | on demand | FR-07.5, FR-11.6 |
 | Account data deletion | on demand | FR-11.11 |
 | Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), approvals with M9 | TS-22, TS-64 |

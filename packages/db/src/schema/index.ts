@@ -4,6 +4,7 @@
 export * from "./admission";
 export * from "./approvals";
 export * from "./auth";
+export * from "./cache";
 export * from "./collection";
 export * from "./fields";
 export * from "./oauth";

@@ -98,6 +98,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@tonaris/domain": "workspace:*",
+        "zod": "4.6.7",
       },
     },
     "packages/ui": {

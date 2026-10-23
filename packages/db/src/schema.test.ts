@@ -116,6 +116,7 @@ describe("migrations", () => {
       "oauth_refresh_token",
       "oauth_resource",
       "positions",
+      "provider_cache",
       "saved_references",
       "service_state",
       "session",
