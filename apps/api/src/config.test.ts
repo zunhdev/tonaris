@@ -73,4 +73,12 @@ describe("apiConfig", () => {
       "x-forwarded-for",
     );
   });
+
+  test("turns the Spotify bridge on only with both credentials, and off with SPOTIFY_BRIDGE=off (TS-41)", () => {
+    expect(apiConfig({}).spotify).toBeUndefined();
+    expect(apiConfig({ SPOTIFY_CLIENT_ID: "id" }).spotify).toBeUndefined();
+    const credentials = { SPOTIFY_CLIENT_ID: "id", SPOTIFY_CLIENT_SECRET: "secret" };
+    expect(apiConfig(credentials).spotify).toEqual({ clientId: "id", clientSecret: "secret" });
+    expect(apiConfig({ ...credentials, SPOTIFY_BRIDGE: "off" }).spotify).toBeUndefined();
+  });
 });

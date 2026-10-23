@@ -27,3 +27,12 @@ export type LinkRef = { service: StreamingService; kind: LinkKind; id: string };
 export function sameLink(a: LinkRef, b: LinkRef): boolean {
   return a.service === b.service && a.kind === b.kind && a.id === b.id;
 }
+
+/**
+ * What `album_service_links.entity_id` holds for a link (TS-11, TS-41 step 1): the album's id when the link names
+ * one (album links, and Apple Music links to a song in an album), else `track:{id}`. Album and track ids never
+ * collide that way, and a link is found again whatever form it was pasted in.
+ */
+export function linkEntityId(link: { kind: LinkKind; id: string; albumId?: string }): string {
+  return link.albumId ?? (link.kind === "album" ? link.id : `track:${link.id}`);
+}

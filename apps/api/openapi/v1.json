@@ -3369,7 +3369,8 @@
                               "enum": [
                                 "destination",
                                 "name",
-                                "match"
+                                "match",
+                                "details"
                               ]
                             },
                             "candidates": {
@@ -3825,7 +3826,8 @@
                                     "enum": [
                                       "destination",
                                       "name",
-                                      "match"
+                                      "match",
+                                      "details"
                                     ]
                                   },
                                   "candidates": {
@@ -4169,7 +4171,8 @@
                               "enum": [
                                 "destination",
                                 "name",
-                                "match"
+                                "match",
+                                "details"
                               ]
                             },
                             "candidates": {

@@ -9,6 +9,7 @@ import {
   type Database,
   type Transaction,
 } from "@tonaris/db";
+import type { Spotify } from "@tonaris/providers";
 
 export type Schedule = {
   /** Names the advisory lock too, so it must be unique. */
@@ -33,11 +34,47 @@ export const pruneProviderCacheSchedule: Schedule = {
   run: (tx, now) => pruneProviderCache(tx, now),
 };
 
-/** Every schedule the API runs. */
-export const apiSchedules: readonly Schedule[] = [
-  pruneSyncHistorySchedule,
-  pruneProviderCacheSchedule,
-];
+/** *Random Access Memories* on Spotify: an album with a UPC that won't go away. */
+export const spotifyHealthAlbum = "4m2880jivSbbyEGAKfITCa";
+
+/**
+ * TS-41's daily health check of the Spotify bridge: one Get Album call shows the token works (the owner's Premium
+ * subscription) and that a UPC still comes back, and keeps the app in use (Spotify's Terms IX.8.e). A failure is
+ * logged naming no Spotify value; the bridge's lookups then fail as unavailable until it is fixed or turned off.
+ */
+export function spotifyHealthSchedule(
+  spotify: Pick<Spotify, "album">,
+  log: (message: string) => void = console.error,
+): Schedule {
+  return {
+    name: "spotify-health",
+    everyMs: day,
+    async run() {
+      let upc: string | undefined;
+      try {
+        upc = (await spotify.album(spotifyHealthAlbum))?.upc;
+      } catch (error) {
+        log(
+          `Spotify health check failed: ${error instanceof Error ? error.message : "unknown error"}.`,
+        );
+        return;
+      }
+      if (!upc)
+        log(
+          "Spotify health check failed: Get Album returned no UPC, so the bridge can't search barcodes.",
+        );
+    },
+  };
+}
+
+/** Every schedule the API runs; the Spotify health check only while the bridge is on. */
+export function apiSchedules(spotify: Pick<Spotify, "album"> | undefined): Schedule[] {
+  return [
+    pruneSyncHistorySchedule,
+    pruneProviderCacheSchedule,
+    ...(spotify ? [spotifyHealthSchedule(spotify)] : []),
+  ];
+}
 
 /** Runs `schedule` once, unless another instance is running it. Answers whether it ran. */
 export function runSchedule(

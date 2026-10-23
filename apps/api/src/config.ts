@@ -21,6 +21,11 @@ export type ApiConfig = {
   emailFrom: string;
   /** The header the host's proxy puts the client address in; unset means the socket address (TS-104). */
   clientIpHeader: string | undefined;
+  /**
+   * The Spotify bridge's app credentials (TS-41 step 3), or undefined when the bridge is off: `SPOTIFY_BRIDGE=off`,
+   * or either credential missing. Spotify links are then identified by MusicBrainz's URL lookup alone.
+   */
+  spotify: { clientId: string; clientSecret: string } | undefined;
 };
 
 type Env = Record<string, string | undefined>;
@@ -72,6 +77,12 @@ export function apiConfig(env: Env = process.env): ApiConfig {
     smtpUrl: value("SMTP_URL"),
     emailFrom: value("EMAIL_FROM"),
     clientIpHeader: env.CLIENT_IP_HEADER?.toLowerCase() || undefined,
+    spotify:
+      env.SPOTIFY_BRIDGE?.toLowerCase() !== "off" &&
+      env.SPOTIFY_CLIENT_ID &&
+      env.SPOTIFY_CLIENT_SECRET
+        ? { clientId: env.SPOTIFY_CLIENT_ID, clientSecret: env.SPOTIFY_CLIENT_SECRET }
+        : undefined,
   };
 }
 

@@ -41,6 +41,7 @@ export {
 export { runExclusively } from "./locks";
 export { migrateDatabase, migrationsFolder } from "./migrations";
 export { providerCacheStore, pruneProviderCache } from "./provider-cache";
+export { findLinkedAlbum } from "./service-links";
 export * from "./schema";
 export {
   bootstrapSnapshot,
