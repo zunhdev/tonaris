@@ -381,6 +381,9 @@ Typed confirmation is reserved for account deletion (DS-97).
 - **Kept per device:** the width and whether the sidebar is hidden.
 - **The view's header** shows the breadcrumbs (DS-29), then the view's name as its heading.
 
+*As built in TON-38:*
+- **The inspector** takes a third column, 380 px wide, when the window is at least 1100 px. Below that, it is a panel over the view's right edge, with the floating shadow. It is a landmark named "Album".
+
 *(FR-01.3, FR-12.2)*
 
 **DS-31 Sidebar contents, top to bottom.** *(FR-01.9, FR-01.12, FR-07.6, FR-07.13, FR-11.6, FR-12.2)*
@@ -406,6 +409,9 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 *As built in TON-35:*
 - **The tree follows each level's sort** (decided with the creator on 23 October 2026): a folder's contents in the order its view is sorted, and the top level in the root's. "The owner's root order" is the root's presentation, so the tree and the view beside it always agree. In manual order, the default, both show the arrangement.
 - **The account menu's "Connections"** became **Settings**, which opens Settings → Preferences (DS-92).
+
+*As built in TON-38:*
+- **+ Add album** opens the manual entry form (DS-47) until capture arrives (M3), switching to Editing first. Offline, it is disabled with "You're offline" (DS-81).
 
 **DS-32 Route map.** These are conceptual paths; final paths are decided in the tech spec. *(Section 2.2)*
 
@@ -436,6 +442,10 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **A missing folder or list** reads "This folder or list isn't available.", with "Go to your collection".
 - **Page titles** are "{name} · Tonaris".
 - **TON-35 adds `/settings/preferences`.** G then S goes there, the first settings page built in DS-92's order.
+- **TON-38 adds the inspector and `/a/$albumId`:**
+  - **`?album={id}`** opens the inspector on any workspace view; a value that isn't an ID is dropped.
+  - **`/a/$albumId`** shows the album's details on a page of its own, titled with its name, with View and Edit. A missing album reads "This album isn't available.", with "Go to your collection".
+  - **Links inside the app** open the inspector over the current view, not the page.
 
 ---
 
@@ -554,6 +564,27 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 6. **Info:** source service and date added to the collection.
 7. **Footer (editing):** "Delete from collection…" in danger text.
 
+*As built in TON-38:*
+- **Opening:**
+  - a click on an album's row or card, except its drag handle. Opening the inspector narrows the view, so in Editing mode, with the inspector closed, a click waits 300 ms for a double-click, which edits the cell instead;
+  - Enter on a row or card in Viewing mode. In Editing mode, Enter on the title, artist or year still edits the cell (DS-45).
+  - From a view, opening adds a history entry. With the inspector open, focus moving to another album (J, K, the arrows, a click) shows that one in place.
+- **Closing:** Esc, unless a field, dialog, popover or menu has the keys, or the Close button.
+- **Viewing mode** shows the values. **Editing mode** makes them editors:
+  - **title, artist, original year and recording year or range:** fields that save on Enter or leaving them and discard on Escape, as one `album.update` (TS-21);
+  - **release type** (a segmented control) and **Live** (a switch): saved as chosen.
+  - **Refusals** stay with their reason and send nothing, as in DS-45. Switching Live off for an album with only a recording year reads "Give the album a year.", and Live stays on.
+  - **Leaving Editing mode** saves open fields, or stays for a refused one (DS-45). Offline, the editors are read-only, with "You're offline. Changes can wait until the connection is back."
+- **The sort hints:** "Sorts by its original release year.", "Sorts by its recording year." or "Sorts by its release year, as the recording year is unknown."
+- **Links and Custom fields** show a line each until their features arrive: "Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture." and "Custom fields arrive in a later version."
+- **Lists:**
+  - **The chips** link to their lists, with the folder path as their tooltip, or to Unsorted.
+  - **In Editing mode,** a chip's × removes the album from the list, with "Removed from {list}" and Undo (DS-50). Undo puts the entry back at the end of the list.
+  - **"+ Add to list", or L,** opens "Add '{title}' to a list": the owner's lists the album isn't in, with their folder paths, moved through with Tab or ↑ and ↓. Choosing one announces "Added {title} to {list}".
+- **Info** shows "Added {date}", from the album's ID. The source service arrives with capture (M3).
+- **Artwork** is the letter tile until capture brings artwork URLs (decided with the creator on 23 October 2026).
+- **Delete from collection…** arrives with Trash (M5).
+
 **DS-47 Manual entry form.** A 560px dialog titled "New album" (desktop). Shortcut ⌘Enter saves; Esc asks before discarding entered data. *(FR-02.4, FR-02.6, FR-13.2)*
 
 - **Field order:**
@@ -570,6 +601,22 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Validation** runs on blur and on submit. Errors appear inline under each field and are summarized at the top for screen readers.
 - **Destination list** is an optional combobox. It defaults to the current list when opened from one; otherwise it reads "No list (goes to Unsorted)".
 - **Opened from a failed capture:** the form is pre-filled, and a banner explains why: "We couldn't read this link — complete the details below."
+
+*As built in TON-38:*
+- **Its description:** "Title, artist and a year are required. Everything else can wait."
+- **Artwork URL, links and custom fields** are shown in order with a line each until their features arrive: "Artwork arrives with link capture." (decided with the creator on 23 October 2026), and the same lines as the inspector's.
+- **Validation:**
+  - **The messages:** "Give the album a title.", "Give the album an artist.", "Give the album its original release year.", for a live album "Give the album its recording year or its release year.", "Enter the year as four digits, such as 1986." and "The recording period ends before it starts."
+  - **On submit,** an alert at the top reads "Check {n} fields: {names}.", and the first field with a problem takes the focus.
+- **The destination** is a native select of "No list (goes to Unsorted)" and the owner's lists with their folder paths. A combobox can replace it when there are more lists than a select suits.
+- **Saving** adds the album, then its entry in the list, closes the form, and announces "Added {title}".
+- **Esc, Cancel or closing** with anything entered asks "Discard this album?" ("What you entered isn't saved."), with Keep editing and Discard.
+- **It opens from:**
+  - the sidebar's + Add album;
+  - "Add album" below a list's rows in Editing mode, and as an empty list's action;
+  - Edit on a failed album save, as it was entered, with its list. Saving it dismisses the failure.
+
+  Each switches to Editing first.
 
 **DS-48 Link capture.** *(FR-02.1–FR-02.3, FR-02.5, FR-02.9–FR-02.11, FR-01.7, FR-06.4, FR-14.4, FR-15.3, X-04)*
 
@@ -831,6 +878,7 @@ The block never says "private" while another access path remains.
 - **TON-35 adds V,** which opens the current view's View options; it works offline, since choosing isn't an edit. **G then S** now goes to Settings → Preferences.
 - **TON-36 adds M,** "Move to…", which waits while offline like N, and ⌥↑ / ⌥↓, with ⇧ for the ends, in the views' grids. The reference lists them.
 - **TON-37 adds E,** which switches between Viewing and Editing, and F2 on an album row, which edits its title. M now switches to Editing first.
+- **TON-38 adds L,** "Add to list…", for the inspector's album, else the focused album, switching to Editing first and waiting while offline; **Enter** on an album, which opens the inspector; and **Esc,** which closes it. The reference lists them.
 
 ---
 

@@ -67,8 +67,8 @@ export function useGridFocus({
   grid: RefObject<HTMLElement | null>;
   shape: GridShape;
   reveal: (row: number) => void;
-  /** Enter on a cell. */
-  onActivate?: (cell: Cell) => void;
+  /** Enter on a cell; answers whether it acted, which then claims the key. */
+  onActivate?: (cell: Cell) => boolean;
   /** ⌥↑ and ⌥↓ on a cell, when the grid's items can be rearranged. */
   rearrange?: GridRearrange;
 }) {
@@ -124,10 +124,9 @@ export function useGridFocus({
       if (id !== undefined && rearrange.move(id, to)) following.current = { id, from };
       return;
     }
-    if (event.key === "Enter" && onActivate) {
-      // Activated here, so a link in the cell doesn't also follow itself.
+    // Activated here, so a link in the cell doesn't also follow itself.
+    if (event.key === "Enter" && onActivate?.(cellAt(event.target) ?? current)) {
       event.preventDefault();
-      onActivate(current);
       return;
     }
     const next = nextCell(event, current, shape);

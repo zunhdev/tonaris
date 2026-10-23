@@ -9,6 +9,7 @@
 import { PageHeader } from "@/features/shell/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useEffect, useMemo, type ReactNode } from "react";
 
 import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
@@ -16,9 +17,9 @@ import { Button } from "@tonaris/ui/components/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
 
 import { AlbumCards } from "./album-cards";
+import { AlbumDetails } from "./album-details";
 import { AlbumRows } from "./album-rows";
-import { useStartEditor } from "./collection-ui";
-import { useMode } from "./collection-ui";
+import { useMode, useStartEditor, useStartNewAlbum } from "./collection-ui";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
 import { useDropHandler } from "./drag";
@@ -207,6 +208,28 @@ function Empty({ text, action }: { text: string; action?: ReactNode }) {
   );
 }
 
+/** Opens the manual entry form for the list on view (DS-47); disabled offline (DS-81). */
+function AddAlbumButton({ variant }: { variant: "primary" | "ghost" }) {
+  const startNewAlbum = useStartNewAlbum();
+  if (useConnection() === "offline") {
+    return (
+      <Tooltip>
+        <TooltipTrigger render={<Button variant={variant} aria-disabled />}>
+          <Plus strokeWidth={1.5} aria-hidden />
+          Add album
+        </TooltipTrigger>
+        <TooltipContent>You're offline</TooltipContent>
+      </Tooltip>
+    );
+  }
+  return (
+    <Button variant={variant} onClick={startNewAlbum}>
+      <Plus strokeWidth={1.5} aria-hidden />
+      Add album
+    </Button>
+  );
+}
+
 /** Starts a new list in `parentId`, named in the sidebar; disabled offline (DS-81). */
 function NewListButton({ parentId }: { parentId: string | null }) {
   const startEditor = useStartEditor();
@@ -251,6 +274,7 @@ const kindNames: Record<ContainerKind, string> = { folder: "Folder", list: "List
 
 export function ContainerView({ id, kind }: { id: string; kind: ContainerKind }) {
   const { tree, ready, albumsById, entriesByList } = useCollectionData();
+  const { editing } = useMode();
   const navigate = useNavigate();
   const container = tree.byId.get(id);
   const entries = entriesByList.get(id);
@@ -306,12 +330,22 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
         <Empty text="This folder is empty." action={<NewListButton parentId={id} />} />
       );
   } else {
-    // Add album comes with capture and manual entry (M3, TON-38).
+    // Adding by hand: below the rows in Editing mode, and as the empty list's action (DS-47).
     body =
       albums.length > 0 ? (
-        <AlbumsBody albums={albums} label={container.name} viewKey={id} />
+        <>
+          <AlbumsBody albums={albums} label={container.name} viewKey={id} />
+          {editing && (
+            <div className="shrink-0 border-t border-subtle px-4 py-2">
+              <AddAlbumButton variant="ghost" />
+            </div>
+          )}
+        </>
       ) : (
-        <Empty text="No albums yet. Paste a Spotify, Apple Music, Qobuz or Tidal link." />
+        <Empty
+          text="No albums yet. Paste a Spotify, Apple Music, Qobuz or Tidal link."
+          action={<AddAlbumButton variant="primary" />}
+        />
       );
   }
 
@@ -362,6 +396,38 @@ export function TrashView() {
     <>
       <PageHeader title="Trash" />
       <Empty text="Nothing in Trash. Deleted items stay here for 30 days." />
+    </>
+  );
+}
+
+/** An album on its own page (DS-32): `/a/{albumId}`, its details as the inspector shows them. */
+export function AlbumView({ id }: { id: string }) {
+  const { ready, albumsById } = useCollectionData();
+  const { editing } = useMode();
+  const album = albumsById.get(id);
+  useDocumentTitle(album?.title ?? (ready ? "Not available" : "Album"));
+  if (!album) {
+    if (!ready) return <PageHeader title="Album" />;
+    return (
+      <>
+        <PageHeader title="Not available" />
+        <Body>
+          <p className="text-fg-secondary">This album isn't available.</p>
+          <Link to="/c" className="text-accent-solid underline-offset-4 hover:underline">
+            Go to your collection
+          </Link>
+        </Body>
+      </>
+    );
+  }
+  return (
+    <>
+      <PageHeader title={album.title} editing={editing} actions={<ModeSwitch />} />
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="max-w-xl">
+          <AlbumDetails album={album} />
+        </div>
+      </div>
     </>
   );
 }

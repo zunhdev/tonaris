@@ -89,10 +89,11 @@ export function ContainerRows({
     rearrange,
     onActivate: ({ row }) => {
       const container = containers[row];
-      if (!container) return;
+      if (!container) return false;
       void (container.kind === "folder"
         ? navigate({ to: "/f/$folderId", params: { folderId: container.id } })
         : navigate({ to: "/l/$listId", params: { listId: container.id } }));
+      return true;
     },
   });
 

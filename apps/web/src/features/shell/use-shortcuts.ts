@@ -8,11 +8,12 @@ import {
   useStartEditor,
   useViewContainerId,
 } from "@/features/collection/collection-ui";
+import { useInspector } from "@/features/collection/inspector-state";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
-import { createShortcutMatcher, type ShortcutAction } from "./shortcuts";
+import { createShortcutMatcher, inLayer, type ShortcutAction } from "./shortcuts";
 
 const destinations: Partial<
   Record<ShortcutAction, "/c" | "/unsorted" | "/trash" | "/settings/preferences">
@@ -22,15 +23,6 @@ const destinations: Partial<
   "go-trash": "/trash",
   "go-settings": "/settings/preferences",
 };
-
-/** Whether `target` is inside a layer with keys of its own: a dialog, a popover or a menu. */
-function inLayer(target: EventTarget | null): boolean {
-  return (
-    target instanceof Element &&
-    target.closest('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]') !==
-      null
-  );
-}
 
 export function useShortcuts({
   toggleSidebar,
@@ -46,6 +38,7 @@ export function useShortcuts({
   const viewId = useViewContainerId();
   const mode = useMode();
   const offline = useConnection() === "offline";
+  const inspected = useInspector().albumId;
   // The latest of each, so the listener is installed once.
   const latest = useRef({
     navigate,
@@ -58,6 +51,7 @@ export function useShortcuts({
     ui,
     viewId,
     mode,
+    inspected,
   });
   useEffect(() => {
     latest.current = {
@@ -71,6 +65,7 @@ export function useShortcuts({
       ui,
       viewId,
       mode,
+      inspected,
     };
   });
 
@@ -92,6 +87,13 @@ export function useShortcuts({
           // Edit intent switches to Editing first (DS-45).
           now.mode.enterEditing();
           now.ui.startMove(target);
+        }
+      } else if (action === "add-to-list") {
+        // Adding to a list is an edit too. It acts on the inspector's album, else the focused album of a view.
+        const albumId = now.inspected ?? now.ui.focusedAlbum();
+        if (!now.offline && !now.editing.current && albumId !== undefined) {
+          now.mode.enterEditing();
+          now.ui.startAddToList(albumId);
         }
       } else if (action === "toggle-mode") {
         now.mode.choose(now.mode.editing ? "view" : "edit");

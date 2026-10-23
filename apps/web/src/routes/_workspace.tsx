@@ -16,8 +16,13 @@ import { useEffect } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const Route = createFileRoute("/_workspace")({
   ssr: false,
+  // The open album inspector, on any view (DS-32, DS-46); anything but an ID is dropped.
+  validateSearch: (search: Record<string, unknown>): { album?: string } =>
+    typeof search.album === "string" && uuid.test(search.album) ? { album: search.album } : {},
   beforeLoad: async ({ location }) => {
     const account = await currentAccount();
     if (!account) throw redirect({ to: "/sign-in", search: { redirect: location.href } });

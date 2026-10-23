@@ -10,7 +10,8 @@
 
 import type { SyncClient } from "@/client/sync/client";
 import { resubmit, resubmitAll } from "@/client/sync/resubmit";
-import { useStartEditor } from "@/features/collection/collection-ui";
+import { formOf } from "@/features/collection/album-form";
+import { useCollectionUi, useMode, useStartEditor } from "@/features/collection/collection-ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { OutcomeStatus } from "@tonaris/domain";
@@ -42,6 +43,8 @@ export function SaveStateLayer({ children }: { children: ReactNode }) {
 function Feedback({ notify, children }: { notify: Notifier; children: ReactNode }) {
   const client = useSyncClient();
   const startEditor = useStartEditor();
+  const { enterEditing } = useMode();
+  const { startNewAlbum } = useCollectionUi();
   const [reviewing, setReviewing] = useState<string>();
   const [activityOpen, setActivityOpen] = useState(false);
   const [shownReport, setShownReport] = useState<string>();
@@ -101,6 +104,7 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
       },
       canEdit({ status, mutation }) {
         if (status !== "failed") return false;
+        if (mutation.name === "album.create") return true;
         if (mutation.name === "container.rename") return client.containers.has(mutation.args.id);
         if (mutation.name !== "container.create") return false;
         const { parentId } = mutation.args;
@@ -113,10 +117,27 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
           startEditor({ mode: "create", kind, parentId, name, replaces });
         } else if (mutation.name === "container.rename") {
           startEditor({ mode: "rename", id: mutation.args.id, name: mutation.args.name, replaces });
+        } else if (mutation.name === "album.create") {
+          // The form opens as it was entered, with the list its entry was going to (DS-47, AC-08).
+          const album = mutation.args;
+          const entry = client.states
+            .open()
+            .find(
+              (state) =>
+                state.mutation.name === "membership.add" &&
+                state.mutation.args.albumId === album.id,
+            );
+          const listId =
+            entry?.mutation.name === "membership.add" ? entry.mutation.args.listId : null;
+          enterEditing();
+          startNewAlbum({
+            form: formOf(album, listId),
+            replaces: entry ? [replaces, entry.mutation.mutationId] : [replaces],
+          });
         }
       },
     };
-  }, [client, notify, startEditor]);
+  }, [client, notify, startEditor, enterEditing, startNewAlbum]);
 
   useSettledToasts(client, actions, notify);
   useReportFeedback(client, notify, showReport);
