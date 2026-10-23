@@ -1,6 +1,6 @@
 // The collection views in a real browser (FR-05, DS-21–DS-23, DS-40, DS-41, DS-106, DS-115): albums as rows or
-// cards, folders and lists as rows, walked as ARIA grids by keyboard, and 5,000 albums kept smooth by
-// virtualization. With MEASURE_SCROLL=1, the 5,000-album test also measures scrolling, frame by frame, and prints it;
+// cards (switched in View options, DS-49), folders and lists as rows, walked as ARIA grids by keyboard, and 5,000
+// albums kept smooth by virtualization. With MEASURE_SCROLL=1, the 5,000-album test also measures scrolling, frame by frame, and prints it;
 // run it headed (`--headed`), since headless Chromium paces frames irregularly even when idle. Each test signs in
 // with its own account.
 
@@ -20,6 +20,19 @@ const rows = (page: Page, name: string) =>
   grid(page, name)
     .getByRole("row")
     .filter({ hasNot: page.getByRole("columnheader") });
+
+/** Switches the view to `layout` in its View options (DS-49). */
+async function chooseLayout(page: Page, layout: "Rows" | "Grid"): Promise<void> {
+  await page.getByRole("button", { name: "View", exact: true }).click();
+  const options = page.getByRole("dialog", { name: "View options" });
+  const radio = options
+    .getByRole("radiogroup", { name: "Layout" })
+    .getByRole("radio", { name: layout });
+  await radio.click();
+  await expect(radio).toBeChecked();
+  await page.keyboard.press("Escape");
+  await expect(options).toBeHidden();
+}
 
 test("a list's albums show as rows in chronological order, or as cards kept per view", async ({
   page,
@@ -56,7 +69,7 @@ test("a list's albums show as rows in chronological order, or as cards kept per 
   await expect(rows(page, "Doom").nth(2).getByRole("gridcell")).toHaveText([
     "LLive in Stockholm",
     "Candlemass",
-    "1988",
+    "rec. 1988",
     "Live",
     "",
   ]);
@@ -72,17 +85,12 @@ test("a list's albums show as rows in chronological order, or as cards kept per 
   await expect(rows(page, "Doom").nth(2).getByRole("gridcell")).toHaveText([
     "LLive in Stockholm",
     "Candlemass",
-    "1988",
+    "rec. 1988",
     "",
   ]);
 
   // Grid for this list: three cards a row at this width, walked with the arrows.
-  const layout = page.getByRole("group", { name: "Layout" });
-  await layout.getByRole("button", { name: "Grid" }).click();
-  await expect(layout.getByRole("button", { name: "Grid" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await chooseLayout(page, "Grid");
   const cards = grid(page, "Doom");
   await expect(cards).toHaveAttribute("aria-colcount", "3");
   await expect(cards).toHaveAttribute("aria-rowcount", "2");
@@ -107,7 +115,7 @@ test("a list's albums show as rows in chronological order, or as cards kept per 
 
   // A rename from another session updates the row in place.
   await page.goto(`/l/${doom.id}`);
-  await layout.getByRole("button", { name: "Rows" }).click();
+  await chooseLayout(page, "Rows");
   const response = await page.request.post(`${apiUrl}/v1/mutations`, {
     headers: { origin: webOrigin },
     data: {
@@ -220,7 +228,7 @@ test("5,000 albums stay virtualized in both layouts", async ({ page }) => {
     report("Rows", await scrollFrames(page));
   }
 
-  await page.getByRole("group", { name: "Layout" }).getByRole("button", { name: "Grid" }).click();
+  await chooseLayout(page, "Grid");
   const cards = grid(page, "Unsorted");
   const columns = Number(await cards.getAttribute("aria-colcount"));
   await expect(cards).toHaveAttribute("aria-rowcount", String(Math.ceil(5_000 / columns)));

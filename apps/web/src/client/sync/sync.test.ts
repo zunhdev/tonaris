@@ -27,7 +27,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(26);
+  server = await startApiServer(28);
 }, 30_000);
 
 afterAll(async () => {
@@ -799,5 +799,119 @@ describe("batch reports (FR-13.4, FR-13.5, DS-84)", () => {
     expect(web.containers.get(inside.id)).toMatchObject({ parentId: folder.id, name: "Doom" });
     const names = [...web.containers.values()].map((each) => each.name).toSorted();
     expect(names).toEqual(["Doom", "Earlier", "Later", "Soon"]);
+  });
+});
+
+/** The `view.set` and `defaults.set` envelopes sent after `from`, as the server got them. */
+const preferenceWrites = (of: ReturnType<typeof testClient>, from: number) =>
+  of.network.sent
+    .slice(from)
+    .map((body) => mutationSchema.parse(JSON.parse(body)))
+    .filter((mutation) => mutation.name === "view.set" || mutation.name === "defaults.set")
+    .map(({ name, args, base }) => ({ name, args, base }));
+
+describe("view choices and defaults (FR-11.7, FR-11.8, FR-09.2)", () => {
+  test("a view's choices are sent from their prior values, and reach the other session live", async () => {
+    const web = await openClient(26, 0);
+    const phone = await openClient(26, 1);
+    await Promise.all([web.views.preload(), phone.views.preload(), phone.defaults.preload()]);
+    const sent = web.network.sent.length;
+
+    await web.views
+      .insert({
+        viewKey: "unsorted",
+        sortMode: "name",
+        sortDir: "desc",
+        grouped: null,
+        layout: null,
+      })
+      .when("settled");
+    await web.views
+      .update("unsorted", (draft) => {
+        draft.grouped = true;
+      })
+      .when("settled");
+    await web.views
+      .update("unsorted", (draft) => {
+        draft.sortDir = "asc";
+      })
+      .when("settled");
+    await until(
+      () => phone.views.get("unsorted")?.sortDir === "asc",
+      3_000,
+      "the other session's view",
+    );
+    expect(phone.views.get("unsorted")).toMatchObject({
+      viewKey: "unsorted",
+      sortMode: "name",
+      sortDir: "asc",
+      grouped: true,
+      layout: null,
+    });
+
+    await web.views.delete("unsorted").when("settled");
+    await web.defaults
+      .update("defaults", (draft) => {
+        draft.layout = "grid";
+      })
+      .when("settled");
+    await until(
+      () => phone.defaults.get("defaults")?.layout === "grid",
+      3_000,
+      "the other session's defaults",
+    );
+    expect(phone.views.has("unsorted")).toBe(false);
+    expect(preferenceWrites(web, sent)).toEqual([
+      {
+        name: "view.set",
+        args: { viewKey: "unsorted", sortMode: "name", sortDir: "desc" },
+        base: { sortMode: null, sortDir: null },
+      },
+      { name: "view.set", args: { viewKey: "unsorted", grouped: true }, base: { grouped: null } },
+      // The direction alone changed, and the sort goes with it.
+      {
+        name: "view.set",
+        args: { viewKey: "unsorted", sortMode: "name", sortDir: "asc" },
+        base: { sortMode: "name", sortDir: "desc" },
+      },
+      {
+        name: "view.set",
+        args: { viewKey: "unsorted", sortMode: null, sortDir: null, grouped: null },
+        base: { sortMode: "name", sortDir: "asc", grouped: true },
+      },
+      { name: "defaults.set", args: { layout: "grid" }, base: { layout: "rows" } },
+    ]);
+    // A view's choices have their own save state, never the list's.
+    expect(web.states.open()).toEqual([]);
+  });
+
+  test("Retry makes a view choice again against the current row, or reports a gone list", async () => {
+    const web = await openClient(27, 0);
+    await Promise.all([web.views.preload(), web.containers.preload(), web.defaults.preload()]);
+    const choice: Mutation = {
+      mutationId: uuidv7(),
+      name: "view.set",
+      args: { viewKey: "root", sortMode: "name", sortDir: "asc" },
+      base: { sortMode: null, sortDir: null },
+    };
+    expect(resubmit(web, failedWrite(choice))).toBe("sent");
+    await until(() => web.views.get("root")?.sortMode === "name", 3_000, "the retried choice");
+    expect(resubmit(web, failedWrite(choice))).toBe("unchanged");
+
+    const gone: Mutation = {
+      ...choice,
+      mutationId: uuidv7(),
+      args: { ...choice.args, viewKey: uuidv7() },
+    };
+    expect(resubmit(web, failedWrite(gone))).toBe("gone");
+    const defaults: Mutation = {
+      mutationId: uuidv7(),
+      name: "defaults.set",
+      args: { grouped: true },
+      base: { grouped: false },
+    };
+    expect(resubmit(web, failedWrite(defaults))).toBe("sent");
+    await until(() => web.defaults.get("defaults")?.grouped === true, 3_000, "the retried default");
+    await until(() => web.states.open().length === 0, 3_000, "the writes to be confirmed");
   });
 });

@@ -25,11 +25,23 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
 `GET /v1/sync/bootstrap` → `Bootstrap`:
 
 ```json
-{ "seq": 1342, "albums": [...], "containers": [...], "memberships": [...] }
+{
+  "seq": 1342,
+  "albums": [...],
+  "containers": [...],
+  "memberships": [...],
+  "views": [...],
+  "defaults": { ... }
+}
 ```
 
 - **One consistent point.** The records and `seq` come from one snapshot, so the data includes every change up to `seq` and none after it.
-- **Contents today:** albums, folders and lists (`containers`), and list entries (`memberships`). Preferences, positions, custom fields and Shared with me join as their features arrive, as new fields (TS-24).
+- **Contents today:**
+  - albums, folders and lists (`containers`), and list entries (`memberships`);
+  - the person's remembered view choices (`views`), one record per view they made a choice in;
+  - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own.
+
+  Positions, custom fields and Shared with me join as their features arrive, as new fields (TS-24).
 - **Trash.** Records in Trash are included, but not marked yet; Trash arrives in M5.
 - **Compression.** Send `Accept-Encoding: gzip`. The bootstrap is about 2.3 MB of JSON for 5,000 albums, and under 0.5 MB gzipped (TS-120).
 
@@ -61,6 +73,8 @@ A client keeps one store per entity and applies each change by key:
 | `album` | the album's ID | `Album` |
 | `container` | the folder's or list's ID | `Container` |
 | `membership` | `<listId>:<albumId>` | `Membership` |
+| `view` | the view key: `root`, `unsorted`, or a folder's or list's ID | `ViewPrefs` |
+| `defaults` | the account's ID | `ViewDefaults`, never `null` |
 
 Clients must ignore entities they don't know. New ones are added within v1 (TS-09).
 
@@ -107,9 +121,17 @@ The server ends a stream in four cases:
 - **The mutations today:**
   - `album.create`, `album.update`;
   - `container.create`, `container.rename`, `container.move`;
-  - `membership.add`, `membership.remove`.
+  - `membership.add`, `membership.remove`;
+  - `view.set`, `defaults.set`.
 
   The OpenAPI document has each one's `args` and `base`.
+- **Personal preferences follow the same rules** (FR-09.4).
+  - **`view.set`** remembers or clears a person's choices for one view: `sortMode` with `sortDir`, `grouped` and `layout`.
+    - A field left out stays as it is, and `null` clears it back to the account default. Its `base` is `null` for a choice not made.
+    - The sort's mode and direction go together.
+    - Folders and the root take `name`, `created` or `manual` and no grouping or layout; lists and Unsorted take `year`, `name` or `manual`.
+    - Clearing every field deletes the view's record: the change's `data` is `null`.
+  - **`defaults.set`** changes some of the account defaults. Its `base` holds their prior values, DS-44's until saved.
 
 The answer is `200` with a `MutationResult`: `{mutationId, outcome}`. A malformed envelope answers `422` with a problem and changes nothing.
 

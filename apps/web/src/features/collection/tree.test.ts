@@ -27,6 +27,9 @@ const funeral = folder("Funeral", metal.id);
 const deep = list("Deep", funeral.id);
 const later = list("Later");
 
+const byName = (siblings: Container[]) =>
+  siblings.toSorted((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+
 describe("the sidebar tree (DS-27)", () => {
   test("siblings come in creation order, and only expanded folders show what they hold", () => {
     const tree = buildTree([later, deep, funeral, doom, metal]);
@@ -49,6 +52,18 @@ describe("the sidebar tree (DS-27)", () => {
     ]);
     // A folder inside a collapsed one stays hidden, even if expanded itself.
     expect(visibleRows(tree, new Set([funeral.id])).map(label)).toHaveLength(5);
+  });
+
+  test("each level comes in the order its folder's view gives, the top level in the root's", () => {
+    const seen: (string | null)[] = [];
+    const tree = buildTree([metal, doom, funeral, deep, later], (siblings, parentId) => {
+      seen.push(parentId);
+      return parentId === metal.id ? byName(siblings).toReversed() : byName(siblings);
+    });
+    expect(tree.roots.map((each) => each.name)).toEqual(["Later", "Metal"]);
+    expect(tree.children.get(metal.id)?.map((each) => each.name)).toEqual(["Funeral", "Doom"]);
+    expect(new Set(seen)).toEqual(new Set([null, metal.id, funeral.id]));
+    expect(seen).toHaveLength(3);
   });
 
   test("ancestors run from the root down", () => {

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { eq, sql } from "drizzle-orm";
 
 import {
+  appViewDefaults,
   maxContainerDepth,
   maxContainers,
   maxMemberships,
@@ -271,6 +272,8 @@ describe("bootstrapSnapshot (TS-24)", () => {
       albums: [],
       containers: [],
       memberships: [],
+      views: [],
+      defaults: appViewDefaults,
     });
   });
 
@@ -730,6 +733,112 @@ async function listNames(accountId: string): Promise<string[]> {
   const rows = await t.db.select().from(containers).where(eq(containers.ownerId, accountId));
   return rows.map((row) => row.name).toSorted();
 }
+
+const setView = (viewKey: string, args: object, base: object): Mutation => ({
+  mutationId: uuidv7(),
+  name: "view.set",
+  args: { viewKey, ...args },
+  base,
+});
+
+describe("view choices and defaults (FR-05.2, FR-11.7, FR-11.8)", () => {
+  test("a choice is logged as a view change and comes back in the bootstrap, for that person only", async () => {
+    const [anna, ben] = await Promise.all([newPrincipal(), newPrincipal()]);
+    const doom = await savedList(anna, "Doom");
+    const mutation = setView(
+      doom.id,
+      { sortMode: "name", sortDir: "desc" },
+      { sortMode: null, sortDir: null },
+    );
+    const sorted = await executeMutation(t.db, anna, mutation);
+    const prefs = {
+      viewKey: doom.id,
+      sortMode: "name" as const,
+      sortDir: "desc" as const,
+      grouped: null,
+      layout: null,
+    };
+    expect(sorted.changes).toEqual([
+      {
+        seq: 2,
+        entity: "view",
+        id: doom.id,
+        op: "insert",
+        data: prefs,
+        mutationId: mutation.mutationId,
+      },
+    ]);
+    expect(await readChanges(t.db, anna.userId, 1, 10)).toEqual(sorted.changes);
+
+    const grouped = await executeMutation(
+      t.db,
+      anna,
+      setView(doom.id, { grouped: true }, { grouped: null }),
+    );
+    expect(grouped.changes.map((change) => change.op)).toEqual(["update"]);
+    expect((await bootstrapSnapshot(t.db, anna.userId)).views).toEqual([
+      { ...prefs, grouped: true },
+    ]);
+    expect((await bootstrapSnapshot(t.db, ben.userId)).views).toEqual([]);
+  });
+
+  test("clearing every choice deletes the row, and a stale choice changes nothing", async () => {
+    const anna = await newPrincipal();
+    await executeMutation(t.db, anna, setView("unsorted", { layout: "grid" }, { layout: null }));
+    const stale = await executeMutation(
+      t.db,
+      anna,
+      setView("unsorted", { layout: "rows" }, { layout: null }),
+    );
+    expect(stale.result.outcome).toEqual({
+      status: "conflict",
+      conflicts: [{ field: "layout", current: "grid", attempted: "rows", base: null }],
+    });
+    const cleared = await executeMutation(
+      t.db,
+      anna,
+      setView("unsorted", { layout: null }, { layout: "grid" }),
+    );
+    expect(cleared.changes).toEqual([
+      expect.objectContaining({ entity: "view", id: "unsorted", op: "delete", data: null }),
+    ]);
+    expect((await bootstrapSnapshot(t.db, anna.userId)).views).toEqual([]);
+  });
+
+  test("defaults are logged complete, and the bootstrap has them complete before and after", async () => {
+    const anna = await newPrincipal();
+    expect((await bootstrapSnapshot(t.db, anna.userId)).defaults).toEqual(appViewDefaults);
+    const mutation: Mutation = {
+      mutationId: uuidv7(),
+      name: "defaults.set",
+      args: { listSortMode: "name", grouped: true },
+      base: { listSortMode: "year", grouped: false },
+    };
+    const saved = await executeMutation(t.db, anna, mutation);
+    const defaults = { ...appViewDefaults, listSortMode: "name" as const, grouped: true };
+    expect(saved.changes).toEqual([
+      {
+        seq: 1,
+        entity: "defaults",
+        id: anna.userId,
+        op: "update",
+        data: defaults,
+        mutationId: mutation.mutationId,
+      },
+    ]);
+    const again = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "defaults.set",
+      args: { layout: "grid" },
+      base: { layout: "rows" },
+    });
+    expect(again.changes[0]?.data).toEqual({ ...defaults, layout: "grid" });
+    expect((await bootstrapSnapshot(t.db, anna.userId)).defaults).toEqual({
+      ...defaults,
+      layout: "grid",
+    });
+  });
+});
 
 describe("executeBatch (TS-25, FR-13.4)", () => {
   test("keeps the successes around a failed item, each committed on its own", async () => {

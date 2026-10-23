@@ -1,6 +1,7 @@
 // The sidebar tree's shared state (DS-27, DS-78): the inline editor, the expanded folders (kept per device) and the
 // tree item that has focus. The tree, the shortcuts, the views and the save-state layer's Edit all start editors
-// through it, so there is one editor at a time; the shell shows a hidden sidebar when one starts.
+// through it, so there is one editor at a time; the shell shows a hidden sidebar when one starts. The view shown
+// registers how to open its View options, for `V` (DS-49).
 
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useParams } from "@tanstack/react-router";
@@ -31,6 +32,10 @@ type CollectionUi = {
   /** The container whose tree item has focus, while focus is in the tree. */
   focused: () => string | undefined;
   setFocused: (id: string | undefined) => void;
+  /** Opens the current view's View options, if it has them. */
+  openViewOptions: () => void;
+  /** Registers how the current view opens its View options; undefined when it goes. */
+  setViewOptionsOpener: (open: (() => void) | undefined) => void;
 };
 
 const CollectionUiContext = createContext<CollectionUi | undefined>(undefined);
@@ -45,6 +50,7 @@ export function CollectionUiProvider({
   const [editing] = useState(createEditing);
   const [expanded, setExpandedState] = useState(() => expandedFolders.read(accountId));
   const focused = useRef<string | undefined>(undefined);
+  const viewOptions = useRef<(() => void) | undefined>(undefined);
 
   const update = useCallback(
     (change: (current: Set<string>) => void) => {
@@ -76,6 +82,10 @@ export function CollectionUiProvider({
       focused: () => focused.current,
       setFocused: (id) => {
         focused.current = id;
+      },
+      openViewOptions: () => viewOptions.current?.(),
+      setViewOptionsOpener: (open) => {
+        viewOptions.current = open;
       },
     }),
     [accountId, editing, expanded, update],

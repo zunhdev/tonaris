@@ -75,6 +75,27 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: capitalized(quoted(moved?.name, `a ${moved?.kind ?? "folder or list"}`)),
     };
   }
+  if (mutation.name === "view.set") {
+    const { viewKey } = mutation.args;
+    const view =
+      viewKey === "root"
+        ? "Collection"
+        : viewKey === "unsorted"
+          ? "Unsorted"
+          : quoted(names.container(viewKey)?.name, "a folder or list");
+    return {
+      summary: `View options for ${view}`,
+      what: `the view options for ${view}`,
+      subject: `The view options for ${view}`,
+    };
+  }
+  if (mutation.name === "defaults.set") {
+    return {
+      summary: "Default view options",
+      what: "your default view options",
+      subject: "Your default view options",
+    };
+  }
   const album = quoted(names.album(mutation.args.albumId), "an album");
   const list = quoted(names.container(mutation.args.listId)?.name, "a list");
   if (mutation.name === "membership.add") {
@@ -153,6 +174,14 @@ const fieldLabels: Record<string, string> = {
   recordingYearEnd: "Recorded until",
   name: "Name",
   parentId: "Location",
+  sortMode: "Sort",
+  sortDir: "Direction",
+  grouped: "Grouping",
+  layout: "Layout",
+  listSortMode: "Sort for lists",
+  listSortDir: "Direction for lists",
+  folderSortMode: "Sort for folders",
+  folderSortDir: "Direction for folders",
 };
 
 /** A conflicting field's name in the review (DS-80). */
@@ -166,8 +195,39 @@ const releaseTypeLabels: Record<string, string> = {
   compilation: "Compilation",
 };
 
-/** A conflicting field's value in the review: "—" when empty, folders by name, the root as "Collection". */
+/** The words for view options' values (DS-49). */
+const presentationValues: Record<string, string> = {
+  year: "Year",
+  name: "Name",
+  created: "Created",
+  manual: "Manual",
+  asc: "Ascending",
+  desc: "Descending",
+  rows: "Rows",
+  grid: "Grid",
+};
+
+const presentationFields = new Set([
+  "sortMode",
+  "sortDir",
+  "grouped",
+  "layout",
+  "listSortMode",
+  "listSortDir",
+  "folderSortMode",
+  "folderSortDir",
+]);
+
+/**
+ * A conflicting field's value in the review: "—" when empty, folders by name, the root as "Collection", and a view
+ * choice in words, "Account default" when not made.
+ */
 export function fieldValue(field: string, value: unknown, names: Names): string {
+  if (presentationFields.has(field)) {
+    if (value === null || value === undefined) return "Account default";
+    if (field === "grouped") return value === true ? "Release type" : "None";
+    return typeof value === "string" ? (presentationValues[value] ?? value) : "—";
+  }
   if (field === "parentId") {
     if (value === null) return "Collection";
     return (typeof value === "string" && names.container(value)?.name) || "A folder no longer here";

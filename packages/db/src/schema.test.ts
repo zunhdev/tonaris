@@ -7,6 +7,7 @@ import { eq, sql } from "drizzle-orm";
 import postgres from "postgres";
 
 import {
+  accountSettings,
   accountSync,
   admissionInvitations,
   albums,
@@ -18,6 +19,7 @@ import {
   sessions,
   trashUnits,
   users,
+  viewPrefs,
 } from "./schema";
 import { trimmedCharacters } from "./schema/columns";
 import { createTestDatabase, type TestDatabase } from "./testing";
@@ -89,6 +91,7 @@ describe("migrations", () => {
     expect(rows.map((row) => row.table_name)).toEqual([
       "__drizzle_migrations",
       "account",
+      "account_settings",
       "account_sync",
       "admission_invitations",
       "album_field_multi",
@@ -353,6 +356,53 @@ describe("constraints", () => {
     expect(columns).toContain("mb_release_group_id");
     expect(columns).not.toContain("edition_label");
     expect(columns).not.toContain("barcode");
+  });
+
+  test("a view's sort is a known mode, set and cleared with its direction", async () => {
+    const personId = await newUser();
+    const prefs = (values: Partial<typeof viewPrefs.$inferInsert>) =>
+      t.db.insert(viewPrefs).values({ personId, viewKey: id(), ...values });
+    expect(await violation(prefs({ sortMode: "name", sortDir: "desc" }))).toBeUndefined();
+    expect(await violation(prefs({ layout: "grid" }))).toBeUndefined();
+    expect(
+      await violation(
+        t.db
+          .insert(viewPrefs)
+          .values({ personId, viewKey: id(), sortMode: sql`'random'`, sortDir: "asc" }),
+      ),
+    ).toBe("view_prefs_sort_mode_check");
+    expect(await violation(prefs({ sortMode: "name" }))).toBe("view_prefs_sort_check");
+    expect(await violation(prefs({ sortDir: "asc" }))).toBe("view_prefs_sort_check");
+  });
+
+  test("account defaults hold only the modes their views take", async () => {
+    const defaults = {
+      listSortMode: "year",
+      listSortDir: "asc",
+      folderSortMode: "manual",
+      folderSortDir: "asc",
+      grouped: false,
+      layout: "rows",
+    } as const;
+    expect(
+      await violation(
+        t.db.insert(accountSettings).values({ accountId: await newUser(), ...defaults }),
+      ),
+    ).toBeUndefined();
+    expect(
+      await violation(
+        t.db
+          .insert(accountSettings)
+          .values({ accountId: await newUser(), ...defaults, listSortMode: sql`'created'` }),
+      ),
+    ).toBe("account_settings_list_sort_mode_check");
+    expect(
+      await violation(
+        t.db
+          .insert(accountSettings)
+          .values({ accountId: await newUser(), ...defaults, folderSortMode: sql`'year'` }),
+      ),
+    ).toBe("account_settings_folder_sort_mode_check");
   });
 
   test("purging an album removes its memberships", async () => {

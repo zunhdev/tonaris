@@ -192,9 +192,13 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
   - the checkbox (TON-37);
   - the drag handle (TON-36);
   - the services, and the Open button (M4).
-- **The year** shows the original year, or a live recording range ("1978–1982"). The `rec.` prefix and fallback marker come with TON-35 (DS-24).
-- **Order:** until TON-35, albums are in DS-44's first-time default, chronological ascending. Ties go by title, then ID.
+- **The year** shows the original year, or a live recording range ("1978–1982").
 - **Save states:** the status cell holds the save-state marker. The row is `aria-busy` while saving, and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+
+*As built in TON-35:*
+- **The year** follows DS-24, in a 7 rem column to fit "rec. 1978–1982".
+- **Grouped by release type,** the type column is hidden.
+- **Order:** the view's sort (DS-49), with DS-44's first-time default of chronological ascending.
 
 **DS-22 Album card.** This is the grid item. A square artwork tile (160–200px, responsive columns) sits over the title and artist, each truncated to one line, then the year. Save state appears as a corner badge. *(FR-05)*
 
@@ -202,6 +206,8 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **Sizes:** cards are at least 160 px wide, 16 px apart, and fill the row. They are about 200 px or less from 360 px of view width up.
 - **Virtualized by rows of cards.**
 - **Each card is a grid cell,** named by its title, artist and year. The save-state badge sits on the artwork's top-right corner.
+
+*As built in TON-35:* the year follows DS-24, as in rows. Grouped, each group's header is a row of its own above its cards (DS-43).
 
 **DS-23 Artwork.**
 - A fixed-aspect box with lazy loading, `decoding="async"`, a `sizes`/`srcset` where the source allows it, and a 150ms fade-in.
@@ -226,6 +232,13 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 | Live, recording year unknown | Release year with a fallback marker, e.g. `1979 ·` plus a "release-year fallback" glyph; tooltip and accessible label: "Recording year unknown — sorted by release year" |
 
 A reissue's release date never appears in the year column. Tonaris saves albums, not editions (FR-02.12).
+
+*As built in TON-35:*
+- **`rec.`** is `text.small` in `fg.tertiary`, before the year or range.
+- **The fallback marker** is "·" and a calendar-clock glyph in `fg.tertiary`, after the release year.
+  - Its tooltip says "Recording year unknown — sorted by release year".
+  - So does visually hidden text, so the year cell reads "1979 · Recording year unknown — sorted by release year" to assistive technology.
+- **An unknown year** shows "—" and sorts last in both directions. Saved albums always have a year (FR-02.6), so only damaged data shows it.
 
 **DS-25 Service-link chooser.** "Open in…" lists only the services that have a link, each by name in plain text ("Open in Spotify"), with no logos (DS-19).
 - **Desktop:** a popover anchored to the Open button or invoked with `O`. The first item is focused, and Enter opens it.
@@ -364,6 +377,10 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 - **Invitations** waits for sharing (M7).
 - **The account menu** has Keyboard shortcuts, which opens the reference (DS-78).
 
+*As built in TON-35:*
+- **The tree follows each level's sort** (decided with the creator on 23 October 2026): a folder's contents in the order its view is sorted, and the top level in the root's. "The owner's root order" is the root's presentation, so the tree and the view beside it always agree. In manual order, the default, both show the arrangement.
+- **The account menu's "Connections"** became **Settings**, which opens Settings → Preferences (DS-92).
+
 **DS-32 Route map.** These are conceptual paths; final paths are decided in the tech spec. *(Section 2.2)*
 
 | Path | Screen |
@@ -392,6 +409,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **The wrong kind.** A folder's path given a list's ID leads to the list's path, and the other way round.
 - **A missing folder or list** reads "This folder or list isn't available.", with "Go to your collection".
 - **Page titles** are "{name} · Tonaris".
+- **TON-35 adds `/settings/preferences`.** G then S goes there, the first settings page built in DS-92's order.
 
 ---
 
@@ -414,6 +432,10 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - Page Up and Page Down move by a page.
 - **Measured:** at 5,000 albums, both layouts scroll at the display's rate (120 Hz on the test Mac), with no frame over 17 ms.
 
+*As built in TON-35:*
+- **The layout is chosen in View options** (DS-49) and saved with the view's other choices to the account, so it follows the person to every device. The header switch is gone.
+- **Layouts kept on the device move to the account.** The first time the workspace loads, each list or Unsorted kept as Grid on the device since TON-34 is saved as Grid, unless it chose a layout meanwhile. Then the device forgets them.
+
 *(FR-05.2)*
 
 **DS-41 Folder and root rows.** Each row shows the container icon (folder or list), name, a description excerpt (`fg.tertiary`, one line), the item count (albums for lists, children for folders), and a sharing glyph. When sorted by creation date, a date column appears. *(FR-01.3, FR-03.5, FR-05.1)*
@@ -423,18 +445,34 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - the name cell, a link with the icon, name and save-state marker;
   - the contents cell: "2 albums", or "3 folders and lists".
 - **Enter** opens the folder or list from either cell.
-- **Order:** creation order, as the tree, until manual order (TON-36).
 - **Later:** descriptions (M4) and sharing glyphs (M7).
+
+*As built in TON-35:*
+- **Order:** the view's sort (DS-42), the same as the tree's.
+- **Created:** sorted by creation date, a Created column between the name and the contents shows each one's date, in the browser's medium date style ("Oct 23, 2026"). The date comes from the folder's or list's UUIDv7 ID, made when it was created (TS-10).
 
 **DS-42 Lists and folders under each sort** *(handoff FR-05.1)*:
 - **Name and creation-date sorts:** folders first, then lists, each sorted by the selected key and direction. This is the filesystem convention and keeps hierarchy scannable.
 - **Manual sort:** one mixed sequence in the person's arrangement.
+
+*As built in TON-35:*
+- **Albums:**
+  - **Year** uses FR-05.5's chronological year.
+  - **Name** sorts by title, ignoring case and accents (the domain's `searchKey`), ties by artist.
+  - **Ties** then go by title, then ID, ascending in either direction, so the order never shifts.
+- **Folders and lists:** Name sorts by name, ignoring case and accents. Created sorts by when each was made, as its UUIDv7 ID holds.
 
 **DS-43 Group sequence and headers** *(handoff FR-05.7)*:
 - Sequence: **Album → EP → Live → Compilation → Unclassified.** Core studio work comes first and unknowns last.
 - Sticky 28px headers show the group name and count (`text.small`, `fg.secondary`).
 - Empty groups are hidden.
 - Groups can be collapsed per session; collapse state is not synced.
+
+*As built in TON-35:*
+- **Each header is a grid row** with one cell spanning the columns. The cell holds a button with a chevron, the group's name and its count ("Live 2", read as "Live 2 albums"), and `aria-expanded`. Enter or Space collapses or expands the group.
+- **Sticky:** the header of the group in view stays at the top as the view scrolls, on the panel's surface. The others scroll with their groups.
+- **Collapsed groups** are kept per view for the tab's session (`sessionStorage`), so a reload in the tab keeps them.
+- **Grouping filters the one sorted sequence,** so each group keeps the view's order, manual order included (FR-05.8).
 
 **DS-44 Initial presentation** *(handoff FR-05.10)*. Saved defaults and remembered choices always win (FR-11.7).
 
@@ -447,6 +485,13 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
 - **Folders and root:** with no arrangement yet, manual order falls back to creation order. This makes the sidebar tree the user's own arrangement.
 - **Manual order before anyone arranges a list:** for a person who hasn't arranged a list, it falls back to the order in which albums were added to that list, oldest first. A viewer's manual order never starts from the owner's arrangement (FR-05.2).
+
+*As built in TON-35:*
+- **Every first-time default** in the table is built, for the owner's views. Shared views wait for M7, and the mode for TON-37.
+- **Manual order shows these fallbacks** until rearranging writes positions (TON-36):
+  - a list's albums in the order they were added, ties by ID;
+  - folders and lists in creation order;
+  - Unsorted newest first, as DS-51's inbox. Until TON-36, "newest" means the album's creation, so an album leaving its last list doesn't yet come to the top.
 
 **DS-45 Viewing and editing modes.** These reconcile FR-04 with a Linear-like feel: the mode controls chrome, and edit intent switches modes. *(FR-04.1, FR-04.2)*
 
@@ -528,6 +573,16 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - **Sharing preview:** the picker footer and drag-hover tooltip show the destination's SharingImpact (DS-69) before anything applies.
   - **When effective sharing would change**, a confirmation popover lists the change ("Will become visible to 2 people and anyone with the 'Metal' link"), with Move and Cancel. When nothing changes, the move applies immediately.
   - *(FR-01.4, FR-01.5, FR-07.9, FR-07.14)*
+
+*As built in TON-35:*
+- **The View button** sits at the end of the header in the root, folders, lists and Unsorted, with `aria-keyshortcuts="V"`. Its popover is titled "View options" for assistive technology.
+- **Each choice is a segmented control,** a radio group with the arrow keys between options. Folders and the root have Sort and Direction only.
+- **Each choice is remembered for the view** at once and saved to the account (FR-11.7, FR-11.8): the sort with its direction, the grouping, and the layout, each on its own. A choice not made follows the account defaults.
+  - Choosing works offline: it waits in the outbox, as it isn't a collection edit (X-04).
+  - A conflicting choice from another session is reviewed like any conflict (FR-09.4), with its fields named Sort, Direction, Grouping and Layout, and an unset value as "Account default".
+- **"Use account defaults"** clears the view's choices, and is disabled when it has none.
+- **"Save as my default"** makes the view's choices the defaults for its kind: sort, direction, grouping and layout for lists and Unsorted, sort and direction for folders and the root. It is disabled when they already are.
+- **Rearranging** comes with TON-36. Until then, Manual shows DS-44's fallbacks.
 
 **DS-50 Removal and deletion feedback.** *(FR-01.11, FR-01.8, FR-14.1, X-07)*
 
@@ -710,6 +765,7 @@ The block never says "private" while another access path remains.
 - **When they wait:** shortcuts are off in text fields, and inside dialogs, popovers and menus.
 - **The reference** lists the shortcuts that work; others join it with their issues.
 - **TON-34 adds the views' grid keys:** J and K, arrows across a row, and ⌘Home and ⌘End. J and K belong to the grid, not to global shortcuts, so in the tree they stay type-ahead letters.
+- **TON-35 adds V,** which opens the current view's View options; it works offline, since choosing isn't an edit. **G then S** now goes to Settings → Preferences.
 
 ---
 
@@ -918,6 +974,8 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 *(FR-11.13)*
 
+*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues.
+
 **DS-93 Profile and account.** *(FR-11.3, FR-11.4, FR-11.5)*
 - **Display name:** saved on blur. While sharing is on, clearing it shows an inline error that keeps the current value.
 - **Change sign-in email:** a stepper with three steps:
@@ -929,6 +987,13 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **Lost access to your email?** is a link from sign-in and Account to `/help/recovery`. That page explains creator-assisted recovery and shows the support contact address (TS-73). There is no in-app request form.
 
 **DS-94 Preferences.** Default sort and direction for lists, default sort for folders, default grouping, and default layout. A note explains that remembered per-view choices are kept when defaults change. *(FR-11.7)*
+
+*As built in TON-35:*
+- **Two sections,** with the same segmented controls as View options:
+  - **Lists and Unsorted:** sort, direction, grouping and layout;
+  - **Folders and Collection:** sort and direction. Folders have a direction too, since Name and Created sort both ways.
+- **Each choice is saved at once** to the account, and reaches the person's other sessions.
+- **The note:** "Folders, lists and views where you've chosen options in View options keep them when you change these defaults. Choose "Use account defaults" there to follow these again."
 
 **DS-96 Data export** (Settings → Data). *(FR-08.1–FR-08.6)*
 - **Explanation:** "A ZIP with a JSON file (complete, for programs and AI tools), a Markdown file (readable outline of your collection) and a README."

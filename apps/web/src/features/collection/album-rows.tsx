@@ -1,7 +1,8 @@
 // Album rows (DS-21): a list's or Unsorted's albums as a virtualized ARIA grid of 36 px rows, each with its artwork
-// tile, title, artist, year and release type, and its save state. The type collapses first as the view narrows.
-// The checkbox and drag handle (TON-37, TON-36) and the services and Open button (M4) join these columns later.
-// Each row is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+// tile, title, artist, year and release type, and its save state. The type collapses first as the view narrows, and
+// is hidden while the view is grouped by it. Grouped, each group starts with its header, the one in view sticking
+// at the top (DS-43). The checkbox and drag handle (TON-37, TON-36) and the services and Open button (M4) join these
+// columns later. Each row is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 
 // Virtualized rows are absolutely positioned CSS grid rows, which table elements can't be without overriding their
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -10,13 +11,15 @@
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { Album } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { Artwork } from "./artwork";
-import { yearLabel } from "./order";
+import { ChronologyYear } from "./chronology-year";
+import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
+import type { ReleaseGroup, Section } from "./order";
 import { useGridFocus, useWidth } from "./use-grid";
 
 const rowHeight = 36;
@@ -35,32 +38,77 @@ export function typeName(album: Pick<Album, "releaseType" | "isLive">): string {
   return album.releaseType === null ? "—" : typeNames[album.releaseType];
 }
 
-export function AlbumRows({ albums, label }: { albums: readonly Album[]; label: string }) {
+type Item =
+  | { type: "header"; group: ReleaseGroup; count: number }
+  | { type: "album"; album: Album };
+
+/** The grid's rows: each group's header, then its albums unless collapsed; combined, just the albums. */
+function itemsOf(
+  sections: readonly Section<Album>[],
+  collapsed: ReadonlySet<ReleaseGroup>,
+): Item[] {
+  return sections.flatMap(({ group, albums }) => {
+    const rows = albums.map((album): Item => ({ type: "album", album }));
+    if (group === undefined) return rows;
+    const header: Item = { type: "header", group, count: albums.length };
+    return collapsed.has(group) ? [header] : [header, ...rows];
+  });
+}
+
+export function AlbumRows({
+  sections,
+  label,
+  collapsed,
+  onToggle,
+}: {
+  sections: readonly Section<Album>[];
+  label: string;
+  collapsed: ReadonlySet<ReleaseGroup>;
+  onToggle: (group: ReleaseGroup) => void;
+}) {
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
   const width = useWidth(scroller);
-  const showType = width === 0 || width >= typeFrom;
+  const grouped = sections[0]?.group !== undefined;
+  const showType = !grouped && (width === 0 || width >= typeFrom);
   const columns = showType ? 5 : 4;
+  const items = useMemo(() => itemsOf(sections, collapsed), [sections, collapsed]);
+  const headers = useMemo(
+    () => items.flatMap((item, index) => (item.type === "header" ? [index] : [])),
+    [items],
+  );
+  const { rangeExtractor, isStuck } = useStickyHeader(headers);
   // TanStack Virtual re-renders on scroll by design; the app isn't compiled with React Compiler, which the rule is
   // about.
   // oxlint-disable-next-line react/incompatible-library
   const virtualizer = useVirtualizer({
-    count: albums.length,
+    count: items.length,
     getScrollElement: () => scroller.current,
-    estimateSize: () => rowHeight,
+    estimateSize: (index) => (items[index]?.type === "header" ? headerHeight : rowHeight),
+    getItemKey: (index) => {
+      const item = items[index];
+      return item?.type === "header" ? `group:${item.group}` : (item?.album.id ?? index);
+    },
     overscan: 10,
+    rangeExtractor,
   });
+  // Headers and rows differ in height, so offsets change whenever the items do.
+  useEffect(() => virtualizer.measure(), [virtualizer, items]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
   const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? 360) / rowHeight) - 1);
   const { onKeyDown, cellProps } = useGridFocus({
     grid,
-    shape: { rows: albums.length, columns: () => columns, page },
+    shape: {
+      rows: items.length,
+      columns: (row) => (items[row]?.type === "header" ? 1 : columns),
+      page,
+    },
     reveal,
   });
   const template = showType
-    ? "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_4.5rem_6.5rem_1.5rem]"
-    : "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_4.5rem_1.5rem]";
+    ? "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_7rem_6.5rem_1.5rem]"
+    : "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_7rem_1.5rem]";
 
   return (
     <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-2">
@@ -70,7 +118,7 @@ export function AlbumRows({ albums, label }: { albums: readonly Album[]; label: 
         aria-label={label}
         // Its cells take the focus; the grid itself only when clicked between them.
         tabIndex={-1}
-        aria-rowcount={albums.length + 1}
+        aria-rowcount={items.length + 1}
         aria-colcount={columns}
         onKeyDown={onKeyDown}
         className="px-4"
@@ -85,15 +133,39 @@ export function AlbumRows({ albums, label }: { albums: readonly Album[]; label: 
           </div>
         </div>
         <div role="rowgroup" className="relative" style={{ height: virtualizer.getTotalSize() }}>
-          {virtualizer.getVirtualItems().map((item) => {
-            const album = albums[item.index];
-            if (!album) return null;
+          {virtualizer.getVirtualItems().map((virtual) => {
+            const item = items[virtual.index];
+            if (!item) return null;
+            if (item.type === "header") {
+              return (
+                <div
+                  key={virtual.key}
+                  role="row"
+                  aria-rowindex={virtual.index + 2}
+                  className="inset-x-0 flex items-stretch bg-panel px-2"
+                  style={{
+                    height: headerHeight,
+                    ...placement(isStuck(virtual.index), virtual.start),
+                  }}
+                >
+                  <div role="gridcell" aria-colspan={columns} className="flex min-w-0">
+                    <GroupHeader
+                      group={item.group}
+                      count={item.count}
+                      collapsed={collapsed.has(item.group)}
+                      onToggle={onToggle}
+                      {...cellProps(virtual.index, 0)}
+                    />
+                  </div>
+                </div>
+              );
+            }
             return (
               <AlbumRow
-                key={album.id}
-                album={album}
-                index={item.index}
-                top={item.start}
+                key={virtual.key}
+                album={item.album}
+                index={virtual.index}
+                top={virtual.start}
                 template={template}
                 showType={showType}
                 cellProps={cellProps}
@@ -143,10 +215,10 @@ function AlbumRow({
     <div
       key="year"
       role="gridcell"
-      className={cn(cell, "pr-3 text-fg-secondary tabular-nums")}
+      className={cn(cell, "pr-3 text-fg-secondary")}
       {...cellProps(index, 2)}
     >
-      {yearLabel(album)}
+      <ChronologyYear album={album} />
     </div>,
     ...(showType
       ? [
@@ -176,7 +248,7 @@ function AlbumRow({
       aria-rowindex={index + 2}
       aria-busy={status === "pending" || status === "unconfirmed" ? true : undefined}
       className={cn(
-        "absolute inset-x-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
+        "absolute inset-x-0 top-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
         template,
       )}
       style={{ transform: `translateY(${top}px)` }}

@@ -5,6 +5,7 @@ import type { Album } from "./albums";
 import type { CollectionStore, StoredAlbum } from "./commands";
 import type { Container, StoredContainer } from "./containers";
 import { membershipKey, type Membership } from "./memberships";
+import type { ViewDefaults, ViewPrefs } from "./views";
 
 /** The entries of `values` that are set: an update leaves undefined fields as they are. */
 const defined = (values: object) =>
@@ -12,18 +13,25 @@ const defined = (values: object) =>
 
 type StoredMembership = Membership & { ownerId: string };
 
+/** A view preference's key in `memoryStore`: the person's ID and the view key, joined by a colon. */
+export const viewRowKey = (personId: string, viewKey: string) => `${personId}:${viewKey}`;
+
 /**
  * A store over plain maps, which tests inspect directly. Albums are active unless they say otherwise; entries are
- * keyed by `membershipKey`.
+ * keyed by `membershipKey`, view preferences by `viewRowKey`, and defaults by the person's ID.
  */
 export function memoryStore({
   albums = [],
   containers = [],
   memberships = [],
+  views = [],
+  defaults = [],
 }: {
   albums?: (Album & { ownerId: string; trashed?: boolean })[];
   containers?: StoredContainer[];
   memberships?: StoredMembership[];
+  views?: (ViewPrefs & { personId: string })[];
+  defaults?: (ViewDefaults & { personId: string })[];
 } = {}) {
   const albumRows = new Map<string, StoredAlbum>(
     albums.map((album) => [album.id, { trashed: false, ...album }]),
@@ -31,6 +39,12 @@ export function memoryStore({
   const containerRows = new Map(containers.map((container) => [container.id, { ...container }]));
   const membershipRows = new Map(
     memberships.map((entry) => [membershipKey(entry.listId, entry.albumId), { ...entry }]),
+  );
+  const viewRows = new Map<string, ViewPrefs>(
+    views.map(({ personId, ...prefs }) => [viewRowKey(personId, prefs.viewKey), prefs]),
+  );
+  const defaultRows = new Map<string, ViewDefaults>(
+    defaults.map(({ personId, ...values }) => [personId, values]),
   );
 
   const activeChildren = (ownerId: string, parentId: string | null): StoredContainer[] =>
@@ -102,11 +116,34 @@ export function memoryStore({
       membershipRows.delete(membershipKey(listId, albumId));
       return Promise.resolve();
     },
+
+    findViewPrefs: (personId, viewKey) => {
+      const row = viewRows.get(viewRowKey(personId, viewKey));
+      return Promise.resolve(row && { ...row });
+    },
+    saveViewPrefs: (personId, prefs) => {
+      viewRows.set(viewRowKey(personId, prefs.viewKey), { ...prefs });
+      return Promise.resolve();
+    },
+    deleteViewPrefs: (personId, viewKey) => {
+      viewRows.delete(viewRowKey(personId, viewKey));
+      return Promise.resolve();
+    },
+    findDefaults: (personId) => {
+      const row = defaultRows.get(personId);
+      return Promise.resolve(row && { ...row });
+    },
+    saveDefaults: (personId, values) => {
+      defaultRows.set(personId, { ...values });
+      return Promise.resolve();
+    },
   };
   return {
     store,
     albums: albumRows,
     containers: containerRows,
     memberships: membershipRows,
+    views: viewRows,
+    defaults: defaultRows,
   };
 }

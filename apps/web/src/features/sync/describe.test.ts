@@ -123,6 +123,36 @@ describe("describeWrite (DS-80, DS-81)", () => {
   });
 });
 
+describe("view options (DS-49, DS-94)", () => {
+  test("are named by their view, and defaults as the person's", () => {
+    const choice = (viewKey: string) =>
+      write({ name: "view.set", args: { viewKey, layout: "grid" }, base: { layout: null } });
+    expect(choice(later.id)).toEqual({
+      summary: "View options for 'Later'",
+      what: "the view options for 'Later'",
+      subject: "The view options for 'Later'",
+    });
+    expect(choice("root").summary).toBe("View options for Collection");
+    expect(choice("unsorted").summary).toBe("View options for Unsorted");
+    expect(choice(uuidv7()).summary).toBe("View options for a folder or list");
+    expect(
+      write({ name: "defaults.set", args: { grouped: true }, base: { grouped: false } }).summary,
+    ).toBe("Default view options");
+  });
+
+  test("their fields and values read as the View options do", () => {
+    expect(fieldLabel("sortMode")).toBe("Sort");
+    expect(fieldLabel("folderSortDir")).toBe("Direction for folders");
+    expect(fieldValue("sortMode", "year", names)).toBe("Year");
+    expect(fieldValue("sortDir", "desc", names)).toBe("Descending");
+    expect(fieldValue("sortMode", null, names)).toBe("Account default");
+    expect(fieldValue("grouped", true, names)).toBe("Release type");
+    expect(fieldValue("grouped", false, names)).toBe("None");
+    expect(fieldValue("layout", "grid", names)).toBe("Grid");
+    expect(fieldValue("listSortMode", "manual", names)).toBe("Manual");
+  });
+});
+
 describe("fields and reasons (DS-80, DS-107)", () => {
   test("values read as people would write them", () => {
     expect(fieldLabel("artistCredit")).toBe("Artist");

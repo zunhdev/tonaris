@@ -14,6 +14,13 @@ const containerCreate = (kind: Container["kind"], parentId: string | null = null
 
 const idOf = (mutation: Mutation) => (mutation.name === "container.create" ? mutation.args.id : "");
 
+const choice = (viewKey: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "view.set",
+  args: { viewKey, layout: "grid" },
+  base: { layout: null },
+});
+
 describe("dependencies within a request", () => {
   test("a list inside a folder created earlier depends on it, and so does what goes in the list", () => {
     const folder = containerCreate("folder");
@@ -85,5 +92,18 @@ describe("dependencies within a request", () => {
       args: { listId: idOf(list), albumId: uuidv7() },
     };
     expect(dependenciesOf([removal, addition, list])).toEqual([undefined, undefined, undefined]);
+  });
+
+  test("a choice for a new list depends on its creation; one for the root or Unsorted on nothing", () => {
+    const list = containerCreate("list");
+    const defaults: Mutation = {
+      mutationId: uuidv7(),
+      name: "defaults.set",
+      args: { grouped: true },
+      base: { grouped: false },
+    };
+    expect(
+      dependenciesOf([list, choice(idOf(list)), choice("root"), choice("unsorted"), defaults]),
+    ).toEqual([undefined, [list.mutationId], undefined, undefined, undefined]);
   });
 });

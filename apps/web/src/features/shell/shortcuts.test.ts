@@ -36,6 +36,8 @@ describe("shortcuts (DS-78)", () => {
     expect(match(press("?"))).toBe("shortcuts");
     expect(match(press("n"))).toBe("new-list");
     expect(match(press("N"))).toBe("new-folder");
+    expect(match(press("v"))).toBe("view-options");
+    expect(match(press("v", 0, { metaKey: true }))).toBeUndefined();
   });
 
   test("nothing matches while typing in a text field, nor with ⌘, Ctrl or Alt, nor on repeat", () => {

@@ -1,6 +1,7 @@
 // The sidebar tree's model (DS-27, DS-31, FR-01.3): the owner's folders and lists, nested as saved, then Unsorted,
-// Shared with me and Trash. Siblings come in creation order, which their client-made UUIDv7 IDs sort by, until
-// manual order exists (DS-44's fallback; TON-36). The rows a person can see follow which folders are expanded, and
+// Shared with me and Trash. Each level comes in the order its folder's view is sorted, and the top level in the
+// root's (decided 23 October 2026); without one, in creation order, which their client-made UUIDv7 IDs sort by
+// (DS-44's fallback for manual order). The rows a person can see follow which folders are expanded, and
 // carry what the ARIA tree pattern needs in its flat form: level, position in the set, and set size. Pure, so the
 // tree's rules are tested without a DOM.
 
@@ -16,7 +17,13 @@ export type Tree = {
 
 const byCreation = (a: Container, b: Container) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
-export function buildTree(containers: Iterable<Container>): Tree {
+/** Orders the folders and lists in a folder, or at the root (`parentId` null). */
+export type SiblingOrder = (siblings: Container[], parentId: string | null) => Container[];
+
+export function buildTree(
+  containers: Iterable<Container>,
+  order: SiblingOrder = (siblings) => siblings.toSorted(byCreation),
+): Tree {
   const byId = new Map<string, Container>();
   const children = new Map<string, Container[]>();
   const roots: Container[] = [];
@@ -25,9 +32,8 @@ export function buildTree(containers: Iterable<Container>): Tree {
     if (container.parentId === null) roots.push(container);
     else children.set(container.parentId, [...(children.get(container.parentId) ?? []), container]);
   }
-  roots.sort(byCreation);
-  for (const siblings of children.values()) siblings.sort(byCreation);
-  return { roots, children, byId };
+  for (const [parentId, siblings] of children) children.set(parentId, order(siblings, parentId));
+  return { roots: order(roots, null), children, byId };
 }
 
 /** The places below the folders and lists, in order (DS-31). */
