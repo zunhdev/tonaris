@@ -27,7 +27,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(28);
+  server = await startApiServer(30);
 }, 30_000);
 
 afterAll(async () => {
@@ -913,5 +913,91 @@ describe("view choices and defaults (FR-11.7, FR-11.8, FR-09.2)", () => {
     expect(resubmit(web, failedWrite(defaults))).toBe("sent");
     await until(() => web.defaults.get("defaults")?.grouped === true, 3_000, "the retried default");
     await until(() => web.states.open().length === 0, 3_000, "the writes to be confirmed");
+  });
+});
+
+/** The `order.set` envelopes sent after `from`. */
+const orderWrites = (of: ReturnType<typeof testClient>, from: number) =>
+  of.network.sent
+    .slice(from)
+    .map((body) => mutationSchema.parse(JSON.parse(body)))
+    .filter((mutation) => mutation.name === "order.set")
+    .map(({ args, base }) => ({ args, base }));
+
+describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
+  test("a move is one order.set with its bases, and reaches the other session", async () => {
+    const web = await openClient(28, 0);
+    const phone = await openClient(28, 1);
+    await Promise.all([
+      web.containers.preload(),
+      web.positions.preload(),
+      phone.positions.preload(),
+    ]);
+    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    const doom: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Doom" };
+    await web.containers.insert([later, doom]).when("settled");
+    const sent = web.network.sent.length;
+
+    await web.arrange(
+      "root",
+      new Map([
+        [later.id, "a0"],
+        [doom.id, "Zz"],
+      ]),
+    ).isPersisted.promise;
+    await web.arrange("root", new Map([[later.id, "Zy"]])).isPersisted.promise;
+    expect(orderWrites(web, sent)).toEqual([
+      {
+        args: { viewKey: "root", keys: { [later.id]: "a0", [doom.id]: "Zz" } },
+        base: { [later.id]: null, [doom.id]: null },
+      },
+      { args: { viewKey: "root", keys: { [later.id]: "Zy" } }, base: { [later.id]: "a0" } },
+    ]);
+    await until(
+      () => phone.positions.get(`root:${later.id}`)?.key === "Zy",
+      3_000,
+      "the other session's move",
+    );
+    expect(web.states.open()).toEqual([]);
+  });
+
+  test("moving an item another session moved first is rolled back, kept for review, and Apply mine saves it", async () => {
+    const web = await openClient(29, 0);
+    const phone = await openClient(29, 1);
+    await Promise.all([
+      web.containers.preload(),
+      web.positions.preload(),
+      phone.positions.preload(),
+    ]);
+    const doom: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Doom" };
+    await web.containers.insert(doom).when("settled");
+    await until(() => phone.containers.has(doom.id));
+    phone.network.faults.noStream = true;
+    phone.network.cutStreams();
+    await web.arrange("root", new Map([[doom.id, "a0"]])).isPersisted.promise;
+
+    await phone.arrange("root", new Map([[doom.id, "Zz"]])).isPersisted.promise.catch(() => {});
+    const [conflict] = phone.states.conflicts();
+    expect(conflict?.outcome).toEqual({
+      status: "conflict",
+      conflicts: [{ field: doom.id, current: "a0", attempted: "Zz", base: null }],
+    });
+    phone.network.faults.noStream = false;
+    await until(
+      () => phone.positions.get(`root:${doom.id}`)?.key === "a0",
+      3_000,
+      "the saved place",
+    );
+
+    expect(conflict && resubmit(phone, conflict)).toBe("sent");
+    await until(
+      () => web.positions.get(`root:${doom.id}`)?.key === "Zz",
+      3_000,
+      "the applied place",
+    );
+    expect(
+      conflict &&
+        resubmit(phone, { ...conflict, mutation: { ...conflict.mutation, mutationId: uuidv7() } }),
+    ).toBe("unchanged");
   });
 });

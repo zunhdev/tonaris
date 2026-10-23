@@ -1,5 +1,5 @@
 // One signed-in client's sync: the engine on the stream, the outbox for writes, the save states, and the
-// collections: the collection's content, and the person's view choices and defaults. The web app makes one per tab, for the signed-in account (src/features/sync). With tabs, the
+// collections: the collection's content, and the person's view choices, defaults and manual order. The web app makes one per tab, for the signed-in account (src/features/sync). With tabs, the
 // account's tabs share one stream, and the outbox and the review queue are kept in the browser, so a reload loses
 // nothing: the next tab adopts what a gone tab left unsent (TS-22, TS-23). The client also tells changes saved
 // elsewhere from this tab's own, for the views to highlight (DS-82).
@@ -10,6 +10,7 @@ import { createSyncEngine, type Fetch, type SyncEngineOptions } from "./engine";
 import { createContainerCollection, createMembershipCollection } from "./lists";
 import { createOutbox } from "./outbox";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
+import { createArrange, createPositionCollection } from "./positions";
 import { entrySender } from "./transport";
 import { createDefaultsCollection, createViewCollection } from "./views";
 import { createSaveStates, createWriter } from "./writer";
@@ -59,6 +60,7 @@ export function createSyncClient({
   const memberships = createMembershipCollection({ engine, writer });
   const views = createViewCollection({ engine, writer });
   const defaults = createDefaultsCollection({ engine, writer });
+  const positions = createPositionCollection({ engine });
   // After the collections, so a listener hears of a change once its record is in them.
   const elsewhere = createChangesElsewhere({ engine, states });
 
@@ -74,6 +76,7 @@ export function createSyncClient({
       memberships.cleanup(),
       views.cleanup(),
       defaults.cleanup(),
+      positions.cleanup(),
     ]);
   }
 
@@ -86,6 +89,9 @@ export function createSyncClient({
     memberships,
     views,
     defaults,
+    positions,
+    /** Writes one move in a view: each item's new key, or null to clear its place (TS-16). */
+    arrange: createArrange({ positions, writer }),
     elsewhere,
     /** Loads the kept conflicts, takes over gone tabs' unsent writes, and connects. */
     start(): void {

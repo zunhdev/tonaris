@@ -7,6 +7,7 @@ import { albumFieldsSchema, albumSchema } from "./albums";
 import { containerSchema } from "./containers";
 import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
+import { positionSchema } from "./positions";
 import { viewDefaultsSchema, viewKeySchema, viewPrefsFieldsSchema, viewPrefsSchema } from "./views";
 import { z } from "./zod";
 
@@ -109,6 +110,21 @@ export const defaultsSetSchema = z.object({
   base: viewDefaultsSchema.partial(),
 });
 
+/**
+ * `order.set`: places items in one of the person's views, as one move (TS-16, FR-05.2). `keys` maps each item's ID to
+ * its new fractional-index key, or null to clear its place; `base` maps each to its key before, null for none
+ * (TS-21). Every item must be in the view.
+ */
+export const orderSetSchema = z.object({
+  mutationId,
+  name: z.literal("order.set"),
+  args: z.object({
+    viewKey: viewKeySchema,
+    keys: z.record(z.uuid(), z.string().nullable()),
+  }),
+  base: z.record(z.uuid(), z.string().nullable()),
+});
+
 /** `membership.add`'s `result` in a `confirmed` outcome. */
 export const membershipAddResultSchema = z
   .object({
@@ -131,6 +147,7 @@ export const mutationSchema = z
     membershipRemoveSchema,
     viewSetSchema,
     defaultsSetSchema,
+    orderSetSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;
@@ -192,6 +209,14 @@ export const changeSchema = z
     }),
     z.object({
       seq: z.int().positive(),
+      entity: z.literal("position"),
+      id: z.string().meta({ description: "The view key and the item's ID, joined by a colon." }),
+      op: z.enum(changeOps),
+      data: positionSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
       entity: z.literal("defaults"),
       id: z.uuid().meta({ description: "The account's ID." }),
       op: z.enum(changeOps),
@@ -210,6 +235,9 @@ export const bootstrapSchema = z
     containers: z.array(containerSchema),
     memberships: z.array(membershipSchema),
     views: z.array(viewPrefsSchema).meta({ description: "The person's remembered view choices." }),
+    positions: z
+      .array(positionSchema)
+      .meta({ description: "The person's manual order: one key per arranged item (TS-16)." }),
     defaults: viewDefaultsSchema.meta({
       description: "The person's account defaults, DS-44's until they save their own.",
     }),

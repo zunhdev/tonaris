@@ -200,6 +200,12 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **Grouped by release type,** the type column is hidden.
 - **Order:** the view's sort (DS-49), with DS-44's first-time default of chronological ascending.
 
+*As built in TON-36:*
+- **The drag handle** shows under Manual sort only, on the row's hover or keyboard focus. It sits in the gutter left of the row, not in a column, so the grid's shape stays the same.
+  - Decided with the creator on 23 October 2026: handles show in Viewing mode until TON-37, which shows them only in Editing (DS-45).
+  - It is pointer only and hidden from assistive technology. ⌥↑ and ⌥↓ do the same from the keyboard (DS-03).
+- **Folder and root rows** have the same handle (DS-41).
+
 **DS-22 Album card.** This is the grid item. A square artwork tile (160–200px, responsive columns) sits over the title and artist, each truncated to one line, then the year. Save state appears as a corner badge. *(FR-05)*
 
 *As built in TON-34:*
@@ -280,6 +286,11 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
   - Enter opens.
 - **The chevron** is for the pointer only.
 - **Type-ahead** waits 700 ms between letters, ignoring case and accents.
+
+*As built in TON-36:*
+- **Order:** each level follows its folder's arrangement, and the top level the root's (TS-16). Unarranged items are in creation order.
+- **Dragging:** a folder or list in the tree can be dragged onto a folder, or onto Collection above the tree, to move it (DS-49). A press that moves less than 6 px is still a click.
+- **Drop targets** highlight with `accent.soft`. Only places that can take the item accept it: not the item itself, anything under it, a list, or where it is already, and nothing while offline.
   - Letters that are shortcuts act as shortcuts instead (DS-78; decided with the creator on 22 October 2026).
   - Names starting with one are reached with the arrows, or ⌘K search once it exists.
 - **Counts:** lists and Unsorted show their album count, which screen readers hear as "Doom 2 albums".
@@ -493,6 +504,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - folders and lists in creation order;
   - Unsorted newest first, as DS-51's inbox. Until TON-36, "newest" means the album's creation, so an album leaving its last list doesn't yet come to the top.
 
+*As built in TON-36:* manual order is the person's arrangement (TS-16): arranged items by their keys, then the rest in these fallback orders. DS-51 keeps Unsorted's top, so an album leaving its last list now comes to the top.
+
 **DS-45 Viewing and editing modes.** These reconcile FR-04 with a Linear-like feel: the mode controls chrome, and edit intent switches modes. *(FR-04.1, FR-04.2)*
 
 - **Viewing** is the default. It shows a clean list or grid: no checkboxes, drag handles, add-rows, or inline-edit affordances. The inspector shows values read-only.
@@ -584,6 +597,22 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **"Save as my default"** makes the view's choices the defaults for its kind: sort, direction, grouping and layout for lists and Unsorted, sort and direction for folders and the root. It is disabled when they already are.
 - **Rearranging** comes with TON-36. Until then, Manual shows DS-44's fallbacks.
 
+*As built in TON-36:*
+- **Rearranging,** under Manual sort only:
+  - **Keyboard:** ⌥↑ and ⌥↓ move the focused item by one, and ⌥⇧↑ and ⌥⇧↓ to the top or bottom, in rows and cards. Focus follows the item.
+  - **Pointer:** a row's drag handle. A 2 px `accent.solid` line shows where it would land, and an overlay with its name follows the pointer.
+  - **Grouped,** an item moves among its own group's items, in the one arrangement (FR-05.8).
+  - **Each move is announced** politely: "Moved {name} to position {n} of {total}", counted within the group when grouped.
+  - **Under another sort,** ⌥↑ or ⌥↓ moves nothing. An info toast says "Rearranging works in manual order", with "Switch to manual order".
+  - **It works offline,** being presentation (X-04).
+  - **"Move to position…"** waits for the command palette (TON-63).
+- **Moving folders and lists:**
+  - **`M`, "Move to…",** acts on the focused tree item, else the focused folder or list row of a view, else the folder or list the view shows. The dialog lists Collection and the folders that can take it, indented by level, and ↑ and ↓ move between them.
+  - **Dragging** a folder or list from its row or the tree onto a folder in the tree, or onto Collection, moves it.
+  - **After a move,** the destination opens in the tree, and "Moved {name} to {destination}" is announced. The item follows its new parent's arranged items, in creation order among the rest.
+  - **While offline,** M does nothing and the tree takes no drops (DS-81). A refused move is reported like any failed write (DS-107).
+  - **Not yet:** adding albums to lists, with L or by dragging onto a list (their issue), and SharingImpact previews (DS-69, M7).
+
 **DS-50 Removal and deletion feedback.** *(FR-01.11, FR-01.8, FR-14.1, X-07)*
 
 | Action | Feedback |
@@ -598,6 +627,13 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - Positions are not retained when an album leaves and later returns.
 - New albums added to a **list** go at the **end** of the adding owner's manual order, which suits lists used as rankings.
 - Viewers' arrangements place newly added albums at the end.
+
+*As built in TON-36:* the server keeps these places in the commands that change memberships and parents (TS-16).
+- **An album leaving its last list** gets a key at the top of the owner's Unsorted. A new album does too, once Unsorted has keys; before that, Unsorted's fallback order, newest first, already puts it on top.
+- **An album joining a list** loses its Unsorted key, and one removed from a list loses its key there. So each returns as new.
+- **New albums in a list** have no key, so they follow the arranged ones: the end.
+- **A moved folder or list** loses its key in its old parent.
+- **Viewers' arrangements** come with sharing (M7).
 
 ---
 
@@ -766,6 +802,7 @@ The block never says "private" while another access path remains.
 - **The reference** lists the shortcuts that work; others join it with their issues.
 - **TON-34 adds the views' grid keys:** J and K, arrows across a row, and ⌘Home and ⌘End. J and K belong to the grid, not to global shortcuts, so in the tree they stay type-ahead letters.
 - **TON-35 adds V,** which opens the current view's View options; it works offline, since choosing isn't an edit. **G then S** now goes to Settings → Preferences.
+- **TON-36 adds M,** "Move to…", which waits while offline like N, and ⌥↑ / ⌥↓, with ⇧ for the ends, in the views' grids. The reference lists them.
 
 ---
 

@@ -9,6 +9,7 @@
 import {
   albumFields,
   membershipKey,
+  positionKey,
   unsetView,
   viewDefaultsFields,
   viewPrefsFields,
@@ -30,7 +31,10 @@ import type { SaveState } from "./writer";
  */
 export type Resubmitted = "sent" | "unchanged" | "gone";
 
-type Collections = Pick<SyncClient, "albums" | "containers" | "memberships" | "views" | "defaults">;
+type Collections = Pick<
+  SyncClient,
+  "albums" | "containers" | "memberships" | "views" | "defaults" | "positions" | "arrange"
+>;
 
 type Call =
   | "album.insert"
@@ -42,7 +46,8 @@ type Call =
   | "view.insert"
   | "view.update"
   | "view.delete"
-  | "defaults.update";
+  | "defaults.update"
+  | "order";
 
 /** The collection calls that make the changes again, in the order of each call's first change. */
 function plan() {
@@ -58,6 +63,8 @@ function plan() {
     viewInserts: [] as ViewPrefs[],
     viewUpdates: new Map<string, Partial<ViewPrefs>>(),
     viewDeletes: [] as string[],
+    /** Each move made again: one transaction each, as each was one move. */
+    orders: [] as { viewKey: string; keys: Map<string, string | null> }[],
     defaultsUpdate: {} as Partial<ViewDefaults>,
     /** Notes that `call` is needed; answers `sent`. */
     needs(call: Call): "sent" {
@@ -96,7 +103,7 @@ export function resubmitAll(
 
 /** Adds `mutation`'s change to `planned`, unless the records already hold it or its record is gone. */
 function remake(
-  { albums, containers, memberships, views, defaults }: Collections,
+  { albums, containers, memberships, views, defaults, positions }: Collections,
   mutation: Mutation,
   planned: Plan,
 ): Resubmitted {
@@ -176,6 +183,18 @@ function remake(
     Object.assign(planned.defaultsUpdate, changes);
     return planned.needs("defaults.update");
   }
+  if (mutation.name === "order.set") {
+    const { viewKey, keys } = mutation.args;
+    if (viewKey !== "root" && viewKey !== "unsorted" && !containers.has(viewKey)) return "gone";
+    const changed = new Map(
+      Object.entries(keys).filter(
+        ([itemId, key]) => (positions.get(positionKey(viewKey, itemId))?.key ?? null) !== key,
+      ),
+    );
+    if (changed.size === 0) return "unchanged";
+    planned.orders.push({ viewKey, keys: changed });
+    return planned.needs("order");
+  }
   const { listId, albumId } = mutation.args;
   const key = membershipKey(listId, albumId);
   if (mutation.name === "membership.add") {
@@ -200,7 +219,7 @@ function applyTo<Row>(rows: Map<string, Partial<Row>>) {
 
 /** Makes one call: one transaction, so one batch when it holds several changes. */
 function make(
-  { albums, containers, memberships, views, defaults }: Collections,
+  { albums, containers, memberships, views, defaults, arrange }: Collections,
   planned: Plan,
   call: Call,
 ): void {
@@ -218,13 +237,13 @@ function make(
   else if (call === "view.update") {
     sent(views.update([...planned.viewUpdates.keys()], applyTo(planned.viewUpdates)));
   } else if (call === "view.delete") sent(views.delete(planned.viewDeletes));
-  else {
+  else if (call === "defaults.update") {
     sent(
       defaults.update(defaultsKey, (draft) => {
         Object.assign(draft, planned.defaultsUpdate);
       }),
     );
-  }
+  } else for (const { viewKey, keys } of planned.orders) sent(arrange(viewKey, keys));
 }
 
 /** The new writes report their own outcomes in the save states; a rejection is expected there, not here. */

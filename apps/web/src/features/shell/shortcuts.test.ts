@@ -37,6 +37,7 @@ describe("shortcuts (DS-78)", () => {
     expect(match(press("n"))).toBe("new-list");
     expect(match(press("N"))).toBe("new-folder");
     expect(match(press("v"))).toBe("view-options");
+    expect(match(press("m"))).toBe("move");
     expect(match(press("v", 0, { metaKey: true }))).toBeUndefined();
   });
 

@@ -17,6 +17,16 @@ export const list = (name: string): Container => ({
   name,
 });
 
+/**
+ * Waits until the page has nothing left to send or confirm, before a navigation reloads it: an edit made just
+ * before could otherwise still be on its way into the browser's storage.
+ */
+export async function saved(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => window.tonarisSync?.unsent === 0 && window.tonarisSync.states.open().length === 0,
+  );
+}
+
 /** Waits until the page's sync client is connected. */
 export async function live(page: Page): Promise<void> {
   await page.waitForFunction(() => window.tonarisSync?.engine.status === "live");

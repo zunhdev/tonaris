@@ -4,6 +4,7 @@
 // selected. ↑/↓, Home/End, ←/→ and type-ahead move focus; letters that are shortcuts act as shortcuts instead
 // (decided 22 October 2026). F2 renames, and new folders and lists are named inline (editing.ts). Each folder or
 // list shows its save state, is busy while saving, and is highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+// Folders and lists can be dragged onto a folder, or onto Collection, to move them (DS-49, drag.tsx).
 
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
@@ -17,6 +18,7 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionUi, useEditor, useStartEditor, useViewContainerId } from "./collection-ui";
 import { useCollectionData } from "./data";
+import { useDestination, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
 import { ContainerIcon } from "./icons";
 import { NameEditor } from "./name-editor";
@@ -318,11 +320,16 @@ function ContainerRow({
   useLiveHighlight(container.id, ref);
   const status = useSaveState(container.id);
   const isFolder = container.kind === "folder";
+  const drag = useTreeDrag(container);
+  const destination = useDestination(container.id, isFolder);
   const props = {
     ref: (element: HTMLAnchorElement | null) => {
       ref.current = element;
       register(element);
+      drag.setNodeRef(element);
+      destination.setNodeRef(element);
     },
+    ...drag.listeners,
     role: "treeitem",
     "data-key": container.id,
     "aria-level": row.level,
@@ -332,7 +339,7 @@ function ContainerRow({
     "aria-selected": selected,
     "aria-busy": status === "pending" || status === "unconfirmed" ? true : undefined,
     tabIndex: tabbable ? 0 : -1,
-    className: rowClass,
+    className: cn(rowClass, destination.over && "bg-accent-soft", drag.dragging && "opacity-40"),
     style: indent(row.level),
   };
   const content = (

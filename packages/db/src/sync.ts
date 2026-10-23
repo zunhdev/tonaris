@@ -2,7 +2,7 @@
 // change log after a cursor, and the bootstrap snapshot. Commands come from packages/domain; this module
 // gives them a store on the transaction and records what they did.
 
-import { and, asc, count, eq, gt, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNull, lt, notExists, sql } from "drizzle-orm";
 
 import {
   actingUserId,
@@ -28,6 +28,7 @@ import {
   type Mutation,
   type MutationResult,
   type Outcome,
+  type Position,
   type Principal,
   type ViewDefaults,
   type ViewPrefs,
@@ -42,6 +43,7 @@ import {
   containers,
   memberships,
   mutations,
+  positions,
   viewPrefs,
 } from "./schema";
 
@@ -85,6 +87,21 @@ const defaultsColumns = {
   grouped: accountSettings.grouped,
   layout: accountSettings.layout,
 };
+
+const positionColumns = {
+  viewKey: positions.viewKey,
+  itemId: positions.itemId,
+  key: positions.key,
+};
+
+/** An entry of an active list: the album is in Unsorted while it has none (FR-01.9, TS-13). */
+function activeEntryOf(tx: Transaction, albumId: typeof albums.id | string) {
+  return tx
+    .select({ one: sql`1` })
+    .from(memberships)
+    .innerJoin(containers, eq(containers.id, memberships.listId))
+    .where(and(eq(memberships.albumId, albumId), isNull(containers.trashedAt)));
+}
 
 /** An entry as clients see it, with `addedAt` as the ISO string the protocol carries. */
 const membershipOf = (row: Omit<Membership, "addedAt"> & { addedAt: Date }): Membership => ({
@@ -250,6 +267,89 @@ function collectionStore(tx: Transaction): CollectionStore {
         .insert(accountSettings)
         .values({ accountId: personId, ...defaults })
         .onConflictDoUpdate({ target: accountSettings.accountId, set: defaults });
+    },
+
+    async findPositions(personId, viewKey, itemIds) {
+      if (itemIds.length === 0) return new Map();
+      const rows = await tx
+        .select({ itemId: positions.itemId, key: positions.key })
+        .from(positions)
+        .where(
+          and(
+            eq(positions.personId, personId),
+            eq(positions.viewKey, viewKey),
+            inArray(positions.itemId, [...itemIds]),
+          ),
+        );
+      return new Map(rows.map((row) => [row.itemId, row.key]));
+    },
+    async savePosition(personId, { viewKey, itemId, key }) {
+      await tx
+        .insert(positions)
+        .values({ personId, viewKey, itemId, key })
+        .onConflictDoUpdate({
+          target: [positions.personId, positions.viewKey, positions.itemId],
+          set: { key },
+        });
+    },
+    async deletePosition(personId, viewKey, itemId) {
+      const deleted = await tx
+        .delete(positions)
+        .where(
+          and(
+            eq(positions.personId, personId),
+            eq(positions.viewKey, viewKey),
+            eq(positions.itemId, itemId),
+          ),
+        )
+        .returning({ itemId: positions.itemId });
+      return deleted.length > 0;
+    },
+    async firstKey(personId, viewKey) {
+      // Keys compare bytewise, never by the database's locale (TS-16).
+      const [row] = await tx
+        .select({ key: positions.key })
+        .from(positions)
+        .where(and(eq(positions.personId, personId), eq(positions.viewKey, viewKey)))
+        .orderBy(sql`${positions.key} collate "C"`)
+        .limit(1);
+      return row?.key;
+    },
+    async viewItems(personId, viewKey, kind) {
+      let rows: { id: string }[];
+      if (kind === "containers") {
+        rows = await tx
+          .select({ id: containers.id })
+          .from(containers)
+          .where(
+            and(
+              eq(containers.ownerId, personId),
+              viewKey === "root" ? isNull(containers.parentId) : eq(containers.parentId, viewKey),
+              isNull(containers.trashedAt),
+            ),
+          );
+      } else if (viewKey === "unsorted") {
+        rows = await tx
+          .select({ id: albums.id })
+          .from(albums)
+          .where(
+            and(
+              eq(albums.ownerId, personId),
+              isNull(albums.trashedAt),
+              notExists(activeEntryOf(tx, albums.id)),
+            ),
+          );
+      } else {
+        rows = await tx
+          .select({ id: memberships.albumId })
+          .from(memberships)
+          .innerJoin(albums, eq(albums.id, memberships.albumId))
+          .where(and(eq(memberships.listId, viewKey), isNull(albums.trashedAt)));
+      }
+      return new Set(rows.map((row) => row.id));
+    },
+    async inActiveList(albumId) {
+      return (await activeEntryOf(tx, albumId).limit(1)).length > 0;
     },
   };
 }
@@ -431,7 +531,7 @@ export async function readChanges(
 }
 
 /**
- * The account's collection, its remembered view choices and its defaults, and the `seq` they are current at (TS-24),
+ * The account's collection, its view choices, manual order and defaults, and the `seq` they are current at (TS-24),
  * from one snapshot: a write commits its records and its `seq` together, so the snapshot sees both or neither.
  * Trashed records come too, marked by nothing yet: Trash arrives with M5, and its views filter them.
  */
@@ -462,6 +562,11 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .from(viewPrefs)
         .where(eq(viewPrefs.personId, accountId))
         .orderBy(asc(viewPrefs.viewKey));
+      const arranged: Position[] = await tx
+        .select(positionColumns)
+        .from(positions)
+        .where(eq(positions.personId, accountId))
+        .orderBy(asc(positions.viewKey), asc(positions.itemId));
       const [defaults]: ViewDefaults[] = await tx
         .select(defaultsColumns)
         .from(accountSettings)
@@ -472,6 +577,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         containers: folders,
         memberships: entries.map(membershipOf),
         views,
+        positions: arranged,
         defaults: defaults ?? appViewDefaults,
       };
     },

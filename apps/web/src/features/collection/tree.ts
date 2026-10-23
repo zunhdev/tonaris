@@ -126,3 +126,37 @@ export function typeAhead(
   }
   return undefined;
 }
+
+/**
+ * Whether the folder or list `id` can move into `parentId`, null being the root (FR-01.4, FR-01.5): a folder, not
+ * the item itself nor anything under it, and not where it is already. The domain still checks names and depth.
+ */
+export function canMoveInto(tree: Tree, id: string, parentId: string | null): boolean {
+  const item = tree.byId.get(id);
+  if (!item || item.parentId === parentId) return false;
+  if (parentId === null) return true;
+  const parent = tree.byId.get(parentId);
+  if (!parent || parent.kind !== "folder" || parentId === id) return false;
+  return !ancestorsOf(tree, parentId).some((folder) => folder.id === id);
+}
+
+/** A place the M picker offers: the root, or a folder at its level in the tree. */
+export type Destination = { parentId: string | null; name: string; level: number };
+
+/** Where `id` can move, for the M picker (DS-49): Collection, then the folders in the tree's order. */
+export function moveDestinations(tree: Tree, id: string): Destination[] {
+  const found: Destination[] = [];
+  if (canMoveInto(tree, id, null)) found.push({ parentId: null, name: "Collection", level: 0 });
+  const walk = (siblings: readonly Container[], level: number) => {
+    for (const folder of siblings) {
+      // Nothing under the item itself can take it.
+      if (folder.kind !== "folder" || folder.id === id) continue;
+      if (canMoveInto(tree, id, folder.id)) {
+        found.push({ parentId: folder.id, name: folder.name, level });
+      }
+      walk(tree.children.get(folder.id) ?? [], level + 1);
+    }
+  };
+  walk(tree.roots, 1);
+  return found;
+}

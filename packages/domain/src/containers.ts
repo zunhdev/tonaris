@@ -6,6 +6,7 @@ import { maxContainerDepth, maxContainers, maxNameLength } from "./limits";
 import { findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
+import { forgetPlace } from "./positions";
 import { actingUserId } from "./principals";
 import { z } from "./zod";
 
@@ -208,7 +209,8 @@ export async function renameContainer(
 /**
  * Moves a folder or list whose parent is still `base.parentId` to the root or another active folder (FR-01.4,
  * FR-01.5, TS-21). It keeps its ID, so everything under it comes along and nothing is copied. A folder can't go
- * into itself or anything under it, and nothing may end up deeper than 32 levels.
+ * into itself or anything under it, and nothing may end up deeper than 32 levels. Its owner's place for it in the old
+ * parent goes, so it lands at the end of the new parent's arrangement.
  */
 export async function moveContainer(
   { id, parentId }: { id: string; parentId: string | null },
@@ -245,5 +247,9 @@ export async function moveContainer(
 
   await store.updateContainer(id, { parentId });
   const data = containerOf({ ...container, parentId });
-  return applied({ entity: "container", id, op: "update", data });
+  // It leaves its place in the old parent's arrangement, and arrives last in the new one, unarranged (DS-51).
+  return applied(
+    { entity: "container", id, op: "update", data },
+    ...(await forgetPlace(store, ownerId, container.parentId ?? "root", id)),
+  );
 }

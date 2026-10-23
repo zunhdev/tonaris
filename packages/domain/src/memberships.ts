@@ -1,11 +1,14 @@
 // List entries as clients hold them (TS-11, TS-24), and the commands that add and remove them (TON-27). An album
 // is one record however many lists hold it, at most once each (FR-01.6, FR-01.7), and it stays in the collection
-// when its entries go (FR-01.8). In no active list, it is in Unsorted: a query, never anything stored (TS-13).
+// when its entries go (FR-01.8). In no active list, it is in Unsorted: a query, never anything stored (TS-13). The
+// owner's arrangement follows (DS-51): an album entering Unsorted goes to its top, and one leaving Unsorted or a list
+// loses its place there, so a new entry lands at the end of the list.
 
 import type { CommandContext, CommandResult } from "./commands";
 import { maxMemberships } from "./limits";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
+import { forgetPlace, placeAtTop } from "./positions";
 import type { MembershipAddResult } from "./sync";
 import { z } from "./zod";
 
@@ -75,6 +78,7 @@ export async function addMembership(
     albumId: args.albumId,
     addedAt: (context.now ?? new Date()).toISOString(),
   };
+  const wasUnsorted = !(await store.inActiveList(args.albumId));
   await store.insertMembership({ ...membership, ownerId });
   const result: MembershipAddResult = { alreadyInList: false };
   return {
@@ -86,6 +90,8 @@ export async function addMembership(
         op: "insert",
         data: membership,
       },
+      // It leaves Unsorted, and its place there isn't kept (DS-51).
+      ...(wasUnsorted ? await forgetPlace(store, ownerId, "unsorted", args.albumId) : []),
     ],
     result,
   };
@@ -108,8 +114,13 @@ export async function removeMembership(
 
   await store.deleteMembership(args.listId, args.albumId);
   const id = membershipKey(args.listId, args.albumId);
+  const left = await forgetPlace(store, ownerId, args.listId, args.albumId);
+  // In no list any more, it enters Unsorted, at the top (DS-51).
+  const entered = (await store.inActiveList(args.albumId))
+    ? []
+    : [await placeAtTop(store, ownerId, "unsorted", args.albumId)];
   return {
     status: "applied",
-    changes: [{ entity: "membership", id, op: "delete", data: null }],
+    changes: [{ entity: "membership", id, op: "delete", data: null }, ...left, ...entered],
   };
 }

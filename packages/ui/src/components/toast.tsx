@@ -35,14 +35,33 @@ export type Notifier = ReturnType<typeof notifier>;
 /** DS-108's kinds of toast, each with its duration and priority, raised through `manager`. */
 export function notifier(manager: Pick<ToastManager, "add" | "close">) {
   return {
-    /** Something worth knowing that needs nothing: gone after 4 s. */
-    info(title: string, description?: string): string {
-      return manager.add({
+    /**
+     * Something worth knowing that needs nothing: gone after 4 s. An optional action offers a shortcut, such as
+     * "Switch to manual order"; taking it closes the toast.
+     */
+    info(title: string, description?: string, action?: ToastAction): string {
+      const id: string = manager.add({
         title,
         ...(description === undefined ? {} : { description }),
         timeout: toastTimeouts.info,
         priority: "low",
+        ...(action === undefined
+          ? {}
+          : {
+              data: {
+                actions: [
+                  {
+                    label: action.label,
+                    onClick: () => {
+                      action.onClick();
+                      manager.close(id);
+                    },
+                  },
+                ],
+              },
+            }),
       });
+      return id;
     },
     /** A reversible action done: **Undo** for 8 s, which undoes it and closes the toast (DS-50). */
     undo({ title, onUndo }: { title: string; onUndo: () => void }): string {

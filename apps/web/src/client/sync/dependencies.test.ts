@@ -106,4 +106,21 @@ describe("dependencies within a request", () => {
       dependenciesOf([list, choice(idOf(list)), choice("root"), choice("unsorted"), defaults]),
     ).toEqual([undefined, [list.mutationId], undefined, undefined, undefined]);
   });
+
+  test("a move depends on the creation of its view and of the items it places", () => {
+    const folder = containerCreate("folder");
+    const list = containerCreate("list", idOf(folder));
+    const existing = uuidv7();
+    const move: Mutation = {
+      mutationId: uuidv7(),
+      name: "order.set",
+      args: { viewKey: idOf(folder), keys: { [idOf(list)]: "a0", [existing]: "a1" } },
+      base: { [idOf(list)]: null, [existing]: null },
+    };
+    expect(dependenciesOf([folder, list, move])).toEqual([
+      undefined,
+      [folder.mutationId],
+      [folder.mutationId, list.mutationId],
+    ]);
+  });
 });

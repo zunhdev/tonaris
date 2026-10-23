@@ -38,6 +38,18 @@ const kindNamed = (kind: ContainerKind | undefined, name: string | undefined) =>
 
 const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
+/** A view by name: Collection, Unsorted, or "'Doom'". */
+function viewNamed(viewKey: string, names: Names): string {
+  if (viewKey === "root") return "Collection";
+  if (viewKey === "unsorted") return "Unsorted";
+  return quoted(names.container(viewKey)?.name, "a folder or list");
+}
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Whether a conflicting field is an item's place in an arrangement: its field is the item's ID (TS-16). */
+const isPlace = (field: string) => uuidPattern.test(field);
+
 export function describeWrite(mutation: Mutation, names: Names): Described {
   if (mutation.name === "album.create") {
     const title = quoted(mutation.args.title, "an album");
@@ -76,13 +88,7 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
     };
   }
   if (mutation.name === "view.set") {
-    const { viewKey } = mutation.args;
-    const view =
-      viewKey === "root"
-        ? "Collection"
-        : viewKey === "unsorted"
-          ? "Unsorted"
-          : quoted(names.container(viewKey)?.name, "a folder or list");
+    const view = viewNamed(mutation.args.viewKey, names);
     return {
       summary: `View options for ${view}`,
       what: `the view options for ${view}`,
@@ -94,6 +100,14 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       summary: "Default view options",
       what: "your default view options",
       subject: "Your default view options",
+    };
+  }
+  if (mutation.name === "order.set") {
+    const view = viewNamed(mutation.args.viewKey, names);
+    return {
+      summary: `Arrange ${view}`,
+      what: `the order of ${view}`,
+      subject: `The order of ${view}`,
     };
   }
   const album = quoted(names.album(mutation.args.albumId), "an album");
@@ -184,8 +198,12 @@ const fieldLabels: Record<string, string> = {
   folderSortDir: "Direction for folders",
 };
 
-/** A conflicting field's name in the review (DS-80). */
-export function fieldLabel(field: string): string {
+/** A conflicting field's name in the review (DS-80): an item's place is named by the item. */
+export function fieldLabel(field: string, names?: Names): string {
+  if (isPlace(field)) {
+    const name = names?.album(field) ?? names?.container(field)?.name;
+    return name === undefined ? "Place of an item" : `Place of '${name}'`;
+  }
   return fieldLabels[field] ?? field;
 }
 
@@ -219,10 +237,20 @@ const presentationFields = new Set([
 ]);
 
 /**
- * A conflicting field's value in the review: "—" when empty, folders by name, the root as "Collection", and a view
- * choice in words, "Account default" when not made.
+ * A conflicting field's value in the review: "—" when empty, folders by name, the root as "Collection", a view
+ * choice in words, "Account default" when not made, and an item's place as where it is or where the person put it
+ * (`side`), since its key means nothing to people.
  */
-export function fieldValue(field: string, value: unknown, names: Names): string {
+export function fieldValue(
+  field: string,
+  value: unknown,
+  names: Names,
+  side: "current" | "attempted" = "current",
+): string {
+  if (isPlace(field)) {
+    if (value === null || value === undefined) return "Not arranged";
+    return side === "current" ? "Placed elsewhere" : "Your place";
+  }
   if (presentationFields.has(field)) {
     if (value === null || value === undefined) return "Account default";
     if (field === "grouped") return value === true ? "Release type" : "None";

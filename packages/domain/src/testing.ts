@@ -5,6 +5,7 @@ import type { Album } from "./albums";
 import type { CollectionStore, StoredAlbum } from "./commands";
 import type { Container, StoredContainer } from "./containers";
 import { membershipKey, type Membership } from "./memberships";
+import { positionKey, type Position } from "./positions";
 import type { ViewDefaults, ViewPrefs } from "./views";
 
 /** The entries of `values` that are set: an update leaves undefined fields as they are. */
@@ -16,9 +17,14 @@ type StoredMembership = Membership & { ownerId: string };
 /** A view preference's key in `memoryStore`: the person's ID and the view key, joined by a colon. */
 export const viewRowKey = (personId: string, viewKey: string) => `${personId}:${viewKey}`;
 
+/** A position's key in `memoryStore`: the person's ID, the view key and the item's ID, joined by colons. */
+export const positionRowKey = (personId: string, viewKey: string, itemId: string) =>
+  `${personId}:${positionKey(viewKey, itemId)}`;
+
 /**
  * A store over plain maps, which tests inspect directly. Albums are active unless they say otherwise; entries are
- * keyed by `membershipKey`, view preferences by `viewRowKey`, and defaults by the person's ID.
+ * keyed by `membershipKey`, view preferences by `viewRowKey`, positions by `positionRowKey`, and defaults by the
+ * person's ID.
  */
 export function memoryStore({
   albums = [],
@@ -26,12 +32,14 @@ export function memoryStore({
   memberships = [],
   views = [],
   defaults = [],
+  positions = [],
 }: {
   albums?: (Album & { ownerId: string; trashed?: boolean })[];
   containers?: StoredContainer[];
   memberships?: StoredMembership[];
   views?: (ViewPrefs & { personId: string })[];
   defaults?: (ViewDefaults & { personId: string })[];
+  positions?: (Position & { personId: string })[];
 } = {}) {
   const albumRows = new Map<string, StoredAlbum>(
     albums.map((album) => [album.id, { trashed: false, ...album }]),
@@ -46,6 +54,13 @@ export function memoryStore({
   const defaultRows = new Map<string, ViewDefaults>(
     defaults.map(({ personId, ...values }) => [personId, values]),
   );
+  const positionRows = new Map<string, Position & { personId: string }>(
+    positions.map((row) => [positionRowKey(row.personId, row.viewKey, row.itemId), { ...row }]),
+  );
+  const inActiveList = (albumId: string) =>
+    [...membershipRows.values()].some(
+      (entry) => entry.albumId === albumId && containerRows.get(entry.listId)?.trashed === false,
+    );
 
   const activeChildren = (ownerId: string, parentId: string | null): StoredContainer[] =>
     [...containerRows.values()].filter(
@@ -137,6 +152,57 @@ export function memoryStore({
       defaultRows.set(personId, { ...values });
       return Promise.resolve();
     },
+
+    findPositions: (personId, viewKey, itemIds) =>
+      Promise.resolve(
+        new Map(
+          itemIds.flatMap((itemId) => {
+            const row = positionRows.get(positionRowKey(personId, viewKey, itemId));
+            return row ? [[itemId, row.key] as const] : [];
+          }),
+        ),
+      ),
+    savePosition: (personId, position) => {
+      positionRows.set(positionRowKey(personId, position.viewKey, position.itemId), {
+        ...position,
+        personId,
+      });
+      return Promise.resolve();
+    },
+    deletePosition: (personId, viewKey, itemId) =>
+      Promise.resolve(positionRows.delete(positionRowKey(personId, viewKey, itemId))),
+    firstKey: (personId, viewKey) => {
+      const keys = [...positionRows.values()]
+        .filter((row) => row.personId === personId && row.viewKey === viewKey)
+        .map((row) => row.key)
+        .toSorted((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+      return Promise.resolve(keys[0]);
+    },
+    viewItems: (personId, viewKey, kind) => {
+      if (kind === "containers") {
+        const parentId = viewKey === "root" ? null : viewKey;
+        return Promise.resolve(new Set(activeChildren(personId, parentId).map((row) => row.id)));
+      }
+      const active = [...albumRows.values()].filter((album) => !album.trashed);
+      if (viewKey === "unsorted") {
+        return Promise.resolve(
+          new Set(
+            active
+              .filter((album) => album.ownerId === personId && !inActiveList(album.id))
+              .map((album) => album.id),
+          ),
+        );
+      }
+      const listed = new Set(
+        [...membershipRows.values()]
+          .filter((entry) => entry.listId === viewKey)
+          .map((entry) => entry.albumId),
+      );
+      return Promise.resolve(
+        new Set(active.filter((album) => listed.has(album.id)).map((a) => a.id)),
+      );
+    },
+    inActiveList: (albumId) => Promise.resolve(inActiveList(albumId)),
   };
   return {
     store,
@@ -145,5 +211,6 @@ export function memoryStore({
     memberships: membershipRows,
     views: viewRows,
     defaults: defaultRows,
+    positions: positionRows,
   };
 }

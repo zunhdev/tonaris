@@ -10,7 +10,7 @@ import { bootstrapSchema, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, created, list, live, violations } from "./support/workspace";
+import { added, album, created, list, live, saved, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -216,6 +216,7 @@ test("choices are remembered per view and synced, and defaults apply where none 
   await expect(lists.getByRole("radio", { name: "Year" })).toBeChecked();
   await choose(lists, "Sort", "Name");
   expect(await violations(page, "main")).toEqual([]);
+  await saved(page);
 
   // The default applies to Later, and Doom keeps its own choice (AC-16).
   await page.goto(`/l/${later.id}`);
@@ -238,6 +239,7 @@ test("choices are remembered per view and synced, and defaults apply where none 
   await unsorted.getByRole("button", { name: "Save as my default" }).click();
   await expect(unsorted.getByRole("button", { name: "Save as my default" })).toBeDisabled();
   await page.keyboard.press("Escape");
+  await saved(page);
   await page.goto(`/l/${later.id}`);
   await expect(groupHeaders(page, "Later")).toHaveText(["Album2 albums"]);
 

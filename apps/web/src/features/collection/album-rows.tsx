@@ -11,6 +11,7 @@
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { GripVertical } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { Album } from "@tonaris/domain";
@@ -18,9 +19,11 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 import { Artwork } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
+import { useRowDrag } from "./drag";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
 import type { ReleaseGroup, Section } from "./order";
-import { useGridFocus, useWidth } from "./use-grid";
+import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
+import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
 /** Below this width, the type column collapses (DS-21). */
@@ -58,13 +61,17 @@ function itemsOf(
 export function AlbumRows({
   sections,
   label,
+  viewKey,
   collapsed,
   onToggle,
+  moves,
 }: {
   sections: readonly Section<Album>[];
   label: string;
+  viewKey: string;
   collapsed: ReadonlySet<ReleaseGroup>;
   onToggle: (group: ReleaseGroup) => void;
+  moves: ViewMoves;
 }) {
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
@@ -97,6 +104,20 @@ export function AlbumRows({
   useEffect(() => virtualizer.measure(), [virtualizer, items]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
   const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? 360) / rowHeight) - 1);
+  const rearrange = useMemo<GridRearrange>(
+    () => ({
+      itemAt: ({ row }) => {
+        const item = items[row];
+        return item?.type === "album" ? item.album.id : undefined;
+      },
+      cellOf: (id, col) => {
+        const row = items.findIndex((item) => item.type === "album" && item.album.id === id);
+        return row === -1 ? undefined : { row, col };
+      },
+      move: moves.move,
+    }),
+    [items, moves],
+  );
   const { onKeyDown, cellProps } = useGridFocus({
     grid,
     shape: {
@@ -105,6 +126,7 @@ export function AlbumRows({
       page,
     },
     reveal,
+    rearrange,
   });
   const template = showType
     ? "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_7rem_6.5rem_1.5rem]"
@@ -139,7 +161,7 @@ export function AlbumRows({
             if (item.type === "header") {
               return (
                 <div
-                  key={virtual.key}
+                  key={`group:${item.group}`}
                   role="row"
                   aria-rowindex={virtual.index + 2}
                   className="inset-x-0 flex items-stretch bg-panel px-2"
@@ -161,9 +183,12 @@ export function AlbumRows({
               );
             }
             return (
+              // Keyed by the album, not the virtualizer's cached key, which lags a reorder by a render.
               <AlbumRow
-                key={virtual.key}
+                key={item.album.id}
                 album={item.album}
+                viewKey={viewKey}
+                manual={moves.manual}
                 index={virtual.index}
                 top={virtual.start}
                 template={template}
@@ -183,6 +208,8 @@ const cell =
 
 function AlbumRow({
   album,
+  viewKey,
+  manual,
   index,
   top,
   template,
@@ -190,6 +217,9 @@ function AlbumRow({
   cellProps,
 }: {
   album: Album;
+  viewKey: string;
+  /** Under Manual sort, the row has a drag handle and takes drops (DS-21, DS-49). */
+  manual: boolean;
   index: number;
   top: number;
   template: string;
@@ -199,6 +229,15 @@ function AlbumRow({
   const row = useRef<HTMLDivElement>(null);
   useLiveHighlight(album.id, row);
   const status = useSaveState(album.id);
+  const drag = useRowDrag({ kind: "album", id: album.id, name: album.title, viewKey }, manual);
+  const { ref: dragRef } = drag;
+  const rowRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      row.current = element;
+      dragRef(element);
+    },
+    [dragRef],
+  );
   const cells = [
     <div key="title" role="gridcell" className={cn(cell, "gap-2.5 pr-3")} {...cellProps(index, 0)}>
       <Artwork title={album.title} className="size-7" letterClassName="text-small" />
@@ -243,17 +282,54 @@ function AlbumRow({
   ];
   return (
     <div
-      ref={row}
+      ref={rowRef}
       role="row"
       aria-rowindex={index + 2}
       aria-busy={status === "pending" || status === "unconfirmed" ? true : undefined}
       className={cn(
-        "absolute inset-x-0 top-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
+        "group/row absolute inset-x-0 top-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
+        drag.dragging && "opacity-40",
         template,
       )}
       style={{ transform: `translateY(${top}px)` }}
     >
+      {manual && <DragHandle {...drag.handle} />}
+      {drag.side && <DropLine side={drag.side} />}
       {cells}
     </div>
+  );
+}
+
+/**
+ * A row's drag handle (DS-21), in the gutter left of the row, shown on the row's hover or focus. Pointer only and
+ * hidden from assistive technology: ⌥↑ and ⌥↓ do the same from the keyboard (DS-03).
+ */
+export function DragHandle({
+  ref,
+  ...listeners
+}: { ref: (element: HTMLElement | null) => void } & Record<string, unknown>) {
+  return (
+    <span
+      ref={ref}
+      aria-hidden
+      data-slot="drag-handle"
+      className="absolute top-0 -left-4 flex h-9 w-4 cursor-grab touch-none items-center justify-center text-fg-tertiary opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100 hover:text-fg-primary"
+      {...listeners}
+    >
+      <GripVertical strokeWidth={1.5} className="size-3.5" />
+    </span>
+  );
+}
+
+/** Where a dragged row would land: a line above or below this one (DS-49). */
+export function DropLine({ side }: { side: "before" | "after" }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute inset-x-2 z-10 h-0.5 rounded-full bg-accent-solid",
+        side === "before" ? "-top-px" : "-bottom-px",
+      )}
+    />
   );
 }

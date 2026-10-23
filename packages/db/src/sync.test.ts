@@ -273,6 +273,7 @@ describe("bootstrapSnapshot (TS-24)", () => {
       containers: [],
       memberships: [],
       views: [],
+      positions: [],
       defaults: appViewDefaults,
     });
   });
@@ -545,6 +546,13 @@ async function savedList(principal: Principal, name: string): Promise<Container>
   return list;
 }
 
+async function savedFolder(principal: Principal, name: string): Promise<Container> {
+  const folder = node("folder", name);
+  const { result } = await executeMutation(t.db, principal, createContainer(folder));
+  expect(result.outcome.status).toBe("confirmed");
+  return folder;
+}
+
 describe("list entries (FR-01.6–FR-01.8)", () => {
   test("an add is logged at the next seq with the server's time, and a retry replays it", async () => {
     const anna = await newPrincipal();
@@ -602,14 +610,16 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
     ]);
   });
 
-  test("a remove is logged as a delete, and the album stays", async () => {
+  test("a remove is logged as a delete, and the album stays, at the top of Unsorted", async () => {
     const anna = await newPrincipal();
     const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
     const favorites = await savedList(anna, "Favorites");
     await executeMutation(t.db, anna, addEntry(favorites.id, kindOfBlue.id));
 
     const removed = await executeMutation(t.db, anna, removeEntry(favorites.id, kindOfBlue.id));
-    expect(removed.result.outcome).toEqual({ status: "confirmed", seq: 4, result: null });
+    // The entry's delete, then the album entering Unsorted at the top (DS-51).
+    expect(removed.result.outcome).toEqual({ status: "confirmed", seq: 5, result: null });
+    const atTop = { viewKey: "unsorted", itemId: kindOfBlue.id, key: "a0" };
     expect(removed.changes).toEqual([
       expect.objectContaining({
         entity: "membership",
@@ -617,10 +627,12 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
         op: "delete",
         data: null,
       }),
+      expect.objectContaining({ entity: "position", op: "insert", data: atTop }),
     ]);
     const snapshot = await bootstrapSnapshot(t.db, anna.userId);
     expect(snapshot.memberships).toEqual([]);
     expect(snapshot.albums).toEqual([kindOfBlue]);
+    expect(snapshot.positions).toEqual([atTop]);
   });
 
   test("an album in two lists is one record with two entries", async () => {
@@ -837,6 +849,112 @@ describe("view choices and defaults (FR-05.2, FR-11.7, FR-11.8)", () => {
       ...defaults,
       layout: "grid",
     });
+  });
+});
+
+const orderSet = (
+  viewKey: string,
+  keys: Record<string, string | null>,
+  base: Record<string, string | null>,
+): Mutation => ({ mutationId: uuidv7(), name: "order.set", args: { viewKey, keys }, base });
+
+describe("manual order (TS-16, FR-05.2–FR-05.4)", () => {
+  test("a move is logged as position changes, bootstrapped, and a stale one is a conflict", async () => {
+    const [anna, ben] = await Promise.all([newPrincipal(), newPrincipal()]);
+    const nightfall = await savedAlbum(anna, "Nightfall");
+    const dreams = await savedAlbum(anna, "Ancient Dreams");
+    const doom = await savedList(anna, "Doom");
+    await executeMutation(t.db, anna, addEntry(doom.id, nightfall.id));
+    await executeMutation(t.db, anna, addEntry(doom.id, dreams.id));
+
+    const moved = await executeMutation(
+      t.db,
+      anna,
+      orderSet(doom.id, { [dreams.id]: "Zz" }, { [dreams.id]: null }),
+    );
+    const place = { viewKey: doom.id, itemId: dreams.id, key: "Zz" };
+    expect(moved.changes).toEqual([
+      expect.objectContaining({
+        entity: "position",
+        id: `${doom.id}:${dreams.id}`,
+        op: "insert",
+        data: place,
+      }),
+    ]);
+    expect((await bootstrapSnapshot(t.db, anna.userId)).positions).toEqual([place]);
+    expect((await bootstrapSnapshot(t.db, ben.userId)).positions).toEqual([]);
+
+    const stale = await executeMutation(
+      t.db,
+      anna,
+      orderSet(doom.id, { [dreams.id]: "a5" }, { [dreams.id]: null }),
+    );
+    expect(stale.result.outcome).toEqual({
+      status: "conflict",
+      conflicts: [{ field: dreams.id, current: "Zz", attempted: "a5", base: null }],
+    });
+  });
+
+  test("Unsorted holds only albums in no active list, and its top is the bytewise first key", async () => {
+    const anna = await newPrincipal();
+    const listed = await savedAlbum(anna, "Nightfall");
+    const loose = await savedAlbum(anna, "Ancient Dreams");
+    const other = await savedAlbum(anna, "Tales of Creation");
+    const doom = await savedList(anna, "Doom");
+    await executeMutation(t.db, anna, addEntry(doom.id, listed.id));
+
+    const refused = await executeMutation(
+      t.db,
+      anna,
+      orderSet("unsorted", { [listed.id]: "a0" }, { [listed.id]: null }),
+    );
+    expect(refused.result.outcome).toMatchObject({ status: "failed", code: "not_found" });
+    // Bytewise, "Zz" sorts before "a0", so it is the top; a locale's collation would put "a0" first.
+    await executeMutation(
+      t.db,
+      anna,
+      orderSet(
+        "unsorted",
+        { [loose.id]: "a0", [other.id]: "Zz" },
+        { [loose.id]: null, [other.id]: null },
+      ),
+    );
+    // A new album enters the arranged Unsorted above the bytewise first key.
+    const created = await executeMutation(t.db, anna, create());
+    const entered = created.changes.find((change) => change.entity === "position");
+    expect(entered?.data).toMatchObject({ viewKey: "unsorted" });
+    const key = entered?.data && "key" in entered.data ? entered.data.key : "";
+    expect(key < "Zz").toBe(true);
+  });
+
+  test("joining a list forgets the Unsorted place, and a moved list forgets its place at the root", async () => {
+    const anna = await newPrincipal();
+    const nightfall = await savedAlbum(anna, "Nightfall");
+    const doom = await savedList(anna, "Doom");
+    const metal = await savedFolder(anna, "Metal");
+    await executeMutation(
+      t.db,
+      anna,
+      orderSet("unsorted", { [nightfall.id]: "a0" }, { [nightfall.id]: null }),
+    );
+    await executeMutation(t.db, anna, orderSet("root", { [doom.id]: "a0" }, { [doom.id]: null }));
+
+    const added = await executeMutation(t.db, anna, addEntry(doom.id, nightfall.id));
+    expect(added.changes.map((change) => [change.entity, change.op])).toEqual([
+      ["membership", "insert"],
+      ["position", "delete"],
+    ]);
+    const moved = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "container.move",
+      args: { id: doom.id, parentId: metal.id },
+      base: { parentId: null },
+    });
+    expect(moved.changes.map((change) => [change.entity, change.id])).toEqual([
+      ["container", doom.id],
+      ["position", `root:${doom.id}`],
+    ]);
+    expect((await bootstrapSnapshot(t.db, anna.userId)).positions).toEqual([]);
   });
 });
 

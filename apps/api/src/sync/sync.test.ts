@@ -152,6 +152,7 @@ describe("bootstrap, write and stream (TS-24, FR-09.1)", () => {
       containers: [],
       memberships: [],
       views: [],
+      positions: [],
       defaults: appViewDefaults,
     });
     const stream = await connect(anna.cookie, { after: 0 });
@@ -589,8 +590,9 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
       anna.cookie,
       entry("membership.remove", favorites.id, kindOfBlue.id),
     );
-    expect(removed.outcome).toEqual({ status: "confirmed", seq: 4, result: null });
-    await stream.until(() => stream.seqs().length === 2);
+    // The entry's delete, then the album entering Unsorted at the top (DS-51).
+    expect(removed.outcome).toEqual({ status: "confirmed", seq: 5, result: null });
+    await stream.until(() => stream.seqs().length === 3);
     const key = `${favorites.id}:${kindOfBlue.id}`;
     expect(stream.events.map((event) => event.data)).toEqual([
       expect.objectContaining({
@@ -600,11 +602,16 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
         data: listed.memberships[0],
       }),
       expect.objectContaining({ entity: "membership", id: key, op: "delete", data: null }),
+      expect.objectContaining({
+        entity: "position",
+        id: `unsorted:${kindOfBlue.id}`,
+        op: "insert",
+      }),
     ]);
     await stream.close();
 
     const snapshot = await bootstrap(anna.cookie);
-    expect(snapshot.seq).toBe(4);
+    expect(snapshot.seq).toBe(5);
     expect(snapshot.memberships).toEqual([]);
     expect(snapshot.albums).toEqual([kindOfBlue]);
   });
@@ -728,6 +735,56 @@ describe("view choices and defaults (FR-11.7, FR-11.8, FR-09.2)", () => {
     });
     expect(refused.outcome).toMatchObject({ status: "failed", code: "not_found" });
     expect((await bootstrap(ben.cookie)).views).toEqual([]);
+  });
+});
+
+describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
+  test("a move reaches the person's other session; the same item moved from a stale place is a conflict", async () => {
+    const anna = await t.signIn("anna@example.com");
+    const other = await t.signIn("anna@example.com");
+    const later = node("list", "Later");
+    const doom = node("list", "Doom");
+    await post(anna.cookie, createContainer(later));
+    await post(anna.cookie, createContainer(doom));
+    const stream = await connect(other.cookie, { after: 2 });
+
+    const moved = await post(anna.cookie, {
+      mutationId: uuidv7(),
+      name: "order.set",
+      args: { viewKey: "root", keys: { [doom.id]: "Zz" } },
+      base: { [doom.id]: null },
+    });
+    expect(moved.outcome).toEqual({ status: "confirmed", seq: 3, result: null });
+    await stream.until(() => stream.seqs().length === 1);
+    const place = { viewKey: "root", itemId: doom.id, key: "Zz" };
+    expect(stream.events[0]?.data).toEqual(
+      expect.objectContaining({
+        entity: "position",
+        id: `root:${doom.id}`,
+        op: "insert",
+        data: place,
+      }),
+    );
+    await stream.close();
+
+    const stale = await post(other.cookie, {
+      mutationId: uuidv7(),
+      name: "order.set",
+      args: { viewKey: "root", keys: { [doom.id]: "a1" } },
+      base: { [doom.id]: null },
+    });
+    expect(stale.outcome).toEqual({
+      status: "conflict",
+      conflicts: [{ field: doom.id, current: "Zz", attempted: "a1", base: null }],
+    });
+    const different = await post(other.cookie, {
+      mutationId: uuidv7(),
+      name: "order.set",
+      args: { viewKey: "root", keys: { [later.id]: "a1" } },
+      base: { [later.id]: null },
+    });
+    expect(different.outcome.status).toBe("confirmed");
+    expect((await bootstrap(anna.cookie)).positions).toHaveLength(2);
   });
 });
 

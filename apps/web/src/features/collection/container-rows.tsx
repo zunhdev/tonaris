@@ -12,13 +12,17 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 import { uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { DragHandle, DropLine } from "./album-rows";
+import { useCollectionUi } from "./collection-ui";
+import { useRowDrag } from "./drag";
 import { ContainerIcon } from "./icons";
-import { useGridFocus } from "./use-grid";
+import { useGridFocus, type GridRearrange } from "./use-grid";
+import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
 
@@ -38,6 +42,8 @@ export function ContainerRows({
   albumCounts,
   childCounts,
   showCreated = false,
+  viewKey,
+  moves,
 }: {
   containers: readonly Container[];
   label: string;
@@ -46,6 +52,8 @@ export function ContainerRows({
   childCounts: (folderId: string) => number;
   /** Whether the rows show when each was created: when sorted by creation date (DS-41). */
   showCreated?: boolean;
+  viewKey: string;
+  moves: ViewMoves;
 }) {
   const columns = showCreated ? 3 : 2;
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
@@ -63,10 +71,22 @@ export function ContainerRows({
   });
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
   const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? 360) / rowHeight) - 1);
+  const rearrange = useMemo<GridRearrange>(
+    () => ({
+      itemAt: ({ row }) => containers[row]?.id,
+      cellOf: (id, col) => {
+        const row = containers.findIndex((container) => container.id === id);
+        return row === -1 ? undefined : { row, col };
+      },
+      move: moves.move,
+    }),
+    [containers, moves],
+  );
   const { onKeyDown, cellProps } = useGridFocus({
     grid,
     shape: { rows: containers.length, columns: () => columns, page },
     reveal,
+    rearrange,
     onActivate: ({ row }) => {
       const container = containers[row];
       if (!container) return;
@@ -110,6 +130,8 @@ export function ContainerRows({
                 container={container}
                 count={count}
                 created={showCreated ? created(container.id) : undefined}
+                viewKey={viewKey}
+                manual={moves.manual}
                 index={item.index}
                 top={item.start}
                 cellProps={cellProps}
@@ -129,6 +151,8 @@ function ContainerRow({
   container,
   count,
   created: createdOn,
+  viewKey,
+  manual,
   index,
   top,
   cellProps,
@@ -137,12 +161,28 @@ function ContainerRow({
   count: string;
   /** When it was created, if the rows show it. */
   created: string | undefined;
+  viewKey: string;
+  /** Under Manual sort, the row has a drag handle and takes drops (DS-21, DS-49). */
+  manual: boolean;
   index: number;
   top: number;
   cellProps: ReturnType<typeof useGridFocus>["cellProps"];
 }) {
   const row = useRef<HTMLDivElement>(null);
+  const { setFocusedRow } = useCollectionUi();
   useLiveHighlight(container.id, row);
+  const drag = useRowDrag(
+    { kind: "container", id: container.id, name: container.name, viewKey },
+    manual,
+  );
+  const { ref: dragRef } = drag;
+  const rowRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      row.current = element;
+      dragRef(element);
+    },
+    [dragRef],
+  );
   const status = useSaveState(container.id);
   const name = (
     <>
@@ -154,18 +194,24 @@ function ContainerRow({
   const link = cn(focusable, "flex min-w-0 items-center gap-2.5 rounded-sm pr-3 text-fg-primary");
   return (
     <div
-      ref={row}
+      ref={rowRef}
       role="row"
       aria-rowindex={index + 2}
       aria-busy={status === "pending" || status === "unconfirmed" ? true : undefined}
+      // M moves the folder or list whose row has focus.
+      onFocus={() => setFocusedRow(container.id)}
+      onBlur={() => setFocusedRow(undefined)}
       className={cn(
-        "absolute inset-x-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
+        "group/row absolute inset-x-0 top-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
+        drag.dragging && "opacity-40",
         createdOn === undefined
           ? "grid-cols-[minmax(0,1fr)_12rem]"
           : "grid-cols-[minmax(0,1fr)_9rem_12rem]",
       )}
       style={{ transform: `translateY(${top}px)` }}
     >
+      {manual && <DragHandle {...drag.handle} />}
+      {drag.side && <DropLine side={drag.side} />}
       <div role="gridcell" className="flex min-w-0">
         {container.kind === "folder" ? (
           <Link

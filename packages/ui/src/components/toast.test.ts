@@ -62,4 +62,20 @@ describe("notifier (DS-108)", () => {
     expect(undone).toBe(1);
     expect(closed).toEqual([id]);
   });
+
+  test("information can offer one action, which closes its toast", () => {
+    const { added, closed, manager } = recorder();
+    let switched = 0;
+    const id = notifier(manager).info("Rearranging works in manual order", undefined, {
+      label: "Switch to manual order",
+      onClick: () => {
+        switched += 1;
+      },
+    });
+    expect(added[0]).toMatchObject({ timeout: 4_000, priority: "low" });
+    const [action] = added[0]?.data?.actions ?? [];
+    action?.onClick();
+    expect(switched).toBe(1);
+    expect(closed).toEqual([id]);
+  });
 });

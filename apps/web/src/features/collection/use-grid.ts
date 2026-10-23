@@ -1,11 +1,11 @@
 // What the collection views' grids share (DS-115, DS-106): the scroll container's size, and the roving focus of the
 // grid pattern under virtualization. Focus is kept as a cell's position rather than an element, since rows scrolled
 // out of view are unmounted; a key moving to such a row scrolls it into view first, then focuses the cell once it
-// renders.
+// renders. ⌥↑ and ⌥↓, with ⇧ for the ends, rearrange the focused item (DS-49), and focus follows it to its new cell.
 
 import {
-  useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -13,6 +13,16 @@ import {
 } from "react";
 
 import { nextCell, type Cell, type GridShape } from "./grid-keys";
+import type { Direction } from "./order";
+
+/** How a grid rearranges its items by keyboard: the item at a cell, an item's cell, and the move itself. */
+export type GridRearrange = {
+  itemAt: (cell: Cell) => string | undefined;
+  /** The item's cell now, keeping `col` where the grid's rows are alike; undefined if it isn't shown. */
+  cellOf: (id: string, col: number) => Cell | undefined;
+  /** Moves the item; answers whether anything moved. */
+  move: (id: string, to: Direction) => boolean;
+};
 
 /** The element's content width, kept current with a ResizeObserver. */
 export function useWidth(ref: RefObject<HTMLElement | null>): number {
@@ -32,6 +42,16 @@ export function useWidth(ref: RefObject<HTMLElement | null>): number {
 
 const cellSelector = (cell: Cell) => `[data-cell="${cell.row}:${cell.col}"]`;
 
+/** The cell `target` is in, from its `data-cell` address. */
+function cellAt(target: EventTarget): Cell | undefined {
+  const address =
+    target instanceof Element ? target.closest("[data-cell]")?.getAttribute("data-cell") : null;
+  const [row, col] = (address ?? "").split(":").map(Number);
+  return row === undefined || col === undefined || Number.isNaN(row) || Number.isNaN(col)
+    ? undefined
+    : { row, col };
+}
+
 /**
  * The grid's roving focus: the cell that takes Tab, the keys that move it, and the props each cell spreads. `reveal`
  * scrolls a row into view, so that its cells render.
@@ -41,15 +61,20 @@ export function useGridFocus({
   shape,
   reveal,
   onActivate,
+  rearrange,
 }: {
   grid: RefObject<HTMLElement | null>;
   shape: GridShape;
   reveal: (row: number) => void;
   /** Enter on a cell. */
   onActivate?: (cell: Cell) => void;
+  /** ⌥↑ and ⌥↓ on a cell, when the grid's items can be rearranged. */
+  rearrange?: GridRearrange;
 }) {
   const [active, setActive] = useState<Cell>({ row: 0, col: 0 });
   const pending = useRef<Cell | undefined>(undefined);
+  /** An item just moved by keyboard, whose cell takes the focus once it is drawn somewhere else. */
+  const following = useRef<{ id: string; from: Cell } | undefined>(undefined);
   // The rows may have shrunk since the cell was focused.
   const row = Math.min(active.row, Math.max(0, shape.rows - 1));
   const current: Cell = { row, col: Math.min(active.col, Math.max(0, shape.columns(row) - 1)) };
@@ -62,19 +87,41 @@ export function useGridFocus({
     element.focus();
   });
 
-  const focusCell = useCallback(
-    (cell: Cell) => {
-      setActive(cell);
-      reveal(cell.row);
-      const element = grid.current?.querySelector<HTMLElement>(cellSelector(cell));
-      if (element) element.focus();
-      else pending.current = cell;
-    },
-    [grid, reveal],
-  );
+  function focusCell(cell: Cell) {
+    setActive(cell);
+    reveal(cell.row);
+    const element = grid.current?.querySelector<HTMLElement>(cellSelector(cell));
+    if (element) element.focus();
+    else pending.current = cell;
+  }
+
+  // The moved item is drawn at its new place a render or two later, once its key is in the collection. Before the
+  // browser paints, so the next key press finds the focus where the item is.
+  useLayoutEffect(() => {
+    const moved = following.current;
+    if (!moved || !rearrange) return;
+    const cell = rearrange.cellOf(moved.id, moved.from.col);
+    if (!cell) {
+      following.current = undefined;
+      return;
+    }
+    if (cell.row === moved.from.row && cell.col === moved.from.col) return;
+    following.current = undefined;
+    focusCell(cell);
+  });
 
   function onKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.defaultPrevented) return;
+    if (rearrange && event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+      event.preventDefault();
+      const up = event.key === "ArrowUp";
+      const to: Direction = event.shiftKey ? (up ? "top" : "bottom") : up ? "up" : "down";
+      // The focused cell's own address: after a move it is drawn at its new row before the roving focus catches up.
+      const from = cellAt(event.target) ?? current;
+      const id = rearrange.itemAt(from);
+      if (id !== undefined && rearrange.move(id, to)) following.current = { id, from };
+      return;
+    }
     if (event.key === "Enter" && onActivate) {
       // Activated here, so a link in the cell doesn't also follow itself.
       event.preventDefault();

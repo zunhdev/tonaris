@@ -4,7 +4,18 @@ import { describe, expect, test } from "bun:test";
 
 import { uuidv7, type Album, type Container } from "@tonaris/domain";
 
-import { chronology, groupOf, sections, sortAlbums, sortContainers, sortYear } from "./order";
+import {
+  arranged,
+  chronology,
+  groupOf,
+  placeIn,
+  planMove,
+  sections,
+  sortAlbums,
+  sortContainers,
+  sortYear,
+  type Keys,
+} from "./order";
 
 const album = (title: string, values: Partial<Album> = {}): Album => ({
   id: uuidv7(),
@@ -202,5 +213,130 @@ describe("the year shown (DS-24)", () => {
       recorded: false,
       fallback: false,
     });
+  });
+});
+
+describe("manual order (TS-16, DS-44)", () => {
+  test("arranged items come first by key, bytewise, then the rest in the fallback order", () => {
+    const keys: Keys = new Map([
+      ["c", "a0"],
+      ["a", "Zz"],
+    ]);
+    expect(arranged(["a", "b", "c", "d"], keys, (id) => id)).toEqual(["a", "c", "b", "d"]);
+    // Bytewise, "Zz" comes before "a0"; equal keys go by ID.
+    expect(
+      arranged(
+        ["y", "x"],
+        new Map([
+          ["y", "a0"],
+          ["x", "a0"],
+        ]),
+        (id) => id,
+      ),
+    ).toEqual(["x", "y"]);
+  });
+
+  test("Manual sorts albums and containers by their keys", () => {
+    const first = album("First");
+    const second = album("Second");
+    expect(
+      titles(
+        sortAlbums([first, second], { mode: "manual", dir: "asc" }, new Map([[second.id, "a0"]])),
+      ),
+    ).toEqual(["Second", "First"]);
+    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    const metal: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Metal" };
+    expect(
+      sortContainers(
+        [later, metal],
+        { mode: "manual", dir: "asc" },
+        new Map([[metal.id, "a0"]]),
+      ).map((each) => each.name),
+    ).toEqual(["Metal", "Later"]);
+  });
+});
+
+/** A move's writes, and the order they make. */
+const order = (
+  sequence: string[],
+  keys: Keys,
+  itemId: string,
+  place: Parameters<typeof planMove>[3],
+) => {
+  const writes = planMove(sequence, keys, itemId, place);
+  const merged = new Map([...keys, ...writes]);
+  return { writes, order: arranged(sequence, merged, (id) => id) };
+};
+
+describe("planning a move (TS-16)", () => {
+  test("among arranged items, one key between its new neighbours", () => {
+    const keys: Keys = new Map([
+      ["a", "a0"],
+      ["b", "a1"],
+      ["c", "a2"],
+    ]);
+    const up = order(["a", "b", "c"], keys, "c", { before: "b" });
+    expect(up.writes.size).toBe(1);
+    expect(up.order).toEqual(["a", "c", "b"]);
+    expect(order(["a", "b", "c"], keys, "a", "bottom").order).toEqual(["b", "c", "a"]);
+    expect(order(["a", "b", "c"], keys, "c", "top").order).toEqual(["c", "a", "b"]);
+  });
+
+  test("in an unarranged view, the top is one key", () => {
+    const top = order(["a", "b", "c"], new Map(), "c", "top");
+    expect([...top.writes.keys()]).toEqual(["c"]);
+    expect(top.order).toEqual(["c", "a", "b"]);
+  });
+
+  test("past unarranged items, they get keys first, in their order", () => {
+    const keys: Keys = new Map([["a", "a0"]]);
+    const moved = order(["a", "b", "c", "d"], keys, "a", { after: "c" });
+    expect([...moved.writes.keys()]).toEqual(["b", "c", "a"]);
+    expect(moved.order).toEqual(["b", "c", "a", "d"]);
+    const bottom = order(["a", "b", "c"], new Map(), "a", "bottom");
+    expect(bottom.writes.size).toBe(3);
+    expect(bottom.order).toEqual(["b", "c", "a"]);
+  });
+
+  test("right after the arranged items, before the unarranged ones, is one key", () => {
+    const keys: Keys = new Map([["a", "a0"]]);
+    const moved = order(["a", "b", "c"], keys, "c", { after: "a" });
+    expect([...moved.writes.keys()]).toEqual(["c"]);
+    expect(moved.order).toEqual(["a", "c", "b"]);
+  });
+
+  test("equal keys from a race are skipped, so the key is always valid", () => {
+    const keys: Keys = new Map([
+      ["a", "a0"],
+      ["b", "a0"],
+      ["c", "a1"],
+    ]);
+    const moved = order(["a", "b", "c", "d"], keys, "d", { after: "a" });
+    expect(moved.order.indexOf("d")).toBeGreaterThan(moved.order.indexOf("a"));
+    expect(moved.order.indexOf("d")).toBeLessThan(moved.order.indexOf("c"));
+  });
+
+  test("within a group, a move goes before the previous item of the group in the one arrangement", () => {
+    // The group holds a and c; b is in another group between them.
+    const keys: Keys = new Map([
+      ["a", "a0"],
+      ["b", "a1"],
+      ["c", "a2"],
+    ]);
+    const moved = order(["a", "b", "c"], keys, "c", { before: "a" });
+    expect(moved.order).toEqual(["c", "a", "b"]);
+  });
+});
+
+describe("keyboard moves (DS-49)", () => {
+  test("by one and to the ends, with the new position, and nothing past an end", () => {
+    const group = ["a", "b", "c"];
+    expect(placeIn(group, "c", "up")).toEqual({ place: { before: "b" }, position: 2 });
+    expect(placeIn(group, "a", "down")).toEqual({ place: { after: "b" }, position: 2 });
+    expect(placeIn(group, "c", "top")).toEqual({ place: { before: "a" }, position: 1 });
+    expect(placeIn(group, "a", "bottom")).toEqual({ place: { after: "c" }, position: 3 });
+    expect(placeIn(group, "a", "up")).toBeUndefined();
+    expect(placeIn(group, "c", "bottom")).toBeUndefined();
+    expect(placeIn(group, "z", "up")).toBeUndefined();
   });
 });

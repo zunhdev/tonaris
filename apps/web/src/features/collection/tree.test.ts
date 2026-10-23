@@ -4,7 +4,15 @@ import { describe, expect, test } from "bun:test";
 
 import { uuidv7, type Container } from "@tonaris/domain";
 
-import { ancestorsOf, buildTree, typeAhead, visibleRows, type TreeRow } from "./tree";
+import {
+  ancestorsOf,
+  buildTree,
+  canMoveInto,
+  moveDestinations,
+  typeAhead,
+  visibleRows,
+  type TreeRow,
+} from "./tree";
 
 const folder = (name: string, parentId: string | null = null): Container => ({
   id: uuidv7(),
@@ -90,5 +98,32 @@ describe("the sidebar tree (DS-27)", () => {
     expect(names(typeAhead(rows, 0, "oxa"))).toBe("Öxabäck");
     expect(names(typeAhead(rows, 0, "un"))).toBe("Unsorted");
     expect(typeAhead(rows, 0, "zz")).toBeUndefined();
+  });
+});
+
+describe("moving folders and lists (FR-01.4, FR-01.5)", () => {
+  test("a folder can't move into itself, under itself, into a list, or where it is", () => {
+    const tree = buildTree([metal, doom, funeral, deep, later]);
+    expect(canMoveInto(tree, metal.id, funeral.id)).toBe(false);
+    expect(canMoveInto(tree, metal.id, metal.id)).toBe(false);
+    expect(canMoveInto(tree, funeral.id, later.id)).toBe(false);
+    expect(canMoveInto(tree, funeral.id, metal.id)).toBe(false);
+    expect(canMoveInto(tree, funeral.id, null)).toBe(true);
+    expect(canMoveInto(tree, later.id, funeral.id)).toBe(true);
+  });
+
+  test("the picker offers Collection and the folders that can take the item, in tree order", () => {
+    const tree = buildTree([metal, doom, funeral, deep, later]);
+    expect(moveDestinations(tree, later.id)).toEqual([
+      { parentId: metal.id, name: "Metal", level: 1 },
+      { parentId: funeral.id, name: "Funeral", level: 2 },
+    ]);
+    expect(moveDestinations(tree, funeral.id)).toEqual([
+      { parentId: null, name: "Collection", level: 0 },
+    ]);
+    expect(moveDestinations(tree, deep.id)).toEqual([
+      { parentId: null, name: "Collection", level: 0 },
+      { parentId: metal.id, name: "Metal", level: 1 },
+    ]);
   });
 });

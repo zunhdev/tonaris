@@ -31,6 +31,7 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   "containers": [...],
   "memberships": [...],
   "views": [...],
+  "positions": [...],
   "defaults": { ... }
 }
 ```
@@ -39,9 +40,10 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
 - **Contents today:**
   - albums, folders and lists (`containers`), and list entries (`memberships`);
   - the person's remembered view choices (`views`), one record per view they made a choice in;
+  - their manual order (`positions`), one key per arranged item;
   - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own.
 
-  Positions, custom fields and Shared with me join as their features arrive, as new fields (TS-24).
+  Custom fields and Shared with me join as their features arrive, as new fields (TS-24).
 - **Trash.** Records in Trash are included, but not marked yet; Trash arrives in M5.
 - **Compression.** Send `Accept-Encoding: gzip`. The bootstrap is about 2.3 MB of JSON for 5,000 albums, and under 0.5 MB gzipped (TS-120).
 
@@ -75,6 +77,7 @@ A client keeps one store per entity and applies each change by key:
 | `membership` | `<listId>:<albumId>` | `Membership` |
 | `view` | the view key: `root`, `unsorted`, or a folder's or list's ID | `ViewPrefs` |
 | `defaults` | the account's ID | `ViewDefaults`, never `null` |
+| `position` | `<viewKey>:<itemId>` | `Position` |
 
 Clients must ignore entities they don't know. New ones are added within v1 (TS-09).
 
@@ -122,7 +125,8 @@ The server ends a stream in four cases:
   - `album.create`, `album.update`;
   - `container.create`, `container.rename`, `container.move`;
   - `membership.add`, `membership.remove`;
-  - `view.set`, `defaults.set`.
+  - `view.set`, `defaults.set`;
+  - `order.set`.
 
   The OpenAPI document has each one's `args` and `base`.
 - **Personal preferences follow the same rules** (FR-09.4).
@@ -132,6 +136,15 @@ The server ends a stream in four cases:
     - Folders and the root take `name`, `created` or `manual` and no grouping or layout; lists and Unsorted take `year`, `name` or `manual`.
     - Clearing every field deletes the view's record: the change's `data` is `null`.
   - **`defaults.set`** changes some of the account defaults. Its `base` holds their prior values, DS-44's until saved.
+- **Manual order** (TS-16) is a fractional-index key per arranged item, in each of the person's views. Keys compare bytewise. Items without a key follow the arranged ones in the view's fallback order (DS-44).
+  - **`order.set`** places items in one view as one move. `args.keys` maps each item's ID to its new key, or `null` to clear its place; `base` maps each to its key before, `null` for none.
+    - Each item must be in the view now.
+    - A stale base is a conflict per item, whose `field` is the item's ID. Moves of different items both apply.
+  - **The server places new items** (DS-51). Expect `position` changes from other mutations:
+    - an album entering Unsorted (leaving its last list, or new once Unsorted is arranged) gets a key at its top;
+    - an album joining a list loses its Unsorted key;
+    - an album leaving a list loses its key there;
+    - a moved folder or list loses its key in its old parent.
 
 The answer is `200` with a `MutationResult`: `{mutationId, outcome}`. A malformed envelope answers `422` with a problem and changes nothing.
 
