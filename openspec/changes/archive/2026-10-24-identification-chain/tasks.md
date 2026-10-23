@@ -41,8 +41,8 @@
 
 ## 6. Checks
 
-- [ ] 6.1 Run the full `bun run check`, including `bun test` and `bun run test:e2e`, and verify it passes locally.
-- [ ] 6.2 Run `openspec validate identification-chain --strict` and verify it passes.
+- [x] 6.1 Run the full `bun run check`, including `bun test` and `bun run test:e2e`, and verify it passes locally.
+- [x] 6.2 Run `openspec validate identification-chain --strict` and verify it passes.
 
 ## Workflow follow-up
 
