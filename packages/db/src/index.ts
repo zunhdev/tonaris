@@ -18,6 +18,7 @@ export {
   type AdmissionInvitationRow,
 } from "./admission";
 export { createApproval, decideApproval, findApproval, type ApprovalRow } from "./approvals";
+export { maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";
 export { createDatabase, type Database, type Transaction } from "./client";
 export { databaseUrl, redact } from "./config";
 export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
@@ -47,11 +48,17 @@ export { findLinkedAlbum } from "./service-links";
 export * from "./schema";
 export {
   bootstrapSnapshot,
+  claimMutation,
+  claimTimeoutMs,
   executeBatch,
   executeMutation,
   findMutationResult,
+  finishMutation,
   headSeq,
+  mutationRunning,
+  releaseClaim,
   pruneSyncHistory,
   readChanges,
+  type Claim,
   type ExecutedMutation,
 } from "./sync";

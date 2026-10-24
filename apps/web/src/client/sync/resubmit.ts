@@ -126,6 +126,11 @@ function remake(
     planned.albumUpdates.set(id, { ...planned.albumUpdates.get(id), ...changes });
     return planned.needs("album.update");
   }
+  if (mutation.name === "album.capture") {
+    // A capture is made again by sending its link once more, from the capture interface (TON-45). Here it can only
+    // be found saved; otherwise its state stays, for that interface to retry.
+    return albums.has(mutation.args.albumId) ? "unchanged" : "gone";
+  }
   if (mutation.name === "container.create") {
     if (containers.has(mutation.args.id)) return "unchanged";
     planned.containerInserts.push(mutation.args);

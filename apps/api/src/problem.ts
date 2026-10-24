@@ -14,6 +14,7 @@ export type HttpProblemCode = Extract<
   | "unauthenticated"
   | "permission_denied"
   | "expired"
+  | "in_progress"
   | "rate_limited"
   | "internal_error"
 >;

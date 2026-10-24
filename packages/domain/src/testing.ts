@@ -1,9 +1,11 @@
 // An in-memory `CollectionStore` for the command tests: the same contract the database layer implements on the
 // owner's write transaction (packages/db/src/sync.ts). Import from tests only.
 
-import type { Album } from "./albums";
+import { albumFields, type Album } from "./albums";
+import type { CapturedLink, CaptureTarget } from "./capture";
 import type { CollectionStore, StoredAlbum } from "./commands";
 import type { Container, StoredContainer } from "./containers";
+import type { EnrichableField, ProvenanceEntry } from "./enrichment";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
 import type { ViewDefaults, ViewPrefs } from "./views";
@@ -21,6 +23,12 @@ export const viewRowKey = (personId: string, viewKey: string) => `${personId}:${
 export const positionRowKey = (personId: string, viewKey: string, itemId: string) =>
   `${personId}:${positionKey(viewKey, itemId)}`;
 
+/** What a person's write records: `user` for each value it gives (TS-15). */
+const userProvenance = (values: Partial<Record<EnrichableField, unknown>>): ProvenanceEntry[] =>
+  albumFields
+    .filter((field) => values[field] !== undefined && values[field] !== null)
+    .map((field) => ({ field, source: "user", sourceRef: null, retrievedAt: null }));
+
 /**
  * A store over plain maps, which tests inspect directly. Albums are active unless they say otherwise; entries are
  * keyed by `membershipKey`, view preferences by `viewRowKey`, positions by `positionRowKey`, and defaults by the
@@ -28,13 +36,20 @@ export const positionRowKey = (personId: string, viewKey: string, itemId: string
  */
 export function memoryStore({
   albums = [],
+  links = [],
   containers = [],
   memberships = [],
   views = [],
   defaults = [],
   positions = [],
 }: {
-  albums?: (Album & { ownerId: string; trashed?: boolean })[];
+  albums?: (Album & {
+    ownerId: string;
+    trashed?: boolean;
+    releaseGroupId?: string | null;
+    artworkUrl?: string | null;
+  })[];
+  links?: (CapturedLink & { albumId: string })[];
   containers?: StoredContainer[];
   memberships?: StoredMembership[];
   views?: (ViewPrefs & { personId: string })[];
@@ -42,8 +57,33 @@ export function memoryStore({
   positions?: (Position & { personId: string })[];
 } = {}) {
   const albumRows = new Map<string, StoredAlbum>(
-    albums.map((album) => [album.id, { trashed: false, ...album }]),
+    albums.map((row) => {
+      const { releaseGroupId: _, artworkUrl: __, ...album } = row;
+      return [album.id, { trashed: false, ...album }];
+    }),
   );
+  /** Each album's release group and artwork, which clients' records don't carry. */
+  const identityRows = new Map(
+    albums.map((album) => [
+      album.id,
+      { releaseGroupId: album.releaseGroupId ?? null, artworkUrl: album.artworkUrl ?? null },
+    ]),
+  );
+  /** Each album's provenance, by field (TS-15). */
+  const provenanceRows = new Map<string, Map<EnrichableField, ProvenanceEntry>>();
+  const linkRows = new Map(
+    links.map(({ albumId, ...link }) => [`${albumId}:${link.service}`, link]),
+  );
+  const recordProvenance = (albumId: string, entries: readonly ProvenanceEntry[]) => {
+    const row = provenanceRows.get(albumId) ?? new Map<EnrichableField, ProvenanceEntry>();
+    for (const entry of entries) row.set(entry.field, entry);
+    provenanceRows.set(albumId, row);
+  };
+  const captureTarget = (id: string): CaptureTarget | undefined => {
+    const album = albumRows.get(id);
+    const identity = identityRows.get(id) ?? { releaseGroupId: null, artworkUrl: null };
+    return album && { ...album, ...identity };
+  };
   const containerRows = new Map(containers.map((container) => [container.id, { ...container }]));
   const membershipRows = new Map(
     memberships.map((entry) => [membershipKey(entry.listId, entry.albumId), { ...entry }]),
@@ -71,12 +111,55 @@ export function memoryStore({
 
   const store: CollectionStore = {
     findAlbum: (id) => Promise.resolve(albumRows.has(id) ? { ...albumRows.get(id)! } : undefined),
-    insertAlbum: (album) => {
+    insertAlbum: (album, origin) => {
       albumRows.set(album.id, { ...album, trashed: false });
+      identityRows.set(album.id, {
+        releaseGroupId: origin?.releaseGroupId ?? null,
+        artworkUrl: origin?.artworkUrl ?? null,
+      });
+      recordProvenance(album.id, origin ? origin.provenance : userProvenance(album));
       return Promise.resolve();
     },
     updateAlbum: (id, values) => {
       albumRows.set(id, { ...albumRows.get(id)!, ...defined(values) });
+      recordProvenance(id, userProvenance(values));
+      return Promise.resolve();
+    },
+    findCaptureTarget: (id) => Promise.resolve(captureTarget(id)),
+    albumsOfReleaseGroup: (ownerId, releaseGroupId) =>
+      Promise.resolve(
+        [...albumRows.keys()]
+          .flatMap((id) => captureTarget(id) ?? [])
+          .filter((album) => album.ownerId === ownerId && album.releaseGroupId === releaseGroupId)
+          .toSorted((a, b) =>
+            a.trashed === b.trashed ? (a.id < b.id ? -1 : 1) : a.trashed ? 1 : -1,
+          ),
+      ),
+    fillAlbum: (id, { values, releaseGroupId, provenance }) => {
+      const { artworkUrl, ...fields } = values;
+      albumRows.set(id, { ...albumRows.get(id)!, ...defined(fields) });
+      const identity = identityRows.get(id) ?? { releaseGroupId: null, artworkUrl: null };
+      identityRows.set(id, {
+        releaseGroupId: releaseGroupId === undefined ? identity.releaseGroupId : releaseGroupId,
+        artworkUrl: artworkUrl ?? identity.artworkUrl,
+      });
+      recordProvenance(id, provenance);
+      return Promise.resolve();
+    },
+    reactivateAlbum: (id) => {
+      albumRows.set(id, { ...albumRows.get(id)!, trashed: false });
+      const left = [...membershipRows.values()].filter(
+        (entry) => entry.albumId === id && containerRows.get(entry.listId)?.trashed === false,
+      );
+      for (const entry of left) membershipRows.delete(membershipKey(entry.listId, id));
+      return Promise.resolve(left.map((entry) => entry.listId));
+    },
+    findServiceLink: (albumId, service) => {
+      const link = linkRows.get(`${albumId}:${service}`);
+      return Promise.resolve(link && { ...link });
+    },
+    insertServiceLink: (albumId, _ownerId, link) => {
+      linkRows.set(`${albumId}:${link.service}`, { ...link });
       return Promise.resolve();
     },
 
@@ -207,6 +290,9 @@ export function memoryStore({
   return {
     store,
     albums: albumRows,
+    identities: identityRows,
+    provenance: provenanceRows,
+    links: linkRows,
     containers: containerRows,
     memberships: membershipRows,
     views: viewRows,

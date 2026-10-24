@@ -55,6 +55,10 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
     const title = quoted(mutation.args.title, "an album");
     return { summary: `Add ${title}`, what: title, subject: capitalized(title) };
   }
+  if (mutation.name === "album.capture") {
+    const title = quoted(names.album(mutation.args.albumId), "an album from a link");
+    return { summary: `Add ${title}`, what: title, subject: capitalized(title) };
+  }
   if (mutation.name === "album.update") {
     const title = quoted(mutation.base.title ?? names.album(mutation.args.id), "an album");
     return { summary: `Edit ${title}`, what: `changes to ${title}`, subject: capitalized(title) };
@@ -152,6 +156,7 @@ const codeReasons: Record<ErrorCode, string> = {
     "Couldn't reach the music service. Try again, or enter the details manually.",
   rate_limited: "Too many changes at once. Wait a moment, then retry.",
   expired: "This change is too old to be retried. Check what's saved, then make it again.",
+  in_progress: "This change is still being saved. Wait a moment, then check again.",
   internal_error: "Tonaris couldn't save this change. Try again.",
 };
 

@@ -127,9 +127,11 @@ describe("step 4's rule (TS-41)", () => {
     expect(answer).toMatchObject({
       status: "unidentified",
       reason: unidentifiedReasons.notFound,
-      prefill: { year: 2026, source: "itunes-lookup" },
+      prefill: { source: "itunes-lookup", values: { originalYear: 2026 } },
     });
-    expect(answer.status === "unidentified" && answer.prefill?.title).not.toContain("Remastered");
+    expect(answer.status === "unidentified" && answer.prefill?.values.title).not.toContain(
+      "Remastered",
+    );
   });
 
   test("a re-recording is its own album: Red (Taylor's Version), through requests A and B", async () => {
@@ -272,7 +274,10 @@ describe("identificationOutcome (TS-27)", () => {
       status: "unidentified",
       link,
       reason: unidentifiedReasons.notFound,
-      prefill: { title: "Idéal", artist: "Trust", year: 1983, source: "itunes-lookup" },
+      prefill: {
+        source: "itunes-lookup",
+        values: { title: "Idéal", artistCredit: "Trust", originalYear: 1983 },
+      },
     },
   ];
 
@@ -287,7 +292,10 @@ describe("identificationOutcome (TS-27)", () => {
           service: "tidal",
           url: "https://tidal.com/album/348182612",
           reason: unidentifiedReasons.notFound,
-          prefill: { title: "Idéal", artist: "Trust", year: 1983, source: "itunes-lookup" },
+          prefill: {
+            source: "itunes-lookup",
+            values: { title: "Idéal", artistCredit: "Trust", originalYear: 1983 },
+          },
         },
       ],
     });

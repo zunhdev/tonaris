@@ -122,13 +122,17 @@ The server ends a stream in four cases:
 - **New records** get a UUIDv7 the client makes (TS-10), so a retried create can't duplicate.
 - **`base`** holds the prior value of exactly the fields being changed (TS-21). A field whose saved value differs is a conflict, and nothing in the mutation applies. Fields not named are never compared, so edits to different fields of one record both apply.
 - **The mutations today:**
-  - `album.create`, `album.update`;
+  - `album.create`, `album.update`, `album.capture`;
   - `container.create`, `container.rename`, `container.move`;
   - `membership.add`, `membership.remove`;
   - `view.set`, `defaults.set`;
   - `order.set`.
 
   The OpenAPI document has each one's `args` and `base`.
+- **`album.capture`** saves the album a pasted link names (FR-02.1, TS-44): `{albumId, link, listId}`, where `albumId` is the ID a new album gets and `listId` may be `null` for Unsorted.
+  - **It may reuse an album** of the owner's, in Trash or not, and its `confirmed` result says so: `{albumId, match: "created" | "reused" | "restored", alreadyInList, keptLink}`.
+  - **It may need input** (TS-26): `match` with candidate albums, or `details` with a prefill. Resubmit as a new mutation with `releaseGroupId` or `details` added.
+  - **The server asks metadata sources before saving,** so the request can take seconds. A copy sent while it runs answers `409 in_progress` (below).
 - **Personal preferences follow the same rules** (FR-09.4).
   - **`view.set`** remembers or clears a person's choices for one view: `sortMode` with `sortDir`, `grouped` and `layout`.
     - A field left out stays as it is, and `null` clears it back to the account default. Its `base` is `null` for a choice not made.
@@ -176,6 +180,8 @@ A network error, a timeout, a `5xx`, a `408` or a `429` leaves the outcome unkno
 
 - **send the same envelope again**, which is safe by `mutationId`; or
 - **look it up** with `GET /v1/mutations/{mutationId}`. It answers the stored `MutationResult`, or `404` if the server never received the write.
+
+A capture still running answers `409 in_progress`, both to its envelope sent again and to the lookup (TS-22). Look it up again a little later. A batch that holds such an item answers `409 in_progress` as a whole; the items before it are saved, and sending the batch again replays them.
 
 A write whose `mutationId` is more than 30 days old and has no record is `failed` with `expired`, never run (TS-22). Any other `4xx` with a problem means the request was judged and nothing changed.
 

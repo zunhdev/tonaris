@@ -1,6 +1,6 @@
 // The metadata sources the API asks (TS-41, TS-103), made once per process: MusicBrainz's 1 request a second and
-// iTunes Lookup's 20 a minute hold for every capture only while there is one client of each. The capture command
-// (TON-44, TON-45) identifies links with `identifier`, and enriches saved albums with `enrich` (TS-42).
+// iTunes Lookup's 20 a minute hold for every capture only while there is one client of each. `album.capture` asks
+// through `capture` (TON-44), and the capture job's retries will enrich saved albums with `enrich` (TS-42).
 
 import {
   albumReleaseGroup,
@@ -19,6 +19,7 @@ import {
   StorePages,
 } from "@tonaris/providers";
 
+import type { CaptureDeps } from "./capture";
 import type { ApiConfig } from "./config";
 import type { SyncHub } from "./sync/hub";
 
@@ -59,15 +60,21 @@ export function createProviders(
   const cache = providerCacheStore(db);
   const spotify = config.spotify ? new Spotify(config.spotify) : undefined;
   const musicBrainz = new MusicBrainz({ cache });
+  const identifier = createIdentifier({
+    musicBrainz,
+    itunes: new ItunesLookup({ cache }),
+    pages: new StorePages({ cache }),
+    spotify,
+  });
+  const capture: CaptureDeps = {
+    identify: identifier.identify,
+    describe: (releaseGroupId) => describeAlbum(musicBrainz, releaseGroupId),
+  };
   return {
     musicBrainz,
     spotify,
-    identifier: createIdentifier({
-      musicBrainz,
-      itunes: new ItunesLookup({ cache }),
-      pages: new StorePages({ cache }),
-      spotify,
-    }),
+    identifier,
+    capture,
     enrich: createEnricher({ db, musicBrainz, hub }),
   };
 }

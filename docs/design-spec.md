@@ -645,14 +645,15 @@ Presentation choices are not in the URL; they are personal synced preferences (F
     | A Spotify track with the bridge off | "Tonaris can't ask Spotify which album this track is on right now. Enter the album's details; the link is kept." |
     | The service no longer has it | "Spotify doesn't have this anymore. Check the link, or enter the album's details." (with the service's name) |
     | A source that can't be reached (`provider_unavailable`) | "Couldn't reach MusicBrainz. Try again, or enter the details manually." (with the source's name) |
+    | MusicBrainz has the album but no year (FR-02.6), *as built in TON-44*; the form is prefilled with MusicBrainz's values | "MusicBrainz doesn't know when this album first came out. Enter its year; the link is kept." |
 - **Outcome toasts**, replacing the row where relevant:
 
-  | Outcome | Toast |
-  | --- | --- |
-  | Confident match, added to this list | "Already in your collection — added to this list" |
-  | Already in this list | "Already in this list" (the row flashes) |
-  | Restored from Trash (FR-14.4) | "Restored from Trash and added" |
-  | Different link already saved for that service (FR-06.4) | "Kept your existing Spotify link · Review" |
+  | Outcome | Toast | `album.capture`'s result (TON-44) |
+  | --- | --- | --- |
+  | Confident match, added to this list | "Already in your collection — added to this list" | `match: "reused"`, `alreadyInList: false` |
+  | Already in this list | "Already in this list" (the row flashes) | `alreadyInList: true` |
+  | Restored from Trash (FR-14.4) | "Restored from Trash and added" | `match: "restored"` |
+  | Different link already saved for that service (FR-06.4) | "Kept your existing Spotify link · Review" | `keptLink` |
 
 - **Uncertain match:** an inline decision card in the row asks "Is this the same album?"
   - It shows the existing album (artwork, title, year, services) and plain-language evidence: matching identifiers, title, artist and year.

@@ -14,5 +14,8 @@ export const maxNameLength = 200;
 /** List entries per account, counting those whose list or album is in Trash until purged (decided 22 October 2026). */
 export const maxMemberships = 50_000;
 
+/** Characters in a pasted link: longer input isn't a link of the four services (TS-40). */
+export const maxLinkLength = 2_048;
+
 /** Items in one batch, from any client: the app, native clients or MCP (TS-25, decided 22 October 2026). */
 export const maxBatchItems = 200;

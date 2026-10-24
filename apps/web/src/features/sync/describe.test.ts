@@ -40,6 +40,16 @@ type Unsent = Mutation extends infer Each
 
 const write = (mutation: Unsent) => describeWrite({ mutationId: uuidv7(), ...mutation }, names);
 
+/** A capture of a Spotify link, proposing `albumId`. */
+const capture = (albumId: string): Unsent => ({
+  name: "album.capture",
+  args: {
+    albumId,
+    link: "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv",
+    listId: null,
+  },
+});
+
 describe("describeWrite (DS-80, DS-81)", () => {
   test("albums", () => {
     expect(write({ name: "album.create", args: blue })).toEqual({
@@ -60,6 +70,15 @@ describe("describeWrite (DS-80, DS-81)", () => {
       summary: "Edit 'Kind of Blue'",
       what: "changes to 'Kind of Blue'",
       subject: "'Kind of Blue'",
+    });
+  });
+
+  test("a capture is named by its album once saved, and as a link's album before", () => {
+    expect(write(capture(blue.id)).summary).toBe("Add 'Kind of Blue'");
+    expect(write(capture(uuidv7()))).toEqual({
+      summary: "Add an album from a link",
+      what: "an album from a link",
+      subject: "An album from a link",
     });
   });
 

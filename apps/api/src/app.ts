@@ -12,6 +12,7 @@ import { admissionRoutes } from "./auth/admission";
 import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
+import type { CaptureDeps } from "./capture";
 import { compression } from "./compression";
 import type { ApiConfig } from "./config";
 import { webCors } from "./cors";
@@ -30,7 +31,10 @@ export const healthSchema = z
   .meta({ description: "The API is up." });
 
 /** The versioned contract (TS-09): additive changes only within /v1. */
-function v1(session: SessionGuard, sync: { db: Database; hub: SyncHub }) {
+function v1(
+  session: SessionGuard,
+  sync: { db: Database; hub: SyncHub; capture?: CaptureDeps | undefined },
+) {
   return new Elysia({ prefix: "/v1" })
     .use(openApiJson)
     .get(
@@ -57,6 +61,8 @@ export type AppOptions = ProblemDetailsOptions & {
   hub?: SyncHub;
   /** The sign-in limits; the default holds the TS-104 limits for this process. */
   limiter?: SignInLimiter;
+  /** What captures ask (TS-41); without it, a capture fails as `provider_unavailable`. */
+  capture?: CaptureDeps | undefined;
 };
 
 export function createApp({
@@ -66,6 +72,7 @@ export function createApp({
   email,
   hub = databaseHub(db),
   limiter = createSignInLimiter(),
+  capture,
   ...problemOptions
 }: AppOptions) {
   const logError =
@@ -85,7 +92,7 @@ export function createApp({
       .use(admissionRoutes({ auth, db, config, email, limiter, logError }))
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
       .use(mcpRoutes({ auth, db, config, logError }))
-      .use(v1(sessionGuard(auth), { db, hub }))
+      .use(v1(sessionGuard(auth), { db, hub, capture }))
   );
 }
 

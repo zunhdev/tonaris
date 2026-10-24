@@ -4,12 +4,21 @@
 
 import { albumFields, albumProblem, type Album, type AlbumField, type AlbumFields } from "./albums";
 import {
+  captureAlbum,
+  type AlbumOrigin,
+  type CapturedLink,
+  type CaptureSource,
+  type CaptureTarget,
+} from "./capture";
+import {
   createContainer,
   moveContainer,
   renameContainer,
   type Container,
   type StoredContainer,
 } from "./containers";
+import type { EnrichmentPlan } from "./enrichment";
+import type { StreamingService } from "./links";
 import { addMembership, removeMembership, type Membership } from "./memberships";
 import { failure, type FieldConflict, type Outcome } from "./outcomes";
 import { authorizeWrite } from "./policies";
@@ -25,9 +34,27 @@ export type StoredAlbum = Album & { ownerId: string; trashed: boolean };
 export type CollectionStore = {
   /** The album with this ID, whoever owns it, in Trash or not. */
   findAlbum(id: string): Promise<StoredAlbum | undefined>;
-  insertAlbum(album: Album & { ownerId: string }): Promise<void>;
+  /**
+   * Inserts the album. `origin` says where its values came from, and its release group and artwork, for a captured
+   * album (TS-15); without it, the values are the person's.
+   */
+  insertAlbum(album: Album & { ownerId: string }, origin?: AlbumOrigin): Promise<void>;
   /** Sets the fields in `values`; fields left undefined keep their value. */
   updateAlbum(id: string, values: Partial<AlbumFields>): Promise<void>;
+  /** The album with its identity and artwork, as capture sees it, whoever owns it, in Trash or not. */
+  findCaptureTarget(id: string): Promise<CaptureTarget | undefined>;
+  /** The owner's albums saved as `releaseGroupId`, Trash included: active ones first, then by ID (TS-44). */
+  albumsOfReleaseGroup(ownerId: string, releaseGroupId: string): Promise<CaptureTarget[]>;
+  /** Writes an enrichment plan: its values, release group and provenance (TS-42). */
+  fillAlbum(id: string, plan: EnrichmentPlan): Promise<void>;
+  /**
+   * Takes a trashed album out of Trash for re-addition (FR-14.4, TS-13): its Trash unit goes, and so do its entries in
+   * active lists, while those in trashed lists stay for their recovery. Answers the lists it left.
+   */
+  reactivateAlbum(id: string): Promise<string[]>;
+  /** The album's link for `service`, if it has one (FR-06.2). */
+  findServiceLink(albumId: string, service: StreamingService): Promise<CapturedLink | undefined>;
+  insertServiceLink(albumId: string, ownerId: string, link: CapturedLink): Promise<void>;
 
   /** The folder or list with this ID, whoever owns it, in Trash or not. */
   findContainer(id: string): Promise<StoredContainer | undefined>;
@@ -93,14 +120,25 @@ export type ChangeInput =
 /** `result` is what the mutation reports in its `confirmed` outcome, if anything, such as `MembershipAddResult`. */
 export type CommandResult =
   | { status: "applied"; changes: ChangeInput[]; result?: unknown }
-  | Extract<Outcome, { status: "failed" | "conflict" }>;
+  | Extract<Outcome, { status: "failed" | "conflict" | "needs_input" }>;
 
-/** `now` is the time a command records, such as when an album joined a list; the current time if absent. */
-export type CommandContext = { principal: Principal; store: CollectionStore; now?: Date };
+/**
+ * `now` is the time a command records, such as when an album joined a list; the current time if absent. `capture`
+ * is what the API found for an `album.capture` before the lock.
+ */
+export type CommandContext = {
+  principal: Principal;
+  store: CollectionStore;
+  now?: Date;
+  capture?: CaptureSource;
+};
 
 export function runCommand(mutation: Mutation, context: CommandContext): Promise<CommandResult> {
   if (mutation.name === "album.create") return createAlbum(mutation.args, context);
   if (mutation.name === "album.update") return updateAlbum(mutation.args, mutation.base, context);
+  if (mutation.name === "album.capture") {
+    return captureAlbum(mutation.args, context.capture, context);
+  }
   if (mutation.name === "container.create") return createContainer(mutation.args, context);
   if (mutation.name === "container.rename") {
     return renameContainer(mutation.args, mutation.base, context);

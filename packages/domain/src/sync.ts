@@ -4,6 +4,7 @@
 // adds joins these unions.
 
 import { albumFieldsSchema, albumSchema } from "./albums";
+import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
 import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
@@ -37,6 +38,17 @@ export const albumUpdateSchema = z.object({
   name: z.literal("album.update"),
   args: albumFieldsSchema.partial().extend({ id: z.uuid() }),
   base: albumFieldsSchema.partial(),
+});
+
+/**
+ * `album.capture`: saves the album a pasted link names, reusing the owner's album when it is the same one, in Trash or
+ * not (FR-02.9, FR-14.4). The server asks metadata sources first, so it may answer `409 in_progress` to a copy sent
+ * while it runs (TS-22). It answers `needs_input` for a choice or missing details; resubmit with them (TS-26).
+ */
+export const albumCaptureSchema = z.object({
+  mutationId,
+  name: z.literal("album.capture"),
+  args: captureArgsSchema,
 });
 
 /**
@@ -140,6 +152,7 @@ export const mutationSchema = z
   .discriminatedUnion("name", [
     albumCreateSchema,
     albumUpdateSchema,
+    albumCaptureSchema,
     containerCreateSchema,
     containerRenameSchema,
     containerMoveSchema,

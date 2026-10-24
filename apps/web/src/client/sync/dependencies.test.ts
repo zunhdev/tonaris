@@ -123,4 +123,18 @@ describe("dependencies within a request", () => {
       [folder.mutationId, list.mutationId],
     ]);
   });
+
+  test("a capture into a new list depends on the list's creation", () => {
+    const list = containerCreate("list");
+    const capture: Mutation = {
+      mutationId: uuidv7(),
+      name: "album.capture",
+      args: {
+        albumId: uuidv7(),
+        link: "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv",
+        listId: idOf(list),
+      },
+    };
+    expect(dependenciesOf([list, capture])).toEqual([undefined, [list.mutationId]]);
+  });
 });

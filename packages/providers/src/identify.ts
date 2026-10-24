@@ -14,6 +14,7 @@ import { z } from "zod";
 import {
   failure,
   linkEntityId,
+  type CapturePrefill,
   serviceNames,
   type Failure,
   type Outcome,
@@ -34,7 +35,7 @@ import { extractQobuzHints, type StorePages } from "./store-pages";
 export type AlbumCandidate = { releaseGroupId: string; title: string };
 
 /** Manual entry's prefill: only Apple's hints, which may become album data once confirmed (TS-41). */
-export type Prefill = { title: string; artist: string; year: number; source: "itunes-lookup" };
+export type Prefill = CapturePrefill & { source: "itunes-lookup" };
 
 export type Identification =
   /** Step 1: an album of the owner's already has this link. */
@@ -202,10 +203,12 @@ export function createIdentifier(deps: IdentifierDeps) {
     const step4 = answer(link, 4, await byHints(album));
     if (step4) return step4;
     return unidentified(link, unidentifiedReasons.notFound, {
-      title: cleanTitle(album.title),
-      artist: album.artist,
-      year: Number(album.date.slice(0, 4)),
       source: "itunes-lookup",
+      values: {
+        title: cleanTitle(album.title),
+        artistCredit: album.artist,
+        originalYear: Number(album.date.slice(0, 4)),
+      },
     });
   }
 

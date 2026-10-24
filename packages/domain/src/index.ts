@@ -62,6 +62,21 @@ export {
   type ApprovalStatus,
 } from "./approvals";
 export {
+  captureAlbum,
+  captureArgsSchema,
+  captureMatches,
+  captureResultSchema,
+  missingYearReason,
+  type AlbumOrigin,
+  type CaptureArgs,
+  type CapturedLink,
+  type CapturePrefill,
+  type CaptureResult,
+  type CaptureSource,
+  type CaptureTarget,
+  type FoundFacts,
+} from "./capture";
+export {
   batchItemSchema,
   batchResultSchema,
   batchSchema,
@@ -108,6 +123,7 @@ export {
   maxBatchItems,
   maxContainerDepth,
   maxContainers,
+  maxLinkLength,
   maxMemberships,
   maxNameLength,
 } from "./limits";
@@ -163,6 +179,7 @@ export {
   type Principal,
 } from "./principals";
 export {
+  albumCaptureSchema,
   bootstrapSchema,
   changeOps,
   changeSchema,

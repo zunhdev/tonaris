@@ -294,6 +294,8 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 - **Membership rows are never deleted by trashing.** Unsorted is a query: active albums with no effective membership.
 - **Album restore (FR-14.2):** memberships in active lists become effective automatically. Rows pointing at trashed lists are reported as skipped and stay in place, so a later recovery of that list reattaches the album, as FR-01.14 requires.
 - **Re-addition (FR-14.4):** delete the album's former membership rows that point at *active* lists, so those memberships stay inactive. Keep rows that point at trashed lists: they belong to those lists' recovery information, and a later container recovery reattaches the album (FR-01.14). Then apply the requested memberships.
+  - *As built in TON-44* (`reactivateAlbum()`): capture clears the album's `trashed_at` and `trash_unit_id` and deletes its own `album` unit, which holds only it. The deleted entries' places go too.
+  - With no membership requested, the album enters Unsorted at its top (DS-51).
 - **Purge:**
   - Purging a container deletes its rows and its membership rows.
   - Purging an album deletes the album, its membership rows, and its field values. It also writes a tombstone `{id, title, artist}` into every trash unit that still references the album, so FR-01.14 can report the skip.
@@ -421,6 +423,12 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 - **No response.** If a request times out or the connection drops, the mutation becomes `unconfirmed`. The UI shows it as such, never as saved.
 - **Reconnect.** The outbox **resends the same envelope**, which is safe by TS-20 step 3. The server either applies it once or returns the stored outcome.
 - **In-flight duplicate.** A copy that arrives while the first is still running waits for the write lock, then gets the stored outcome (TS-20 step 2). Only a command that works outside the lock, such as a capture waiting on providers, needs `409 in_progress`, with the client polling `GET /v1/mutations/:id`. The endpoint exists since TON-20.
+  - *As built in TON-44:* `claimMutation()` records such a mutation in `mutations` before its providers run: no result yet, `status: "running"`. It does this under the write lock, in a short transaction of its own.
+  - **A copy** sent while the claim is under 5 minutes old (`claimTimeoutMs`) answers `409 in_progress`, and so does `GET /v1/mutations/{id}`. An older claim counts as abandoned and is taken again.
+  - **The claimer** finishes with `executeMutation(…, { claimed: true })`, whose final transaction writes everything and the outcome together. An outcome decided before the lock, such as a choice to make, goes through `finishMutation()`.
+  - **An unexpected failure** gives the claim up (`releaseClaim()`), so sending it again runs it.
+  - **In a batch,** an item claimed by another request ends the request with `409 in_progress`. The items already run stay committed and replay on the next send.
+  - **Bun's idle timeout** is switched off for a request carrying a capture, as for the streams (TS-23).
 - **What counts as no answer.** A network error, a timeout, a 5xx, a 408 or a 429 leave the outcome unknown, so the outbox sends the envelope again. A 4xx with a problem means the request was judged and nothing changed: a `failed` outcome.
 - **MCP.** Agents get the same guarantees through an optional `idempotencyKey` (= `mutationId`) on every write tool, plus `get_operation(id)`.
 - **Retention.** Idempotency records are kept 30 days. A replay after that window is rejected as `expired` rather than run again. The server knows a replay is that old from the time inside its UUIDv7 `mutationId`: no record, and older than the window. That relies on the client's clock; a replay misjudged by a wrong clock still meets CAS and the client's entity IDs.
@@ -507,6 +515,12 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 
 The input is then resubmitted as a new mutation carrying the user's choice. Unresolved inputs keep the item in its current state; for example, Trash expiry keeps running (FR-01.16).
 
+*As built in TON-44,* for `album.capture`:
+- **`match`:** each candidate is `{releaseGroupId, title, albumId}`, where `albumId` is the owner's album already saved as that release group, or null. The resubmission carries `releaseGroupId`, used only if the link still offers it; otherwise the candidates are answered again.
+- **`details`:** the candidate is `{service, url, reason, prefill?}`, with `prefill` as `{source, values}` in the album's field names. It comes from Apple's hints (`itunes-lookup`), or from MusicBrainz for an identified album without a year (`musicbrainz`, FR-02.6).
+  - The resubmission carries `details`, the album's values. Values left as offered keep their source; others are `user` (TS-15).
+  - `details` without a chosen release group, after a `match`, means none of the candidates: the album is saved unidentified.
+
 **TS-27 Outcome vocabulary (Decided; shared with the design spec).** It is defined once, as Zod schemas in `packages/domain/src/outcomes.ts` (statuses, error codes, outcomes, and the RFC 9457 problem), and used by commands, the API, MCP, and clients.
 
 | Status | Meaning | Client display (DS-defined) |
@@ -529,6 +543,7 @@ Error `code`s:
 - `field_in_use`
 - `uncertain_match`, `unsupported_link`, `provider_unavailable`
 - `rate_limited`, `expired`
+- `in_progress` (409): a mutation still running outside the lock, such as a capture (TS-22; added in TON-44)
 - `internal_error`: an unexpected server fault, answered without details
 
 **TS-28 Client-agnostic sync contract (Decided; FR-09, FR-13, PRD section 2.2 later platforms).** Bootstrap, the stream, and mutations form one documented protocol that any client implements. The web app is its first implementation.
@@ -717,7 +732,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 - **As built in TON-42** (`identify()` in `packages/providers/src/identify.ts`):
   - **The answer.** It is linked, identified (a release group, with the step), ambiguous (candidates), unidentified (a reason, and Apple's hints as prefill), or failed. `identificationOutcome()` gives TS-27's outcome:
     - ambiguous → `needs_input` (`match`);
-    - unidentified → `needs_input` (`details`), carrying the link, the reason and any prefill;
+    - unidentified → `needs_input` (`details`), carrying the link, the reason and any prefill (`{source, values}` since TON-44, TS-26);
     - failed → the failure: `unsupported_link`, or `provider_unavailable`.
   - **Step 4's cleaning.** It drops trailing notes naming an edition (deluxe, remaster, edition, expanded, anniversary, bonus, version, mono, stereo, reissue, special, collector's, legacy, super, explicit, clean, standard). A note naming a re-recording stays: `{name}'s Version` or "re-recorded".
   - **Step 4's search.**
@@ -863,6 +878,17 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
   - A deleted release group (404) leaves the album unidentified, with its data.
   - *As built in TON-43:* enrichment asks about the album's saved id. A merge stores the id MusicBrainz answered under; a 404 clears `mb_release_group_id` and keeps every value. An album already saved as another release group takes nothing from the facts.
 - Matching reads candidates for the owner, including trashed albums (FR-14.4), under the write lock.
+- *As built in TON-44* (`album.capture`; `captureAlbum()` in `packages/domain/src/capture.ts`, prepared by `prepareCapture()` in `apps/api/src/capture.ts`):
+  - **The API asks first, outside the lock.** It identifies the link (TS-41), then describes the release group (TON-43), then checks for merge matches.
+  - **Merge matches** are looked for only when the owner has no album of that release group.
+    - The candidates are up to 5 of the owner's albums, Trash included, under another release group, with the same artist key and a title key one of which contains the other.
+    - Each candidate's saved MBID is described. One answering under the captured release group's id is a match, and its own facts make its enrichment follow the merge.
+    - Similarity only picks whom to ask.
+  - **The command matches again, under the lock:** the linked album; else the owner's albums of the release group, active first, then by ID; else a merge match still saved as it was, active first.
+  - **A reused album** has its gaps filled, gets the link unless it has another for the service (FR-06.4), and joins the list at most once (FR-01.7). A trashed one is reactivated first (TS-13).
+  - **A new album** takes the capture's `albumId`, MusicBrainz's values or the person's details, the release group, the front's address and the link.
+  - **Refusals are checked before anything is written:** the destination, the entry limit, and an ID already taken.
+  - **The result** is `{albumId, match: created | reused | restored, alreadyInList, keptLink}` (DS-48).
 
 **TS-45 Classification mapping (Decided; FR-02.8, FR-05.9).**
 
