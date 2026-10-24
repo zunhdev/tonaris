@@ -1,7 +1,8 @@
-// Public entry point of @tonaris/providers: link parsing, the outbound fetch, and metadata sources (TS-40, TS-41,
-// TS-103).
+// Public entry point of @tonaris/providers: link parsing, the outbound fetch, metadata sources and their policy
+// (TS-15, TS-40, TS-41, TS-103).
 
 export { isPublicAddress } from "./addresses";
+export { classify, describeAlbum, recordingYears, type Classification } from "./album-facts";
 export { cleanTitle, matchHints, type Candidate, type HintMatch, type Hints } from "./hints";
 export {
   createIdentifier,
@@ -33,6 +34,15 @@ export {
   type MusicBrainzOptions,
   type UrlTarget,
 } from "./musicbrainz";
+export {
+  filterFields,
+  policy,
+  policyVersion,
+  withheld,
+  type PolicyFlags,
+  type PolicyUse,
+  type Withheld,
+} from "./policy";
 export { memoryCache, ProviderUnavailableError, type ProviderCache } from "./provider-cache";
 export { PacedQueue, realClock, type Clock } from "./paced-queue";
 export { Spotify, type SpotifyOptions } from "./spotify";

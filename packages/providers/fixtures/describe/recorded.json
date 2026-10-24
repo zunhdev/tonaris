@@ -1,0 +1,1868 @@
+{
+  "https://coverartarchive.org/release-group/155ba060-6b49-4f0b-8556-2e13853e061d/front-500": {
+    "status": 307,
+    "location": "https://archive.org/download/mbid-6644d2fa-d41d-4dc1-9eac-5b7700f89dfe/mbid-6644d2fa-d41d-4dc1-9eac-5b7700f89dfe-44363261164_thumb500.jpg"
+  },
+  "https://coverartarchive.org/release-group/516d4629-7bf3-3ac3-907a-ed9a022db840/front-500": {
+    "status": 307,
+    "location": "https://archive.org/download/mbid-733b8ed9-a393-46b8-9309-69564e96e7e6/mbid-733b8ed9-a393-46b8-9309-69564e96e7e6-18565713920_thumb500.jpg"
+  },
+  "https://coverartarchive.org/release-group/85206823-9808-3da2-a9d7-2e9b8b0f4e99/front-500": {
+    "status": 307,
+    "location": "https://archive.org/download/mbid-31396841-9925-4f71-8a20-f2a9e33362f9/mbid-31396841-9925-4f71-8a20-f2a9e33362f9-19983271690_thumb500.jpg"
+  },
+  "https://coverartarchive.org/release-group/d6d1de65-7e43-4277-b723-fc74a2b385e1/front-500": {
+    "status": 307,
+    "location": "https://archive.org/download/mbid-42d6820e-993f-4b06-880a-1c70911296e7/mbid-42d6820e-993f-4b06-880a-1c70911296e7-27558961938_thumb500.jpg"
+  },
+  "https://coverartarchive.org/release-group/f1afec0b-26dd-3db5-9aa1-c91229a74a24/front-500": {
+    "status": 307,
+    "location": "https://archive.org/download/mbid-adab3feb-1822-4d27-a997-db7d6c9688c0/mbid-adab3feb-1822-4d27-a997-db7d6c9688c0-26212361129_thumb500.jpg"
+  },
+  "https://musicbrainz.org/ws/2/release-group/155ba060-6b49-4f0b-8556-2e13853e061d?inc=artist-credits+releases&fmt=json": {
+    "status": 200,
+    "body": {
+      "primary-type": "Single",
+      "artist-credit": [
+        {
+          "name": "Nirvana",
+          "joinphrase": ""
+        }
+      ],
+      "first-release-date": "1996",
+      "secondary-types": ["Live"],
+      "id": "155ba060-6b49-4f0b-8556-2e13853e061d",
+      "releases": [
+        {
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Smells Like Teen Spirit (live)",
+          "status": "Promotion",
+          "date": "1996",
+          "id": "6644d2fa-d41d-4dc1-9eac-5b7700f89dfe"
+        }
+      ],
+      "title": "Smells Like Teen Spirit (live)"
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group/516d4629-7bf3-3ac3-907a-ed9a022db840?inc=artist-credits+releases&fmt=json": {
+    "status": 200,
+    "body": {
+      "first-release-date": "1975-11-30",
+      "artist-credit": [
+        {
+          "joinphrase": "",
+          "name": "Keith Jarrett"
+        }
+      ],
+      "primary-type": "Album",
+      "releases": [
+        {
+          "title": "The Köln Concert",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "date": "1975-11-30",
+          "id": "d4e075d9-7e10-4316-a589-b2482d46ea80"
+        },
+        {
+          "title": "The Köln Concert",
+          "id": "733b8ed9-a393-46b8-9309-69564e96e7e6",
+          "date": "1975-11-30",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ]
+        },
+        {
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official",
+          "date": "1975-11",
+          "id": "b0d9e23f-43ce-491b-84dd-a6d6b8980733",
+          "title": "The Köln Concert"
+        },
+        {
+          "title": "The Köln Concert",
+          "date": "1975",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "id": "f3a288bb-c303-4564-b194-a346e2655a12"
+        },
+        {
+          "title": "The Köln Concert",
+          "id": "b9116ca4-160d-4b45-b2bb-cfa1765f7cd2",
+          "date": "1983",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "id": "de88eeb3-afde-40c5-925b-2ee28bb43574",
+          "date": "1983",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ],
+          "title": "The Köln Concert"
+        },
+        {
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "date": "1984",
+          "id": "43dd0b85-0f22-3fa4-80d8-e49c7310af83",
+          "title": "The Köln Concert"
+        },
+        {
+          "id": "81e69a22-81e6-44dc-ad6c-2c1ed9414e48",
+          "date": "1984",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "title": "The Köln Concert"
+        },
+        {
+          "date": "1987-07-25",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "id": "f4d29a02-d99e-49bb-9594-bad256a963d7",
+          "title": "The Köln Concert"
+        },
+        {
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "date": "1994",
+          "id": "535c8f04-be8f-4565-bd3d-25b8cedcae1e",
+          "title": "The Köln Concert"
+        },
+        {
+          "title": "The Köln Concert",
+          "date": "1997-08-25",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "id": "aec62fd7-a5d8-4d6b-83e3-919d5d39b352"
+        },
+        {
+          "title": "The Köln Concert",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "date": "1999-11-16",
+          "id": "8afba10c-1aba-42e3-b68d-c7f7b26c5c23"
+        },
+        {
+          "title": "The Köln Concert",
+          "id": "1c4996cf-b9c2-4db7-b81a-d28e21b2f12e",
+          "date": "2001-08-22",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official"
+        },
+        {
+          "title": "The Köln Concert",
+          "date": "2003-04-23",
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official",
+          "id": "d3348057-a87d-408e-99d2-34d6bf15e7b0"
+        },
+        {
+          "title": "The Köln Concert",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ],
+          "date": "2004-02-21",
+          "id": "aabcea88-6489-4fde-957a-ba5fc755cd74"
+        },
+        {
+          "date": "2005",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "id": "8e29a31d-16e8-44b3-82ec-4004baef973b",
+          "title": "The Köln Concert"
+        },
+        {
+          "title": "The Köln Concert",
+          "id": "e1a81cc7-2f06-4bd9-8a5d-865f03c44938",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "date": "2010"
+        },
+        {
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "date": "2011-06-20",
+          "id": "231b9740-fdb7-443f-b784-2c3979ccdd4e",
+          "title": "The Köln Concert"
+        },
+        {
+          "title": "The Köln Concert",
+          "id": "a48849e9-daed-427a-8f13-b05bbab6a0d5",
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official",
+          "date": "2015-10-02"
+        },
+        {
+          "title": "The Köln Concert",
+          "id": "bd1f3bd6-f159-48fc-83ad-d124e4823bce",
+          "date": "2016-10-26",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "date": "2017-03-08",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "id": "97e2b73e-4334-4a73-a672-ea7eebc11c40",
+          "title": "The Köln Concert"
+        },
+        {
+          "date": "2020-06-09",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "status": "Official",
+          "id": "abd7f125-ae44-4068-9b5f-2d6053a8a4c7",
+          "title": "The Köln Concert"
+        },
+        {
+          "title": "The Köln Concert",
+          "id": "8ec74f29-0f66-4376-abe0-5f80cf6d2d46",
+          "date": "2021-06-23",
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official"
+        },
+        {
+          "date": "2025-02-14",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Keith Jarrett"
+            }
+          ],
+          "id": "6a391b51-e5dc-462e-ae5e-dcb0a4157a73",
+          "title": "The Köln Concert 50"
+        },
+        {
+          "id": "ec0b4e3d-5ff3-49e4-8f47-9098c4f78c84",
+          "artist-credit": [
+            {
+              "name": "Keith Jarrett",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official",
+          "date": "2025-12-12",
+          "title": "The Köln Concert"
+        }
+      ],
+      "title": "The Köln Concert",
+      "id": "516d4629-7bf3-3ac3-907a-ed9a022db840",
+      "secondary-types": ["Live"]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group/60179d2e-07df-4351-90fb-c08c7cde4396?inc=artist-credits+releases&fmt=json": {
+    "status": 404,
+    "body": {
+      "error": "Not Found"
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group/85206823-9808-3da2-a9d7-2e9b8b0f4e99?inc=artist-credits+releases&fmt=json": {
+    "status": 200,
+    "body": {
+      "secondary-types": ["Compilation", "Live"],
+      "releases": [
+        {
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ],
+          "status": "Bootleg",
+          "title": "Live/1975–85",
+          "date": "1985",
+          "id": "12bf372c-6ead-4761-ba45-165eeb8649d9"
+        },
+        {
+          "status": "Promotion",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ],
+          "date": "1986-09-17",
+          "id": "3b6b3148-68f4-47be-94b3-18fbbbb27ed7",
+          "title": "Live/1975–85"
+        },
+        {
+          "title": "Live/1975–85",
+          "date": "1986-11-06",
+          "id": "f50fcf09-4339-4e1c-91cd-e1d2a7b3a7bc",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Bruce Springsteen",
+              "joinphrase": " & "
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ],
+          "status": "Official",
+          "date": "1986-11-09",
+          "id": "5b457e4a-1d78-435f-8a51-75ae206024ca",
+          "title": "Live/1975–85"
+        },
+        {
+          "title": "Live/1975–85",
+          "id": "7fee73e5-f950-4e55-8a79-793d11dc04e1",
+          "date": "1986-11-09",
+          "status": "Promotion",
+          "artist-credit": [
+            {
+              "name": "Bruce Springsteen",
+              "joinphrase": " & "
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "title": "Live/1975–85",
+          "date": "1986-11-09",
+          "id": "b79903ef-ee5a-408b-9f2f-af3e51c44194",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ],
+          "status": "Official"
+        },
+        {
+          "title": "Live/1975–85",
+          "date": "1986-11-09",
+          "id": "30280166-1905-4292-968a-c1b071cde323",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official"
+        },
+        {
+          "id": "3a23664e-dde3-4751-919f-624e801c5c73",
+          "date": "1986-11-10",
+          "title": "Live/1975–85",
+          "artist-credit": [
+            {
+              "name": "Bruce Springsteen",
+              "joinphrase": " & "
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ],
+          "status": "Official"
+        },
+        {
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Bruce Springsteen",
+              "joinphrase": " & "
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Live/1975–85",
+          "id": "2e95dd1f-e727-4634-8e30-a5c7eb143884",
+          "date": "1986-11-10"
+        },
+        {
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Live/1975–85",
+          "id": "8fa43461-a46f-4d30-8a3b-98e889637e2a",
+          "date": "1986-11-10"
+        },
+        {
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Bruce Springsteen",
+              "joinphrase": " & "
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ],
+          "date": "1986-11-10",
+          "id": "14dd5409-8173-4a73-84bb-56577b5f3922",
+          "title": "Live/1975–85"
+        },
+        {
+          "date": "1986-11-10",
+          "id": "75553328-91a7-492e-a04f-baf72dbc1aaf",
+          "title": "Live/1975–85",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Live/1975–85",
+          "date": "1986-11-10",
+          "id": "02462627-1ac0-48c5-8309-83a011ade6f0"
+        },
+        {
+          "title": "Live/1975–85",
+          "date": "1986-11-10",
+          "id": "5086370e-a09a-4db2-a5cf-c47decde3779",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ],
+          "title": "Live/1975–85",
+          "date": "1986-11-10",
+          "id": "2e5c512d-31be-42cb-bf2e-d658b3351be1"
+        },
+        {
+          "title": "Live/1975–85",
+          "id": "633d073f-12b7-4b50-a462-f9bf91286938",
+          "date": "1986-11-21",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ]
+        },
+        {
+          "date": "1986",
+          "id": "e34abdb8-6548-4337-8a1f-3deca9e90095",
+          "title": "Live!",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ]
+        },
+        {
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Bruce Springsteen",
+              "joinphrase": " & "
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ],
+          "date": "1986",
+          "id": "1507c33e-f4d3-48f7-a57e-28890cc08bf1",
+          "title": "¡Live!"
+        },
+        {
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official",
+          "date": "1986",
+          "id": "d72c4c02-bc30-4e41-b4cf-5f274e3c9d94",
+          "title": "Live/1975–85"
+        },
+        {
+          "title": "Ao Vivo",
+          "date": "1986",
+          "id": "1b986b44-b4b9-426f-be71-49298482617f",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Bruce Springsteen"
+            }
+          ]
+        },
+        {
+          "title": "Ao Vivo",
+          "date": "1986",
+          "id": "9c78dfb6-46ec-4590-bcaf-0310457e17f1",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Bruce Springsteen"
+            }
+          ]
+        },
+        {
+          "id": "7264b8ed-c038-449b-a17d-41d7a32f6557",
+          "date": "1986",
+          "title": "Live/1975–85",
+          "artist-credit": [
+            {
+              "name": "Bruce Springsteen",
+              "joinphrase": " & "
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official"
+        },
+        {
+          "title": "Live/1975–85",
+          "id": "3ef5c85b-827e-4ddf-8a4d-8e152c2a61ea",
+          "date": "1986",
+          "status": "Promotion",
+          "artist-credit": [
+            {
+              "name": "Bruce Springsteen",
+              "joinphrase": " & "
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "name": "The E Street Band",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Promotion",
+          "date": "1986",
+          "id": "874c4cc2-2df1-44cc-84cf-584cd9586980",
+          "title": "Live/1975–85"
+        },
+        {
+          "id": "cae28d8f-2532-4e86-b86b-64f8b5414e9e",
+          "date": "1986",
+          "title": "Live/1975–85",
+          "artist-credit": [
+            {
+              "joinphrase": " & ",
+              "name": "Bruce Springsteen"
+            },
+            {
+              "joinphrase": "",
+              "name": "The E Street Band"
+            }
+          ],
+          "status": "Official"
+        }
+      ],
+      "title": "Live/1975–85",
+      "primary-type": "Album",
+      "id": "85206823-9808-3da2-a9d7-2e9b8b0f4e99",
+      "artist-credit": [
+        {
+          "name": "Bruce Springsteen",
+          "joinphrase": " & "
+        },
+        {
+          "joinphrase": "",
+          "name": "The E Street Band"
+        }
+      ],
+      "first-release-date": "1985"
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group/f1afec0b-26dd-3db5-9aa1-c91229a74a24?inc=artist-credits+releases&fmt=json": {
+    "status": 200,
+    "body": {
+      "primary-type": "Album",
+      "releases": [
+        {
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "title": "Bleach",
+          "date": "1989-08-08",
+          "id": "a714af56-fb41-481c-9fdf-4f1b86effffa",
+          "status": "Official"
+        },
+        {
+          "id": "b7184186-6884-44cd-91ed-62370f880e5d",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "date": "1989-08",
+          "title": "Bleach"
+        },
+        {
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Bleach",
+          "date": "1989-08",
+          "id": "581f7289-93cc-4629-97d6-4c1eae38db17",
+          "status": "Official"
+        },
+        {
+          "status": "Official",
+          "id": "02b23593-ad18-4c8c-b30a-5c96b4796289",
+          "title": "Bleach",
+          "date": "1989",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ]
+        },
+        {
+          "id": "d3d44548-b2ed-3ddc-a9e0-3f5ee544c1c9",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "title": "Bleach",
+          "date": "1989"
+        },
+        {
+          "date": "1990",
+          "title": "Bleach",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "status": "Bootleg",
+          "id": "202368dc-5497-47a3-953e-bfa631b2a0cb"
+        },
+        {
+          "status": "Official",
+          "id": "7dd07633-bf9a-4562-8935-f16eb9f62a9a",
+          "title": "Bleach",
+          "date": "1990",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ]
+        },
+        {
+          "title": "Bleach",
+          "date": "1990",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "status": "Official",
+          "id": "b984300f-2fb5-4147-891b-7740019a6164"
+        },
+        {
+          "status": "Official",
+          "id": "7d166a44-cfb5-4b08-aacb-6863bbe677d6",
+          "title": "Bleach",
+          "date": "1990",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "id": "5ff87106-3062-42a1-9684-b38e381650f1",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Bleach",
+          "date": "1992-08-26"
+        },
+        {
+          "status": "Official",
+          "id": "c3c5442f-7d7b-349c-99fe-c94debae5e77",
+          "date": "1992-08-31",
+          "title": "Bleach",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ]
+        },
+        {
+          "id": "0ba648d4-dfe9-4771-b223-2e280ed027fa",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "title": "Bleach",
+          "date": "1992-08-31"
+        },
+        {
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "title": "Bleach",
+          "date": "1992",
+          "id": "e5fa1cc5-3693-455a-821f-5ace2690aff1",
+          "status": "Official"
+        },
+        {
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Bleach",
+          "date": "1992",
+          "id": "1fc1731f-d18c-4818-b808-bf4b3c32c6e3",
+          "status": "Official"
+        },
+        {
+          "status": "Official",
+          "id": "8b87cbcd-00e8-4056-893c-96c2146baf0d",
+          "title": "Bleach",
+          "date": "1992",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "status": "Official",
+          "id": "a96b59a5-4185-4d87-899a-a0d944385811",
+          "date": "1995-10",
+          "title": "Bleach",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "date": "1995",
+          "title": "Bleach",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official",
+          "id": "a631cad6-50dc-4c07-aa64-479c7ffb8611"
+        },
+        {
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "date": "1996-10-23",
+          "title": "Bleach",
+          "id": "9b892382-7895-43b0-bef6-48b9941c47e4",
+          "status": "Official"
+        },
+        {
+          "status": "Official",
+          "id": "fe0ff90c-d88d-4cd1-9258-5ebcf07f3ce7",
+          "date": "1998-03-21",
+          "title": "Bleach",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "date": "2002-08-19",
+          "title": "Bleach",
+          "id": "9575d742-dace-4cd5-ab71-f4f9765b1e45",
+          "status": "Official"
+        },
+        {
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Bleach",
+          "date": "2005-11-08",
+          "id": "adab3feb-1822-4d27-a997-db7d6c9688c0",
+          "status": "Official"
+        },
+        {
+          "date": "2009-06-09",
+          "title": "Bleach",
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official",
+          "id": "acfe96a7-e135-4183-8f24-f2cce6d872f1"
+        },
+        {
+          "artist-credit": [
+            {
+              "name": "Nirvana",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Bleach",
+          "date": "2009-11-02",
+          "id": "fec5e33a-6e87-48d1-9fb4-c40969313924",
+          "status": "Official"
+        },
+        {
+          "date": "2009-11-02",
+          "title": "Bleach",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ],
+          "status": "Official",
+          "id": "7c2b193e-532d-4beb-90f0-6f8dd3034461"
+        },
+        {
+          "status": "Official",
+          "id": "1f0c1ac6-2bb3-4ec5-91ee-e6e086abdcde",
+          "title": "Bleach",
+          "date": "2009-11-02",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Nirvana"
+            }
+          ]
+        }
+      ],
+      "title": "Bleach",
+      "artist-credit": [
+        {
+          "name": "Nirvana",
+          "joinphrase": ""
+        }
+      ],
+      "id": "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
+      "first-release-date": "1989-08-08",
+      "secondary-types": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/release-group/fcd3637b-3365-4780-802d-0013b070bca2?inc=artist-credits+releases&fmt=json": {
+    "status": 200,
+    "body": {
+      "primary-type": "Album",
+      "artist-credit": [
+        {
+          "joinphrase": "",
+          "name": "Pop Smoke"
+        }
+      ],
+      "id": "d6d1de65-7e43-4277-b723-fc74a2b385e1",
+      "title": "Shoot for the Stars Aim for the Moon",
+      "secondary-types": [],
+      "releases": [
+        {
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "name": "Pop Smoke",
+              "joinphrase": ""
+            }
+          ],
+          "id": "42d6820e-993f-4b06-880a-1c70911296e7",
+          "status": "Official",
+          "date": "2020-07-03"
+        },
+        {
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Pop Smoke"
+            }
+          ],
+          "date": "2020-07-03",
+          "status": "Official",
+          "id": "83a2784b-5366-4e55-986e-e962463aa731"
+        },
+        {
+          "date": "2020-07-03",
+          "id": "854f8205-cc45-47bd-85c4-dc3b5ac49f8c",
+          "status": "Official",
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Pop Smoke"
+            }
+          ]
+        },
+        {
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Pop Smoke"
+            }
+          ],
+          "title": "Shoot for the Stars Aim for the Moon",
+          "status": "Official",
+          "id": "a95739a5-073a-41bd-b19c-0c159948c69c",
+          "date": "2020-07-03"
+        },
+        {
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "name": "Pop Smoke",
+              "joinphrase": ""
+            }
+          ],
+          "status": "Official",
+          "id": "3f92f78b-89e1-4dc4-b8ea-de14c2b5b3cb",
+          "date": "2020-07-03"
+        },
+        {
+          "date": "2020-07-03",
+          "id": "dc0df31e-5a0c-49f8-9f0e-fd974e788fd2",
+          "status": "Official",
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "name": "Pop Smoke",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "date": "2020-07-20",
+          "id": "1993d2ac-b480-4ffd-86bf-e72de0734e9b",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Pop Smoke"
+            }
+          ],
+          "title": "Shoot for the Stars Aim for the Moon"
+        },
+        {
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Pop Smoke"
+            }
+          ],
+          "date": "2020-07-20",
+          "id": "c008e101-f865-4264-a1ac-84a4763db353",
+          "status": "Official"
+        },
+        {
+          "artist-credit": [
+            {
+              "name": "Pop Smoke",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Shoot for the Stars Aim for the Moon",
+          "date": "2020-07-20",
+          "id": "f9d5d3f9-9a8a-4994-8da0-8a4aae7a991f",
+          "status": "Official"
+        },
+        {
+          "date": "2020-07-20",
+          "status": "Official",
+          "id": "bd48a66e-556c-4ff7-91df-e09177fa3d92",
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "name": "Pop Smoke",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "status": "Official",
+          "id": "021985e0-6afe-4517-b80a-d2e1cf3fc174",
+          "date": "2020-07-20",
+          "artist-credit": [
+            {
+              "name": "Pop Smoke",
+              "joinphrase": ""
+            }
+          ],
+          "title": "Shoot for the Stars Aim for the Moon"
+        },
+        {
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "name": "Pop Smoke",
+              "joinphrase": ""
+            }
+          ],
+          "id": "892da9f2-78b9-4c36-8384-2f5041f0bf16",
+          "status": "Official",
+          "date": "2020-07-20"
+        },
+        {
+          "id": "853d0acf-427d-4863-a4d7-2d87d6c14895",
+          "status": "Official",
+          "date": "2020-07-24",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Pop Smoke"
+            }
+          ],
+          "title": "Shoot for the Stars Aim for the Moon"
+        },
+        {
+          "title": "Shoot for the Stars, Aim for the Moon",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Pop Smoke"
+            }
+          ],
+          "date": "2020-08-07",
+          "id": "898defb5-e358-4fd9-b83b-58c88cbb0c60",
+          "status": "Official"
+        },
+        {
+          "date": "2020-09-04",
+          "status": "Official",
+          "id": "79110d9f-f91e-4855-9621-5f88c2c3691c",
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "name": "Pop Smoke",
+              "joinphrase": ""
+            }
+          ]
+        },
+        {
+          "title": "Shoot for the Stars Aim for the Moon",
+          "artist-credit": [
+            {
+              "joinphrase": "",
+              "name": "Pop Smoke"
+            }
+          ],
+          "status": "Official",
+          "id": "bc48f5e4-536d-4495-a51e-b3b0753bc395",
+          "date": "2020-09-04"
+        }
+      ],
+      "first-release-date": "2020-07-03"
+    }
+  },
+  "https://musicbrainz.org/ws/2/release/e34abdb8-6548-4337-8a1f-3deca9e90095?inc=recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "relations": [],
+      "media": [
+        {
+          "tracks": [
+            {
+              "recording": {
+                "first-release-date": "1985",
+                "relations": [
+                  {
+                    "end": null,
+                    "type": "recorded at",
+                    "begin": null,
+                    "event": {
+                      "name": "1975‐10‐18, early show: The Roxy Theatre, West Hollywood, CA, USA",
+                      "id": "9964230e-776a-4333-abd6-28c32796b82b",
+                      "life-span": {
+                        "begin": "1975-10-18",
+                        "end": "1975-10-18"
+                      },
+                      "type": "Concert"
+                    },
+                    "target-type": "event"
+                  },
+                  {
+                    "target-type": "place",
+                    "begin": null,
+                    "type": "mixed at",
+                    "end": null
+                  },
+                  {
+                    "target-type": "place",
+                    "begin": "1975-10-18",
+                    "type": "recorded at",
+                    "end": "1975-10-18"
+                  }
+                ],
+                "title": "Thunder Road",
+                "id": "e94a1986-8853-4c1e-932b-cec1e01914a7"
+              },
+              "id": "49c4491f-e087-4f38-9447-083d6bc6ad9a",
+              "title": "Thunder Road"
+            },
+            {
+              "title": "Cubreme (Cover Me)",
+              "id": "1a307b33-1443-46fb-820b-18260b74de78",
+              "recording": {
+                "id": "2ae04581-ba6e-4c63-a834-7bb7acb48d78",
+                "title": "Cover Me",
+                "first-release-date": "1986-09-17",
+                "relations": [
+                  {
+                    "begin": null,
+                    "target-type": "event",
+                    "event": {
+                      "type": "Concert",
+                      "life-span": {
+                        "end": "1985-09-30",
+                        "begin": "1985-09-30"
+                      },
+                      "id": "e9034f61-9801-4cc4-991a-656e664af448",
+                      "name": "1985‐09‐30: Los Angeles Memorial Coliseum, Los Angeles, CA, USA"
+                    },
+                    "end": null,
+                    "type": "recorded at"
+                  },
+                  {
+                    "end": null,
+                    "type": "mixed at",
+                    "begin": null,
+                    "target-type": "place"
+                  },
+                  {
+                    "begin": "1985-09-30",
+                    "target-type": "place",
+                    "end": "1985-09-30",
+                    "type": "recorded at"
+                  }
+                ]
+              }
+            },
+            {
+              "title": "Estoy Ardiendo (I’m on Fire)",
+              "id": "5f48cadc-132c-40a1-8e57-6c8ccc4b26e0",
+              "recording": {
+                "id": "a6e7916f-ac2e-4454-9527-e49195035672",
+                "title": "I’m on Fire",
+                "first-release-date": "1986-09-17",
+                "relations": [
+                  {
+                    "begin": null,
+                    "target-type": "event",
+                    "event": {
+                      "type": "Concert",
+                      "life-span": {
+                        "begin": "1985-08-19",
+                        "end": "1985-08-19"
+                      },
+                      "id": "d70b1e25-6653-4bdb-a516-454503a87380",
+                      "name": "1985‐08‐19: Giants Stadium, East Rutherford, NJ, USA"
+                    },
+                    "end": null,
+                    "type": "recorded at"
+                  },
+                  {
+                    "end": null,
+                    "type": "mixed at",
+                    "begin": null,
+                    "target-type": "place"
+                  },
+                  {
+                    "begin": "1985-08-19",
+                    "target-type": "place",
+                    "end": "1985-08-19",
+                    "type": "recorded at"
+                  }
+                ]
+              }
+            },
+            {
+              "title": "Congestión En La 10a. Avenida (Tenth Avenue Freeze‐Out)",
+              "id": "1c7620a2-51b1-4821-a977-ddc269392d02",
+              "recording": {
+                "id": "7cbf5ecb-64ab-42db-a5a0-4b05a4526069",
+                "title": "Tenth Avenue Freeze‐Out",
+                "relations": [
+                  {
+                    "end": null,
+                    "type": "recorded at",
+                    "begin": null,
+                    "target-type": "event",
+                    "event": {
+                      "name": "1984‐08‐20: Brendan Byrne Arena, East Rutherford, NJ, USA",
+                      "type": "Concert",
+                      "id": "cfdf99bc-ced6-4a68-bf79-32fb3e3ca60f",
+                      "life-span": {
+                        "end": "1984-08-20",
+                        "begin": "1984-08-20"
+                      }
+                    }
+                  },
+                  {
+                    "begin": null,
+                    "target-type": "place",
+                    "end": null,
+                    "type": "mixed at"
+                  },
+                  {
+                    "end": "1984-08-20",
+                    "type": "recorded at",
+                    "begin": "1984-08-20",
+                    "target-type": "place"
+                  }
+                ],
+                "first-release-date": "1986-09-17"
+              }
+            },
+            {
+              "id": "88c1c232-c5d0-4526-ab0b-e3d53697cc68",
+              "title": "Corazón Hambriento (Hungry Heart)",
+              "recording": {
+                "id": "738fe725-cd1f-4f3c-8261-c8e27a2f5ac5",
+                "title": "Hungry Heart",
+                "relations": [
+                  {
+                    "begin": null,
+                    "target-type": "event",
+                    "event": {
+                      "name": "1980‐12‐28: Nassau Veterans Memorial Coliseum, Uniondale, NY, USA",
+                      "life-span": {
+                        "begin": "1980-12-28",
+                        "end": "1980-12-28"
+                      },
+                      "id": "8c687ea6-1bc5-42a9-957a-58f16ae70c6e",
+                      "type": "Concert"
+                    },
+                    "end": null,
+                    "type": "recorded at"
+                  },
+                  {
+                    "type": "mixed at",
+                    "end": null,
+                    "target-type": "place",
+                    "begin": null
+                  },
+                  {
+                    "type": "recorded at",
+                    "end": "1980-12-28",
+                    "target-type": "place",
+                    "begin": "1980-12-28"
+                  }
+                ],
+                "first-release-date": "1985"
+              }
+            },
+            {
+              "id": "f2600e2c-3b9f-4be4-94f0-03cee7a91843",
+              "title": "Nacido Para Correr (Born to Run)",
+              "recording": {
+                "relations": [
+                  {
+                    "event": {
+                      "name": "1985‐08‐19: Giants Stadium, East Rutherford, NJ, USA",
+                      "type": "Concert",
+                      "id": "d70b1e25-6653-4bdb-a516-454503a87380",
+                      "life-span": {
+                        "begin": "1985-08-19",
+                        "end": "1985-08-19"
+                      }
+                    },
+                    "target-type": "event",
+                    "begin": null,
+                    "type": "recorded at",
+                    "end": null
+                  },
+                  {
+                    "begin": null,
+                    "target-type": "place",
+                    "end": null,
+                    "type": "mixed at"
+                  },
+                  {
+                    "type": "recorded at",
+                    "end": "1985-08-19",
+                    "target-type": "place",
+                    "begin": "1985-08-19"
+                  }
+                ],
+                "first-release-date": "1986-09-17",
+                "title": "Born to Run",
+                "id": "0dd4af25-8eea-4243-8d9c-395508abbb70"
+              }
+            },
+            {
+              "id": "ec1d0d64-53b6-49a0-bde5-4a2386f67f0c",
+              "title": "Nacido En USA (Born in USA)",
+              "recording": {
+                "first-release-date": "1986-09-17",
+                "relations": [
+                  {
+                    "type": "recorded at",
+                    "end": null,
+                    "event": {
+                      "type": "Concert",
+                      "life-span": {
+                        "begin": "1985-09-30",
+                        "end": "1985-09-30"
+                      },
+                      "id": "e9034f61-9801-4cc4-991a-656e664af448",
+                      "name": "1985‐09‐30: Los Angeles Memorial Coliseum, Los Angeles, CA, USA"
+                    },
+                    "target-type": "event",
+                    "begin": null
+                  },
+                  {
+                    "target-type": "place",
+                    "begin": null,
+                    "type": "mixed at",
+                    "end": null
+                  },
+                  {
+                    "end": "1985-09-30",
+                    "type": "recorded at",
+                    "begin": "1985-09-30",
+                    "target-type": "place"
+                  }
+                ],
+                "title": "Born in the U.S.A.",
+                "id": "e3a32a1f-518f-4b50-9b60-0895f19ca3c7"
+              }
+            },
+            {
+              "title": "Guerra (War)",
+              "id": "820a5445-2d54-48c4-a4d4-a6c990bcd476",
+              "recording": {
+                "title": "War",
+                "id": "1a1aa1dc-396f-4dd4-9426-0ba1bbcd89e4",
+                "relations": [
+                  {
+                    "type": "recorded at",
+                    "end": null,
+                    "event": {
+                      "name": "1985‐09‐30: Los Angeles Memorial Coliseum, Los Angeles, CA, USA",
+                      "life-span": {
+                        "begin": "1985-09-30",
+                        "end": "1985-09-30"
+                      },
+                      "id": "e9034f61-9801-4cc4-991a-656e664af448",
+                      "type": "Concert"
+                    },
+                    "target-type": "event",
+                    "begin": null
+                  },
+                  {
+                    "end": null,
+                    "type": "mixed at",
+                    "begin": null,
+                    "target-type": "place"
+                  },
+                  {
+                    "begin": "1985-09-30",
+                    "target-type": "place",
+                    "end": "1985-09-30",
+                    "type": "recorded at"
+                  }
+                ],
+                "first-release-date": "1985"
+              }
+            },
+            {
+              "title": "Condado de Darlington (Darlington County)",
+              "id": "3d9d9628-ecf3-4a71-99c0-b020ef962ed4",
+              "recording": {
+                "first-release-date": "1985",
+                "relations": [
+                  {
+                    "type": "recorded at",
+                    "end": null,
+                    "event": {
+                      "id": "e9034f61-9801-4cc4-991a-656e664af448",
+                      "life-span": {
+                        "end": "1985-09-30",
+                        "begin": "1985-09-30"
+                      },
+                      "type": "Concert",
+                      "name": "1985‐09‐30: Los Angeles Memorial Coliseum, Los Angeles, CA, USA"
+                    },
+                    "target-type": "event",
+                    "begin": null
+                  },
+                  {
+                    "type": "mixed at",
+                    "end": null,
+                    "target-type": "place",
+                    "begin": null
+                  },
+                  {
+                    "begin": "1985-09-30",
+                    "target-type": "place",
+                    "end": "1985-09-30",
+                    "type": "recorded at"
+                  }
+                ],
+                "title": "Darlington County",
+                "id": "81cb6521-4c75-4787-9ee5-0ab50577821c"
+              }
+            },
+            {
+              "id": "22289f92-0233-4280-a787-f4309d73fe62",
+              "title": "Porque La Noche (Because the Night)",
+              "recording": {
+                "id": "ec617bb2-93e8-4a49-aa92-0ac1175a2f46",
+                "title": "Because the Night",
+                "relations": [
+                  {
+                    "begin": null,
+                    "target-type": "event",
+                    "event": {
+                      "name": "1980‐12‐28: Nassau Veterans Memorial Coliseum, Uniondale, NY, USA",
+                      "type": "Concert",
+                      "life-span": {
+                        "begin": "1980-12-28",
+                        "end": "1980-12-28"
+                      },
+                      "id": "8c687ea6-1bc5-42a9-957a-58f16ae70c6e"
+                    },
+                    "end": null,
+                    "type": "recorded at"
+                  },
+                  {
+                    "begin": null,
+                    "target-type": "place",
+                    "end": null,
+                    "type": "mixed at"
+                  },
+                  {
+                    "type": "recorded at",
+                    "end": "1980-12-28",
+                    "target-type": "place",
+                    "begin": "1980-12-28"
+                  }
+                ],
+                "first-release-date": "1985"
+              }
+            }
+          ],
+          "title": "",
+          "id": "e2a8f7e7-6be1-3ece-bbe0-b91bd03d7843"
+        }
+      ],
+      "id": "e34abdb8-6548-4337-8a1f-3deca9e90095",
+      "date": "1986",
+      "title": "Live!",
+      "status": "Official"
+    }
+  },
+  "https://musicbrainz.org/ws/2/release/f3a288bb-c303-4564-b194-a346e2655a12?inc=recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "title": "The Köln Concert",
+      "relations": [],
+      "media": [
+        {
+          "tracks": [
+            {
+              "id": "cc3a5d92-bacd-4e3d-81dd-af9ecc8e99ce",
+              "title": "Köln, January 24, 1975, Part I",
+              "recording": {
+                "first-release-date": "1975-11-30",
+                "id": "efa85037-66ba-4910-ab97-86124ea515f3",
+                "title": "Köln, January 24, 1975, Part I",
+                "relations": [
+                  {
+                    "event": {
+                      "type": "Concert",
+                      "id": "eb5b5db3-ff72-4f7d-ab2e-cc51cc4ee147",
+                      "name": "The Köln Concert",
+                      "life-span": {
+                        "begin": "1975-01-24",
+                        "end": "1975-01-24"
+                      }
+                    },
+                    "end": null,
+                    "begin": null,
+                    "target-type": "event",
+                    "type": "recorded at"
+                  },
+                  {
+                    "end": "1975-01-24",
+                    "target-type": "place",
+                    "begin": "1975-01-24",
+                    "type": "recorded at"
+                  }
+                ]
+              }
+            },
+            {
+              "recording": {
+                "first-release-date": "1975-11-30",
+                "id": "f21744bd-fa50-46b9-9377-0f9ff486e175",
+                "title": "Köln, January 24, 1975, Part II a",
+                "relations": [
+                  {
+                    "event": {
+                      "type": "Concert",
+                      "id": "eb5b5db3-ff72-4f7d-ab2e-cc51cc4ee147",
+                      "name": "The Köln Concert",
+                      "life-span": {
+                        "begin": "1975-01-24",
+                        "end": "1975-01-24"
+                      }
+                    },
+                    "end": null,
+                    "begin": null,
+                    "target-type": "event",
+                    "type": "recorded at"
+                  },
+                  {
+                    "type": "recorded at",
+                    "begin": "1975-01-24",
+                    "target-type": "place",
+                    "end": "1975-01-24"
+                  }
+                ]
+              },
+              "title": "Köln, January 24, 1975, Part II a",
+              "id": "15b740e3-3571-4adc-9f9e-fa1356627441"
+            }
+          ],
+          "id": "5a4caa56-c201-3780-85be-fb20d8070e8a",
+          "title": ""
+        },
+        {
+          "tracks": [
+            {
+              "recording": {
+                "first-release-date": "1975-11-30",
+                "id": "b9900315-f150-430a-b7fa-5c2f7027d20d",
+                "title": "Köln, January 24, 1975, Part II b",
+                "relations": [
+                  {
+                    "type": "recorded at",
+                    "begin": null,
+                    "target-type": "event",
+                    "end": null,
+                    "event": {
+                      "id": "eb5b5db3-ff72-4f7d-ab2e-cc51cc4ee147",
+                      "type": "Concert",
+                      "name": "The Köln Concert",
+                      "life-span": {
+                        "begin": "1975-01-24",
+                        "end": "1975-01-24"
+                      }
+                    }
+                  },
+                  {
+                    "end": "1975-01-24",
+                    "begin": "1975-01-24",
+                    "target-type": "place",
+                    "type": "recorded at"
+                  }
+                ]
+              },
+              "title": "Köln, January 24, 1975, Part II b",
+              "id": "5fe2568d-2b9b-4336-9c31-04ab5b16066d"
+            },
+            {
+              "title": "Köln, January 24, 1975, Part II c",
+              "id": "22582b09-75a7-4657-bbd8-81998c64c1c9",
+              "recording": {
+                "id": "fa91982b-cbac-4b91-bbf7-21ccb533aff4",
+                "first-release-date": "1975-11-30",
+                "title": "Köln, January 24, 1975, Part II c",
+                "relations": [
+                  {
+                    "end": null,
+                    "event": {
+                      "name": "The Köln Concert",
+                      "life-span": {
+                        "begin": "1975-01-24",
+                        "end": "1975-01-24"
+                      },
+                      "id": "eb5b5db3-ff72-4f7d-ab2e-cc51cc4ee147",
+                      "type": "Concert"
+                    },
+                    "type": "recorded at",
+                    "target-type": "event",
+                    "begin": null
+                  },
+                  {
+                    "end": "1975-01-24",
+                    "target-type": "place",
+                    "begin": "1975-01-24",
+                    "type": "recorded at"
+                  }
+                ]
+              }
+            }
+          ],
+          "title": "",
+          "id": "43771e1a-18de-3437-9901-b58301e12299"
+        }
+      ],
+      "id": "f3a288bb-c303-4564-b194-a346e2655a12",
+      "date": "1975",
+      "status": "Official"
+    }
+  }
+}

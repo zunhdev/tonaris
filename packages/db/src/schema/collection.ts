@@ -15,7 +15,13 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { containerKinds, releaseTypes, streamingServices } from "@tonaris/domain";
+import {
+  containerKinds,
+  provenanceSources,
+  releaseTypes,
+  streamingServices,
+  type EnrichableField,
+} from "@tonaris/domain";
 
 import { users } from "./auth";
 import { instant, notBlank, oneOf, table, timestamps, trashStamp } from "./columns";
@@ -131,13 +137,6 @@ export const albums = table(
   ],
 );
 
-export const provenanceSources = [
-  "user",
-  "musicbrainz",
-  "coverartarchive",
-  "itunes-lookup",
-] as const;
-
 /** Where each metadata field came from; policy flags derive from `source` (TS-15). */
 export const albumProvenance = table(
   "album_provenance",
@@ -145,7 +144,8 @@ export const albumProvenance = table(
     albumId: uuid()
       .notNull()
       .references(() => albums.id, { onDelete: "cascade" }),
-    field: text().notNull(),
+    // An album value's name, as the API spells it (TS-15).
+    field: text().$type<EnrichableField>().notNull(),
     source: text({ enum: provenanceSources }).notNull(),
     sourceRef: text(),
     retrievedAt: instant(),

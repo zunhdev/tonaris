@@ -316,6 +316,12 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
     - `itunes-lookup` values are facts the user confirmed. Their provenance lets them be found and removed if Apple ever asks.
   - `coverartarchive` gives the artwork URL, which is stored, agent-visible and exportable. The image is the rights holder's: it is shown only through the image proxy (TS-103) and never exported as a file (FR-08).
   - Spotify, Qobuz and Tidal values are never stored (TS-41), so they have no source.
+- *As built in TON-43:*
+  - **The map** is `policy` in `packages/providers/src/policy.ts`, under `policyVersion = 1`. `filterFields(values, sources, use)` replaces a value whose source's `agentVisible` or `exportable` flag is off with `{"withheld": "provider-policy"}`; a field with no source, such as an id or an unknown value, passes. `describeAlbum()` emits only sources whose `store` flag is on.
+  - **Field names** are the API's: `title`, `artistCredit`, `releaseType`, `isLive`, `originalYear`, `recordingYearStart`, `recordingYearEnd`, `artworkUrl`.
+  - **A person's writes** record `user`: `album.create` for every value it sets, `album.update` for every value it changes. An agent writes for its person, so its values are `user` too. A value set to unknown loses its row, since unknown has no source.
+  - **Enrichment** records `musicbrainz` with the release group's MBID (the release's for recording years), or `coverartarchive` for the front, and the time it ran.
+  - `provenanceSources` lives in `packages/domain` with the other vocabularies.
 
 **TS-16 Personal ordering (Decided; FR-05.2, FR-05.4, FR-05.8).**
 
@@ -815,6 +821,17 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 
 **TS-42 Enrichment rule (Decided; FR-03.3).** Enrichment writes only fields that are currently null and records their provenance. Populated fields, including user-entered ones, are never overwritten. Retries and newly matched links follow the same rule.
 
+*As built in TON-43:*
+- **The decision** is `planEnrichment(album, facts)` in `packages/domain/src/enrichment.ts`, a pure function. The facts come from `describeAlbum()` in `packages/providers` (TS-41, TS-45, TS-46).
+  - A missing value is null, or a blank title or artist, so a capture plans from `blankAlbum`.
+  - The recording range is one value: filled only when both its years are missing, and only for an album that is live once filled. A person's "not live" keeps an album free of recording years.
+  - Artwork follows the same rule (FR-03.4).
+- **The write** is `enrichAlbum()` in `packages/db`, under the owner's write lock, so the plan is made on the album as it then is. A person's edit committed while MusicBrainz was asked is a populated value, and kept.
+  - Filled values reach the owner's sessions as one album `update` with a null `mutationId`.
+  - Clients' album records don't carry artwork or MBIDs yet (TON-48), so filling only those logs nothing.
+  - Trashed albums are enriched too, since matching may bring them back (FR-14.4).
+- **The API's `enrich(accountId, albumId)`** asks MusicBrainz about the album's saved release group, applies the plan and publishes the change. An unidentified album has nothing to enrich from. MusicBrainz's unavailability writes nothing and propagates, so the capture's job retries (TS-90).
+
 **TS-43 Service links and opening (Decided, with a spike; FR-06.5, FR-06.6).**
 
 - **Mobile:** open the canonical `https` URL. Universal and app links open the installed app (verified for Spotify album and track paths, Apple Music on Android, and Qobuz `open.`/`play.`; unverified for Tidal), and fall back to the web otherwise.
@@ -844,6 +861,7 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
   - When MusicBrainz answers with another id, enrichment replaces the stored `mb_release_group_id`.
   - Matching compares a new link's album with saved albums whose old id was merged into it.
   - A deleted release group (404) leaves the album unidentified, with its data.
+  - *As built in TON-43:* enrichment asks about the album's saved id. A merge stores the id MusicBrainz answered under; a 404 clears `mb_release_group_id` and keeps every value. An album already saved as another release group takes nothing from the facts.
 - Matching reads candidates for the owner, including trashed albums (FR-14.4), under the write lock.
 
 **TS-45 Classification mapping (Decided; FR-02.8, FR-05.9).**
@@ -856,12 +874,20 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 
 The MB secondary type `Compilation` sets `release_type = compilation`, and the secondary type `Live` sets `is_live = true`. Live then takes priority in grouping (FR-05.9). Unknown stays null. **Singles are Unclassified** (creator decision, 17 October 2026), so no type is invented. Classification comes from MusicBrainz, the canonical source (TS-41). Provider hints never set a type.
 
+- **Secondary types apply to Album, EP, and a release group with no primary type** (decided by the creator on 24 October 2026, TON-43). Single, Broadcast and Other stay Unclassified with `is_live = false`, whatever their secondary types, so a live single isn't Live. A primary type MusicBrainz adds later is treated as Other.
+- *As built in TON-43* (`classify()` in `packages/providers/src/album-facts.ts`): an Album or EP gets `is_live` from `Live`, true or false. A release group with no types leaves both fields unknown.
+
 **TS-46 Chronology (Proposed; FR-02.8, FR-05.5, FR-05.6).**
 
 - `original_year` is the release group's `first-release-date` year.
 - For live releases, `recording_year_start` and `recording_year_end` are the minimum and maximum of the recordings' "recorded at" relationship dates, when present. A recording with no dated relationship uses the `life-span` of the event it was recorded at ([TON-14](spikes/2026-10-18-g1-musicbrainz.md)).
 - Otherwise the fields stay null, and FR-05.6's fallback is shown.
 - Provider or reissue release dates never fill recording years.
+- *As built in TON-43* (`describeAlbum()` and `recordingYears()` in `packages/providers/src/album-facts.ts`):
+  - **The recordings** are those of the album's first official release by date, else its first release, so a later edition's bonus tracks don't widen the range. *Live/1975–85*'s first release is a bootleg; its first official one is read.
+  - **The requests.** The release group lookup (`inc=artist-credits releases`) lists at most 25 releases, by date. Only for a live album, one release lookup (`inc=recordings recording-level-rels place-rels area-rels event-rels`) follows. Both are kept 7 days (TON-41).
+  - **Dates.** A recording's "recorded at" and "recorded in" relationships give their `begin` and `end`; a recording with none dated uses its events' `life-span`. The range is the smallest and largest year; a single year is saved as a range from itself to itself, as manual entry saves it.
+  - **The Cover Art Archive** being unavailable leaves the artwork out and the rest in (FR-03.4).
 
 ---
 

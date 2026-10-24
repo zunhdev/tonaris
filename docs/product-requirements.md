@@ -417,7 +417,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 - Live classification takes priority over EP and Compilation. The EP and Compilation groups hold non-live releases.
 - An unknown type goes to Unclassified when grouped and stays in the normal flow when combined. A type is never assigned just to place an album.
 - Mixed content follows the metadata source's main release identity: live bonus tracks do not make a studio release Live, and vice versa.
-- Singles, and any other release type outside Album, EP, Live, and Compilation, go to Unclassified.
+- Singles, and any other release type outside Album, EP, Live, and Compilation, go to Unclassified. A live single stays Unclassified: the source's live or compilation marking doesn't move a single out of it (decided 24 October 2026).
 - Users can correct classification. There is no track-by-track classification.
 
 **FR-05.10 Initial presentation.** The design spec chooses the initial sort, grouping, and mode on entry, within the supported options, device scope, and permissions. Saved account defaults and remembered choices take precedence (FR-11.7).
@@ -1061,6 +1061,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - Tidal track links go to manual entry with the link kept (FR-02.3, AC-06);
   - nothing from Tidal is saved (FR-08.8).
 - **Decision (24 October 2026), Qobuz track links** (TON-42): they go to manual entry with the link kept, like Tidal's, as nothing permitted names their album (FR-02.3, AC-06, section 8).
+- **Decision (24 October 2026), live singles** (TON-43): a single the canonical source also marks live or a compilation stays Unclassified, and isn't live (FR-05.9).
 - **Decisions (21 October 2026), G1, G2 and Q-01**, from the M1 spike reports ([MusicBrainz](spikes/2026-10-18-g1-musicbrainz.md), [Apple](spikes/2026-10-19-g1-apple-hints.md), [Spotify](spikes/2026-10-19-g1-spotify-bridge.md), [Qobuz](spikes/2026-10-19-g1-qobuz-hints.md), [Tidal](spikes/2026-10-20-g1-tidal.md), [G2](spikes/2026-10-19-g2-album-matching.md), [Q-01](spikes/2026-10-21-q01-measurements.md)):
   - **G1 is closed.** The identification chain is final, and Qobuz links use page hints too. A hinted match needs exactly one official album or EP fitting its title, artist and year.
   - **Agents.** Captures an agent starts never read Qobuz's or Tidal's pages (FR-10.5).
