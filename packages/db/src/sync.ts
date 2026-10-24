@@ -22,6 +22,7 @@ import {
   type BatchResult,
   type Bootstrap,
   type Change,
+  type ChangeInput,
   type CollectionStore,
   type Container,
   type Membership,
@@ -35,6 +36,7 @@ import {
 } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
+import { recordUserValues } from "./provenance";
 import {
   accountSettings,
   accountSync,
@@ -111,8 +113,8 @@ const membershipOf = (row: Omit<Membership, "addedAt"> & { addedAt: Date }): Mem
 
 /**
  * The domain's store on one transaction. Search and name keys are derived here, so every write keeps them
- * (TS-12). The hierarchy is walked with recursive CTEs (TS-31), cut off past the depth limit so that even a
- * cycle in damaged data can't run away.
+ * (TS-12), and so is the provenance of a person's album values (TS-15). The hierarchy is walked with recursive
+ * CTEs (TS-31), cut off past the depth limit so that even a cycle in damaged data can't run away.
  */
 function collectionStore(tx: Transaction): CollectionStore {
   return {
@@ -125,12 +127,15 @@ function collectionStore(tx: Transaction): CollectionStore {
       const { trashedAt, ...album } = row;
       return { ...album, trashed: trashedAt !== null };
     },
-    async insertAlbum(album) {
+    async insertAlbum({ ownerId, id, ...values }) {
       await tx.insert(albums).values({
-        ...album,
-        searchTitleKey: searchKey(album.title),
-        searchArtistKey: searchKey(album.artistCredit),
+        id,
+        ownerId,
+        ...values,
+        searchTitleKey: searchKey(values.title),
+        searchArtistKey: searchKey(values.artistCredit),
       });
+      await recordUserValues(tx, id, values);
     },
     async updateAlbum(id, values) {
       await tx
@@ -143,6 +148,7 @@ function collectionStore(tx: Transaction): CollectionStore {
             : { searchArtistKey: searchKey(values.artistCredit) }),
         })
         .where(eq(albums.id, id));
+      await recordUserValues(tx, id, values);
     },
 
     async findContainer(id) {
@@ -354,6 +360,53 @@ function collectionStore(tx: Transaction): CollectionStore {
   };
 }
 
+/**
+ * Takes the account's write lock (TS-20): its `account_sync` row, for the rest of the transaction. Every write of
+ * the account waits here, so commit order is `seq` order. Answers the account's `seq` before this write.
+ */
+export async function lockAccount(tx: Transaction, accountId: string): Promise<number> {
+  await tx.insert(accountSync).values({ accountId }).onConflictDoNothing();
+  const [lock] = await tx
+    .select({ seq: accountSync.seq })
+    .from(accountSync)
+    .where(eq(accountSync.accountId, accountId))
+    .for("update");
+  return lock?.seq ?? 0;
+}
+
+/**
+ * Logs `inputs` at the `seq`s after `seq`, one each, and advances the account's `seq` past them, under the lock
+ * `lockAccount` took. `mutationId` is the mutation that made them, or null for the system's own writes, such as
+ * enrichment. Answers the changes as the stream carries them.
+ */
+export async function logChanges(
+  tx: Transaction,
+  accountId: string,
+  seq: number,
+  inputs: readonly ChangeInput[],
+  mutationId: string | null,
+): Promise<Change[]> {
+  const changes = inputs.map((change, index) =>
+    Object.assign({ seq: seq + index + 1, mutationId }, change),
+  );
+  await tx
+    .update(accountSync)
+    .set({ seq: seq + changes.length })
+    .where(eq(accountSync.accountId, accountId));
+  await tx.insert(changeLog).values(
+    changes.map((change) => ({
+      accountId,
+      seq: change.seq,
+      entity: change.entity,
+      entityId: change.id,
+      op: change.op,
+      data: change.data,
+      mutationId,
+    })),
+  );
+  return changes;
+}
+
 /** How the `mutations` table names who sent a mutation (TS-11). */
 function principalLabel(principal: Principal): string {
   if (principal.kind === "mcp") return `mcp:${principal.grantId}`;
@@ -395,13 +448,7 @@ export async function executeMutation(
   if (!accountId) return answer(failure("permission_denied", "Guests can't change anything."));
 
   return db.transaction(async (tx) => {
-    await tx.insert(accountSync).values({ accountId }).onConflictDoNothing();
-    const [lock] = await tx
-      .select({ seq: accountSync.seq })
-      .from(accountSync)
-      .where(eq(accountSync.accountId, accountId))
-      .for("update");
-    const seq = lock?.seq ?? 0;
+    const seq = await lockAccount(tx, accountId);
 
     const [stored] = await tx
       .select({ accountId: mutations.accountId, result: mutations.result })
@@ -433,23 +480,8 @@ export async function executeMutation(
     let outcome: Outcome =
       result.status === "applied" ? { status: "confirmed", seq, result: reported } : result;
     if (result.status === "applied" && result.changes.length > 0) {
-      changes = result.changes.map((change, index) =>
-        Object.assign({ seq: seq + index + 1, mutationId }, change),
-      );
-      const last = seq + changes.length;
-      await tx.update(accountSync).set({ seq: last }).where(eq(accountSync.accountId, accountId));
-      await tx.insert(changeLog).values(
-        changes.map((change) => ({
-          accountId,
-          seq: change.seq,
-          entity: change.entity,
-          entityId: change.id,
-          op: change.op,
-          data: change.data,
-          mutationId,
-        })),
-      );
-      outcome = { status: "confirmed", seq: last, result: reported };
+      changes = await logChanges(tx, accountId, seq, result.changes, mutationId);
+      outcome = { status: "confirmed", seq: seq + changes.length, result: reported };
     }
 
     await tx.insert(mutations).values({

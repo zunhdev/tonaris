@@ -20,6 +20,7 @@ export {
 export { createApproval, decideApproval, findApproval, type ApprovalRow } from "./approvals";
 export { createDatabase, type Database, type Transaction } from "./client";
 export { databaseUrl, redact } from "./config";
+export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
 export {
   addToList,
   albumDeletionTargets,
@@ -40,6 +41,7 @@ export {
 } from "./mcp";
 export { runExclusively } from "./locks";
 export { migrateDatabase, migrationsFolder } from "./migrations";
+export { albumProvenance } from "./provenance";
 export { providerCacheStore, pruneProviderCache } from "./provider-cache";
 export { findLinkedAlbum } from "./service-links";
 export * from "./schema";

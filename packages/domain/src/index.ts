@@ -87,6 +87,22 @@ export {
   type CommandResult,
   type StoredAlbum,
 } from "./commands";
+export {
+  blankAlbum,
+  enrichableFields,
+  planEnrichment,
+  provenanceSources,
+  type AlbumFacts,
+  type EnrichableAlbum,
+  type EnrichableField,
+  type EnrichableFields,
+  type EnrichmentPlan,
+  type Identity,
+  type ProvenanceEntry,
+  type ProvenanceSource,
+  type Sourced,
+  type SourcedValues,
+} from "./enrichment";
 export { uuidv7, uuidv7Time } from "./ids";
 export {
   maxBatchItems,
