@@ -54,19 +54,19 @@ export async function recordUserValues(
   albumId: string,
   values: Partial<EnrichableFields>,
 ): Promise<void> {
-  const given = enrichableFields.filter((field) => values[field] !== undefined);
-  await writeProvenance(
-    tx,
-    albumId,
-    given
-      .filter((field) => values[field] !== null)
-      .map((field) => ({ field, source: "user", sourceRef: null, retrievedAt: null })),
-  );
+  await writeProvenance(tx, albumId, userEntries(values));
   await clearProvenance(
     tx,
     albumId,
-    given.filter((field) => values[field] === null),
+    enrichableFields.filter((field) => values[field] === null),
   );
+}
+
+/** `user` for each field `values` gives a value: a person's write (TS-15). */
+export function userEntries(values: Partial<EnrichableFields>): ProvenanceEntry[] {
+  return enrichableFields
+    .filter((field) => values[field] !== undefined && values[field] !== null)
+    .map((field) => ({ field, source: "user", sourceRef: null, retrievedAt: null }));
 }
 
 /** The album's provenance, by field. */

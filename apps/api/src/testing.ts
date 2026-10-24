@@ -15,6 +15,7 @@ import {
 import { createApp } from "./app";
 import { type AuthOptions, createAuth } from "./auth/auth";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
+import type { CaptureDeps } from "./capture";
 import { apiConfig } from "./config";
 import { databaseHub, type SyncHubOptions } from "./sync/hub";
 
@@ -76,6 +77,8 @@ export type LocalAppOptions = {
   hub?: Omit<SyncHubOptions, "log" | "sessions">;
   /** Serves client metadata documents (CIMD) instead of fetching them. */
   fetchClientMetadata?: AuthOptions["fetchClientMetadata"];
+  /** What captures ask, stubbed; without it, captures fail as `provider_unavailable`. */
+  capture?: CaptureDeps;
 };
 
 /**
@@ -101,6 +104,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     email,
     hub,
     limiter: options.limiter ?? createSignInLimiter(),
+    capture: options.capture,
     logError: () => {},
   });
 

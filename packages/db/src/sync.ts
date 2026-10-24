@@ -2,7 +2,7 @@
 // change log after a cursor, and the bootstrap snapshot. Commands come from packages/domain; this module
 // gives them a store on the transaction and records what they did.
 
-import { and, asc, count, eq, gt, inArray, isNull, lt, notExists, sql } from "drizzle-orm";
+import { and, asc, count, eq, exists, gt, inArray, isNull, lt, notExists, sql } from "drizzle-orm";
 
 import {
   actingUserId,
@@ -21,6 +21,7 @@ import {
   type Batch,
   type BatchResult,
   type Bootstrap,
+  type CaptureSource,
   type Change,
   type ChangeInput,
   type CollectionStore,
@@ -35,17 +36,20 @@ import {
   type ViewPrefs,
 } from "@tonaris/domain";
 
+import { albumsOfReleaseGroupIn, applyPlan, findCaptureTarget } from "./album-writes";
 import type { Database, Transaction } from "./client";
-import { recordUserValues } from "./provenance";
+import { recordUserValues, userEntries, writeProvenance } from "./provenance";
 import {
   accountSettings,
   accountSync,
+  albumServiceLinks,
   albums,
   changeLog,
   containers,
   memberships,
   mutations,
   positions,
+  trashUnits,
   viewPrefs,
 } from "./schema";
 
@@ -127,15 +131,19 @@ function collectionStore(tx: Transaction): CollectionStore {
       const { trashedAt, ...album } = row;
       return { ...album, trashed: trashedAt !== null };
     },
-    async insertAlbum({ ownerId, id, ...values }) {
+    async insertAlbum({ ownerId, id, ...values }, origin) {
       await tx.insert(albums).values({
         id,
         ownerId,
         ...values,
+        ...(origin
+          ? { mbReleaseGroupId: origin.releaseGroupId, artworkUrl: origin.artworkUrl }
+          : {}),
         searchTitleKey: searchKey(values.title),
         searchArtistKey: searchKey(values.artistCredit),
       });
-      await recordUserValues(tx, id, values);
+      // A new album has no rows to clear.
+      await writeProvenance(tx, id, origin ? origin.provenance : userEntries(values));
     },
     async updateAlbum(id, values) {
       await tx
@@ -149,6 +157,58 @@ function collectionStore(tx: Transaction): CollectionStore {
         })
         .where(eq(albums.id, id));
       await recordUserValues(tx, id, values);
+    },
+    findCaptureTarget: (id) => findCaptureTarget(tx, id),
+    albumsOfReleaseGroup: (ownerId, releaseGroupId) =>
+      albumsOfReleaseGroupIn(tx, ownerId, releaseGroupId),
+    fillAlbum: (id, plan) => applyPlan(tx, id, plan),
+    async reactivateAlbum(id) {
+      const [album] = await tx
+        .select({ trashUnitId: albums.trashUnitId })
+        .from(albums)
+        .where(eq(albums.id, id));
+      await tx.update(albums).set({ trashedAt: null, trashUnitId: null }).where(eq(albums.id, id));
+      // An album's own unit holds only it (TS-13), so it goes with the album's return.
+      if (album?.trashUnitId) {
+        await tx
+          .delete(trashUnits)
+          .where(
+            and(
+              eq(trashUnits.id, album.trashUnitId),
+              eq(trashUnits.kind, "album"),
+              eq(trashUnits.rootId, id),
+            ),
+          );
+      }
+      const left = await tx
+        .delete(memberships)
+        .where(
+          and(
+            eq(memberships.albumId, id),
+            exists(
+              tx
+                .select({ one: sql`1` })
+                .from(containers)
+                .where(and(eq(containers.id, memberships.listId), isNull(containers.trashedAt))),
+            ),
+          ),
+        )
+        .returning({ listId: memberships.listId });
+      return left.map((row) => row.listId);
+    },
+    async findServiceLink(albumId, service) {
+      const [row] = await tx
+        .select({
+          service: albumServiceLinks.service,
+          url: albumServiceLinks.url,
+          entityId: albumServiceLinks.entityId,
+        })
+        .from(albumServiceLinks)
+        .where(and(eq(albumServiceLinks.albumId, albumId), eq(albumServiceLinks.service, service)));
+      return row;
+    },
+    async insertServiceLink(albumId, ownerId, link) {
+      await tx.insert(albumServiceLinks).values({ albumId, ownerId, ...link });
     },
 
     async findContainer(id) {
@@ -431,12 +491,16 @@ export type ExecutedMutation = {
  * 3. Run the command. If it applied changes, advance `seq` by one per change and log each change at its `seq`,
  *    so the log has no gaps and a rejection or replay uses no `seq`.
  * 4. Record the outcome under `mutationId`, whatever it is, so every retry gets the same answer (FR-13.5).
+ *
+ * A mutation `claimMutation()` claimed, such as a capture whose providers ran outside the lock, passes `claimed`, and
+ * its claim's row takes the outcome. `capture` is what the API found for an `album.capture`.
  */
 export async function executeMutation(
   db: Database,
   principal: Principal,
   mutation: Mutation,
   now: Date = new Date(),
+  { claimed = false, capture }: { claimed?: boolean; capture?: CaptureSource } = {},
 ): Promise<ExecutedMutation> {
   const accountId = actingUserId(principal);
   const { mutationId } = mutation;
@@ -454,16 +518,10 @@ export async function executeMutation(
       .select({ accountId: mutations.accountId, result: mutations.result })
       .from(mutations)
       .where(eq(mutations.id, mutationId));
-    if (stored) {
-      if (stored.accountId !== accountId || !stored.result) {
-        return answer(
-          failure("validation_failed", "This mutation ID is already in use.", [
-            { path: "mutationId", message: "Already in use" },
-          ]),
-        );
-      }
+    if (stored?.result && stored.accountId === accountId) {
       return answer(outcomeSchema.parse(stored.result), [], true);
     }
+    if (stored && (stored.accountId !== accountId || !claimed)) return answer(idInUse);
     const madeAt = uuidv7Time(mutationId) ?? now.getTime();
     if (madeAt < now.getTime() - syncRetentionMs) {
       return answer(
@@ -474,7 +532,12 @@ export async function executeMutation(
       );
     }
 
-    const result = await runCommand(mutation, { principal, store: collectionStore(tx), now });
+    const result = await runCommand(mutation, {
+      principal,
+      store: collectionStore(tx),
+      now,
+      ...(capture ? { capture } : {}),
+    });
     let changes: Change[] = [];
     const reported = result.status === "applied" ? (result.result ?? null) : null;
     let outcome: Outcome =
@@ -484,33 +547,191 @@ export async function executeMutation(
       outcome = { status: "confirmed", seq: seq + changes.length, result: reported };
     }
 
-    await tx.insert(mutations).values({
-      id: mutationId,
+    await recordOutcome(tx, accountId, principal, mutation, outcome, now);
+    return answer(outcome, changes);
+  });
+}
+
+const idInUse = failure("validation_failed", "This mutation ID is already in use.", [
+  { path: "mutationId", message: "Already in use" },
+]);
+
+/** Stores `outcome` under the mutation's ID, completing its claim if it has one. */
+async function recordOutcome(
+  tx: Transaction,
+  accountId: string,
+  principal: Principal,
+  mutation: Mutation,
+  outcome: Outcome,
+  receivedAt: Date,
+): Promise<void> {
+  const completedAt = new Date();
+  await tx
+    .insert(mutations)
+    .values({
+      id: mutation.mutationId,
       accountId,
       principal: principalLabel(principal),
       name: mutation.name,
       status: outcome.status,
       result: outcome,
-      receivedAt: now,
-      completedAt: new Date(),
+      receivedAt,
+      completedAt,
+    })
+    .onConflictDoUpdate({
+      target: mutations.id,
+      set: { status: outcome.status, result: outcome, completedAt },
+      setWhere: isNull(mutations.result),
     });
-    return answer(outcome, changes);
+}
+
+/** How long a claim holds before it counts as abandoned, and the mutation runs again (TS-22). */
+export const claimTimeoutMs = 5 * 60_000;
+
+/** What `claimMutation()` found: run it now, it is running elsewhere, or it is already answered. */
+export type Claim =
+  | { status: "claimed" }
+  | { status: "in_progress" }
+  | { status: "answered"; executed: ExecutedMutation };
+
+/**
+ * Claims a mutation that waits on providers before taking the write lock, such as a capture (TS-22): a stored outcome
+ * is replayed, a claim made under `claimTimeoutMs` ago is in progress, and otherwise a row with no outcome is
+ * recorded, or an abandoned one refreshed. The claimer then finishes it with `executeMutation(…, { claimed })` or
+ * `finishMutation()`. Refusals that need no providers, such as an expired retry, are answered here.
+ */
+export async function claimMutation(
+  db: Database,
+  principal: Principal,
+  mutation: Mutation,
+  now: Date = new Date(),
+): Promise<Claim> {
+  const accountId = actingUserId(principal);
+  const { mutationId } = mutation;
+  const answered = (outcome: Outcome, replayed = false): Claim => ({
+    status: "answered",
+    executed: { result: { mutationId, outcome }, changes: [], replayed },
   });
+  if (!accountId) return answered(failure("permission_denied", "Guests can't change anything."));
+
+  return db.transaction(async (tx) => {
+    await lockAccount(tx, accountId);
+    const [stored] = await tx
+      .select({
+        accountId: mutations.accountId,
+        result: mutations.result,
+        receivedAt: mutations.receivedAt,
+      })
+      .from(mutations)
+      .where(eq(mutations.id, mutationId));
+    if (stored) {
+      if (stored.accountId !== accountId) return answered(idInUse);
+      if (stored.result) return answered(outcomeSchema.parse(stored.result), true);
+      if (stored.receivedAt.getTime() > now.getTime() - claimTimeoutMs) {
+        return { status: "in_progress" };
+      }
+      await tx.update(mutations).set({ receivedAt: now }).where(eq(mutations.id, mutationId));
+      return { status: "claimed" };
+    }
+    const madeAt = uuidv7Time(mutationId) ?? now.getTime();
+    if (madeAt < now.getTime() - syncRetentionMs) {
+      return answered(
+        failure(
+          "expired",
+          "This change is too old to be retried. Check the saved state and make it again.",
+        ),
+      );
+    }
+    await tx.insert(mutations).values({
+      id: mutationId,
+      accountId,
+      principal: principalLabel(principal),
+      name: mutation.name,
+      status: "running",
+      result: null,
+      receivedAt: now,
+    });
+    return { status: "claimed" };
+  });
+}
+
+/** Stores the outcome of a claimed mutation decided before the lock, such as a link that needs details. */
+export async function finishMutation(
+  db: Database,
+  principal: Principal,
+  mutation: Mutation,
+  outcome: Outcome,
+  now: Date = new Date(),
+): Promise<ExecutedMutation> {
+  const accountId = actingUserId(principal);
+  if (accountId) {
+    await db.transaction((tx) => recordOutcome(tx, accountId, principal, mutation, outcome, now));
+  }
+  return { result: { mutationId: mutation.mutationId, outcome }, changes: [], replayed: false };
+}
+
+/** Gives a claim up without an outcome, after an unexpected failure, so sending the mutation again runs it. */
+export async function releaseClaim(
+  db: Database,
+  principal: Principal,
+  mutationId: string,
+): Promise<void> {
+  const accountId = actingUserId(principal);
+  if (!accountId) return;
+  await db
+    .delete(mutations)
+    .where(
+      and(
+        eq(mutations.id, mutationId),
+        eq(mutations.accountId, accountId),
+        isNull(mutations.result),
+      ),
+    );
+}
+
+/** Whether the account's mutation is claimed and still running, for `GET /v1/mutations/{id}` (TS-22). */
+export async function mutationRunning(
+  db: Database,
+  accountId: string,
+  mutationId: string,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const [row] = await db
+    .select({ receivedAt: mutations.receivedAt })
+    .from(mutations)
+    .where(
+      and(
+        eq(mutations.id, mutationId),
+        eq(mutations.accountId, accountId),
+        isNull(mutations.result),
+      ),
+    );
+  return row !== undefined && row.receivedAt.getTime() > now.getTime() - claimTimeoutMs;
 }
 
 /**
  * Runs a batch's items in order (TS-25), each as its own `executeMutation`: its own transaction, under the
  * owner's write lock, so a success stays committed whatever happens to later items. `onExecuted` gets each item's
  * changes as soon as it commits, for the stream. Each item takes the time it runs at, unless `now` is given.
+ * `execute` replaces `executeMutation` per item, as the API's does to run captures with their providers.
  */
 export function executeBatch(
   db: Database,
   principal: Principal,
   batch: Batch,
-  { now, onExecuted = () => {} }: { now?: Date; onExecuted?: (changes: Change[]) => void } = {},
+  {
+    now,
+    onExecuted = () => {},
+    execute = (mutation) => executeMutation(db, principal, mutation, now),
+  }: {
+    now?: Date;
+    onExecuted?: (changes: Change[]) => void;
+    /** Runs one item; the API's runs captures with their providers first. */
+    execute?: (mutation: Mutation) => Promise<ExecutedMutation>;
+  } = {},
 ): Promise<BatchResult> {
   return runBatch(batch, async (mutation) => {
-    const { result, changes } = await executeMutation(db, principal, mutation, now);
+    const { result, changes } = await execute(mutation);
     onExecuted(changes);
     return result.outcome;
   });

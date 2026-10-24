@@ -779,7 +779,7 @@
     "/v1/mutations": {
       "post": {
         "summary": "Run a mutation",
-        "description": "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22).",
+        "description": "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22). An `album.capture` still running answers `409 in_progress`.",
         "tags": [
           "sync"
         ],
@@ -1027,6 +1027,126 @@
                       },
                       "name": {
                         "type": "string",
+                        "const": "album.capture"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                            "description": "The ID a new album gets (TS-10). A reused album keeps its own."
+                          },
+                          "link": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2048,
+                            "description": "The link as pasted (FR-02.1)."
+                          },
+                          "listId": {
+                            "description": "The list to put the album in, or null for none: Unsorted (FR-02.2).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "releaseGroupId": {
+                            "description": "The person's choice among a `match` answer's candidates (TS-26).",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "details": {
+                            "description": "The album's details from the person, after a `details` answer (FR-02.4).",
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string"
+                              },
+                              "artistCredit": {
+                                "type": "string"
+                              },
+                              "releaseType": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "album",
+                                  "ep",
+                                  "compilation",
+                                  null
+                                ]
+                              },
+                              "isLive": {
+                                "type": [
+                                  "boolean",
+                                  "null"
+                                ]
+                              },
+                              "originalYear": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              "recordingYearStart": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              "recordingYearEnd": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              }
+                            },
+                            "required": [
+                              "title",
+                              "artistCredit",
+                              "releaseType",
+                              "isLive",
+                              "originalYear",
+                              "recordingYearStart",
+                              "recordingYearEnd"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "link",
+                          "listId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
                         "const": "container.create"
                       },
                       "args": {
@@ -1818,6 +1938,126 @@
                       },
                       "name": {
                         "type": "string",
+                        "const": "album.capture"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                            "description": "The ID a new album gets (TS-10). A reused album keeps its own."
+                          },
+                          "link": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2048,
+                            "description": "The link as pasted (FR-02.1)."
+                          },
+                          "listId": {
+                            "description": "The list to put the album in, or null for none: Unsorted (FR-02.2).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "releaseGroupId": {
+                            "description": "The person's choice among a `match` answer's candidates (TS-26).",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "details": {
+                            "description": "The album's details from the person, after a `details` answer (FR-02.4).",
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string"
+                              },
+                              "artistCredit": {
+                                "type": "string"
+                              },
+                              "releaseType": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "album",
+                                  "ep",
+                                  "compilation",
+                                  null
+                                ]
+                              },
+                              "isLive": {
+                                "type": [
+                                  "boolean",
+                                  "null"
+                                ]
+                              },
+                              "originalYear": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              "recordingYearStart": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              "recordingYearEnd": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              }
+                            },
+                            "required": [
+                              "title",
+                              "artistCredit",
+                              "releaseType",
+                              "isLive",
+                              "originalYear",
+                              "recordingYearStart",
+                              "recordingYearEnd"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "link",
+                          "listId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
                         "const": "container.create"
                       },
                       "args": {
@@ -2596,6 +2836,126 @@
                       "name",
                       "args",
                       "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "album.capture"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                            "description": "The ID a new album gets (TS-10). A reused album keeps its own."
+                          },
+                          "link": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2048,
+                            "description": "The link as pasted (FR-02.1)."
+                          },
+                          "listId": {
+                            "description": "The list to put the album in, or null for none: Unsorted (FR-02.2).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "releaseGroupId": {
+                            "description": "The person's choice among a `match` answer's candidates (TS-26).",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "details": {
+                            "description": "The album's details from the person, after a `details` answer (FR-02.4).",
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string"
+                              },
+                              "artistCredit": {
+                                "type": "string"
+                              },
+                              "releaseType": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "album",
+                                  "ep",
+                                  "compilation",
+                                  null
+                                ]
+                              },
+                              "isLive": {
+                                "type": [
+                                  "boolean",
+                                  "null"
+                                ]
+                              },
+                              "originalYear": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              "recordingYearStart": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              "recordingYearEnd": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 9999
+                              }
+                            },
+                            "required": [
+                              "title",
+                              "artistCredit",
+                              "releaseType",
+                              "isLive",
+                              "originalYear",
+                              "recordingYearStart",
+                              "recordingYearEnd"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "link",
+                          "listId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
                     ]
                   },
                   {
@@ -3192,7 +3552,7 @@
                               "maximum": 9007199254740991
                             },
                             "result": {
-                              "description": "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); the others give null."
+                              "description": "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); `album.capture` gives a `CaptureResult`; the others give null."
                             }
                           },
                           "required": [
@@ -3230,6 +3590,7 @@
                                 "provider_unavailable",
                                 "rate_limited",
                                 "expired",
+                                "in_progress",
                                 "internal_error"
                               ]
                             },
@@ -3278,6 +3639,7 @@
                                     "provider_unavailable",
                                     "rate_limited",
                                     "expired",
+                                    "in_progress",
                                     "internal_error"
                                   ],
                                   "description": "Machine-readable error code (TS-27)."
@@ -3456,6 +3818,16 @@
               }
             }
           },
+          "409": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
@@ -3482,7 +3854,7 @@
     "/v1/batches": {
       "post": {
         "summary": "Run a batch of mutations",
-        "description": "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice.",
+        "description": "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice. An `album.capture` item still running in another request answers the batch `409 in_progress`: the items before it stay saved, and sending the batch again replays them.",
         "tags": [
           "sync"
         ],
@@ -3649,7 +4021,7 @@
                                     "maximum": 9007199254740991
                                   },
                                   "result": {
-                                    "description": "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); the others give null."
+                                    "description": "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); `album.capture` gives a `CaptureResult`; the others give null."
                                   }
                                 },
                                 "required": [
@@ -3687,6 +4059,7 @@
                                       "provider_unavailable",
                                       "rate_limited",
                                       "expired",
+                                      "in_progress",
                                       "internal_error"
                                     ]
                                   },
@@ -3735,6 +4108,7 @@
                                           "provider_unavailable",
                                           "rate_limited",
                                           "expired",
+                                          "in_progress",
                                           "internal_error"
                                         ],
                                         "description": "Machine-readable error code (TS-27)."
@@ -3922,6 +4296,16 @@
               }
             }
           },
+          "409": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
@@ -3948,7 +4332,7 @@
     "/v1/mutations/{id}": {
       "get": {
         "summary": "Get a mutation's outcome",
-        "description": "The stored outcome of a mutation this account sent, kept for 30 days (TS-22). A client whose request went unanswered reconciles with it.",
+        "description": "The stored outcome of a mutation this account sent, kept for 30 days (TS-22). A client whose request went unanswered reconciles with it. A capture still running answers `409 in_progress`.",
         "tags": [
           "sync"
         ],
@@ -3994,7 +4378,7 @@
                               "maximum": 9007199254740991
                             },
                             "result": {
-                              "description": "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); the others give null."
+                              "description": "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); `album.capture` gives a `CaptureResult`; the others give null."
                             }
                           },
                           "required": [
@@ -4032,6 +4416,7 @@
                                 "provider_unavailable",
                                 "rate_limited",
                                 "expired",
+                                "in_progress",
                                 "internal_error"
                               ]
                             },
@@ -4080,6 +4465,7 @@
                                     "provider_unavailable",
                                     "rate_limited",
                                     "expired",
+                                    "in_progress",
                                     "internal_error"
                                   ],
                                   "description": "Machine-readable error code (TS-27)."
@@ -4259,6 +4645,16 @@
             }
           },
           "404": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
               "application/problem+json": {
@@ -4776,6 +5172,7 @@
               "provider_unavailable",
               "rate_limited",
               "expired",
+              "in_progress",
               "internal_error"
             ],
             "description": "Machine-readable error code (TS-27)."
@@ -5768,6 +6165,148 @@
                   "name",
                   "args",
                   "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "album.capture"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "albumId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "The ID a new album gets (TS-10). A reused album keeps its own."
+                      },
+                      "link": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048,
+                        "description": "The link as pasted (FR-02.1)."
+                      },
+                      "listId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "The list to put the album in, or null for none: Unsorted (FR-02.2)."
+                      },
+                      "releaseGroupId": {
+                        "description": "The person's choice among a `match` answer's candidates (TS-26).",
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "details": {
+                        "description": "The album's details from the person, after a `details` answer (FR-02.4).",
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string"
+                          },
+                          "artistCredit": {
+                            "type": "string"
+                          },
+                          "releaseType": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "album",
+                                  "ep",
+                                  "compilation"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "isLive": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "originalYear": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "recordingYearStart": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "recordingYearEnd": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9999
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "title",
+                          "artistCredit",
+                          "releaseType",
+                          "isLive",
+                          "originalYear",
+                          "recordingYearStart",
+                          "recordingYearEnd"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "albumId",
+                      "link",
+                      "listId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
                 ],
                 "additionalProperties": false
               },

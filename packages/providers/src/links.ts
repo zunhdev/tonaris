@@ -4,6 +4,7 @@
 
 import {
   failure,
+  maxLinkLength,
   serviceNames,
   type Failure,
   type LinkKind,
@@ -31,8 +32,8 @@ export type LinkParse =
   /** `unsupported_link`, or `provider_unavailable` when a short link couldn't be followed (TS-27). */
   | { status: "failed"; failure: Failure };
 
-/** Longer input isn't a link anyone pasted. */
-export const maxLinkLength = 2_048;
+/** Longer input isn't a link anyone pasted; capture's arguments refuse it too (TS-40). */
+export { maxLinkLength };
 
 /** A short link's requests, at most (TS-40). */
 export const maxShortLinkHops = 3;

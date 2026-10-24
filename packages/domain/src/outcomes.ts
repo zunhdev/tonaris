@@ -23,6 +23,7 @@ export const errorCodes = [
   "provider_unavailable",
   "rate_limited",
   "expired",
+  "in_progress",
   "internal_error",
 ] as const;
 export const errorCodeSchema = z.enum(errorCodes);
@@ -48,6 +49,7 @@ const codeStatuses: Record<ErrorCode, number> = {
   provider_unavailable: 503,
   rate_limited: 429,
   expired: 410,
+  in_progress: 409,
   internal_error: 500,
 };
 
@@ -140,7 +142,7 @@ export const outcomeSchema = z.discriminatedUnion("status", [
     seq: z.int().nonnegative(),
     result: z.unknown().meta({
       description:
-        "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); the others give null.",
+        "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); `album.capture` gives a `CaptureResult`; the others give null.",
     }),
   }),
   /** Rejected; nothing changed (X-05). */

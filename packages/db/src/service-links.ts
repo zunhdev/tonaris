@@ -1,14 +1,14 @@
-// Albums by their service links (TS-11, TS-41 step 1). Links are written with TON-46; `entity_id` holds
-// `linkEntityId()` of the link, so a link is found again whatever form it was pasted in.
+// Albums by their service links (TS-11, TS-41 step 1). Capture writes links (TON-44), and editing them comes with
+// TON-46; `entity_id` holds `linkEntityId()` of the link, so a link is found again whatever form it was pasted in.
 
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 import type { StreamingService } from "@tonaris/domain";
 
 import type { Database } from "./client";
-import { albumServiceLinks } from "./schema";
+import { albums, albumServiceLinks } from "./schema";
 
-/** The owner's album with this link, Trash included (FR-14.4), if any. */
+/** The owner's album with this link, Trash included (FR-14.4), if any: an active one first (FR-14.3). */
 export async function findLinkedAlbum(
   db: Database,
   ownerId: string,
@@ -18,6 +18,7 @@ export async function findLinkedAlbum(
   const [row] = await db
     .select({ albumId: albumServiceLinks.albumId })
     .from(albumServiceLinks)
+    .innerJoin(albums, eq(albums.id, albumServiceLinks.albumId))
     .where(
       and(
         eq(albumServiceLinks.ownerId, ownerId),
@@ -25,6 +26,7 @@ export async function findLinkedAlbum(
         eq(albumServiceLinks.entityId, entityId),
       ),
     )
+    .orderBy(sql`${albums.trashedAt} is not null`, asc(albums.id))
     .limit(1);
   return row?.albumId;
 }

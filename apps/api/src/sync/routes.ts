@@ -2,6 +2,7 @@
 // - POST /v1/mutations runs a mutation envelope and answers with its outcome, the same on every retry;
 // - POST /v1/batches runs up to 200 of them in order, each on its own, and answers with every item's outcome;
 // - GET /v1/mutations/{id} looks an outcome up, to reconcile one whose answer was lost (TS-22);
+// - a capture, which asks metadata sources before the write lock, answers `409 in_progress` while it runs;
 // - GET /v1/sync/bootstrap is the account's data at a `seq`;
 // - GET /v1/sync/stream streams the changes after a cursor, as server-sent events.
 // Each accepts the session cookie today; bearer tokens for native apps and MCP arrive with TS-30 and TS-61.
@@ -12,8 +13,8 @@ import { z } from "zod";
 import {
   bootstrapSnapshot,
   executeBatch,
-  executeMutation,
   findMutationResult,
+  mutationRunning,
   type Database,
 } from "@tonaris/db";
 import {
@@ -26,6 +27,7 @@ import {
 } from "@tonaris/domain";
 
 import type { SessionGuard } from "../auth/plugin";
+import { MutationInProgressError, mutationRunner, type CaptureDeps } from "../capture";
 import { ProblemError } from "../problem";
 import { eventStream } from "../sse";
 import type { SyncHub } from "./hub";
@@ -35,7 +37,37 @@ const cursor = z
   .regex(/^\d+$/)
   .meta({ description: "The `seq` of the last change the client has." });
 
-export function syncRoutes(session: SessionGuard, { db, hub }: { db: Database; hub: SyncHub }) {
+const inProgress = () =>
+  new ProblemError(
+    409,
+    "in_progress",
+    "This change is still being saved. Check its outcome again in a moment.",
+  );
+
+/**
+ * A request carrying a capture may wait on MusicBrainz for longer than Bun's 10 s idle timeout, so it switches that
+ * off for itself, as the streams do (TS-23).
+ */
+function keepOpen(
+  request: Request,
+  server: { timeout(request: Request, seconds: number): void } | null,
+  mutations: readonly unknown[],
+): void {
+  const captures = mutations.some(
+    (mutation) =>
+      typeof mutation === "object" &&
+      mutation !== null &&
+      "name" in mutation &&
+      mutation.name === "album.capture",
+  );
+  if (captures) server?.timeout(request, 0);
+}
+
+export function syncRoutes(
+  session: SessionGuard,
+  { db, hub, capture }: { db: Database; hub: SyncHub; capture?: CaptureDeps | undefined },
+) {
+  const run = mutationRunner(db, capture);
   return new Elysia()
     .use(session)
     .post(
@@ -43,19 +75,30 @@ export function syncRoutes(session: SessionGuard, { db, hub }: { db: Database; h
       {
         signedIn: true,
         body: mutationSchema,
-        response: { 200: mutationResultSchema, 401: problemSchema, 422: problemSchema },
+        response: {
+          200: mutationResultSchema,
+          401: problemSchema,
+          409: problemSchema,
+          422: problemSchema,
+        },
         detail: {
           summary: "Run a mutation",
           description:
-            "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22).",
+            "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22). An `album.capture` still running answers `409 in_progress`.",
           tags: ["sync"],
           operationId: "postMutation",
         },
       },
-      async ({ body, principal, account }) => {
-        const { result, changes } = await executeMutation(db, principal, body);
-        hub.publish(account.id, changes);
-        return result;
+      async ({ body, principal, account, request, server }) => {
+        keepOpen(request, server, [body]);
+        try {
+          const { result, changes } = await run(principal, body);
+          hub.publish(account.id, changes);
+          return result;
+        } catch (error) {
+          if (error instanceof MutationInProgressError) throw inProgress();
+          throw error;
+        }
       },
     )
     .post(
@@ -63,19 +106,32 @@ export function syncRoutes(session: SessionGuard, { db, hub }: { db: Database; h
       {
         signedIn: true,
         body: batchSchema,
-        response: { 200: batchResultSchema, 401: problemSchema, 422: problemSchema },
+        response: {
+          200: batchResultSchema,
+          401: problemSchema,
+          409: problemSchema,
+          422: problemSchema,
+        },
         detail: {
           summary: "Run a batch of mutations",
           description:
-            "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice.",
+            "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice. An `album.capture` item still running in another request answers the batch `409 in_progress`: the items before it stay saved, and sending the batch again replays them.",
           tags: ["sync"],
           operationId: "postBatch",
         },
       },
-      ({ body, principal, account }) =>
-        executeBatch(db, principal, body, {
-          onExecuted: (changes) => hub.publish(account.id, changes),
-        }),
+      async ({ body, principal, account, request, server }) => {
+        keepOpen(request, server, body.items);
+        try {
+          return await executeBatch(db, principal, body, {
+            onExecuted: (changes) => hub.publish(account.id, changes),
+            execute: (mutation) => run(principal, mutation),
+          });
+        } catch (error) {
+          if (error instanceof MutationInProgressError) throw inProgress();
+          throw error;
+        }
+      },
     )
     .get(
       "/mutations/:id",
@@ -86,21 +142,22 @@ export function syncRoutes(session: SessionGuard, { db, hub }: { db: Database; h
           200: mutationResultSchema,
           401: problemSchema,
           404: problemSchema,
+          409: problemSchema,
           422: problemSchema,
         },
         detail: {
           summary: "Get a mutation's outcome",
           description:
-            "The stored outcome of a mutation this account sent, kept for 30 days (TS-22). A client whose request went unanswered reconciles with it.",
+            "The stored outcome of a mutation this account sent, kept for 30 days (TS-22). A client whose request went unanswered reconciles with it. A capture still running answers `409 in_progress`.",
           tags: ["sync"],
           operationId: "getMutation",
         },
       },
       async ({ params, account }) => {
         const result = await findMutationResult(db, account.id, params.id);
-        if (!result)
-          throw new ProblemError(404, "not_found", "No mutation with this ID was received.");
-        return result;
+        if (result) return result;
+        if (await mutationRunning(db, account.id, params.id)) throw inProgress();
+        throw new ProblemError(404, "not_found", "No mutation with this ID was received.");
       },
     )
     .get(

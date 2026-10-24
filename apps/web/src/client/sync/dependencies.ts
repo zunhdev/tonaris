@@ -11,12 +11,15 @@ function created(mutation: Mutation): string | undefined {
   if (mutation.name === "album.create" || mutation.name === "container.create") {
     return mutation.args.id;
   }
+  // A capture may reuse an album instead; then nothing later in the request refers to the ID it proposed.
+  if (mutation.name === "album.capture") return mutation.args.albumId;
   return undefined;
 }
 
 /** The records a write changes or puts something in, other than one it creates. */
 function referenced(mutation: Mutation): (string | null)[] {
   if (mutation.name === "album.create") return [];
+  if (mutation.name === "album.capture") return [mutation.args.listId];
   if (mutation.name === "album.update" || mutation.name === "container.rename") {
     return [mutation.args.id];
   }

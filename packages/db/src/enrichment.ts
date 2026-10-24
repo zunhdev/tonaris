@@ -9,32 +9,18 @@ import {
   albumFields,
   failure,
   planEnrichment,
-  searchKey,
   type AlbumFacts,
   type Change,
   type EnrichmentPlan,
   type Failure,
 } from "@tonaris/domain";
 
+import { applyPlan, findCaptureTarget } from "./album-writes";
 import type { Database } from "./client";
-import { writeProvenance } from "./provenance";
 import { albums } from "./schema";
 import { lockAccount, logChanges } from "./sync";
 
 export type Enrichment = { status: "applied"; plan: EnrichmentPlan; changes: Change[] };
-
-const enrichableColumns = {
-  id: albums.id,
-  title: albums.title,
-  artistCredit: albums.artistCredit,
-  releaseType: albums.releaseType,
-  isLive: albums.isLive,
-  originalYear: albums.originalYear,
-  recordingYearStart: albums.recordingYearStart,
-  recordingYearEnd: albums.recordingYearEnd,
-  artworkUrl: albums.artworkUrl,
-  releaseGroupId: albums.mbReleaseGroupId,
-};
 
 /**
  * Fills the account's album `albumId` from `facts`, as `planEnrichment()` decides, and records the filled values'
@@ -50,34 +36,24 @@ export async function enrichAlbum(
 ): Promise<Enrichment | Failure> {
   return db.transaction(async (tx) => {
     const seq = await lockAccount(tx, accountId);
-    const [row] = await tx
-      .select(enrichableColumns)
-      .from(albums)
-      .where(and(eq(albums.id, albumId), eq(albums.ownerId, accountId)));
-    if (!row) return failure("not_found", "This album doesn't exist.");
+    const row = await findCaptureTarget(tx, albumId);
+    if (row?.ownerId !== accountId) return failure("not_found", "This album doesn't exist.");
 
     const plan = planEnrichment(row, facts, now);
-    const { values, releaseGroupId } = plan;
-    if (Object.keys(values).length > 0 || releaseGroupId !== undefined) {
-      await tx
-        .update(albums)
-        .set({
-          ...values,
-          ...(releaseGroupId === undefined ? {} : { mbReleaseGroupId: releaseGroupId }),
-          ...(values.title === undefined ? {} : { searchTitleKey: searchKey(values.title) }),
-          ...(values.artistCredit === undefined
-            ? {}
-            : { searchArtistKey: searchKey(values.artistCredit) }),
-        })
-        .where(eq(albums.id, albumId));
-    }
-    await writeProvenance(tx, albumId, plan.provenance);
+    const { values } = plan;
+    await applyPlan(tx, albumId, plan);
 
     if (!albumFields.some((field) => values[field] !== undefined)) {
       return { status: "applied", plan, changes: [] };
     }
-    // The album as clients hold it: without the artwork and release group they don't carry yet.
-    const { artworkUrl: _, releaseGroupId: __, ...data } = { ...row, ...values };
+    // The album as clients hold it: without what they don't carry yet.
+    const {
+      artworkUrl: _,
+      releaseGroupId: __,
+      ownerId: ___,
+      trashed: ____,
+      ...data
+    } = { ...row, ...values };
     const changes = await logChanges(
       tx,
       accountId,
