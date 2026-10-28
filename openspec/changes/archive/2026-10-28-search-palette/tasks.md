@@ -26,7 +26,7 @@
 
 ## 5. Checks
 
-- [ ] 5.1 Run `bun run check`, and a native `bun run build`.
+- [x] 5.1 Run `bun run check`, and a native `bun run build`.
 
 ## Workflow follow-up
 
