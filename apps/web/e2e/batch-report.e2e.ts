@@ -37,8 +37,20 @@ test("a batch that partly fails is reported once, by status, kept across a reloa
   const later = await created(page, "Later");
 
   // One action: a folder whose name is taken, a list inside it, and two other lists.
-  const folder: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Later" };
-  const doom: Container = { id: uuidv7(), kind: "list", parentId: folder.id, name: "Doom" };
+  const folder: Container = {
+    id: uuidv7(),
+    kind: "folder",
+    parentId: null,
+    name: "Later",
+    description: null,
+  };
+  const doom: Container = {
+    id: uuidv7(),
+    kind: "list",
+    parentId: folder.id,
+    name: "Doom",
+    description: null,
+  };
   await insert(page, folder, doom, list("Soon"), list("Sooner"));
 
   // One toast for the whole batch, announced as an alert, instead of one per item.

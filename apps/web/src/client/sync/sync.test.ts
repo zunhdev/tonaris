@@ -30,7 +30,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(40);
+  server = await startApiServer(41);
 }, 30_000);
 
 afterAll(async () => {
@@ -471,8 +471,20 @@ describe("folders, lists and entries (FR-09.3, TON-26, TON-27)", () => {
     const phone = await openClient(14, 1);
     await Promise.all([phone.containers.preload(), phone.memberships.preload()]);
     const args = await saved(web);
-    const folder: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Jazz" };
-    const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Favorites" };
+    const folder: Container = {
+      id: uuidv7(),
+      kind: "folder",
+      parentId: null,
+      name: "Jazz",
+      description: null,
+    };
+    const list: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Favorites",
+      description: null,
+    };
 
     await web.containers.insert([folder, list]).when("settled");
     expect(web.network.writes.at(-1)).toBe("batches");
@@ -502,7 +514,13 @@ describe("folders, lists and entries (FR-09.3, TON-26, TON-27)", () => {
   test("a list named like a sibling rolls back, and the conflict is reported", async () => {
     const web = await openClient(15, 0);
     await web.containers.preload();
-    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    const later: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
     await web.containers.insert(later).when("settled");
     const twin: Container = { ...later, id: uuidv7(), name: "later" };
     const error = await web.containers
@@ -594,7 +612,13 @@ describe("tabs sharing one stream (TS-23)", () => {
     const phone = await openClient(20, 1);
     await Promise.all([web.containers.preload(), phone.memberships.preload()]);
     const args = await saved(web);
-    const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    const list: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
     await web.containers.insert(list).when("settled");
 
     web.network.faults.offline = true;
@@ -639,7 +663,13 @@ describe("changes from elsewhere (FR-09.1, DS-82)", () => {
     const web = await openClient(21, 0);
     const phone = await openClient(21, 1);
     await Promise.all([web.containers.preload(), phone.containers.preload()]);
-    const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    const list: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
     await web.containers.insert(list).when("settled");
     await until(() => phone.containers.has(list.id), 3_000, "the list");
 
@@ -697,7 +727,13 @@ describe("resubmitting (DS-80, FR-09.4, FR-13.2)", () => {
   test("Retry saves a list whose name was taken, once the other list is renamed", async () => {
     const web = await openClient(23, 0);
     await web.containers.preload();
-    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    const later: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
     await web.containers.insert(later).when("settled");
     const twin: Container = { ...later, id: uuidv7() };
     await web.containers
@@ -720,7 +756,13 @@ describe("resubmitting (DS-80, FR-09.4, FR-13.2)", () => {
   test("an attempt the records already hold sends nothing, and a gone record's is reported", async () => {
     const web = await openClient(24, 0);
     await web.containers.preload();
-    const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    const list: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
     await web.containers.insert(list).when("settled");
     const before = web.network.sent.length;
 
@@ -746,13 +788,37 @@ describe("batch reports (FR-13.4, FR-13.5, DS-84)", () => {
   test("a partial batch keeps its successes, skips what built on a failure, and a retry inside the report saves the rest once", async () => {
     const web = await openClient(25, 0);
     await web.containers.preload();
-    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+    const later: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
     await web.containers.insert(later).when("settled");
 
     // One action: a folder whose name is taken, a list inside it, and another list.
-    const folder: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Later" };
-    const inside: Container = { id: uuidv7(), kind: "list", parentId: folder.id, name: "Doom" };
-    const soon: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Soon" };
+    const folder: Container = {
+      id: uuidv7(),
+      kind: "folder",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
+    const inside: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: folder.id,
+      name: "Doom",
+      description: null,
+    };
+    const soon: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Soon",
+      description: null,
+    };
     const error = await web.containers
       .insert([folder, inside, soon])
       .when("settled")
@@ -937,8 +1003,20 @@ describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
       web.positions.preload(),
       phone.positions.preload(),
     ]);
-    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
-    const doom: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Doom" };
+    const later: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
+    const doom: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Doom",
+      description: null,
+    };
     await web.containers.insert([later, doom]).when("settled");
     const sent = web.network.sent.length;
 
@@ -973,7 +1051,13 @@ describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
       web.positions.preload(),
       phone.positions.preload(),
     ]);
-    const doom: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Doom" };
+    const doom: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Doom",
+      description: null,
+    };
     await web.containers.insert(doom).when("settled");
     await until(() => phone.containers.has(doom.id));
     phone.network.faults.noStream = true;
@@ -1080,7 +1164,13 @@ describe("captures (TON-45, TS-22)", () => {
   test("a capture into a list made just before it finds the list, and a rename made after isn't held up", async () => {
     const web = await openClient(32, 0);
     await Promise.all([web.containers.preload(), web.memberships.preload()]);
-    const doom: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Doom" };
+    const doom: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Doom",
+      description: null,
+    };
     const created = web.containers.insert(doom);
     const [capture] = web.captures.send([{ link: links.slow, listId: doom.id }]);
     await created.isPersisted.promise;
@@ -1309,5 +1399,31 @@ describe("deleting a custom field (FR-03.18, TS-14)", () => {
       .isPersisted.promise;
     await until(() => !phone.fields.has(fieldId), 3_000, "the deletion");
     await until(() => !phone.fieldValues.has(key), 3_000, "the value's removal");
+  });
+});
+
+describe("folder and list descriptions (FR-03.5, FR-09.1)", () => {
+  test("a description written in one session follows in another, and a new list may start with one", async () => {
+    const web = await openClient(40, 0);
+    const phone = await openClient(40, 1);
+    await Promise.all([web.containers.preload(), phone.containers.preload()]);
+    const id = uuidv7();
+    // Created with a description: `container.create`, then `container.describe`, in one request.
+    await web.containers.insert({
+      id,
+      kind: "list",
+      parentId: null,
+      name: "Grunge",
+      description: "Seattle",
+    }).isPersisted.promise;
+    await until(
+      () => phone.containers.get(id)?.description === "Seattle",
+      3_000,
+      "the description",
+    );
+    await web.containers.update(id, (draft) => {
+      draft.description = null;
+    }).isPersisted.promise;
+    await until(() => phone.containers.get(id)?.description === null, 3_000, "the cleared one");
   });
 });

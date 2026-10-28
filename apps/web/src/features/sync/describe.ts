@@ -182,6 +182,19 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: seen,
     };
   }
+  if (mutation.name === "container.describe") {
+    const described = names.container(mutation.args.id);
+    const target = kindNamed(described?.kind, described?.name);
+    return {
+      summary: capitalized(
+        mutation.args.description === null
+          ? `clear the description of ${target}`
+          : `describe ${target}`,
+      ),
+      what: `the description of ${target}`,
+      subject: capitalized(`the description of ${target}`),
+    };
+  }
   if (mutation.name === "container.move") {
     const moved = names.container(mutation.args.id);
     const { parentId } = mutation.args;

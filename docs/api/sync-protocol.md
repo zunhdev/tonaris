@@ -80,7 +80,7 @@ A client keeps one store per entity and applies each change by key:
 | `entity` | `id` | `data` |
 | --- | --- | --- |
 | `album` | the album's ID | `Album` |
-| `container` | the folder's or list's ID | `Container` |
+| `container` | the folder's or list's ID | `Container`: `{id, kind, parentId, name, description}`, `description` null for none |
 | `membership` | `<listId>:<albumId>` | `Membership` |
 | `field` | the field's ID | `CustomField`: `{id, name, type, options: [{id, label}]}` |
 | `fieldValue` | `<albumId>:<fieldId>` | `FieldValue`: `{albumId, fieldId, value}`, `value` null when applied-empty |
@@ -133,7 +133,7 @@ The server ends a stream in four cases:
 - **`base`** holds the prior value of exactly the fields being changed (TS-21). A field whose saved value differs is a conflict, and nothing in the mutation applies. Fields not named are never compared, so edits to different fields of one record both apply.
 - **The mutations today:**
   - `album.create`, `album.update`, `album.setArtwork`, `album.capture`;
-  - `container.create`, `container.rename`, `container.move`;
+  - `container.create`, `container.rename`, `container.move`, `container.describe`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
   - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
@@ -147,6 +147,7 @@ The server ends a stream in four cases:
   - **It may need input** (TS-26): `match` with candidate albums, or `details` with a prefill. Resubmit as a new mutation with `releaseGroupId` or `details` added.
   - **The server asks metadata sources before saving,** so the request can take seconds. A copy sent while it runs answers `409 in_progress` (below).
   - **It sends the album's link** as a `link` change when it saves one (TON-46).
+- **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
 - **Custom fields** (FR-03.6, FR-03.9, FR-03.11), defined per account (TON-49):
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.
   - **`field.rename`** `{id, name}`, with `base.name`, renames it everywhere.

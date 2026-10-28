@@ -19,6 +19,7 @@ const folder = (name: string, parentId: string | null = null): Container => ({
   kind: "folder",
   parentId,
   name,
+  description: null,
 });
 const list = (name: string, parentId: string | null = null): Container => ({
   ...folder(name, parentId),

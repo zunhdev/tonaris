@@ -27,6 +27,7 @@ const container = (kind: StoredContainer["kind"], name: string): StoredContainer
   kind,
   parentId: null,
   name,
+  description: null,
   ownerId: owner,
   trashed: false,
 });

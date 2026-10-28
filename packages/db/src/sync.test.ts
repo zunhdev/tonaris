@@ -304,8 +304,14 @@ describe("bootstrapSnapshot (TS-24)", () => {
     // In ID order; two UUIDv7s made in the same millisecond can come either way.
     expect(snapshot.containers).toEqual(
       [
-        { id: folderId, kind: "folder" as const, parentId: null, name: "Jazz" },
-        { id: listId, kind: "list" as const, parentId: folderId, name: "Hard bop" },
+        { id: folderId, kind: "folder" as const, parentId: null, name: "Jazz", description: null },
+        {
+          id: listId,
+          kind: "list" as const,
+          parentId: folderId,
+          name: "Hard bop",
+          description: null,
+        },
       ].toSorted((a, b) => a.id.localeCompare(b.id)),
     );
     expect(snapshot.memberships).toEqual([
@@ -398,6 +404,7 @@ const node = (
   id: uuidv7(),
   kind,
   parentId,
+  description: null,
   name,
 });
 

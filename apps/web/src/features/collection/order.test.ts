@@ -117,6 +117,7 @@ const made = (kind: Container["kind"], name: string): Container => ({
   kind,
   parentId: null,
   name,
+  description: null,
 });
 
 const names = (containers: readonly Container[]) => containers.map((each) => each.name);
@@ -246,8 +247,20 @@ describe("manual order (TS-16, DS-44)", () => {
         sortAlbums([first, second], { mode: "manual", dir: "asc" }, new Map([[second.id, "a0"]])),
       ),
     ).toEqual(["Second", "First"]);
-    const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
-    const metal: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Metal" };
+    const later: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Later",
+      description: null,
+    };
+    const metal: Container = {
+      id: uuidv7(),
+      kind: "folder",
+      parentId: null,
+      name: "Metal",
+      description: null,
+    };
     expect(
       sortContainers(
         [later, metal],

@@ -12,7 +12,7 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useId, useMemo, useRef } from "react";
 
 import { uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -185,6 +185,8 @@ function ContainerRow({
     [dragRef],
   );
   const status = useSaveState(container.id);
+  const descriptionId = useId();
+  const excerpt = container.description?.split("\n")[0];
   const name = (
     <>
       <ContainerIcon kind={container.kind} />
@@ -192,7 +194,11 @@ function ContainerRow({
       <SaveStateMarker status={status} />
     </>
   );
-  const link = cn(focusable, "flex min-w-0 items-center gap-2.5 rounded-sm pr-3 text-fg-primary");
+  const link = cn(
+    focusable,
+    "flex min-w-0 shrink-0 items-center gap-2.5 rounded-sm pr-3 text-fg-primary",
+    excerpt && "max-w-[60%]",
+  );
   return (
     <div
       ref={rowRef}
@@ -213,12 +219,13 @@ function ContainerRow({
     >
       {manual && <DragHandle {...drag.handle} />}
       {drag.side && <DropLine side={drag.side} />}
-      <div role="gridcell" className="flex min-w-0">
+      <div role="gridcell" className="flex min-w-0 items-center">
         {container.kind === "folder" ? (
           <Link
             to="/f/$folderId"
             params={{ folderId: container.id }}
             className={link}
+            aria-describedby={excerpt ? descriptionId : undefined}
             {...cellProps(index, 0)}
           >
             {name}
@@ -228,10 +235,17 @@ function ContainerRow({
             to="/l/$listId"
             params={{ listId: container.id }}
             className={link}
+            aria-describedby={excerpt ? descriptionId : undefined}
             {...cellProps(index, 0)}
           >
             {name}
           </Link>
+        )}
+        {/* The description's first line, after the name (DS-41); the link's description for assistive technology. */}
+        {excerpt && (
+          <span id={descriptionId} className="min-w-0 truncate pr-3 text-fg-tertiary">
+            {excerpt}
+          </span>
         )}
       </div>
       {createdOn !== undefined && (

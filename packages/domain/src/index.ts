@@ -91,11 +91,14 @@ export {
   type BatchResult,
 } from "./batches";
 export {
+  containerFieldsSchema,
   containerKinds,
   containerNameProblem,
   containerSchema,
+  descriptionTooLong,
   nameTakenProblem,
   type Container,
+  type ContainerFields,
   type ContainerKind,
   type StoredContainer,
 } from "./containers";
@@ -128,6 +131,7 @@ export {
   maxBatchItems,
   maxContainerDepth,
   maxContainers,
+  maxDescriptionLength,
   maxFieldOptions,
   maxFields,
   maxLinkLength,

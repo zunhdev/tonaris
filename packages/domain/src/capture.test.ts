@@ -99,6 +99,7 @@ const saved = (
 const list = (name: string, values: Partial<StoredContainer> = {}): StoredContainer => ({
   id: uuidv7(),
   kind: "list",
+  description: null,
   parentId: null,
   name,
   ownerId: owner,

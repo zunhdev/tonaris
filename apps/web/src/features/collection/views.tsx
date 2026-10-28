@@ -22,6 +22,7 @@ import { AlbumCards } from "./album-cards";
 import { AlbumDetails } from "./album-details";
 import { AlbumRows } from "./album-rows";
 import { useMode, useStartEditor } from "./collection-ui";
+import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
 import { useDropHandler } from "./drag";
@@ -364,6 +365,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
         viewKey={id}
         kind={container.kind === "folder" ? "containers" : "albums"}
       />
+      <ContainerDescription container={container} />
       {body}
     </>
   );
