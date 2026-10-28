@@ -26,11 +26,12 @@ import {
   problemSchema,
 } from "@tonaris/domain";
 
+import { presentBootstrap, presentChange, type ArtworkSigner } from "../artwork";
 import type { SessionGuard } from "../auth/plugin";
 import { MutationInProgressError, mutationRunner, type CaptureDeps } from "../capture";
 import { ProblemError } from "../problem";
-import { eventStream } from "../sse";
-import type { SyncHub } from "./hub";
+import { eventStream, type StreamSource } from "../sse";
+import type { SyncEvent, SyncHub } from "./hub";
 
 const cursor = z
   .string()
@@ -63,9 +64,32 @@ function keepOpen(
   if (captures) server?.timeout(request, 0);
 }
 
+/** The stream's events with albums' artwork signed, as clients show it (TS-103). */
+function presented(
+  source: StreamSource<SyncEvent>,
+  artwork: ArtworkSigner,
+): StreamSource<SyncEvent> {
+  return {
+    end: () => source.end(),
+    async next() {
+      const result = await source.next();
+      if (result.done || result.value.event !== "change") return result;
+      return {
+        ...result,
+        value: { ...result.value, data: presentChange(artwork, result.value.data) },
+      };
+    },
+  };
+}
+
 export function syncRoutes(
   session: SessionGuard,
-  { db, hub, capture }: { db: Database; hub: SyncHub; capture?: CaptureDeps | undefined },
+  {
+    db,
+    hub,
+    capture,
+    artwork,
+  }: { db: Database; hub: SyncHub; capture?: CaptureDeps | undefined; artwork: ArtworkSigner },
 ) {
   const run = mutationRunner(db, capture);
   return new Elysia()
@@ -173,7 +197,7 @@ export function syncRoutes(
           operationId: "getBootstrap",
         },
       },
-      ({ account }) => bootstrapSnapshot(db, account.id),
+      async ({ account }) => presentBootstrap(artwork, await bootstrapSnapshot(db, account.id)),
     )
     .get(
       "/sync/stream",
@@ -207,7 +231,7 @@ export function syncRoutes(
       },
       async function* ({ request, server, headers, query, account, sessionId }) {
         const after = Number(headers["last-event-id"] ?? query.after ?? 0);
-        yield* eventStream(hub.subscribe(account.id, after, sessionId), {
+        yield* eventStream(presented(hub.subscribe(account.id, after, sessionId), artwork), {
           request,
           server,
           signal: hub.signal,

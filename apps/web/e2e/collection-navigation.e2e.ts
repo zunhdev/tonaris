@@ -47,6 +47,7 @@ const album = (title: string): Album => ({
   originalYear: 1986,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
 });
 
 test("folders and lists are created, renamed and walked by keyboard alone", async ({ page }) => {

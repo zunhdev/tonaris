@@ -3,7 +3,7 @@
 // (TON-20) synced albums; folders and lists joined in TON-26 and list entries in TON-27, and each entity type M2
 // adds joins these unions.
 
-import { albumFieldsSchema, albumSchema } from "./albums";
+import { albumCreateArgsSchema, albumFieldsSchema, albumSchema, artworkUrlSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
 import { streamingServices } from "./links";
@@ -28,7 +28,7 @@ const mutationId = z.uuid({ version: "v7" }).meta({
 export const albumCreateSchema = z.object({
   mutationId,
   name: z.literal("album.create"),
-  args: albumSchema,
+  args: albumCreateArgsSchema,
 });
 
 /**
@@ -40,6 +40,17 @@ export const albumUpdateSchema = z.object({
   name: z.literal("album.update"),
   args: albumFieldsSchema.partial().extend({ id: z.uuid() }),
   base: albumFieldsSchema.partial(),
+});
+
+/**
+ * `album.setArtwork`: sets or clears an album's artwork URL (FR-03.4), if it is still `base.artworkUrl` (TS-21). An
+ * album's artwork has its own mutation, so `album.create` and `album.update` keep their shapes (TS-09).
+ */
+export const albumSetArtworkSchema = z.object({
+  mutationId,
+  name: z.literal("album.setArtwork"),
+  args: z.object({ id: z.uuid(), artworkUrl: artworkUrlSchema }),
+  base: z.object({ artworkUrl: z.string().nullable() }),
 });
 
 /**
@@ -173,6 +184,7 @@ export const mutationSchema = z
   .discriminatedUnion("name", [
     albumCreateSchema,
     albumUpdateSchema,
+    albumSetArtworkSchema,
     albumCaptureSchema,
     containerCreateSchema,
     containerRenameSchema,
@@ -195,6 +207,17 @@ export const mutationResultSchema = z
   .meta({ description: "A mutation's outcome (TS-27)." });
 export type MutationResult = z.infer<typeof mutationResultSchema>;
 
+/**
+ * An album as the server sends it: with `artworkSignature`, the API's signature of its artwork URL, which clients show
+ * through the image proxy (`artworkPath()`, TS-103). The API adds it; the database never stores it.
+ */
+export const syncedAlbumSchema = albumSchema.extend({
+  artworkSignature: z.string().optional().meta({
+    description: "The image proxy's signature of `artworkUrl`, when it has one (TS-103).",
+  }),
+});
+export type SyncedAlbum = z.infer<typeof syncedAlbumSchema>;
+
 export const changeOps = ["insert", "update", "delete"] as const;
 export type ChangeOp = (typeof changeOps)[number];
 
@@ -211,7 +234,7 @@ export const changeSchema = z
       entity: z.literal("album"),
       id: z.uuid(),
       op: z.enum(changeOps),
-      data: albumSchema.nullable(),
+      data: syncedAlbumSchema.nullable(),
       mutationId: z.uuid().nullable(),
     }),
     z.object({
@@ -278,7 +301,7 @@ export type Change = z.infer<typeof changeSchema>;
 export const bootstrapSchema = z
   .object({
     seq: z.int().nonnegative(),
-    albums: z.array(albumSchema),
+    albums: z.array(syncedAlbumSchema),
     containers: z.array(containerSchema),
     memberships: z.array(membershipSchema),
     links: z

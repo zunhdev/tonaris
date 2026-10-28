@@ -64,6 +64,7 @@ const albumColumns = {
   originalYear: albums.originalYear,
   recordingYearStart: albums.recordingYearStart,
   recordingYearEnd: albums.recordingYearEnd,
+  artworkUrl: albums.artworkUrl,
 };
 
 const containerColumns = {
@@ -138,9 +139,7 @@ function collectionStore(tx: Transaction): CollectionStore {
         id,
         ownerId,
         ...values,
-        ...(origin
-          ? { mbReleaseGroupId: origin.releaseGroupId, artworkUrl: origin.artworkUrl }
-          : {}),
+        ...(origin ? { mbReleaseGroupId: origin.releaseGroupId } : {}),
         searchTitleKey: searchKey(values.title),
         searchArtistKey: searchKey(values.artistCredit),
       });

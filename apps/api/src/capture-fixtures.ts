@@ -1,6 +1,7 @@
 // What capture asks, stubbed for the browser tests and the sync client's tests (TS-121, TON-45): links are parsed for
 // real, then answered from the table below instead of MusicBrainz, iTunes Lookup and the store pages, so AC-06 runs
-// end to end without the network. Not part of the deployable service.
+// end to end without the network. The image proxy's artwork comes from a stub host too (TON-48). Not part of the
+// deployable service.
 
 import { failure, serviceNames, type AlbumFacts, type AlbumFields } from "@tonaris/domain";
 import {
@@ -11,6 +12,7 @@ import {
   type ParsedLink,
 } from "@tonaris/providers";
 
+import type { ImageFetch } from "./artwork";
 import type { CaptureDeps } from "./capture";
 
 const ids = {
@@ -173,3 +175,20 @@ export function fixtureCapture(): CaptureDeps {
     },
   };
 }
+
+/** A 1×1 PNG: what the fixture image host answers. */
+const pixel = Uint8Array.from(
+  atob(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  ),
+  (char) => char.codePointAt(0) ?? 0,
+);
+
+/** Artwork the browser tests show: under `https://images.example/`, a PNG, except names starting "missing". */
+export const fixtureImageFetch: ImageFetch = (url) => {
+  const { host, pathname } = new URL(url);
+  if (host !== "images.example" || pathname.startsWith("/missing")) {
+    return Promise.resolve(new Response(null, { status: 404 }));
+  }
+  return Promise.resolve(new Response(pixel, { headers: { "content-type": "image/png" } }));
+};

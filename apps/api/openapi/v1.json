@@ -1027,6 +1027,63 @@
                       },
                       "name": {
                         "type": "string",
+                        "const": "album.setArtwork"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "artworkUrl": {
+                            "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "maxLength": 2048
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "artworkUrl"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "artworkUrl": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "artworkUrl"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
                         "const": "album.capture"
                       },
                       "args": {
@@ -2058,6 +2115,63 @@
                       },
                       "name": {
                         "type": "string",
+                        "const": "album.setArtwork"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "artworkUrl": {
+                            "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "maxLength": 2048
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "artworkUrl"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "artworkUrl": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "artworkUrl"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
                         "const": "album.capture"
                       },
                       "args": {
@@ -3069,6 +3183,63 @@
                             "maximum": 9999
                           }
                         }
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "album.setArtwork"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "artworkUrl": {
+                            "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "maxLength": 2048
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "artworkUrl"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "artworkUrl": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "artworkUrl"
+                        ]
                       }
                     },
                     "required": [
@@ -5126,6 +5297,18 @@
                             "type": "string",
                             "format": "uuid",
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                          },
+                          "artworkUrl": {
+                            "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "maxLength": 2048
+                          },
+                          "artworkSignature": {
+                            "description": "The image proxy's signature of `artworkUrl`, when it has one (TS-103).",
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -5136,10 +5319,10 @@
                           "originalYear",
                           "recordingYearStart",
                           "recordingYearEnd",
-                          "id"
+                          "id",
+                          "artworkUrl"
                         ],
-                        "additionalProperties": false,
-                        "description": "An album record (FR-01.6)."
+                        "additionalProperties": false
                       }
                     },
                     "containers": {
@@ -5701,6 +5884,22 @@
                         "type": "string",
                         "format": "uuid",
                         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                      },
+                      "artworkUrl": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 2048
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103)."
+                      },
+                      "artworkSignature": {
+                        "description": "The image proxy's signature of `artworkUrl`, when it has one (TS-103).",
+                        "type": "string"
                       }
                     },
                     "required": [
@@ -5711,10 +5910,10 @@
                       "originalYear",
                       "recordingYearStart",
                       "recordingYearEnd",
-                      "id"
+                      "id",
+                      "artworkUrl"
                     ],
-                    "additionalProperties": false,
-                    "description": "An album record (FR-01.6)."
+                    "additionalProperties": false
                   },
                   {
                     "type": "null"
@@ -6637,6 +6836,70 @@
                         ]
                       }
                     },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "album.setArtwork"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "artworkUrl": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 2048
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103)."
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "artworkUrl"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "artworkUrl": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "artworkUrl"
+                    ],
                     "additionalProperties": false
                   }
                 },

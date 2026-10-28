@@ -15,6 +15,7 @@ const album = (values: Partial<Album> = {}): Album => ({
   originalYear: 1987,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
   ...values,
 });
 
@@ -24,6 +25,7 @@ const live = (values: Partial<Album> = {}) =>
     originalYear: 1990,
     recordingYearStart: 1988,
     recordingYearEnd: 1988,
+    artworkUrl: null,
     ...values,
   });
 

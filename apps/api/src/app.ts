@@ -8,6 +8,7 @@ import { z } from "zod";
 import type { Database } from "@tonaris/db";
 import type { EmailPort } from "@tonaris/domain";
 
+import { artworkRoutes, artworkSigner, type ArtworkSigner, type ImageFetch } from "./artwork";
 import { admissionRoutes } from "./auth/admission";
 import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
@@ -33,7 +34,12 @@ export const healthSchema = z
 /** The versioned contract (TS-09): additive changes only within /v1. */
 function v1(
   session: SessionGuard,
-  sync: { db: Database; hub: SyncHub; capture?: CaptureDeps | undefined },
+  sync: {
+    db: Database;
+    hub: SyncHub;
+    capture?: CaptureDeps | undefined;
+    artwork: ArtworkSigner;
+  },
 ) {
   return new Elysia({ prefix: "/v1" })
     .use(openApiJson)
@@ -63,6 +69,8 @@ export type AppOptions = ProblemDetailsOptions & {
   limiter?: SignInLimiter;
   /** What captures ask (TS-41); without it, a capture fails as `provider_unavailable`. */
   capture?: CaptureDeps | undefined;
+  /** How the image proxy fetches artwork: `safeFetch` unless a test stands in (TS-103). */
+  imageFetch?: ImageFetch | undefined;
 };
 
 export function createApp({
@@ -73,8 +81,10 @@ export function createApp({
   hub = databaseHub(db),
   limiter = createSignInLimiter(),
   capture,
+  imageFetch,
   ...problemOptions
 }: AppOptions) {
+  const artwork = artworkSigner(config.authSecret);
   const logError =
     problemOptions.logError ??
     ((error: unknown, context: string) => console.error(`Failed: ${context}`, error));
@@ -92,7 +102,9 @@ export function createApp({
       .use(admissionRoutes({ auth, db, config, email, limiter, logError }))
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
       .use(mcpRoutes({ auth, db, config, logError }))
-      .use(v1(sessionGuard(auth), { db, hub, capture }))
+      // Artwork, outside the versioned contract: images the server signed (TS-103).
+      .use(artworkRoutes(artwork, imageFetch ? { fetch: imageFetch } : {}))
+      .use(v1(sessionGuard(auth), { db, hub, capture, artwork }))
   );
 }
 

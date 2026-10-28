@@ -29,6 +29,7 @@ const album = (title: string): Album => ({
   originalYear: 1959,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
 });
 
 /** Waits until the page's sync client is connected, through its own stream or the leader's. */

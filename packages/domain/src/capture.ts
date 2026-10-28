@@ -19,6 +19,7 @@ import {
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
   blankAlbum,
+  enrichableFields,
   planEnrichment,
   type AlbumFacts,
   type EnrichableAlbum,
@@ -107,10 +108,9 @@ export type CaptureSource = { link: CapturedLink } &
 /** An album as capture sees it: its values and identity, its owner, and whether it is in Trash. */
 export type CaptureTarget = EnrichableAlbum & { id: string; ownerId: string; trashed: boolean };
 
-/** Where a new album's values came from, for its provenance (TS-15). */
+/** Where a new album's values came from, for its provenance (TS-15), and its release group. */
 export type AlbumOrigin = {
   releaseGroupId: string | null;
-  artworkUrl: string | null;
   provenance: ProvenanceEntry[];
 };
 
@@ -126,8 +126,8 @@ const applied = (changes: ChangeInput[], result: CaptureResult): CommandResult =
   result,
 });
 
-/** The album as clients hold it. */
-const clientAlbum = (id: string, values: AlbumFields): Album => ({
+/** The album as clients hold it, with its artwork (FR-03.4). */
+const clientAlbum = (id: string, values: AlbumFields, artworkUrl: string | null): Album => ({
   id,
   title: values.title,
   artistCredit: values.artistCredit,
@@ -136,6 +136,7 @@ const clientAlbum = (id: string, values: AlbumFields): Album => ({
   originalYear: values.originalYear,
   recordingYearStart: values.recordingYearStart,
   recordingYearEnd: values.recordingYearEnd,
+  artworkUrl,
 });
 
 /**
@@ -279,9 +280,9 @@ async function entryLimit(
   );
 }
 
-/** Whether the plan fills a value clients hold. */
+/** Whether the plan fills a value clients hold: the artwork too (TON-48). */
 const fillsClientValues = (plan: EnrichmentPlan) =>
-  albumFields.some((field) => plan.values[field] !== undefined);
+  enrichableFields.some((field) => plan.values[field] !== undefined);
 
 async function reuse(
   args: CaptureArgs,
@@ -318,7 +319,11 @@ async function reuse(
         entity: "album",
         id: target.id,
         op: "update",
-        data: clientAlbum(target.id, { ...target, ...plan.values }),
+        data: clientAlbum(
+          target.id,
+          { ...target, ...plan.values },
+          plan.values.artworkUrl ?? target.artworkUrl,
+        ),
       });
     }
   }
@@ -348,15 +353,17 @@ async function create(
 
   let values: AlbumFields;
   let origin: AlbumOrigin;
+  // The Cover Art Archive's artwork, whatever the person entered (TON-48).
+  let artworkUrl: string | null = null;
   if (source.kind === "identified") {
     const plan = planEnrichment(blankAlbum, source.facts, now);
-    const { artworkUrl = null, ...planned } = plan.values;
+    const { artworkUrl: front = null, ...planned } = plan.values;
     const artwork = plan.provenance.filter((entry) => entry.field === "artworkUrl");
+    artworkUrl = front;
     if (source.details) {
       values = source.details;
       origin = {
         releaseGroupId: source.facts.releaseGroupId,
-        artworkUrl,
         provenance: [...detailsProvenance(values, source.facts.values, now), ...artwork],
       };
     } else {
@@ -364,24 +371,19 @@ async function create(
       if (albumProblem(values)) {
         return askForDetails(source.link, { source: "musicbrainz", values: planned });
       }
-      origin = {
-        releaseGroupId: source.facts.releaseGroupId,
-        artworkUrl,
-        provenance: plan.provenance,
-      };
+      origin = { releaseGroupId: source.facts.releaseGroupId, provenance: plan.provenance };
     }
   } else {
     values = source.details;
     origin = {
       releaseGroupId: null,
-      artworkUrl: null,
       provenance: detailsProvenance(values, source.prefill, now),
     };
   }
   const problem = albumProblem(values);
   if (problem) return problem;
 
-  const album = clientAlbum(args.albumId, values);
+  const album = clientAlbum(args.albumId, values, artworkUrl);
   await store.insertAlbum({ ...album, ownerId }, origin);
   await store.insertServiceLink(args.albumId, ownerId, source.link);
   const placed = await place(args.albumId, ownerId, args.listId, true, context);

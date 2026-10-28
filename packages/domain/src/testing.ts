@@ -1,11 +1,11 @@
 // An in-memory `CollectionStore` for the command tests: the same contract the database layer implements on the
 // owner's write transaction (packages/db/src/sync.ts). Import from tests only.
 
-import { albumFields, type Album } from "./albums";
+import type { Album } from "./albums";
 import type { CapturedLink, CaptureTarget } from "./capture";
 import type { CollectionStore, StoredAlbum } from "./commands";
 import type { Container, StoredContainer } from "./containers";
-import type { EnrichableField, ProvenanceEntry } from "./enrichment";
+import { enrichableFields, type EnrichableField, type ProvenanceEntry } from "./enrichment";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
 import type { ViewDefaults, ViewPrefs } from "./views";
@@ -25,7 +25,7 @@ export const positionRowKey = (personId: string, viewKey: string, itemId: string
 
 /** What a person's write records: `user` for each value it gives (TS-15). */
 const userProvenance = (values: Partial<Record<EnrichableField, unknown>>): ProvenanceEntry[] =>
-  albumFields
+  enrichableFields
     .filter((field) => values[field] !== undefined && values[field] !== null)
     .map((field) => ({ field, source: "user", sourceRef: null, retrievedAt: null }));
 
@@ -43,7 +43,8 @@ export function memoryStore({
   defaults = [],
   positions = [],
 }: {
-  albums?: (Album & {
+  /** Albums; one without `artworkUrl` has none. */
+  albums?: (Omit<Album, "artworkUrl"> & {
     ownerId: string;
     trashed?: boolean;
     releaseGroupId?: string | null;
@@ -58,16 +59,13 @@ export function memoryStore({
 } = {}) {
   const albumRows = new Map<string, StoredAlbum>(
     albums.map((row) => {
-      const { releaseGroupId: _, artworkUrl: __, ...album } = row;
-      return [album.id, { trashed: false, ...album }];
+      const { releaseGroupId: _, artworkUrl = null, ...album } = row;
+      return [album.id, { trashed: false, ...album, artworkUrl }];
     }),
   );
-  /** Each album's release group and artwork, which clients' records don't carry. */
+  /** Each album's release group, which clients' records don't carry. */
   const identityRows = new Map(
-    albums.map((album) => [
-      album.id,
-      { releaseGroupId: album.releaseGroupId ?? null, artworkUrl: album.artworkUrl ?? null },
-    ]),
+    albums.map((album) => [album.id, { releaseGroupId: album.releaseGroupId ?? null }]),
   );
   /** Each album's provenance, by field (TS-15). */
   const provenanceRows = new Map<string, Map<EnrichableField, ProvenanceEntry>>();
@@ -81,7 +79,7 @@ export function memoryStore({
   };
   const captureTarget = (id: string): CaptureTarget | undefined => {
     const album = albumRows.get(id);
-    const identity = identityRows.get(id) ?? { releaseGroupId: null, artworkUrl: null };
+    const identity = identityRows.get(id) ?? { releaseGroupId: null };
     return album && { ...album, ...identity };
   };
   const containerRows = new Map(containers.map((container) => [container.id, { ...container }]));
@@ -113,10 +111,7 @@ export function memoryStore({
     findAlbum: (id) => Promise.resolve(albumRows.has(id) ? { ...albumRows.get(id)! } : undefined),
     insertAlbum: (album, origin) => {
       albumRows.set(album.id, { ...album, trashed: false });
-      identityRows.set(album.id, {
-        releaseGroupId: origin?.releaseGroupId ?? null,
-        artworkUrl: origin?.artworkUrl ?? null,
-      });
+      identityRows.set(album.id, { releaseGroupId: origin?.releaseGroupId ?? null });
       recordProvenance(album.id, origin ? origin.provenance : userProvenance(album));
       return Promise.resolve();
     },
@@ -136,12 +131,10 @@ export function memoryStore({
           ),
       ),
     fillAlbum: (id, { values, releaseGroupId, provenance }) => {
-      const { artworkUrl, ...fields } = values;
-      albumRows.set(id, { ...albumRows.get(id)!, ...defined(fields) });
-      const identity = identityRows.get(id) ?? { releaseGroupId: null, artworkUrl: null };
+      albumRows.set(id, { ...albumRows.get(id)!, ...defined(values) });
+      const identity = identityRows.get(id) ?? { releaseGroupId: null };
       identityRows.set(id, {
         releaseGroupId: releaseGroupId === undefined ? identity.releaseGroupId : releaseGroupId,
-        artworkUrl: artworkUrl ?? identity.artworkUrl,
       });
       recordProvenance(id, provenance);
       return Promise.resolve();

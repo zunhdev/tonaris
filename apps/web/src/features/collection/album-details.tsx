@@ -14,7 +14,14 @@ import { Link } from "@tanstack/react-router";
 import { Plus, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
-import { membershipKey, uuidv7Time, type Album, type AlbumFields } from "@tonaris/domain";
+import {
+  artworkUrlRefusal,
+  isArtworkUrl,
+  membershipKey,
+  uuidv7Time,
+  type Album,
+  type AlbumFields,
+} from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
 import { Switch } from "@tonaris/ui/components/switch";
@@ -23,7 +30,7 @@ import { cn } from "@tonaris/ui/lib/utils";
 import { albumChoice, albumEdit, cellText, type AlbumCell } from "./album-edit";
 import { LinksSection } from "./album-links";
 import { cellNames } from "./album-rows";
-import { Artwork } from "./artwork";
+import { Artwork, artworkSrc } from "./artwork";
 import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { ancestorsOf } from "./tree";
@@ -82,7 +89,14 @@ export function AlbumDetails({ album }: { album: Album }) {
   return (
     <div className="flex flex-col gap-6 p-4">
       <div className="flex flex-col gap-3">
-        <Artwork title={album.title} className="w-60 rounded-md" letterClassName="text-display" />
+        <Artwork
+          title={album.title}
+          src={artworkSrc(album)}
+          label={`Cover of ${album.title}`}
+          className="w-60 rounded-md"
+          letterClassName="text-display"
+        />
+        {canEdit && <ArtworkUrlEditor album={album} />}
         {canEdit ? (
           <>
             {/* The sections' headings stay under the album's, as fields replace it. */}
@@ -309,6 +323,106 @@ function FieldEditor({
           "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
           refusal !== undefined && "border-status-danger",
           className,
+        )}
+      />
+      {refusal !== undefined && (
+        <p id={`${id}-error`} className="text-small text-status-danger">
+          {refusal}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The artwork's URL, in Editing mode (FR-03.4): Enter or leaving the field saves it as one `album.update`, empty clears
+ * it, and Escape discards. A URL that isn't an https link stays with its reason. The artwork shows through the image
+ * proxy once the server has signed it (TS-103).
+ */
+function ArtworkUrlEditor({ album }: { album: Album }) {
+  const client = useSyncClient();
+  const { registerEditor } = useCollectionUi();
+  const [draft, setDraftState] = useState<string | undefined>(undefined);
+  const [refusal, setRefusal] = useState<string>();
+  const current = useRef<string | undefined>(undefined);
+  const latest = useRef(album);
+  const input = useRef<HTMLInputElement>(null);
+  const id = useId();
+  const setDraft = (next: string | undefined) => {
+    current.current = next;
+    setDraftState(next);
+  };
+  useEffect(() => {
+    latest.current = album;
+  });
+  const commit = useRef<() => boolean>(() => true);
+  useEffect(() => {
+    commit.current = () => {
+      const typed = current.current;
+      if (typed === undefined) return true;
+      const value = typed.trim() || null;
+      if (value !== null && !isArtworkUrl(value)) {
+        setRefusal(artworkUrlRefusal);
+        return false;
+      }
+      if (value !== latest.current.artworkUrl && client) {
+        sent(
+          client.albums.update(latest.current.id, (record) => {
+            record.artworkUrl = value;
+          }),
+        );
+      }
+      setRefusal(undefined);
+      setDraft(undefined);
+      return true;
+    };
+  });
+  const open = draft !== undefined;
+  useEffect(() => {
+    if (!open) return undefined;
+    return registerEditor(() => {
+      const closed = commit.current();
+      if (!closed) input.current?.focus();
+      return closed;
+    });
+  }, [open, registerEditor]);
+
+  return (
+    <div className="flex w-60 flex-col gap-1">
+      <label htmlFor={id} className="text-small text-fg-secondary">
+        Artwork URL
+      </label>
+      <input
+        ref={input}
+        id={id}
+        type="url"
+        placeholder="https://…"
+        spellCheck={false}
+        aria-invalid={refusal !== undefined}
+        aria-describedby={refusal === undefined ? undefined : `${id}-error`}
+        value={draft ?? album.artworkUrl ?? ""}
+        onFocus={() => {
+          if (current.current === undefined) setDraft(album.artworkUrl ?? "");
+        }}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          setRefusal(undefined);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commit.current();
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            setDraft(undefined);
+            setRefusal(undefined);
+          }
+        }}
+        onBlur={() => commit.current()}
+        className={cn(
+          "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-small text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+          refusal !== undefined && "border-status-danger",
         )}
       />
       {refusal !== undefined && (

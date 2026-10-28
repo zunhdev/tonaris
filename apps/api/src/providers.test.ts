@@ -103,6 +103,7 @@ async function savedAlbum(releaseGroupId: string | null = bleachId) {
     originalYear: 1989,
     recordingYearStart: null,
     recordingYearEnd: null,
+    artworkUrl: null,
   };
   await executeMutation(t.db, principal, {
     mutationId: uuidv7(),
@@ -131,7 +132,12 @@ test("enrich fills a saved album's gaps and publishes the change to the owner's 
         expect.objectContaining({
           entity: "album",
           id: album.id,
-          data: { ...album, releaseType: "album" },
+          // The Cover Art Archive's front, which clients show through the image proxy (TON-48).
+          data: {
+            ...album,
+            releaseType: "album",
+            artworkUrl: expect.stringContaining("coverartarchive.org/release-group/"),
+          },
           mutationId: null,
         }),
       ],

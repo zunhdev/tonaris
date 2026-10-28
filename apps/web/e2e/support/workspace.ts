@@ -165,6 +165,7 @@ export const album = (title: string, values: Partial<Album> = {}): Album => ({
   originalYear: 1986,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
   ...values,
 });
 

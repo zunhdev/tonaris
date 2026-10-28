@@ -129,8 +129,16 @@ function remake(
 ): Resubmitted {
   if (mutation.name === "album.create") {
     if (albums.has(mutation.args.id)) return "unchanged";
-    planned.albumInserts.push(mutation.args);
+    planned.albumInserts.push({ ...mutation.args, artworkUrl: null });
     return planned.needs("album.insert");
+  }
+  if (mutation.name === "album.setArtwork") {
+    const { id, artworkUrl } = mutation.args;
+    const current = albums.get(id);
+    if (!current) return "gone";
+    if (current.artworkUrl === artworkUrl) return "unchanged";
+    planned.albumUpdates.set(id, { ...planned.albumUpdates.get(id), artworkUrl });
+    return planned.needs("album.update");
   }
   if (mutation.name === "album.update") {
     const { id, ...attempted } = mutation.args;

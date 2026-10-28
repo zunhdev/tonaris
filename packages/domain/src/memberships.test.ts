@@ -38,6 +38,7 @@ const album = (
   originalYear: 1959,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
   ownerId: owner,
   ...values,
 });

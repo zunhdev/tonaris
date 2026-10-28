@@ -28,6 +28,7 @@ const kindOfBlue = (values: Partial<AlbumFields> = {}): Album => ({
   originalYear: 1959,
   recordingYearStart: 1959,
   recordingYearEnd: 1959,
+  artworkUrl: null,
   ...values,
 });
 

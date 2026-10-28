@@ -1,6 +1,5 @@
-// The manual entry form (DS-47, FR-02.4): "New album", every album field in order, with the ones whose features come
-// later shown as such (artwork with link capture, decided 23 October 2026; custom fields with M4), a link per service
-// (FR-06.3), and a destination list. Title, artist and the applicable year are required (FR-02.6); fields are checked
+// The manual entry form (DS-47, FR-02.4): "New album", every album field in order, with custom fields shown as coming
+// later (M4), the artwork's URL (FR-03.4), a link per service (FR-06.3), and a destination list. Title, artist and the applicable year are required (FR-02.6); fields are checked
 // when left and on submit, each error shown at its field and, on submit, summarized at the top. Nothing incomplete is
 // saved and nothing invented (AC-08). ⌘Enter saves; Esc or closing asks before discarding what was typed. Saving
 // creates the album, then its links, then its entry in the list, through the collections, so save states apply; Edit
@@ -59,6 +58,7 @@ const formFields: readonly FormField[] = [
   "artistCredit",
   "originalYear",
   "recording",
+  "artworkUrl",
   ...streamingServices,
 ];
 
@@ -67,6 +67,7 @@ const fieldNames: Record<FormField, string> = {
   artistCredit: "Artist",
   originalYear: "Original release year",
   recording: "Recording year or range",
+  artworkUrl: "Artwork URL",
   spotify: "Spotify link",
   "apple-music": "Apple Music link",
   qobuz: "Qobuz link",
@@ -129,7 +130,8 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
     }
     if (draft.capture?.mode === "details") {
       // Completing a capture: it keeps the link, and the sources of the values left as offered (TS-15).
-      const { id: _, ...details } = album;
+      // Capture's details are the album's fields; its artwork comes from the Cover Art Archive (TON-48).
+      const { id: _, artworkUrl: __, ...details } = album;
       const capture = client.states.get(draft.capture.mutationId);
       if (capture) client.captures.again(capture, { details, listId: form.listId });
       else {
@@ -281,7 +283,18 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
               />
             )}
 
-            <Placeholder label="Artwork">Artwork arrives with link capture.</Placeholder>
+            {draft.capture?.mode !== "details" && (
+              <TextField
+                name="artworkUrl"
+                label="Artwork URL"
+                type="url"
+                placeholder="https://…"
+                value={form.artworkUrl}
+                problem={shownProblems.artworkUrl}
+                onChange={(artworkUrl) => set({ artworkUrl })}
+                onBlur={() => touch("artworkUrl")}
+              />
+            )}
             {draft.capture?.mode === "details" ? (
               <p className="text-small text-fg-secondary">
                 The link is kept:{" "}

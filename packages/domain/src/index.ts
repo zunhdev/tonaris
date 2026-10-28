@@ -31,7 +31,12 @@ export {
   albumFields,
   albumFieldsSchema,
   albumProblem,
+  artworkPath,
+  artworkUrlRefusal,
+  isArtworkUrl,
   albumSchema,
+  albumCreateArgsSchema,
+  type AlbumCreateArgs,
   releaseTypes,
   type Album,
   type AlbumField,
@@ -191,6 +196,8 @@ export {
 } from "./principals";
 export {
   albumCaptureSchema,
+  syncedAlbumSchema,
+  type SyncedAlbum,
   bootstrapSchema,
   changeOps,
   changeSchema,

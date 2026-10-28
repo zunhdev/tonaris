@@ -16,7 +16,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Album } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { Artwork } from "./artwork";
+import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
 import { useAlbumOpening } from "./inspector-state";
@@ -229,7 +229,12 @@ function AlbumCard({
       {...cell}
     >
       <span className="relative block">
-        <Artwork title={album.title} className="w-full rounded-md" letterClassName="text-display" />
+        <Artwork
+          title={album.title}
+          src={artworkSrc(album)}
+          className="w-full rounded-md"
+          letterClassName="text-display"
+        />
         {status && (
           <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-raised shadow-floating">
             <SaveStateMarker status={status} />

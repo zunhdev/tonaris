@@ -2,7 +2,16 @@
 // (TS-21), against a store the database layer implements inside the owner's write transaction (TS-02).
 // A command decides; it never commits. Rejections change nothing (X-05).
 
-import { albumFields, albumProblem, type Album, type AlbumField, type AlbumFields } from "./albums";
+import {
+  albumFields,
+  albumProblem,
+  artworkUrlRefusal,
+  isArtworkUrl,
+  type Album,
+  type AlbumCreateArgs,
+  type AlbumField,
+  type AlbumFields,
+} from "./albums";
 import {
   captureAlbum,
   type AlbumOrigin,
@@ -40,8 +49,11 @@ export type CollectionStore = {
    * album (TS-15); without it, the values are the person's.
    */
   insertAlbum(album: Album & { ownerId: string }, origin?: AlbumOrigin): Promise<void>;
-  /** Sets the fields in `values`; fields left undefined keep their value. */
-  updateAlbum(id: string, values: Partial<AlbumFields>): Promise<void>;
+  /** Sets the fields in `values`, the artwork included; fields left undefined keep their value. */
+  updateAlbum(
+    id: string,
+    values: Partial<AlbumFields & { artworkUrl: string | null }>,
+  ): Promise<void>;
   /** The album with its identity and artwork, as capture sees it, whoever owns it, in Trash or not. */
   findCaptureTarget(id: string): Promise<CaptureTarget | undefined>;
   /** The owner's albums saved as `releaseGroupId`, Trash included: active ones first, then by ID (TS-44). */
@@ -142,6 +154,9 @@ export type CommandContext = {
 export function runCommand(mutation: Mutation, context: CommandContext): Promise<CommandResult> {
   if (mutation.name === "album.create") return createAlbum(mutation.args, context);
   if (mutation.name === "album.update") return updateAlbum(mutation.args, mutation.base, context);
+  if (mutation.name === "album.setArtwork") {
+    return setArtwork(mutation.args, mutation.base, context);
+  }
   if (mutation.name === "album.capture") {
     return captureAlbum(mutation.args, context.capture, context);
   }
@@ -175,7 +190,7 @@ function albumOf(stored: StoredAlbum): Album {
  * already saved, and different ones are a conflict.
  */
 async function createAlbum(
-  args: Album,
+  args: AlbumCreateArgs,
   { principal, store }: CommandContext,
 ): Promise<CommandResult> {
   const ownerId = actingUserId(principal);
@@ -202,14 +217,52 @@ async function createAlbum(
     return conflicts.length > 0 ? { status: "conflict", conflicts } : applied();
   }
 
-  await store.insertAlbum({ ...args, ownerId });
+  // Its artwork, if any, follows with `album.setArtwork` (TON-48).
+  const album: Album = { ...args, artworkUrl: null };
+  await store.insertAlbum({ ...album, ownerId });
   // A new album is in no list yet, so it enters Unsorted, at the top (DS-51). Until Unsorted is arranged, its
   // fallback order, newest first, already puts it there.
   const arranged = (await store.firstKey(ownerId, "unsorted")) !== undefined;
   return applied(
-    { entity: "album", id: args.id, op: "insert", data: args },
+    { entity: "album", id: args.id, op: "insert", data: album },
     ...(arranged ? [await placeAtTop(store, ownerId, "unsorted", args.id)] : []),
   );
+}
+
+/**
+ * `album.setArtwork` (FR-03.4): sets or clears the album's artwork URL if it is still `base.artworkUrl` (TS-21). It
+ * must be an https link; the image proxy checks the rest each time it fetches (TS-103). The same URL changes nothing.
+ */
+async function setArtwork(
+  { id, artworkUrl }: { id: string; artworkUrl: string | null },
+  base: { artworkUrl: string | null },
+  { principal, store }: CommandContext,
+): Promise<CommandResult> {
+  const album = await store.findAlbum(id);
+  if (!album) return failure("not_found", "This album doesn't exist.");
+  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
+  if (!decision.allowed) return failure(decision.code, "You can't change this album.");
+  if (album.artworkUrl !== base.artworkUrl) {
+    return {
+      status: "conflict",
+      conflicts: [
+        {
+          field: "artworkUrl",
+          current: album.artworkUrl,
+          attempted: artworkUrl,
+          base: base.artworkUrl,
+        },
+      ],
+    };
+  }
+  if (artworkUrl !== null && !isArtworkUrl(artworkUrl)) {
+    return failure("validation_failed", artworkUrlRefusal, [
+      { path: "args.artworkUrl", message: "Not an https link" },
+    ]);
+  }
+  if (artworkUrl === album.artworkUrl) return applied();
+  await store.updateAlbum(id, { artworkUrl });
+  return applied({ entity: "album", id, op: "update", data: albumOf({ ...album, artworkUrl }) });
 }
 
 /**
