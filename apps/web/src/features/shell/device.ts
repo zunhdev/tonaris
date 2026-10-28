@@ -1,6 +1,7 @@
-// What the workspace remembers on this device, not synced (DS-27, DS-30, DS-32, DS-43, DS-45): which folders are
-// expanded, the sidebar's width and whether it is hidden, the last collection view visited, Viewing or Editing mode,
-// and, for the tab's session, which groups are collapsed. Kept in localStorage and sessionStorage, which can be missing or refuse writes (private
+// What the workspace remembers on this device, not synced (DS-27, DS-30, DS-32, DS-43, DS-45, DS-75): which folders
+// are expanded, the sidebar's width and whether it is hidden, the last collection view visited, Viewing or Editing
+// mode, what was opened lately and which palette commands are run most, and, for the tab's session, which groups
+// are collapsed. Kept in localStorage and sessionStorage, which can be missing or refuse writes (private
 // modes, blocked storage): then nothing is remembered, and nothing fails.
 
 const storageOf = (session: boolean): Storage | undefined => {
@@ -119,5 +120,71 @@ export const editMode = {
   },
   write(accountId: string, mode: Mode): void {
     write(`tonaris:mode:${accountId}`, mode);
+  },
+};
+
+/** A folder, list or album the person opened (DS-75). */
+export type RecentItem = { kind: "folder" | "list" | "album"; id: string };
+
+const isRecentKind = (kind: unknown): kind is RecentItem["kind"] =>
+  kind === "folder" || kind === "list" || kind === "album";
+const uuidPattern = new RegExp(`^${uuid}$`, "i");
+
+/** How many opened items the device keeps: more than the palette shows, so deleted ones can drop out. */
+export const recentLimit = 20;
+
+/** `items` with `item` first, once, and no more than `recentLimit`. */
+export function withRecent(items: readonly RecentItem[], item: RecentItem): RecentItem[] {
+  return [item, ...items.filter((each) => each.id !== item.id)].slice(0, recentLimit);
+}
+
+const routeKinds: Record<string, RecentItem["kind"]> = { f: "folder", l: "list", a: "album" };
+
+/** What visiting `pathname`, with `album` in the inspector, opened, in the order it was opened. */
+export function openedItems(pathname: string, album: string | undefined): RecentItem[] {
+  const [, prefix, id] = /^\/([fla])\/([^/]+)$/.exec(pathname) ?? [];
+  const opened: RecentItem[] = [];
+  const kind = prefix === undefined ? undefined : routeKinds[prefix];
+  if (kind && id && uuidPattern.test(id)) opened.push({ kind, id });
+  if (album !== undefined && uuidPattern.test(album)) opened.push({ kind: "album", id: album });
+  return opened;
+}
+
+/** The folders, lists and albums the account opened on this device, newest first (DS-75). */
+export const recentItems = {
+  read(accountId: string): RecentItem[] {
+    const value = read(`tonaris:recent:${accountId}`);
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((each: unknown) =>
+      typeof each === "object" &&
+      each !== null &&
+      "kind" in each &&
+      isRecentKind(each.kind) &&
+      "id" in each &&
+      typeof each.id === "string"
+        ? [{ kind: each.kind, id: each.id }]
+        : [],
+    );
+  },
+  record(accountId: string, opened: readonly RecentItem[]): void {
+    if (opened.length === 0) return;
+    write(`tonaris:recent:${accountId}`, opened.reduce(withRecent, recentItems.read(accountId)));
+  },
+};
+
+/** How often the account ran each command from the palette on this device, for its frequent commands (DS-75). */
+export const commandUses = {
+  read(accountId: string): Record<string, number> {
+    const value = read(`tonaris:command-uses:${accountId}`);
+    const record = typeof value === "object" && value !== null ? value : {};
+    return Object.fromEntries(
+      Object.entries(record).filter(
+        (entry): entry is [string, number] => typeof entry[1] === "number",
+      ),
+    );
+  },
+  add(accountId: string, id: string): void {
+    const uses = commandUses.read(accountId);
+    write(`tonaris:command-uses:${accountId}`, { ...uses, [id]: (uses[id] ?? 0) + 1 });
   },
 };

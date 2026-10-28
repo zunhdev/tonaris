@@ -65,9 +65,8 @@ test("results are grouped, located and highlighted; Trash and descriptions aren'
   await page.getByRole("textbox", { name: "Filter by name" }).focus();
   await page.keyboard.press("ControlOrMeta+k");
   await expect(field(page)).toBeFocused();
-  await expect(palette(page)).toContainText(
-    "Search folder and list names, album titles and artists.",
-  );
+  // Empty, it offers commands (TON-63).
+  await expect(group(page, "Frequent commands").getByRole("option").first()).toBeVisible();
 
   // Lists by how the name matches, each with where it is.
   await field(page).fill("doom");

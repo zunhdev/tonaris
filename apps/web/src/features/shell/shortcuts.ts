@@ -129,55 +129,124 @@ export function createShortcutMatcher({ sequenceMs = 1_500 } = {}): ShortcutMatc
   };
 }
 
-/** The shortcuts that work now, for the reference (DS-78). Grouped as the reference shows them. */
-export const shortcutReference = [
+/** What the palette runs (DS-75): every action shortcut, and F2 and R, which act where they are pressed. */
+export type CommandId = Exclude<ShortcutAction, "search"> | "rename" | "restore";
+
+type Section = "Moving around" | "Views" | "Albums" | "Folders and lists" | "Trash" | "Help";
+
+export type Command = {
+  id: CommandId;
+  /** Its name in the reference, and in the palette unless it has a label of its own there. */
+  title: string;
+  keys: readonly string[];
+  section: Section;
+};
+
+/**
+ * Every action shortcut, as a palette command and a reference entry (DS-75, DS-78): one list, so the two can't
+ * drift. Pure navigation keys are the reference's alone (decided with the creator, 29 October 2026).
+ */
+export const commands: readonly Command[] = [
+  { id: "go-root", title: "Go to Collection", keys: ["G", "H"], section: "Moving around" },
+  { id: "go-unsorted", title: "Go to Unsorted", keys: ["G", "U"], section: "Moving around" },
+  { id: "go-trash", title: "Go to Trash", keys: ["G", "T"], section: "Moving around" },
+  { id: "go-settings", title: "Go to Settings", keys: ["G", "S"], section: "Moving around" },
   {
-    title: "Moving around",
-    keys: [
-      { keys: ["↑", "↓"], action: "Move in the sidebar or a view" },
-      { keys: ["J", "K"], action: "Next or previous row in a view" },
-      { keys: ["←", "→"], action: "Collapse or expand a folder; move across a row" },
-      { keys: ["⌘", "Home"], action: "First item in a view" },
-      { keys: ["⌘", "End"], action: "Last item in a view" },
-      { keys: ["Enter"], action: "Open; open an album in the inspector" },
-      { keys: ["Esc"], action: "Close the inspector" },
-      { keys: ["G", "H"], action: "Go to Collection" },
-      { keys: ["G", "U"], action: "Go to Unsorted" },
-      { keys: ["G", "T"], action: "Go to Trash" },
-      { keys: ["G", "S"], action: "Go to Settings" },
-      { keys: ["⌘", "K"], action: "Search" },
-      { keys: ["["], action: "Hide or show the sidebar" },
-    ],
+    id: "toggle-sidebar",
+    title: "Hide or show the sidebar",
+    keys: ["["],
+    section: "Moving around",
   },
   {
-    title: "Views",
-    keys: [
-      { keys: ["E"], action: "Switch between viewing and editing" },
-      { keys: ["V"], action: "View options" },
-      { keys: ["⌥", "↑"], action: "Move up, in manual order" },
-      { keys: ["⌥", "↓"], action: "Move down, in manual order" },
-      { keys: ["⌥", "⇧", "↑"], action: "Move to the top" },
-      { keys: ["⌥", "⇧", "↓"], action: "Move to the bottom" },
-    ],
+    id: "toggle-mode",
+    title: "Switch between viewing and editing",
+    keys: ["E"],
+    section: "Views",
   },
+  { id: "view-options", title: "View options", keys: ["V"], section: "Views" },
+  { id: "capture", title: "Add albums from links", keys: ["C"], section: "Albums" },
+  { id: "add-to-list", title: "Add to list…", keys: ["L"], section: "Albums" },
+  { id: "open-in", title: "Open in…", keys: ["O"], section: "Albums" },
   {
-    title: "Albums",
-    keys: [
-      { keys: ["C"], action: "Add albums from links" },
-      { keys: ["L"], action: "Add to list…" },
-      { keys: ["O"], action: "Open in…" },
-    ],
+    id: "delete-album",
+    title: "Delete an album from the collection",
+    keys: ["⌘", "⌫"],
+    section: "Albums",
   },
-  {
-    title: "Folders and lists",
+  { id: "new-list", title: "New list", keys: ["N"], section: "Folders and lists" },
+  { id: "new-folder", title: "New folder", keys: ["⇧", "N"], section: "Folders and lists" },
+  { id: "rename", title: "Rename", keys: ["F2"], section: "Folders and lists" },
+  { id: "move", title: "Move to…", keys: ["M"], section: "Folders and lists" },
+  { id: "delete", title: "Delete a folder or list", keys: ["⌫"], section: "Folders and lists" },
+  { id: "restore", title: "Restore", keys: ["R"], section: "Trash" },
+  { id: "shortcuts", title: "Keyboard shortcuts", keys: ["?"], section: "Help" },
+];
+
+export const commandsById: ReadonlyMap<CommandId, Command> = new Map(
+  commands.map((command) => [command.id, command]),
+);
+
+/** The palette's frequent commands before there is any history (decided with the creator, 29 October 2026). */
+export const starterCommands: readonly CommandId[] = [
+  "capture",
+  "new-list",
+  "go-unsorted",
+  "toggle-mode",
+  "shortcuts",
+];
+
+/** The `count` commands run most from the palette, ties in list order, then the starter set to fill (DS-75). */
+export function frequentCommands(
+  uses: Readonly<Record<string, number>>,
+  count = starterCommands.length,
+): CommandId[] {
+  const used = commands
+    .filter(({ id }) => (uses[id] ?? 0) > 0)
+    .toSorted((a, b) => (uses[b.id] ?? 0) - (uses[a.id] ?? 0))
+    .map(({ id }) => id);
+  return [...new Set([...used, ...starterCommands])].slice(0, count);
+}
+
+type ReferenceEntry = { keys: readonly string[]; action: string };
+
+/** Keys that move or confirm rather than act: the reference lists them, the palette doesn't. */
+const navigation: Partial<Record<Section, readonly ReferenceEntry[]>> = {
+  "Moving around": [
+    { keys: ["⌘", "K"], action: "Search" },
+    { keys: ["↑", "↓"], action: "Move in the sidebar or a view" },
+    { keys: ["J", "K"], action: "Next or previous row in a view" },
+    { keys: ["←", "→"], action: "Collapse or expand a folder; move across a row" },
+    { keys: ["⌘", "Home"], action: "First item in a view" },
+    { keys: ["⌘", "End"], action: "Last item in a view" },
+    { keys: ["Enter"], action: "Open; open an album in the inspector" },
+    { keys: ["⌘", "Enter"], action: "Submit a form; in search, open an album on its own" },
+    { keys: ["Esc"], action: "Close the inspector" },
+  ],
+  Views: [
+    { keys: ["⌥", "↑"], action: "Move up, in manual order" },
+    { keys: ["⌥", "↓"], action: "Move down, in manual order" },
+    { keys: ["⌥", "⇧", "↑"], action: "Move to the top" },
+    { keys: ["⌥", "⇧", "↓"], action: "Move to the bottom" },
+  ],
+};
+
+const sections: readonly Section[] = [
+  "Moving around",
+  "Views",
+  "Albums",
+  "Folders and lists",
+  "Trash",
+  "Help",
+];
+
+/** Every shortcut, for the reference (DS-78): each section's navigation keys, then its commands. */
+export const shortcutReference: readonly { title: Section; keys: readonly ReferenceEntry[] }[] =
+  sections.map((title) => ({
+    title,
     keys: [
-      { keys: ["N"], action: "New list" },
-      { keys: ["⇧", "N"], action: "New folder" },
-      { keys: ["F2"], action: "Rename" },
-      { keys: ["M"], action: "Move to…" },
-      { keys: ["⌫"], action: "Delete a folder or list" },
-      { keys: ["⌘", "⌫"], action: "Delete an album from the collection" },
+      ...(navigation[title] ?? []),
+      ...commands
+        .filter((command) => command.section === title)
+        .map(({ keys, title: action }) => ({ keys, action })),
     ],
-  },
-  { title: "Help", keys: [{ keys: ["?"], action: "Keyboard shortcuts" }] },
-] as const;
+  }));
