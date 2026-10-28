@@ -776,6 +776,154 @@
         }
       }
     },
+    "/v1/fields/{fieldId}/options/{optionId}/removal": {
+      "get": {
+        "summary": "Get what removing an option affects",
+        "description": "The albums choosing the option, active and in Trash, and the scope hash that confirms removing it from exactly them. `field.removeOption` needs that hash when any album chooses the option, and refuses it if the albums changed meanwhile (FR-03.17, TS-14).",
+        "tags": [
+          "fields"
+        ],
+        "operationId": "getOptionRemoval",
+        "parameters": [
+          {
+            "name": "fieldId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "optionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What removing an option affects (FR-03.17, TS-14).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "option": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "label": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "albums": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Active albums choosing the option."
+                    },
+                    "inTrash": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Albums in Trash choosing the option."
+                    },
+                    "scopeHash": {
+                      "type": "string",
+                      "description": "Confirms exactly this scope: pass it to `field.removeOption`. The removal is refused if the albums choosing the option changed meanwhile."
+                    }
+                  },
+                  "required": [
+                    "field",
+                    "option",
+                    "albums",
+                    "inTrash",
+                    "scopeHash"
+                  ],
+                  "additionalProperties": false,
+                  "description": "What removing an option affects (FR-03.17, TS-14)."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/mutations": {
       "post": {
         "summary": "Run a mutation",
@@ -1478,6 +1626,212 @@
                         "required": [
                           "albumId",
                           "fieldId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.changeType"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "number",
+                              "date",
+                              "yes_no",
+                              "single_choice",
+                              "multiple_choice"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "number",
+                              "date",
+                              "yes_no",
+                              "single_choice",
+                              "multiple_choice"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.addOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "id",
+                          "label"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.renameOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "optionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "optionId",
+                          "label"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "label"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.removeOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "optionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "scopeHash": {
+                            "description": "The hash of the removal's scope, as `GET /v1/fields/{fieldId}/options/{optionId}/removal` gave it: required when any album chooses the option (FR-03.17, TS-14).",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "optionId"
                         ]
                       }
                     },
@@ -2880,6 +3234,212 @@
                       },
                       "name": {
                         "type": "string",
+                        "const": "field.changeType"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "number",
+                              "date",
+                              "yes_no",
+                              "single_choice",
+                              "multiple_choice"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "number",
+                              "date",
+                              "yes_no",
+                              "single_choice",
+                              "multiple_choice"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.addOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "id",
+                          "label"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.renameOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "optionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "optionId",
+                          "label"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "label"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.removeOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "optionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "scopeHash": {
+                            "description": "The hash of the removal's scope, as `GET /v1/fields/{fieldId}/options/{optionId}/removal` gave it: required when any album chooses the option (FR-03.17, TS-14).",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "optionId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
                         "const": "container.create"
                       },
                       "args": {
@@ -4242,6 +4802,212 @@
                         "required": [
                           "albumId",
                           "fieldId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.changeType"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "number",
+                              "date",
+                              "yes_no",
+                              "single_choice",
+                              "multiple_choice"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "number",
+                              "date",
+                              "yes_no",
+                              "single_choice",
+                              "multiple_choice"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.addOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "id",
+                          "label"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.renameOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "optionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "optionId",
+                          "label"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "label"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "field.removeOption"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "optionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "scopeHash": {
+                            "description": "The hash of the removal's scope, as `GET /v1/fields/{fieldId}/options/{optionId}/removal` gave it: required when any album chooses the option (FR-03.17, TS-14).",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "optionId"
                         ]
                       }
                     },
@@ -8551,6 +9317,222 @@
                     "required": [
                       "albumId",
                       "fieldId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "field.changeType"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "text",
+                          "number",
+                          "date",
+                          "yes_no",
+                          "single_choice",
+                          "multiple_choice"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "text",
+                          "number",
+                          "date",
+                          "yes_no",
+                          "single_choice",
+                          "multiple_choice"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "field.addOption"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "fieldId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                      },
+                      "label": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "fieldId",
+                      "id",
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "field.renameOption"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "fieldId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "optionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "label": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "fieldId",
+                      "optionId",
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "field.removeOption"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "fieldId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "optionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "scopeHash": {
+                        "description": "The hash of the removal's scope, as `GET /v1/fields/{fieldId}/options/{optionId}/removal` gave it: required when any album chooses the option (FR-03.17, TS-14).",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "fieldId",
+                      "optionId"
                     ],
                     "additionalProperties": false
                   }

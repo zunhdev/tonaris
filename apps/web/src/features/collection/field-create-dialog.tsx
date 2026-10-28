@@ -32,16 +32,7 @@ import {
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionData } from "./data";
-
-/** Each type, as the type select names it. */
-export const fieldTypeNames: Record<FieldType, string> = {
-  text: "Text",
-  number: "Number",
-  date: "Date",
-  yes_no: "Yes/no",
-  single_choice: "Single choice",
-  multiple_choice: "Multiple choice",
-};
+import { fieldTypeNames } from "./field-types";
 
 const control =
   "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid";

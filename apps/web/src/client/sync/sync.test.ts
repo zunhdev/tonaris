@@ -10,6 +10,7 @@ import {
   batchSchema,
   membershipKey,
   mutationSchema,
+  optionRemovalSchema,
   serviceLinkKey,
   uuidv7,
   type Album,
@@ -28,7 +29,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(38);
+  server = await startApiServer(39);
 }, 30_000);
 
 afterAll(async () => {
@@ -1220,5 +1221,63 @@ describe("custom field values (FR-03.7, FR-03.8, FR-09.1)", () => {
     await until(() => phone.fieldValues.get(key)?.value === null, 3_000, "applied-empty");
     await web.fieldValues.delete(key).isPersisted.promise;
     await until(() => !phone.fieldValues.has(key), 3_000, "the removal");
+  });
+});
+
+describe("custom field options (FR-03.15 to FR-03.17, TS-14)", () => {
+  test("options renamed, added and removed in one session follow in another, a chosen one once confirmed", async () => {
+    const web = await openClient(38, 0);
+    const phone = await openClient(38, 1);
+    await Promise.all([
+      web.fields.preload(),
+      web.fieldValues.preload(),
+      phone.fields.preload(),
+      phone.fieldValues.preload(),
+    ]);
+    const { id: albumId } = await saved(web);
+    const [fieldId, calm, loud, odd] = [uuidv7(), uuidv7(), uuidv7(), uuidv7()];
+    await web.fields.insert({
+      id: fieldId,
+      name: "Mood",
+      type: "single_choice",
+      options: [
+        { id: calm, label: "Calm" },
+        { id: loud, label: "Loud" },
+      ],
+    }).isPersisted.promise;
+    await web.fieldValues.insert({ albumId, fieldId, value: calm }).isPersisted.promise;
+
+    await web.fields.update(fieldId, (draft) => {
+      draft.options = [
+        { id: calm, label: "Quiet" },
+        { id: odd, label: "Odd" },
+      ];
+    }).isPersisted.promise;
+    const labels = () =>
+      phone.fields
+        .get(fieldId)
+        ?.options.map((option) => option.label)
+        .join();
+    await until(() => labels() === "Quiet,Odd", 3_000, "the options");
+
+    // "Quiet" is chosen: its removal needs the scope's hash.
+    const session = sessionFetch(server, server.accounts[38]?.sessions[0] ?? "");
+    const response = await session.fetch(
+      `${server.url}/v1/fields/${fieldId}/options/${calm}/removal`,
+    );
+    const { scopeHash } = optionRemovalSchema.parse(await response.json());
+    await web.fields.update(
+      fieldId,
+      { metadata: { confirmed: { [calm]: scopeHash } } },
+      (draft) => {
+        draft.options = [{ id: odd, label: "Odd" }];
+      },
+    ).isPersisted.promise;
+    await until(() => labels() === "Odd", 3_000, "the removal");
+    await until(
+      () => phone.fieldValues.get(`${albumId}:${fieldId}`)?.value === null,
+      3_000,
+      "the cleared value",
+    );
   });
 });

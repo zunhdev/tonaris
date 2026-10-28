@@ -43,6 +43,7 @@ import {
   type FieldType,
   type FieldValue,
   type FieldValueData,
+  type OptionUser,
   type Membership,
   type Mutation,
   type MutationResult,
@@ -135,7 +136,10 @@ function activeEntryOf(tx: Transaction, albumId: typeof albums.id | string) {
 }
 
 /** A field with its owner and its options in order: keys compare bytewise (TS-16). */
-async function findFieldIn(tx: Transaction, id: string): Promise<StoredField | undefined> {
+export async function findFieldIn(
+  tx: Transaction | Database,
+  id: string,
+): Promise<StoredField | undefined> {
   const [row] = await tx
     .select({
       id: fieldDefinitions.id,
@@ -240,6 +244,26 @@ function selectionsOf(tx: Transaction, where: SQL | undefined, fieldId?: string)
     .innerJoin(fieldOptions, eq(fieldOptions.id, albumFieldMulti.optionId))
     .where(fieldId === undefined ? where : and(where, eq(albumFieldMulti.fieldId, fieldId)))
     .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
+}
+
+/** The albums choosing the option, single or multiple choice, in Trash or not (FR-03.17). */
+export async function optionUsersIn(
+  tx: Transaction | Database,
+  fieldId: string,
+  optionId: string,
+): Promise<OptionUser[]> {
+  const trashed = sql<boolean>`${albums.trashedAt} is not null`;
+  const single = await tx
+    .select({ id: albums.id, trashed })
+    .from(albumFieldValues)
+    .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
+    .where(and(eq(albumFieldValues.fieldId, fieldId), eq(albumFieldValues.optionId, optionId)));
+  const multiple = await tx
+    .select({ id: albums.id, trashed })
+    .from(albumFieldMulti)
+    .innerJoin(albums, eq(albums.id, albumFieldMulti.albumId))
+    .where(and(eq(albumFieldMulti.fieldId, fieldId), eq(albumFieldMulti.optionId, optionId)));
+  return [...single, ...multiple];
 }
 
 /** The fields the account's albums apply, with their values, Trash included (FR-03.7). */
@@ -459,6 +483,80 @@ function collectionStore(tx: Transaction): CollectionStore {
       await tx
         .delete(albumFieldValues)
         .where(and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, fieldId)));
+    },
+    async fieldUsage(fieldId) {
+      // An album in Trash keeps its rows (TS-13), so it counts (TS-14).
+      const rows = await tx
+        .select({ trashed: sql<boolean>`${albums.trashedAt} is not null`, n: count() })
+        .from(albumFieldValues)
+        .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
+        .where(eq(albumFieldValues.fieldId, fieldId))
+        .groupBy(sql`1`);
+      return {
+        active: rows.find((row) => !row.trashed)?.n ?? 0,
+        trashed: rows.find((row) => row.trashed)?.n ?? 0,
+      };
+    },
+    optionUsers: (fieldId, optionId) => optionUsersIn(tx, fieldId, optionId),
+    async optionField(optionId) {
+      const [row] = await tx
+        .select({ fieldId: fieldOptions.fieldId })
+        .from(fieldOptions)
+        .where(eq(fieldOptions.id, optionId));
+      return row?.fieldId;
+    },
+    async lastOptionKey(fieldId) {
+      const [row] = await tx
+        .select({ sortKey: fieldOptions.sortKey })
+        .from(fieldOptions)
+        .where(eq(fieldOptions.fieldId, fieldId))
+        .orderBy(sql`${fieldOptions.sortKey} collate "C" desc`)
+        .limit(1);
+      return row?.sortKey ?? null;
+    },
+    async changeFieldType(fieldId, type, discardOptions) {
+      await tx.update(fieldDefinitions).set({ type }).where(eq(fieldDefinitions.id, fieldId));
+      if (discardOptions) await tx.delete(fieldOptions).where(eq(fieldOptions.fieldId, fieldId));
+    },
+    async insertFieldOption(fieldId, { id, label, sortKey }) {
+      await tx
+        .insert(fieldOptions)
+        .values({ id, fieldId, label, labelKey: nameKey(label), sortKey });
+    },
+    async renameFieldOption(optionId, label) {
+      await tx
+        .update(fieldOptions)
+        .set({ label, labelKey: nameKey(label) })
+        .where(eq(fieldOptions.id, optionId));
+    },
+    async removeFieldOption(fieldId, optionId, albumIds) {
+      // The foreign keys clear it: a single choice's `option_id` becomes null, and a multiple choice's selection
+      // goes, its row staying applied (TS-11, FR-03.17).
+      await tx.delete(fieldOptions).where(eq(fieldOptions.id, optionId));
+      if (albumIds.length === 0) return [];
+      const where = and(
+        inArray(albumFieldValues.albumId, albumIds),
+        eq(albumFieldValues.fieldId, fieldId),
+      );
+      const rows = await tx
+        .select({ ...valueColumns, type: fieldDefinitions.type })
+        .from(albumFieldValues)
+        .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
+        .where(where)
+        .orderBy(asc(albumFieldValues.albumId));
+      const selections = await selectionsOf(
+        tx,
+        inArray(albumFieldMulti.albumId, albumIds),
+        fieldId,
+      );
+      return rows.map((row) => ({
+        albumId: row.albumId,
+        fieldId,
+        value: valueOf(
+          row,
+          selections.filter((each) => each.albumId === row.albumId).map((each) => each.optionId),
+        ),
+      }));
     },
 
     async findContainer(id) {

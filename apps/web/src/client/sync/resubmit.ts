@@ -91,6 +91,8 @@ function plan() {
     linkDeletes: [] as string[],
     fieldInserts: [] as CustomField[],
     fieldUpdates: new Map<string, Partial<CustomField>>(),
+    /** Each removed option's confirmed scope hash (FR-03.17). */
+    fieldConfirmed: {} as Record<string, string>,
     valueInserts: [] as FieldValue[],
     valueUpdates: new Map<string, Partial<FieldValue>>(),
     valueDeletes: [] as string[],
@@ -214,7 +216,46 @@ function remake(
     const current = fields.get(mutation.args.id);
     if (!current) return "gone";
     if (current.name === mutation.args.name) return "unchanged";
-    planned.fieldUpdates.set(mutation.args.id, { name: mutation.args.name });
+    planned.fieldUpdates.set(mutation.args.id, {
+      ...planned.fieldUpdates.get(mutation.args.id),
+      name: mutation.args.name,
+    });
+    return planned.needs("field.update");
+  }
+  if (
+    mutation.name === "field.changeType" ||
+    mutation.name === "field.addOption" ||
+    mutation.name === "field.renameOption" ||
+    mutation.name === "field.removeOption"
+  ) {
+    const fieldId = mutation.name === "field.changeType" ? mutation.args.id : mutation.args.fieldId;
+    const current = fields.get(fieldId);
+    if (!current) return "gone";
+    const update = planned.fieldUpdates.get(fieldId) ?? {};
+    const options = update.options ?? current.options;
+    let next: Partial<CustomField>;
+    if (mutation.name === "field.changeType") {
+      if ((update.type ?? current.type) === mutation.args.type) return "unchanged";
+      next = { type: mutation.args.type };
+    } else if (mutation.name === "field.addOption") {
+      const { id, label } = mutation.args;
+      if (options.some((option) => option.id === id)) return "unchanged";
+      next = { options: [...options, { id, label }] };
+    } else if (mutation.name === "field.renameOption") {
+      const { optionId, label } = mutation.args;
+      const option = options.find((each) => each.id === optionId);
+      if (!option) return "gone";
+      if (option.label === label) return "unchanged";
+      next = {
+        options: options.map((each) => (each.id === optionId ? { id: each.id, label } : each)),
+      };
+    } else {
+      const { optionId, scopeHash } = mutation.args;
+      if (!options.some((option) => option.id === optionId)) return "unchanged";
+      if (scopeHash !== undefined) planned.fieldConfirmed[optionId] = scopeHash;
+      next = { options: options.filter((option) => option.id !== optionId) };
+    }
+    planned.fieldUpdates.set(fieldId, { ...update, ...next });
     return planned.needs("field.update");
   }
   if (
@@ -366,7 +407,13 @@ function make(
     sent(fieldValues.update([...planned.valueUpdates.keys()], applyTo(planned.valueUpdates)));
   } else if (call === "value.delete") sent(fieldValues.delete(planned.valueDeletes));
   else if (call === "field.update") {
-    sent(fields.update([...planned.fieldUpdates.keys()], applyTo(planned.fieldUpdates)));
+    sent(
+      fields.update(
+        [...planned.fieldUpdates.keys()],
+        { metadata: { confirmed: planned.fieldConfirmed } },
+        applyTo(planned.fieldUpdates),
+      ),
+    );
   } else if (call === "link.update") {
     sent(links.update([...planned.linkUpdates.keys()], applyTo(planned.linkUpdates)));
   } else if (call === "link.delete") sent(links.delete(planned.linkDeletes));

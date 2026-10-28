@@ -6,8 +6,14 @@
 import { albumCreateArgsSchema, albumFieldsSchema, albumSchema, artworkUrlSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
+import {
+  fieldAddOptionArgsSchema,
+  fieldChangeTypeArgsSchema,
+  fieldRemoveOptionArgsSchema,
+  fieldRenameOptionArgsSchema,
+} from "./field-options";
 import { fieldValueDataSchema, fieldValueSchema } from "./field-values";
-import { customFieldSchema, fieldCreateArgsSchema } from "./fields";
+import { customFieldSchema, fieldCreateArgsSchema, fieldTypes } from "./fields";
 import { streamingServices } from "./links";
 import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
@@ -79,6 +85,43 @@ export const fieldRenameSchema = z.object({
   name: z.literal("field.rename"),
   args: z.object({ id: z.uuid(), name: z.string() }),
   base: z.object({ name: z.string() }),
+});
+
+/**
+ * `field.changeType`: changes a field's type while no album uses it, in Trash or not, even empty (FR-03.12).
+ * Options stay between single and multiple choice, and are discarded for any other type; the `confirmed` outcome's
+ * `result` names those discarded (FR-03.13). A used field is `field_in_use`.
+ */
+export const fieldChangeTypeSchema = z.object({
+  mutationId,
+  name: z.literal("field.changeType"),
+  args: fieldChangeTypeArgsSchema,
+  base: z.object({ type: z.enum(fieldTypes) }),
+});
+
+/** `field.addOption`: adds an option at the end of a choice field, with the client's ID (FR-03.15, TS-10). */
+export const fieldAddOptionSchema = z.object({
+  mutationId,
+  name: z.literal("field.addOption"),
+  args: fieldAddOptionArgsSchema,
+});
+
+/** `field.renameOption`: relabels an option, keeping its selections (FR-03.16); `base.label` as last seen (TS-21). */
+export const fieldRenameOptionSchema = z.object({
+  mutationId,
+  name: z.literal("field.renameOption"),
+  args: fieldRenameOptionArgsSchema,
+  base: z.object({ label: z.string() }),
+});
+
+/**
+ * `field.removeOption`: removes an option, clearing it from every album, Trash included (FR-03.17). A chosen option
+ * needs `scopeHash` from its removal read (TS-14); without it, or with a stale one, it is `field_in_use`.
+ */
+export const fieldRemoveOptionSchema = z.object({
+  mutationId,
+  name: z.literal("field.removeOption"),
+  args: fieldRemoveOptionArgsSchema,
 });
 
 const fieldValueArgs = z.object({ albumId: z.uuid(), fieldId: z.uuid() });
@@ -235,6 +278,10 @@ export const mutationSchema = z
     fieldValueApplySchema,
     fieldValueSetSchema,
     fieldValueRemoveSchema,
+    fieldChangeTypeSchema,
+    fieldAddOptionSchema,
+    fieldRenameOptionSchema,
+    fieldRemoveOptionSchema,
     containerCreateSchema,
     containerRenameSchema,
     containerMoveSchema,

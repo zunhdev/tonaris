@@ -306,6 +306,17 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 - A type change takes `EXISTS(SELECT 1 FROM album_field_values WHERE field_id = $1)` inside the owner's write lock. That check covers trashed albums too, because the rows survive trashing.
 - Option removal and field deletion compute their affected scope in the same transaction that executes them. The approval or confirmation carries a `scope_hash` of that scope (TS-64).
 
+*As built in TON-51:*
+- **Type changes:**
+  - `field.changeType` counts the field's `album_field_values` rows, joined to `albums` to tell Trash apart, so the refusal can say "Used by 3 albums (1 in Trash)";
+  - options stay between choice types; any other type deletes them, and the outcome's `result` lists them.
+- **Option removal:**
+  - **The scope** is `{operation: "remove_option", fieldId, optionId, albums: [{id, trashed}]}`, the albums by ID, hashed as `sha256(canonical(scope))`.
+  - **Confirmation:** `GET /v1/fields/{fieldId}/options/{optionId}/removal` returns the counts and the hash, never the IDs. `field.removeOption` recomputes the scope under the owner's lock and removes a chosen option only if `scopeHash` matches.
+  - **Clearing values:** deleting the option does it through the foreign keys. `album_field_values.option_id` is set null, and `album_field_multi` rows cascade, their `album_field_values` row staying applied.
+  - **Shared-view effects** join the scope with sharing (M7).
+- **New options** take a key after the field's last (`generateKeyBetween(last, null)`).
+
 **TS-15 Provenance and policy flags (Decided; policy values decided 19 October 2026 in the [G1 terms review](spikes/2026-10-19-g1-terms-review.md)).**
 
 - Every metadata write records `album_provenance(field, source)`.

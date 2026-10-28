@@ -272,3 +272,4 @@ export {
   type ViewPrefsField,
   type ViewPrefsFields,
 } from "./views";
+export * from "./field-options";

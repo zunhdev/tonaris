@@ -6,24 +6,33 @@
 
 import type { Mutation } from "@tonaris/domain";
 
-/** The record a write creates, if it creates one. */
-function created(mutation: Mutation): string | undefined {
+/** The records a write creates: a field's creation also creates its options. */
+function created(mutation: Mutation): string[] {
+  if (mutation.name === "field.create") {
+    return [mutation.args.id, ...mutation.args.options.map((option) => option.id)];
+  }
   if (
     mutation.name === "album.create" ||
     mutation.name === "container.create" ||
-    mutation.name === "field.create"
+    mutation.name === "field.addOption"
   ) {
-    return mutation.args.id;
+    return [mutation.args.id];
   }
   // A capture may reuse an album instead; then nothing later in the request refers to the ID it proposed.
-  if (mutation.name === "album.capture") return mutation.args.albumId;
-  return undefined;
+  if (mutation.name === "album.capture") return [mutation.args.albumId];
+  return [];
 }
 
 /** The records a write changes or puts something in, other than one it creates. */
 function referenced(mutation: Mutation): (string | null)[] {
   if (mutation.name === "album.create" || mutation.name === "field.create") return [];
-  if (mutation.name === "field.rename") return [mutation.args.id];
+  if (mutation.name === "field.rename" || mutation.name === "field.changeType") {
+    return [mutation.args.id];
+  }
+  if (mutation.name === "field.addOption") return [mutation.args.fieldId];
+  if (mutation.name === "field.renameOption" || mutation.name === "field.removeOption") {
+    return [mutation.args.fieldId, mutation.args.optionId];
+  }
   if (
     mutation.name === "fieldValue.apply" ||
     mutation.name === "fieldValue.set" ||
@@ -69,8 +78,9 @@ export function dependenciesOf(mutations: readonly Mutation[]): (string[] | unde
         }),
       ),
     ];
-    const id = created(mutation);
-    if (id !== undefined && !creators.has(id)) creators.set(id, mutation.mutationId);
+    for (const id of created(mutation)) {
+      if (!creators.has(id)) creators.set(id, mutation.mutationId);
+    }
     return dependsOn.length > 0 ? dependsOn : undefined;
   });
 }

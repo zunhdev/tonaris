@@ -194,4 +194,40 @@ describe("dependencies within a request", () => {
     };
     expect(dependenciesOf([field, apply])).toEqual([undefined, [field.mutationId]]);
   });
+
+  test("an option write depends on its field's creation, or on the option's", () => {
+    const [fieldId, calm, odd] = [uuidv7(), uuidv7(), uuidv7()];
+    const field: Mutation = {
+      mutationId: uuidv7(),
+      name: "field.create",
+      args: {
+        id: fieldId,
+        name: "Mood",
+        type: "single_choice",
+        options: [{ id: calm, label: "Calm" }],
+      },
+    };
+    const rename: Mutation = {
+      mutationId: uuidv7(),
+      name: "field.renameOption",
+      args: { fieldId, optionId: calm, label: "Quiet" },
+      base: { label: "Calm" },
+    };
+    const add: Mutation = {
+      mutationId: uuidv7(),
+      name: "field.addOption",
+      args: { fieldId, id: odd, label: "Odd" },
+    };
+    const remove: Mutation = {
+      mutationId: uuidv7(),
+      name: "field.removeOption",
+      args: { fieldId, optionId: odd },
+    };
+    expect(dependenciesOf([field, rename, add, remove])).toEqual([
+      undefined,
+      [field.mutationId],
+      [field.mutationId],
+      [field.mutationId, add.mutationId],
+    ]);
+  });
 });
