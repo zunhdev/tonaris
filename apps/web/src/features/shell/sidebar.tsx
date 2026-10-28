@@ -1,6 +1,6 @@
-// The sidebar (DS-30, DS-31): the wordmark and a button to hide it, the account menu, Search (its issue comes later)
-// and Add album, which opens the manual entry form until capture arrives (DS-47), the collection's tree with a "+" menu for new lists and folders, and the SyncIndicator in
-// the footer. Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a
+// The sidebar (DS-30, DS-31): the wordmark and a button to hide it, the account menu, Search, which opens the search
+// palette (DS-75), and Add album, which opens the capture dialog (DS-48), the collection's tree with a "+" menu for new
+// lists and folders, and the SyncIndicator in the footer. Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a
 // dragged folder or list, to move it to the root (DS-49).
 
 import { AccountMenu } from "@/features/account/account-menu";
@@ -40,7 +40,7 @@ export function Sidebar({
   width: number;
   onResize: (width: number) => void;
 }) {
-  const { toggleSidebar } = useShell();
+  const { toggleSidebar, openSearch } = useShell();
   return (
     <nav
       aria-label="Sidebar"
@@ -60,7 +60,12 @@ export function Sidebar({
       </div>
       <AccountMenu account={account} />
       <div className="mt-1 flex flex-col gap-0.5 px-2">
-        <Button variant="ghost" className="justify-start" disabled>
+        <Button
+          variant="ghost"
+          className="justify-start"
+          aria-keyshortcuts="Meta+K Control+K"
+          onClick={openSearch}
+        >
           <Search strokeWidth={1.5} aria-hidden />
           Search
           <kbd className="ml-auto text-micro text-fg-tertiary">⌘K</kbd>

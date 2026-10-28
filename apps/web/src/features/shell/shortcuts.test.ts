@@ -62,4 +62,15 @@ describe("shortcuts (DS-78)", () => {
     expect(isTextField({ tagName: "A" })).toBe(false);
     expect(isTextField(null)).toBe(false);
   });
+
+  test("⌘K or Ctrl+K searches, even from a text field", () => {
+    const match = createShortcutMatcher();
+    const input = { target: { tagName: "INPUT" } };
+    expect(match(press("k", 0, { metaKey: true }))).toBe("search");
+    expect(match(press("k", 0, { ctrlKey: true, ...input }))).toBe("search");
+    expect(match(press("K", 0, { metaKey: true, ...input }))).toBe("search");
+    expect(match(press("k", 0, { metaKey: true, altKey: true }))).toBeUndefined();
+    expect(match(press("k", 0, { metaKey: true, repeat: true }))).toBeUndefined();
+    expect(match(press("k"))).toBeUndefined();
+  });
 });

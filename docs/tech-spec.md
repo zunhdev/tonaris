@@ -1009,6 +1009,12 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
   - The query is `WHERE key LIKE '%' || $q || '%'`, scoped to the principal's owned IDs plus the accessible shared roots (TS-31). Trash is excluded.
   - Queries shorter than 3 characters fall back to a scan over the owner index, which is fine at 5,000 rows.
 - **Parity.** Both sides use `searchKey` from `packages/domain`. A shared test fixture (e.g. "bjork" → "Björk", "metal" → "Metallica", "ß" ↔ "ss") runs against both implementations in CI.
+- **As built in TON-61 (the app):**
+  - **Ranking and highlighting** are `searchTier()` and `matchRange()` in `packages/domain/src/normalize.ts`, so the server ranks and highlights alike.
+    - `searchTier` is 0 for a key that starts with the query, 1 for a word start, and 2 for any other substring.
+    - `matchRange` rebuilds `searchKey` code point by code point to map a match back onto the original text. It gives no range if the rebuilt key differs.
+  - **The index** is `apps/web/src/features/search/search-index.ts`. It is built from the client's collections while the palette is open, with album keys cached by row.
+  - **Measured (bun test, this Mac, 5,000 albums and 500 lists):** building the index takes 6 ms, and the slowest query 1.1 ms, against the 50 ms target.
 
 ---
 

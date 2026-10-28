@@ -1,6 +1,6 @@
 // The workspace's shortcuts at work (DS-78): one keydown listener, in the capture phase so that a key that is a
 // shortcut is claimed before the sidebar tree could type ahead with it (decided 22 October 2026). Keys typed in a
-// text field, or inside a dialog, popover or menu, are left alone.
+// text field, or inside a dialog, popover or menu, are left alone, but for ⌘K in a text field, which searches.
 
 import { useCapture } from "@/features/capture/capture-context";
 import {
@@ -30,9 +30,11 @@ const destinations: Partial<
 export function useShortcuts({
   toggleSidebar,
   openShortcuts,
+  openSearch,
 }: {
   toggleSidebar: () => void;
   openShortcuts: () => void;
+  openSearch: () => void;
 }): void {
   const navigate = useNavigate();
   const startEditor = useStartEditor();
@@ -53,6 +55,7 @@ export function useShortcuts({
     offline,
     toggleSidebar,
     openShortcuts,
+    openSearch,
     openViewOptions,
     ui,
     viewId,
@@ -70,6 +73,7 @@ export function useShortcuts({
       offline,
       toggleSidebar,
       openShortcuts,
+      openSearch,
       openViewOptions,
       ui,
       viewId,
@@ -89,6 +93,8 @@ export function useShortcuts({
       if (to) void now.navigate({ to });
       else if (action === "toggle-sidebar") now.toggleSidebar();
       else if (action === "shortcuts") now.openShortcuts();
+      // Searching works anywhere, offline and in Viewing mode too (DS-75).
+      else if (action === "search") now.openSearch();
       // Choosing how a view looks isn't an edit, so it works offline (X-04).
       else if (action === "view-options") now.openViewOptions();
       // Moving is an edit: it waits while offline (DS-81), as N does. It moves the focused tree item, else the

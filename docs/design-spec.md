@@ -151,7 +151,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - Use the shadcn CLI v4 **TanStack Start template with Base UI primitives**. Components are copied in and restyled to DS-10 to DS-19.
 - Never introduce an unstyled third-party component without wrapping it in the system.
 - Supporting libraries:
-  - **cmdk** for the command palette;
+  - **Base UI's Dialog, with a combobox and listbox of our own,** for the command palette. cmdk was named first, but it filters and orders results itself, and doesn't virtualize, so "Show all" could render thousands of rows (changed in TON-61);
   - **Base UI's Toast** for toasts. Sonner was named first, but it injects its stylesheet as a `<style>` element without the CSP nonce, which TS-101 blocks (changed in TON-31);
   - **TanStack Virtual** for long collections;
   - **dnd-kit** for drag-and-drop (it has a keyboard sensor);
@@ -169,7 +169,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | Mobile overlays | Drawer / Sheet (bottom) | Service chooser, view options, album detail on mobile |
 | Feedback | Toast, Skeleton, Progress, Badge | See DS-80 to DS-84 |
 | Navigation | ScrollArea, Tabs, Separator | Tabs in Settings and Admin only |
-| Palette | Command (cmdk) | See DS-75 |
+| Palette | Dialog + combobox/listbox (`CommandDialog`) | See DS-75 |
 
 **DS-21 Album row.** This is the desktop list item: 36px high and virtualized. Columns, in order:
 
@@ -1060,6 +1060,38 @@ The block never says "private" while another access path remains.
 - **Empty query:** recent items and frequent commands.
 - **Mobile:** a search icon opens a full-screen search sheet with the same groups.
 
+*As built in TON-61 (owned content):*
+- **Opening it:** ⌘K or Ctrl+K, also from a text field, or the sidebar's Search item. ⌘K again or Esc closes it. Searching isn't an edit, so it works offline and in Viewing mode.
+- **The palette:**
+  - It sits 12% from the top, 640px wide, on the palette layer (DS-18).
+  - Below 768px it fills the screen, inside the safe area. There is no mobile shell yet (DS-110), so the sheet opens with ⌘K or the sidebar's item.
+  - Its field reads "Search folders, lists and albums…".
+  - Empty, it says "Search folder and list names, album titles and artists."; with no match, "No results for '{query}'."
+  - Commands and recent items come with TON-63.
+- **Groups:** Folders, Lists, Albums, each with a heading, up to 8 results, then a "Show all {n}" option that expands the group in place.
+- **Order within a group** (decided with the creator, 28 October 2026):
+  - names that start with the query first;
+  - then names with a word that starts with it (after a space or punctuation);
+  - then any other match;
+  - alphabetical within each tier, by search key.
+  - An album ranks by the better of its title and its artist. Ties go by title, then artist.
+- **Rows:**
+  - A container: its icon, its name, and its location on the right: its folders' path ("Metal › Doom"), or "Collection" at the top.
+  - An album, 48px: 24px artwork, its title, then "{artist} · {year}" below. Its location is the alphabetically first path of its lists, plus "+N more" when it is in others, or "Unsorted" (decided with the creator, 28 October 2026).
+- **Highlighting:** the match is highlighted in `accent.soft` in each matched field, title and artist alike. A word-start match is preferred.
+- **Keyboard:**
+  - ↑ and ↓ move through the options, wrapping;
+  - Enter opens the active one, or expands "Show all";
+  - ⌘Enter opens an album on its own page;
+  - the pointer moves the active option too.
+- **Opening:**
+  - a folder or list opens its view;
+  - an album opens in its first list, or in Unsorted, with the inspector.
+- **Screen readers:**
+  - the field is a combobox over a listbox, with a group per heading;
+  - the active option is `aria-activedescendant`;
+  - a polite status gives the result count.
+
 ---
 
 ## 11. Keyboard map
@@ -1097,6 +1129,7 @@ The block never says "private" while another access path remains.
 - **TON-47 adds O,** which opens "Open in…" for the inspector's album, else the focused album. Opening isn't an edit, so it works in Viewing mode and offline.
 - **TON-45 adds C,** which opens the capture dialog, switching to Editing first and waiting while offline. The reference lists it as "Add albums from links".
 - **TON-38 adds L,** "Add to list…", for the inspector's album, else the focused album, switching to Editing first and waiting while offline; **Enter** on an album, which opens the inspector; and **Esc,** which closes it. The reference lists them.
+- **TON-61 adds ⌘K** (Ctrl+K on Windows and Linux), which opens search (DS-75). It works from a text field too, and in the palette it closes it. The reference lists it as "Search", and the sidebar's Search item carries it in `aria-keyshortcuts`.
 
 ---
 
