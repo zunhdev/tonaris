@@ -5,10 +5,12 @@
 import {
   pruneProviderCache,
   pruneSyncHistory,
+  purgeExpiredTrash,
   runExclusively,
   type Database,
   type Transaction,
 } from "@tonaris/db";
+import type { Change } from "@tonaris/domain";
 import type { Spotify } from "@tonaris/providers";
 
 export type Schedule = {
@@ -33,6 +35,26 @@ export const pruneProviderCacheSchedule: Schedule = {
   everyMs: day,
   run: (tx, now) => pruneProviderCache(tx, now),
 };
+
+/**
+ * The hourly Trash expiry (TS-91; FR-01.17, FR-14.5): units past their 30 days are purged, each owner's in a
+ * transaction of its own under the owner's write lock, and their changes published to the owner's streams once
+ * committed. The schedule's own lock keeps a second instance from purging at the same time.
+ */
+export function trashExpirySchedule(
+  db: Database,
+  publish: (accountId: string, changes: readonly Change[]) => void,
+): Schedule {
+  return {
+    name: "trash-expiry",
+    everyMs: 3_600_000,
+    async run(_tx, now) {
+      for (const { accountId, changes } of await purgeExpiredTrash(db, now)) {
+        publish(accountId, changes);
+      }
+    },
+  };
+}
 
 /** *Random Access Memories* on Spotify: an album with a UPC that won't go away. */
 export const spotifyHealthAlbum = "4m2880jivSbbyEGAKfITCa";
@@ -68,10 +90,14 @@ export function spotifyHealthSchedule(
 }
 
 /** Every schedule the API runs; the Spotify health check only while the bridge is on. */
-export function apiSchedules(spotify: Pick<Spotify, "album"> | undefined): Schedule[] {
+export function apiSchedules(
+  spotify: Pick<Spotify, "album"> | undefined,
+  trash: { db: Database; publish: (accountId: string, changes: readonly Change[]) => void },
+): Schedule[] {
   return [
     pruneSyncHistorySchedule,
     pruneProviderCacheSchedule,
+    trashExpirySchedule(trash.db, trash.publish),
     ...(spotify ? [spotifyHealthSchedule(spotify)] : []),
   ];
 }

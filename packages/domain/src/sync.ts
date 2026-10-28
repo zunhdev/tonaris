@@ -23,6 +23,7 @@ import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./se
 import {
   albumDeleteArgsSchema,
   containerDeleteArgsSchema,
+  trashPurgeArgsSchema,
   trashRecoverArgsSchema,
   trashUnitSchema,
 } from "./trash";
@@ -164,6 +165,16 @@ export const albumDeleteSchema = z.object({
   mutationId,
   name: z.literal("album.delete"),
   args: albumDeleteArgsSchema,
+});
+
+/**
+ * `trash.purge`: removes units from Trash for good, early (FR-01.18): those the owner confirmed, or all for Empty Trash.
+ * App-only (X-03). Its `confirmed` result is `{purged, gone}`, the units removed and those no longer in Trash.
+ */
+export const trashPurgeSchema = z.object({
+  mutationId,
+  name: z.literal("trash.purge"),
+  args: trashPurgeArgsSchema,
 });
 
 export const trashRecoverSchema = z.object({
@@ -349,6 +360,7 @@ export const mutationSchema = z
     containerDeleteSchema,
     trashRecoverSchema,
     albumDeleteSchema,
+    trashPurgeSchema,
     membershipAddSchema,
     membershipRemoveSchema,
     linkSetSchema,

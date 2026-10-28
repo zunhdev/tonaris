@@ -20,6 +20,7 @@ import {
   tooDeep,
   type Container,
 } from "./containers";
+import { fieldValueKey } from "./field-values";
 import { maxContainerDepth } from "./limits";
 import { membershipKey, type Membership } from "./memberships";
 import { findNameConflict } from "./names";
@@ -27,6 +28,7 @@ import { failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { forgetPlace, placeAtTop } from "./positions";
 import { actingUserId } from "./principals";
+import { serviceLinkKey } from "./service-links";
 import { z } from "./zod";
 
 export const trashUnitKinds = [...containerKinds, "album"] as const;
@@ -51,8 +53,13 @@ export const trashUnitSchema = z
   .meta({ description: "Content deleted together, recovered and purged as one (FR-01.13)." });
 export type TrashUnit = z.infer<typeof trashUnitSchema>;
 
-/** An album purged while a unit still referred to it, so recovery can report it (TS-13). */
-export type Tombstone = { id: string; title: string; artist: string };
+/**
+ * What was purged while a unit still referred to it, so its recovery can report it (TS-13): an album, in a folder's
+ * or list's unit, or a list, in an album's unit.
+ */
+export type Tombstone =
+  | { kind?: "album"; id: string; title: string; artist: string }
+  | { kind: "list"; id: string; name: string };
 
 /** A unit as the store keeps it. */
 export type StoredTrashUnit = {
@@ -75,7 +82,7 @@ export const skippedEntrySchema = z.object({
     .string()
     .nullable()
     .meta({ description: "That list's name, when the client may not hold it: it is in Trash." }),
-  reason: z.enum(["album_in_trash", "album_deleted", "list_in_trash"]),
+  reason: z.enum(["album_in_trash", "album_deleted", "list_in_trash", "list_deleted"]),
 });
 export type SkippedEntry = z.infer<typeof skippedEntrySchema>;
 
@@ -320,14 +327,20 @@ export async function recoverUnit(
           },
         ];
       }),
-      ...unit.tombstones.map((tombstone): SkippedEntry => ({
-        albumId: tombstone.id,
-        title: tombstone.title,
-        artist: tombstone.artist,
-        listId: null,
-        listName: null,
-        reason: "album_deleted",
-      })),
+      ...unit.tombstones.flatMap((tombstone): SkippedEntry[] =>
+        tombstone.kind === "list"
+          ? []
+          : [
+              {
+                albumId: tombstone.id,
+                title: tombstone.title,
+                artist: tombstone.artist,
+                listId: null,
+                listName: null,
+                reason: "album_deleted",
+              },
+            ],
+      ),
     ],
   };
   return {
@@ -483,6 +496,17 @@ async function recoverAlbumUnit(
       });
     }
   }
+  for (const tombstone of unit.tombstones) {
+    if (tombstone.kind !== "list") continue;
+    skipped.push({
+      albumId: album.id,
+      title: album.title,
+      artist: album.artistCredit,
+      listId: tombstone.id,
+      listName: tombstone.name,
+      reason: "list_deleted",
+    });
+  }
   await store.recoverAlbum(unit.id, album.id);
   // With no list to return to, it enters Unsorted at its top (FR-14.2, DS-51).
   const placed = back.length === 0 ? [await placeAtTop(store, ownerId, "unsorted", album.id)] : [];
@@ -507,4 +531,112 @@ async function recoverAlbumUnit(
       { entity: "trashUnit", id: unit.id, op: "delete", data: null },
     ],
   };
+}
+
+export const trashPurgeArgsSchema = z.object({
+  unitIds: z.array(z.uuid()).min(1).max(5_000).meta({
+    description:
+      "The units to remove for good: those the owner confirmed, or all of Trash for Empty Trash.",
+  }),
+});
+
+/** `trash.purge`'s `result` in a `confirmed` outcome: the units removed, and those already gone (FR-01.18). */
+export const purgeResultSchema = z.object({
+  purged: z.array(z.uuid()),
+  gone: z
+    .array(z.uuid())
+    .meta({ description: "Units no longer in Trash: recovered or purged before." }),
+});
+export type PurgeResult = z.infer<typeof purgeResultSchema>;
+
+/**
+ * Removes one unit for good (FR-01.17, FR-01.18, TS-13). A folder's or list's: its folders and lists and their
+ * entries; albums stay where else they are, and an album in Trash that was in one of its lists keeps a tombstone of
+ * that list. An album's: the album, with its entries, links and values, and a tombstone in every unit still referring
+ * to it. Answers the changes for clients.
+ */
+export async function purgeUnit(
+  store: CollectionStore,
+  unit: StoredTrashUnit,
+): Promise<ChangeInput[]> {
+  const gone: ChangeInput = { entity: "trashUnit", id: unit.id, op: "delete", data: null };
+  if (unit.kind === "album") {
+    const album = await store.findAlbum(unit.rootId);
+    if (album) {
+      const tombstone: Tombstone = { id: album.id, title: album.title, artist: album.artistCredit };
+      for (const unitId of await store.unitsReferencingAlbum(album.id)) {
+        // oxlint-disable-next-line no-await-in-loop
+        await store.addTombstone(unitId, tombstone);
+      }
+    }
+    const removed = await store.purgeAlbum(unit.id, unit.rootId);
+    // Clients hold the album's links and values, as of an album in Trash: they go too.
+    return [
+      ...removed.services.map((service): ChangeInput => ({
+        entity: "link",
+        id: serviceLinkKey(unit.rootId, service),
+        op: "delete",
+        data: null,
+      })),
+      ...removed.fieldIds.map((fieldId): ChangeInput => ({
+        entity: "fieldValue",
+        id: fieldValueKey(unit.rootId, fieldId),
+        op: "delete",
+        data: null,
+      })),
+      gone,
+    ];
+  }
+  const members = await store.unitContainers(unit.id);
+  const lists = members.filter((member) => member.kind === "list");
+  const entries = await store.listEntries(lists.map((list) => list.id));
+  for (const entry of entries) {
+    // oxlint-disable-next-line no-await-in-loop
+    const album = await store.findAlbum(entry.albumId);
+    // oxlint-disable-next-line no-await-in-loop
+    const albumUnit = album?.trashed ? await store.albumUnit(album.id) : undefined;
+    const list = lists.find((each) => each.id === entry.listId);
+    if (albumUnit && list) {
+      // oxlint-disable-next-line no-await-in-loop
+      await store.addTombstone(albumUnit, { kind: "list", id: list.id, name: list.name });
+    }
+  }
+  await store.purgeContainers(
+    unit.id,
+    members.map((member) => member.id),
+  );
+  return [gone];
+}
+
+/**
+ * `trash.purge` (FR-01.18, FR-14.5): removes the owner's units for good, early, as confirmed in the app; never through
+ * MCP (X-03). Units already gone are reported, and the rest still go (FR-13.4).
+ */
+export async function purgeUnits(
+  args: z.infer<typeof trashPurgeArgsSchema>,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const { store, principal } = context;
+  const ownerId = actingUserId(principal);
+  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "trash_purge" });
+  if (!ownerId || !decision.allowed) {
+    return failure(
+      decision.allowed ? "permission_denied" : decision.code,
+      "Only the app can empty Trash.",
+    );
+  }
+  const result: PurgeResult = { purged: [], gone: [] };
+  const changes: ChangeInput[] = [];
+  for (const unitId of new Set(args.unitIds)) {
+    // oxlint-disable-next-line no-await-in-loop
+    const unit = await store.findTrashUnit(unitId);
+    if (!unit || unit.ownerId !== ownerId) {
+      result.gone.push(unitId);
+      continue;
+    }
+    // oxlint-disable-next-line no-await-in-loop
+    changes.push(...(await purgeUnit(store, unit)));
+    result.purged.push(unitId);
+  }
+  return { status: "applied", changes, result };
 }

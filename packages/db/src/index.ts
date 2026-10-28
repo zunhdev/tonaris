@@ -21,6 +21,7 @@ export { createApproval, decideApproval, findApproval, type ApprovalRow } from "
 export { maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";
 export { createDatabase, type Database, type Transaction } from "./client";
 export { readFieldDeletion, readFieldUsage, readOptionRemoval } from "./field-options";
+export { purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
 export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
 export {

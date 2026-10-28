@@ -139,7 +139,7 @@ The server ends a stream in four cases:
 - **The mutations today:**
   - `album.create`, `album.update`, `album.setArtwork`, `album.capture`;
   - `container.create`, `container.rename`, `container.move`, `container.describe`, `container.delete`;
-  - `trash.recover`, `album.delete`;
+  - `trash.recover`, `album.delete`, `trash.purge`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
   - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
@@ -167,6 +167,12 @@ The server ends a stream in four cases:
   - **`album.delete`** `{id, unitId}` moves an album to Trash as its own unit. The stream sends the `album` delete, a `membership` delete per entry in an active list, positions, and the `trashUnit` insert.
   - **`trash.recover`** on an album unit brings back its entries in active lists and reports those in trashed lists (`list_in_trash`, with `listName`). With none, the album enters Unsorted at its top.
   - **An active album of the same release group** makes it answer `needs_input` `match`, candidates `[{unitId, albumId, title, artistCredit, originalYear}]`; nothing changes.
+- **Permanent removal** (FR-01.17, FR-01.18, FR-14.5, TON-58):
+  - **`trash.purge`** `{unitIds}` removes units for good. It is app-only (`app_only` through MCP).
+    - Its `confirmed` result is `{purged, gone}`; units already gone are reported, and the rest still go.
+    - The stream sends each unit's `trashUnit` delete, and for a purged album its `link` and `fieldValue` deletes.
+  - **The hourly expiry** sends the same changes, with `mutationId` null, for units 30 days old.
+  - **Later recoveries** report what was purged: `album_deleted` in a list's recovery, `list_deleted` in an album's restore.
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
 - **Custom fields** (FR-03.6, FR-03.9, FR-03.11), defined per account (TON-49):
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.

@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 import { uuidv7, type Mutation, type Principal } from "@tonaris/domain";
 
 import { albums, containers, memberships, trashUnits, users } from "./schema";
-import { bootstrapSnapshot, executeMutation } from "./sync";
+import { bootstrapSnapshot, executeMutation, purgeExpiredTrash, readChanges } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
@@ -189,5 +189,65 @@ describe("albums in Trash, in Postgres (FR-14.1 to FR-14.3)", () => {
     });
     const [still] = await t.db.select().from(albums).where(eq(albums.id, first));
     expect(still?.trashUnitId).toBe(unitId);
+  });
+});
+
+describe("removing Trash for good, in Postgres (FR-01.17, FR-01.18, TS-91)", () => {
+  test("an early purge removes a unit's rows, its entries cascading, and keeps active albums", async () => {
+    const doom = await create("list", "Doom");
+    const dopesmoker = await newAlbum("Dopesmoker");
+    await run({
+      mutationId: uuidv7(),
+      name: "membership.add",
+      args: { listId: doom, albumId: dopesmoker },
+    });
+    const unitId = uuidv7();
+    await run({ mutationId: uuidv7(), name: "container.delete", args: { id: doom, unitId } });
+    const purged = await run({
+      mutationId: uuidv7(),
+      name: "trash.purge",
+      args: { unitIds: [unitId] },
+    });
+    expect(purged.outcome).toMatchObject({
+      status: "confirmed",
+      result: { purged: [unitId], gone: [] },
+    });
+    expect(await t.db.select().from(containers)).toEqual([]);
+    expect(await t.db.select().from(memberships)).toEqual([]);
+    expect(await t.db.select().from(trashUnits)).toEqual([]);
+    expect((await bootstrapSnapshot(t.db, anna.userId)).albums.map((album) => album.id)).toEqual([
+      dopesmoker,
+    ]);
+  });
+
+  test("the expiry purges units past 30 days only, logging their removal without a mutation", async () => {
+    const doom = await create("list", "Doom");
+    const later = await create("list", "Later");
+    const [old, recent] = [uuidv7(), uuidv7()];
+    await run({ mutationId: uuidv7(), name: "container.delete", args: { id: doom, unitId: old } });
+    await run({
+      mutationId: uuidv7(),
+      name: "container.delete",
+      args: { id: later, unitId: recent },
+    });
+    // Doom's unit is past its expiry.
+    await t.db
+      .update(trashUnits)
+      .set({ expiresAt: new Date(Date.now() - 60_000) })
+      .where(eq(trashUnits.id, old));
+    const { seq } = await bootstrapSnapshot(t.db, anna.userId);
+
+    const purged = await purgeExpiredTrash(t.db, new Date());
+    expect(purged).toMatchObject([
+      {
+        accountId: anna.userId,
+        changes: [{ entity: "trashUnit", id: old, op: "delete", mutationId: null }],
+      },
+    ]);
+    expect((await t.db.select().from(trashUnits)).map((unit) => unit.id)).toEqual([recent]);
+    expect(await readChanges(t.db, anna.userId, seq, 10)).toMatchObject([
+      { entity: "trashUnit", id: old, op: "delete" },
+    ]);
+    expect(await purgeExpiredTrash(t.db, new Date())).toEqual([]);
   });
 });

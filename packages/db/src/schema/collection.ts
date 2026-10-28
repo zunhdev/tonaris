@@ -28,8 +28,13 @@ import { instant, notBlank, oneOf, table, timestamps, trashStamp } from "./colum
 
 export const trashUnitKinds = ["folder", "list", "album"] as const;
 
-/** A purged album, recorded in every unit that still references it so recovery can report the skip (TS-13). */
-export type Tombstone = { id: string; title: string; artist: string };
+/**
+ * What was purged while a unit still referred to it, so its recovery can report the skip (TS-13): an album in a folder's
+ * or list's unit, or a list in an album's unit.
+ */
+export type Tombstone =
+  | { kind?: "album"; id: string; title: string; artist: string }
+  | { kind: "list"; id: string; name: string };
 
 /** Content deleted together: recovered and purged as one unit, with one expiry (FR-01.13). */
 export const trashUnits = table(

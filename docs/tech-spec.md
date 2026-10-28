@@ -322,6 +322,13 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 - **The bootstrap** leaves out trashed albums and entries of trashed albums.
 - **Capture's reactivation** logs the `album` insert and the unit's delete.
 
+*As built in TON-58:*
+- **Purging a folder's or list's unit** deletes its containers, their entries cascading. Albums in Trash that were in its lists get a tombstone `{kind: "list", id, name}` in their own unit.
+- **Purging an album's unit** writes `{id, title, artist}` into every unit whose lists hold an entry of it, deletes its positions, and deletes the album; entries, links, field values and provenance cascade. It logs `link` and `fieldValue` deletes, as clients hold those.
+- **`trash.purge {unitIds}`** is app-only (`trash_purge`). Its result is `{purged, gone}`.
+- **Expiry:** `purgeExpiredTrash` purges each owner's expired units in a transaction under their lock, logged with `mutation_id` null. The hourly `trash-expiry` schedule publishes the changes to the owner's streams after commit.
+- **Skip reports:** an album's restore reports list tombstones as `list_deleted`.
+
 **TS-14 Custom-field operations (Decided; FR-03.12, FR-03.17, FR-03.18).**
 
 - A type change takes `EXISTS(SELECT 1 FROM album_field_values WHERE field_id = $1)` inside the owner's write lock. That check covers trashed albums too, because the rows survive trashing.
@@ -1246,7 +1253,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 
 | Job | Schedule | Rules |
 | --- | --- | --- |
-| Trash expiry sweep | hourly | FR-01.17, FR-14.5 |
+| Trash expiry sweep | hourly (`trash-expiry`, TON-58), publishing each owner's changes after commit | FR-01.17, FR-14.5 |
 | MusicBrainz enrichment queue | continuous, 1 req/s global, in the API process (TON-41) | TS-41 |
 | Expire provider answers (> 7 d) | daily (`prune-provider-cache`) | TS-41 |
 | Spotify bridge health check | daily (`spotify-health`), while the bridge is on (TON-42) | TS-41 |
