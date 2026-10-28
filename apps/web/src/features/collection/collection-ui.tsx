@@ -47,6 +47,10 @@ type CollectionUi = {
   moving: string | undefined;
   startMove: (id: string) => void;
   endMove: () => void;
+  /** The folder or list whose sharing dialog is open (DS-65). */
+  sharing: string | undefined;
+  startShare: (id: string) => void;
+  endShare: () => void;
   /** The folder whose deletion is being confirmed, if one is (DS-50). */
   deleting: string | undefined;
   startDelete: (id: string) => void;
@@ -114,6 +118,7 @@ export function CollectionUiProvider({
   const viewOptions = useRef<(() => void) | undefined>(undefined);
   const focusedRow = useRef<string | undefined>(undefined);
   const [moving, setMoving] = useState<string | undefined>(undefined);
+  const [sharing, setSharing] = useState<string | undefined>(undefined);
   const [deleting, setDeleting] = useState<string | undefined>(undefined);
   const [deletingAlbum, setDeletingAlbum] = useState<string | undefined>(undefined);
   const [stored, setStored] = useState<Mode>(() => editMode.read(accountId));
@@ -165,6 +170,9 @@ export function CollectionUiProvider({
       moving,
       startMove: setMoving,
       endMove: () => setMoving(undefined),
+      sharing,
+      startShare: setSharing,
+      endShare: () => setSharing(undefined),
       deleting,
       startDelete: setDeleting,
       endDelete: () => setDeleting(undefined),
@@ -204,6 +212,7 @@ export function CollectionUiProvider({
       expanded,
       update,
       moving,
+      sharing,
       deleting,
       deletingAlbum,
       stored,

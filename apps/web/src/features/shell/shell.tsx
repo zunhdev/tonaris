@@ -16,6 +16,7 @@ import { useInspector } from "@/features/collection/inspector-state";
 import { MoveDialog } from "@/features/collection/move";
 import { NewAlbumDialog } from "@/features/collection/new-album";
 import { SearchPalette } from "@/features/search/search-palette";
+import { ShareDialog } from "@/features/sharing/share-dialog";
 import { OfflineBanner } from "@/features/sync/offline-banner";
 import {
   useCallback,
@@ -137,6 +138,7 @@ export function Shell({ account, children }: { account: Account; children: React
         runner={runner}
       />
       <MoveDialog />
+      <ShareDialog />
       <DeleteFolderDialog />
       <DeleteAlbumDialog />
       <AddToListDialog />

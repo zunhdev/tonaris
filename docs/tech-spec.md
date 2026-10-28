@@ -692,7 +692,12 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - Disabling sets `revoked_at`. Re-enabling creates a new row and a new token; old tokens never validate again.
 - Guest pages send `Referrer-Policy: no-referrer`, and outbound links carry `rel="noopener noreferrer"`, so tokens never leak to streaming services.
 - Tokens appear in URLs only on `/s/` (web) and `/v1/s/` (API) paths and are redacted from logs.
-- *As built in TON-64:* `createShareToken()` gives 32 bytes from `crypto.getRandomValues`, base64url-encoded (43 characters), with their SHA-256 from `crypto.subtle`. `findShareLink(db, token)` hashes the presented token and finds a link not revoked.
+- *As built in TON-64:* `findShareLink(db, token)` hashes the presented token and finds a link not revoked.
+- *Changed in TON-65 (decided with the creator, 29 October 2026):* **tokens are derived, not random.**
+  - `shareToken(secret, linkId)` is base64url(HMAC-SHA256(`BETTER_AUTH_SECRET`, `tonaris:share-link:` + linkId)): 256 bits, 43 characters. The database still stores only its SHA-256.
+  - The owner's dialog can show the link every time, while a database leak alone reveals no link.
+  - The API computes a new link's hash before the write lock and hands it to `share.setLink` in `CommandContext.shareLink`, as it prepares `link.set`'s URL.
+  - Rotating `BETTER_AUTH_SECRET` changes every token, so every link stops working until its owner turns it off and on again (`docs/deploy.md`). Rotation already signs everyone out, so it's an emergency step anyway.
 
 **TS-33 Invitations and grants (Decided; FR-07.4–FR-07.7).**
 
@@ -703,6 +708,10 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - *As built in TON-64:* Trash changes no grant or link. A trashed container is simply never on an active path, so recovery resumes accepted grants and live links by itself, and leaves pending and revoked ones as they were. The statuses (`shareGrantStatuses`, `emailStatuses`) live in `packages/domain/src/sharing.ts`, and the db schema imports them.
 
 **TS-34 Display-name guard (Decided; FR-11.3).** Sharing commands and display-name updates check the invariant "a non-blank name exists while any share is active" under the owner lock.
+- *As built in TON-65:*
+  - **What needs a name:** `share.invite` and turning a link on with `share.setLink` refuse with `display_name_required` (409) without a non-blank name.
+  - **Keeping it:** `account.setDisplayName` refuses a blank name while the owner's containers have any pending or accepted grant or live link, Trash included.
+  - **Where names change:** Better Auth's `update-user` isn't exposed (`plugin.ts`), so the name changes only through this mutation, which Settings will use in M8.
 
 ---
 

@@ -45,7 +45,7 @@ Set these as environment secrets; `.env.example` lists every setting. In product
 | api | `DATABASE_URL` | The Postgres connection string |
 | api | `API_ORIGIN` | `https://api.tonaris.<tld>` |
 | api | `WEB_ORIGIN` | `https://tonaris.<tld>` |
-| api | `BETTER_AUTH_SECRET` | At least 32 random bytes, e.g. `openssl rand -hex 32` |
+| api | `BETTER_AUTH_SECRET` | At least 32 random bytes, e.g. `openssl rand -hex 32`. It also derives share links' tokens (TS-32): changing it signs everyone out **and breaks every share link**, which owners then turn off and on again for new ones. |
 | api | `SMTP_URL`, `EMAIL_FROM` | The mail provider's SMTP URL and the sender, such as `Tonaris <no-reply@tonaris.<tld>>` |
 | api | `CLIENT_IP_HEADER` | The header the host's proxy puts the client address in, e.g. `X-Forwarded-For`. Without it, the per-IP sign-in limit sees only the proxy's address (TS-104). |
 | api | `CREATOR_EMAIL` | The creator's address, read by the creator bootstrap |

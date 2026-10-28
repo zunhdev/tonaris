@@ -49,6 +49,7 @@ describe("shortcuts (DS-78)", () => {
     expect(match(press("l"))).toBe("add-to-list");
     expect(match(press("c"))).toBe("capture");
     expect(match(press("o"))).toBe("open-in");
+    expect(match(press("S"))).toBe("share");
     expect(match(press("L"))).toBeUndefined();
     expect(match(press("v", 0, { metaKey: true }))).toBeUndefined();
   });
@@ -94,7 +95,7 @@ describe("the reference and the palette (DS-78)", () => {
   test("every single-key shortcut the matcher knows is a command", () => {
     const match = createShortcutMatcher();
     const ids = new Set<string>(commands.map(({ id }) => id));
-    for (const key of ["[", "?", "n", "N", "v", "m", "e", "l", "c", "o", "Backspace"]) {
+    for (const key of ["[", "?", "n", "N", "S", "v", "m", "e", "l", "c", "o", "Backspace"]) {
       expect(ids.has(String(match(press(key))))).toBe(true);
     }
     expect(ids.has(String(match(press("Backspace", 0, { metaKey: true }))))).toBe(true);

@@ -61,6 +61,7 @@ import { authorizeWrite } from "./policies";
 import { placeAtTop, setOrder, type Position } from "./positions";
 import { actingUserId, type Principal } from "./principals";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
+import { inviteToShare, setDisplayName, setShareLink, type ShareGrantStatus } from "./sharing";
 import type { ChangeOp, Mutation } from "./sync";
 import {
   deleteAlbum,
@@ -241,7 +242,27 @@ export type CollectionStore = {
   viewItems(personId: string, viewKey: string, kind: ViewItems): Promise<Set<string>>;
   /** Whether the album is in any active list. If not, it is in Unsorted (TS-13). */
   inActiveList(albumId: string): Promise<boolean>;
+
+  /** The account an email key signs in with, if any (FR-07.4). */
+  findAccountByEmail(emailKey: string): Promise<{ id: string } | undefined>;
+  /** The account's display name; null for none (FR-11.3). */
+  displayNameOf(userId: string): Promise<string | null>;
+  setDisplayName(userId: string, displayName: string | null): Promise<void>;
+  /** The owner's pending or accepted grants and live links, on any of their folders and lists (TS-34). */
+  activeShareCount(ownerId: string): Promise<number>;
+  /** The person's pending or accepted grant on the container, if any: one at most (TS-11). */
+  findOpenGrant(containerId: string, granteeId: string): Promise<ShareGrant | undefined>;
+  insertGrant(
+    grant: ShareGrant & { containerId: string; granteeId: string; invitedEmail: string },
+  ): Promise<void>;
+  /** The container's link that isn't revoked, if any: one at most (FR-07.16). */
+  findLiveLink(containerId: string): Promise<{ id: string } | undefined>;
+  insertLink(link: { id: string; containerId: string; tokenHash: Uint8Array }): Promise<void>;
+  revokeLink(id: string, at: Date): Promise<void>;
 };
+
+/** A grant as the commands see it. */
+export type ShareGrant = { id: string; status: ShareGrantStatus };
 
 /** A change for the account's log; the database layer gives it its `seq`. */
 export type ChangeInput =
@@ -271,10 +292,15 @@ export type CommandContext = {
   now?: Date;
   capture?: CaptureSource;
   link?: PreparedLink;
+  /** For `share.setLink` turning a link on: its token's hash, prepared with the server's secret (TS-32). */
+  shareLink?: { hash: Uint8Array };
 };
 
 export function runCommand(mutation: Mutation, context: CommandContext): Promise<CommandResult> {
   if (mutation.name === "album.create") return createAlbum(mutation.args, context);
+  if (mutation.name === "share.invite") return inviteToShare(mutation.args, context);
+  if (mutation.name === "share.setLink") return setShareLink(mutation.args, context);
+  if (mutation.name === "account.setDisplayName") return setDisplayName(mutation.args, context);
   if (mutation.name === "album.update") return updateAlbum(mutation.args, mutation.base, context);
   if (mutation.name === "album.setArtwork") {
     return setArtwork(mutation.args, mutation.base, context);

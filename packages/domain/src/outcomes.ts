@@ -24,6 +24,8 @@ export const errorCodes = [
   "rate_limited",
   "expired",
   "in_progress",
+  "recipient_not_found",
+  "display_name_required",
   "internal_error",
 ] as const;
 export const errorCodeSchema = z.enum(errorCodes);
@@ -50,6 +52,8 @@ const codeStatuses: Record<ErrorCode, number> = {
   rate_limited: 429,
   expired: 410,
   in_progress: 409,
+  recipient_not_found: 422,
+  display_name_required: 409,
   internal_error: 500,
 };
 

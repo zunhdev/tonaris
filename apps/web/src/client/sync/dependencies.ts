@@ -70,7 +70,10 @@ function referenced(mutation: Mutation): (string | null)[] {
     const { viewKey } = mutation.args;
     return viewKey === "root" || viewKey === "unsorted" ? [] : [viewKey];
   }
-  if (mutation.name === "defaults.set") return [];
+  if (mutation.name === "defaults.set" || mutation.name === "account.setDisplayName") return [];
+  if (mutation.name === "share.invite" || mutation.name === "share.setLink") {
+    return [mutation.args.containerId];
+  }
   if (mutation.name === "link.set" || mutation.name === "link.remove") {
     return [mutation.args.albumId];
   }

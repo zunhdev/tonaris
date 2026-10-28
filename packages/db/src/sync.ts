@@ -79,7 +79,10 @@ import {
   memberships,
   mutations,
   positions,
+  shareGrants,
+  shareLinks,
   trashUnits,
+  users,
   viewPrefs,
 } from "./schema";
 
@@ -993,6 +996,70 @@ function collectionStore(tx: Transaction): CollectionStore {
     async inActiveList(albumId) {
       return (await activeEntryOf(tx, albumId).limit(1)).length > 0;
     },
+
+    async findAccountByEmail(key) {
+      const [account] = await tx.select({ id: users.id }).from(users).where(eq(users.email, key));
+      return account;
+    },
+    async displayNameOf(userId) {
+      const [account] = await tx
+        .select({ displayName: users.displayName })
+        .from(users)
+        .where(eq(users.id, userId));
+      return account?.displayName ?? null;
+    },
+    async setDisplayName(userId, displayName) {
+      await tx.update(users).set({ displayName }).where(eq(users.id, userId));
+    },
+    async activeShareCount(ownerId) {
+      const owned = tx
+        .select({ id: containers.id })
+        .from(containers)
+        .where(eq(containers.ownerId, ownerId));
+      const [grants] = await tx
+        .select({ count: count() })
+        .from(shareGrants)
+        .where(
+          and(
+            inArray(shareGrants.containerId, owned),
+            inArray(shareGrants.status, ["pending", "accepted"]),
+          ),
+        );
+      const [links] = await tx
+        .select({ count: count() })
+        .from(shareLinks)
+        .where(and(inArray(shareLinks.containerId, owned), isNull(shareLinks.revokedAt)));
+      return (grants?.count ?? 0) + (links?.count ?? 0);
+    },
+    async findOpenGrant(containerId, granteeId) {
+      const [grant] = await tx
+        .select({ id: shareGrants.id, status: shareGrants.status })
+        .from(shareGrants)
+        .where(
+          and(
+            eq(shareGrants.containerId, containerId),
+            eq(shareGrants.granteeId, granteeId),
+            inArray(shareGrants.status, ["pending", "accepted"]),
+          ),
+        );
+      return grant;
+    },
+    async insertGrant(grant) {
+      await tx.insert(shareGrants).values(grant);
+    },
+    async findLiveLink(containerId) {
+      const [link] = await tx
+        .select({ id: shareLinks.id })
+        .from(shareLinks)
+        .where(and(eq(shareLinks.containerId, containerId), isNull(shareLinks.revokedAt)));
+      return link;
+    },
+    async insertLink({ id, containerId, tokenHash }) {
+      await tx.insert(shareLinks).values({ id, containerId, tokenHash: Buffer.from(tokenHash) });
+    },
+    async revokeLink(id, at) {
+      await tx.update(shareLinks).set({ revokedAt: at }).where(eq(shareLinks.id, id));
+    },
   };
 }
 
@@ -1081,7 +1148,13 @@ export async function executeMutation(
     claimed = false,
     capture,
     link,
-  }: { claimed?: boolean; capture?: CaptureSource; link?: PreparedLink } = {},
+    shareLink,
+  }: {
+    claimed?: boolean;
+    capture?: CaptureSource;
+    link?: PreparedLink;
+    shareLink?: { hash: Uint8Array };
+  } = {},
 ): Promise<ExecutedMutation> {
   const accountId = actingUserId(principal);
   const { mutationId } = mutation;
@@ -1119,6 +1192,7 @@ export async function executeMutation(
       now,
       ...(capture ? { capture } : {}),
       ...(link ? { link } : {}),
+      ...(shareLink ? { shareLink } : {}),
     });
     let changes: Change[] = [];
     const reported = result.status === "applied" ? (result.result ?? null) : null;

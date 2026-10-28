@@ -89,9 +89,17 @@ export function syncRoutes(
     hub,
     capture,
     artwork,
-  }: { db: Database; hub: SyncHub; capture?: CaptureDeps | undefined; artwork: ArtworkSigner },
+    shareSecret,
+  }: {
+    db: Database;
+    hub: SyncHub;
+    capture?: CaptureDeps | undefined;
+    artwork: ArtworkSigner;
+    /** Derives link tokens (TS-32). */
+    shareSecret: string;
+  },
 ) {
-  const run = mutationRunner(db, capture);
+  const run = mutationRunner(db, capture, { shareSecret });
   return new Elysia()
     .use(session)
     .post(

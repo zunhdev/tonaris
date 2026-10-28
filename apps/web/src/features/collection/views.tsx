@@ -11,7 +11,7 @@ import { CaptureRows } from "@/features/capture/capture-rows";
 import { PageHeader } from "@/features/shell/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Share2, Trash2 } from "lucide-react";
 import { useEffect, useMemo, type ReactNode } from "react";
 
 import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
@@ -21,7 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/
 import { AlbumCards } from "./album-cards";
 import { AlbumDetails } from "./album-details";
 import { AlbumRows } from "./album-rows";
-import { useMode, useStartEditor } from "./collection-ui";
+import { useCollectionUi, useMode, useNarrowScreen, useStartEditor } from "./collection-ui";
 import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
@@ -191,6 +191,9 @@ function ViewHeader({
 }) {
   const { editing } = useMode();
   const deleteContainer = useDeleteContainer();
+  const { startShare } = useCollectionUi();
+  const narrow = useNarrowScreen();
+  const offline = useConnection() === "offline";
   return (
     <PageHeader
       title={title}
@@ -198,6 +201,18 @@ function ViewHeader({
       editing={editing}
       actions={
         <>
+          {/* Sharing is the owner's, on the desktop (DS-65); it waits while offline. */}
+          {container && !narrow && (
+            <Button
+              variant="ghost"
+              aria-keyshortcuts="Shift+S"
+              disabled={offline}
+              onClick={() => startShare(container.id)}
+            >
+              <Share2 strokeWidth={1.5} aria-hidden />
+              Share
+            </Button>
+          )}
           {editing && container && (
             <Button variant="ghost" onClick={() => deleteContainer(container.id)}>
               <Trash2 strokeWidth={1.5} aria-hidden />
