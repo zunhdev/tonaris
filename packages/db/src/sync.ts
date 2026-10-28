@@ -760,14 +760,20 @@ function collectionStore(tx: Transaction): CollectionStore {
       return row?.count ?? 0;
     },
     async insertContainer(container) {
-      await tx.insert(containers).values({ ...container, nameKey: nameKey(container.name) });
+      await tx.insert(containers).values({
+        ...container,
+        nameKey: nameKey(container.name),
+        searchNameKey: searchKey(container.name),
+      });
     },
     async updateContainer(id, values) {
       await tx
         .update(containers)
         .set({
           ...values,
-          ...(values.name === undefined ? {} : { nameKey: nameKey(values.name) }),
+          ...(values.name === undefined
+            ? {}
+            : { nameKey: nameKey(values.name), searchNameKey: searchKey(values.name) }),
         })
         .where(eq(containers.id, id));
     },

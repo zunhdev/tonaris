@@ -32,7 +32,6 @@ export {
   listConnections,
   listContainer,
   revokeConnection,
-  searchAlbums,
   trashAlbums,
   type AlbumMatch,
   type CollectionOverview,
@@ -46,6 +45,8 @@ export { runExclusively } from "./locks";
 export { migrateDatabase, migrationsFolder } from "./migrations";
 export { albumProvenance } from "./provenance";
 export { providerCacheStore, pruneProviderCache } from "./provider-cache";
+export { fillSearchKeys } from "./migrations";
+export { searchCollection } from "./search";
 export { findLinkedAlbum } from "./service-links";
 export * from "./schema";
 export {

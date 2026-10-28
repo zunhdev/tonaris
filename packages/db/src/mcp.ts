@@ -3,12 +3,11 @@
 // their scopes carry the mode (`mcpModeOf`). The writes (`addToList`, `trashAlbums`) are TON-23's minimal stand-ins
 // for the domain commands M2 and M5 bring, which also record them in the change log (TS-20).
 
-import { and, asc, count, desc, eq, gt, inArray, isNull, notExists, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNull, notExists, sql } from "drizzle-orm";
 
 import {
   albumDeletionScope,
   scopeHash,
-  searchKey,
   trashRetentionDays,
   uuidv7,
   type AlbumDeletionScope,
@@ -150,40 +149,6 @@ export type AlbumMatch = {
   artistCredit: string;
   originalYear: number | null;
 };
-
-/** `%`, `_` and `\` match literally in a LIKE pattern. */
-const likeLiteral = (text: string) => text.replace(/[\\%_]/g, (character) => `\\${character}`);
-
-/**
- * Active albums whose title or artist contains `query`, by search key (FR-12.5, TS-12), ordered by artist and
- * title. At most `limit`.
- */
-export function searchAlbums(
-  db: Database,
-  { ownerId, query, limit }: { ownerId: string; query: string; limit: number },
-): Promise<AlbumMatch[]> {
-  const pattern = `%${likeLiteral(searchKey(query))}%`;
-  return db
-    .select({
-      id: albums.id,
-      title: albums.title,
-      artistCredit: albums.artistCredit,
-      originalYear: albums.originalYear,
-    })
-    .from(albums)
-    .where(
-      and(
-        eq(albums.ownerId, ownerId),
-        isNull(albums.trashedAt),
-        or(
-          sql`${albums.searchTitleKey} like ${pattern}`,
-          sql`${albums.searchArtistKey} like ${pattern}`,
-        ),
-      ),
-    )
-    .orderBy(asc(albums.searchArtistKey), asc(albums.searchTitleKey), asc(albums.id))
-    .limit(limit);
-}
 
 export type ContainerRef = { id: string; kind: ContainerKind; name: string };
 

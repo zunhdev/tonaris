@@ -22,7 +22,7 @@ import {
   type Principal,
 } from "@tonaris/domain";
 
-import { collectionOverview, listContainer, searchAlbums } from "./mcp";
+import { collectionOverview, listContainer } from "./mcp";
 import {
   accountSync,
   albums,
@@ -33,6 +33,7 @@ import {
   trashUnits,
   users,
 } from "./schema";
+import { searchCollection } from "./search";
 import {
   bootstrapSnapshot,
   executeBatch,
@@ -94,7 +95,15 @@ function container(
   parentId: string | null,
   name: string,
 ) {
-  return { id, ownerId, kind, parentId, name, nameKey: name.toLowerCase() };
+  return {
+    id,
+    ownerId,
+    kind,
+    parentId,
+    name,
+    nameKey: name.toLowerCase(),
+    searchNameKey: name.toLowerCase(),
+  };
 }
 
 async function changeCount(accountId: string): Promise<number> {
@@ -677,8 +686,8 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
       select gen_random_uuid(), ${anna.userId}, 'Album ' || n, 'Artist', 2000, 'album ' || n, 'artist'
       from generate_series(1, 200) n`);
     await t.db.execute(sql`
-      insert into ${containers} (id, owner_id, kind, name, name_key)
-      select gen_random_uuid(), ${anna.userId}, 'list', 'Bulk ' || n, 'bulk ' || n
+      insert into ${containers} (id, owner_id, kind, name, name_key, search_name_key)
+      select gen_random_uuid(), ${anna.userId}, 'list', 'Bulk ' || n, 'bulk ' || n, 'bulk ' || n
       from generate_series(1, 250) n`);
     await t.db.execute(sql`
       insert into ${memberships} (list_id, album_id, owner_id)
@@ -709,8 +718,12 @@ describe("Unsorted (FR-01.9, FR-01.10, TS-13)", () => {
 
     await executeMutation(t.db, anna, removeEntry(favorites.id, kindOfBlue.id));
     expect(await collectionOverview(t.db, anna.userId)).toMatchObject({ albums: 1, unsorted: 1 });
-    const found = await searchAlbums(t.db, { ownerId: anna.userId, query: "kind of", limit: 10 });
-    expect(found.map((match) => match.id)).toEqual([kindOfBlue.id]);
+    const found = await searchCollection(t.db, {
+      ownerId: anna.userId,
+      query: "kind of",
+      limit: 10,
+    });
+    expect(found.albums.items.map((match) => match.id)).toEqual([kindOfBlue.id]);
   });
 
   test("a list in Trash keeps its albums: in their other lists, or in Unsorted", async () => {

@@ -2,7 +2,14 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { uuidv7, type Album, type Container, type Membership } from "@tonaris/domain";
+import {
+  defaultSearchLimit,
+  uuidv7,
+  type Album,
+  type Container,
+  type Membership,
+} from "@tonaris/domain";
+import parity from "@tonaris/domain/fixtures/search.json";
 
 import { buildTree } from "../collection/tree";
 import { albumPlace, buildSearchIndex, containerLocation, search } from "./search-index";
@@ -153,4 +160,73 @@ test("builds and answers within 50 ms a keystroke at 5,000 albums", () => {
   );
   expect(built).toBeLessThan(50);
   expect(slowest).toBeLessThan(50);
+});
+
+/** The fixture's active part. */
+const active = <T extends { trashed?: boolean }>(items: T[]) =>
+  items.filter((each) => each.trashed !== true);
+const joined = (location: string[], empty: string) => location.join(" › ") || empty;
+
+describe("the parity fixture (X-02, TS-50)", () => {
+  // The client holds only active content, so the fixture's Trash isn't on it.
+  const refs = new Map<string, string>();
+  const idOf = (ref: string) => {
+    let id = refs.get(ref);
+    if (!id) {
+      id = uuidv7();
+      refs.set(ref, id);
+    }
+    return id;
+  };
+  const fixtureContainers = active(parity.containers).map(
+    ({ ref, kind, name, parent, description }): Container => ({
+      id: idOf(ref),
+      kind: kind === "folder" ? "folder" : "list",
+      parentId: parent === null ? null : idOf(parent),
+      name,
+      description: description ?? null,
+    }),
+  );
+  const activeLists = new Set(fixtureContainers.map(({ id }) => id));
+  const fixtureAlbums = active(parity.albums).map(({ ref, title, artist }) =>
+    Object.assign(album(title, artist), { id: idOf(ref) }),
+  );
+  const fixtureEntries = active(parity.albums).flatMap(({ ref, lists }) =>
+    lists
+      .map((list) => ({ listId: idOf(list), albumId: idOf(ref) }))
+      .filter(({ listId }) => activeLists.has(listId)),
+  );
+  const parityIndex = indexOf(fixtureContainers, fixtureAlbums, fixtureEntries);
+
+  test.each(parity.queries)('"$query"', (expected) => {
+    const results = search(parityIndex, expected.query);
+    const limit = expected.limit ?? defaultSearchLimit;
+    for (const group of ["folders", "lists"] as const) {
+      expect(results[group].length).toBe(expected[group].total);
+      expect(
+        results[group].slice(0, limit).map((each) => ({
+          name: each.name,
+          location: containerLocation(parityIndex.tree, each),
+        })),
+      ).toEqual(
+        expected[group].items.map(({ name, location }) => ({
+          name,
+          location: joined(location, "Collection"),
+        })),
+      );
+    }
+    expect(results.albums.length).toBe(expected.albums.total);
+    expect(
+      results.albums.slice(0, limit).map((each) => {
+        const { path, others } = albumPlace(parityIndex, each.id);
+        return { title: each.title, path, others };
+      }),
+    ).toEqual(
+      expected.albums.items.map(({ title, lists }) => ({
+        title,
+        path: joined(lists[0] ?? [], "Unsorted"),
+        others: Math.max(lists.length - 1, 0),
+      })),
+    );
+  });
 });

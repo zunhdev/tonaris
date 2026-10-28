@@ -255,6 +255,7 @@ describe("constraints", () => {
       kind: "folder" as const,
       name: "Jazz",
       nameKey: "jazz",
+      searchNameKey: "jazz",
       ...values,
     });
 
@@ -289,6 +290,7 @@ describe("constraints", () => {
           kind: "list",
           name: "Later",
           nameKey: "later",
+          searchNameKey: "later",
           trashedAt: new Date(),
         }),
       ),
@@ -302,7 +304,9 @@ describe("constraints", () => {
     const violations = await Promise.all(
       blanks.map((name) =>
         violation(
-          t.db.insert(containers).values({ id: id(), ownerId, kind: "list", name, nameKey: name }),
+          t.db
+            .insert(containers)
+            .values({ id: id(), ownerId, kind: "list", name, nameKey: name, searchNameKey: name }),
         ),
       ),
     );
@@ -438,9 +442,14 @@ describe("constraints", () => {
     const listId = id();
     const purged = album(ownerId);
     const kept = album(ownerId);
-    await t.db
-      .insert(containers)
-      .values({ id: listId, ownerId, kind: "list", name: "Favorites", nameKey: "favorites" });
+    await t.db.insert(containers).values({
+      id: listId,
+      ownerId,
+      kind: "list",
+      name: "Favorites",
+      nameKey: "favorites",
+      searchNameKey: "favorites",
+    });
     await t.db.insert(albums).values([purged, kept]);
     await t.db.insert(memberships).values([
       { listId, albumId: purged.id, ownerId },
@@ -457,9 +466,14 @@ describe("accounts", () => {
   test("owner and person columns need an existing account", async () => {
     expect(
       await violation(
-        t.db
-          .insert(containers)
-          .values({ id: id(), ownerId: id(), kind: "list", name: "Later", nameKey: "later" }),
+        t.db.insert(containers).values({
+          id: id(),
+          ownerId: id(),
+          kind: "list",
+          name: "Later",
+          nameKey: "later",
+          searchNameKey: "later",
+        }),
       ),
     ).toBe("containers_owner_id_user_id_fkey");
     expect(await violation(t.db.insert(accountSync).values({ accountId: id() }))).toBe(

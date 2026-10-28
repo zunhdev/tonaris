@@ -1,16 +1,10 @@
 // Search over the owned collection on this device (FR-12.1, FR-12.4, FR-12.5; TS-50): folder and list names, album
 // titles and artist credits, matched as substrings of their search keys. The client holds only active content, so
-// Trash is never searched, and Unsorted is. Results come in DS-75's groups, each ordered by how the name matches —
-// its start, then a word's start, then anywhere — then alphabetically (decided with the creator, 28 October 2026).
-// Locations are worked out only for the results shown. Pure, so the rules are tested without a DOM.
+// Trash is never searched, and Unsorted is. Results come in DS-75's groups, in the order the server gives too
+// (`rankNames` and `rankAlbums`, X-02). Locations are worked out only for the results shown. Pure, so the rules are
+// tested without a DOM; the shared parity fixture runs against it (TON-62).
 
-import {
-  searchKey,
-  searchTier,
-  type Album,
-  type Container,
-  type SearchTier,
-} from "@tonaris/domain";
+import { rankAlbums, rankNames, searchKey, type Album, type Container } from "@tonaris/domain";
 
 import type { CollectionData } from "../collection/data";
 import { ancestorsOf, type Tree } from "../collection/tree";
@@ -83,54 +77,34 @@ export type SearchResults = {
 
 export const noResults: SearchResults = { folders: [], lists: [], albums: [] };
 
-/** Bytewise, as the views compare search keys (order.ts). */
-const byKey = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-
-function rankContainers(entries: readonly ContainerEntry[], query: string): Container[] {
-  const matched: (ContainerEntry & { tier: SearchTier })[] = [];
-  for (const entry of entries) {
-    const tier = searchTier(query, entry.key);
-    if (tier !== undefined) matched.push({ ...entry, tier });
-  }
-  return matched
-    .toSorted(
-      (a, b) => a.tier - b.tier || byKey(a.key, b.key) || byKey(a.container.id, b.container.id),
-    )
-    .map(({ container }) => container);
-}
-
-/** Albums rank by the better of their title's and artist's matches; ties go by title, then artist. */
-function rankAlbums(entries: readonly AlbumEntry[], query: string): Album[] {
-  const matched: (AlbumEntry & { tier: SearchTier })[] = [];
-  for (const entry of entries) {
-    const title = searchTier(query, entry.title);
-    const artist = searchTier(query, entry.artist);
-    const tier = title === undefined || (artist !== undefined && artist < title) ? artist : title;
-    if (tier !== undefined) matched.push({ ...entry, tier });
-  }
-  return matched
-    .toSorted(
-      (a, b) =>
-        a.tier - b.tier ||
-        byKey(a.title, b.title) ||
-        byKey(a.artist, b.artist) ||
-        byKey(a.album.id, b.album.id),
-    )
-    .map(({ album }) => album);
-}
+const containersOf = (entries: readonly ContainerEntry[], query: string) =>
+  rankNames(
+    entries,
+    query,
+    (entry) => entry.key,
+    (entry) => entry.container.id,
+  ).map(({ container }) => container);
 
 /** Everything `query` matches, in DS-75's groups, each fully ordered; nothing for a blank query. */
 export function search(index: SearchIndex, query: string): SearchResults {
   const key = searchKey(query);
   if (key === "") return noResults;
   return {
-    folders: rankContainers(index.folders, key),
-    lists: rankContainers(index.lists, key),
-    albums: rankAlbums(index.albums, key),
+    folders: containersOf(index.folders, key),
+    lists: containersOf(index.lists, key),
+    albums: rankAlbums(
+      index.albums,
+      key,
+      (entry) => entry,
+      (entry) => entry.album.id,
+    ).map(({ album }) => album),
   };
 }
 
 const separator = " › ";
+
+/** Bytewise, as search keys are compared everywhere (TS-12). */
+const byKey = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 const pathOf = (tree: Tree, container: Container) =>
   [...ancestorsOf(tree, container.id), container].map(({ name }) => name).join(separator);

@@ -295,6 +295,7 @@ function buildTree(b: Builder, shape: CollectionShape): { root?: Container; list
       parentId,
       name,
       nameKey: nameKey(name),
+      searchNameKey: searchKey(name),
       ...stamps(createdAt),
     });
     return container;

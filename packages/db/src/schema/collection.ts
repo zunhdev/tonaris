@@ -72,6 +72,8 @@ export const containers = table(
     parentId: uuid(),
     name: text().notNull(),
     nameKey: text().notNull(),
+    // searchKey() of the name, stored like the albums' keys so the server searches as the app does (TS-12, TS-50).
+    searchNameKey: text().notNull(),
     description: text(),
     trashedAt: instant(),
     trashUnitId: uuid().references(() => trashUnits.id),
@@ -90,6 +92,11 @@ export const containers = table(
         t.nameKey,
       )
       .where(sql`${t.trashedAt} is null`),
+    // Substring search (TS-50). pg_trgm lives in `public`, so the operator class is named in full (TON-62).
+    index("containers_search_name_key_trgm").using(
+      "gin",
+      t.searchNameKey.op("public.gin_trgm_ops"),
+    ),
     check("containers_kind_check", oneOf(t.kind, containerKinds)),
     check("containers_name_check", notBlank(t.name)),
     check("containers_trash_check", trashStamp(t.trashedAt, t.trashUnitId)),
@@ -128,6 +135,11 @@ export const albums = table(
   (t) => [
     index().on(t.ownerId),
     index().on(t.trashUnitId),
+    index("albums_search_title_key_trgm").using("gin", t.searchTitleKey.op("public.gin_trgm_ops")),
+    index("albums_search_artist_key_trgm").using(
+      "gin",
+      t.searchArtistKey.op("public.gin_trgm_ops"),
+    ),
     check("albums_title_check", notBlank(t.title)),
     check("albums_artist_credit_check", notBlank(t.artistCredit)),
     check("albums_release_type_check", oneOf(t.releaseType, releaseTypes)),
