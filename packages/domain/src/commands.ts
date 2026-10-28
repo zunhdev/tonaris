@@ -63,8 +63,10 @@ import type { ChangeOp, Mutation } from "./sync";
 import {
   deleteAlbum,
   deleteContainer,
+  purgeUnits,
   recoverUnit,
   type StoredTrashUnit,
+  type Tombstone,
   type TrashUnit,
 } from "./trash";
 import { setDefaults, setView, type ViewDefaults, type ViewItems, type ViewPrefs } from "./views";
@@ -103,6 +105,22 @@ export type CollectionStore = {
   trashAlbum(unit: StoredTrashUnit, albumId: string): Promise<void>;
   /** Takes the album out of Trash, and deletes its unit (FR-14.2). */
   recoverAlbum(unitId: string, albumId: string): Promise<void>;
+  /** The unit the album in Trash is in, if any. */
+  albumUnit(albumId: string): Promise<string | undefined>;
+  /** The folder or list units whose lists hold an entry of the album (TS-13). */
+  unitsReferencingAlbum(albumId: string): Promise<string[]>;
+  /** Records what was purged in the unit, for its recovery to report (TS-13). */
+  addTombstone(unitId: string, tombstone: Tombstone): Promise<void>;
+  /** Deletes the folders and lists `ids` with their entries, and their unit (FR-01.17). */
+  purgeContainers(unitId: string, ids: string[]): Promise<void>;
+  /**
+   * Deletes the album with its entries, links, values and places, and its unit (FR-14.5); answers the services and
+   * fields it had, which clients hold.
+   */
+  purgeAlbum(
+    unitId: string,
+    albumId: string,
+  ): Promise<{ services: StreamingService[]; fieldIds: string[] }>;
   /** The album's link for `service`, if it has one (FR-06.2). */
   findServiceLink(albumId: string, service: StreamingService): Promise<CapturedLink | undefined>;
   insertServiceLink(albumId: string, ownerId: string, link: CapturedLink): Promise<void>;
@@ -282,6 +300,7 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   }
   if (mutation.name === "container.delete") return deleteContainer(mutation.args, context);
   if (mutation.name === "album.delete") return deleteAlbum(mutation.args, context);
+  if (mutation.name === "trash.purge") return purgeUnits(mutation.args, context);
   if (mutation.name === "trash.recover") return recoverUnit(mutation.args, context);
   if (mutation.name === "container.describe") {
     return describeContainer(mutation.args, mutation.base, context);

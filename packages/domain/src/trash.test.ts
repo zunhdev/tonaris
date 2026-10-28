@@ -460,3 +460,104 @@ describe("deleting and restoring albums (FR-14.1 to FR-14.3)", () => {
     expect(trashUnits.has(unitId)).toBe(true);
   });
 });
+
+const purge = (...unitIds: string[]): Mutation => ({
+  mutationId: uuidv7(),
+  name: "trash.purge",
+  args: { unitIds },
+});
+
+describe("removing Trash for good (FR-01.17, FR-01.18, FR-14.5, TS-13)", () => {
+  test("a purged list goes with its entries; its albums stay, and one in Trash keeps a tombstone of it", async () => {
+    const doom = container("list", "Doom");
+    const [kept, trashed] = [album("Dopesmoker"), album("Holy Mountain")];
+    const addedAt = "2026-10-28T12:00:00.000Z";
+    const { run, containers, memberships, albums, trashUnits } = setup([doom], {
+      albums: [kept, trashed],
+      memberships: [
+        { listId: doom.id, albumId: kept.id, addedAt, ownerId: owner },
+        { listId: doom.id, albumId: trashed.id, addedAt, ownerId: owner },
+      ],
+    });
+    const albumUnit = uuidv7();
+    await run(deleteAlbum(trashed.id, albumUnit));
+    const listUnit = uuidv7();
+    await run(remove(doom.id, listUnit));
+    const gone = uuidv7();
+    expect(await run(purge(listUnit, gone))).toMatchObject({
+      status: "applied",
+      result: { purged: [listUnit], gone: [gone] },
+      changes: [{ entity: "trashUnit", id: listUnit, op: "delete" }],
+    });
+    expect(containers.has(doom.id)).toBe(false);
+    expect(memberships.size).toBe(0);
+    expect(albums.get(kept.id)?.trashed).toBe(false);
+    expect(trashUnits.get(albumUnit)?.tombstones).toEqual([
+      { kind: "list", id: doom.id, name: "Doom" },
+    ]);
+
+    // Restoring the album reports the list it can't go back to.
+    expect(await run(recover(albumUnit))).toMatchObject({
+      status: "applied",
+      result: { skipped: [{ listId: doom.id, listName: "Doom", reason: "list_deleted" }] },
+    });
+  });
+
+  test("a purged album goes with its links and values, and a list's unit keeps a tombstone of it", async () => {
+    const doom = container("list", "Doom");
+    const dopesmoker = album("Dopesmoker");
+    const addedAt = "2026-10-28T12:00:00.000Z";
+    const fieldId = uuidv7();
+    const { run, albums, links, fieldValues, trashUnits } = setup([doom], {
+      albums: [dopesmoker],
+      memberships: [{ listId: doom.id, albumId: dopesmoker.id, addedAt, ownerId: owner }],
+      links: [
+        {
+          albumId: dopesmoker.id,
+          service: "spotify",
+          url: "https://open.spotify.com/album/1",
+          entityId: "1",
+        },
+      ],
+      fields: [{ id: fieldId, name: "Rating", type: "number", options: [], ownerId: owner }],
+      fieldValues: [{ albumId: dopesmoker.id, fieldId, value: "5" }],
+    });
+    const listUnit = uuidv7();
+    await run(remove(doom.id, listUnit));
+    const albumUnit = uuidv7();
+    await run(deleteAlbum(dopesmoker.id, albumUnit));
+    const result = await run(purge(albumUnit));
+    expect(result).toMatchObject({
+      status: "applied",
+      changes: [
+        { entity: "link", id: `${dopesmoker.id}:spotify`, op: "delete" },
+        { entity: "fieldValue", id: `${dopesmoker.id}:${fieldId}`, op: "delete" },
+        { entity: "trashUnit", id: albumUnit, op: "delete" },
+      ],
+    });
+    expect(albums.has(dopesmoker.id)).toBe(false);
+    expect(links.size).toBe(0);
+    expect(fieldValues.size).toBe(0);
+    expect(trashUnits.get(listUnit)?.tombstones).toEqual([
+      { id: dopesmoker.id, title: "Dopesmoker", artist: "Sleep" },
+    ]);
+  });
+
+  test("purging is app-only", async () => {
+    const doom = container("list", "Doom");
+    const context = memoryStore({ containers: [doom] });
+    const unitId = uuidv7();
+    await runCommand(mutationSchema.parse(remove(doom.id, unitId)), {
+      principal: anna,
+      store: context.store,
+    });
+    const agent: Principal = { kind: "mcp", userId: owner, grantId: uuidv7(), mode: "manage" };
+    expect(
+      await runCommand(mutationSchema.parse(purge(unitId)), {
+        principal: agent,
+        store: context.store,
+      }),
+    ).toMatchObject({ status: "failed", code: "app_only" });
+    expect(context.trashUnits.has(unitId)).toBe(true);
+  });
+});

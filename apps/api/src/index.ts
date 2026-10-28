@@ -21,7 +21,13 @@ const providers = createProviders(config, db, hub);
 const app = createApp({ config, auth, db, email, hub, capture: providers.capture }).listen(
   config.port,
 );
-const schedules = startSchedules(db, apiSchedules(providers.spotify));
+const schedules = startSchedules(
+  db,
+  apiSchedules(providers.spotify, {
+    db,
+    publish: (accountId, changes) => hub.publish(accountId, changes),
+  }),
+);
 
 console.log(`tonaris-api listening on ${app.server?.url.href}`);
 

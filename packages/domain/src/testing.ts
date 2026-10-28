@@ -10,6 +10,7 @@ import { containerOf, type Container, type StoredContainer } from "./containers"
 import { enrichableFields, type EnrichableField, type ProvenanceEntry } from "./enrichment";
 import { fieldValueKey, type FieldValue, type FieldValueData } from "./field-values";
 import type { StoredField } from "./fields";
+import { streamingServices } from "./links";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
 import type { StoredTrashUnit } from "./trash";
@@ -192,6 +193,52 @@ export function memoryStore({
       albumRows.set(albumId, { ...albumRows.get(albumId)!, trashed: true });
       unitOf.set(albumId, unit.id);
       return Promise.resolve();
+    },
+    albumUnit: (albumId) =>
+      Promise.resolve(albumRows.get(albumId)?.trashed ? unitOf.get(albumId) : undefined),
+    unitsReferencingAlbum: (albumId) =>
+      Promise.resolve([
+        ...new Set(
+          [...membershipRows.values()].flatMap((entry) => {
+            const unit = entry.albumId === albumId ? unitOf.get(entry.listId) : undefined;
+            return unit ? [unit] : [];
+          }),
+        ),
+      ]),
+    addTombstone: (unitId, tombstone) => {
+      unitRows.get(unitId)?.tombstones.push(tombstone);
+      return Promise.resolve();
+    },
+    purgeContainers: (unitId, ids) => {
+      for (const id of ids) {
+        containerRows.delete(id);
+        unitOf.delete(id);
+        for (const [key, entry] of membershipRows)
+          if (entry.listId === id) membershipRows.delete(key);
+      }
+      unitRows.delete(unitId);
+      return Promise.resolve();
+    },
+    purgeAlbum: (unitId, albumId) => {
+      albumRows.delete(albumId);
+      unitOf.delete(albumId);
+      unitRows.delete(unitId);
+      for (const [key, entry] of membershipRows)
+        if (entry.albumId === albumId) membershipRows.delete(key);
+      const services = [...linkRows.keys()]
+        .filter((key) => key.startsWith(`${albumId}:`))
+        .map((key) => key.slice(albumId.length + 1));
+      for (const service of services) linkRows.delete(`${albumId}:${service}`);
+      const fieldIds = [...valueRows.keys()]
+        .filter((key) => key.startsWith(`${albumId}:`))
+        .map((key) => key.slice(albumId.length + 1));
+      for (const fieldId of fieldIds) valueRows.delete(`${albumId}:${fieldId}`);
+      for (const [key, position] of positionRows)
+        if (position.itemId === albumId) positionRows.delete(key);
+      return Promise.resolve({
+        services: streamingServices.filter((service) => services.includes(service)),
+        fieldIds,
+      });
     },
     recoverAlbum: (unitId, albumId) => {
       albumRows.set(albumId, { ...albumRows.get(albumId)!, trashed: false });

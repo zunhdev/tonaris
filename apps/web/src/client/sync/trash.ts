@@ -142,6 +142,28 @@ export function createTrash({
     },
 
     /**
+     * Removes units from Trash for good (FR-01.18), as the owner confirmed: they leave the Trash at once, and
+     * `trash.purge` reports any already gone. Answers the transaction and its write's ID.
+     */
+    purge(unitIds: readonly string[]) {
+      const mutation: Mutation = {
+        mutationId: uuidv7(),
+        name: "trash.purge",
+        args: { unitIds: [...unitIds] },
+      };
+      const transaction = createTransaction({
+        mutationFn: async ({ transaction: written }) => {
+          await writer.persist(written, [{ key: `purge:${mutation.mutationId}`, mutation }]);
+        },
+      });
+      transaction.mutate(() => {
+        const held = unitIds.filter((unitId) => trashUnits.has(unitId));
+        if (held.length > 0) trashUnits.delete(held);
+      });
+      return { transaction, mutationId: mutation.mutationId };
+    },
+
+    /**
      * Recovers a unit (FR-01.14 to FR-01.16): to `choice.parentId` and as `choice.name` when given, otherwise where and
      * as it was. With `deleted`, what the deletion took out comes back at once, as chosen; otherwise it arrives from the
      * server. Answers the transaction and its write's ID, whose outcome reports what was skipped.

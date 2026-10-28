@@ -25,14 +25,18 @@ afterEach(async () => {
 test("the Spotify bridge and its health check exist only when configured", () => {
   const off = createProviders({ spotify: undefined }, t.db, { publish: () => {} });
   expect(off.spotify).toBeUndefined();
-  expect(apiSchedules(off.spotify).map((schedule) => schedule.name)).toEqual([
+  const trash = { db: t.db, publish: () => {} };
+  expect(apiSchedules(off.spotify, trash).map((schedule) => schedule.name)).toEqual([
     "prune-sync-history",
     "prune-provider-cache",
+    "trash-expiry",
   ]);
   const on = createProviders({ spotify: { clientId: "id", clientSecret: "secret" } }, t.db, {
     publish: () => {},
   });
-  expect(apiSchedules(on.spotify).map((schedule) => schedule.name)).toContain("spotify-health");
+  expect(apiSchedules(on.spotify, trash).map((schedule) => schedule.name)).toContain(
+    "spotify-health",
+  );
 });
 
 test("spotify-health logs a refused token and a missing UPC, naming no Spotify value", async () => {

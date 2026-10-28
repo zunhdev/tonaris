@@ -79,6 +79,7 @@ type Call =
   | "capture"
   | "trash.delete"
   | "album.delete"
+  | "trash.purge"
   | "trash.recover";
 
 /** The collection calls that make the changes again, in the order of each call's first change. */
@@ -113,6 +114,7 @@ function plan() {
     /** Folders and lists to move to Trash again, and units to recover again (TON-55). */
     trashDeletes: [] as string[],
     albumDeletes: [] as string[],
+    purges: [] as string[],
     trashRecoveries: [] as { unitId: string; parentId?: string | null; name?: string }[],
     /** Captures sent again: one request each, as they were (TON-45). */
     captures: [] as CaptureArgs[],
@@ -310,6 +312,12 @@ function remake(
     planned.albumDeletes.push(mutation.args.id);
     return planned.needs("album.delete");
   }
+  if (mutation.name === "trash.purge") {
+    const left = mutation.args.unitIds.filter((unitId) => trashUnits.has(unitId));
+    if (left.length === 0) return "unchanged";
+    planned.purges.push(...left);
+    return planned.needs("trash.purge");
+  }
   if (mutation.name === "trash.recover") {
     if (!trashUnits.has(mutation.args.unitId)) return "unchanged";
     planned.trashRecoveries.push(mutation.args);
@@ -477,6 +485,7 @@ function make(
     );
   } else if (call === "capture") captures.send(planned.captures);
   else if (call === "trash.delete") sent(trash.deleteContainers(planned.trashDeletes).transaction);
+  else if (call === "trash.purge") sent(trash.purge(planned.purges).transaction);
   else if (call === "album.delete") {
     for (const id of planned.albumDeletes) sent(trash.deleteAlbum(id).transaction);
   } else if (call === "trash.recover") {

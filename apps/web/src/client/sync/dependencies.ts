@@ -61,8 +61,10 @@ function referenced(mutation: Mutation): (string | null)[] {
   if (mutation.name === "container.delete" || mutation.name === "album.delete") {
     return [mutation.args.id];
   }
-  if (mutation.name === "trash.recover")
+  if (mutation.name === "trash.recover") {
     return [mutation.args.unitId, mutation.args.parentId ?? null];
+  }
+  if (mutation.name === "trash.purge") return mutation.args.unitIds;
   if (mutation.name === "container.move") return [mutation.args.id, mutation.args.parentId];
   if (mutation.name === "view.set") {
     const { viewKey } = mutation.args;

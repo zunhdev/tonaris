@@ -429,6 +429,7 @@ const reasons: Record<SkippedEntry["reason"], string> = {
   album_in_trash: "The album is in Trash",
   album_deleted: "The album was deleted permanently",
   list_in_trash: "The list is in Trash",
+  list_deleted: "The list was deleted permanently",
 };
 
 /** Each entry recovery skipped, and why (DS-56). */

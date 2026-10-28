@@ -10,8 +10,10 @@ import {
   exists,
   gt,
   inArray,
+  isNotNull,
   isNull,
   lt,
+  lte,
   notExists,
   sql,
   type SQL,
@@ -28,6 +30,7 @@ import {
   uuidv7Time,
   failure,
   maxContainerDepth,
+  purgeUnit,
   trashUnitOf,
   nameKey,
   searchKey,
@@ -454,6 +457,50 @@ function collectionStore(tx: Transaction): CollectionStore {
         .update(albums)
         .set({ trashedAt: unit.deletedAt, trashUnitId: unit.id })
         .where(eq(albums.id, albumId));
+    },
+    async albumUnit(albumId) {
+      const [row] = await tx
+        .select({ unitId: albums.trashUnitId })
+        .from(albums)
+        .where(eq(albums.id, albumId));
+      return row?.unitId ?? undefined;
+    },
+    async unitsReferencingAlbum(albumId) {
+      const rows = await tx
+        .selectDistinct({ unitId: containers.trashUnitId })
+        .from(memberships)
+        .innerJoin(containers, eq(containers.id, memberships.listId))
+        .where(and(eq(memberships.albumId, albumId), isNotNull(containers.trashUnitId)));
+      return rows.flatMap((row) => (row.unitId ? [row.unitId] : []));
+    },
+    async addTombstone(unitId, tombstone) {
+      await tx
+        .update(trashUnits)
+        .set({ tombstones: sql`${trashUnits.tombstones} || ${JSON.stringify([tombstone])}::jsonb` })
+        .where(eq(trashUnits.id, unitId));
+    },
+    async purgeContainers(unitId, ids) {
+      // Their entries cascade (TS-11); albums stay where else they are (FR-01.17).
+      if (ids.length > 0) await tx.delete(containers).where(inArray(containers.id, ids));
+      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
+    },
+    async purgeAlbum(unitId, albumId) {
+      const links = await tx
+        .select({ service: albumServiceLinks.service })
+        .from(albumServiceLinks)
+        .where(eq(albumServiceLinks.albumId, albumId));
+      const values = await tx
+        .select({ fieldId: albumFieldValues.fieldId })
+        .from(albumFieldValues)
+        .where(eq(albumFieldValues.albumId, albumId));
+      // Its entries, links, values and provenance cascade (TS-11); its places don't refer to it by key.
+      await tx.delete(positions).where(eq(positions.itemId, albumId));
+      await tx.delete(albums).where(eq(albums.id, albumId));
+      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
+      return {
+        services: links.map((link) => link.service),
+        fieldIds: values.map((value) => value.fieldId),
+      };
     },
     async recoverAlbum(unitId, albumId) {
       await tx
@@ -1385,4 +1432,48 @@ export async function pruneSyncHistory(
   const before = new Date(now.getTime() - syncRetentionMs);
   await db.delete(changeLog).where(lt(changeLog.createdAt, before));
   await db.delete(mutations).where(lt(mutations.receivedAt, before));
+}
+
+/**
+ * The hourly Trash expiry (TS-91, FR-01.17, FR-14.5): every unit past its expiry is purged, one owner at a time,
+ * under the owner's write lock, with its changes logged without a mutation. Answers each owner's changes, for the
+ * streams.
+ */
+export async function purgeExpiredTrash(
+  db: Database,
+  now: Date,
+): Promise<{ accountId: string; changes: Change[] }[]> {
+  const owners = await db
+    .selectDistinct({ ownerId: trashUnits.ownerId })
+    .from(trashUnits)
+    .where(lte(trashUnits.expiresAt, now));
+  const purged: { accountId: string; changes: Change[] }[] = [];
+  for (const { ownerId } of owners) {
+    // oxlint-disable-next-line no-await-in-loop
+    const changes = await db.transaction(async (tx) => {
+      const seq = await lockAccount(tx, ownerId);
+      const store = collectionStore(tx);
+      const units = await tx
+        .select({
+          id: trashUnits.id,
+          ownerId: trashUnits.ownerId,
+          kind: trashUnits.kind,
+          rootId: trashUnits.rootId,
+          deletedAt: trashUnits.deletedAt,
+          expiresAt: trashUnits.expiresAt,
+          tombstones: trashUnits.tombstones,
+        })
+        .from(trashUnits)
+        .where(and(eq(trashUnits.ownerId, ownerId), lte(trashUnits.expiresAt, now)))
+        .orderBy(asc(trashUnits.expiresAt), asc(trashUnits.id));
+      const inputs: ChangeInput[] = [];
+      for (const unit of units) {
+        // oxlint-disable-next-line no-await-in-loop
+        inputs.push(...(await purgeUnit(store, unit)));
+      }
+      return inputs.length > 0 ? logChanges(tx, ownerId, seq, inputs, null) : [];
+    });
+    if (changes.length > 0) purged.push({ accountId: ownerId, changes });
+  }
+  return purged;
 }

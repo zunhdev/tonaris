@@ -1519,5 +1519,12 @@ describe("albums in Trash (FR-14.1, FR-14.2, TON-57)", () => {
       3_000,
       "the restore",
     );
+
+    // Deleted again and purged for good (FR-14.5): the unit leaves the other session too.
+    const again = web.trash.deleteAlbum(albumId);
+    await again.transaction.isPersisted.promise;
+    await until(() => phone.trashUnits.has(again.unitId), 3_000, "the second unit");
+    await web.trash.purge([again.unitId]).transaction.isPersisted.promise;
+    await until(() => !phone.trashUnits.has(again.unitId), 3_000, "the purge");
   });
 });

@@ -3,11 +3,17 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { changeLog, mutations, users } from "@tonaris/db";
+import { changeLog, containers, mutations, trashUnits, users } from "@tonaris/db";
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { syncRetentionMs, uuidv7 } from "@tonaris/domain";
 
-import { pruneSyncHistorySchedule, runSchedule, startSchedules, type Schedule } from "./schedules";
+import {
+  pruneSyncHistorySchedule,
+  runSchedule,
+  startSchedules,
+  trashExpirySchedule,
+  type Schedule,
+} from "./schedules";
 
 let t: TestDatabase;
 
@@ -99,5 +105,39 @@ describe("schedules (TS-90)", () => {
     }
     await schedules.stop();
     expect(slow.finished).toBe(1);
+  });
+});
+
+describe("trash-expiry (TS-91, FR-01.17)", () => {
+  test("purges units past their expiry and publishes each owner's changes", async () => {
+    const ownerId = uuidv7();
+    await t.db.insert(users).values({ id: ownerId, email: `${ownerId}@example.com` });
+    const [listId, unitId] = [uuidv7(), uuidv7()];
+    const deletedAt = new Date(Date.now() - 31 * 86_400_000);
+    await t.db.insert(trashUnits).values({
+      id: unitId,
+      ownerId,
+      kind: "list",
+      rootId: listId,
+      deletedAt,
+      expiresAt: new Date(deletedAt.getTime() + 30 * 86_400_000),
+    });
+    await t.db.insert(containers).values({
+      id: listId,
+      ownerId,
+      kind: "list",
+      parentId: null,
+      name: "Doom",
+      nameKey: "doom",
+      trashedAt: deletedAt,
+      trashUnitId: unitId,
+    });
+    const published: { accountId: string; ids: string[] }[] = [];
+    const schedule = trashExpirySchedule(t.db, (accountId, changes) =>
+      published.push({ accountId, ids: changes.map((change) => change.id) }),
+    );
+    expect(await runSchedule(t.db, schedule)).toBe(true);
+    expect(published).toEqual([{ accountId: ownerId, ids: [unitId] }]);
+    expect(await t.db.select().from(containers)).toEqual([]);
   });
 });
