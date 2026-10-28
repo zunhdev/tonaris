@@ -2,12 +2,12 @@
 // owner already has albums of, and which saved albums might be under a release group MusicBrainz has since merged
 // into the captured one. The command matches again under the lock, so these only decide what to ask.
 
-import { and, asc, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 
 import { searchKey } from "@tonaris/domain";
 
 import type { Database } from "./client";
-import { albums } from "./schema";
+import { albums, mutations } from "./schema";
 
 /** Merge candidates asked about per capture, at most: each costs a MusicBrainz lookup at 1 a second. */
 export const maxMergeCandidates = 5;
@@ -71,4 +71,28 @@ export async function mergeCandidates(
   return rows.flatMap((row) =>
     row.releaseGroupId ? [{ albumId: row.albumId, releaseGroupId: row.releaseGroupId }] : [],
   );
+}
+
+/**
+ * The account's captures received after `since`, other than `mutationId` (TS-18): what the hourly limit counts. Each
+ * capture's row is written when it is claimed, so ones still running count too.
+ */
+export async function capturesSince(
+  db: Database,
+  accountId: string,
+  since: Date,
+  mutationId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: count() })
+    .from(mutations)
+    .where(
+      and(
+        eq(mutations.accountId, accountId),
+        eq(mutations.name, "album.capture"),
+        gt(mutations.receivedAt, since),
+        ne(mutations.id, mutationId),
+      ),
+    );
+  return row?.count ?? 0;
 }

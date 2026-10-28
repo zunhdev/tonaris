@@ -6,6 +6,7 @@
 import { emptyForm } from "@/features/collection/album-form";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { useListOptions } from "@/features/collection/list-options";
+import { CapacityNotice } from "@/features/settings/usage";
 import { useId, useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
@@ -73,6 +74,7 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
             Paste Spotify, Apple Music, Qobuz or Tidal album or track links.
           </DialogDescription>
         </DialogHeader>
+        <CapacityNotice />
         {/* ⌘Enter adds from any field (DS-47, DS-78). */}
         {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
         <form

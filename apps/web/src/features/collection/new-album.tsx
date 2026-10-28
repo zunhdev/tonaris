@@ -7,6 +7,7 @@
 // with the album's details, the link kept, or adds the album with the pasted link in its field (DS-48).
 
 import { shownLink } from "@/features/capture/outcomes";
+import { CapacityNotice } from "@/features/settings/usage";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSaveActions } from "@/features/sync/save-actions";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -189,6 +190,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
               Title, artist and a year are required. Everything else can wait.
             </DialogDescription>
           </DialogHeader>
+          <CapacityNotice />
           {/* ⌘Enter submits from any field of the form (DS-47). */}
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
           <form

@@ -416,6 +416,14 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 
 At a limit, only the new item is rejected, with `capacity_exceeded` (albums) or `limit_exceeded` (everything else) and a clear reason (X-05, FR-15.3). Existing content stays fully usable. Raising a limit is a config change.
 
+*As built in TON-60:*
+- **The album limit** (`maxAlbums`):
+  - `album.create` and a capture making a new record check every album row of the owner, Trash included;
+  - reuse, re-addition and restore never create a record, so they work at the limit;
+  - the refusal is "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more."
+- **Captures** (`maxCapturesPerHour`): the mutation runner counts the account's `album.capture` mutations received in the last hour, this one excepted. At 100 it answers `rate_limited` before asking any provider: "You've added 100 albums from links in the last hour. Try again later, or enter an album manually."
+- **Still to come:** MCP's per-grant rates come with TON-85, and export rates with TON-89.
+
 ---
 
 ## 4. Synchronization, mutations, and conflicts

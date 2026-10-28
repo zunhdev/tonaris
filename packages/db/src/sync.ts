@@ -445,6 +445,13 @@ function collectionStore(tx: Transaction): CollectionStore {
         .returning({ listId: memberships.listId });
       return { left: left.map((row) => row.listId), unitId: album?.trashUnitId ?? null };
     },
+    async countAlbums(ownerId) {
+      const [row] = await tx
+        .select({ count: count() })
+        .from(albums)
+        .where(eq(albums.ownerId, ownerId));
+      return row?.count ?? 0;
+    },
     async entriesOfAlbum(albumId) {
       const rows = await tx
         .select(membershipColumns)

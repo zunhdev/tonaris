@@ -1,5 +1,5 @@
 // The Settings subnav (DS-92): the settings pages built so far, in DS-92's order, with the current one marked for
-// assistive technology too. Profile, Account and Data join with their issues (M8, M10).
+// assistive technology too. Profile and Account join with their issues (M8); Data has the usage meter (TON-60).
 
 import { Link } from "@tanstack/react-router";
 
@@ -7,6 +7,7 @@ const pages = [
   { to: "/settings/preferences", label: "Preferences" },
   { to: "/settings/custom-fields", label: "Custom fields" },
   { to: "/settings/connections", label: "Connections" },
+  { to: "/settings/data", label: "Data" },
 ] as const;
 
 export function SettingsNav() {

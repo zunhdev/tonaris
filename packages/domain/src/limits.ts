@@ -2,6 +2,15 @@
 // the commands under the owner's write lock; raising a limit is a change here. The rest of TS-18's values join as
 // the features that need them arrive.
 
+/**
+ * Albums per account, counting those in Trash until they are purged (FR-15.1, FR-15.2). Restoring or re-adding one
+ * reuses its slot, so only a new record can be refused.
+ */
+export const maxAlbums = 5_000;
+
+/** Link captures per account per hour, from the app or MCP (TS-18). */
+export const maxCapturesPerHour = 100;
+
 /** Folders and lists per account, counting those in Trash until they are purged (decided 21 October 2026). */
 export const maxContainers = 2_000;
 
