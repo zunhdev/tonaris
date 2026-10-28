@@ -38,6 +38,7 @@ const album = (index: number): Album => ({
   originalYear: 1950 + (index % 70),
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
 });
 
 console.log(`Starting the API… (${edits} edits, then ${albums} albums to bootstrap)`);

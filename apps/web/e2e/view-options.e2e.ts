@@ -67,6 +67,7 @@ test("albums sort by their chronological year or name, and group by release type
         originalYear: 1984,
         recordingYearStart: 1978,
         recordingYearEnd: 1982,
+        artworkUrl: null,
       }),
       album("Live Evil", { ...values, isLive: true, releaseType: "ep", originalYear: 1982 }),
       album("Neon Knights", { ...values, releaseType: null, originalYear: 1980 }),

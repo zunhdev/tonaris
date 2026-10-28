@@ -213,6 +213,7 @@ const fieldLabels: Record<string, string> = {
   originalYear: "Year",
   recordingYearStart: "Recorded from",
   recordingYearEnd: "Recorded until",
+  artworkUrl: "Artwork",
   name: "Name",
   parentId: "Location",
   url: "Link",

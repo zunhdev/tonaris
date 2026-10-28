@@ -25,6 +25,7 @@ const album = () => ({
   originalYear: 1989,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
   ownerId: owner,
 });
 

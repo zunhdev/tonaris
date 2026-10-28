@@ -13,6 +13,7 @@ import {
 } from "@tonaris/domain";
 
 import { createApp } from "./app";
+import type { ImageFetch } from "./artwork";
 import { type AuthOptions, createAuth } from "./auth/auth";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import type { CaptureDeps } from "./capture";
@@ -79,6 +80,8 @@ export type LocalAppOptions = {
   fetchClientMetadata?: AuthOptions["fetchClientMetadata"];
   /** What captures ask, stubbed; without it, captures fail as `provider_unavailable`. */
   capture?: CaptureDeps;
+  /** How the image proxy fetches, stubbed; `safeFetch` otherwise (TS-103). */
+  imageFetch?: ImageFetch;
 };
 
 /**
@@ -105,6 +108,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     hub,
     limiter: options.limiter ?? createSignInLimiter(),
     capture: options.capture,
+    imageFetch: options.imageFetch,
     logError: () => {},
   });
 

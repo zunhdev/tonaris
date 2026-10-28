@@ -254,7 +254,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | --- | --- | --- | --- |
 | `account_sync` | `account_id` PK, `seq bigint` | Per-account write serializer and cursor (TS-23) | FR-09 |
 | `containers` | `id`, `owner_id`, `kind` (`folder`\|`list`), `parent_id` (null = root), `name`, `name_key`, `description`, `trashed_at`, `trash_unit_id` | Partial unique index `(owner_id, coalesce(parent_id, nil UUID), name_key) WHERE trashed_at IS NULL`, so root-level names collide too; drizzle-kit can't emit `NULLS NOT DISTINCT` on a partial index. No foreign key on `parent_id`: a container trashed on its own keeps its parent's id after that parent is purged, so recovery can see the parent is missing (FR-01.15). CHECK: name not blank. Depth ≤ 32 enforced in the move/create command (TS-31). | FR-01.1–FR-01.5, X-06 |
-| `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `artwork_url`, `mb_release_group_id`, `mb_release_id`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live IS TRUE AND recording_year_start IS NOT NULL)`. (`IS TRUE`, because a null `is_live` would make the expression null, which a CHECK accepts.) CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. One record per album (FR-02.12): `mb_release_group_id` is the album's identity (TS-44), and `mb_release_id` only records the release a link resolved to. There is no edition label or barcode: TON-27 dropped `edition_label` and `barcode`. | FR-02.6, FR-02.8, FR-02.12, FR-05.5 |
+| `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `artwork_url` (on client records since TON-48), `mb_release_group_id`, `mb_release_id`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live IS TRUE AND recording_year_start IS NOT NULL)`. (`IS TRUE`, because a null `is_live` would make the expression null, which a CHECK accepts.) CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. One record per album (FR-02.12): `mb_release_group_id` is the album's identity (TS-44), and `mb_release_id` only records the release a link resolved to. There is no edition label or barcode: TON-27 dropped `edition_label` and `barcode`. | FR-02.6, FR-02.8, FR-02.12, FR-05.5 |
 | `album_provenance` | `album_id`, `field`, `source` (`user`\|`musicbrainz`\|`coverartarchive`\|`itunes-lookup`), `source_ref`, `retrieved_at`. PK `(album_id, field)` | Policy flags are *derived* from `source` through a versioned policy map in `packages/providers` (TS-15). Spotify-derived values are never stored, so there is no `spotify` source (TS-41). | G1, FR-08.8 |
 | `album_service_links` | `album_id`, `owner_id` (copied from the album), `service`, `url` (canonical), `entity_id`: the album's id when the link names one, else `track:{id}` (`linkEntityId()`, TON-42). PK `(album_id, service)` | One current link per service. Index on `(owner_id, service, entity_id)` for matching. Clients hold `{albumId, service, url}` per row, keyed `<albumId>:<service>`, and edit it with `link.set` and `link.remove` (TON-46). | FR-06.2–FR-06.4 |
 | `memberships` | `list_id`, `album_id`, `owner_id`, `added_at`. PK `(list_id, album_id)` | A membership is *effective* when both list and album are active. Rows survive the trashing of either side (TS-13). | FR-01.6–FR-01.10, FR-14.2 |
@@ -1277,6 +1277,18 @@ The API service's `https://api.tonaris.<tld>/img/{hmac}/{b64url(url)}?w=…` ser
 - is cacheable (`Cache-Control: public, max-age=604800, immutable`), with optional Cloudflare caching in front.
 
 There is no resizing in v1.
+
+*As built in TON-48:*
+- **Clients hold `artworkUrl`,** an album field like the others, with compare-and-set (TS-21). It must be an https URL on the default port without credentials (`isArtworkUrl()`).
+- **The API signs it as it sends albums,** in the bootstrap and on the stream: `artworkSignature`, HMAC-SHA256 of the URL, base64url, cut to 128 bits.
+  - The key is HMAC-SHA256 of `tonaris:image-proxy:v1` under `BETTER_AUTH_SECRET`, so a deploy needs no new secret. Rotating the auth secret changes every path.
+  - Change rows store albums without it.
+- **Clients build the path** with `artworkPath()`: `/img/{signature}/{base64url(UTF-8 url)}`.
+- **`GET /img/:signature/:encoded`** is outside `/v1` and the OpenAPI document.
+  - The segment must round-trip as base64url, and the signature must match in constant time; otherwise it is a 404, and nothing is fetched.
+  - It fetches with `contentTypes` JPEG, PNG, WebP, GIF and AVIF. SVG is refused, as it can carry scripts.
+  - It answers the bytes with the cache header above, or a bodiless 404 with `no-store`.
+- **No server-side image cache:** HTTP caching, and a CDN if the creator adds one, absorb repeats.
 
 **TS-104 Rate limits (captures and exports Decided in TS-18, sign-in approved 18 October 2026; the rest Proposed).**
 

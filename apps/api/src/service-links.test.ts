@@ -74,6 +74,7 @@ async function newAlbum(): Promise<string> {
       originalYear: 1989,
       recordingYearStart: null,
       recordingYearEnd: null,
+      artworkUrl: null,
     },
   });
   expect(outcome.status).toBe("confirmed");
@@ -176,6 +177,7 @@ describe("link edits through the API (FR-06.2, FR-06.3)", () => {
         originalYear: 1989,
         recordingYearStart: null,
         recordingYearEnd: null,
+        artworkUrl: null,
       },
     };
     const link = set(albumId, shortLink, null);

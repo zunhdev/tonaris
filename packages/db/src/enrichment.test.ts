@@ -75,6 +75,7 @@ async function saved(
     originalYear: 1990,
     recordingYearStart: null,
     recordingYearEnd: null,
+    artworkUrl: null,
     ...values,
   };
   const { result } = await executeMutation(t.db, principal, {
@@ -156,7 +157,7 @@ describe("enrichAlbum (TS-42, FR-03.3, AC-10)", () => {
         entity: "album",
         id: album.id,
         op: "update",
-        data: { ...album, releaseType: "album" },
+        data: { ...album, releaseType: "album", artworkUrl: front },
         mutationId: null,
       },
     ]);
@@ -172,13 +173,13 @@ describe("enrichAlbum (TS-42, FR-03.3, AC-10)", () => {
     expect(await readChanges(t.db, principal.userId, 2, 10)).toEqual([]);
   });
 
-  test("filling only the artwork logs no change: clients don't hold it yet", async () => {
+  test("filling only the artwork logs it for clients, who show it (TON-48)", async () => {
     const principal = await newPrincipal();
     const album = await saved(principal, { releaseType: "album" });
     const enriched = await enrichAlbum(t.db, principal.userId, album.id, bleach(), now);
     expect(enriched).toMatchObject({
       status: "applied",
-      changes: [],
+      changes: [{ entity: "album", op: "update", data: { artworkUrl: front } }],
       plan: { values: { artworkUrl: front } },
     });
     const [row] = await t.db.select({ artworkUrl: albums.artworkUrl }).from(albums);

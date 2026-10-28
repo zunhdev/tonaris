@@ -26,6 +26,7 @@ const album = (title: string, values: Partial<Album> = {}): Album => ({
   originalYear: 1986,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
   ...values,
 });
 
@@ -47,6 +48,7 @@ describe("the chronological year (FR-05.5, FR-05.6)", () => {
       originalYear: 1984,
       recordingYearStart: 1978,
       recordingYearEnd: 1982,
+      artworkUrl: null,
     });
     const heaven = album("Heaven and Hell", { originalYear: 1980 });
     expect(titles(sortAlbums([heaven, rainbow], { mode: "year", dir: "asc" }))).toEqual([

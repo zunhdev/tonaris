@@ -12,7 +12,7 @@ import type { Writer } from "./writer";
 /** The album's own fields only, whatever else the draft carried. */
 function albumOf(value: Album): Album {
   const { id, title, artistCredit, releaseType, isLive, originalYear } = value;
-  const { recordingYearStart, recordingYearEnd } = value;
+  const { recordingYearStart, recordingYearEnd, artworkUrl } = value;
   return {
     id,
     title,
@@ -22,6 +22,7 @@ function albumOf(value: Album): Album {
     originalYear,
     recordingYearStart,
     recordingYearEnd,
+    artworkUrl,
   };
 }
 

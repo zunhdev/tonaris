@@ -248,6 +248,11 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **Images** load lazily, fade in over 150 ms once loaded, and on error leave the tile.
 - **Albums carry no artwork yet** (capture, M3), so every album shows its tile.
 
+*As built in TON-48:*
+- **Artwork shows through the API's image proxy** (TS-103), in rows, cards and the inspector, once the server has signed the album's URL. The browser never contacts the artwork's host.
+- **The inspector names it "Cover of {title}";** rows and cards keep it decorative.
+- **A failed load removes the image and keeps the tile.** Replaced artwork loads afresh.
+
 **DS-24 Chronology display.** *(FR-05.5, FR-05.6, FR-02.8)*
 
 | Case | Display |
@@ -593,7 +598,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - **In Editing mode,** a chip's × removes the album from the list, with "Removed from {list}" and Undo (DS-50). Undo puts the entry back at the end of the list.
   - **"+ Add to list", or L,** opens "Add '{title}' to a list": the owner's lists the album isn't in, with their folder paths, moved through with Tab or ↑ and ↓. Choosing one announces "Added {title} to {list}".
 - **Info** shows "Added {date}", from the album's ID. The source service arrives with capture (M3).
-- **Artwork** is the letter tile until capture brings artwork URLs (decided with the creator on 23 October 2026).
+- **Artwork** is the letter tile until capture brings artwork URLs (decided with the creator on 23 October 2026). *As built in TON-48:* the album's artwork through the image proxy, named "Cover of {title}". In Editing mode, an "Artwork URL" field under it ("https://…") saves on Enter or when left; empty clears it, and one that isn't an https link stays with "Give the artwork as an https link, such as https://example.com/cover.jpg."
 - **Delete from collection…** arrives with Trash (M5).
 
 *As built in TON-46:* **Links** (FR-06.2, FR-06.3).
@@ -635,6 +640,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Asked for details,** or "None of these": prefilled with capture's values, such as Apple's title, artist and year. The link fields give way to "The link is kept: {link}". Saving completes the capture, which keeps the link and the sources of the values left as offered (TS-15), and announces "Adding {title}".
 - **After a failure:** the pasted link is in its service's field. Saving adds the album as usual and dismisses the failed capture.
 - **"Add album" opens the capture dialog;** manual entry is its "Enter manually".
+
+*As built in TON-48:* **"Artwork URL"** replaces its line, with the placeholder "https://…". It is optional, checked when left and on submit, with the inspector's reason.
 
 *As built in TON-46:* **links** replace their line: "Spotify link", "Apple Music link", "Qobuz link" and "Tidal link", each optional, with the placeholder "Album or track link".
 - **Checked when left and on submit,** like the other fields, with the inspector's reasons, and named in the summary.

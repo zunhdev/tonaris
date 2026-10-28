@@ -32,7 +32,7 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 import { isTextField } from "../shell/shortcuts";
 import { albumEdit, cellText, type AlbumCell } from "./album-edit";
-import { Artwork } from "./artwork";
+import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
 import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
@@ -432,7 +432,12 @@ function AlbumRow({
   );
   const cells = [
     <div key="title" role="gridcell" className={cn(cell, "gap-2.5 pr-3")} {...cellProps(index, 0)}>
-      <Artwork title={album.title} className="size-7" letterClassName="text-small" />
+      <Artwork
+        title={album.title}
+        src={artworkSrc(album)}
+        className="size-7"
+        letterClassName="text-small"
+      />
       {editor("title") ?? <span className="truncate text-fg-primary">{album.title}</span>}
     </div>,
     <div

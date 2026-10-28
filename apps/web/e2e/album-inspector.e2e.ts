@@ -83,6 +83,7 @@ test("Editing mode edits the chronology everywhere, and refuses leaving an album
     originalYear: null,
     recordingYearStart: 1982,
     recordingYearEnd: 1982,
+    artworkUrl: null,
   });
   await added(page, [rainbow, evil], doom.id);
   await page.evaluate(
@@ -210,7 +211,7 @@ test("the form reports missing required information, saves nothing, and asks bef
   const form = page.getByRole("dialog", { name: "New album" });
   await expect(form.getByRole("textbox", { name: "Title" })).toBeFocused();
   await Promise.all(
-    ["Artwork", "Spotify link", "Tidal link", "Custom fields", "List"].map((field) =>
+    ["Artwork URL", "Spotify link", "Tidal link", "Custom fields", "List"].map((field) =>
       expect(form.getByText(field, { exact: true })).toBeVisible(),
     ),
   );

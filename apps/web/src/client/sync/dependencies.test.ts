@@ -39,6 +39,7 @@ describe("dependencies within a request", () => {
         originalYear: 1959,
         recordingYearStart: null,
         recordingYearEnd: null,
+        artworkUrl: null,
       },
     };
     const entry: Mutation = {
@@ -152,6 +153,7 @@ describe("dependencies within a request", () => {
         originalYear: 1989,
         recordingYearStart: null,
         recordingYearEnd: null,
+        artworkUrl: null,
       },
     };
     const link: Mutation = {

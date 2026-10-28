@@ -39,6 +39,7 @@ async function createAlbum(page: Page, title: string): Promise<string> {
         originalYear: 1959,
         recordingYearStart: null,
         recordingYearEnd: null,
+        artworkUrl: null,
       },
     },
   });

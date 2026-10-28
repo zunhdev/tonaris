@@ -69,6 +69,7 @@ const album = (values: Partial<Album> = {}): Album => ({
   originalYear: 1959,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
   ...values,
 });
 

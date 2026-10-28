@@ -107,10 +107,9 @@ export type CaptureSource = { link: CapturedLink } &
 /** An album as capture sees it: its values and identity, its owner, and whether it is in Trash. */
 export type CaptureTarget = EnrichableAlbum & { id: string; ownerId: string; trashed: boolean };
 
-/** Where a new album's values came from, for its provenance (TS-15). */
+/** Where a new album's values came from, for its provenance (TS-15), and its release group. */
 export type AlbumOrigin = {
   releaseGroupId: string | null;
-  artworkUrl: string | null;
   provenance: ProvenanceEntry[];
 };
 
@@ -118,7 +117,7 @@ export type AlbumOrigin = {
 export const missingYearReason =
   "MusicBrainz doesn't know when this album first came out. Enter its year; the link is kept.";
 
-const { artworkUrl: _artwork, releaseGroupId: _releaseGroup, ...blankFields } = blankAlbum;
+const { releaseGroupId: _releaseGroup, ...blankFields } = blankAlbum;
 
 const applied = (changes: ChangeInput[], result: CaptureResult): CommandResult => ({
   status: "applied",
@@ -136,6 +135,7 @@ const clientAlbum = (id: string, values: AlbumFields): Album => ({
   originalYear: values.originalYear,
   recordingYearStart: values.recordingYearStart,
   recordingYearEnd: values.recordingYearEnd,
+  artworkUrl: values.artworkUrl,
 });
 
 /**
@@ -350,31 +350,26 @@ async function create(
   let origin: AlbumOrigin;
   if (source.kind === "identified") {
     const plan = planEnrichment(blankAlbum, source.facts, now);
-    const { artworkUrl = null, ...planned } = plan.values;
-    const artwork = plan.provenance.filter((entry) => entry.field === "artworkUrl");
     if (source.details) {
-      values = source.details;
+      // The person's values; with no artwork of theirs, the Cover Art Archive's, with its source (TS-15).
+      const artworkUrl = source.details.artworkUrl ?? plan.values.artworkUrl ?? null;
+      values = { ...source.details, artworkUrl };
       origin = {
         releaseGroupId: source.facts.releaseGroupId,
-        artworkUrl,
-        provenance: [...detailsProvenance(values, source.facts.values, now), ...artwork],
+        provenance: detailsProvenance(values, source.facts.values, now),
       };
     } else {
-      values = { ...blankFields, ...planned };
+      values = { ...blankFields, ...plan.values };
       if (albumProblem(values)) {
+        const { artworkUrl: _, ...planned } = plan.values;
         return askForDetails(source.link, { source: "musicbrainz", values: planned });
       }
-      origin = {
-        releaseGroupId: source.facts.releaseGroupId,
-        artworkUrl,
-        provenance: plan.provenance,
-      };
+      origin = { releaseGroupId: source.facts.releaseGroupId, provenance: plan.provenance };
     }
   } else {
     values = source.details;
     origin = {
       releaseGroupId: null,
-      artworkUrl: null,
       provenance: detailsProvenance(values, source.prefill, now),
     };
   }

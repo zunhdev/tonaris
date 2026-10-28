@@ -6,6 +6,8 @@
 
 import {
   albumProblem,
+  artworkUrlRefusal,
+  isArtworkUrl,
   streamingServices,
   uuidv7,
   type Album,
@@ -25,13 +27,21 @@ export type AlbumForm = {
   originalYear: string;
   /** The recording year or range; only used for a live album. */
   recording: string;
+  /** The artwork's https URL as typed; empty for none (FR-03.4). */
+  artworkUrl: string;
   /** Each service's link as typed; empty for none. */
   links: Record<StreamingService, string>;
   /** The destination list; null for none, so the album goes to Unsorted. */
   listId: string | null;
 };
 
-export type FormField = "title" | "artistCredit" | "originalYear" | "recording" | StreamingService;
+export type FormField =
+  | "title"
+  | "artistCredit"
+  | "originalYear"
+  | "recording"
+  | "artworkUrl"
+  | StreamingService;
 
 const noLinks = (): Record<StreamingService, string> => ({
   spotify: "",
@@ -49,6 +59,7 @@ export function emptyForm(listId: string | null): AlbumForm {
     isLive: false,
     originalYear: "",
     recording: "",
+    artworkUrl: "",
     links: noLinks(),
     listId,
   };
@@ -63,6 +74,7 @@ export function formOf(album: Album, listId: string | null): AlbumForm {
     isLive: album.isLive === true,
     originalYear: cellText(album, "originalYear"),
     recording: cellText(album, "recording"),
+    artworkUrl: album.artworkUrl ?? "",
     links: noLinks(),
     listId,
   };
@@ -78,6 +90,7 @@ export function isFormDirty(form: AlbumForm): boolean {
     form.isLive !== empty.isLive ||
     form.originalYear !== empty.originalYear ||
     form.recording !== empty.recording ||
+    form.artworkUrl !== empty.artworkUrl ||
     streamingServices.some((service) => form.links[service] !== "")
   );
 }
@@ -106,6 +119,8 @@ export function formProblems(form: AlbumForm): Partial<Record<FormField, string>
       ? "Give the album its recording year or its release year."
       : "Give the album its original release year.";
   }
+  const artwork = form.artworkUrl.trim();
+  if (artwork !== "" && !isArtworkUrl(artwork)) problems.artworkUrl = artworkUrlRefusal;
   for (const service of streamingServices) {
     const reason = checkLink(service, form.links[service]);
     if (reason !== undefined) problems[service] = reason;
@@ -135,6 +150,7 @@ export function albumOfForm(form: AlbumForm): Album | undefined {
     originalYear: original?.start ?? null,
     recordingYearStart: recording?.start ?? null,
     recordingYearEnd: recording ? (recording.end ?? recording.start) : null,
+    artworkUrl: form.artworkUrl.trim() || null,
   };
   return albumProblem(album) ? undefined : album;
 }

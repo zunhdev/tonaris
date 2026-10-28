@@ -14,10 +14,10 @@ export const provenanceSources = [
 ] as const;
 export type ProvenanceSource = (typeof provenanceSources)[number];
 
-/** The values enrichment fills: those a person edits, and the artwork (FR-03.4). */
-export type EnrichableFields = AlbumFields & { artworkUrl: string | null };
+/** The values enrichment fills: those a person edits, the artwork included (FR-03.4). */
+export type EnrichableFields = AlbumFields;
 export type EnrichableField = keyof EnrichableFields;
-export const enrichableFields: readonly EnrichableField[] = [...albumFields, "artworkUrl"];
+export const enrichableFields: readonly EnrichableField[] = albumFields;
 
 /** An album as enrichment sees it: its values, and the MusicBrainz release group it is, if it is identified. */
 export type EnrichableAlbum = EnrichableFields & { releaseGroupId: string | null };

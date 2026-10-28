@@ -183,5 +183,6 @@ test("albums are edited inline in their rows", async ({ page }) => {
   expect(albums.find((each) => each.isLive)).toMatchObject({
     recordingYearStart: 1978,
     recordingYearEnd: 1982,
+    artworkUrl: null,
   });
 });

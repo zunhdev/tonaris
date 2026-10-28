@@ -86,6 +86,9 @@ export const accounts = {
   openDesktop: at("open-desktop"),
   openKeys: at("open-keys"),
   openMobile: at("open-mobile"),
+  // Artwork (artwork.e2e.ts), one per test.
+  artworkShown: at("artwork-shown"),
+  artworkEdited: at("artwork-edited"),
 } as const;
 
 /** An address with no account. */

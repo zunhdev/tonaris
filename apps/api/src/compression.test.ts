@@ -36,6 +36,7 @@ async function fillCollection(cookie: string): Promise<void> {
         originalYear: 1959,
         recordingYearStart: null,
         recordingYearEnd: null,
+        artworkUrl: null,
       },
     };
     // oxlint-disable-next-line no-await-in-loop

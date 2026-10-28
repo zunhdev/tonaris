@@ -51,6 +51,7 @@ test("a signed-in page streams changes and writes a mutation across origins", as
           originalYear: 1959,
           recordingYearStart: null,
           recordingYearEnd: null,
+          artworkUrl: null,
         },
       }),
     });

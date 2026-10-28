@@ -9,7 +9,7 @@ import { createApp } from "./app";
 import { createAuth } from "./auth/auth";
 import { seedCreator } from "./auth/seed-creator";
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
-import { fixtureCapture } from "./capture-fixtures";
+import { fixtureCapture, fixtureImageFetch } from "./capture-fixtures";
 import { apiConfig } from "./config";
 import { smtpEmail } from "./email/smtp";
 import { databaseHub } from "./sync/hub";
@@ -36,7 +36,7 @@ const limiter = createSignInLimiter({
   perIp: { ...signInLimits.perIp, max: 10_000 },
 });
 const hub = databaseHub(database.db);
-// Captures are answered from fixtures, not MusicBrainz (TON-45).
+// Captures and artwork are answered from fixtures, not MusicBrainz or image hosts (TON-45, TON-48).
 const app = createApp({
   config,
   auth,
@@ -45,6 +45,7 @@ const app = createApp({
   hub,
   limiter,
   capture: fixtureCapture(),
+  imageFetch: fixtureImageFetch,
 }).listen(port);
 console.log(`e2e API on ${app.server?.url.href}, schema ${database.schema}`);
 

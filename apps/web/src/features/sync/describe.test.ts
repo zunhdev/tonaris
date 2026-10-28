@@ -22,6 +22,7 @@ const blue: Album = {
   originalYear: 1959,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
 };
 const jazz: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Jazz" };
 const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };

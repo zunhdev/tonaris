@@ -195,6 +195,17 @@ export const mutationResultSchema = z
   .meta({ description: "A mutation's outcome (TS-27)." });
 export type MutationResult = z.infer<typeof mutationResultSchema>;
 
+/**
+ * An album as the server sends it: with `artworkSignature`, the API's signature of its artwork URL, which clients show
+ * through the image proxy (`artworkPath()`, TS-103). The API adds it; the database never stores it.
+ */
+export const syncedAlbumSchema = albumSchema.extend({
+  artworkSignature: z.string().optional().meta({
+    description: "The image proxy's signature of `artworkUrl`, when it has one (TS-103).",
+  }),
+});
+export type SyncedAlbum = z.infer<typeof syncedAlbumSchema>;
+
 export const changeOps = ["insert", "update", "delete"] as const;
 export type ChangeOp = (typeof changeOps)[number];
 
@@ -211,7 +222,7 @@ export const changeSchema = z
       entity: z.literal("album"),
       id: z.uuid(),
       op: z.enum(changeOps),
-      data: albumSchema.nullable(),
+      data: syncedAlbumSchema.nullable(),
       mutationId: z.uuid().nullable(),
     }),
     z.object({
@@ -278,7 +289,7 @@ export type Change = z.infer<typeof changeSchema>;
 export const bootstrapSchema = z
   .object({
     seq: z.int().nonnegative(),
-    albums: z.array(albumSchema),
+    albums: z.array(syncedAlbumSchema),
     containers: z.array(containerSchema),
     memberships: z.array(membershipSchema),
     links: z

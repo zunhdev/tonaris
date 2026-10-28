@@ -28,6 +28,7 @@ const kindOfBlue = (values: Partial<AlbumFields> = {}): Album => ({
   originalYear: 1959,
   recordingYearStart: 1959,
   recordingYearEnd: 1959,
+  artworkUrl: null,
   ...values,
 });
 
@@ -77,6 +78,7 @@ describe("album.create", () => {
       originalYear: null,
       recordingYearStart: 1964,
       recordingYearEnd: 1964,
+      artworkUrl: null,
     });
     expect((await runCommand(create(live), { principal: anna, store })).status).toBe("applied");
     expect(rows.get(live.id)?.originalYear).toBeNull();

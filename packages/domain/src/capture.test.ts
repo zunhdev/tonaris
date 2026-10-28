@@ -90,6 +90,7 @@ const saved = (
   originalYear: 1989,
   recordingYearStart: null,
   recordingYearEnd: null,
+  artworkUrl: null,
   ownerId: owner,
   releaseGroupId: bleachId,
   ...values,
@@ -150,7 +151,7 @@ describe("album.capture: a confident match reuses the saved album (FR-02.9, FR-0
     expect(t.albums.size).toBe(1);
     expect(t.listsOf(bleach.id)).toEqual([grunge.id]);
     // The gaps are filled; its values are kept.
-    expect(t.identities.get(bleach.id)?.artworkUrl).toContain(bleachId);
+    expect(t.albums.get(bleach.id)?.artworkUrl).toContain(bleachId);
   });
 
   test("an album already in the list keeps its entry, and says so (FR-01.7)", async () => {
@@ -406,6 +407,7 @@ describe("album.capture: required information (FR-02.6, AC-08)", () => {
       originalYear: 1989,
       recordingYearStart: null,
       recordingYearEnd: null,
+      artworkUrl: null,
     };
     const mutation = capture(null, { details });
     applied(await t.run(mutation, identified(undated, { details })));
@@ -433,6 +435,7 @@ describe("album.capture: required information (FR-02.6, AC-08)", () => {
       originalYear: 1984,
       recordingYearStart: null,
       recordingYearEnd: null,
+      artworkUrl: null,
     };
     const mutation = capture(null, { link: appleLink.url, details });
     applied(
@@ -470,6 +473,7 @@ describe("album.capture: required information (FR-02.6, AC-08)", () => {
       originalYear: null,
       recordingYearStart: null,
       recordingYearEnd: null,
+      artworkUrl: null,
     };
     const result = await t.run(capture(null, { details }), {
       kind: "entered",

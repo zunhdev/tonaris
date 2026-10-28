@@ -64,6 +64,7 @@ describe("the album it makes", () => {
       originalYear: 1987,
       recordingYearStart: null,
       recordingYearEnd: null,
+      artworkUrl: null,
     });
     expect(
       albumOfForm(
@@ -74,6 +75,7 @@ describe("the album it makes", () => {
       originalYear: null,
       recordingYearStart: 1978,
       recordingYearEnd: 1982,
+      artworkUrl: null,
     });
   });
 
@@ -87,6 +89,7 @@ describe("the album it makes", () => {
       originalYear: 1982,
       recordingYearStart: 1982,
       recordingYearEnd: 1982,
+      artworkUrl: null,
     };
     expect(formOf(album, "list")).toEqual({
       title: "Live Evil",
@@ -95,6 +98,7 @@ describe("the album it makes", () => {
       isLive: true,
       originalYear: "1982",
       recording: "1982",
+      artworkUrl: "",
       links: { spotify: "", "apple-music": "", qobuz: "", tidal: "" },
       listId: "list",
     });
@@ -151,5 +155,27 @@ describe("links (FR-06.3, TS-40)", () => {
       qobuz: "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.",
     });
     expect(albumOfForm(typed)).toBeUndefined();
+  });
+});
+
+describe("artwork (FR-03.4)", () => {
+  const valid = {
+    ...emptyForm(null),
+    title: "Bleach",
+    artistCredit: "Nirvana",
+    originalYear: "1989",
+  };
+
+  test("an https link is the album's artwork; empty is none", () => {
+    expect(
+      albumOfForm({ ...valid, artworkUrl: " https://images.example/bleach.jpg " })?.artworkUrl,
+    ).toBe("https://images.example/bleach.jpg");
+    expect(albumOfForm(valid)?.artworkUrl).toBeNull();
+  });
+
+  test("anything else is a problem at its field", () => {
+    expect(formProblems({ ...valid, artworkUrl: "http://images.example/bleach.jpg" })).toEqual({
+      artworkUrl: "Give the artwork as an https link, such as https://example.com/cover.jpg.",
+    });
   });
 });
