@@ -30,7 +30,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(42);
+  server = await startApiServer(43);
 }, 30_000);
 
 afterAll(async () => {
@@ -1474,5 +1474,50 @@ describe("Trash (FR-01.11, FR-01.13, TON-55)", () => {
       "the recovery",
     );
     await until(() => !phone.trashUnits.has(unit?.unitId ?? ""), 3_000, "the unit's end");
+  });
+});
+
+describe("albums in Trash (FR-14.1, FR-14.2, TON-57)", () => {
+  test("an album deleted in one session leaves another with its entries, and is restored to its list", async () => {
+    const web = await openClient(42, 0);
+    const phone = await openClient(42, 1);
+    await Promise.all([
+      web.albums.preload(),
+      web.memberships.preload(),
+      web.trashUnits.preload(),
+      phone.albums.preload(),
+      phone.memberships.preload(),
+      phone.trashUnits.preload(),
+    ]);
+    const listId = uuidv7();
+    await web.containers.insert({
+      id: listId,
+      kind: "list",
+      parentId: null,
+      name: "Doom",
+      description: null,
+    }).isPersisted.promise;
+    const { id: albumId } = await saved(web);
+    await web.memberships.insert({ listId, albumId, addedAt: new Date().toISOString() }).isPersisted
+      .promise;
+    const entry = `${listId}:${albumId}`;
+    await until(() => phone.memberships.has(entry), 3_000, "the entry");
+
+    const { transaction, unitId } = web.trash.deleteAlbum(albumId);
+    expect(web.albums.has(albumId)).toBe(false);
+    await transaction.isPersisted.promise;
+    await until(
+      () => !phone.albums.has(albumId) && !phone.memberships.has(entry),
+      3_000,
+      "the deletion",
+    );
+    await until(() => phone.trashUnits.get(unitId)?.kind === "album", 3_000, "the unit");
+
+    await web.trash.recover({ unitId, rootId: albumId }).transaction.isPersisted.promise;
+    await until(
+      () => phone.albums.has(albumId) && phone.memberships.has(entry),
+      3_000,
+      "the restore",
+    );
   });
 });

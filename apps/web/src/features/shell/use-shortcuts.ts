@@ -100,6 +100,13 @@ export function useShortcuts({
           now.mode.enterEditing();
           now.ui.startMove(target);
         }
+      } else if (action === "delete-album") {
+        // Deleting an album is an edit too: the inspector's album, else the focused album of a view.
+        const albumId = now.inspected ?? now.ui.focusedAlbum();
+        if (!now.offline && !now.editing.current && albumId !== undefined) {
+          now.mode.enterEditing();
+          now.ui.startDeleteAlbum(albumId);
+        }
       } else if (action === "delete") {
         // Deleting is an edit (DS-45): the focused tree item, else the focused folder or list row of a view. An
         // album's row isn't one of them; ⌫ on it waits for removing albums from lists.

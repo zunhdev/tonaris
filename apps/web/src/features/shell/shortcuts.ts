@@ -3,8 +3,8 @@
 // Settings → Preferences. Single keys: `[` hides or shows the sidebar, `?` opens the reference, N and ⇧N make a new
 // list or folder, V opens the view's View options, M moves the focused folder or list, E switches between Viewing
 // and Editing mode, L adds the open or focused album to a list, C opens the capture dialog (DS-48), and O opens the
-// open or focused album's "Open in…" chooser (DS-25). ⌫ deletes the focused folder or list (DS-50). Esc closing the
-// inspector is the inspector's.
+// open or focused album's "Open in…" chooser (DS-25). ⌫ deletes the focused folder or list, and ⌘⌫ the open or
+// focused album (DS-50). Esc closing the inspector is the inspector's.
 // Nothing matches while a text field has focus, nor with ⌘, Ctrl or Alt held. Shortcuts come before the tree's
 // type-ahead (decided 22 October 2026): a matched key is claimed, and the tree types ahead only with the others.
 
@@ -23,7 +23,8 @@ export type ShortcutAction =
   | "add-to-list"
   | "capture"
   | "open-in"
-  | "delete";
+  | "delete"
+  | "delete-album";
 
 /** What the matcher reads of a `KeyboardEvent`. */
 export type KeyPress = {
@@ -88,6 +89,16 @@ export function createShortcutMatcher({ sequenceMs = 1_500 } = {}): ShortcutMatc
   /** When G was pressed, while its sequence is open. */
   let started: number | undefined;
   return (press) => {
+    // ⌘⌫ (Ctrl+⌫ elsewhere) deletes an album from the collection (DS-50), the one combination with a modifier.
+    if (
+      !press.repeat &&
+      !press.altKey &&
+      (press.metaKey || press.ctrlKey) &&
+      (press.key === "Backspace" || press.key === "Delete") &&
+      !isTextField(press.target)
+    ) {
+      return "delete-album";
+    }
     if (press.repeat || press.altKey || press.ctrlKey || press.metaKey) return undefined;
     if (isTextField(press.target)) {
       started = undefined;
@@ -152,6 +163,7 @@ export const shortcutReference = [
       { keys: ["F2"], action: "Rename" },
       { keys: ["M"], action: "Move to…" },
       { keys: ["⌫"], action: "Delete a folder or list" },
+      { keys: ["⌘", "⌫"], action: "Delete an album from the collection" },
     ],
   },
   { title: "Help", keys: [{ keys: ["?"], action: "Keyboard shortcuts" }] },

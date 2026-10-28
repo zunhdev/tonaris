@@ -438,7 +438,29 @@ function collectionStore(tx: Transaction): CollectionStore {
           ),
         )
         .returning({ listId: memberships.listId });
-      return left.map((row) => row.listId);
+      return { left: left.map((row) => row.listId), unitId: album?.trashUnitId ?? null };
+    },
+    async entriesOfAlbum(albumId) {
+      const rows = await tx
+        .select(membershipColumns)
+        .from(memberships)
+        .where(eq(memberships.albumId, albumId))
+        .orderBy(asc(memberships.listId));
+      return rows.map(membershipOf);
+    },
+    async trashAlbum(unit, albumId) {
+      await tx.insert(trashUnits).values(unit);
+      await tx
+        .update(albums)
+        .set({ trashedAt: unit.deletedAt, trashUnitId: unit.id })
+        .where(eq(albums.id, albumId));
+    },
+    async recoverAlbum(unitId, albumId) {
+      await tx
+        .update(albums)
+        .set({ trashedAt: null, trashUnitId: null })
+        .where(and(eq(albums.id, albumId), eq(albums.trashUnitId, unitId)));
+      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
     },
     async findServiceLink(albumId, service) {
       const [row] = await tx
@@ -1273,8 +1295,8 @@ export async function readChanges(
 /**
  * The account's collection, its view choices, manual order and defaults, and the `seq` they are current at (TS-24),
  * from one snapshot: a write commits its records and its `seq` together, so the snapshot sees both or neither.
- * Folders and lists come active only, with the entries of active lists: clients hold active content, and Trash comes
- * as units (TS-13). Trashed albums still come, unmarked, until album deletion (TON-57).
+ * Albums, folders and lists come active only, with the entries joining an active list and an active album: clients
+ * hold active content, and Trash comes as units (TS-13). Links and field values of albums in Trash still come.
  */
 export function bootstrapSnapshot(db: Database, accountId: string): Promise<Bootstrap> {
   return db.transaction(
@@ -1286,19 +1308,26 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
       const owned: Album[] = await tx
         .select(albumColumns)
         .from(albums)
-        .where(eq(albums.ownerId, accountId))
+        .where(and(eq(albums.ownerId, accountId), isNull(albums.trashedAt)))
         .orderBy(asc(albums.id));
       const folders: Container[] = await tx
         .select(containerColumns)
         .from(containers)
         .where(and(eq(containers.ownerId, accountId), isNull(containers.trashedAt)))
         .orderBy(asc(containers.id));
-      // Only an active list's entries are effective (TS-13).
+      // Only an entry of an active list and an active album is effective (TS-13).
       const entries = await tx
         .select(membershipColumns)
         .from(memberships)
         .innerJoin(containers, eq(containers.id, memberships.listId))
-        .where(and(eq(memberships.ownerId, accountId), isNull(containers.trashedAt)))
+        .innerJoin(albums, eq(albums.id, memberships.albumId))
+        .where(
+          and(
+            eq(memberships.ownerId, accountId),
+            isNull(containers.trashedAt),
+            isNull(albums.trashedAt),
+          ),
+        )
         .orderBy(asc(memberships.listId), asc(memberships.albumId));
       const trash = await unitsOfAccount(tx, accountId);
       const fields = await fieldsOfAccount(tx, accountId);

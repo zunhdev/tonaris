@@ -53,8 +53,8 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
 
   Custom fields and Shared with me join as their features arrive, as new fields (TS-24).
 - **Trash** (TON-55):
-  - Folders and lists come only when active, and entries only of active lists. What is in Trash is in `trashUnits`.
-  - Albums in Trash are still included, unmarked, until album deletion (TON-57).
+  - Albums, folders and lists come only when active, and entries only of active lists and albums. What is in Trash is in `trashUnits` (TON-55, TON-57).
+  - Links and field values of albums in Trash are still included.
 - **Artwork** (TON-48). Albums carry `artworkUrl`, set or cleared with `album.setArtwork {id, artworkUrl}` and `base.artworkUrl`; `album.create` makes an album without it. An album with `artworkUrl` carries `artworkSignature`, here and in album changes on the stream. Show the artwork only from `{API origin}/img/{artworkSignature}/{base64url(UTF-8 artworkUrl)}`, never from its own host (TS-103). A failed image means the fallback tile.
 - **Compression.** Send `Accept-Encoding: gzip`. The bootstrap is about 2.3 MB of JSON for 5,000 albums, and under 0.5 MB gzipped (TS-120).
 
@@ -139,7 +139,7 @@ The server ends a stream in four cases:
 - **The mutations today:**
   - `album.create`, `album.update`, `album.setArtwork`, `album.capture`;
   - `container.create`, `container.rename`, `container.move`, `container.describe`, `container.delete`;
-  - `trash.recover`;
+  - `trash.recover`, `album.delete`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
   - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
@@ -163,6 +163,10 @@ The server ends a stream in four cases:
     - With the name taken among the new siblings, it answers `needs_input` `name`, candidates `[{unitId, name, parentId}]`. Resubmit with the choice (TS-26).
     - The stream sends the containers and the entries with active albums back, and the `trashUnit` delete.
     - **Its `confirmed` result** lists what stayed out: `{skipped: [{albumId, title, artist, listId, reason}]}`. `reason` is `album_in_trash` (with the list), or `album_deleted` for an album purged while the unit referred to it (`listId` null) (TON-56).
+- **Albums in Trash** (FR-14.1 to FR-14.3, TON-57):
+  - **`album.delete`** `{id, unitId}` moves an album to Trash as its own unit. The stream sends the `album` delete, a `membership` delete per entry in an active list, positions, and the `trashUnit` insert.
+  - **`trash.recover`** on an album unit brings back its entries in active lists and reports those in trashed lists (`list_in_trash`, with `listName`). With none, the album enters Unsorted at its top.
+  - **An active album of the same release group** makes it answer `needs_input` `match`, candidates `[{unitId, albumId, title, artistCredit, originalYear}]`; nothing changes.
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
 - **Custom fields** (FR-03.6, FR-03.9, FR-03.11), defined per account (TON-49):
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.

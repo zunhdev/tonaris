@@ -127,7 +127,7 @@ const applied = (changes: ChangeInput[], result: CaptureResult): CommandResult =
 });
 
 /** The album as clients hold it, with its artwork (FR-03.4). */
-const clientAlbum = (id: string, values: AlbumFields, artworkUrl: string | null): Album => ({
+export const clientAlbum = (id: string, values: AlbumFields, artworkUrl: string | null): Album => ({
   id,
   title: values.title,
   artistCredit: values.artistCredit,
@@ -295,7 +295,9 @@ async function reuse(
   const changes: ChangeInput[] = [];
   const restored = target.trashed;
   if (restored) {
-    const left = await store.reactivateAlbum(target.id);
+    const { left, unitId } = await store.reactivateAlbum(target.id);
+    // It leaves Trash: its unit goes (TS-13), and clients get the album back below.
+    if (unitId) changes.push({ entity: "trashUnit", id: unitId, op: "delete", data: null });
     const places = await Promise.all(
       left.map((listId) => forgetPlace(store, ownerId, listId, target.id)),
     );
@@ -309,12 +311,14 @@ async function reuse(
       ...places.flat(),
     );
   }
+  let filled: Partial<AlbumFields & { artworkUrl: string | null }> = {};
   if (facts) {
     const plan = planEnrichment(target, facts, context.now);
     if (Object.keys(plan.values).length > 0 || plan.releaseGroupId !== undefined) {
       await store.fillAlbum(target.id, plan);
     }
-    if (fillsClientValues(plan)) {
+    filled = plan.values;
+    if (fillsClientValues(plan) && !restored) {
       changes.push({
         entity: "album",
         id: target.id,
@@ -326,6 +330,19 @@ async function reuse(
         ),
       });
     }
+  }
+  // Clients hold active albums only: a restored one comes back whole (TON-57).
+  if (restored) {
+    changes.push({
+      entity: "album",
+      id: target.id,
+      op: "insert",
+      data: clientAlbum(
+        target.id,
+        { ...target, ...filled },
+        filled.artworkUrl === undefined ? target.artworkUrl : filled.artworkUrl,
+      ),
+    });
   }
   const { keptLink, changes: linked } = await keepLink(target.id, ownerId, link, context);
   const placed = await place(target.id, ownerId, args.listId, restored, context);

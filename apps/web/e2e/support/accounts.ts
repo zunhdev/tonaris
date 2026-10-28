@@ -104,6 +104,8 @@ export const accounts = {
   // Recovery prompts (recovery.e2e.ts), one per test.
   recoveryDestination: at("recovery-destination"),
   recoveryName: at("recovery-name"),
+  // Album deletion (album-trash.e2e.ts).
+  albumTrash: at("album-trash"),
 } as const;
 
 /** An address with no account. */
