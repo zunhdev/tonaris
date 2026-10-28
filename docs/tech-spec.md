@@ -670,6 +670,21 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
   - the owner exists.
 - **Shared snapshot:** a downward CTE from the root yields active containers and the albums with effective memberships in them, with only the used fields (FR-07.12).
 - The owner's client never needs these queries, because it holds its whole tree.
+- *As built in TON-64:*
+  - **The definition** is `readableContainers(state, viewer)` in `packages/domain/src/sharing.ts`. It walks down from each active source through active children only.
+    - **A viewer** (`ShareViewer`) is a person or a link. `viewerOf(principal)` maps `user` and `mcp` to the person, so an MCP connection reads what its user may, and `guest` to its link.
+    - **A person's sources** are their accepted grants and the live links their saved references name. A reference with no link reads through nothing by itself.
+  - **`packages/db/src/sharing.ts`** walks the same rule with recursive CTEs, bounded by the depth limit:
+    - `readableContainers(db, viewer)` goes down from the sources;
+    - `canReadContainer(db, viewer, id)` goes up from `id` while every container is active, checking whether any of them is a source.
+
+    A property test holds both equal to the model over random states (`packages/db/src/sharing.test.ts`): trashed flags in any combination, grants of every status, links revoked or not, and references. A domain property test runs moves, Trash and recovery through the real commands, and revocations on the side (`packages/domain/src/sharing.test.ts`).
+  - **`sharedSnapshot(db, viewer, id)`** answers nothing unless the viewer may read `id`. Otherwise, in one repeatable-read transaction like the bootstrap, it gives:
+    - the active subtree, with the root's `parentId` withheld;
+    - the active albums with entries in it, their entries and service links;
+    - their field values;
+    - only the fields those values use, each with only the options they choose (FR-07.12);
+    - the owner's display name.
 
 **TS-32 Link tokens (Decided; FR-07.16, Q-05).**
 
@@ -677,6 +692,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - Disabling sets `revoked_at`. Re-enabling creates a new row and a new token; old tokens never validate again.
 - Guest pages send `Referrer-Policy: no-referrer`, and outbound links carry `rel="noopener noreferrer"`, so tokens never leak to streaming services.
 - Tokens appear in URLs only on `/s/` (web) and `/v1/s/` (API) paths and are redacted from logs.
+- *As built in TON-64:* `createShareToken()` gives 32 bytes from `crypto.getRandomValues`, base64url-encoded (43 characters), with their SHA-256 from `crypto.subtle`. `findShareLink(db, token)` hashes the presented token and finds a link not revoked.
 
 **TS-33 Invitations and grants (Decided; FR-07.4–FR-07.7).**
 
@@ -684,6 +700,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - **Accept:** set the grant to `accepted`, upsert `saved_references`, and emit a change to the grantee's stream.
 - **Leave:** set the grant to `withdrawn`, and delete the reference if it has no `link_id`.
 - **Recovery:** active statuses resume after Trash recovery. `withdrawn` and `revoked` never resume (FR-07.10).
+- *As built in TON-64:* Trash changes no grant or link. A trashed container is simply never on an active path, so recovery resumes accepted grants and live links by itself, and leaves pending and revoked ones as they were. The statuses (`shareGrantStatuses`, `emailStatuses`) live in `packages/domain/src/sharing.ts`, and the db schema imports them.
 
 **TS-34 Display-name guard (Decided; FR-11.3).** Sharing commands and display-name updates check the invariant "a non-blank name exists while any share is active" under the owner lock.
 

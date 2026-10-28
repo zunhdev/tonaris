@@ -4,6 +4,8 @@
 import { sql } from "drizzle-orm";
 import { bytea, check, index, primaryKey, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
+import { emailStatuses, shareGrantStatuses } from "@tonaris/domain";
+
 import { users } from "./auth";
 import { containers } from "./collection";
 import { instant, oneOf, table, timestamps } from "./columns";
@@ -27,14 +29,7 @@ export const shareLinks = table(
   ],
 );
 
-export const shareGrantStatuses = [
-  "pending",
-  "accepted",
-  "declined",
-  "withdrawn",
-  "revoked",
-] as const;
-export const emailStatuses = ["sending", "sent", "failed", "unknown"] as const;
+export { emailStatuses, shareGrantStatuses };
 
 /** Invitations to view a container; delivery is tracked apart from the grant's status (TS-33). */
 export const shareGrants = table(
