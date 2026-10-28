@@ -2,13 +2,15 @@
 // opening that service's page in a new tab until "Open in…" arrives (TON-47). In Editing mode every service has a row:
 // a linked one offers Replace and Remove, the others Add. Replace and Add open a field that saves on Enter or when
 // left and discards on Escape, checked first as the server will read it (TS-40), so a refused link stays with its
-// reason and nothing is sent. Remove applies at once, with Undo (DS-50). Each link shows its save state (DS-80).
+// reason and nothing is sent. Remove applies at once, with Undo (DS-50). Each link shows its save state (DS-80). A
+// link capture kept instead of a pasted one shows the pasted one, for an explicit Replace (FR-06.4, TON-45).
 
+import { useCapture, type KeptLink } from "@/features/capture/capture-context";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useSaveState } from "@/features/sync/save-states";
-import { useSyncClient } from "@/features/sync/sync-provider";
+import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -23,7 +25,7 @@ import {
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { useCollectionUi } from "./collection-ui";
+import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { checkLink } from "./link-check";
 
@@ -48,9 +50,18 @@ export function LinksSection({ album, canEdit }: { album: Album; canEdit: boolea
   const shown = canEdit
     ? streamingServices
     : streamingServices.filter((service) => links.has(service));
+  // Links capture kept instead of pasted ones, while the album still has them (FR-06.4).
+  const kept = (useCapture()?.keptLinks ?? []).filter(
+    (each) => each.albumId === album.id && links.get(each.service)?.url === each.kept,
+  );
+  const notices = kept.map((each) => (
+    <KeptLinkNotice key={each.service} kept={each} canEdit={canEdit} />
+  ));
+  // A kept link's notice needs the album's link, so an album without links has none.
   if (shown.length === 0) return <p className="text-small text-fg-tertiary">No links yet.</p>;
   return (
     <ul className="flex flex-col gap-2">
+      {notices}
       {shown.map((service) => (
         <LinkRow
           key={service}
@@ -61,6 +72,54 @@ export function LinksSection({ album, canEdit }: { album: Album; canEdit: boolea
         />
       ))}
     </ul>
+  );
+}
+
+/**
+ * "Another Spotify link was found for this album" (DS-46, FR-06.4): capture kept the album's link and reported the
+ * pasted one. Replace sets the pasted one, an edit like any other, switching to Editing first; Dismiss keeps the link.
+ */
+function KeptLinkNotice({ kept, canEdit }: { kept: KeptLink; canEdit: boolean }) {
+  const client = useSyncClient();
+  const capture = useCapture();
+  const { enterEditing } = useMode();
+  const offline = useConnection() === "offline";
+  const name = serviceNames[kept.service];
+  return (
+    <li
+      data-slot="kept-link"
+      className="flex flex-col gap-1.5 rounded-md border border-subtle bg-raised px-3 py-2"
+    >
+      <p className="text-small text-fg-primary">Another {name} link was found for this album</p>
+      <p className="truncate text-small text-fg-tertiary" title={kept.pasted}>
+        {shownUrl(kept.pasted)}
+      </p>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          disabled={offline}
+          onClick={() => {
+            if (!client) return;
+            if (!canEdit) enterEditing();
+            sent(
+              client.links.update(serviceLinkKey(kept.albumId, kept.service), (record) => {
+                record.url = kept.pasted;
+              }),
+            );
+            capture?.forgetKeptLink(kept.albumId, kept.service);
+          }}
+        >
+          Replace
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => capture?.forgetKeptLink(kept.albumId, kept.service)}
+        >
+          Dismiss
+        </Button>
+      </div>
+    </li>
   );
 }
 

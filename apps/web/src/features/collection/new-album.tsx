@@ -4,20 +4,14 @@
 // when left and on submit, each error shown at its field and, on submit, summarized at the top. Nothing incomplete is
 // saved and nothing invented (AC-08). ⌘Enter saves; Esc or closing asks before discarding what was typed. Saving
 // creates the album, then its links, then its entry in the list, through the collections, so save states apply; Edit
-// on a failed save reopens it as it was entered.
+// on a failed save reopens it as it was entered. Opened from a capture, it says why, and either completes the capture
+// with the album's details, the link kept, or adds the album with the pasted link in its field (DS-48).
 
+import { shownLink } from "@/features/capture/outcomes";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSaveActions } from "@/features/sync/save-actions";
 import { useSyncClient } from "@/features/sync/sync-provider";
-import {
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 
 import { streamingServices } from "@tonaris/domain";
 import {
@@ -51,8 +45,7 @@ import {
   type FormField,
 } from "./album-form";
 import { useCollectionUi, type NewAlbumDraft } from "./collection-ui";
-import { useCollectionData } from "./data";
-import { ancestorsOf } from "./tree";
+import { useListOptions } from "./list-options";
 
 const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation" | "unknown">[] = [
   { value: "album", label: "Album" },
@@ -99,7 +92,6 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
   const client = useSyncClient();
   const announce = useAnnounce();
   const actions = useSaveActions();
-  const { tree } = useCollectionData();
   const [form, setForm] = useState<AlbumForm>(draft.form);
   const [touched, setTouched] = useState<ReadonlySet<FormField>>(new Set());
   const [submitted, setSubmitted] = useState(false);
@@ -114,19 +106,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       shownProblems[field] = problems[field];
   }
 
-  const lists = useMemo(
-    () =>
-      [...tree.byId.values()]
-        .filter((container) => container.kind === "list")
-        .map((list) => ({
-          id: list.id,
-          label: [...ancestorsOf(tree, list.id).map((folder) => folder.name), list.name].join(
-            " › ",
-          ),
-        }))
-        .toSorted((a, b) => a.label.localeCompare(b.label)),
-    [tree],
-  );
+  const lists = useListOptions();
 
   const set = (values: Partial<AlbumForm>) => setForm((current) => ({ ...current, ...values }));
   const touch = (field: FormField) =>
@@ -145,6 +125,18 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       // The first field with a problem takes the focus; the summary is announced.
       const first = formFields.find((field) => problems[field]);
       formRef.current?.querySelector<HTMLInputElement>(`[name="${first}"]`)?.focus();
+      return;
+    }
+    if (draft.capture?.mode === "details") {
+      // Completing a capture: it keeps the link, and the sources of the values left as offered (TS-15).
+      const { id: _, ...details } = album;
+      const capture = client.states.get(draft.capture.mutationId);
+      if (capture) client.captures.again(capture, { details, listId: form.listId });
+      else {
+        client.captures.send([{ link: draft.capture.link, listId: form.listId, details }]);
+      }
+      announce(`Adding ${album.title}`);
+      onDone();
       return;
     }
     client.albums.insert(album).isPersisted.promise.catch(() => {});
@@ -192,6 +184,16 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
               if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) submit(event);
             }}
           >
+            {draft.capture && (
+              <p
+                role="note"
+                className="rounded-md border border-subtle bg-raised px-3 py-2 text-small text-fg-secondary"
+              >
+                {draft.capture.mode === "failed" && draft.capture.reason === ""
+                  ? "We couldn't read this link — complete the details below."
+                  : draft.capture.reason}
+              </p>
+            )}
             {submitted && problemCount > 0 && (
               <div
                 id={summaryId}
@@ -280,19 +282,26 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
             )}
 
             <Placeholder label="Artwork">Artwork arrives with link capture.</Placeholder>
-            {streamingServices.map((service) => (
-              <TextField
-                key={service}
-                name={service}
-                label={fieldNames[service]}
-                type="url"
-                placeholder="Album or track link"
-                value={form.links[service]}
-                problem={shownProblems[service]}
-                onChange={(url) => set({ links: { ...form.links, [service]: url } })}
-                onBlur={() => touch(service)}
-              />
-            ))}
+            {draft.capture?.mode === "details" ? (
+              <p className="text-small text-fg-secondary">
+                The link is kept:{" "}
+                <span className="text-fg-primary">{shownLink(draft.capture.link)}</span>
+              </p>
+            ) : (
+              streamingServices.map((service) => (
+                <TextField
+                  key={service}
+                  name={service}
+                  label={fieldNames[service]}
+                  type="url"
+                  placeholder="Album or track link"
+                  value={form.links[service]}
+                  problem={shownProblems[service]}
+                  onChange={(url) => set({ links: { ...form.links, [service]: url } })}
+                  onBlur={() => touch(service)}
+                />
+              ))
+            )}
             <Placeholder label="Custom fields">
               Custom fields arrive in a later version.
             </Placeholder>

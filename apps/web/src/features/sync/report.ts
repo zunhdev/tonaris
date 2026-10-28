@@ -4,6 +4,7 @@
 // items that waited for it along; completed items are never made again (FR-13.5).
 
 import type { BatchReport, SaveState } from "@/client/sync/writer";
+import { needReason } from "@/features/capture/outcomes";
 
 import type { OutcomeStatus } from "@tonaris/domain";
 
@@ -78,7 +79,7 @@ export function reasonFor(item: SaveState, report: BatchReport, names: Names): s
   const { outcome } = item;
   if (outcome?.status === "failed") return reasonOf(outcome);
   if (outcome?.status === "conflict") return "Changed elsewhere. Review both versions to choose.";
-  if (outcome?.status === "needs_input") return "Needs your choice.";
+  if (outcome?.status === "needs_input") return needReason(outcome) ?? "Needs your choice.";
   if (outcome?.status === "needs_approval") return "Waits for your approval.";
   if (outcome?.status !== "skipped") return undefined;
   const prerequisite = report.items.find((each) => each.mutation.mutationId === outcome.dependsOn);

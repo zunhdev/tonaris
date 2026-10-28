@@ -69,8 +69,27 @@ type CollectionUi = {
   endNewAlbum: () => void;
 };
 
-/** The manual entry form's starting values, and the failed writes it makes again, if Edit opened it. */
-export type NewAlbumDraft = { form: AlbumForm; replaces?: readonly string[] };
+/**
+ * A capture the manual entry form continues (DS-47, DS-48): its write, its link, and why it came to the form. In
+ * `details` mode, saving completes the capture with the album's details and the link is kept by it; in `failed` mode,
+ * the album is added as the form always adds one, with the link in its service's field.
+ */
+export type CaptureEntry = {
+  mode: "details" | "failed";
+  mutationId: string;
+  link: string;
+  reason: string;
+};
+
+/**
+ * The manual entry form's starting values, the failed writes it makes again, if Edit opened it, and the capture it
+ * continues, if Enter manually opened it.
+ */
+export type NewAlbumDraft = {
+  form: AlbumForm;
+  replaces?: readonly string[];
+  capture?: CaptureEntry;
+};
 
 const CollectionUiContext = createContext<CollectionUi | undefined>(undefined);
 
@@ -244,7 +263,7 @@ export function useStartEditor(): (editor: Editor | { mode: "new"; kind: Contain
 const narrowQuery = "(max-width: 767px)";
 
 /** Whether the screen is narrower than the desktop app (DS-110): there the app is for browsing. */
-function useNarrowScreen(): boolean {
+export function useNarrowScreen(): boolean {
   return useSyncExternalStore(
     (listener) => {
       const query = globalThis.matchMedia?.(narrowQuery);

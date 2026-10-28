@@ -6,6 +6,7 @@
 // elsewhere from this tab's own, for the views to highlight (DS-82).
 
 import { createAlbumCollection } from "./albums";
+import { createCaptures, type Captures } from "./captures";
 import { createChangesElsewhere } from "./elsewhere";
 import { createSyncEngine, type Fetch, type SyncEngineOptions } from "./engine";
 import { createLinkCollection } from "./links";
@@ -20,6 +21,8 @@ import { createSaveStates, createWriter } from "./writer";
 export type SyncClientOptions = SyncEngineOptions & {
   /** How long a mutation request may take before it counts as unanswered. */
   requestTimeoutMs?: number;
+  /** How long a capture's request may take, waiting on metadata sources, before it counts as unanswered. */
+  captureTimeoutMs?: number;
   /** How long a write may take to reach the stream before it shows as unconfirmed (TS-24). */
   confirmWithinMs?: number;
   /** Where unsent writes and conflicts are kept; in memory by default, so a reload loses them. */
@@ -47,15 +50,41 @@ export function createSyncClient({
     onAdopted: (entry, outcomes) => writer?.restored(entry, outcomes),
   });
   writer = createWriter({ outbox, engine, states, confirmWithinMs: options.confirmWithinMs });
+  // Captures have a lane of their own: each waits for the edits made before it, and none holds up the edits after.
+  const sendCapture = entrySender(options.apiUrl, options.fetch, {
+    timeoutMs: options.captureTimeoutMs ?? 120_000,
+  });
+  let captures: Captures | undefined;
+  const captureOutbox = createOutbox({
+    lane: "capture",
+    send: async (entry) => {
+      await outbox.answeredBefore(entry.createdAt);
+      return sendCapture(entry);
+    },
+    persistence,
+    tab: options.tabs,
+    backoff: options.backoff,
+    onState: (mutation, state) => states.queued(mutation, state),
+    onAdopted: (entry, outcomes) => captures?.restored(entry, outcomes),
+  });
+  captures = createCaptures({ outbox: captureOutbox, engine, states });
+  /** Takes over gone tabs' unsent writes, lane by lane: a gone tab's lock is taken only when free. */
+  const adopt = async () => {
+    await outbox.adopt();
+    await captureOutbox.adopt();
+  };
   // A connection that is back is the moment to retry what went unanswered.
   engine.onStatus((status) => {
-    if (status === "live") outbox.wake();
+    if (status === "live") {
+      outbox.wake();
+      captureOutbox.wake();
+    }
   });
   // The leader keeps looking for writes that tabs closed meanwhile left behind.
   let adopting: ReturnType<typeof setInterval> | undefined;
   engine.onLead(() => {
-    void outbox.adopt();
-    adopting = setInterval(() => void outbox.adopt(), adoptEveryMs);
+    void adopt();
+    adopting = setInterval(() => void adopt(), adoptEveryMs);
   });
   const albums = createAlbumCollection({ engine, writer });
   const containers = createContainerCollection({ engine, writer });
@@ -72,6 +101,7 @@ export function createSyncClient({
     elsewhere.stop();
     engine.stop();
     outbox.stop();
+    captureOutbox.stop();
     options.tabs?.close();
     await Promise.all([
       albums.cleanup(),
@@ -98,16 +128,18 @@ export function createSyncClient({
     /** Writes one move in a view: each item's new key, or null to clear its place (TS-16). */
     arrange: createArrange({ positions, writer }),
     elsewhere,
+    /** Sends captures (TON-45). */
+    captures,
     /** Loads the kept conflicts, takes over gone tabs' unsent writes, and connects. */
     start(): void {
       void states.restore();
-      void outbox.adopt();
+      void adopt();
       engine.start();
     },
     stop,
     /** The writes not yet answered: what signing out would discard. */
     get unsent(): number {
-      return outbox.queued.length;
+      return outbox.queued.length + captureOutbox.queued.length;
     },
     /** Stops, and deletes what this browser keeps for the account, as signing out does. */
     async clear(): Promise<void> {

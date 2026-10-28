@@ -9,6 +9,7 @@ import { z } from "zod";
 import {
   errorCodeSchema,
   fieldConflictSchema,
+  inputNeeds,
   mutationSchema,
   outcomeSchema,
   problemSchema,
@@ -22,11 +23,16 @@ export type OutboxItem = z.infer<typeof outboxItemSchema>;
 const outboxEntrySchema = z.object({
   id: z.string(),
   tab: z.string(),
+  /** The outbox lane it is sent in, such as `capture`; none for the main lane. */
+  lane: z.string().optional(),
   createdAt: z.number(),
   items: z.array(outboxItemSchema).min(1),
 });
 
-/** One transaction's writes, owned by the tab that sends them. `createdAt` orders entries across tabs. */
+/**
+ * One transaction's writes, owned by the tab that sends them. `createdAt` orders entries across tabs, and across
+ * lanes.
+ */
 export type OutboxEntry = z.infer<typeof outboxEntrySchema>;
 
 const storedConflictSchema = outboxItemSchema.extend({
@@ -40,10 +46,21 @@ const storedConflictSchema = outboxItemSchema.extend({
 export type StoredConflict = z.infer<typeof storedConflictSchema>;
 
 const storedFailureSchema = outboxItemSchema.extend({
-  outcome: z.object({ status: z.literal("failed"), code: errorCodeSchema, problem: problemSchema }),
+  outcome: z.discriminatedUnion("status", [
+    z.object({ status: z.literal("failed"), code: errorCodeSchema, problem: problemSchema }),
+    // A capture waiting for the person's choice or details keeps its link the same way (TON-45).
+    z.object({
+      status: z.literal("needs_input"),
+      need: z.enum(inputNeeds),
+      candidates: z.array(z.unknown()),
+    }),
+  ]),
 });
 
-/** A write the server rejected, kept until the person retries or dismisses it (FR-13.2, DS-80). */
+/**
+ * A write the server rejected, or one waiting for the person's input, kept until the person retries, completes or
+ * dismisses it (FR-13.2, FR-02.10, DS-80).
+ */
 export type StoredFailure = z.infer<typeof storedFailureSchema>;
 
 const storedBatchSchema = z.object({

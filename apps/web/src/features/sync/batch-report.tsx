@@ -1,10 +1,13 @@
 // The BatchOutcomeReport (DS-29, DS-84; FR-13.4): one action's writes, reported together in Activity. Its header is
 // the summary sentence and folds the report; the groups follow in DS-84's order, each item with its reason and next
-// action: Retry for a failure, which brings the items that waited for it along, and Review for a conflict. Retry all
+// action: Retry for a failure, which brings the items that waited for it along, Review for a conflict, and for a
+// capture, Enter manually or the decision card's Decide (DS-48). Retry all
 // appears for two or more failures, and Dismiss once the report is kept. Completed items are folded away, since a
 // batch holds up to 200. Status is told by the group's heading and each item's icon, never by color only (DS-115).
 
 import type { BatchReport, SaveState } from "@/client/sync/writer";
+import { DecisionCard } from "@/features/capture/decision-card";
+import { captureNeed } from "@/features/capture/outcomes";
 import { ChevronRight } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
@@ -162,6 +165,8 @@ function ReportItem({
   if (!client) return null;
   const names = namesOf(client);
   const { summary } = describeWrite(item.mutation, names);
+  // A capture waiting for the person: a choice, or the album's details (DS-48).
+  const need = captureNeed(item.outcome);
   const reason = gone
     ? "It no longer exists, so it can't be saved again."
     : reasonFor(item, report, names);
@@ -180,9 +185,17 @@ function ReportItem({
             </Button>
             {actions.canEdit(item) && (
               <Button size="sm" variant="secondary" onClick={() => actions.edit(item)}>
-                Edit
+                {actions.editLabel(item)}
               </Button>
             )}
+          </div>
+        )}
+        {actions && need?.need === "match" && <DecisionCard state={item} folded />}
+        {actions && need?.need === "details" && (
+          <div className="mt-1 flex gap-2">
+            <Button size="sm" variant="secondary" onClick={() => actions.edit(item)}>
+              {actions.editLabel(item)}
+            </Button>
           </div>
         )}
         {actions && item.status === "conflict" && (

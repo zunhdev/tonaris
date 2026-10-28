@@ -4,8 +4,9 @@
 // dragged folder or list, to move it to the root (DS-49).
 
 import { AccountMenu } from "@/features/account/account-menu";
+import { useCapture } from "@/features/capture/capture-context";
 import { CollectionTree } from "@/features/collection/collection-tree";
-import { useStartEditor, useStartNewAlbum } from "@/features/collection/collection-ui";
+import { useStartEditor } from "@/features/collection/collection-ui";
 import { useDestination } from "@/features/collection/drag";
 import { SyncIndicator } from "@/features/sync/sync-indicator";
 import { useConnection } from "@/features/sync/sync-provider";
@@ -204,9 +205,12 @@ function CollectionLink() {
   );
 }
 
-/** Add album: the manual entry form, for now (DS-47). Adding is an edit, so it waits while offline (DS-81). */
+/**
+ * Add album: the capture dialog, with manual entry one step further (DS-48). Adding is an edit, so it waits while
+ * offline (DS-81).
+ */
 function AddAlbumButton() {
-  const startNewAlbum = useStartNewAlbum();
+  const capture = useCapture();
   const offline = useConnection() === "offline";
   if (offline) {
     return (
@@ -220,7 +224,12 @@ function AddAlbumButton() {
     );
   }
   return (
-    <Button variant="ghost" className="justify-start" onClick={startNewAlbum}>
+    <Button
+      variant="ghost"
+      className="justify-start"
+      aria-keyshortcuts="C"
+      onClick={() => capture?.openDialog()}
+    >
       <Plus strokeWidth={1.5} aria-hidden />
       Add album
     </Button>

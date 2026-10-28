@@ -150,3 +150,86 @@ describe("adoption (TS-22, TS-23)", () => {
     expect(await persistence.entries()).toHaveLength(1);
   });
 });
+
+describe("lanes (TON-45)", () => {
+  test("a gone tab's entries are adopted by the outbox of their own lane", async () => {
+    const browser = memoryBrowser();
+    const persistence = memoryPersistence();
+    const gone = browser.tab("anna");
+    const [edit, capture] = [item("A"), item("B")];
+    await persistence.putEntry({ id: uuidv7(), tab: gone.id, createdAt: 1, items: [edit] });
+    await persistence.putEntry({
+      id: uuidv7(),
+      tab: gone.id,
+      lane: "capture",
+      createdAt: 2,
+      items: [capture],
+    });
+    gone.close();
+
+    const tab = browser.tab("anna");
+    const main = stubSend();
+    const captures = stubSend();
+    const outbox = createOutbox({ send: main.send, persistence, tab });
+    const captureLane = createOutbox({ send: captures.send, persistence, tab, lane: "capture" });
+    // One after the other: a gone tab's lock is taken only when free.
+    await outbox.adopt();
+    await captureLane.adopt();
+    await Bun.sleep(5);
+    expect(main.sends.map((entry) => entry.items[0]?.key)).toEqual([edit.key]);
+    expect(captures.sends.map((entry) => entry.items[0]?.key)).toEqual([capture.key]);
+    expect(captures.sends[0]?.lane).toBe("capture");
+  });
+
+  test("an entry waits for the main lane's earlier entries, and the main lane never waits for it", async () => {
+    const order: string[] = [];
+    const { promise: held, resolve: releaseFirst } = Promise.withResolvers<void>();
+    let sends = 0;
+    const main = createOutbox({
+      send: async (entry) => {
+        sends += 1;
+        // The first main entry is held until the capture would have gone.
+        if (sends === 1) await held;
+        order.push(entry.items[0]?.key ?? "");
+        return { answered: entry.items.map(() => confirmed(sends)) };
+      },
+    });
+    const captureLane = createOutbox({
+      lane: "capture",
+      send: async (entry) => {
+        await main.answeredBefore(entry.createdAt);
+        order.push(entry.items[0]?.key ?? "");
+        return { answered: entry.items.map(() => confirmed(0)) };
+      },
+    });
+    const [list, capture, rename] = [item("list"), item("capture"), item("rename")];
+    const sent = main.enqueue([list]);
+    await Bun.sleep(2);
+    const captured = captureLane.enqueue([capture]);
+    await Bun.sleep(2);
+    // A main entry made after the capture: it waits for the held one only.
+    const renamed = main.enqueue([rename]);
+    await Bun.sleep(5);
+    expect(order).toEqual([]);
+    releaseFirst();
+    await Promise.all([sent, captured, renamed]);
+    expect(order.indexOf(list.key)).toBeLessThan(order.indexOf(capture.key));
+    expect(order).toContain(rename.key);
+  });
+
+  test("a main entry is answered while a capture is still running", async () => {
+    const { promise: running, resolve: finish } = Promise.withResolvers<void>();
+    const main = createOutbox({ send: stubSend().send });
+    const captureLane = createOutbox({
+      lane: "capture",
+      send: async (entry) => {
+        await running;
+        return { answered: entry.items.map(() => confirmed(0)) };
+      },
+    });
+    const captured = captureLane.enqueue([item("capture")]);
+    expect(await main.enqueue([item("rename")])).toEqual([confirmed(1)]);
+    finish();
+    await captured;
+  });
+});

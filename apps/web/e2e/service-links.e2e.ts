@@ -90,6 +90,16 @@ test("manual entry saves an album with its links, and refuses another service's 
   await live(page);
 
   await page.getByRole("main").getByRole("button", { name: "Add album" }).click();
+
+  // "Add album" opens capture; manual entry is a step further (DS-48).
+
+  await page
+
+    .getByRole("dialog", { name: "Add albums" })
+
+    .getByRole("button", { name: "Enter manually" })
+
+    .click();
   const form = page.getByRole("dialog", { name: "New album" });
   await form.getByRole("textbox", { name: "Title" }).fill("Bleach");
   await form.getByRole("textbox", { name: "Artist" }).fill("Nirvana");

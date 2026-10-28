@@ -197,6 +197,16 @@ test("the form reports missing required information, saves nothing, and asks bef
   await live(page);
 
   await page.getByRole("button", { name: "Add album" }).click();
+
+  // "Add album" opens capture; manual entry is a step further (DS-48).
+
+  await page
+
+    .getByRole("dialog", { name: "Add albums" })
+
+    .getByRole("button", { name: "Enter manually" })
+
+    .click();
   const form = page.getByRole("dialog", { name: "New album" });
   await expect(form.getByRole("textbox", { name: "Title" })).toBeFocused();
   await Promise.all(
@@ -245,6 +255,11 @@ test("the form saves into the list on view, and live albums need only their reco
 
   // The empty list's own action.
   await page.getByRole("main").getByRole("button", { name: "Add album" }).click();
+  // "Add album" opens capture; manual entry is a step further (DS-48).
+  await page
+    .getByRole("dialog", { name: "Add albums" })
+    .getByRole("button", { name: "Enter manually" })
+    .click();
   const form = page.getByRole("dialog", { name: "New album" });
   await expect(form.getByRole("combobox", { name: "List" })).toHaveValue(doom.id);
   await form.getByRole("textbox", { name: "Title" }).fill("Nightfall");
@@ -257,6 +272,11 @@ test("the form saves into the list on view, and live albums need only their reco
 
   // Below the rows in Editing mode; a live album with only a recording range.
   await page.getByRole("main").getByRole("button", { name: "Add album" }).click();
+  // "Add album" opens capture; manual entry is a step further (DS-48).
+  await page
+    .getByRole("dialog", { name: "Add albums" })
+    .getByRole("button", { name: "Enter manually" })
+    .click();
   await form.getByRole("textbox", { name: "Title" }).fill("Live Evil");
   await form.getByRole("textbox", { name: "Artist" }).fill("Black Sabbath");
   await form.getByRole("switch", { name: "Live" }).click();

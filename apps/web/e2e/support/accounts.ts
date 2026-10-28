@@ -73,6 +73,15 @@ export const accounts = {
   // Service links (service-links.e2e.ts), one per test.
   linksInspector: at("links-inspector"),
   linksEntry: at("links-entry"),
+  // Capture (capture.e2e.ts), one per test.
+  captureList: at("capture-list"),
+  captureRoot: at("capture-root"),
+  captureManual: at("capture-manual"),
+  captureFailure: at("capture-failure"),
+  captureChoice: at("capture-choice"),
+  captureBatch: at("capture-batch"),
+  captureKept: at("capture-kept"),
+  captureField: at("capture-field"),
 } as const;
 
 /** An address with no account. */

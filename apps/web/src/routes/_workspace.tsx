@@ -5,6 +5,7 @@
 // view visited is remembered on the device, for `/` (DS-32).
 
 import { currentAccount } from "@/features/account/session";
+import { CaptureProvider } from "@/features/capture/capture-context";
 import { CollectionUiProvider } from "@/features/collection/collection-ui";
 import { CollectionDataProvider } from "@/features/collection/data";
 import { lastView } from "@/features/shell/device";
@@ -41,9 +42,11 @@ function WorkspaceLayout() {
       <CollectionUiProvider accountId={account.id}>
         <CollectionDataProvider>
           <SaveStateLayer>
-            <Shell account={account}>
-              <Outlet />
-            </Shell>
+            <CaptureProvider>
+              <Shell account={account}>
+                <Outlet />
+              </Shell>
+            </CaptureProvider>
           </SaveStateLayer>
         </CollectionDataProvider>
       </CollectionUiProvider>

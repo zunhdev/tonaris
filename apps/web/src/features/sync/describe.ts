@@ -3,6 +3,8 @@
 // back to the write itself for a record that was rolled back, such as a list whose creation failed. Plain and
 // specific, names in single quotes.
 
+import { shownLink } from "@/features/capture/outcomes";
+
 import {
   serviceNames,
   type Container,
@@ -57,7 +59,11 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
     return { summary: `Add ${title}`, what: title, subject: capitalized(title) };
   }
   if (mutation.name === "album.capture") {
-    const title = quoted(names.album(mutation.args.albumId), "an album from a link");
+    // Until saved, a capture is told apart by its link (DS-48).
+    const title = quoted(
+      names.album(mutation.args.albumId),
+      `an album from ${shownLink(mutation.args.link)}`,
+    );
     return { summary: `Add ${title}`, what: title, subject: capitalized(title) };
   }
   if (mutation.name === "album.update") {
