@@ -430,6 +430,12 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - **In a batch,** an item claimed by another request ends the request with `409 in_progress`. The items already run stay committed and replay on the next send.
   - **Bun's idle timeout** is switched off for a request carrying a capture, as for the streams (TS-23).
 - **What counts as no answer.** A network error, a timeout, a 5xx, a 408 or a 429 leave the outcome unknown, so the outbox sends the envelope again. A 4xx with a problem means the request was judged and nothing changed: a `failed` outcome.
+  - *As built in TON-45:* `409 in_progress` is no answer yet too. The entry is sent again after the backoff, and gets the stored outcome once the capture has finished.
+- **The capture lane** (*as built in TON-45*). A capture can take a minute, so the web client sends captures through a second outbox, a lane, made by the same code (`createOutbox({ lane: "capture" })`).
+  - **Order:** a capture entry waits until every main entry made before it is answered (`answeredBefore()`), so a capture into a list created just before it finds the list. Main entries never wait for captures.
+  - **One request per link,** sent one at a time, with a 120 s timeout instead of 10 s.
+  - **Kept and adopted lane by lane.** Entries carry their lane; one without a lane is the main lane's. A tab adopts a gone tab's entries one lane after the other, since a gone tab's lock is taken only when free.
+  - **A single capture waiting for a choice or details** is kept in the browser like a failure, so its link survives a reload (FR-02.5, FR-02.10).
 - **MCP.** Agents get the same guarantees through an optional `idempotencyKey` (= `mutationId`) on every write tool, plus `get_operation(id)`.
 - **Retention.** Idempotency records are kept 30 days. A replay after that window is rejected as `expired` rather than run again. The server knows a replay is that old from the time inside its UUIDv7 `mutationId`: no record, and older than the window. That relies on the client's clock; a replay misjudged by a wrong clock still meets CAS and the client's entity IDs.
 

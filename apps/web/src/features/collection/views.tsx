@@ -6,6 +6,8 @@
 // that names a list leads to the list, and the other way round; a folder or list that doesn't exist says so, once
 // the collection has loaded.
 
+import { useCapture } from "@/features/capture/capture-context";
+import { CaptureRows } from "@/features/capture/capture-rows";
 import { PageHeader } from "@/features/shell/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -19,7 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/
 import { AlbumCards } from "./album-cards";
 import { AlbumDetails } from "./album-details";
 import { AlbumRows } from "./album-rows";
-import { useMode, useStartEditor, useStartNewAlbum } from "./collection-ui";
+import { useMode, useStartEditor } from "./collection-ui";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
 import { useDropHandler } from "./drag";
@@ -208,9 +210,9 @@ function Empty({ text, action }: { text: string; action?: ReactNode }) {
   );
 }
 
-/** Opens the manual entry form for the list on view (DS-47); disabled offline (DS-81). */
+/** Opens the capture dialog for the list on view (DS-48), with manual entry one step further; disabled offline. */
 function AddAlbumButton({ variant }: { variant: "primary" | "ghost" }) {
-  const startNewAlbum = useStartNewAlbum();
+  const capture = useCapture();
   if (useConnection() === "offline") {
     return (
       <Tooltip>
@@ -223,7 +225,7 @@ function AddAlbumButton({ variant }: { variant: "primary" | "ghost" }) {
     );
   }
   return (
-    <Button variant={variant} onClick={startNewAlbum}>
+    <Button variant={variant} onClick={() => capture?.openDialog()}>
       <Plus strokeWidth={1.5} aria-hidden />
       Add album
     </Button>
@@ -330,23 +332,28 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
         <Empty text="This folder is empty." action={<NewListButton parentId={id} />} />
       );
   } else {
-    // Adding by hand: below the rows in Editing mode, and as the empty list's action (DS-47).
-    body =
-      albums.length > 0 ? (
-        <>
-          <AlbumsBody albums={albums} label={container.name} viewKey={id} />
-          {editing && (
-            <div className="shrink-0 border-t border-subtle px-4 py-2">
-              <AddAlbumButton variant="ghost" />
-            </div>
-          )}
-        </>
-      ) : (
-        <Empty
-          text="No albums yet. Paste a Spotify, Apple Music, Qobuz or Tidal link."
-          action={<AddAlbumButton variant="primary" />}
-        />
-      );
+    // Adding: below the rows in Editing mode, and as the empty list's action (DS-47, DS-48). Captures under way
+    // wait at the top (DS-48).
+    body = (
+      <>
+        <CaptureRows listId={id} />
+        {albums.length > 0 ? (
+          <>
+            <AlbumsBody albums={albums} label={container.name} viewKey={id} />
+            {editing && (
+              <div className="shrink-0 border-t border-subtle px-4 py-2">
+                <AddAlbumButton variant="ghost" />
+              </div>
+            )}
+          </>
+        ) : (
+          <Empty
+            text="No albums yet. Paste a Spotify, Apple Music, Qobuz or Tidal link."
+            action={<AddAlbumButton variant="primary" />}
+          />
+        )}
+      </>
+    );
   }
 
   return (
@@ -369,6 +376,7 @@ export function UnsortedView() {
   return (
     <>
       <ViewHeader title="Unsorted" viewKey="unsorted" kind="albums" />
+      <CaptureRows listId={null} />
       {!ready ? null : albums.length > 0 ? (
         <AlbumsBody albums={albums} label="Unsorted" viewKey="unsorted" />
       ) : (

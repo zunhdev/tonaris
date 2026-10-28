@@ -1,6 +1,7 @@
 // The API for the browser tests (TS-121), started by Playwright (apps/web/playwright.config.ts). It serves a fresh,
 // migrated schema of the test database with the accounts in E2E_ACCOUNTS (the first is the creator), sends email
-// to Mailpit, and drops the schema when it stops. Not part of the deployable service.
+// to Mailpit, answers captures from fixtures, and drops the schema when it stops. Not part of the deployable
+// service.
 
 import { createTestDatabase } from "@tonaris/db/testing";
 
@@ -8,6 +9,7 @@ import { createApp } from "./app";
 import { createAuth } from "./auth/auth";
 import { seedCreator } from "./auth/seed-creator";
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
+import { fixtureCapture } from "./capture-fixtures";
 import { apiConfig } from "./config";
 import { smtpEmail } from "./email/smtp";
 import { databaseHub } from "./sync/hub";
@@ -34,7 +36,16 @@ const limiter = createSignInLimiter({
   perIp: { ...signInLimits.perIp, max: 10_000 },
 });
 const hub = databaseHub(database.db);
-const app = createApp({ config, auth, db: database.db, email, hub, limiter }).listen(port);
+// Captures are answered from fixtures, not MusicBrainz (TON-45).
+const app = createApp({
+  config,
+  auth,
+  db: database.db,
+  email,
+  hub,
+  limiter,
+  capture: fixtureCapture(),
+}).listen(port);
 console.log(`e2e API on ${app.server?.url.href}, schema ${database.schema}`);
 
 async function stop() {

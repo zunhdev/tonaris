@@ -7,6 +7,8 @@
 // changes needing review keeps failures and conflicts in view once their toasts are closed (DS-02).
 
 import type { BatchReport, SaveState } from "@/client/sync/writer";
+import { DecisionCard } from "@/features/capture/decision-card";
+import { captureNeed, needReason } from "@/features/capture/outcomes";
 
 import { Button } from "@tonaris/ui/components/button";
 import {
@@ -149,6 +151,9 @@ function ActivityItem({ state }: { state: SaveState }) {
   if (!client) return null;
   const { summary } = describeWrite(state.mutation, namesOf(client));
   const failed = state.status === "failed";
+  // A capture waiting for the person: a choice, or the album's details (DS-48).
+  const need = captureNeed(state.outcome);
+  const reason = failed ? reasonOf(state.outcome) : needReason(state.outcome);
   return (
     <li className="flex items-start gap-2 rounded-md py-1" data-status={state.status}>
       <span className="mt-1">
@@ -158,18 +163,21 @@ function ActivityItem({ state }: { state: SaveState }) {
         <p className="truncate text-fg-primary">{summary}</p>
         <p className="text-small text-fg-secondary">
           {statusLabels[state.status]}
-          {failed && `: ${reasonOf(state.outcome)}`}
+          {reason !== undefined && `: ${reason}`}
         </p>
-        {actions && (failed || state.status === "conflict") && (
+        {actions && need?.need === "match" && <DecisionCard state={state} folded />}
+        {actions && (failed || need !== undefined || state.status === "conflict") && (
           <div className="mt-1 flex gap-2">
-            {failed ? (
+            {failed || need !== undefined ? (
               <>
-                <Button size="sm" onClick={() => actions.resubmit(state)}>
-                  Retry
-                </Button>
-                {actions.canEdit(state) && (
+                {failed && (
+                  <Button size="sm" onClick={() => actions.resubmit(state)}>
+                    Retry
+                  </Button>
+                )}
+                {actions.canEdit(state) && need?.need !== "match" && (
                   <Button size="sm" variant="secondary" onClick={() => actions.edit(state)}>
-                    Edit
+                    {actions.editLabel(state)}
                   </Button>
                 )}
                 <Button size="sm" variant="ghost" onClick={() => actions.dismiss(state)}>

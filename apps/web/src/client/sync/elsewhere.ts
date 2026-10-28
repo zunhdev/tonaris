@@ -37,6 +37,10 @@ export function createChangesElsewhere({
         if (forKey.size === 0) listeners.delete(key);
       };
     },
+    /** Highlights the record with `key` as a change from elsewhere would, as capture does for "Already in this list". */
+    highlight(key: string): void {
+      for (const listener of listeners.get(key) ?? []) listener();
+    },
     stop: unregister,
   };
 }

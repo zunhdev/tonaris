@@ -20,9 +20,17 @@ export type SaveActions = {
   retry(report: BatchReport, ids: readonly string[]): Resubmitted[];
   /** Dismisses a report and the inputs it kept. */
   dismissReport(report: BatchReport): void;
-  /** Whether a failure can be edited: a folder or list's create or rename whose place still exists (DS-80). */
+  /**
+   * Whether a failure can be edited: a folder or list's create or rename whose place still exists (DS-80), an album's
+   * create, or a capture that failed or waits for details, which is entered manually (DS-48).
+   */
   canEdit(state: SaveState): boolean;
-  /** Reopens the failed create or rename's editor with the name attempted; saving it clears the failure. */
+  /** What the edit action is called: "Edit", or "Enter manually" for a capture. */
+  editLabel(state: SaveState): string;
+  /**
+   * Reopens the failed create or rename's editor with the name attempted, or the manual entry form for a capture;
+   * saving it clears the failure.
+   */
   edit(state: SaveState): void;
 };
 

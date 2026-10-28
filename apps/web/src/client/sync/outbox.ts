@@ -6,6 +6,9 @@
 // unconfirmed outcome is reconciled (FR-13.5).
 // Entries are kept in the browser until answered, owned by this tab. A reloaded or closed tab's entries are adopted
 // by another tab of the account, which sends them on (`adopt`), so a reload loses no write.
+// An outbox is one lane. Captures, which can take a minute, have a lane of their own, so they never hold up the
+// edits made after them; a capture's entry waits for the main lane's entries made before it (`answeredBefore`), so
+// it never overtakes what it depends on either (TON-45).
 
 import { maxBatchItems, uuidv7, type Mutation, type Outcome } from "@tonaris/domain";
 
@@ -20,6 +23,8 @@ export type QueuedState = "pending" | "unconfirmed";
 
 export type OutboxOptions = {
   send: (entry: OutboxEntry) => Promise<Sent>;
+  /** The lane its entries are kept under, such as `capture`; none for the main lane. */
+  lane?: string;
   /** Where entries are kept until answered; without it, a reload loses them. */
   persistence?: SyncPersistence;
   /** This tab, which owns new entries and adopts gone tabs' (TS-23). */
@@ -39,6 +44,7 @@ type Queued = { entry: OutboxEntry; stored: Promise<void>; resolve(outcomes: Out
 
 export function createOutbox({
   send,
+  lane,
   persistence,
   tab,
   backoff = { minMs: 500, maxMs: 30_000 },
@@ -54,6 +60,18 @@ export function createOutbox({
   let wake: (() => void) | undefined;
   // Entries made in the same millisecond keep their order.
   let lastCreated = 0;
+  /** Who waits for the entries made before a time to be answered. */
+  const waiters: { time: number; resolve: () => void }[] = [];
+
+  /** Resolves the waiters whose earlier entries are all answered. */
+  function release(): void {
+    const oldest = Math.min(...queue.map((queued) => queued.entry.createdAt));
+    const ready = waiters.filter((waiter) => waiter.time <= oldest || stopped);
+    for (const waiter of ready) {
+      waiters.splice(waiters.indexOf(waiter), 1);
+      waiter.resolve();
+    }
+  }
 
   const rest = (attempt: number) =>
     new Promise<void>((resolve) => {
@@ -86,6 +104,7 @@ export function createOutbox({
         attempt = 0;
         persistence?.deleteEntry(head.entry.id).catch(logError);
         head.resolve(sent.answered);
+        release();
         continue;
       }
       for (const { mutation } of head.entry.items) onState(mutation, "unconfirmed");
@@ -116,6 +135,7 @@ export function createOutbox({
         const entry: OutboxEntry = {
           id: uuidv7(),
           tab: owner,
+          ...(lane === undefined ? {} : { lane }),
           createdAt: lastCreated,
           items: items.slice(start, start + maxBatchItems),
         };
@@ -134,14 +154,20 @@ export function createOutbox({
     async adopt(): Promise<void> {
       if (!persistence || !tab || stopped) return;
       try {
+        const inLane = (entry: OutboxEntry) => entry.lane === lane;
         const gone = new Set(
-          (await persistence.entries()).map((entry) => entry.tab).filter((id) => id !== owner),
+          (await persistence.entries())
+            .filter(inLane)
+            .map((entry) => entry.tab)
+            .filter((id) => id !== owner),
         );
         const adopted: OutboxEntry[] = [];
         for (const id of gone) {
           // oxlint-disable-next-line no-await-in-loop
           await tab.adopt(id, async () => {
-            const theirs = (await persistence.entries()).filter((entry) => entry.tab === id);
+            const theirs = (await persistence.entries()).filter(
+              (entry) => entry.tab === id && inLane(entry),
+            );
             for (const entry of theirs) {
               const mine = { ...entry, tab: owner };
               // oxlint-disable-next-line no-await-in-loop
@@ -172,6 +198,15 @@ export function createOutbox({
     stop(): void {
       stopped = true;
       wake?.();
+      release();
+    },
+
+    /** Resolves once every entry queued before `time` (ms since the epoch) is answered, or the outbox stops. */
+    answeredBefore(time: number): Promise<void> {
+      return new Promise((resolve) => {
+        waiters.push({ time, resolve });
+        release();
+      });
     },
 
     /** The writes not yet answered, oldest first. */

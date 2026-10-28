@@ -2,8 +2,8 @@
 // several to POST /v1/batches with the entry's ID as the batch's, each declaring the earlier writes it builds on
 // (dependencies.ts), so the same entry always sends the same body. A 200 carries the outcomes. A refusal with a
 // problem (4xx) means the request was judged and nothing changed (X-05), so every write in it failed. Anything
-// else — a network error, a timeout, a 5xx, a 408 or 429 — leaves the outcomes unknown, and the outbox sends the
-// same envelopes again (TS-22).
+// else — a network error, a timeout, a 5xx, a 408 or 429, or a capture still running (`409 in_progress`) — leaves
+// the outcomes unknown, and the outbox sends the same envelopes again (TS-22).
 
 import {
   batchResultSchema,
@@ -51,6 +51,10 @@ export function entrySender(
       }
       if (response.status < 500 && !unknownOutcome.has(response.status)) {
         const problem = problemSchema.safeParse(await response.json().catch(() => undefined));
+        // A capture in this entry is still running elsewhere: its outcome comes with a later send.
+        if (problem.success && problem.data.code === "in_progress") {
+          return { unanswered: new Error("A capture in this request is still running.") };
+        }
         if (problem.success) {
           const failed: Outcome = {
             status: "failed",

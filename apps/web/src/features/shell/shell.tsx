@@ -5,6 +5,8 @@
 // so do dragging, which spans the sidebar and the view, "Move to…" (DS-49), "Add to list…" (DS-46) and the manual
 // entry form (DS-47).
 
+import { CaptureDialog } from "@/features/capture/capture-dialog";
+import { CapturePanel } from "@/features/capture/capture-panel";
 import { AddToListDialog } from "@/features/collection/add-to-list";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { DragProvider } from "@/features/collection/drag";
@@ -112,6 +114,8 @@ export function Shell({ account, children }: { account: Account; children: React
       <MoveDialog />
       <AddToListDialog />
       <NewAlbumDialog />
+      <CaptureDialog />
+      <CapturePanel />
     </ShellContext>
   );
 }

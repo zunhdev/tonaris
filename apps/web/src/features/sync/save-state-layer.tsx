@@ -10,6 +10,8 @@
 
 import type { SyncClient } from "@/client/sync/client";
 import { resubmit, resubmitAll } from "@/client/sync/resubmit";
+import type { BatchReport } from "@/client/sync/writer";
+import { captureDraft } from "@/features/capture/manual-entry";
 import { formOf } from "@/features/collection/album-form";
 import { useCollectionUi, useMode, useStartEditor } from "@/features/collection/collection-ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -102,7 +104,10 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
       dismissReport(report) {
         client.states.dismissReport(report.id);
       },
-      canEdit({ status, mutation }) {
+      canEdit(state) {
+        const { status, mutation } = state;
+        // A capture that failed or waits for details is entered manually instead (DS-48).
+        if (mutation.name === "album.capture") return captureDraft(state) !== undefined;
         if (status !== "failed") return false;
         if (mutation.name === "album.create") return true;
         if (mutation.name === "container.rename") return client.containers.has(mutation.args.id);
@@ -110,9 +115,16 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
         const { parentId } = mutation.args;
         return parentId === null || client.containers.has(parentId);
       },
-      edit({ mutation }) {
+      editLabel: ({ mutation }) => (mutation.name === "album.capture" ? "Enter manually" : "Edit"),
+      edit(state) {
+        const { mutation } = state;
         const replaces = mutation.mutationId;
-        if (mutation.name === "container.create") {
+        if (mutation.name === "album.capture") {
+          const draft = captureDraft(state);
+          if (!draft) return;
+          enterEditing();
+          startNewAlbum(draft);
+        } else if (mutation.name === "container.create") {
           const { kind, parentId, name } = mutation.args;
           startEditor({ mode: "create", kind, parentId, name, replaces });
         } else if (mutation.name === "container.rename") {
@@ -123,9 +135,8 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
           const entry = client.states
             .open()
             .find(
-              (state) =>
-                state.mutation.name === "membership.add" &&
-                state.mutation.args.albumId === album.id,
+              (open) =>
+                open.mutation.name === "membership.add" && open.mutation.args.albumId === album.id,
             );
           const listId =
             entry?.mutation.name === "membership.add" ? entry.mutation.args.listId : null;
@@ -182,6 +193,8 @@ function useSettledToasts(
       }
       seen.delete(id);
       if (state.batch !== undefined || !before || !underwayStatuses.has(before)) return;
+      // A capture says what happened in its own words, with its own actions (DS-48).
+      if (state.mutation.name === "album.capture") return;
       const { what, subject } = describeWrite(state.mutation, namesOf(client));
       if (state.status === "failed") {
         notify.problem({
@@ -192,7 +205,7 @@ function useSettledToasts(
           actions: [
             { label: "Retry", onClick: () => actions.resubmit(state) },
             ...(actions.canEdit(state)
-              ? [{ label: "Edit", onClick: () => actions.edit(state) }]
+              ? [{ label: actions.editLabel(state), onClick: () => actions.edit(state) }]
               : []),
           ],
         });
@@ -210,6 +223,14 @@ function useSettledToasts(
 }
 
 const changes = (n: number) => (n === 1 ? "1 change" : `${n} changes`);
+const albums = (n: number) => (n === 1 ? "1 album" : `${n} albums`);
+
+/** How a report's toast and announcement count its writes: albums for a batch of captures (DS-48). */
+function wordsFor(report: BatchReport): { count: (n: number) => string; verb: string } {
+  return report.items.every((item) => item.mutation.name === "album.capture")
+    ? { count: albums, verb: "add" }
+    : { count: changes, verb: "save" };
+}
 
 /**
  * One toast for a batch of this page's that settles with anything not saved, and a polite announcement for one that
@@ -241,8 +262,9 @@ function useReportFeedback(
         toasts.delete(report.id);
       }
       if (!wasUnderway || isUnderway) return;
+      const { count, verb } = wordsFor(report);
       if (problems.length === 0) {
-        announce(`${changes(report.items.length)} saved.`);
+        announce(`${count(report.items.length)} ${verb === "add" ? "added" : "saved"}.`);
         return;
       }
       const total = report.items.length;
@@ -252,8 +274,8 @@ function useReportFeedback(
         id: report.id,
         title:
           problems.length === total
-            ? `Couldn't save ${changes(total)}`
-            : `Couldn't save ${problems.length} of ${changes(total)}`,
+            ? `Couldn't ${verb} ${count(total)}`
+            : `Couldn't ${verb} ${problems.length} of ${count(total)}`,
         description: summarize(report),
         tone: problems.some((item) => item.status === "failed") ? "danger" : "warning",
         actions: [{ label: "View report", onClick: () => showReport(report.id) }],

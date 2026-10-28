@@ -28,7 +28,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(32);
+  server = await startApiServer(36);
 }, 30_000);
 
 afterAll(async () => {
@@ -1057,5 +1057,120 @@ describe("links (FR-06.2, FR-06.3, FR-09.1)", () => {
     await until(() => phone.links.get(key)?.url === other, 3_000, "the newer link");
     expect(conflict && resubmit(phone, conflict)).toBe("sent");
     await until(() => !web.links.has(key), 3_000, "the applied removal");
+  });
+});
+
+/** The captures a client hasn't saved yet. */
+const capturesOf = (of: SyncClient) =>
+  of.states.open().filter((state) => state.mutation.name === "album.capture");
+
+describe("captures (TON-45, TS-22)", () => {
+  // The test API answers these from its fixtures (apps/api/src/capture-fixtures.ts).
+  const links = {
+    bleach: "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv",
+    nevermind: "https://music.apple.com/us/album/nevermind/1440783617",
+    ambiguous: "https://music.apple.com/us/album/1000000002",
+    slow: "https://open.spotify.com/album/0000000000000000000007",
+    flaky: "https://open.spotify.com/album/0000000000000000000008",
+  };
+
+  test("a capture into a list made just before it finds the list, and a rename made after isn't held up", async () => {
+    const web = await openClient(32, 0);
+    await Promise.all([web.containers.preload(), web.memberships.preload()]);
+    const doom: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Doom" };
+    const created = web.containers.insert(doom);
+    const [capture] = web.captures.send([{ link: links.slow, listId: doom.id }]);
+    await created.isPersisted.promise;
+    const renamed = web.containers.update(doom.id, (draft) => {
+      draft.name = "Heavy";
+    });
+    await renamed.isPersisted.promise;
+    // The rename is saved while the capture still waits on MusicBrainz.
+    expect(capture && web.states.get(capture.mutationId)?.status).toBe("pending");
+
+    await until(
+      () => capture !== undefined && web.states.get(capture.mutationId)?.status === "confirmed",
+      10_000,
+      "the capture",
+    );
+    const master = [...web.albums.values()].find((each) => each.title === "Master of Reality");
+    expect(master && web.memberships.has(membershipKey(doom.id, master.id))).toBe(true);
+  });
+
+  test("a batch settles item by item, and a choice waits while the others are saved", async () => {
+    const web = await openClient(33, 0);
+    const sent = web.captures.send([
+      { link: links.bleach, listId: null },
+      { link: links.ambiguous, listId: null },
+      { link: links.nevermind, listId: null },
+    ]);
+    expect(sent).toHaveLength(3);
+    await until(
+      () => web.states.reports()[0]?.items.every((item) => item.status !== "pending") === true,
+      10_000,
+      "the batch",
+    );
+    const [report] = web.states.reports();
+    expect(report?.items.map((item) => item.status)).toEqual([
+      "confirmed",
+      "needs_input",
+      "confirmed",
+    ]);
+    const waiting = report?.items[1];
+    expect(waiting?.outcome).toMatchObject({
+      status: "needs_input",
+      need: "match",
+      candidates: [{ title: "The Last in Line" }, { title: "Holy Diver" }],
+    });
+
+    // Choosing completes it in the same report.
+    const [first] = waiting?.outcome?.status === "needs_input" ? waiting.outcome.candidates : [];
+    const releaseGroupId =
+      typeof first === "object" && first !== null && "releaseGroupId" in first
+        ? String(first.releaseGroupId)
+        : "";
+    const again = waiting && web.captures.again(waiting, { releaseGroupId });
+    await until(
+      () => again !== undefined && web.states.get(again.mutationId)?.status === "confirmed",
+      10_000,
+      "the chosen album",
+    );
+    expect([...web.albums.values()].map((each) => each.title).toSorted()).toEqual([
+      "Bleach",
+      "Nevermind",
+      "The Last in Line",
+    ]);
+    expect(web.states.reports()[0]?.items.map((item) => item.status)).toEqual([
+      "confirmed",
+      "confirmed",
+      "confirmed",
+    ]);
+  });
+
+  test("a capture waiting for a choice is kept across a reload", async () => {
+    const persistence = memoryPersistence();
+    const first = await openClient(34, 0, { persistence });
+    first.captures.send([{ link: links.ambiguous, listId: null }]);
+    await until(() => capturesOf(first)[0]?.status === "needs_input", 10_000, "the choice");
+    await first.stop();
+
+    const second = await openClient(34, 0, { persistence });
+    await until(() => capturesOf(second).length === 1, 3_000, "the kept choice");
+    expect(capturesOf(second)[0]?.mutation.args).toMatchObject({ link: links.ambiguous });
+  });
+
+  test("Retry sends a failed capture again, and saves it once the source answers", async () => {
+    const web = await openClient(35, 0);
+    web.captures.send([{ link: links.flaky, listId: null }]);
+    await until(() => capturesOf(web)[0]?.status === "failed", 10_000, "the failure");
+    const [failed] = capturesOf(web);
+    expect(failed?.outcome).toMatchObject({ status: "failed", code: "provider_unavailable" });
+    expect(failed && resubmit(web, failed)).toBe("sent");
+    await until(
+      () => [...web.albums.values()].some((each) => each.title === "Paranoid"),
+      10_000,
+      "the retried album",
+    );
+    await until(() => capturesOf(web).length === 0, 3_000, "the capture to be saved");
   });
 });

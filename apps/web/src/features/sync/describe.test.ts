@@ -76,9 +76,9 @@ describe("describeWrite (DS-80, DS-81)", () => {
   test("a capture is named by its album once saved, and as a link's album before", () => {
     expect(write(capture(blue.id)).summary).toBe("Add 'Kind of Blue'");
     expect(write(capture(uuidv7()))).toEqual({
-      summary: "Add an album from a link",
-      what: "an album from a link",
-      subject: "An album from a link",
+      summary: "Add an album from open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv",
+      what: "an album from open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv",
+      subject: "An album from open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv",
     });
   });
 

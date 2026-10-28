@@ -9,6 +9,7 @@
 import {
   albumFields,
   membershipKey,
+  type CaptureArgs,
   positionKey,
   serviceLinkKey,
   unsetView,
@@ -35,7 +36,15 @@ export type Resubmitted = "sent" | "unchanged" | "gone";
 
 type Collections = Pick<
   SyncClient,
-  "albums" | "containers" | "memberships" | "links" | "views" | "defaults" | "positions" | "arrange"
+  | "albums"
+  | "containers"
+  | "memberships"
+  | "links"
+  | "views"
+  | "defaults"
+  | "positions"
+  | "arrange"
+  | "captures"
 >;
 
 type Call =
@@ -52,7 +61,8 @@ type Call =
   | "view.update"
   | "view.delete"
   | "defaults.update"
-  | "order";
+  | "order"
+  | "capture";
 
 /** The collection calls that make the changes again, in the order of each call's first change. */
 function plan() {
@@ -74,6 +84,8 @@ function plan() {
     /** Each move made again: one transaction each, as each was one move. */
     orders: [] as { viewKey: string; keys: Map<string, string | null> }[],
     defaultsUpdate: {} as Partial<ViewDefaults>,
+    /** Captures sent again: one request each, as they were (TON-45). */
+    captures: [] as CaptureArgs[],
     /** Notes that `call` is needed; answers `sent`. */
     needs(call: Call): "sent" {
       if (!order.includes(call)) order.push(call);
@@ -135,9 +147,10 @@ function remake(
     return planned.needs("album.update");
   }
   if (mutation.name === "album.capture") {
-    // A capture is made again by sending its link once more, from the capture interface (TON-45). Here it can only
-    // be found saved; otherwise its state stays, for that interface to retry.
-    return albums.has(mutation.args.albumId) ? "unchanged" : "gone";
+    // Sent again as it was; an album saved under its ID means it was saved after all.
+    if (albums.has(mutation.args.albumId)) return "unchanged";
+    planned.captures.push(mutation.args);
+    return planned.needs("capture");
   }
   if (mutation.name === "link.set" || mutation.name === "link.remove") {
     const { albumId, service } = mutation.args;
@@ -251,7 +264,7 @@ function applyTo<Row>(rows: Map<string, Partial<Row>>) {
 
 /** Makes one call: one transaction, so one batch when it holds several changes. */
 function make(
-  { albums, containers, memberships, links, views, defaults, arrange }: Collections,
+  { albums, containers, memberships, links, views, defaults, arrange, captures }: Collections,
   planned: Plan,
   call: Call,
 ): void {
@@ -279,7 +292,8 @@ function make(
         Object.assign(draft, planned.defaultsUpdate);
       }),
     );
-  } else for (const { viewKey, keys } of planned.orders) sent(arrange(viewKey, keys));
+  } else if (call === "capture") captures.send(planned.captures);
+  else for (const { viewKey, keys } of planned.orders) sent(arrange(viewKey, keys));
 }
 
 /** The new writes report their own outcomes in the save states; a rejection is expected there, not here. */

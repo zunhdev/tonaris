@@ -159,11 +159,14 @@ export function createSaveStates({
     emit(next);
   };
 
-  /** Keeps a write's failure or conflict in the browser until the person deals with it. */
+  /**
+   * Keeps a write's failure or conflict in the browser until the person deals with it, and a capture waiting for
+   * their choice or details with it (TON-45).
+   */
   function keep({ mutation, key, outcome }: SaveState): void {
     if (outcome?.status === "conflict") {
       persistence?.putConflict({ mutation, key, outcome }).catch(logError);
-    } else if (outcome?.status === "failed") {
+    } else if (outcome?.status === "failed" || outcome?.status === "needs_input") {
       persistence?.putFailure({ mutation, key, outcome }).catch(logError);
     }
   }
@@ -316,7 +319,9 @@ export function createSaveStates({
         leave(state);
       } else {
         if (state.status === "conflict") persistence?.deleteConflict(mutationId).catch(logError);
-        else if (state.status === "failed") persistence?.deleteFailure(mutationId).catch(logError);
+        else if (state.status === "failed" || state.status === "needs_input") {
+          persistence?.deleteFailure(mutationId).catch(logError);
+        }
         states.delete(mutationId);
       }
       changed();

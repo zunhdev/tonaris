@@ -2,6 +2,7 @@
 // shortcut is claimed before the sidebar tree could type ahead with it (decided 22 October 2026). Keys typed in a
 // text field, or inside a dialog, popover or menu, are left alone.
 
+import { useCapture } from "@/features/capture/capture-context";
 import {
   useCollectionUi,
   useMode,
@@ -39,6 +40,7 @@ export function useShortcuts({
   const mode = useMode();
   const offline = useConnection() === "offline";
   const inspected = useInspector().albumId;
+  const capture = useCapture();
   // The latest of each, so the listener is installed once.
   const latest = useRef({
     navigate,
@@ -52,6 +54,7 @@ export function useShortcuts({
     viewId,
     mode,
     inspected,
+    capture,
   });
   useEffect(() => {
     latest.current = {
@@ -66,6 +69,7 @@ export function useShortcuts({
       viewId,
       mode,
       inspected,
+      capture,
     };
   });
 
@@ -95,6 +99,9 @@ export function useShortcuts({
           now.mode.enterEditing();
           now.ui.startAddToList(albumId);
         }
+      } else if (action === "capture") {
+        // Capturing is an edit: the dialog switches to Editing first, and waits while offline (DS-48).
+        if (!now.editing.current) now.capture?.openDialog();
       } else if (action === "toggle-mode") {
         now.mode.choose(now.mode.editing ? "view" : "edit");
       }

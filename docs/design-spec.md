@@ -597,6 +597,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Offline,** the rows are read-only, as the album's fields are (DS-81).
 - **Capture's kept link** ("Another Spotify link was found for this album · Replace · Dismiss") comes with the capture interface (TON-45).
 
+*As built in TON-45:* **the kept link's notice** heads the Links section while the album still has the kept link: "Another Spotify link was found for this album", the pasted link, and **Replace** and **Dismiss**. Replace sets the pasted link, switching to Editing first. The notice lives in the tab that captured, until replaced, dismissed or reloaded.
+
 **DS-47 Manual entry form.** A 560px dialog titled "New album" (desktop). Shortcut ⌘Enter saves; Esc asks before discarding entered data. *(FR-02.4, FR-02.6, FR-13.2)*
 
 - **Field order:**
@@ -617,6 +619,11 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 *As built in TON-38:*
 - **Its description:** "Title, artist and a year are required. Everything else can wait."
 - **Artwork URL, links and custom fields** are shown in order with a line each until their features arrive: "Artwork arrives with link capture." (decided with the creator on 23 October 2026), and the same lines as the inspector's.
+
+*As built in TON-45:* **from a capture,** a note under the description gives the reason it came to the form, or "We couldn't read this link — complete the details below." when there is none.
+- **Asked for details,** or "None of these": prefilled with capture's values, such as Apple's title, artist and year. The link fields give way to "The link is kept: {link}". Saving completes the capture, which keeps the link and the sources of the values left as offered (TS-15), and announces "Adding {title}".
+- **After a failure:** the pasted link is in its service's field. Saving adds the album as usual and dismisses the failed capture.
+- **"Add album" opens the capture dialog;** manual entry is its "Enter manually".
 
 *As built in TON-46:* **links** replace their line: "Spotify link", "Apple Music link", "Qobuz link" and "Tidal link", each optional, with the placeholder "Album or track link".
 - **Checked when left and on submit,** like the other fields, with the inspector's reasons, and named in the summary.
@@ -676,6 +683,43 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - Actions: **Same album — link it**, **Different album — save separately**, **Decide later**. "Decide later" keeps the item pending in the batch report.
 - **Batches** (more than one link) show a progress panel in the bottom-right, e.g. "Adding 12 · 8 done · 2 need you · 1 failed", which expands into the BatchOutcomeReport (DS-84).
 - **Capacity refusals** appear inline with a link to the usage meter (DS-98).
+
+*As built in TON-45:*
+- **Pasting:** ⌘V on desktop captures every pasted line that looks like a link: an `http(s)` URL, a `spotify:` URI, or a service's host without the scheme. Other lines are dropped, and a paste with none does nothing.
+  - It acts unless a text field has focus or a dialog, popover or menu is open (DS-78), and waits while offline.
+  - It switches to Editing first (DS-45).
+  - At most 200 links at once: "Add up to 200 links at once."
+- **The capture dialog,** "Add albums", opens from `C` and every "Add album": the sidebar's, the empty list's and the one below a list's rows.
+  - It has "Paste Spotify, Apple Music, Qobuz or Tidal album or track links.", a Links textarea ("One link per line"), and the List select from manual entry, defaulting to the list on view.
+  - **Add** or ⌘Enter captures every non-empty line; a line that isn't a link gets its reason in its row. With none: "Paste at least one Spotify, Apple Music, Qobuz or Tidal link."
+  - "Enter manually" opens DS-47 for the chosen list.
+- **Placeholder rows** sit at the top of the destination view, the list or Unsorted, in "Albums being added", whatever the sort, since the album's place is known only once it is identified. The section scrolls past 40% of the view.
+  - Each row has a skeleton tile and the link's host and path.
+  - Pending: "Resolving link…", with `aria-busy`; unanswered: "Waiting for an answer…".
+  - Failed: the reason in danger text, with Retry, Enter manually and Dismiss.
+  - Needing details: the reason, with Enter manually and Dismiss.
+  - Fitting several albums: the decision card, and Dismiss.
+  - Saved: the row goes and the album is in its place. A new one is announced, "Added {title}".
+  - The rows are this browser's captures, kept across reloads.
+- **The decision card** (as TS-44 shapes it; TON-44's note). DS-48's "Is this the same album?" compared a saved album with a new one. Since G2, an uncertain match is a choice between MusicBrainz albums.
+  - It asks "Which album is this?", with a button per candidate's title. A candidate already saved reads "In your collection · {artist}, {year}".
+  - **"None of these"** opens manual entry, which saves the album unidentified with the link.
+  - **"Decide later"** folds it to "Fits more than one album." with **Decide**. In Activity and the report it starts folded.
+- **Outcome toasts,** for a capture made on its own:
+  - a new album whose row was on screen raises none;
+  - elsewhere: "Added '{title}' to '{list}'", or "Added '{title}' to Unsorted" with **Add to list…**;
+  - "Already in your collection — added to this list", or "Already in your collection" without a list, with Add to list…;
+  - "Already in this list", and the album's row flashes;
+  - "Restored from Trash and added", or "Restored from Trash";
+  - "Kept your existing Spotify link", with **Review**, which opens the inspector at the album.
+  - **Failed:** "Couldn't add an album from this link", the reason, Retry and Enter manually, persistent.
+  - **Waiting for the person:** "Choose which album this link is", with Decide, which opens the destination view; or "Add this album's details", with Enter manually.
+  - A batch's captures raise none; its panel and report carry them.
+- **The capture panel,** bottom right, shows while a batch of captures is underway: "Adding 4 · 1 done · 1 need you · 1 failed". It opens Activity at the batch's report, and goes once nothing is underway.
+  - The batch's toast counts albums: "Couldn't add 2 of 4 albums". A batch that wholly saves is announced as "4 albums added."
+- **Reasons** for a capture waiting for the person: details give capture's reason; a choice reads "This link fits more than one album. Choose which it is."
+- **Capacity:** a refusal shows its reason in the row. The link to the usage meter comes with DS-98 (TON-60).
+- **Activity and reports** name a capture by its link until saved: "Add an album from open.spotify.com/album/…".
 
 **DS-49 View options and rearranging.**
 - **View button** in the header, or `V`, opens a popover:
@@ -914,6 +958,7 @@ The block never says "private" while another access path remains.
 - **TON-35 adds V,** which opens the current view's View options; it works offline, since choosing isn't an edit. **G then S** now goes to Settings → Preferences.
 - **TON-36 adds M,** "Move to…", which waits while offline like N, and ⌥↑ / ⌥↓, with ⇧ for the ends, in the views' grids. The reference lists them.
 - **TON-37 adds E,** which switches between Viewing and Editing, and F2 on an album row, which edits its title. M now switches to Editing first.
+- **TON-45 adds C,** which opens the capture dialog, switching to Editing first and waiting while offline. The reference lists it as "Add albums from links".
 - **TON-38 adds L,** "Add to list…", for the inspector's album, else the focused album, switching to Editing first and waiting while offline; **Enter** on an album, which opens the inspector; and **Esc,** which closes it. The reference lists them.
 
 ---
@@ -1040,6 +1085,7 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   - **Retry** for a failure. It makes the change again with the items skipped because of it, and the new writes take the old ones' place in the report. Nothing completed is sent again.
   - **Review** for a conflict.
   - **Edit**, **Decide** and **Enter manually** come with the editors, choices and capture (TON-38, M3, M5).
+  - *As built in TON-45:* a capture's failure offers **Retry** and **Enter manually**. One asking for details offers Enter manually, and one fitting several albums the folded decision card, with **Decide**. Activity's own items do the same, with Dismiss.
 - **The toast.** A batch that settles with anything unsaved raises one persistent toast instead of one per write:
   - "Couldn't save 2 of 4 changes";
   - the summary sentence;
