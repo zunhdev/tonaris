@@ -19,3 +19,9 @@ export const maxLinkLength = 2_048;
 
 /** Items in one batch, from any client: the app, native clients or MCP (TS-25, decided 22 October 2026). */
 export const maxBatchItems = 200;
+
+/** Custom fields per account (TS-18). */
+export const maxFields = 50;
+
+/** Options per choice field (TS-18). */
+export const maxFieldOptions = 100;

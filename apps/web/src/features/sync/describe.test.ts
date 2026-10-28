@@ -127,6 +127,23 @@ describe("describeWrite (DS-80, DS-81)", () => {
     ).toBe("Move 'Later' to Collection");
   });
 
+  test("custom fields", () => {
+    const id = uuidv7();
+    expect(
+      write({
+        name: "field.create",
+        args: { id, name: "Mood", type: "single_choice", options: [] },
+      }),
+    ).toEqual({ summary: "New field 'Mood'", what: "the field 'Mood'", subject: "'Mood'" });
+    expect(
+      write({ name: "field.rename", args: { id, name: "Score" }, base: { name: "Rating" } }),
+    ).toEqual({
+      summary: "Rename field 'Rating' to 'Score'",
+      what: "the new name for the field 'Rating'",
+      subject: "The field 'Rating'",
+    });
+  });
+
   test("links", () => {
     const albumId = blue.id;
     expect(

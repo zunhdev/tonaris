@@ -15,18 +15,14 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { fieldTypes } from "@tonaris/domain";
+
 import { users } from "./auth";
 import { albums } from "./collection";
 import { notBlank, oneOf, table, timestamps } from "./columns";
 
-export const fieldTypes = [
-  "text",
-  "number",
-  "date",
-  "yes_no",
-  "single_choice",
-  "multiple_choice",
-] as const;
+// The domain's vocabulary, so the column's check and the commands agree (FR-03.6).
+export { fieldTypes };
 
 /** Account-level field definitions; names are unique per owner across types (FR-03.9). */
 export const fieldDefinitions = table(

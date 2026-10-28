@@ -6,6 +6,7 @@
 import { albumCreateArgsSchema, albumFieldsSchema, albumSchema, artworkUrlSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
+import { customFieldSchema, fieldCreateArgsSchema } from "./fields";
 import { streamingServices } from "./links";
 import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
@@ -62,6 +63,21 @@ export const albumCaptureSchema = z.object({
   mutationId,
   name: z.literal("album.capture"),
   args: captureArgsSchema,
+});
+
+/** `field.create`: defines a custom field, with a choice field's options (FR-03.6), with the client's IDs (TS-10). */
+export const fieldCreateSchema = z.object({
+  mutationId,
+  name: z.literal("field.create"),
+  args: fieldCreateArgsSchema,
+});
+
+/** `field.rename`: renames a field everywhere (FR-03.11); `base.name` is the name the client last saw (TS-21). */
+export const fieldRenameSchema = z.object({
+  mutationId,
+  name: z.literal("field.rename"),
+  args: z.object({ id: z.uuid(), name: z.string() }),
+  base: z.object({ name: z.string() }),
 });
 
 /**
@@ -186,6 +202,8 @@ export const mutationSchema = z
     albumUpdateSchema,
     albumSetArtworkSchema,
     albumCaptureSchema,
+    fieldCreateSchema,
+    fieldRenameSchema,
     containerCreateSchema,
     containerRenameSchema,
     containerMoveSchema,
@@ -271,6 +289,14 @@ export const changeSchema = z
     }),
     z.object({
       seq: z.int().positive(),
+      entity: z.literal("field"),
+      id: z.uuid(),
+      op: z.enum(changeOps),
+      data: customFieldSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
       entity: z.literal("view"),
       id: viewKeySchema,
       op: z.enum(changeOps),
@@ -307,6 +333,9 @@ export const bootstrapSchema = z
     links: z
       .array(serviceLinkSchema)
       .meta({ description: "The albums' links to the streaming services (FR-06.2)." }),
+    fields: z
+      .array(customFieldSchema)
+      .meta({ description: "The account's custom fields, with their options (FR-03.6)." }),
     views: z.array(viewPrefsSchema).meta({ description: "The person's remembered view choices." }),
     positions: z
       .array(positionSchema)

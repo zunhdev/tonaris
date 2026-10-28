@@ -8,7 +8,11 @@ import type { Mutation } from "@tonaris/domain";
 
 /** The record a write creates, if it creates one. */
 function created(mutation: Mutation): string | undefined {
-  if (mutation.name === "album.create" || mutation.name === "container.create") {
+  if (
+    mutation.name === "album.create" ||
+    mutation.name === "container.create" ||
+    mutation.name === "field.create"
+  ) {
     return mutation.args.id;
   }
   // A capture may reuse an album instead; then nothing later in the request refers to the ID it proposed.
@@ -18,7 +22,8 @@ function created(mutation: Mutation): string | undefined {
 
 /** The records a write changes or puts something in, other than one it creates. */
 function referenced(mutation: Mutation): (string | null)[] {
-  if (mutation.name === "album.create") return [];
+  if (mutation.name === "album.create" || mutation.name === "field.create") return [];
+  if (mutation.name === "field.rename") return [mutation.args.id];
   if (mutation.name === "album.capture") return [mutation.args.listId];
   if (
     mutation.name === "album.update" ||
