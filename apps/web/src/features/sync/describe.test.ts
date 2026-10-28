@@ -127,6 +127,38 @@ describe("describeWrite (DS-80, DS-81)", () => {
     ).toBe("Move 'Later' to Collection");
   });
 
+  test("custom field types and options", () => {
+    const fieldId = uuidv7();
+    const calm = uuidv7();
+    const withField: Names = {
+      ...names,
+      field: (id) => (id === fieldId ? "Mood" : undefined),
+      option: (id) => (id === calm ? "Calm" : undefined),
+    };
+    const describeIt = (mutation: Unsent) =>
+      describeWrite({ mutationId: uuidv7(), ...mutation }, withField).summary;
+    expect(
+      describeIt({
+        name: "field.changeType",
+        args: { id: fieldId, type: "multiple_choice" },
+        base: { type: "single_choice" },
+      }),
+    ).toBe("Change 'Mood' to Multiple choice");
+    expect(
+      describeIt({ name: "field.addOption", args: { fieldId, id: uuidv7(), label: "Odd" } }),
+    ).toBe("Add option 'Odd' to 'Mood'");
+    expect(
+      describeIt({
+        name: "field.renameOption",
+        args: { fieldId, optionId: calm, label: "Quiet" },
+        base: { label: "Calm" },
+      }),
+    ).toBe("Rename option 'Calm' to 'Quiet'");
+    expect(describeIt({ name: "field.removeOption", args: { fieldId, optionId: calm } })).toBe(
+      "Remove option 'Calm' from 'Mood'",
+    );
+  });
+
   test("custom fields on albums", () => {
     const fieldId = uuidv7();
     const withField: Names = { ...names, field: (id) => (id === fieldId ? "Rating" : undefined) };

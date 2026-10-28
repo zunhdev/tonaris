@@ -4,6 +4,7 @@
 // specific, names in single quotes.
 
 import { shownLink } from "@/features/capture/outcomes";
+import { fieldTypeNames } from "@/features/collection/field-types";
 
 import {
   serviceNames,
@@ -91,6 +92,45 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       summary: `Rename field ${seen} to '${mutation.args.name}'`,
       what: `the new name for the field ${seen}`,
       subject: `The field ${seen}`,
+    };
+  }
+  if (
+    mutation.name === "field.changeType" ||
+    mutation.name === "field.addOption" ||
+    mutation.name === "field.renameOption" ||
+    mutation.name === "field.removeOption"
+  ) {
+    const fieldId = mutation.name === "field.changeType" ? mutation.args.id : mutation.args.fieldId;
+    const field = quoted(names.field?.(fieldId), "a field");
+    if (mutation.name === "field.changeType") {
+      const type = fieldTypeNames[mutation.args.type];
+      return {
+        summary: `Change ${field} to ${type}`,
+        what: `the type of ${field}`,
+        subject: capitalized(`the type of ${field}`),
+      };
+    }
+    if (mutation.name === "field.addOption") {
+      const option = quoted(mutation.args.label, "an option");
+      return {
+        summary: `Add option ${option} to ${field}`,
+        what: `option ${option} of ${field}`,
+        subject: capitalized(`option ${option} of ${field}`),
+      };
+    }
+    if (mutation.name === "field.renameOption") {
+      const option = quoted(mutation.base.label, "an option");
+      return {
+        summary: `Rename option ${option} to ${quoted(mutation.args.label, "a new label")}`,
+        what: `the label of ${option} in ${field}`,
+        subject: capitalized(`option ${option} of ${field}`),
+      };
+    }
+    const option = quoted(names.option?.(mutation.args.optionId), "an option");
+    return {
+      summary: `Remove option ${option} from ${field}`,
+      what: `the removal of ${option} from ${field}`,
+      subject: capitalized(`option ${option} of ${field}`),
     };
   }
   if (

@@ -136,7 +136,7 @@ The server ends a stream in four cases:
   - `container.create`, `container.rename`, `container.move`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
-  - `field.create`, `field.rename`;
+  - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`;
   - `fieldValue.apply`, `fieldValue.set`, `fieldValue.remove`;
   - `view.set`, `defaults.set`;
   - `order.set`.
@@ -151,6 +151,17 @@ The server ends a stream in four cases:
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.
   - **`field.rename`** `{id, name}`, with `base.name`, renames it everywhere.
   - **Names** are unique per account across types, and labels within their field, case-insensitively (`name_conflict`). At most 50 fields and 100 options each (`limit_exceeded`).
+- **A field's type and options** (FR-03.12 to FR-03.17), each change sending the whole field as a `field` change (TON-51):
+  - **`field.changeType`** `{id, type}`, with `base.type`:
+    - it changes the type only while no album applies the field, in Trash or not, even empty. Otherwise it is `field_in_use`: "Used by 3 albums (1 in Trash). Create a new field of the type you need instead.";
+    - options stay between `single_choice` and `multiple_choice`, and any other type discards them;
+    - its `confirmed` result is `{discardedOptions: [{id, label}]}`.
+  - **`field.addOption`** `{fieldId, id, label}` adds an option at the end of a choice field.
+  - **`field.renameOption`** `{fieldId, optionId, label}`, with `base.label`, relabels it, keeping its selections.
+  - **`field.removeOption`** `{fieldId, optionId, scopeHash?}` removes an option. An option no album chooses goes at once.
+    - **A chosen option** needs `scopeHash` from `GET /v1/fields/{fieldId}/options/{optionId}/removal`. That read gives the albums choosing it, active and in Trash, for the confirmation. Without the hash, or once the albums changed, the removal is `field_in_use`.
+    - **Removal clears the option** from every album that chose it, sending each one's value as a `fieldValue` change. A single choice becomes null, and a multiple choice keeps its other options, or becomes null with none left.
+  - **Already done:** a removed option removed again, and an option added again with its ID and label, change nothing.
 - **Custom fields on albums** (FR-03.7, FR-03.8, FR-03.10), one record per album and applied field (TON-50):
   - **`fieldValue.apply`** `{albumId, fieldId}` applies a field, empty; **`fieldValue.remove`** takes it off with its value. Both are no-ops when already done.
   - **`fieldValue.set`** `{albumId, fieldId, value}`, with `base.value`, sets or clears the value of an applied field. A field not applied is `not_found`.

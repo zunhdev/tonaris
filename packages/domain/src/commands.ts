@@ -28,6 +28,14 @@ import {
 } from "./containers";
 import type { EnrichmentPlan } from "./enrichment";
 import {
+  addFieldOption,
+  changeFieldType,
+  removeFieldOption,
+  renameFieldOption,
+  type FieldUsage,
+  type OptionUser,
+} from "./field-options";
+import {
   applyField,
   removeField,
   setFieldValue,
@@ -39,6 +47,7 @@ import {
   renameField,
   type CustomField,
   type FieldOption,
+  type FieldType,
   type StoredField,
 } from "./fields";
 import type { StreamingService } from "./links";
@@ -105,6 +114,25 @@ export type CollectionStore = {
   setFieldValue(albumId: string, field: CustomField, value: FieldValueData): Promise<void>;
   /** Takes the field off the album with its value (FR-03.8). */
   removeField(albumId: string, fieldId: string): Promise<void>;
+  /** How many albums apply the field, active and in Trash, even empty (FR-03.12). */
+  fieldUsage(fieldId: string): Promise<FieldUsage>;
+  /** The albums choosing the option, in Trash or not (FR-03.17). */
+  optionUsers(fieldId: string, optionId: string): Promise<OptionUser[]>;
+  /** The field an option with this ID belongs to, whoever owns it. */
+  optionField(optionId: string): Promise<string | undefined>;
+  /** The key of the field's last option, or null without options (TS-16). */
+  lastOptionKey(fieldId: string): Promise<string | null>;
+  /** Changes the field's type, deleting its options if `discardOptions` (FR-03.13). */
+  changeFieldType(fieldId: string, type: FieldType, discardOptions: boolean): Promise<void>;
+  /** Adds an option to the field with its fractional-index key. */
+  insertFieldOption(fieldId: string, option: FieldOption & { sortKey: string }): Promise<void>;
+  /** Relabels the option; its label key follows. */
+  renameFieldOption(optionId: string, label: string): Promise<void>;
+  /**
+   * Deletes the option, clearing it from every album (FR-03.17), and gives the values of `albumIds`, the albums that
+   * chose it, as they now are.
+   */
+  removeFieldOption(fieldId: string, optionId: string, albumIds: string[]): Promise<FieldValue[]>;
 
   /** The folder or list with this ID, whoever owns it, in Trash or not. */
   findContainer(id: string): Promise<StoredContainer | undefined>;
@@ -198,6 +226,14 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   }
   if (mutation.name === "field.create") return createField(mutation.args, context);
   if (mutation.name === "field.rename") return renameField(mutation.args, mutation.base, context);
+  if (mutation.name === "field.changeType") {
+    return changeFieldType(mutation.args, mutation.base, context);
+  }
+  if (mutation.name === "field.addOption") return addFieldOption(mutation.args, context);
+  if (mutation.name === "field.renameOption") {
+    return renameFieldOption(mutation.args, mutation.base, context);
+  }
+  if (mutation.name === "field.removeOption") return removeFieldOption(mutation.args, context);
   if (mutation.name === "fieldValue.apply") return applyField(mutation.args, context);
   if (mutation.name === "fieldValue.set") {
     return setFieldValue(mutation.args, mutation.base, context);

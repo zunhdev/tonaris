@@ -1,6 +1,8 @@
 // An in-memory `CollectionStore` for the command tests: the same contract the database layer implements on the
 // owner's write transaction (packages/db/src/sync.ts). Import from tests only.
 
+import { generateNKeysBetween } from "fractional-indexing";
+
 import type { Album } from "./albums";
 import type { CapturedLink, CaptureTarget } from "./capture";
 import type { CollectionStore, StoredAlbum } from "./commands";
@@ -92,6 +94,13 @@ export function memoryStore({
   };
   const fieldRows = new Map<string, StoredField>(
     fields.map((field) => [field.id, { ...field, options: [...field.options] }]),
+  );
+  /** Each option's fractional-index key (TS-16). */
+  const optionKeys = new Map<string, string>(
+    fields.flatMap((field) => {
+      const keys = generateNKeysBetween(null, null, field.options.length);
+      return field.options.map((option, index): [string, string] => [option.id, keys[index] ?? ""]);
+    }),
   );
   /** Each album's applied fields and values, by `fieldValueKey`. */
   const valueRows = new Map<string, FieldValueData>(
@@ -195,6 +204,7 @@ export function memoryStore({
           })),
       ),
     insertField: (field, options) => {
+      for (const option of options) optionKeys.set(option.id, option.sortKey);
       const ordered = options.toSorted((a, b) => (a.sortKey < b.sortKey ? -1 : 1));
       fieldRows.set(field.id, {
         ...field,
@@ -221,6 +231,83 @@ export function memoryStore({
     removeField: (albumId, fieldId) => {
       valueRows.delete(fieldValueKey(albumId, fieldId));
       return Promise.resolve();
+    },
+    fieldUsage: (fieldId) => {
+      const usage = { active: 0, trashed: 0 };
+      for (const key of valueRows.keys()) {
+        const [albumId, ofField] = key.split(":");
+        if (ofField !== fieldId) continue;
+        if (albumRows.get(albumId ?? "")?.trashed) usage.trashed += 1;
+        else usage.active += 1;
+      }
+      return Promise.resolve(usage);
+    },
+    optionUsers: (fieldId, optionId) =>
+      Promise.resolve(
+        [...valueRows.entries()].flatMap(([key, value]) => {
+          const [albumId = "", ofField] = key.split(":");
+          const chosen = Array.isArray(value) ? value.includes(optionId) : value === optionId;
+          if (ofField !== fieldId || !chosen) return [];
+          return [{ id: albumId, trashed: albumRows.get(albumId)?.trashed ?? false }];
+        }),
+      ),
+    optionField: (optionId) =>
+      Promise.resolve(
+        [...fieldRows.values()].find((field) => field.options.some((o) => o.id === optionId))?.id,
+      ),
+    lastOptionKey: (fieldId) => {
+      const keys = (fieldRows.get(fieldId)?.options ?? []).map((o) => optionKeys.get(o.id) ?? "");
+      return Promise.resolve(keys.toSorted().at(-1) ?? null);
+    },
+    changeFieldType: (fieldId, type, discardOptions) => {
+      const field = fieldRows.get(fieldId)!;
+      fieldRows.set(fieldId, { ...field, type, options: discardOptions ? [] : field.options });
+      return Promise.resolve();
+    },
+    insertFieldOption: (fieldId, { id, label, sortKey }) => {
+      const field = fieldRows.get(fieldId)!;
+      optionKeys.set(id, sortKey);
+      const options = [...field.options, { id, label }].toSorted((a, b) =>
+        (optionKeys.get(a.id) ?? "") < (optionKeys.get(b.id) ?? "") ? -1 : 1,
+      );
+      fieldRows.set(fieldId, { ...field, options });
+      return Promise.resolve();
+    },
+    renameFieldOption: (optionId, label) => {
+      for (const field of fieldRows.values()) {
+        if (!field.options.some((option) => option.id === optionId)) continue;
+        fieldRows.set(field.id, {
+          ...field,
+          options: field.options.map((option) =>
+            option.id === optionId ? { id: option.id, label } : option,
+          ),
+        });
+      }
+      return Promise.resolve();
+    },
+    removeFieldOption: (fieldId, optionId, albumIds) => {
+      const field = fieldRows.get(fieldId)!;
+      fieldRows.set(fieldId, {
+        ...field,
+        options: field.options.filter((option) => option.id !== optionId),
+      });
+      optionKeys.delete(optionId);
+      // As the foreign keys do: a single choice empties, a multiple choice loses the option.
+      for (const [key, value] of valueRows) {
+        if (!key.endsWith(`:${fieldId}`)) continue;
+        if (value === optionId) valueRows.set(key, null);
+        else if (Array.isArray(value) && value.includes(optionId)) {
+          const rest = value.filter((id) => id !== optionId);
+          valueRows.set(key, rest.length > 0 ? rest : null);
+        }
+      }
+      return Promise.resolve(
+        albumIds.map((albumId) => ({
+          albumId,
+          fieldId,
+          value: valueRows.get(fieldValueKey(albumId, fieldId)) ?? null,
+        })),
+      );
     },
 
     findContainer: (id) =>
