@@ -67,6 +67,22 @@ const album = (artworkUrl: string | null): Album => ({
   artworkUrl,
 });
 
+/** Creates the album, then sets its artwork, as the web app does (TON-48). */
+async function saved(record: Album) {
+  const { artworkUrl, ...args } = record;
+  expect((await send({ mutationId: uuidv7(), name: "album.create", args })).status).toBe(
+    "confirmed",
+  );
+  if (artworkUrl === null) return;
+  const outcome = await send({
+    mutationId: uuidv7(),
+    name: "album.setArtwork",
+    args: { id: record.id, artworkUrl },
+    base: { artworkUrl: null },
+  });
+  expect(outcome.status).toBe("confirmed");
+}
+
 async function send(mutation: Mutation) {
   const response = await t.call("/v1/mutations", { json: mutation, headers: { cookie } });
   expect(response.status).toBe(200);
@@ -86,20 +102,18 @@ describe("artwork signatures (TS-103)", () => {
 
   test("the bootstrap and the stream send albums with their artwork signed", async () => {
     const record = album(cover);
-    expect((await send({ mutationId: uuidv7(), name: "album.create", args: record })).status).toBe(
-      "confirmed",
-    );
+    await saved(record);
     const response = await t.call("/v1/sync/bootstrap", { headers: { cookie } });
     const [sent] = bootstrapSchema.parse(await response.json()).albums;
     expect(sent).toEqual({ ...record, artworkSignature: signer().sign(cover) });
 
-    const [change] = await readChanges(t.db, accountId, 0, 1);
+    const [, change] = await readChanges(t.db, accountId, 0, 10);
     expect(change && presentChange(signer(), change)).toMatchObject({
       data: { artworkSignature: signer().sign(cover) },
     });
     // An album without artwork has no signature.
     const plain = { ...record, id: uuidv7(), artworkUrl: null };
-    await send({ mutationId: uuidv7(), name: "album.create", args: plain });
+    await saved(plain);
     const again = bootstrapSchema.parse(
       await (await t.call("/v1/sync/bootstrap", { headers: { cookie } })).json(),
     );
@@ -107,10 +121,13 @@ describe("artwork signatures (TS-103)", () => {
   });
 
   test("an artwork URL must be an https link", async () => {
+    const record = album(null);
+    await saved(record);
     const outcome = await send({
       mutationId: uuidv7(),
-      name: "album.create",
-      args: album("http://images.example/cover.png"),
+      name: "album.setArtwork",
+      args: { id: record.id, artworkUrl: "http://images.example/cover.png" },
+      base: { artworkUrl: null },
     });
     expect(outcome).toMatchObject({ status: "failed", code: "validation_failed" });
   });

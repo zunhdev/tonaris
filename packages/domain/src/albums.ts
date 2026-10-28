@@ -1,6 +1,6 @@
 // Albums as clients hold and edit them (TS-11, TS-24), and the rules every save checks (FR-02.6). The sync
-// prototype (TON-20) carries the core metadata; the artwork URL joined in TON-48 (FR-03.4), and links, provenance,
-// memberships and Trash have their own records.
+// prototype (TON-20) carries the core metadata; the artwork URL joined in TON-48 (FR-03.4), edited with its own
+// mutation, and links, provenance, memberships and Trash have their own records.
 
 import { maxLinkLength } from "./limits";
 import { failure, type Failure } from "./outcomes";
@@ -11,12 +11,12 @@ export const releaseTypes = ["album", "ep", "compilation"] as const;
 
 const year = z.int().min(1).max(9999);
 
-const artworkUrlSchema = z.string().max(maxLinkLength).nullable().meta({
+export const artworkUrlSchema = z.string().max(maxLinkLength).nullable().meta({
   description:
     "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
 });
 
-/** The fields a person edits; each is one CAS unit (TS-21). */
+/** The fields a person edits with `album.update`; each is one CAS unit (TS-21). */
 export const albumFieldsSchema = z.object({
   title: z.string(),
   artistCredit: z.string(),
@@ -25,35 +25,34 @@ export const albumFieldsSchema = z.object({
   originalYear: year.nullable(),
   recordingYearStart: year.nullable(),
   recordingYearEnd: year.nullable(),
-  artworkUrl: artworkUrlSchema,
 });
 export type AlbumFields = z.infer<typeof albumFieldsSchema>;
-
-/**
- * The album fields as a request sends a whole album: `artworkUrl` may be left out for none, as requests could before it
- * existed (TON-48), so no client's write breaks (TS-09). A partial update leaves it out to keep it.
- */
-export const albumFieldsInputSchema = albumFieldsSchema.extend({
-  artworkUrl: artworkUrlSchema.default(null),
-});
 export type AlbumField = keyof AlbumFields;
 export const albumFields: readonly AlbumField[] = albumFieldsSchema.keyof().options;
 
-export const albumSchema = albumFieldsSchema
+/**
+ * `album.create`'s arguments: the album's fields and the ID the client chose (TS-10). Its artwork is set with
+ * `album.setArtwork`, so this request keeps the shape it had before artwork (TS-09).
+ */
+export const albumCreateArgsSchema = albumFieldsSchema
   .extend({ id: z.uuid({ version: "v7" }) })
+  // The description it had as the record's schema, so the request's contract stays the same (TS-09).
+  .meta({ description: "An album record (FR-01.6)." });
+export type AlbumCreateArgs = z.infer<typeof albumCreateArgsSchema>;
+
+/** An album record as clients hold it: its fields, ID and artwork URL (FR-01.6, FR-03.4). */
+export const albumSchema = albumCreateArgsSchema
+  .extend({ artworkUrl: artworkUrlSchema })
   .meta({ description: "An album record (FR-01.6)." });
 export type Album = z.infer<typeof albumSchema>;
-
-/** A whole album as a request sends it: `artworkUrl` may be left out (`albumFieldsInputSchema`). */
-export const albumInputSchema = albumFieldsInputSchema
-  .extend({ id: z.uuid({ version: "v7" }) })
-  .meta({ description: "An album record (FR-01.6), as a request sends it." });
 
 /**
  * Why `album` can't be saved, if it can't (FR-02.6): the title, the artist and the applicable year are
  * required — the original year, or for a live album its recording year — and a recording period runs forwards.
  */
-export function albumProblem(album: AlbumFields): Failure | undefined {
+export function albumProblem(
+  album: AlbumFields & { artworkUrl?: string | null },
+): Failure | undefined {
   const missing = [
     album.title.trim() === "" && "title",
     album.artistCredit.trim() === "" && "artistCredit",
@@ -77,7 +76,7 @@ export function albumProblem(album: AlbumFields): Failure | undefined {
       { path: "recordingYearEnd", message: "Must not be before the start year" },
     ]);
   }
-  if (album.artworkUrl !== null && !isArtworkUrl(album.artworkUrl)) {
+  if (album.artworkUrl != null && !isArtworkUrl(album.artworkUrl)) {
     return failure("validation_failed", artworkUrlRefusal, [
       { path: "artworkUrl", message: "Not an https link" },
     ]);

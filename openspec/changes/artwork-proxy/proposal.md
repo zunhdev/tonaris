@@ -12,7 +12,8 @@ Enrichment saves Cover Art Archive artwork since TON-43, but no client sees it: 
 
 ## What Changes
 
-- **Albums carry their artwork URL** (`artworkUrl`), an editable field with compare-and-set like the others. It must be an https link (FR-03.4).
+- **Albums carry their artwork URL** (`artworkUrl`) on client records. It must be an https link (FR-03.4).
+- **`album.setArtwork {id, artworkUrl}`,** with `base.artworkUrl`, sets or clears it (TS-21). `album.create`, `album.update` and capture's details keep their request shapes, so no client's write breaks (TS-09).
 - **The API signs it** when it sends an album, in the bootstrap and on the stream: `artworkSignature`, 128 bits of HMAC-SHA256 under a key derived from the auth secret. The database never stores it.
 - **`GET /img/{signature}/{base64url(url)}`** on the API host serves the artwork if the signature matches.
   - It fetches through `safeFetch`, raster images only, and caches a week, immutable.
@@ -34,16 +35,17 @@ None.
 ## Impact
 
 - **`packages/domain`:**
-  - `artworkUrl` in `albumFieldsSchema`, with `isArtworkUrl()` in `albumProblem()`;
+  - `artworkUrl` on `albumSchema`, the record, and `albumCreateArgsSchema` for `album.create`'s unchanged arguments;
+  - `album.setArtwork` and its command, with `isArtworkUrl()`;
   - `artworkPath()`;
   - `syncedAlbumSchema` for the bootstrap and album changes;
-  - enrichment's fields equal the album's.
+  - enrichment's artwork reaching clients.
 - **`packages/db`:** albums' `artwork_url` in client records, and the memory store keeping it on the album.
 - **`apps/api`:**
   - `artwork.ts`: the signer, presenting albums, and the `/img` route;
   - the bootstrap and stream present albums;
   - the browser-test image host.
   - The OpenAPI document is regenerated; the changes are additive.
-- **`apps/web`:** `artworkSrc()`, the Artwork component's label, the inspector's and form's artwork URL fields, and the conflict label "Artwork".
+- **`apps/web`:** `artworkSrc()`, the Artwork component's label, the inspector's and form's artwork URL fields, the albums collection sending `album.setArtwork`, and its description, retry and dependency.
 - **No schema change:** `albums.artwork_url` exists.
 - **Not here:** guest pages (M7), which will show artwork the same way; resizing (TS-103: none in v1); and a live preview of a URL not yet saved.

@@ -70,6 +70,14 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
     const title = quoted(mutation.base.title ?? names.album(mutation.args.id), "an album");
     return { summary: `Edit ${title}`, what: `changes to ${title}`, subject: capitalized(title) };
   }
+  if (mutation.name === "album.setArtwork") {
+    const title = quoted(names.album(mutation.args.id), "an album");
+    return {
+      summary: `Change the artwork of ${title}`,
+      what: `the artwork of ${title}`,
+      subject: capitalized(`the artwork of ${title}`),
+    };
+  }
   if (mutation.name === "container.create") {
     const { kind, name } = mutation.args;
     return {

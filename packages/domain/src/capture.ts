@@ -11,7 +11,7 @@
 
 import {
   albumFields,
-  albumFieldsInputSchema,
+  albumFieldsSchema,
   albumProblem,
   type Album,
   type AlbumFields,
@@ -19,6 +19,7 @@ import {
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
   blankAlbum,
+  enrichableFields,
   planEnrichment,
   type AlbumFacts,
   type EnrichableAlbum,
@@ -49,7 +50,7 @@ export const captureArgsSchema = z.object({
   releaseGroupId: z.uuid().optional().meta({
     description: "The person's choice among a `match` answer's candidates (TS-26).",
   }),
-  details: albumFieldsInputSchema.optional().meta({
+  details: albumFieldsSchema.optional().meta({
     description: "The album's details from the person, after a `details` answer (FR-02.4).",
   }),
 });
@@ -117,7 +118,7 @@ export type AlbumOrigin = {
 export const missingYearReason =
   "MusicBrainz doesn't know when this album first came out. Enter its year; the link is kept.";
 
-const { releaseGroupId: _releaseGroup, ...blankFields } = blankAlbum;
+const { artworkUrl: _artwork, releaseGroupId: _releaseGroup, ...blankFields } = blankAlbum;
 
 const applied = (changes: ChangeInput[], result: CaptureResult): CommandResult => ({
   status: "applied",
@@ -125,8 +126,8 @@ const applied = (changes: ChangeInput[], result: CaptureResult): CommandResult =
   result,
 });
 
-/** The album as clients hold it. */
-const clientAlbum = (id: string, values: AlbumFields): Album => ({
+/** The album as clients hold it, with its artwork (FR-03.4). */
+const clientAlbum = (id: string, values: AlbumFields, artworkUrl: string | null): Album => ({
   id,
   title: values.title,
   artistCredit: values.artistCredit,
@@ -135,7 +136,7 @@ const clientAlbum = (id: string, values: AlbumFields): Album => ({
   originalYear: values.originalYear,
   recordingYearStart: values.recordingYearStart,
   recordingYearEnd: values.recordingYearEnd,
-  artworkUrl: values.artworkUrl,
+  artworkUrl,
 });
 
 /**
@@ -279,9 +280,9 @@ async function entryLimit(
   );
 }
 
-/** Whether the plan fills a value clients hold. */
+/** Whether the plan fills a value clients hold: the artwork too (TON-48). */
 const fillsClientValues = (plan: EnrichmentPlan) =>
-  albumFields.some((field) => plan.values[field] !== undefined);
+  enrichableFields.some((field) => plan.values[field] !== undefined);
 
 async function reuse(
   args: CaptureArgs,
@@ -318,7 +319,11 @@ async function reuse(
         entity: "album",
         id: target.id,
         op: "update",
-        data: clientAlbum(target.id, { ...target, ...plan.values }),
+        data: clientAlbum(
+          target.id,
+          { ...target, ...plan.values },
+          plan.values.artworkUrl ?? target.artworkUrl,
+        ),
       });
     }
   }
@@ -348,20 +353,22 @@ async function create(
 
   let values: AlbumFields;
   let origin: AlbumOrigin;
+  // The Cover Art Archive's artwork, whatever the person entered (TON-48).
+  let artworkUrl: string | null = null;
   if (source.kind === "identified") {
     const plan = planEnrichment(blankAlbum, source.facts, now);
+    const { artworkUrl: front = null, ...planned } = plan.values;
+    const artwork = plan.provenance.filter((entry) => entry.field === "artworkUrl");
+    artworkUrl = front;
     if (source.details) {
-      // The person's values; with no artwork of theirs, the Cover Art Archive's, with its source (TS-15).
-      const artworkUrl = source.details.artworkUrl ?? plan.values.artworkUrl ?? null;
-      values = { ...source.details, artworkUrl };
+      values = source.details;
       origin = {
         releaseGroupId: source.facts.releaseGroupId,
-        provenance: detailsProvenance(values, source.facts.values, now),
+        provenance: [...detailsProvenance(values, source.facts.values, now), ...artwork],
       };
     } else {
-      values = { ...blankFields, ...plan.values };
+      values = { ...blankFields, ...planned };
       if (albumProblem(values)) {
-        const { artworkUrl: _, ...planned } = plan.values;
         return askForDetails(source.link, { source: "musicbrainz", values: planned });
       }
       origin = { releaseGroupId: source.facts.releaseGroupId, provenance: plan.provenance };
@@ -376,7 +383,7 @@ async function create(
   const problem = albumProblem(values);
   if (problem) return problem;
 
-  const album = clientAlbum(args.albumId, values);
+  const album = clientAlbum(args.albumId, values, artworkUrl);
   await store.insertAlbum({ ...album, ownerId }, origin);
   await store.insertServiceLink(args.albumId, ownerId, source.link);
   const placed = await place(args.albumId, ownerId, args.listId, true, context);

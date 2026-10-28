@@ -14,13 +14,16 @@
 
 ## Decisions
 
-### 1. The record
+### 1. The record and its mutation
 
-- **`artworkUrl`** joins `albumFieldsSchema`: nullable, at most 2,048 characters.
-  - `albumProblem()` refuses one that isn't an https URL on the default port without credentials: "Give the artwork as an https link, such as https://example.com/cover.jpg."
-  - The proxy checks the host and the answer each time it fetches.
-- **It is one compare-and-set field** like the others (TS-21), so a person's value records `user` provenance, and enrichment fills it only when null (TS-42).
-- **Enrichment's fields are now the album's fields,** so capture's created albums carry the CAA artwork in their values.
+- **`artworkUrl`** is on the album record (`albumSchema`): nullable, at most 2,048 characters. It must be an https URL on the default port without credentials: "Give the artwork as an https link, such as https://example.com/cover.jpg." The proxy checks the host and the answer each time it fetches.
+- **`album.setArtwork {id, artworkUrl}`,** with `base.artworkUrl`, sets or clears it.
+  - **Compare-and-set** is on the field `artworkUrl` (TS-21); the same URL again changes nothing.
+  - **A person's value** records `user` provenance; clearing it drops the row (TS-15). Enrichment still fills it only when null (TS-42).
+- **The request shapes stay as they were.** `album.create` takes `albumCreateArgsSchema`, the fields and ID, and makes an album without artwork. `album.update` and capture's `details` keep their shapes too.
+  - The CI's oasdiff matches inline `oneOf` variants by content, so an optional field added to an existing mutation reads as a removal.
+  - A mutation of its own is additive, as `link.set` was (TON-46).
+- **The web client** sends `album.setArtwork` after `album.create` in the same request when a new album has artwork. An update that changes it sends it beside `album.update`.
 
 ### 2. Signing
 
@@ -29,7 +32,9 @@
 - **Where:** the API adds `artworkSignature` to albums as it sends them: the bootstrap, and change events on the stream. Change rows store the album without it.
 - **The path:** `artworkPath(url, signature)` in the domain: `/img/{signature}/{base64url(UTF-8 url)}`. Clients add the API origin.
 
-**Alternative rejected:** `/img/{albumId}` looked up in the database. Guests would need authorization per album (M7), while a signature is a capability on its own, as TS-103 decided.
+**Alternatives rejected:**
+- `artworkUrl` as an `album.update` field: the natural fit, but it changes the existing requests (decision 1).
+- `/img/{albumId}` looked up in the database.   Guests would need authorization per album (M7), while a signature is a capability on its own, as TS-103 decided.
 
 ### 3. The proxy
 

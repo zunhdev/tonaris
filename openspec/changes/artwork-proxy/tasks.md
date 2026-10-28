@@ -2,7 +2,7 @@
 
 ## 1. Domain
 
-- [x] 1.1 Add `artworkUrl` to the album fields with `isArtworkUrl()`, `artworkPath()`, and `syncedAlbumSchema`; make enrichment's fields the album's, and capture keep the CAA artwork in its values (design decisions 1 and 2). Verify with the domain tests, updated for the field.
+- [x] 1.1 Add `artworkUrl` to the album record, `album.setArtwork` with `isArtworkUrl()`, `artworkPath()`, and `syncedAlbumSchema`, keeping the existing requests' shapes (design decisions 1 and 2). Verify with `artwork.test.ts`: set, replaced and cleared; refusals and a conflict; a new album without artwork; and the URL check and path.
 
 ## 2. Database
 

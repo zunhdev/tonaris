@@ -1,18 +1,26 @@
 // The albums collection: a TanStack DB custom sync collection over the sync protocol (TS-24). The engine fills it
 // from the bootstrap snapshot and the stream; inserts and updates are optimistic, and each becomes one mutation
-// envelope whose `base` is the record's value before the edit (TS-21).
+// envelope whose `base` is the record's value before the edit (TS-21). The artwork URL has its own mutation,
+// `album.setArtwork` (TON-48): an album made with artwork sends it after `album.create`, in the same request.
 
 import { createCollection } from "@tanstack/db";
 
-import { albumFields, uuidv7, type Album, type AlbumFields, type Mutation } from "@tonaris/domain";
+import {
+  albumFields,
+  uuidv7,
+  type Album,
+  type AlbumCreateArgs,
+  type AlbumFields,
+  type Mutation,
+} from "@tonaris/domain";
 
 import type { SyncEngine } from "./engine";
 import type { Writer } from "./writer";
 
-/** The album's own fields only, whatever else the draft carried. */
-function albumOf(value: Album): Album {
+/** `album.create`'s arguments: the album's own fields and ID, whatever else the draft carried. */
+function createArgsOf(value: Album): AlbumCreateArgs {
   const { id, title, artistCredit, releaseType, isLive, originalYear } = value;
-  const { recordingYearStart, recordingYearEnd, artworkUrl } = value;
+  const { recordingYearStart, recordingYearEnd } = value;
   return {
     id,
     title,
@@ -22,9 +30,16 @@ function albumOf(value: Album): Album {
     originalYear,
     recordingYearStart,
     recordingYearEnd,
-    artworkUrl,
   };
 }
+
+/** The write that sets an album's artwork over `base`, the URL the client last saw (TON-48). */
+const artworkWrite = (id: string, artworkUrl: string | null, base: string | null): Mutation => ({
+  mutationId: uuidv7(),
+  name: "album.setArtwork",
+  args: { id, artworkUrl },
+  base: { artworkUrl: base },
+});
 
 /** The fields an update changed, and their values before it: the mutation's `args` and `base`. */
 function updateOf(
@@ -85,22 +100,53 @@ export function createAlbumCollection({ engine, writer }: { engine: SyncEngine; 
     onInsert: ({ transaction }) =>
       writer.persist(
         transaction,
-        transaction.mutations.map((pending) => ({
-          key: pending.key,
-          mutation: { mutationId: uuidv7(), name: "album.create", args: albumOf(pending.modified) },
-        })),
+        transaction.mutations.flatMap((pending) => {
+          const { key, modified } = pending;
+          const create: Mutation = {
+            mutationId: uuidv7(),
+            name: "album.create",
+            args: createArgsOf(modified),
+          };
+          return [
+            { key, mutation: create },
+            ...(modified.artworkUrl
+              ? [{ key, mutation: artworkWrite(modified.id, modified.artworkUrl, null) }]
+              : []),
+          ];
+        }),
       ),
     onUpdate: ({ transaction }) =>
       writer.persist(
         transaction,
-        transaction.mutations.map((pending) => ({
-          key: pending.key,
-          mutation: {
-            mutationId: uuidv7(),
-            name: "album.update",
-            ...updateOf(pending.original, pending.changes),
-          },
-        })),
+        transaction.mutations.flatMap((pending) => {
+          const { key, original, changes } = pending;
+          const update = updateOf(original, changes);
+          const fields = Object.keys(update.base).length > 0;
+          const artwork =
+            changes.artworkUrl !== undefined && changes.artworkUrl !== original.artworkUrl;
+          return [
+            ...(fields
+              ? [
+                  {
+                    key,
+                    mutation: { mutationId: uuidv7(), name: "album.update" as const, ...update },
+                  },
+                ]
+              : []),
+            ...(artwork
+              ? [
+                  {
+                    key,
+                    mutation: artworkWrite(
+                      original.id,
+                      changes.artworkUrl ?? null,
+                      original.artworkUrl,
+                    ),
+                  },
+                ]
+              : []),
+          ];
+        }),
       ),
   });
 }

@@ -142,7 +142,7 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
             entry?.mutation.name === "membership.add" ? entry.mutation.args.listId : null;
           enterEditing();
           startNewAlbum({
-            form: formOf(album, listId),
+            form: formOf({ ...album, artworkUrl: null }, listId),
             replaces: entry ? [replaces, entry.mutation.mutationId] : [replaces],
           });
         }

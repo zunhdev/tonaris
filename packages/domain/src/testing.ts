@@ -1,11 +1,11 @@
 // An in-memory `CollectionStore` for the command tests: the same contract the database layer implements on the
 // owner's write transaction (packages/db/src/sync.ts). Import from tests only.
 
-import { albumFields, type Album } from "./albums";
+import type { Album } from "./albums";
 import type { CapturedLink, CaptureTarget } from "./capture";
 import type { CollectionStore, StoredAlbum } from "./commands";
 import type { Container, StoredContainer } from "./containers";
-import type { EnrichableField, ProvenanceEntry } from "./enrichment";
+import { enrichableFields, type EnrichableField, type ProvenanceEntry } from "./enrichment";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
 import type { ViewDefaults, ViewPrefs } from "./views";
@@ -25,7 +25,7 @@ export const positionRowKey = (personId: string, viewKey: string, itemId: string
 
 /** What a person's write records: `user` for each value it gives (TS-15). */
 const userProvenance = (values: Partial<Record<EnrichableField, unknown>>): ProvenanceEntry[] =>
-  albumFields
+  enrichableFields
     .filter((field) => values[field] !== undefined && values[field] !== null)
     .map((field) => ({ field, source: "user", sourceRef: null, retrievedAt: null }));
 

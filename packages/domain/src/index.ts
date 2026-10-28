@@ -35,6 +35,8 @@ export {
   artworkUrlRefusal,
   isArtworkUrl,
   albumSchema,
+  albumCreateArgsSchema,
+  type AlbumCreateArgs,
   releaseTypes,
   type Album,
   type AlbumField,

@@ -356,7 +356,6 @@ describe("a confident match reuses the saved album (FR-02.9, FR-02.12, AC-09)", 
               originalYear: 2020,
               recordingYearStart: null,
               recordingYearEnd: null,
-              artworkUrl: null,
             },
           }),
         )
@@ -470,7 +469,6 @@ describe("an automated addition missing its year asks for it (FR-02.6, AC-08)", 
       originalYear: 2001,
       recordingYearStart: null,
       recordingYearEnd: null,
-      artworkUrl: null,
     };
     const saved = result((await send(capture(links.undatedQobuz, null, { details }))).outcome);
     const sources = Object.fromEntries(

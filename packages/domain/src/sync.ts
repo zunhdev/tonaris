@@ -3,7 +3,7 @@
 // (TON-20) synced albums; folders and lists joined in TON-26 and list entries in TON-27, and each entity type M2
 // adds joins these unions.
 
-import { albumFieldsSchema, albumInputSchema, albumSchema } from "./albums";
+import { albumCreateArgsSchema, albumFieldsSchema, albumSchema, artworkUrlSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
 import { streamingServices } from "./links";
@@ -28,7 +28,7 @@ const mutationId = z.uuid({ version: "v7" }).meta({
 export const albumCreateSchema = z.object({
   mutationId,
   name: z.literal("album.create"),
-  args: albumInputSchema,
+  args: albumCreateArgsSchema,
 });
 
 /**
@@ -40,6 +40,17 @@ export const albumUpdateSchema = z.object({
   name: z.literal("album.update"),
   args: albumFieldsSchema.partial().extend({ id: z.uuid() }),
   base: albumFieldsSchema.partial(),
+});
+
+/**
+ * `album.setArtwork`: sets or clears an album's artwork URL (FR-03.4), if it is still `base.artworkUrl` (TS-21). An
+ * album's artwork has its own mutation, so `album.create` and `album.update` keep their shapes (TS-09).
+ */
+export const albumSetArtworkSchema = z.object({
+  mutationId,
+  name: z.literal("album.setArtwork"),
+  args: z.object({ id: z.uuid(), artworkUrl: artworkUrlSchema }),
+  base: z.object({ artworkUrl: z.string().nullable() }),
 });
 
 /**
@@ -173,6 +184,7 @@ export const mutationSchema = z
   .discriminatedUnion("name", [
     albumCreateSchema,
     albumUpdateSchema,
+    albumSetArtworkSchema,
     albumCaptureSchema,
     containerCreateSchema,
     containerRenameSchema,

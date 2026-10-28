@@ -1279,7 +1279,8 @@ The API service's `https://api.tonaris.<tld>/img/{hmac}/{b64url(url)}?w=…` ser
 There is no resizing in v1.
 
 *As built in TON-48:*
-- **Clients hold `artworkUrl`,** an album field like the others, with compare-and-set (TS-21). It must be an https URL on the default port without credentials (`isArtworkUrl()`).
+- **Clients hold `artworkUrl`** on album records. It must be an https URL on the default port without credentials (`isArtworkUrl()`).
+- **`album.setArtwork {id, artworkUrl}`,** with `base.artworkUrl`, sets or clears it (TS-21). It is a mutation of its own so that `album.create`, `album.update` and capture's details keep their request shapes (TS-09). The CI's oasdiff reads any change to an existing mutation's inline schema as a removal.
 - **The API signs it as it sends albums,** in the bootstrap and on the stream: `artworkSignature`, HMAC-SHA256 of the URL, base64url, cut to 128 bits.
   - The key is HMAC-SHA256 of `tonaris:image-proxy:v1` under `BETTER_AUTH_SECRET`, so a deploy needs no new secret. Rotating the auth secret changes every path.
   - Change rows store albums without it.

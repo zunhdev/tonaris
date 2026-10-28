@@ -130,7 +130,8 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
     }
     if (draft.capture?.mode === "details") {
       // Completing a capture: it keeps the link, and the sources of the values left as offered (TS-15).
-      const { id: _, ...details } = album;
+      // Capture's details are the album's fields; its artwork comes from the Cover Art Archive (TON-48).
+      const { id: _, artworkUrl: __, ...details } = album;
       const capture = client.states.get(draft.capture.mutationId);
       if (capture) client.captures.again(capture, { details, listId: form.listId });
       else {
@@ -282,16 +283,18 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
               />
             )}
 
-            <TextField
-              name="artworkUrl"
-              label="Artwork URL"
-              type="url"
-              placeholder="https://…"
-              value={form.artworkUrl}
-              problem={shownProblems.artworkUrl}
-              onChange={(artworkUrl) => set({ artworkUrl })}
-              onBlur={() => touch("artworkUrl")}
-            />
+            {draft.capture?.mode !== "details" && (
+              <TextField
+                name="artworkUrl"
+                label="Artwork URL"
+                type="url"
+                placeholder="https://…"
+                value={form.artworkUrl}
+                problem={shownProblems.artworkUrl}
+                onChange={(artworkUrl) => set({ artworkUrl })}
+                onBlur={() => touch("artworkUrl")}
+              />
+            )}
             {draft.capture?.mode === "details" ? (
               <p className="text-small text-fg-secondary">
                 The link is kept:{" "}

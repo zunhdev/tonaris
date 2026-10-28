@@ -407,7 +407,6 @@ describe("album.capture: required information (FR-02.6, AC-08)", () => {
       originalYear: 1989,
       recordingYearStart: null,
       recordingYearEnd: null,
-      artworkUrl: null,
     };
     const mutation = capture(null, { details });
     applied(await t.run(mutation, identified(undated, { details })));
@@ -435,7 +434,6 @@ describe("album.capture: required information (FR-02.6, AC-08)", () => {
       originalYear: 1984,
       recordingYearStart: null,
       recordingYearEnd: null,
-      artworkUrl: null,
     };
     const mutation = capture(null, { link: appleLink.url, details });
     applied(
@@ -473,7 +471,6 @@ describe("album.capture: required information (FR-02.6, AC-08)", () => {
       originalYear: null,
       recordingYearStart: null,
       recordingYearEnd: null,
-      artworkUrl: null,
     };
     const result = await t.run(capture(null, { details }), {
       kind: "entered",

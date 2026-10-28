@@ -78,7 +78,6 @@ describe("album.create", () => {
       originalYear: null,
       recordingYearStart: 1964,
       recordingYearEnd: 1964,
-      artworkUrl: null,
     });
     expect((await runCommand(create(live), { principal: anna, store })).status).toBe("applied");
     expect(rows.get(live.id)?.originalYear).toBeNull();

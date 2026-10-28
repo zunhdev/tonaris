@@ -47,7 +47,7 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
 
   Custom fields and Shared with me join as their features arrive, as new fields (TS-24).
 - **Trash.** Records in Trash are included, but not marked yet; Trash arrives in M5.
-- **Artwork** (TON-48). An album with `artworkUrl` carries `artworkSignature`, here and in album changes on the stream. Show the artwork only from `{API origin}/img/{artworkSignature}/{base64url(UTF-8 artworkUrl)}`, never from its own host (TS-103). A failed image means the fallback tile.
+- **Artwork** (TON-48). Albums carry `artworkUrl`, set or cleared with `album.setArtwork {id, artworkUrl}` and `base.artworkUrl`; `album.create` makes an album without it. An album with `artworkUrl` carries `artworkSignature`, here and in album changes on the stream. Show the artwork only from `{API origin}/img/{artworkSignature}/{base64url(UTF-8 artworkUrl)}`, never from its own host (TS-103). A failed image means the fallback tile.
 - **Compression.** Send `Accept-Encoding: gzip`. The bootstrap is about 2.3 MB of JSON for 5,000 albums, and under 0.5 MB gzipped (TS-120).
 
 ## The change stream
@@ -126,7 +126,7 @@ The server ends a stream in four cases:
 - **New records** get a UUIDv7 the client makes (TS-10), so a retried create can't duplicate.
 - **`base`** holds the prior value of exactly the fields being changed (TS-21). A field whose saved value differs is a conflict, and nothing in the mutation applies. Fields not named are never compared, so edits to different fields of one record both apply.
 - **The mutations today:**
-  - `album.create`, `album.update`, `album.capture`;
+  - `album.create`, `album.update`, `album.setArtwork`, `album.capture`;
   - `container.create`, `container.rename`, `container.move`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;

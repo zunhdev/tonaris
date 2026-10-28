@@ -20,7 +20,11 @@ function created(mutation: Mutation): string | undefined {
 function referenced(mutation: Mutation): (string | null)[] {
   if (mutation.name === "album.create") return [];
   if (mutation.name === "album.capture") return [mutation.args.listId];
-  if (mutation.name === "album.update" || mutation.name === "container.rename") {
+  if (
+    mutation.name === "album.update" ||
+    mutation.name === "album.setArtwork" ||
+    mutation.name === "container.rename"
+  ) {
     return [mutation.args.id];
   }
   if (mutation.name === "container.create") return [mutation.args.parentId];

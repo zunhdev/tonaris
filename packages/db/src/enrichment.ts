@@ -6,7 +6,7 @@
 import { and, eq } from "drizzle-orm";
 
 import {
-  albumFields,
+  enrichableFields,
   failure,
   planEnrichment,
   type AlbumFacts,
@@ -43,7 +43,8 @@ export async function enrichAlbum(
     const { values } = plan;
     await applyPlan(tx, albumId, plan);
 
-    if (!albumFields.some((field) => values[field] !== undefined)) {
+    // Clients hold the artwork too (TON-48).
+    if (!enrichableFields.some((field) => values[field] !== undefined)) {
       return { status: "applied", plan, changes: [] };
     }
     // The album as clients hold it: without its identity, owner and Trash state.
