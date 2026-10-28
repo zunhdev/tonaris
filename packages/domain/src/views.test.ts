@@ -352,6 +352,7 @@ describe("the protocol", () => {
       memberships: [],
       links: [],
       fields: [],
+      fieldValues: [],
       positions: [],
     };
     expect(bootstrapSchema.safeParse(snapshot).success).toBe(false);

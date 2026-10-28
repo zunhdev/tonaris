@@ -19,6 +19,9 @@ import {
 export type Names = {
   album(id: string): string | undefined;
   container(id: string): Pick<Container, "name" | "kind"> | undefined;
+  /** A custom field's name, and an option's label, by ID (TON-50). */
+  field?(id: string): string | undefined;
+  option?(id: string): string | undefined;
 };
 
 export type Described = {
@@ -88,6 +91,30 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       summary: `Rename field ${seen} to '${mutation.args.name}'`,
       what: `the new name for the field ${seen}`,
       subject: `The field ${seen}`,
+    };
+  }
+  if (
+    mutation.name === "fieldValue.apply" ||
+    mutation.name === "fieldValue.set" ||
+    mutation.name === "fieldValue.remove"
+  ) {
+    const album = quoted(names.album(mutation.args.albumId), "an album");
+    const field = quoted(names.field?.(mutation.args.fieldId), "a field");
+    const subject = capitalized(`${field} of ${album}`);
+    if (mutation.name === "fieldValue.apply") {
+      return { summary: `Add ${field} to ${album}`, what: `${field} on ${album}`, subject };
+    }
+    if (mutation.name === "fieldValue.remove") {
+      return {
+        summary: `Remove ${field} from ${album}`,
+        what: `the removal of ${field} from ${album}`,
+        subject,
+      };
+    }
+    return {
+      summary: `Set ${field} of ${album}`,
+      what: `the value of ${field} for ${album}`,
+      subject,
     };
   }
   if (mutation.name === "container.create") {
@@ -237,6 +264,7 @@ const fieldLabels: Record<string, string> = {
   name: "Name",
   parentId: "Location",
   url: "Link",
+  value: "Value",
   sortMode: "Sort",
   sortDir: "Direction",
   grouped: "Grouping",
@@ -311,6 +339,15 @@ export function fieldValue(
   }
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "boolean") return value ? "Yes" : "No";
+  // A custom field's choice: its options' labels (TON-50).
+  if (field === "value" && Array.isArray(value)) {
+    return value
+      .map((id) => (typeof id === "string" && names.option?.(id)) || "An option")
+      .join(", ");
+  }
+  if (field === "value" && typeof value === "string" && names.option?.(value)) {
+    return names.option(value) ?? value;
+  }
   if (field === "releaseType" && typeof value === "string") {
     return releaseTypeLabels[value] ?? value;
   }

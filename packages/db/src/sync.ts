@@ -2,7 +2,20 @@
 // change log after a cursor, and the bootstrap snapshot. Commands come from packages/domain; this module
 // gives them a store on the transaction and records what they did.
 
-import { and, asc, count, eq, exists, gt, inArray, isNull, lt, notExists, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  eq,
+  exists,
+  gt,
+  inArray,
+  isNull,
+  lt,
+  notExists,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 
 import {
   actingUserId,
@@ -27,6 +40,9 @@ import {
   type CollectionStore,
   type Container,
   type CustomField,
+  type FieldType,
+  type FieldValue,
+  type FieldValueData,
   type Membership,
   type Mutation,
   type MutationResult,
@@ -46,6 +62,8 @@ import { recordUserValues, userEntries, writeProvenance } from "./provenance";
 import {
   accountSettings,
   accountSync,
+  albumFieldMulti,
+  albumFieldValues,
   albumServiceLinks,
   fieldDefinitions,
   fieldOptions,
@@ -161,6 +179,94 @@ async function fieldsOfAccount(tx: Transaction, accountId: string): Promise<Cust
     options: options
       .filter((option) => option.fieldId === definition.id)
       .map(({ id, label }) => ({ id, label })),
+  }));
+}
+
+/** The columns a value is stored in (TS-11). */
+const valueColumns = {
+  albumId: albumFieldValues.albumId,
+  fieldId: albumFieldValues.fieldId,
+  textValue: albumFieldValues.textValue,
+  numberValue: albumFieldValues.numberValue,
+  dateValue: albumFieldValues.dateValue,
+  boolValue: albumFieldValues.boolValue,
+  optionId: albumFieldValues.optionId,
+};
+
+const emptyValue = {
+  textValue: null,
+  numberValue: null,
+  dateValue: null,
+  boolValue: null,
+  optionId: null,
+};
+
+type ValueRow = typeof emptyValue extends infer T
+  ? { [K in keyof T]: K extends "boolValue" ? boolean | null : string | null }
+  : never;
+
+/** The column a value of `type` goes in (TS-11); a multiple choice keeps its selections in `album_field_multi`. */
+function columnsOf(type: FieldType, value: FieldValueData): Partial<ValueRow> {
+  if (value === null || Array.isArray(value)) return {};
+  if (type === "yes_no") return typeof value === "boolean" ? { boolValue: value } : {};
+  if (typeof value !== "string") return {};
+  if (type === "text") return { textValue: value };
+  if (type === "number") return { numberValue: value };
+  if (type === "date") return { dateValue: value };
+  return { optionId: value };
+}
+
+/** A stored value as clients hold it: null when applied-empty (FR-03.7). */
+function valueOf(row: ValueRow & { type: FieldType }, selected: string[]): FieldValueData {
+  const { type } = row;
+  if (type === "text") return row.textValue;
+  if (type === "number") return row.numberValue;
+  if (type === "date") return row.dateValue;
+  if (type === "yes_no") return row.boolValue;
+  if (type === "single_choice") return row.optionId;
+  // A multiple choice keeps its selections in `album_field_multi`.
+  return selected.length > 0 ? selected : null;
+}
+
+/** Multiple-choice selections, in their options' order (TS-16), for the albums `where` picks. */
+function selectionsOf(tx: Transaction, where: SQL | undefined, fieldId?: string) {
+  return tx
+    .select({
+      albumId: albumFieldMulti.albumId,
+      fieldId: albumFieldMulti.fieldId,
+      optionId: albumFieldMulti.optionId,
+    })
+    .from(albumFieldMulti)
+    .innerJoin(fieldOptions, eq(fieldOptions.id, albumFieldMulti.optionId))
+    .where(fieldId === undefined ? where : and(where, eq(albumFieldMulti.fieldId, fieldId)))
+    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
+}
+
+/** The fields the account's albums apply, with their values, Trash included (FR-03.7). */
+async function valuesOfAccount(tx: Transaction, accountId: string): Promise<FieldValue[]> {
+  const rows = await tx
+    .select({ ...valueColumns, type: fieldDefinitions.type })
+    .from(albumFieldValues)
+    .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
+    .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
+    .where(eq(albums.ownerId, accountId))
+    .orderBy(asc(albumFieldValues.albumId), asc(albumFieldValues.fieldId));
+  const selections = await selectionsOf(
+    tx,
+    inArray(
+      albumFieldMulti.albumId,
+      tx.select({ id: albums.id }).from(albums).where(eq(albums.ownerId, accountId)),
+    ),
+  );
+  return rows.map((row) => ({
+    albumId: row.albumId,
+    fieldId: row.fieldId,
+    value: valueOf(
+      row,
+      selections
+        .filter((each) => each.albumId === row.albumId && each.fieldId === row.fieldId)
+        .map((each) => each.optionId),
+    ),
   }));
 }
 
@@ -311,6 +417,48 @@ function collectionStore(tx: Transaction): CollectionStore {
         .update(fieldDefinitions)
         .set({ name, nameKey: nameKey(name) })
         .where(eq(fieldDefinitions.id, id));
+    },
+
+    async findFieldValue(albumId, fieldId) {
+      const [row] = await tx
+        .select({ ...valueColumns, type: fieldDefinitions.type })
+        .from(albumFieldValues)
+        .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
+        .where(and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, fieldId)));
+      if (!row) return undefined;
+      const selected =
+        row.type === "multiple_choice"
+          ? await selectionsOf(tx, eq(albumFieldMulti.albumId, albumId), fieldId)
+          : [];
+      return valueOf(
+        row,
+        selected.map((each) => each.optionId),
+      );
+    },
+    async applyField(albumId, fieldId) {
+      await tx.insert(albumFieldValues).values({ albumId, fieldId }).onConflictDoNothing();
+    },
+    async setFieldValue(albumId, field, value) {
+      const at = and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, field.id));
+      await tx
+        .update(albumFieldValues)
+        .set({ ...emptyValue, ...columnsOf(field.type, value) })
+        .where(at);
+      if (field.type !== "multiple_choice") return;
+      await tx
+        .delete(albumFieldMulti)
+        .where(and(eq(albumFieldMulti.albumId, albumId), eq(albumFieldMulti.fieldId, field.id)));
+      if (Array.isArray(value) && value.length > 0) {
+        await tx
+          .insert(albumFieldMulti)
+          .values(value.map((optionId) => ({ albumId, fieldId: field.id, optionId })));
+      }
+    },
+    async removeField(albumId, fieldId) {
+      // Its multiple-choice selections cascade (TS-11).
+      await tx
+        .delete(albumFieldValues)
+        .where(and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, fieldId)));
     },
 
     async findContainer(id) {
@@ -919,6 +1067,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .where(eq(memberships.ownerId, accountId))
         .orderBy(asc(memberships.listId), asc(memberships.albumId));
       const fields = await fieldsOfAccount(tx, accountId);
+      const fieldValues = await valuesOfAccount(tx, accountId);
       const links: ServiceLink[] = await tx
         .select({
           albumId: albumServiceLinks.albumId,
@@ -949,6 +1098,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         memberships: entries.map(membershipOf),
         links,
         fields,
+        fieldValues,
         views,
         positions: arranged,
         defaults: defaults ?? appViewDefaults,

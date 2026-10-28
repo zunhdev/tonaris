@@ -12,6 +12,8 @@ import {
   appViewDefaults,
   unsetView,
   type Album,
+  type CustomField,
+  type FieldValue,
   type Membership,
   type ServiceLink,
   type ViewDefaults,
@@ -37,6 +39,11 @@ export type CollectionData = {
   unsortedAlbums: readonly Album[];
   /** Each album's links to the streaming services (FR-06.2). */
   linksByAlbum: ReadonlyMap<string, readonly ServiceLink[]>;
+  /** The account's custom fields, by name (FR-03.6). */
+  fields: readonly CustomField[];
+  fieldsById: ReadonlyMap<string, CustomField>;
+  /** The fields each album applies, with their values (FR-03.7). */
+  valuesByAlbum: ReadonlyMap<string, readonly FieldValue[]>;
   /** The person's remembered choices, by view key (FR-11.7). */
   views: ReadonlyMap<string, ViewPrefs>;
   /** Their account defaults; DS-44's until the first snapshot or until they save their own. */
@@ -56,6 +63,9 @@ const empty: CollectionData = {
   entriesByList: new Map(),
   unsortedAlbums: [],
   linksByAlbum: new Map(),
+  fields: [],
+  fieldsById: new Map(),
+  valuesByAlbum: new Map(),
   views: new Map(),
   defaults: appViewDefaults,
   keys: new Map(),
@@ -70,6 +80,8 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
   const memberships = useLiveQuery(() => client?.memberships, [client]);
   const albums = useLiveQuery(() => client?.albums, [client]);
   const links = useLiveQuery(() => client?.links, [client]);
+  const fieldRows = useLiveQuery(() => client?.fields, [client]);
+  const valueRows = useLiveQuery(() => client?.fieldValues, [client]);
   const viewRows = useLiveQuery(() => client?.views, [client]);
   const defaultRows = useLiveQuery(() => client?.defaults, [client]);
   const positionRows = useLiveQuery(() => client?.positions, [client]);
@@ -78,6 +90,8 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
   const membershipData = memberships.data;
   const albumData = albums.data;
   const linkData = links.data;
+  const fieldData = fieldRows.data;
+  const valueData = valueRows.data;
   const viewData = viewRows.data;
   const defaultData = defaultRows.data;
   const positionData = positionRows.data;
@@ -86,6 +100,8 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
     memberships.isReady &&
     albums.isReady &&
     links.isReady &&
+    fieldRows.isReady &&
+    valueRows.isReady &&
     viewRows.isReady &&
     defaultRows.isReady &&
     positionRows.isReady;
@@ -107,6 +123,13 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       const ofAlbum = linksByAlbum.get(link.albumId);
       if (ofAlbum) ofAlbum.push(link);
       else linksByAlbum.set(link.albumId, [link]);
+    }
+    const fields = (fieldData ?? []).toSorted((a, b) => a.name.localeCompare(b.name));
+    const valuesByAlbum = new Map<string, FieldValue[]>();
+    for (const row of valueData ?? []) {
+      const ofAlbum = valuesByAlbum.get(row.albumId);
+      if (ofAlbum) ofAlbum.push(row);
+      else valuesByAlbum.set(row.albumId, [row]);
     }
     const views = new Map((viewData ?? []).map((view) => [view.viewKey, view]));
     const defaults = defaultData?.[0] ?? appViewDefaults;
@@ -134,6 +157,9 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       entriesByList,
       unsortedAlbums,
       linksByAlbum,
+      fields,
+      fieldsById: new Map(fields.map((field) => [field.id, field])),
+      valuesByAlbum,
       views,
       defaults,
       keys,
@@ -144,6 +170,8 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
     membershipData,
     albumData,
     linkData,
+    fieldData,
+    valueData,
     viewData,
     defaultData,
     positionData,

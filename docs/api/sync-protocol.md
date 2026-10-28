@@ -32,6 +32,7 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   "memberships": [...],
   "links": [...],
   "fields": [...],
+  "fieldValues": [...],
   "views": [...],
   "positions": [...],
   "defaults": { ... }
@@ -43,6 +44,7 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   - albums, folders and lists (`containers`), and list entries (`memberships`);
   - the albums' links to the streaming services (`links`), one per album and service, as canonical URLs (TON-46);
   - the account's custom fields (`fields`), each with its options in order (TON-49);
+  - the fields each album applies, with their values (`fieldValues`), Trash included (TON-50);
   - the person's remembered view choices (`views`), one record per view they made a choice in;
   - their manual order (`positions`), one key per arranged item;
   - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own.
@@ -81,6 +83,7 @@ A client keeps one store per entity and applies each change by key:
 | `container` | the folder's or list's ID | `Container` |
 | `membership` | `<listId>:<albumId>` | `Membership` |
 | `field` | the field's ID | `CustomField`: `{id, name, type, options: [{id, label}]}` |
+| `fieldValue` | `<albumId>:<fieldId>` | `FieldValue`: `{albumId, fieldId, value}`, `value` null when applied-empty |
 | `link` | `<albumId>:<service>`, the service being `spotify`, `apple-music`, `qobuz` or `tidal` | `ServiceLink`: `{albumId, service, url}` |
 | `view` | the view key: `root`, `unsorted`, or a folder's or list's ID | `ViewPrefs` |
 | `defaults` | the account's ID | `ViewDefaults`, never `null` |
@@ -134,6 +137,7 @@ The server ends a stream in four cases:
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
   - `field.create`, `field.rename`;
+  - `fieldValue.apply`, `fieldValue.set`, `fieldValue.remove`;
   - `view.set`, `defaults.set`;
   - `order.set`.
 
@@ -147,6 +151,10 @@ The server ends a stream in four cases:
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.
   - **`field.rename`** `{id, name}`, with `base.name`, renames it everywhere.
   - **Names** are unique per account across types, and labels within their field, case-insensitively (`name_conflict`). At most 50 fields and 100 options each (`limit_exceeded`).
+- **Custom fields on albums** (FR-03.7, FR-03.8, FR-03.10), one record per album and applied field (TON-50):
+  - **`fieldValue.apply`** `{albumId, fieldId}` applies a field, empty; **`fieldValue.remove`** takes it off with its value. Both are no-ops when already done.
+  - **`fieldValue.set`** `{albumId, fieldId, value}`, with `base.value`, sets or clears the value of an applied field. A field not applied is `not_found`.
+  - **`value` by type:** text (at most 2,000 characters), a decimal string, a `YYYY-MM-DD` calendar date, a boolean, an option ID, or option IDs without repeats. Anything else is `validation_failed` with its reason.
 - **Links** (FR-06.2, FR-06.3), one per album and service (TON-46):
   - **`link.set`** `{albumId, service, url}` adds or replaces the album's link for `service`. `url` is the link as pasted; the server reads it as capture does (TS-40), following a short link, and stores the canonical URL. `base.url` is the URL the client last saw, or `null` for none.
   - **`link.remove`** `{albumId, service}` removes it; `base.url` is the URL the client last saw.

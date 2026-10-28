@@ -299,6 +299,18 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 - Unused fields are absent. They are added through the "+ Add field" menu and removed with the row's × button (FR-03.8).
 - Invalid input keeps the editor open with an inline error, and the value is not saved (X-05).
 
+*As built in TON-50:*
+- **Text, number and date** save on Enter or when left; Escape discards. Text grows a line with each Shift+Enter. The date's "Pick a date" button opens the browser's own calendar.
+- **The reasons:**
+  - "Enter a number, such as 4.5.";
+  - "Enter a date as YYYY-MM-DD, such as 2026-10-28.";
+  - "Text can be at most 2,000 characters.";
+  - "Choose one of the field's options." and "Choose each option once."
+- **Yes/no, single and multiple choice** save as chosen.
+  - The single choice's first item reads "Empty" when empty, else "Clear".
+  - The multiple choice shows its chips in the field's option order, each with "Remove {option}", and an "Add option" select of the rest.
+- **Viewing mode** shows "Empty", `—` for an empty yes/no, Yes or No, and options by label, comma-separated.
+
 **DS-27 Tree navigation.**
 - The sidebar tree follows the ARIA `tree` pattern with roving tabindex. ←/→ collapses and expands, ↑/↓ moves, and Enter opens. Type-ahead jumps to an item by name.
 - Folders show a disclosure chevron. Lists show an album count in `fg.tertiary`.
@@ -592,7 +604,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - **Refusals** stay with their reason and send nothing, as in DS-45. Switching Live off for an album with only a recording year reads "Give the album a year.", and Live stays on.
   - **Leaving Editing mode** saves open fields, or stays for a refused one (DS-45). Offline, the editors are read-only, with "You're offline. Changes can wait until the connection is back."
 - **The sort hints:** "Sorts by its original release year.", "Sorts by its recording year." or "Sorts by its release year, as the recording year is unknown."
-- **Links and Custom fields** show a line each until their features arrive: "Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture." and "Custom fields arrive in a later version." Links arrived in TON-46 (below).
+- **Links and Custom fields** show a line each until their features arrive: "Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture." and "Custom fields arrive in a later version." Links arrived in TON-46, and custom fields in TON-50 (below).
 - **Lists:**
   - **The chips** link to their lists, with the folder path as their tooltip, or to Unsorted.
   - **In Editing mode,** a chip's × removes the album from the list, with "Removed from {list}" and Undo (DS-50). Undo puts the entry back at the end of the list.
@@ -612,6 +624,17 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Each row** shows its save state (DS-80). The stream replaces the link as typed with its canonical URL.
 - **Offline,** the rows are read-only, as the album's fields are (DS-81).
 - **Capture's kept link** ("Another Spotify link was found for this album · Replace · Dismiss") comes with the capture interface (TON-45).
+
+*As built in TON-50:* **Custom fields.**
+- **Applied fields** are rows, by name, each with its value. With none in Viewing mode: "No custom fields."
+- **Editing mode:**
+  - each row has its editor (DS-26), and × "Remove {field}", which clears the value, with "Removed {field}" and Undo;
+  - "+ Add field" lists the unused fields, then "Create field…".
+- **"New field"** (shared with DS-60):
+  - Name; Type (Text, Number, Date, Yes/no, Single choice, Multiple choice); for choice types, Options, with "Add option" and × per option, empty rows left out;
+  - **Create field**, or ⌘Enter;
+  - the inspector applies the new field once it is defined;
+  - the reasons are the server's, such as "'Rating' already exists. Choose another name."
 
 *As built in TON-45:* **the kept link's notice** heads the Links section while the album still has the kept link: "Another Spotify link was found for this album", the pasted link, and **Replace** and **Dismiss**. Replace sets the pasted link, switching to Editing first. The notice lives in the tab that captured, until replaced, dismissed or reloaded.
 
@@ -640,6 +663,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Asked for details,** or "None of these": prefilled with capture's values, such as Apple's title, artist and year. The link fields give way to "The link is kept: {link}". Saving completes the capture, which keeps the link and the sources of the values left as offered (TS-15), and announces "Adding {title}".
 - **After a failure:** the pasted link is in its service's field. Saving adds the album as usual and dismisses the failed capture.
 - **"Add album" opens the capture dialog;** manual entry is its "Enter manually".
+
+*As built in TON-50:* **"Custom fields"** replaces its line, with the inspector's editors and × per field, and an "Add field…" select of the unused fields and "Create field…". A select rather than a menu stays inside the dialog. Saving applies the fields after the album. A form completing a capture has none.
 
 *As built in TON-48:* **"Artwork URL"** replaces its line, with the placeholder "https://…". It is optional, checked when left and on submit, with the inspector's reason.
 

@@ -127,6 +127,30 @@ describe("describeWrite (DS-80, DS-81)", () => {
     ).toBe("Move 'Later' to Collection");
   });
 
+  test("custom fields on albums", () => {
+    const fieldId = uuidv7();
+    const withField: Names = { ...names, field: (id) => (id === fieldId ? "Rating" : undefined) };
+    const args = { albumId: blue.id, fieldId };
+    const describeIt = (mutation: Unsent) =>
+      describeWrite({ mutationId: uuidv7(), ...mutation }, withField);
+    expect(describeIt({ name: "fieldValue.apply", args }).summary).toBe(
+      "Add 'Rating' to 'Kind of Blue'",
+    );
+    expect(
+      describeIt({ name: "fieldValue.set", args: { ...args, value: "4" }, base: { value: null } }),
+    ).toEqual({
+      summary: "Set 'Rating' of 'Kind of Blue'",
+      what: "the value of 'Rating' for 'Kind of Blue'",
+      subject: "'Rating' of 'Kind of Blue'",
+    });
+    expect(describeIt({ name: "fieldValue.remove", args }).summary).toBe(
+      "Remove 'Rating' from 'Kind of Blue'",
+    );
+    const optionNames: Names = { ...names, option: (id) => (id === "o1" ? "Calm" : undefined) };
+    expect(fieldValue("value", ["o1", "o2"], optionNames)).toBe("Calm, An option");
+    expect(fieldLabel("value")).toBe("Value");
+  });
+
   test("custom fields", () => {
     const id = uuidv7();
     expect(

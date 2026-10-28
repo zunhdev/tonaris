@@ -146,6 +146,18 @@ export {
 } from "./links";
 export { membershipKey, membershipSchema, type Membership } from "./memberships";
 export {
+  fieldValueDataSchema,
+  fieldValueKey,
+  fieldValueProblem,
+  fieldValueSchema,
+  maxTextValueLength,
+  normalizedValue,
+  sameValue,
+  valueRefusals,
+  type FieldValue,
+  type FieldValueData,
+} from "./field-values";
+export {
   choiceTypes,
   customFieldSchema,
   fieldCreateArgsSchema,

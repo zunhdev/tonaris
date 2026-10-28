@@ -24,6 +24,13 @@ function created(mutation: Mutation): string | undefined {
 function referenced(mutation: Mutation): (string | null)[] {
   if (mutation.name === "album.create" || mutation.name === "field.create") return [];
   if (mutation.name === "field.rename") return [mutation.args.id];
+  if (
+    mutation.name === "fieldValue.apply" ||
+    mutation.name === "fieldValue.set" ||
+    mutation.name === "fieldValue.remove"
+  ) {
+    return [mutation.args.albumId, mutation.args.fieldId];
+  }
   if (mutation.name === "album.capture") return [mutation.args.listId];
   if (
     mutation.name === "album.update" ||

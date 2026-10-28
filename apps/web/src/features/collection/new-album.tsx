@@ -44,6 +44,7 @@ import {
   type FormField,
 } from "./album-form";
 import { useCollectionUi, type NewAlbumDraft } from "./collection-ui";
+import { FormFields } from "./form-fields";
 import { useListOptions } from "./list-options";
 
 const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation" | "unknown">[] = [
@@ -110,6 +111,12 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
   const lists = useListOptions();
 
   const set = (values: Partial<AlbumForm>) => setForm((current) => ({ ...current, ...values }));
+  // The applied fields as their editors last saved them, so ⌘Enter from an editor saves its value too.
+  const appliedFields = useRef(draft.form.fieldValues);
+  const setFields = (fieldValues: AlbumForm["fieldValues"]) => {
+    appliedFields.current = fieldValues;
+    set({ fieldValues });
+  };
   const touch = (field: FormField) =>
     setTouched((current) => (current.has(field) ? current : new Set([...current, field])));
 
@@ -144,6 +151,13 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
     client.albums.insert(album).isPersisted.promise.catch(() => {});
     // The links go after the album, in one transaction; the server reads each (TS-40).
     const links = linksOfForm(form, album.id);
+    // Its custom fields follow it, applied with their values (FR-03.7).
+    const values = appliedFields.current.map(({ fieldId, value }) => ({
+      albumId: album.id,
+      fieldId,
+      value,
+    }));
+    if (values.length > 0) client.fieldValues.insert(values).isPersisted.promise.catch(() => {});
     if (links.length > 0) client.links.insert(links).isPersisted.promise.catch(() => {});
     if (form.listId !== null) {
       client.memberships
@@ -315,9 +329,9 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                 />
               ))
             )}
-            <Placeholder label="Custom fields">
-              Custom fields arrive in a later version.
-            </Placeholder>
+            {draft.capture?.mode !== "details" && (
+              <FormFields applied={form.fieldValues} onChange={setFields} />
+            )}
 
             <Labelled label="List">
               {(id) => (
@@ -443,16 +457,6 @@ function Labelled({
         {label}
       </span>
       {children(id)}
-    </div>
-  );
-}
-
-/** A field whose feature comes later, shown so the form lists every field (AC-08). */
-function Placeholder({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-small text-fg-secondary">{label}</span>
-      <p className="text-small text-fg-tertiary">{children}</p>
     </div>
   );
 }

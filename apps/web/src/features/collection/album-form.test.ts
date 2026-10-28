@@ -100,6 +100,7 @@ describe("the album it makes", () => {
       recording: "1982",
       artworkUrl: "",
       links: { spotify: "", "apple-music": "", qobuz: "", tidal: "" },
+      fieldValues: [],
       listId: "list",
     });
     expect(isFormDirty(emptyForm("list"))).toBe(false);

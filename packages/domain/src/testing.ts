@@ -6,6 +6,7 @@ import type { CapturedLink, CaptureTarget } from "./capture";
 import type { CollectionStore, StoredAlbum } from "./commands";
 import type { Container, StoredContainer } from "./containers";
 import { enrichableFields, type EnrichableField, type ProvenanceEntry } from "./enrichment";
+import { fieldValueKey, type FieldValue, type FieldValueData } from "./field-values";
 import type { StoredField } from "./fields";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
@@ -39,6 +40,7 @@ export function memoryStore({
   albums = [],
   links = [],
   fields = [],
+  fieldValues = [],
   containers = [],
   memberships = [],
   views = [],
@@ -55,6 +57,8 @@ export function memoryStore({
   links?: (CapturedLink & { albumId: string })[];
   /** Custom fields, with their owners and options in order. */
   fields?: StoredField[];
+  /** Fields applied to albums, with their values. */
+  fieldValues?: FieldValue[];
   containers?: StoredContainer[];
   memberships?: StoredMembership[];
   views?: (ViewPrefs & { personId: string })[];
@@ -88,6 +92,10 @@ export function memoryStore({
   };
   const fieldRows = new Map<string, StoredField>(
     fields.map((field) => [field.id, { ...field, options: [...field.options] }]),
+  );
+  /** Each album's applied fields and values, by `fieldValueKey`. */
+  const valueRows = new Map<string, FieldValueData>(
+    fieldValues.map((row) => [fieldValueKey(row.albumId, row.fieldId), row.value]),
   );
   const containerRows = new Map(containers.map((container) => [container.id, { ...container }]));
   const membershipRows = new Map(
@@ -196,6 +204,22 @@ export function memoryStore({
     },
     renameField: (id, name) => {
       fieldRows.set(id, { ...fieldRows.get(id)!, name });
+      return Promise.resolve();
+    },
+    findFieldValue: (albumId, fieldId) => {
+      const key = fieldValueKey(albumId, fieldId);
+      return Promise.resolve(valueRows.has(key) ? (valueRows.get(key) ?? null) : undefined);
+    },
+    applyField: (albumId, fieldId) => {
+      valueRows.set(fieldValueKey(albumId, fieldId), null);
+      return Promise.resolve();
+    },
+    setFieldValue: (albumId, field, value) => {
+      valueRows.set(fieldValueKey(albumId, field.id), value);
+      return Promise.resolve();
+    },
+    removeField: (albumId, fieldId) => {
+      valueRows.delete(fieldValueKey(albumId, fieldId));
       return Promise.resolve();
     },
 
@@ -330,6 +354,7 @@ export function memoryStore({
     provenance: provenanceRows,
     links: linkRows,
     fields: fieldRows,
+    fieldValues: valueRows,
     containers: containerRows,
     memberships: membershipRows,
     views: viewRows,
