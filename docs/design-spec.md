@@ -195,6 +195,10 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **The year** shows the original year, or a live recording range ("1978–1982").
 - **Save states:** the status cell holds the save-state marker. The row is `aria-busy` while saving, and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 
+*As built in TON-47:*
+- **Services:** after the type, "Spotify, Tidal" in `fg.tertiary`, truncated, in the services' order. The column shows from 760 px of view width and the type from 640 px, so the services collapse first.
+- **Open:** an icon button in the status cell, beside the save marker, for albums with links. It shows on the row's hover or focus, and always on touch screens. It is pointer-only; `O` is its keyboard path. Its name is "Open '{title}' in…".
+
 *As built in TON-35:*
 - **The year** follows DS-24, in a 7 rem column to fit "rec. 1978–1982".
 - **Grouped by release type,** the type column is hidden.
@@ -267,6 +271,13 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 - **No preselection** and no remembered choice. *(FR-06.5)*
 - **Single link:** the popover still appears, with one item. This keeps the explicit choice consistent.
 - **Failure:** if neither the app nor the web destination can open, an inline message replaces the item list (DS-107). *(FR-06.6)*
+
+*As built in TON-47:*
+- **The popover** reads "Open in…", with the album's title under it. Each linked service has "Open in Spotify", which opens its page in a new tab and closes the popover, and "App" beside it ("Open in the Spotify app"), which opens the desktop app (TS-43).
+- **After App:** if the page keeps the focus for 2 s, the list gives way to "If the Spotify app didn't open, it may not be installed on this computer.", with **Open Spotify on the web** and **Back**. The popover closes as soon as the app takes the focus.
+- **The bottom sheet,** on narrow screens, has full-width "Open in Spotify" links to the canonical URLs, which the services' apps take when installed. It has no App choice.
+- **It opens from** a row's Open button, and `O` (DS-78), anchored to what has the focus. An album without links has no Open button, and `O` says "'{title}' has no links to open."
+- **Cards** have no Open button yet; `O` works on them.
 
 **DS-26 Field editors (custom fields).** One editor per type, used in the inspector and the manual-entry form. *(FR-03.6, FR-03.7, FR-03.10)*
 
@@ -586,7 +597,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Delete from collection…** arrives with Trash (M5).
 
 *As built in TON-46:* **Links** (FR-06.2, FR-06.3).
-- **Viewing mode:** a row per service the album has a link for: its name, and the URL's host and path as a link that opens the page in a new tab, until "Open in…" (DS-25, TON-47). With none: "No links yet."
+- **Viewing mode:** a row per service the album has a link for: its name, and the URL's host and path as a link that opens the page in a new tab. Each row is itself an explicit choice of service (DS-25), so it stays a plain link after TON-47. With none: "No links yet."
 - **Editing mode:** a row for every service.
   - **A linked service:** **Replace** and **Remove**.
   - **Replace** turns the row into a field labelled "Spotify link", with the URL selected and the placeholder "Album or track link". Enter or leaving it saves; Escape discards. Empty or unchanged, it closes without sending anything.
@@ -958,6 +969,7 @@ The block never says "private" while another access path remains.
 - **TON-35 adds V,** which opens the current view's View options; it works offline, since choosing isn't an edit. **G then S** now goes to Settings → Preferences.
 - **TON-36 adds M,** "Move to…", which waits while offline like N, and ⌥↑ / ⌥↓, with ⇧ for the ends, in the views' grids. The reference lists them.
 - **TON-37 adds E,** which switches between Viewing and Editing, and F2 on an album row, which edits its title. M now switches to Editing first.
+- **TON-47 adds O,** which opens "Open in…" for the inspector's album, else the focused album. Opening isn't an edit, so it works in Viewing mode and offline.
 - **TON-45 adds C,** which opens the capture dialog, switching to Editing first and waiting while offline. The reference lists it as "Add albums from links".
 - **TON-38 adds L,** "Add to list…", for the inspector's album, else the focused album, switching to Editing first and waiting while offline; **Enter** on an album, which opens the inspector; and **Esc,** which closes it. The reference lists them.
 

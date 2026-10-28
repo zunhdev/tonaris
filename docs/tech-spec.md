@@ -866,6 +866,11 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 - **Mobile:** open the canonical `https` URL. Universal and app links open the installed app (verified for Spotify album and track paths, Apple Music on Android, and Qobuz `open.`/`play.`; unverified for Tidal), and fall back to the web otherwise.
 - **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior and whether Tidal's desktop app has a link scheme are unverified (M3 spike).
 - The service is never switched (FR-06.6).
+- *As built in TON-47,* after the [desktop app-scheme spike](spikes/2026-10-28-desktop-app-links.md) (28 October 2026):
+  - **Every desktop app registers a scheme that names a release.** `appLink()` (`apps/web/src/features/open/app-links.ts`) turns a canonical URL into one: `spotify:{kind}:{id}`; Apple Music's canonical URL with `music:` for `https:`, storefront kept; `qobuzapp://{kind}/{id}`; `tidal://{kind}/{id}`. Tidal's app hands the path to its in-app navigation, so its album and track pages open. Qobuz's route couldn't be read locally and stays as above.
+  - **Desktop:** "Open in Spotify" opens the canonical page in a new tab; "App" beside it opens `appLink()`. No browser tells a page whether an app opened. So if the page keeps the focus 2 s after "App", the chooser says the app may not be installed and offers the same service's web page.
+  - **Mobile** (the narrow-screen query): the canonical `https` URL, with no App choice.
+  - **Not verified:** launching each app from Chrome, Safari and Firefox. That is a manual check for end-product testing (the spike's last section).
 
 **TS-44 Album matching (Decided 19 October 2026: identity is the album; evidence validated by the [G2 spike](spikes/2026-10-19-g2-album-matching.md) the same day; G2 closed 21 October 2026 in TON-25; FR-02.3, FR-02.9, FR-02.10, FR-02.12, FR-14.3).**
 

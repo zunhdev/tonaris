@@ -10,6 +10,7 @@ import {
   useViewContainerId,
 } from "@/features/collection/collection-ui";
 import { useInspector } from "@/features/collection/inspector-state";
+import { useOpenIn } from "@/features/open/open-in";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
@@ -41,6 +42,7 @@ export function useShortcuts({
   const offline = useConnection() === "offline";
   const inspected = useInspector().albumId;
   const capture = useCapture();
+  const openIn = useOpenIn();
   // The latest of each, so the listener is installed once.
   const latest = useRef({
     navigate,
@@ -55,6 +57,7 @@ export function useShortcuts({
     mode,
     inspected,
     capture,
+    openIn,
   });
   useEffect(() => {
     latest.current = {
@@ -70,6 +73,7 @@ export function useShortcuts({
       mode,
       inspected,
       capture,
+      openIn,
     };
   });
 
@@ -99,6 +103,12 @@ export function useShortcuts({
           now.mode.enterEditing();
           now.ui.startAddToList(albumId);
         }
+      } else if (action === "open-in") {
+        // Opening isn't an edit: it works in Viewing mode and offline. It acts on the inspector's album, else the
+        // focused album, and the chooser sits by what has the focus (DS-25).
+        const albumId = now.inspected ?? now.ui.focusedAlbum();
+        const anchor = document.activeElement === document.body ? null : document.activeElement;
+        if (albumId !== undefined) now.openIn?.show(albumId, anchor);
       } else if (action === "capture") {
         // Capturing is an edit: the dialog switches to Editing first, and waits while offline (DS-48).
         if (!now.editing.current) now.capture?.openDialog();

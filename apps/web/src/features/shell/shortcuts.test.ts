@@ -41,6 +41,7 @@ describe("shortcuts (DS-78)", () => {
     expect(match(press("e"))).toBe("toggle-mode");
     expect(match(press("l"))).toBe("add-to-list");
     expect(match(press("c"))).toBe("capture");
+    expect(match(press("o"))).toBe("open-in");
     expect(match(press("L"))).toBeUndefined();
     expect(match(press("v", 0, { metaKey: true }))).toBeUndefined();
   });

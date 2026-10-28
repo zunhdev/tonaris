@@ -130,8 +130,8 @@ test("albums sort by their chronological year or name, and group by release type
   const firstAlbum = await albumRows(page, "Sabbath").first().boundingBox();
   expect(albumHeader?.height).toBe(28);
   expect(firstAlbum && albumHeader && firstAlbum.y - (albumHeader.y + albumHeader.height)).toBe(0);
-  // The type column goes while grouped by type (DS-21).
-  await expect(grid(page, "Sabbath")).toHaveAttribute("aria-colcount", "4");
+  // The type column goes while grouped by type (DS-21); the services stay.
+  await expect(grid(page, "Sabbath")).toHaveAttribute("aria-colcount", "5");
   expect(await violations(page, '[role="grid"]')).toEqual([]);
 
   // A collapsed group keeps its header, also after a reload in the tab.

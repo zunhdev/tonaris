@@ -8,6 +8,7 @@ import { currentAccount } from "@/features/account/session";
 import { CaptureProvider } from "@/features/capture/capture-context";
 import { CollectionUiProvider } from "@/features/collection/collection-ui";
 import { CollectionDataProvider } from "@/features/collection/data";
+import { OpenInProvider } from "@/features/open/open-in";
 import { lastView } from "@/features/shell/device";
 import { Shell } from "@/features/shell/shell";
 import { SaveStateLayer } from "@/features/sync/save-state-layer";
@@ -43,9 +44,11 @@ function WorkspaceLayout() {
         <CollectionDataProvider>
           <SaveStateLayer>
             <CaptureProvider>
-              <Shell account={account}>
-                <Outlet />
-              </Shell>
+              <OpenInProvider>
+                <Shell account={account}>
+                  <Outlet />
+                </Shell>
+              </OpenInProvider>
             </CaptureProvider>
           </SaveStateLayer>
         </CollectionDataProvider>
