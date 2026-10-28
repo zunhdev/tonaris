@@ -1,10 +1,11 @@
-// Removing a chosen option through the API (FR-03.17, TS-14): the removal read gives the albums choosing it and the
-// hash; `field.removeOption` refuses without it and accepts it; another account's option is missing.
+// Removing a chosen option and deleting a field through the API (FR-03.17, FR-03.18, TS-14): each read gives the
+// albums affected and the hash, which the mutation needs; another account's field or option is missing.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import {
   bootstrapSchema,
+  fieldDeletionSchema,
   mutationResultSchema,
   optionRemovalSchema,
   uuidv7,
@@ -119,5 +120,44 @@ describe("removing a chosen option (FR-03.17, TS-14)", () => {
       detail: "This option doesn't exist.",
     });
     expect((await removal(fieldId, uuidv7())).status).toBe(404);
+  });
+});
+
+describe("deleting a field (FR-03.18, TS-14)", () => {
+  test("the deletion read gives the scope's hash, which the deletion needs", async () => {
+    const fieldId = uuidv7();
+    await send({
+      mutationId: uuidv7(),
+      name: "field.create",
+      args: { id: fieldId, name: "Rating", type: "number", options: [] },
+    });
+    const read = await t.call(`/v1/fields/${fieldId}/deletion`, { headers: { cookie } });
+    expect(read.status).toBe(200);
+    const deletion = fieldDeletionSchema.parse(await read.json());
+    expect(deletion).toMatchObject({
+      field: { id: fieldId, name: "Rating", type: "number" },
+      options: [],
+      albums: 0,
+      inTrash: 0,
+    });
+    const stale = await send({
+      mutationId: uuidv7(),
+      name: "field.delete",
+      args: { id: fieldId, scopeHash: "0".repeat(64) },
+    });
+    expect(stale.outcome).toMatchObject({ status: "failed", code: "field_in_use" });
+    const deleted = await send({
+      mutationId: uuidv7(),
+      name: "field.delete",
+      args: { id: fieldId, scopeHash: deletion.scopeHash },
+    });
+    expect(deleted.outcome.status).toBe("confirmed");
+    const ben = await t.signIn("ben@example.com");
+    expect(
+      (await t.call(`/v1/fields/${fieldId}/deletion`, { headers: { cookie: ben.cookie } })).status,
+    ).toBe(404);
+    expect((await t.call(`/v1/fields/${fieldId}/deletion`, { headers: { cookie } })).status).toBe(
+      404,
+    );
   });
 });

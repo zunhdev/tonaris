@@ -246,6 +246,15 @@ function selectionsOf(tx: Transaction, where: SQL | undefined, fieldId?: string)
     .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
 }
 
+/** The albums applying the field, even empty, in Trash or not (FR-03.18). */
+export function fieldUsersIn(tx: Transaction | Database, fieldId: string): Promise<OptionUser[]> {
+  return tx
+    .select({ id: albums.id, trashed: sql<boolean>`${albums.trashedAt} is not null` })
+    .from(albumFieldValues)
+    .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
+    .where(eq(albumFieldValues.fieldId, fieldId));
+}
+
 /** The albums choosing the option, single or multiple choice, in Trash or not (FR-03.17). */
 export async function optionUsersIn(
   tx: Transaction | Database,
@@ -498,6 +507,11 @@ function collectionStore(tx: Transaction): CollectionStore {
       };
     },
     optionUsers: (fieldId, optionId) => optionUsersIn(tx, fieldId, optionId),
+    fieldUsers: (fieldId) => fieldUsersIn(tx, fieldId),
+    async deleteField(fieldId) {
+      // Its options, and every album's usage and selections, cascade (TS-11), in Trash too (TS-13).
+      await tx.delete(fieldDefinitions).where(eq(fieldDefinitions.id, fieldId));
+    },
     async optionField(optionId) {
       const [row] = await tx
         .select({ fieldId: fieldOptions.fieldId })

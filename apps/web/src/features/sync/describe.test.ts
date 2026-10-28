@@ -157,6 +157,9 @@ describe("describeWrite (DS-80, DS-81)", () => {
     expect(describeIt({ name: "field.removeOption", args: { fieldId, optionId: calm } })).toBe(
       "Remove option 'Calm' from 'Mood'",
     );
+    expect(describeIt({ name: "field.delete", args: { id: fieldId, scopeHash: "hash" } })).toBe(
+      "Delete field 'Mood'",
+    );
   });
 
   test("custom fields on albums", () => {

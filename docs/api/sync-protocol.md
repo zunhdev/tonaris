@@ -136,7 +136,7 @@ The server ends a stream in four cases:
   - `container.create`, `container.rename`, `container.move`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
-  - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`;
+  - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
   - `fieldValue.apply`, `fieldValue.set`, `fieldValue.remove`;
   - `view.set`, `defaults.set`;
   - `order.set`.
@@ -162,6 +162,12 @@ The server ends a stream in four cases:
     - **A chosen option** needs `scopeHash` from `GET /v1/fields/{fieldId}/options/{optionId}/removal`. That read gives the albums choosing it, active and in Trash, for the confirmation. Without the hash, or once the albums changed, the removal is `field_in_use`.
     - **Removal clears the option** from every album that chose it, sending each one's value as a `fieldValue` change. A single choice becomes null, and a multiple choice keeps its other options, or becomes null with none left.
   - **Already done:** a removed option removed again, and an option added again with its ID and label, change nothing.
+- **Deleting a field** (FR-03.18), permanently (TON-52):
+  - **`field.delete`** `{id, scopeHash}` deletes the field with its options and every album's usage and value, in Trash too.
+  - **It is always confirmed:** `scopeHash` comes from `GET /v1/fields/{fieldId}/deletion`. That read gives the field's type and options and the albums applying it, active and in Trash.
+  - **Its scope** covers the name, type, options and those albums. A change to any of them makes the hash stale: `field_in_use`, "'Mood' changed since you confirmed. Review the deletion and confirm again."
+  - **What it sends:** the `field` delete, and a `fieldValue` delete for each album that applied it.
+  - **Already done:** a field already deleted changes nothing. Someone else's field is `not_found`.
 - **Custom fields on albums** (FR-03.7, FR-03.8, FR-03.10), one record per album and applied field (TON-50):
   - **`fieldValue.apply`** `{albumId, fieldId}` applies a field, empty; **`fieldValue.remove`** takes it off with its value. Both are no-ops when already done.
   - **`fieldValue.set`** `{albumId, fieldId, value}`, with `base.value`, sets or clears the value of an applied field. A field not applied is `not_found`.

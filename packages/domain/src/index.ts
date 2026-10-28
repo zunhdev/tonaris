@@ -273,3 +273,4 @@ export {
   type ViewPrefsFields,
 } from "./views";
 export * from "./field-options";
+export * from "./field-deletion";

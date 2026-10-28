@@ -94,6 +94,14 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: `The field ${seen}`,
     };
   }
+  if (mutation.name === "field.delete") {
+    const field = quoted(names.field?.(mutation.args.id), "a field");
+    return {
+      summary: `Delete field ${field}`,
+      what: `the deletion of ${field}`,
+      subject: capitalized(`field ${field}`),
+    };
+  }
   if (
     mutation.name === "field.changeType" ||
     mutation.name === "field.addOption" ||

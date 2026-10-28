@@ -9,6 +9,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test
 import {
   batchSchema,
   membershipKey,
+  fieldDeletionSchema,
   mutationSchema,
   optionRemovalSchema,
   serviceLinkKey,
@@ -29,7 +30,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(39);
+  server = await startApiServer(40);
 }, 30_000);
 
 afterAll(async () => {
@@ -1279,5 +1280,34 @@ describe("custom field options (FR-03.15 to FR-03.17, TS-14)", () => {
       3_000,
       "the cleared value",
     );
+  });
+});
+
+describe("deleting a custom field (FR-03.18, TS-14)", () => {
+  test("a field deleted in one session goes from another, with its values", async () => {
+    const web = await openClient(39, 0);
+    const phone = await openClient(39, 1);
+    await Promise.all([
+      web.fields.preload(),
+      web.fieldValues.preload(),
+      phone.fields.preload(),
+      phone.fieldValues.preload(),
+    ]);
+    const { id: albumId } = await saved(web);
+    const fieldId = uuidv7();
+    await web.fields.insert({ id: fieldId, name: "Rating", type: "number", options: [] })
+      .isPersisted.promise;
+    await web.fieldValues.insert({ albumId, fieldId, value: "4" }).isPersisted.promise;
+    const key = `${albumId}:${fieldId}`;
+    await until(() => phone.fieldValues.has(key), 3_000, "the value");
+
+    const session = sessionFetch(server, server.accounts[39]?.sessions[0] ?? "");
+    const response = await session.fetch(`${server.url}/v1/fields/${fieldId}/deletion`);
+    const { scopeHash, albums } = fieldDeletionSchema.parse(await response.json());
+    expect(albums).toBe(1);
+    await web.fields.delete(fieldId, { metadata: { confirmed: { [fieldId]: scopeHash } } })
+      .isPersisted.promise;
+    await until(() => !phone.fields.has(fieldId), 3_000, "the deletion");
+    await until(() => !phone.fieldValues.has(key), 3_000, "the value's removal");
   });
 });

@@ -3,6 +3,7 @@
 // `field.rename` with the name the client last saw (TS-21). An update's type becomes `field.changeType`, and its
 // options the ones removed, renamed and added, in that order, so a label a removal frees can be reused (TON-51). A
 // chosen option's removal carries the hash its confirmation showed, as `metadata.confirmed[optionId]` (TS-14).
+// Deleting a field is `field.delete`, always with its confirmed hash, as `metadata.confirmed[fieldId]` (FR-03.18).
 
 import { uuidv7, type CustomField, type Mutation } from "@tonaris/domain";
 
@@ -10,8 +11,11 @@ import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
 
-/** An update's metadata: each removed option's confirmed scope hash, by option ID (FR-03.17). */
-export type FieldUpdateMetadata = { confirmed?: Record<string, string> };
+/**
+ * An update's or delete's metadata: confirmed scope hashes (TS-14), by the ID of each option removed (FR-03.17) or
+ * field deleted (FR-03.18).
+ */
+export type FieldWriteMetadata = { confirmed?: Record<string, string> };
 
 const confirmedOf = (metadata: unknown): Record<string, string> => {
   if (typeof metadata !== "object" || metadata === null || !("confirmed" in metadata)) return {};
@@ -117,6 +121,21 @@ export function createFieldCollection({ engine, writer }: { engine: SyncEngine; 
               mutation,
             })),
           ),
+        ),
+      onDelete: ({ transaction }) =>
+        writer.persist(
+          transaction,
+          transaction.mutations.map((pending) => {
+            const mutation: Mutation = {
+              mutationId: uuidv7(),
+              name: "field.delete",
+              args: {
+                id: pending.original.id,
+                scopeHash: confirmedOf(pending.metadata)[pending.original.id] ?? "",
+              },
+            };
+            return { key: pending.key, mutation };
+          }),
         ),
     },
   );

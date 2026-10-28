@@ -27,6 +27,7 @@ import {
   type StoredContainer,
 } from "./containers";
 import type { EnrichmentPlan } from "./enrichment";
+import { deleteField } from "./field-deletion";
 import {
   addFieldOption,
   changeFieldType,
@@ -114,6 +115,10 @@ export type CollectionStore = {
   setFieldValue(albumId: string, field: CustomField, value: FieldValueData): Promise<void>;
   /** Takes the field off the album with its value (FR-03.8). */
   removeField(albumId: string, fieldId: string): Promise<void>;
+  /** The albums applying the field, in Trash or not, even empty (FR-03.18). */
+  fieldUsers(fieldId: string): Promise<OptionUser[]>;
+  /** Deletes the field with its options and every album's usage and value (FR-03.18). */
+  deleteField(fieldId: string): Promise<void>;
   /** How many albums apply the field, active and in Trash, even empty (FR-03.12). */
   fieldUsage(fieldId: string): Promise<FieldUsage>;
   /** The albums choosing the option, in Trash or not (FR-03.17). */
@@ -234,6 +239,7 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
     return renameFieldOption(mutation.args, mutation.base, context);
   }
   if (mutation.name === "field.removeOption") return removeFieldOption(mutation.args, context);
+  if (mutation.name === "field.delete") return deleteField(mutation.args, context);
   if (mutation.name === "fieldValue.apply") return applyField(mutation.args, context);
   if (mutation.name === "fieldValue.set") {
     return setFieldValue(mutation.args, mutation.base, context);

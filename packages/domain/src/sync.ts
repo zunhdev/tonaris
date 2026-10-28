@@ -6,6 +6,7 @@
 import { albumCreateArgsSchema, albumFieldsSchema, albumSchema, artworkUrlSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
+import { fieldDeleteArgsSchema } from "./field-deletion";
 import {
   fieldAddOptionArgsSchema,
   fieldChangeTypeArgsSchema,
@@ -122,6 +123,16 @@ export const fieldRemoveOptionSchema = z.object({
   mutationId,
   name: z.literal("field.removeOption"),
   args: fieldRemoveOptionArgsSchema,
+});
+
+/**
+ * `field.delete`: deletes a field permanently, with its options and every album's usage and value, Trash included
+ * (FR-03.18). Always confirmed: `scopeHash` comes from its deletion read (TS-14); a stale one is `field_in_use`.
+ */
+export const fieldDeleteSchema = z.object({
+  mutationId,
+  name: z.literal("field.delete"),
+  args: fieldDeleteArgsSchema,
 });
 
 const fieldValueArgs = z.object({ albumId: z.uuid(), fieldId: z.uuid() });
@@ -282,6 +293,7 @@ export const mutationSchema = z
     fieldAddOptionSchema,
     fieldRenameOptionSchema,
     fieldRemoveOptionSchema,
+    fieldDeleteSchema,
     containerCreateSchema,
     containerRenameSchema,
     containerMoveSchema,

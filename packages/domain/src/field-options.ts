@@ -7,7 +7,7 @@
 
 import { generateKeyBetween } from "fractional-indexing";
 
-import { canonicalJson } from "./approvals";
+import { scopeHash } from "./approvals";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import { fieldValueKey } from "./field-values";
 import {
@@ -84,13 +84,7 @@ export function optionRemovalScope(
 }
 
 /** `sha256(canonical(scope))` in hex (TS-14, TS-64). */
-export async function optionRemovalHash(scope: OptionRemovalScope): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(canonicalJson(scope)),
-  );
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
+export const optionRemovalHash = (scope: OptionRemovalScope): Promise<string> => scopeHash(scope);
 
 /** What the confirmation shows (DS-60): the field, the option, and the albums choosing it, with the scope's hash. */
 export const optionRemovalSchema = z

@@ -26,7 +26,11 @@ function created(mutation: Mutation): string[] {
 /** The records a write changes or puts something in, other than one it creates. */
 function referenced(mutation: Mutation): (string | null)[] {
   if (mutation.name === "album.create" || mutation.name === "field.create") return [];
-  if (mutation.name === "field.rename" || mutation.name === "field.changeType") {
+  if (
+    mutation.name === "field.rename" ||
+    mutation.name === "field.changeType" ||
+    mutation.name === "field.delete"
+  ) {
     return [mutation.args.id];
   }
   if (mutation.name === "field.addOption") return [mutation.args.fieldId];
