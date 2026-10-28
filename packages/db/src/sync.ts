@@ -26,6 +26,7 @@ import {
   type ChangeInput,
   type CollectionStore,
   type Container,
+  type CustomField,
   type Membership,
   type Mutation,
   type MutationResult,
@@ -34,6 +35,7 @@ import {
   type PreparedLink,
   type Principal,
   type ServiceLink,
+  type StoredField,
   type ViewDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
@@ -45,6 +47,8 @@ import {
   accountSettings,
   accountSync,
   albumServiceLinks,
+  fieldDefinitions,
+  fieldOptions,
   albums,
   changeLog,
   containers,
@@ -110,6 +114,54 @@ function activeEntryOf(tx: Transaction, albumId: typeof albums.id | string) {
     .from(memberships)
     .innerJoin(containers, eq(containers.id, memberships.listId))
     .where(and(eq(memberships.albumId, albumId), isNull(containers.trashedAt)));
+}
+
+/** A field with its owner and its options in order: keys compare bytewise (TS-16). */
+async function findFieldIn(tx: Transaction, id: string): Promise<StoredField | undefined> {
+  const [row] = await tx
+    .select({
+      id: fieldDefinitions.id,
+      ownerId: fieldDefinitions.ownerId,
+      name: fieldDefinitions.name,
+      type: fieldDefinitions.type,
+    })
+    .from(fieldDefinitions)
+    .where(eq(fieldDefinitions.id, id));
+  if (!row) return undefined;
+  const options = await tx
+    .select({ id: fieldOptions.id, label: fieldOptions.label })
+    .from(fieldOptions)
+    .where(eq(fieldOptions.fieldId, id))
+    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
+  return { ...row, options };
+}
+
+/** The account's custom fields, each with its options in order, as clients hold them (FR-03.6). */
+async function fieldsOfAccount(tx: Transaction, accountId: string): Promise<CustomField[]> {
+  const definitions = await tx
+    .select({ id: fieldDefinitions.id, name: fieldDefinitions.name, type: fieldDefinitions.type })
+    .from(fieldDefinitions)
+    .where(eq(fieldDefinitions.ownerId, accountId))
+    .orderBy(asc(fieldDefinitions.id));
+  if (definitions.length === 0) return [];
+  const options = await tx
+    .select({ id: fieldOptions.id, fieldId: fieldOptions.fieldId, label: fieldOptions.label })
+    .from(fieldOptions)
+    .where(
+      inArray(
+        fieldOptions.fieldId,
+        definitions.map((definition) => definition.id),
+      ),
+    )
+    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
+  return definitions.map((definition) => ({
+    id: definition.id,
+    name: definition.name,
+    type: definition.type,
+    options: options
+      .filter((option) => option.fieldId === definition.id)
+      .map(({ id, label }) => ({ id, label })),
+  }));
 }
 
 /** An entry as clients see it, with `addedAt` as the ISO string the protocol carries. */
@@ -224,6 +276,41 @@ function collectionStore(tx: Transaction): CollectionStore {
       await tx
         .delete(albumServiceLinks)
         .where(and(eq(albumServiceLinks.albumId, albumId), eq(albumServiceLinks.service, service)));
+    },
+
+    findField: (id) => findFieldIn(tx, id),
+    async fieldsOf(ownerId) {
+      const rows = await tx
+        .select({ id: fieldDefinitions.id })
+        .from(fieldDefinitions)
+        .where(eq(fieldDefinitions.ownerId, ownerId))
+        .orderBy(asc(fieldDefinitions.id));
+      const found = await Promise.all(rows.map((row) => findFieldIn(tx, row.id)));
+      return found.flatMap((field) => {
+        if (!field) return [];
+        const { ownerId: _, ...rest } = field;
+        return [rest];
+      });
+    },
+    async insertField({ id, ownerId, name, type }, options) {
+      await tx.insert(fieldDefinitions).values({ id, ownerId, name, nameKey: nameKey(name), type });
+      if (options.length > 0) {
+        await tx.insert(fieldOptions).values(
+          options.map((option) => ({
+            id: option.id,
+            fieldId: id,
+            label: option.label,
+            labelKey: nameKey(option.label),
+            sortKey: option.sortKey,
+          })),
+        );
+      }
+    },
+    async renameField(id, name) {
+      await tx
+        .update(fieldDefinitions)
+        .set({ name, nameKey: nameKey(name) })
+        .where(eq(fieldDefinitions.id, id));
     },
 
     async findContainer(id) {
@@ -831,6 +918,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .from(memberships)
         .where(eq(memberships.ownerId, accountId))
         .orderBy(asc(memberships.listId), asc(memberships.albumId));
+      const fields = await fieldsOfAccount(tx, accountId);
       const links: ServiceLink[] = await tx
         .select({
           albumId: albumServiceLinks.albumId,
@@ -860,6 +948,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         containers: folders,
         memberships: entries.map(membershipOf),
         links,
+        fields,
         views,
         positions: arranged,
         defaults: defaults ?? appViewDefaults,

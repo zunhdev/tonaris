@@ -10,6 +10,7 @@ import {
   albumFields,
   membershipKey,
   type CaptureArgs,
+  type CustomField,
   positionKey,
   serviceLinkKey,
   unsetView,
@@ -40,6 +41,7 @@ type Collections = Pick<
   | "containers"
   | "memberships"
   | "links"
+  | "fields"
   | "views"
   | "defaults"
   | "positions"
@@ -57,6 +59,8 @@ type Call =
   | "link.insert"
   | "link.update"
   | "link.delete"
+  | "field.insert"
+  | "field.update"
   | "view.insert"
   | "view.update"
   | "view.delete"
@@ -78,6 +82,8 @@ function plan() {
     linkInserts: [] as ServiceLink[],
     linkUpdates: new Map<string, Partial<ServiceLink>>(),
     linkDeletes: [] as string[],
+    fieldInserts: [] as CustomField[],
+    fieldUpdates: new Map<string, Partial<CustomField>>(),
     viewInserts: [] as ViewPrefs[],
     viewUpdates: new Map<string, Partial<ViewPrefs>>(),
     viewDeletes: [] as string[],
@@ -123,7 +129,7 @@ export function resubmitAll(
 
 /** Adds `mutation`'s change to `planned`, unless the records already hold it or its record is gone. */
 function remake(
-  { albums, containers, memberships, links, views, defaults, positions }: Collections,
+  { albums, containers, memberships, links, fields, views, defaults, positions }: Collections,
   mutation: Mutation,
   planned: Plan,
 ): Resubmitted {
@@ -178,6 +184,18 @@ function remake(
     }
     planned.linkUpdates.set(key, { url });
     return planned.needs("link.update");
+  }
+  if (mutation.name === "field.create") {
+    if (fields.has(mutation.args.id)) return "unchanged";
+    planned.fieldInserts.push(mutation.args);
+    return planned.needs("field.insert");
+  }
+  if (mutation.name === "field.rename") {
+    const current = fields.get(mutation.args.id);
+    if (!current) return "gone";
+    if (current.name === mutation.args.name) return "unchanged";
+    planned.fieldUpdates.set(mutation.args.id, { name: mutation.args.name });
+    return planned.needs("field.update");
   }
   if (mutation.name === "container.create") {
     if (containers.has(mutation.args.id)) return "unchanged";
@@ -272,7 +290,17 @@ function applyTo<Row>(rows: Map<string, Partial<Row>>) {
 
 /** Makes one call: one transaction, so one batch when it holds several changes. */
 function make(
-  { albums, containers, memberships, links, views, defaults, arrange, captures }: Collections,
+  {
+    albums,
+    containers,
+    memberships,
+    links,
+    fields,
+    views,
+    defaults,
+    arrange,
+    captures,
+  }: Collections,
   planned: Plan,
   call: Call,
 ): void {
@@ -287,7 +315,10 @@ function make(
   } else if (call === "entry.insert") sent(memberships.insert(planned.entryInserts));
   else if (call === "entry.delete") sent(memberships.delete(planned.entryDeletes));
   else if (call === "link.insert") sent(links.insert(planned.linkInserts));
-  else if (call === "link.update") {
+  else if (call === "field.insert") sent(fields.insert(planned.fieldInserts));
+  else if (call === "field.update") {
+    sent(fields.update([...planned.fieldUpdates.keys()], applyTo(planned.fieldUpdates)));
+  } else if (call === "link.update") {
     sent(links.update([...planned.linkUpdates.keys()], applyTo(planned.linkUpdates)));
   } else if (call === "link.delete") sent(links.delete(planned.linkDeletes));
   else if (call === "view.insert") sent(views.insert(planned.viewInserts));

@@ -162,4 +162,20 @@ describe("dependencies within a request", () => {
     };
     expect(dependenciesOf([create, link])).toEqual([undefined, [create.mutationId]]);
   });
+
+  test("a rename of a new field depends on its creation", () => {
+    const id = uuidv7();
+    const create: Mutation = {
+      mutationId: uuidv7(),
+      name: "field.create",
+      args: { id, name: "Rating", type: "number", options: [] },
+    };
+    const rename: Mutation = {
+      mutationId: uuidv7(),
+      name: "field.rename",
+      args: { id, name: "Score" },
+      base: { name: "Rating" },
+    };
+    expect(dependenciesOf([create, rename])).toEqual([undefined, [create.mutationId]]);
+  });
 });

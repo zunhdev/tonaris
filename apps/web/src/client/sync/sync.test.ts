@@ -28,7 +28,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(36);
+  server = await startApiServer(37);
 }, 30_000);
 
 afterAll(async () => {
@@ -1173,5 +1173,26 @@ describe("captures (TON-45, TS-22)", () => {
       "the retried album",
     );
     await until(() => capturesOf(web).length === 0, 3_000, "the capture to be saved");
+  });
+});
+
+describe("custom fields (FR-03.6, FR-03.11, FR-09.1)", () => {
+  test("a field defined and renamed in one session reaches another without reloading", async () => {
+    const web = await openClient(36, 0);
+    const phone = await openClient(36, 1);
+    await Promise.all([web.fields.preload(), phone.fields.preload()]);
+    const id = uuidv7();
+    const options = [
+      { id: uuidv7(), label: "Calm" },
+      { id: uuidv7(), label: "Loud" },
+    ];
+    await web.fields.insert({ id, name: "Mood", type: "single_choice", options }).isPersisted
+      .promise;
+    await until(() => phone.fields.get(id)?.name === "Mood", 3_000, "the field on the phone");
+    expect(phone.fields.get(id)?.options).toEqual(options);
+    await web.fields.update(id, (draft) => {
+      draft.name = "Feel";
+    }).isPersisted.promise;
+    await until(() => phone.fields.get(id)?.name === "Feel", 3_000, "the rename on the phone");
   });
 });

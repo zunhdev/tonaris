@@ -78,6 +78,18 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: capitalized(`the artwork of ${title}`),
     };
   }
+  if (mutation.name === "field.create") {
+    const { name } = mutation.args;
+    return { summary: `New field '${name}'`, what: `the field '${name}'`, subject: `'${name}'` };
+  }
+  if (mutation.name === "field.rename") {
+    const seen = `'${mutation.base.name}'`;
+    return {
+      summary: `Rename field ${seen} to '${mutation.args.name}'`,
+      what: `the new name for the field ${seen}`,
+      subject: `The field ${seen}`,
+    };
+  }
   if (mutation.name === "container.create") {
     const { kind, name } = mutation.args;
     return {

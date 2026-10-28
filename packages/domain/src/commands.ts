@@ -27,6 +27,13 @@ import {
   type StoredContainer,
 } from "./containers";
 import type { EnrichmentPlan } from "./enrichment";
+import {
+  createField,
+  renameField,
+  type CustomField,
+  type FieldOption,
+  type StoredField,
+} from "./fields";
 import type { StreamingService } from "./links";
 import { addMembership, removeMembership, type Membership } from "./memberships";
 import { failure, type FieldConflict, type Outcome } from "./outcomes";
@@ -71,6 +78,18 @@ export type CollectionStore = {
   /** Inserts the album's link for `link.service`, or replaces the one it has (FR-06.2). */
   saveServiceLink(albumId: string, ownerId: string, link: CapturedLink): Promise<void>;
   deleteServiceLink(albumId: string, service: StreamingService): Promise<void>;
+
+  /** The custom field with this ID, whoever owns it, with its options in order. */
+  findField(id: string): Promise<StoredField | undefined>;
+  /** The owner's custom fields, with their options (FR-03.9, TS-18). */
+  fieldsOf(ownerId: string): Promise<CustomField[]>;
+  /** Inserts the field and its options, each with its fractional-index key (TS-16). */
+  insertField(
+    field: CustomField & { ownerId: string },
+    options: (FieldOption & { sortKey: string })[],
+  ): Promise<void>;
+  /** Renames the field; its name key follows (TS-12). */
+  renameField(id: string, name: string): Promise<void>;
 
   /** The folder or list with this ID, whoever owns it, in Trash or not. */
   findContainer(id: string): Promise<StoredContainer | undefined>;
@@ -130,6 +149,7 @@ export type ChangeInput =
   | { entity: "container"; id: string; op: ChangeOp; data: Container | null }
   | { entity: "membership"; id: string; op: ChangeOp; data: Membership | null }
   | { entity: "link"; id: string; op: ChangeOp; data: ServiceLink | null }
+  | { entity: "field"; id: string; op: ChangeOp; data: CustomField | null }
   | { entity: "view"; id: string; op: ChangeOp; data: ViewPrefs | null }
   | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults }
   | { entity: "position"; id: string; op: ChangeOp; data: Position | null };
@@ -160,6 +180,8 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "album.capture") {
     return captureAlbum(mutation.args, context.capture, context);
   }
+  if (mutation.name === "field.create") return createField(mutation.args, context);
+  if (mutation.name === "field.rename") return renameField(mutation.args, mutation.base, context);
   if (mutation.name === "container.create") return createContainer(mutation.args, context);
   if (mutation.name === "container.rename") {
     return renameContainer(mutation.args, mutation.base, context);

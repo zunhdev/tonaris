@@ -128,6 +128,8 @@ export {
   maxBatchItems,
   maxContainerDepth,
   maxContainers,
+  maxFieldOptions,
+  maxFields,
   maxLinkLength,
   maxMemberships,
   maxNameLength,
@@ -143,6 +145,22 @@ export {
   type StreamingService,
 } from "./links";
 export { membershipKey, membershipSchema, type Membership } from "./memberships";
+export {
+  choiceTypes,
+  customFieldSchema,
+  fieldCreateArgsSchema,
+  fieldNameProblem,
+  fieldNameTaken,
+  fieldOptionSchema,
+  fieldTypes,
+  isChoiceType,
+  optionLabelProblem,
+  type CustomField,
+  type FieldCreateArgs,
+  type FieldOption,
+  type FieldType,
+  type StoredField,
+} from "./fields";
 export {
   linkRemoveArgsSchema,
   linkSetArgsSchema,

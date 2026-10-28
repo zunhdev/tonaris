@@ -6,6 +6,7 @@ import type { CapturedLink, CaptureTarget } from "./capture";
 import type { CollectionStore, StoredAlbum } from "./commands";
 import type { Container, StoredContainer } from "./containers";
 import { enrichableFields, type EnrichableField, type ProvenanceEntry } from "./enrichment";
+import type { StoredField } from "./fields";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
 import type { ViewDefaults, ViewPrefs } from "./views";
@@ -37,6 +38,7 @@ const userProvenance = (values: Partial<Record<EnrichableField, unknown>>): Prov
 export function memoryStore({
   albums = [],
   links = [],
+  fields = [],
   containers = [],
   memberships = [],
   views = [],
@@ -51,6 +53,8 @@ export function memoryStore({
     artworkUrl?: string | null;
   })[];
   links?: (CapturedLink & { albumId: string })[];
+  /** Custom fields, with their owners and options in order. */
+  fields?: StoredField[];
   containers?: StoredContainer[];
   memberships?: StoredMembership[];
   views?: (ViewPrefs & { personId: string })[];
@@ -82,6 +86,9 @@ export function memoryStore({
     const identity = identityRows.get(id) ?? { releaseGroupId: null };
     return album && { ...album, ...identity };
   };
+  const fieldRows = new Map<string, StoredField>(
+    fields.map((field) => [field.id, { ...field, options: [...field.options] }]),
+  );
   const containerRows = new Map(containers.map((container) => [container.id, { ...container }]));
   const membershipRows = new Map(
     memberships.map((entry) => [membershipKey(entry.listId, entry.albumId), { ...entry }]),
@@ -161,6 +168,34 @@ export function memoryStore({
     },
     deleteServiceLink: (albumId, service) => {
       linkRows.delete(`${albumId}:${service}`);
+      return Promise.resolve();
+    },
+
+    findField: (id) => {
+      const field = fieldRows.get(id);
+      return Promise.resolve(field && { ...field, options: [...field.options] });
+    },
+    fieldsOf: (ownerId) =>
+      Promise.resolve(
+        [...fieldRows.values()]
+          .filter((field) => field.ownerId === ownerId)
+          .map((field) => ({
+            id: field.id,
+            name: field.name,
+            type: field.type,
+            options: [...field.options],
+          })),
+      ),
+    insertField: (field, options) => {
+      const ordered = options.toSorted((a, b) => (a.sortKey < b.sortKey ? -1 : 1));
+      fieldRows.set(field.id, {
+        ...field,
+        options: ordered.map(({ id, label }) => ({ id, label })),
+      });
+      return Promise.resolve();
+    },
+    renameField: (id, name) => {
+      fieldRows.set(id, { ...fieldRows.get(id)!, name });
       return Promise.resolve();
     },
 
@@ -294,6 +329,7 @@ export function memoryStore({
     identities: identityRows,
     provenance: provenanceRows,
     links: linkRows,
+    fields: fieldRows,
     containers: containerRows,
     memberships: membershipRows,
     views: viewRows,
