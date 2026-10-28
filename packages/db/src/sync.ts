@@ -95,6 +95,7 @@ const containerColumns = {
   kind: containers.kind,
   parentId: containers.parentId,
   name: containers.name,
+  description: containers.description,
 };
 
 const membershipColumns = {

@@ -118,7 +118,13 @@ test("edits made offline wait, never as saved, then go out in order once back on
   await signIn(page, accounts.syncOffline);
   await live(page);
   const args = album("Kind of Blue");
-  const list: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+  const list: Container = {
+    id: uuidv7(),
+    kind: "list",
+    parentId: null,
+    name: "Later",
+    description: null,
+  };
   await page.evaluate(
     async ([value, container]) => {
       const client = window.tonarisSync;

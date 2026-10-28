@@ -22,6 +22,7 @@ import {
 import {
   createContainer,
   moveContainer,
+  describeContainer,
   renameContainer,
   type Container,
   type StoredContainer,
@@ -151,7 +152,10 @@ export type CollectionStore = {
   countContainers(ownerId: string): Promise<number>;
   insertContainer(container: Container & { ownerId: string }): Promise<void>;
   /** Sets the fields in `values`; fields left undefined keep their value. */
-  updateContainer(id: string, values: Partial<Pick<Container, "name" | "parentId">>): Promise<void>;
+  updateContainer(
+    id: string,
+    values: Partial<Pick<Container, "name" | "parentId" | "description">>,
+  ): Promise<void>;
 
   /** The entry for this album in this list, whether or not either is in Trash. */
   findMembership(listId: string, albumId: string): Promise<Membership | undefined>;
@@ -249,6 +253,10 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "container.rename") {
     return renameContainer(mutation.args, mutation.base, context);
   }
+  if (mutation.name === "container.describe") {
+    return describeContainer(mutation.args, mutation.base, context);
+  }
+
   if (mutation.name === "container.move") {
     return moveContainer(mutation.args, mutation.base, context);
   }

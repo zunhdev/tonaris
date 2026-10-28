@@ -1,8 +1,8 @@
 // Folders and lists as clients hold them (TS-11, TS-24), and the commands that create, rename and move them
-// (TON-26). The albums in lists are memberships.ts.
+// (TON-26) and describe them (TON-54). The albums in lists are memberships.ts.
 
 import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
-import { maxContainerDepth, maxContainers, maxNameLength } from "./limits";
+import { maxContainerDepth, maxContainers, maxDescriptionLength, maxNameLength } from "./limits";
 import { findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
@@ -13,8 +13,8 @@ import { z } from "./zod";
 export const containerKinds = ["folder", "list"] as const;
 export type ContainerKind = (typeof containerKinds)[number];
 
-/** A folder or list. `parentId` null is the root (FR-01.3). */
-export const containerSchema = z
+/** A folder or list as `container.create` takes it. `parentId` null is the root (FR-01.3). */
+export const containerFieldsSchema = z
   .object({
     id: z.uuid(),
     kind: z.enum(containerKinds),
@@ -22,6 +22,17 @@ export const containerSchema = z
     name: z.string(),
   })
   .meta({ description: "A folder or list (FR-01.1)." });
+export type ContainerFields = z.infer<typeof containerFieldsSchema>;
+
+/** A folder or list as clients hold it: with its description, null for none (FR-03.5). */
+export const containerSchema = containerFieldsSchema
+  .extend({
+    description: z
+      .string()
+      .nullable()
+      .meta({ description: "Plain text, null for none (FR-03.5). Not searched (FR-12.4)." }),
+  })
+  .meta({ description: "A folder or list, with its description (FR-01.1, FR-03.5)." });
 export type Container = z.infer<typeof containerSchema>;
 
 /** A container as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
@@ -30,9 +41,16 @@ export type StoredContainer = Container & { ownerId: string; trashed: boolean };
 const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
 
 /** The container as clients see it. */
-function containerOf({ id, kind, parentId, name }: Container): Container {
-  return { id, kind, parentId, name };
+function containerOf({ id, kind, parentId, name, description }: Container): Container {
+  return { id, kind, parentId, name, description };
 }
+
+/** Code points rather than graphemes: the limit bounds stored text (TS-18). */
+// oxlint-disable-next-line no-misused-spread
+const longerThan = (text: string, limit: number) => [...text].length > limit;
+
+/** The refusal of a description over the limit (FR-03.5, TS-18). Clients check it too, with these words. */
+export const descriptionTooLong = `Descriptions can be at most ${maxDescriptionLength.toLocaleString("en")} characters.`;
 
 /**
  * Why `name`, already trimmed, can't name a folder or list, if it can't (X-06, TS-18). Clients check it before
@@ -116,7 +134,7 @@ export function nameTakenProblem(takenName: string, parentName: string | null): 
  * and different ones are a conflict.
  */
 export async function createContainer(
-  args: Container,
+  args: ContainerFields,
   { principal, store }: CommandContext,
 ): Promise<CommandResult> {
   const ownerId = actingUserId(principal);
@@ -127,7 +145,8 @@ export async function createContainer(
       "You can't add folders or lists here.",
     );
   }
-  const container = containerOf({ ...args, name: args.name.trim() });
+  // A new folder or list has no description until one is set (FR-03.5).
+  const container = containerOf({ ...args, name: args.name.trim(), description: null });
   const problem = containerNameProblem(container.name);
   if (problem) return problem;
 
@@ -252,4 +271,42 @@ export async function moveContainer(
     { entity: "container", id, op: "update", data },
     ...(await forgetPlace(store, ownerId, container.parentId ?? "root", id)),
   );
+}
+
+/**
+ * Sets or clears a folder's or list's description, if it is still `base.description` (FR-03.5, TS-21). It is plain
+ * text, trimmed, and empty text clears it. It stays through moves and Trash, as it is part of the record.
+ */
+export async function describeContainer(
+  { id, description }: { id: string; description: string | null },
+  base: { description: string | null },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const container = await changeableContainer(id, context);
+  if ("status" in container) return container;
+  const text = description?.trim() ?? "";
+  const described = text === "" ? null : text;
+  if (described !== null && longerThan(described, maxDescriptionLength)) {
+    return failure("validation_failed", descriptionTooLong, [
+      { path: "args.description", message: `At most ${maxDescriptionLength} characters` },
+    ]);
+  }
+  if (container.description !== base.description) {
+    return {
+      status: "conflict",
+      conflicts: [
+        {
+          field: "description",
+          current: container.description,
+          attempted: described,
+          base: base.description,
+        },
+      ],
+    };
+  }
+  if (described === container.description) return applied();
+
+  await context.store.updateContainer(id, { description: described });
+  const data = containerOf({ ...container, description: described });
+  return applied({ entity: "container", id, op: "update", data });
 }

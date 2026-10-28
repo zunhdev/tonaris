@@ -24,8 +24,20 @@ const blue: Album = {
   recordingYearEnd: null,
   artworkUrl: null,
 };
-const jazz: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Jazz" };
-const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+const jazz: Container = {
+  id: uuidv7(),
+  kind: "folder",
+  parentId: null,
+  name: "Jazz",
+  description: null,
+};
+const later: Container = {
+  id: uuidv7(),
+  kind: "list",
+  parentId: null,
+  name: "Later",
+  description: null,
+};
 
 const names: Names = {
   album: (id) => (id === blue.id ? blue.title : undefined),
@@ -84,7 +96,13 @@ describe("describeWrite (DS-80, DS-81)", () => {
   });
 
   test("a rolled-back record is named from the write itself", () => {
-    const soon: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Soon" };
+    const soon: Container = {
+      id: uuidv7(),
+      kind: "list",
+      parentId: null,
+      name: "Soon",
+      description: null,
+    };
     expect(write({ name: "container.create", args: soon })).toEqual({
       summary: "New list 'Soon'",
       what: "the list 'Soon'",
@@ -107,6 +125,24 @@ describe("describeWrite (DS-80, DS-81)", () => {
       what: "the new name for the list 'Later'",
       subject: "'Later'",
     });
+    expect(
+      write({
+        name: "container.describe",
+        args: { id: later.id, description: "For the weekend" },
+        base: { description: null },
+      }),
+    ).toEqual({
+      summary: "Describe the list 'Later'",
+      what: "the description of the list 'Later'",
+      subject: "The description of the list 'Later'",
+    });
+    expect(
+      write({
+        name: "container.describe",
+        args: { id: later.id, description: null },
+        base: { description: "For the weekend" },
+      }).summary,
+    ).toBe("Clear the description of the list 'Later'");
     expect(
       write({
         name: "container.move",

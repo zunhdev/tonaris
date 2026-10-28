@@ -292,10 +292,14 @@ function remake(
   }
   if (mutation.name === "container.create") {
     if (containers.has(mutation.args.id)) return "unchanged";
-    planned.containerInserts.push(mutation.args);
+    planned.containerInserts.push({ ...mutation.args, description: null });
     return planned.needs("container.insert");
   }
-  if (mutation.name === "container.rename" || mutation.name === "container.move") {
+  if (
+    mutation.name === "container.rename" ||
+    mutation.name === "container.move" ||
+    mutation.name === "container.describe"
+  ) {
     const { args } = mutation;
     const current = containers.get(args.id);
     if (!current) return "gone";
@@ -303,6 +307,9 @@ function remake(
     if ("name" in args) {
       if (current.name === args.name) return "unchanged";
       change = { name: args.name };
+    } else if ("description" in args) {
+      if (current.description === args.description) return "unchanged";
+      change = { description: args.description };
     } else {
       if (current.parentId === args.parentId) return "unchanged";
       change = { parentId: args.parentId };

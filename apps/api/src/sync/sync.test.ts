@@ -444,6 +444,7 @@ const node = (
   kind,
   parentId,
   name,
+  description: null,
 });
 const createContainer = (args: Container): Mutation => ({
   mutationId: uuidv7(),
@@ -531,7 +532,10 @@ describe("folders and lists (FR-01.1–FR-01.5)", () => {
     let parentId: string | null = null;
     for (const id of deep) {
       // oxlint-disable-next-line no-await-in-loop
-      await post(anna.cookie, createContainer({ id, kind: "folder", parentId, name: "Level" }));
+      await post(
+        anna.cookie,
+        createContainer({ id, kind: "folder", parentId, name: "Level", description: null }),
+      );
       parentId = id;
     }
     const tooDeep = await post(anna.cookie, move(bebop.id, deep.at(-1)!, jazz.id));

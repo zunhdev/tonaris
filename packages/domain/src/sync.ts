@@ -5,7 +5,7 @@
 
 import { albumCreateArgsSchema, albumFieldsSchema, albumSchema, artworkUrlSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
-import { containerSchema } from "./containers";
+import { containerFieldsSchema, containerSchema } from "./containers";
 import { fieldDeleteArgsSchema } from "./field-deletion";
 import {
   fieldAddOptionArgsSchema,
@@ -169,7 +169,18 @@ export const fieldValueRemoveSchema = z.object({
 export const containerCreateSchema = z.object({
   mutationId,
   name: z.literal("container.create"),
-  args: containerSchema.extend({ id: z.uuid({ version: "v7" }) }),
+  args: containerFieldsSchema.extend({ id: z.uuid({ version: "v7" }) }),
+});
+
+/**
+ * `container.describe`: sets a folder's or list's plain-text description, or clears it with null or empty text
+ * (FR-03.5); `base.description` is the one the client last saw (TS-21). At most 2,000 characters.
+ */
+export const containerDescribeSchema = z.object({
+  mutationId,
+  name: z.literal("container.describe"),
+  args: z.object({ id: z.uuid(), description: z.string().nullable() }),
+  base: z.object({ description: z.string().nullable() }),
 });
 
 /** `container.rename`: `base.name` is the name the client last saw (TS-21, FR-01.3). */
@@ -297,6 +308,7 @@ export const mutationSchema = z
     containerCreateSchema,
     containerRenameSchema,
     containerMoveSchema,
+    containerDescribeSchema,
     membershipAddSchema,
     membershipRemoveSchema,
     linkSetSchema,

@@ -48,7 +48,16 @@ function stored(
   name: string,
   values: Partial<StoredContainer> = {},
 ): StoredContainer {
-  return { id: uuidv7(), kind, parentId: null, name, ownerId: owner, trashed: false, ...values };
+  return {
+    id: uuidv7(),
+    kind,
+    parentId: null,
+    name,
+    description: null,
+    ownerId: owner,
+    trashed: false,
+    ...values,
+  };
 }
 const list = (name: string, values: Partial<StoredContainer> = {}) => stored("list", name, values);
 

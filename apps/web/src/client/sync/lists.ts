@@ -1,7 +1,7 @@
 // Folders, lists and list entries: TanStack DB collections filled from the bootstrap snapshot and the stream
 // (TS-24), so another session's changes appear live. Writes are optimistic, as for albums (albums.ts): folders and
-// lists are created, renamed and moved (TON-26), and albums added to and removed from lists (TON-27), each
-// becoming one envelope whose `base` is the value before the edit (TS-21).
+// lists are created, renamed and moved (TON-26) and described (TON-54), and albums added to and removed from lists
+// (TON-27), each becoming one envelope whose `base` is the value before the edit (TS-21).
 
 import {
   membershipKey,
@@ -15,12 +15,15 @@ import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
 
-/** The container's own fields only, whatever else the draft carried. */
-function containerOf({ id, kind, parentId, name }: Container): Container {
+/** What `container.create` takes: the container's own fields, without a description, which is set afterwards. */
+function createArgsOf({ id, kind, parentId, name }: Container) {
   return { id, kind, parentId, name };
 }
 
-/** A rename for a new name and a move for a new parent, each with the value before it (TS-21). */
+/**
+ * A rename for a new name, a move for a new parent, and a description for a new one, each with the value before it
+ * (TS-21). A new folder or list with a description is created, then described.
+ */
 function containerUpdates(original: Container, changes: Partial<Container>): Mutation[] {
   const updates: Mutation[] = [];
   const { id } = original;
@@ -38,6 +41,14 @@ function containerUpdates(original: Container, changes: Partial<Container>): Mut
       name: "container.move",
       args: { id, parentId: changes.parentId },
       base: { parentId: original.parentId },
+    });
+  }
+  if (changes.description !== undefined && changes.description !== original.description) {
+    updates.push({
+      mutationId: uuidv7(),
+      name: "container.describe",
+      args: { id, description: changes.description },
+      base: { description: original.description },
     });
   }
   return updates;
@@ -60,14 +71,24 @@ export function createContainerCollection({
       onInsert: ({ transaction }) =>
         writer.persist(
           transaction,
-          transaction.mutations.map((pending) => ({
-            key: pending.key,
-            mutation: {
+          transaction.mutations.flatMap((pending) => {
+            const create: Mutation = {
               mutationId: uuidv7(),
               name: "container.create",
-              args: containerOf(pending.modified),
-            },
-          })),
+              args: createArgsOf(pending.modified),
+            };
+            const { description } = pending.modified;
+            const describe: Mutation = {
+              mutationId: uuidv7(),
+              name: "container.describe",
+              args: { id: pending.modified.id, description },
+              base: { description: null },
+            };
+            return [
+              { key: pending.key, mutation: create },
+              ...(description ? [{ key: pending.key, mutation: describe }] : []),
+            ];
+          }),
         ),
       onUpdate: ({ transaction }) =>
         writer.persist(

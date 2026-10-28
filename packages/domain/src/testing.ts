@@ -61,7 +61,8 @@ export function memoryStore({
   fields?: StoredField[];
   /** Fields applied to albums, with their values. */
   fieldValues?: FieldValue[];
-  containers?: StoredContainer[];
+  /** Folders and lists; one without `description` has none. */
+  containers?: (Omit<StoredContainer, "description"> & { description?: string | null })[];
   memberships?: StoredMembership[];
   views?: (ViewPrefs & { personId: string })[];
   defaults?: (ViewDefaults & { personId: string })[];
@@ -106,7 +107,9 @@ export function memoryStore({
   const valueRows = new Map<string, FieldValueData>(
     fieldValues.map((row) => [fieldValueKey(row.albumId, row.fieldId), row.value]),
   );
-  const containerRows = new Map(containers.map((container) => [container.id, { ...container }]));
+  const containerRows = new Map<string, StoredContainer>(
+    containers.map((container) => [container.id, { description: null, ...container }]),
+  );
   const membershipRows = new Map(
     memberships.map((entry) => [membershipKey(entry.listId, entry.albumId), { ...entry }]),
   );
@@ -342,11 +345,12 @@ export function memoryStore({
     activeChildren: (ownerId, parentId) =>
       Promise.resolve(
         activeChildren(ownerId, parentId).map(
-          ({ id, kind, name, parentId: parent }): Container => ({
+          ({ id, kind, name, parentId: parent, description }): Container => ({
             id,
             kind,
             parentId: parent,
             name,
+            description,
           }),
         ),
       ),

@@ -513,6 +513,12 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Enter** opens the folder or list from either cell.
 - **Later:** descriptions (M4) and sharing glyphs (M7).
 
+*As built in TON-54:*
+- **Rows:** a description's first line follows the name in `fg.tertiary`, truncated. The name takes at most 60% of the cell, and the link is described by it (`aria-describedby`).
+- **Under a folder's or list's header:**
+  - **Viewing mode:** the description, its line breaks kept, scrolling past about four lines.
+  - **Editing mode:** a borderless text box with the placeholder "Add a description". Enter or leaving it saves; Shift+Enter adds a line; Escape reverts; emptied, it clears. Over 2,000 characters it stays, with "Descriptions can be at most 2,000 characters."
+
 *As built in TON-35:*
 - **Order:** the view's sort (DS-42), the same as the tree's.
 - **Created:** sorted by creation date, a Created column between the name and the contents shows each one's date, in the browser's medium date style ("Oct 23, 2026"). The date comes from the folder's or list's UUIDv7 ID, made when it was created (TS-10).

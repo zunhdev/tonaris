@@ -15,6 +15,7 @@ export const list = (name: string): Container => ({
   kind: "list",
   parentId: null,
   name,
+  description: null,
 });
 
 /**

@@ -48,7 +48,8 @@ function referenced(mutation: Mutation): (string | null)[] {
   if (
     mutation.name === "album.update" ||
     mutation.name === "album.setArtwork" ||
-    mutation.name === "container.rename"
+    mutation.name === "container.rename" ||
+    mutation.name === "container.describe"
   ) {
     return [mutation.args.id];
   }

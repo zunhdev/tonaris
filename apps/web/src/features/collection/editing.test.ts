@@ -7,9 +7,27 @@ import { uuidv7, type Container } from "@tonaris/domain";
 import { isCollectionPath } from "../shell/device";
 import { createEditing, nameRefusal, placeFor } from "./editing";
 
-const metal: Container = { id: uuidv7(), kind: "folder", parentId: null, name: "Metal" };
-const doom: Container = { id: uuidv7(), kind: "list", parentId: metal.id, name: "Doom" };
-const later: Container = { id: uuidv7(), kind: "list", parentId: null, name: "Later" };
+const metal: Container = {
+  id: uuidv7(),
+  kind: "folder",
+  parentId: null,
+  name: "Metal",
+  description: null,
+};
+const doom: Container = {
+  id: uuidv7(),
+  kind: "list",
+  parentId: metal.id,
+  name: "Doom",
+  description: null,
+};
+const later: Container = {
+  id: uuidv7(),
+  kind: "list",
+  parentId: null,
+  name: "Later",
+  description: null,
+};
 
 describe("creating and renaming (DS-78)", () => {
   test("a new folder or list goes into the focused folder, else the current view's, else the root", () => {

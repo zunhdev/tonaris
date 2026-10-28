@@ -96,6 +96,8 @@ export const accounts = {
   // Settings → Custom fields (custom-fields-settings.e2e.ts), one per test.
   settingsFields: at("settings-fields"),
   settingsOptions: at("settings-options"),
+  // Folder and list descriptions (descriptions.e2e.ts).
+  descriptions: at("descriptions"),
 } as const;
 
 /** An address with no account. */

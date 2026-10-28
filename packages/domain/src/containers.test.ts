@@ -11,6 +11,7 @@ import {
   containerNameProblem,
   nameTakenProblem,
   type Container,
+  type ContainerFields,
   type StoredContainer,
 } from "./containers";
 import { uuidv7 } from "./ids";
@@ -36,7 +37,16 @@ function stored(
   parentId: string | null = null,
   values: Partial<StoredContainer> = {},
 ): StoredContainer {
-  return { id: uuidv7(), kind, parentId, name, ownerId: owner, trashed: false, ...values };
+  return {
+    id: uuidv7(),
+    kind,
+    parentId,
+    name,
+    description: null,
+    ownerId: owner,
+    trashed: false,
+    ...values,
+  };
 }
 const folder = (name: string, parentId: string | null = null, values = {}) =>
   stored("folder", name, parentId, values);
@@ -54,7 +64,7 @@ function nested(count: number): StoredContainer[] {
 
 type Create = Extract<Mutation, { name: "container.create" }>;
 
-const create = (args: Omit<Container, "id"> & { id?: string }): Create => ({
+const create = (args: Omit<ContainerFields, "id"> & { id?: string }): Create => ({
   mutationId: uuidv7(),
   name: "container.create",
   args: { id: uuidv7(), ...args },
@@ -111,7 +121,14 @@ describe("container.create (FR-01.1, FR-01.2)", () => {
     const jazz = create({ kind: "folder", parentId: null, name: "Jazz" });
     expect(await run(jazz)).toEqual({
       status: "applied",
-      changes: [{ entity: "container", id: jazz.args.id, op: "insert", data: jazz.args }],
+      changes: [
+        {
+          entity: "container",
+          id: jazz.args.id,
+          op: "insert",
+          data: { ...jazz.args, description: null },
+        },
+      ],
     });
     const bebop = create({ kind: "folder", parentId: jazz.args.id, name: "Bebop" });
     const favorites = create({ kind: "list", parentId: bebop.args.id, name: "Favorites" });
@@ -119,6 +136,7 @@ describe("container.create (FR-01.1, FR-01.2)", () => {
     expect(codeOf(await run(favorites))).toBe("applied");
     expect(containers.get(favorites.args.id)).toEqual({
       ...favorites.args,
+      description: null,
       ownerId: owner,
       trashed: false,
     });
@@ -296,7 +314,13 @@ describe("container.rename (FR-01.3)", () => {
           entity: "container",
           id: favorites.id,
           op: "update",
-          data: { id: favorites.id, kind: "list", parentId: null, name: "Desert island" },
+          data: {
+            id: favorites.id,
+            kind: "list",
+            parentId: null,
+            name: "Desert island",
+            description: null,
+          },
         },
       ],
     });
@@ -365,7 +389,7 @@ describe("container.move (FR-01.4, FR-01.5)", () => {
           entity: "container",
           id: bebop.id,
           op: "update",
-          data: { id: bebop.id, kind: "folder", parentId: null, name: "Bebop" },
+          data: { id: bebop.id, kind: "folder", parentId: null, name: "Bebop", description: null },
         },
       ],
     });
@@ -564,6 +588,7 @@ describe("any sequence of commands leaves a sound tree (property)", () => {
                 kind: row.kind,
                 parentId: row.parentId,
                 name: row.name,
+                description: row.description,
               });
             }
           } else {

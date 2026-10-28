@@ -93,7 +93,9 @@ export function NameEditor({
     let saved: string;
     if (editor.mode === "create") {
       saved = uuidv7();
-      sent(client.containers.insert({ id: saved, kind, parentId, name: trimmed }));
+      sent(
+        client.containers.insert({ id: saved, kind, parentId, name: trimmed, description: null }),
+      );
     } else {
       saved = editor.id;
       if (renaming && renaming.name !== trimmed) {
