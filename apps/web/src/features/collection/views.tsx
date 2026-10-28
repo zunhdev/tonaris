@@ -412,16 +412,6 @@ export function SharedView() {
 }
 
 /** Trash, until deleting arrives (M5): nothing can be in it yet. */
-export function TrashView() {
-  useDocumentTitle("Trash");
-  return (
-    <>
-      <PageHeader title="Trash" />
-      <Empty text="Nothing in Trash. Deleted items stay here for 30 days." />
-    </>
-  );
-}
-
 /** An album on its own page (DS-32): `/a/{albumId}`, its details as the inspector shows them. */
 export function AlbumView({ id }: { id: string }) {
   const { ready, albumsById } = useCollectionData();
