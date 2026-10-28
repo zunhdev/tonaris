@@ -1,11 +1,15 @@
-// Trash for folders and lists (TON-55; FR-01.11 to FR-01.13, FR-01.15, FR-01.16, TS-13). Deleting a folder or list
+// Trash for folders, lists (TON-55) and albums (TON-57; FR-01.11 to FR-01.16, FR-14.1 to FR-14.3, TS-13). Deleting a folder or list
 // moves it and its active descendants to Trash as one unit, with one deletion time and an expiry 30 days later;
 // anything already in Trash keeps its own unit. Memberships stay stored but stop being effective, so an album in no
 // other active list enters Unsorted, at its top (DS-51). Clients hold active content only: deletion sends the
 // removals, recovery the returns. Recovery returns a unit to its root's parent, or asks for a destination when that
-// parent isn't active, and for another name when its name is taken there (TS-26). Album units come with TON-57.
+// parent isn't active, and for another name when its name is taken there (TS-26). An album is deleted on its own, as
+// its own unit, keeping everything for its restore: its entries in still-active lists come back, those in trashed
+// lists are reported, and with none it goes to Unsorted. A restore that would make a second active record of the same
+// album pauses instead, naming it, and changes nothing (FR-14.3).
 
 import { trashRetentionDays } from "./approvals";
+import { clientAlbum } from "./capture";
 import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
 import {
   changeableContainer,
@@ -20,6 +24,7 @@ import { maxContainerDepth } from "./limits";
 import { membershipKey, type Membership } from "./memberships";
 import { findNameConflict } from "./names";
 import { failure } from "./outcomes";
+import { authorizeWrite } from "./policies";
 import { forgetPlace, placeAtTop } from "./positions";
 import { actingUserId } from "./principals";
 import { z } from "./zod";
@@ -66,7 +71,11 @@ export const skippedEntrySchema = z.object({
   title: z.string(),
   artist: z.string(),
   listId: z.uuid().nullable().meta({ description: "The list it was in; null when unknown." }),
-  reason: z.enum(["album_in_trash", "album_deleted"]),
+  listName: z
+    .string()
+    .nullable()
+    .meta({ description: "That list's name, when the client may not hold it: it is in Trash." }),
+  reason: z.enum(["album_in_trash", "album_deleted", "list_in_trash"]),
 });
 export type SkippedEntry = z.infer<typeof skippedEntrySchema>;
 
@@ -229,9 +238,7 @@ export async function recoverUnit(
   if (!unit || unit.ownerId !== actingUserId(context.principal)) {
     return failure("not_found", "This is no longer in Trash.");
   }
-  if (unit.kind === "album") {
-    return failure("validation_failed", "Albums can't be recovered from Trash yet.");
-  }
+  if (unit.kind === "album") return recoverAlbumUnit(unit, context);
   const { ownerId } = unit;
   const members = await store.unitContainers(unit.id);
   const root = members.find((member) => member.id === unit.rootId);
@@ -308,6 +315,7 @@ export async function recoverUnit(
             title: album.title,
             artist: album.artist,
             listId: entry.listId,
+            listName: null,
             reason: "album_in_trash",
           },
         ];
@@ -317,6 +325,7 @@ export async function recoverUnit(
         title: tombstone.title,
         artist: tombstone.artist,
         listId: null,
+        listName: null,
         reason: "album_deleted",
       })),
     ],
@@ -348,3 +357,154 @@ const membershipOf = ({ listId, albumId, addedAt }: Membership): Membership => (
   albumId,
   addedAt,
 });
+
+export const albumDeleteArgsSchema = z.object({
+  id: z.uuid(),
+  unitId: z.uuid({ version: "v7" }).meta({
+    description: "The Trash unit's ID, chosen by the client (TS-10).",
+  }),
+});
+
+/**
+ * `album.delete` (FR-14.1): moves an album to Trash as its own unit, out of every list and Unsorted, keeping its
+ * information, links, field values and entries for its restore. Sent again for the same unit, it changes nothing.
+ */
+export async function deleteAlbum(
+  args: z.infer<typeof albumDeleteArgsSchema>,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const { store, principal } = context;
+  const existing = await store.findTrashUnit(args.unitId);
+  if (existing) {
+    return existing.rootId === args.id && existing.ownerId === actingUserId(principal)
+      ? applied()
+      : failure("validation_failed", "This ID is already in use.", [
+          { path: "args.unitId", message: "Already in use" },
+        ]);
+  }
+  const album = await store.findAlbum(args.id);
+  if (!album) return failure("not_found", "This album doesn't exist.");
+  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
+  if (!decision.allowed) return failure(decision.code, "You can't change this album.");
+  if (album.trashed) return failure("trashed", "This album is already in Trash.");
+  const { ownerId } = album;
+
+  const entries = await store.entriesOfAlbum(album.id);
+  const active: string[] = [];
+  for (const entry of entries) {
+    // oxlint-disable-next-line no-await-in-loop
+    const list = await store.findContainer(entry.listId);
+    if (list && !list.trashed) active.push(entry.listId);
+  }
+  const unsorted = active.length === 0;
+  const now = context.now ?? new Date();
+  const unit: StoredTrashUnit = {
+    id: args.unitId,
+    ownerId,
+    kind: "album",
+    rootId: album.id,
+    deletedAt: now,
+    expiresAt: new Date(now.getTime() + trashRetentionDays * 86_400_000),
+    tombstones: [],
+  };
+  await store.trashAlbum(unit, album.id);
+  // Its places go: it comes back as new (DS-51).
+  const places: ChangeInput[] = [];
+  for (const viewKey of unsorted ? ["unsorted"] : active) {
+    // oxlint-disable-next-line no-await-in-loop
+    places.push(...(await forgetPlace(store, ownerId, viewKey, album.id)));
+  }
+  return applied(
+    { entity: "album", id: album.id, op: "delete", data: null },
+    ...active.map((listId): ChangeInput => ({
+      entity: "membership",
+      id: membershipKey(listId, album.id),
+      op: "delete",
+      data: null,
+    })),
+    ...places,
+    { entity: "trashUnit", id: unit.id, op: "insert", data: trashUnitOf(unit, album.title, []) },
+  );
+}
+
+/** An active album the restore would duplicate (FR-14.3), as `needs_input` `match` names it. */
+export type SameAlbum = {
+  unitId: string;
+  albumId: string;
+  title: string;
+  artistCredit: string;
+  originalYear: number | null;
+};
+
+/**
+ * Restores an album unit (FR-14.2, FR-14.3): its entries in still-active lists come back, those in trashed lists are
+ * reported, and with none it enters Unsorted at its top. With an active album of the same release group, it pauses
+ * as `needs_input` `match`, naming it, and changes nothing.
+ */
+async function recoverAlbumUnit(
+  unit: StoredTrashUnit,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const { store } = context;
+  const { ownerId } = unit;
+  const album = await store.findCaptureTarget(unit.rootId);
+  if (!album || !album.trashed) return failure("not_found", "This is no longer in Trash.");
+  if (album.releaseGroupId) {
+    const same = (await store.albumsOfReleaseGroup(ownerId, album.releaseGroupId)).filter(
+      (each) => !each.trashed && each.id !== album.id,
+    );
+    if (same.length > 0) {
+      const candidates = same.map((each): SameAlbum => ({
+        unitId: unit.id,
+        albumId: each.id,
+        title: each.title,
+        artistCredit: each.artistCredit,
+        originalYear: each.originalYear,
+      }));
+      return { status: "needs_input", need: "match", candidates };
+    }
+  }
+
+  const entries = await store.entriesOfAlbum(album.id);
+  const back: Membership[] = [];
+  const skipped: SkippedEntry[] = [];
+  for (const entry of entries) {
+    // oxlint-disable-next-line no-await-in-loop
+    const list = await store.findContainer(entry.listId);
+    if (list && !list.trashed) back.push(entry);
+    else if (list) {
+      skipped.push({
+        albumId: album.id,
+        title: album.title,
+        artist: album.artistCredit,
+        listId: list.id,
+        listName: list.name,
+        reason: "list_in_trash",
+      });
+    }
+  }
+  await store.recoverAlbum(unit.id, album.id);
+  // With no list to return to, it enters Unsorted at its top (FR-14.2, DS-51).
+  const placed = back.length === 0 ? [await placeAtTop(store, ownerId, "unsorted", album.id)] : [];
+  const result: RecoveryResult = { skipped };
+  return {
+    status: "applied",
+    result,
+    changes: [
+      {
+        entity: "album",
+        id: album.id,
+        op: "insert",
+        data: clientAlbum(album.id, album, album.artworkUrl),
+      },
+      ...back.map((entry): ChangeInput => ({
+        entity: "membership",
+        id: membershipKey(entry.listId, entry.albumId),
+        op: "insert",
+        data: membershipOf(entry),
+      })),
+      ...placed,
+      { entity: "trashUnit", id: unit.id, op: "delete", data: null },
+    ],
+  };
+}

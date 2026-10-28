@@ -78,6 +78,7 @@ type Call =
   | "order"
   | "capture"
   | "trash.delete"
+  | "album.delete"
   | "trash.recover";
 
 /** The collection calls that make the changes again, in the order of each call's first change. */
@@ -111,6 +112,7 @@ function plan() {
     defaultsUpdate: {} as Partial<ViewDefaults>,
     /** Folders and lists to move to Trash again, and units to recover again (TON-55). */
     trashDeletes: [] as string[],
+    albumDeletes: [] as string[],
     trashRecoveries: [] as { unitId: string; parentId?: string | null; name?: string }[],
     /** Captures sent again: one request each, as they were (TON-45). */
     captures: [] as CaptureArgs[],
@@ -303,6 +305,11 @@ function remake(
     planned.trashDeletes.push(mutation.args.id);
     return planned.needs("trash.delete");
   }
+  if (mutation.name === "album.delete") {
+    if (!albums.has(mutation.args.id)) return "unchanged";
+    planned.albumDeletes.push(mutation.args.id);
+    return planned.needs("album.delete");
+  }
   if (mutation.name === "trash.recover") {
     if (!trashUnits.has(mutation.args.unitId)) return "unchanged";
     planned.trashRecoveries.push(mutation.args);
@@ -470,7 +477,9 @@ function make(
     );
   } else if (call === "capture") captures.send(planned.captures);
   else if (call === "trash.delete") sent(trash.deleteContainers(planned.trashDeletes).transaction);
-  else if (call === "trash.recover") {
+  else if (call === "album.delete") {
+    for (const id of planned.albumDeletes) sent(trash.deleteAlbum(id).transaction);
+  } else if (call === "trash.recover") {
     for (const { unitId, ...choice } of planned.trashRecoveries) {
       const rootId = trashUnits.get(unitId)?.rootId ?? unitId;
       sent(trash.recover({ unitId, rootId }, choice).transaction);

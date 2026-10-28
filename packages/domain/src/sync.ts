@@ -20,7 +20,12 @@ import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
 import { positionSchema } from "./positions";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
-import { containerDeleteArgsSchema, trashRecoverArgsSchema, trashUnitSchema } from "./trash";
+import {
+  albumDeleteArgsSchema,
+  containerDeleteArgsSchema,
+  trashRecoverArgsSchema,
+  trashUnitSchema,
+} from "./trash";
 import { viewDefaultsSchema, viewKeySchema, viewPrefsFieldsSchema, viewPrefsSchema } from "./views";
 import { z } from "./zod";
 
@@ -151,6 +156,16 @@ export const containerDeleteSchema = z.object({
  * (FR-01.14 to FR-01.16). It answers `needs_input` for a destination when the parent isn't active, and for a name when
  * it is taken there; resubmit with the choice (TS-26).
  */
+/**
+ * `album.delete`: moves an album to Trash as its own unit, whose ID the client chose (FR-14.1, TS-10). It leaves every
+ * list and Unsorted; its information, links, field values and entries are kept for its restore.
+ */
+export const albumDeleteSchema = z.object({
+  mutationId,
+  name: z.literal("album.delete"),
+  args: albumDeleteArgsSchema,
+});
+
 export const trashRecoverSchema = z.object({
   mutationId,
   name: z.literal("trash.recover"),
@@ -333,6 +348,7 @@ export const mutationSchema = z
     containerDescribeSchema,
     containerDeleteSchema,
     trashRecoverSchema,
+    albumDeleteSchema,
     membershipAddSchema,
     membershipRemoveSchema,
     linkSetSchema,

@@ -193,6 +193,14 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: capitalized(target),
     };
   }
+  if (mutation.name === "album.delete") {
+    const title = quoted(names.album(mutation.args.id), "an album");
+    return {
+      summary: `Delete ${title} from the collection`,
+      what: `the deletion of ${title}`,
+      subject: capitalized(title),
+    };
+  }
   if (mutation.name === "trash.recover") {
     const name = names.trashUnit?.(mutation.args.unitId);
     const target = quoted(name, "an item");

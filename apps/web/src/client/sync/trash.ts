@@ -15,6 +15,7 @@ import {
   type TrashUnit,
 } from "@tonaris/domain";
 
+import type { AlbumCollection } from "./albums";
 import type { SyncEngine } from "./engine";
 import type { ContainerCollection, MembershipCollection } from "./lists";
 import { snapshotCollection } from "./snapshot";
@@ -45,11 +46,13 @@ export type Deleted = {
 };
 
 export function createTrash({
+  albums,
   containers,
   memberships,
   trashUnits,
   writer,
 }: {
+  albums: AlbumCollection;
   containers: ContainerCollection;
   memberships: MembershipCollection;
   trashUnits: TrashUnitCollection;
@@ -110,6 +113,32 @@ export function createTrash({
         if (removed.length > 0) containers.delete(removed.map((row) => row.id));
       });
       return { transaction, deleted };
+    },
+
+    /**
+     * Moves an album to Trash as its own unit (FR-14.1): out of the albums and its entries at once, persisted as
+     * `album.delete`. Answers the transaction and the unit's ID.
+     */
+    deleteAlbum(albumId: string) {
+      const unitId = uuidv7();
+      const entries = [...memberships.values()].filter((entry) => entry.albumId === albumId);
+      const transaction = createTransaction({
+        mutationFn: async ({ transaction: written }) => {
+          const mutation: Mutation = {
+            mutationId: uuidv7(),
+            name: "album.delete",
+            args: { id: albumId, unitId },
+          };
+          await writer.persist(written, [{ key: albumId, mutation }]);
+        },
+      });
+      transaction.mutate(() => {
+        if (entries.length > 0) {
+          memberships.delete(entries.map((entry) => membershipKey(entry.listId, entry.albumId)));
+        }
+        if (albums.has(albumId)) albums.delete(albumId);
+      });
+      return { transaction, unitId };
     },
 
     /**

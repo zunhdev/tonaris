@@ -137,3 +137,50 @@ export function DeleteFolderDialog() {
     />
   );
 }
+
+/**
+ * The confirmation for deleting an album from the collection (DS-50, FR-14.1), while one is asked for: it leaves every
+ * list and Unsorted, and Trash keeps it for 30 days.
+ */
+export function DeleteAlbumDialog() {
+  const client = useSyncClient();
+  const notify = useNotify();
+  const announce = useAnnounce();
+  const navigate = useNavigate();
+  const { albumsById, entriesByList, tree } = useCollectionData();
+  const { deletingAlbum, endDeleteAlbum } = useCollectionUi();
+  const album = deletingAlbum === undefined ? undefined : albumsById.get(deletingAlbum);
+  const lists = [...entriesByList].flatMap(([listId, entries]) => {
+    const list = tree.byId.get(listId);
+    return list && album && entries.some((entry) => entry.albumId === album.id) ? [list.name] : [];
+  });
+
+  return (
+    <ConfirmDialog
+      confirmation={
+        album && {
+          title: `Delete '${album.title}' from your collection?`,
+          scope: [
+            lists.length === 0
+              ? "It leaves Unsorted."
+              : `It leaves ${count(lists.length, "list", "lists")}: ${lists.slice(0, 3).join(", ")}${lists.length > 3 ? ", …" : ""}.`,
+          ],
+          consequences: [
+            "Removes it from every list and Unsorted.",
+            `Recoverable from Trash for ${trashRetentionDays} days.`,
+          ],
+          action: "Move to Trash",
+          onConfirm: () => {
+            if (!client) return;
+            // The inspector showing it closes.
+            void navigate({ to: ".", search: (previous) => ({ ...previous, album: undefined }) });
+            client.trash.deleteAlbum(album.id).transaction.isPersisted.promise.catch(() => {});
+            announce(`Moved ${album.title} to Trash`);
+            notify?.info(`'${album.title}' moved to Trash`);
+          },
+        }
+      }
+      onClose={endDeleteAlbum}
+    />
+  );
+}

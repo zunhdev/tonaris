@@ -176,7 +176,28 @@ export function memoryStore({
         (entry) => entry.albumId === id && containerRows.get(entry.listId)?.trashed === false,
       );
       for (const entry of left) membershipRows.delete(membershipKey(entry.listId, id));
-      return Promise.resolve(left.map((entry) => entry.listId));
+      const unitId = unitOf.get(id) ?? null;
+      if (unitId) unitRows.delete(unitId);
+      unitOf.delete(id);
+      return Promise.resolve({ left: left.map((entry) => entry.listId), unitId });
+    },
+    entriesOfAlbum: (albumId) =>
+      Promise.resolve(
+        [...membershipRows.values()]
+          .filter((entry) => entry.albumId === albumId)
+          .map(({ listId, albumId: id, addedAt }) => ({ listId, albumId: id, addedAt })),
+      ),
+    trashAlbum: (unit, albumId) => {
+      unitRows.set(unit.id, { ...unit });
+      albumRows.set(albumId, { ...albumRows.get(albumId)!, trashed: true });
+      unitOf.set(albumId, unit.id);
+      return Promise.resolve();
+    },
+    recoverAlbum: (unitId, albumId) => {
+      albumRows.set(albumId, { ...albumRows.get(albumId)!, trashed: false });
+      unitOf.delete(albumId);
+      unitRows.delete(unitId);
+      return Promise.resolve();
     },
     findServiceLink: (albumId, service) => {
       const link = linkRows.get(`${albumId}:${service}`);

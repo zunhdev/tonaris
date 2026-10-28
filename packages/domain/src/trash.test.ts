@@ -346,3 +346,117 @@ describe("unit semantics, as properties (FR-01.13)", () => {
     );
   });
 });
+
+const deleteAlbum = (id: string, unitId = uuidv7()): Mutation => ({
+  mutationId: uuidv7(),
+  name: "album.delete",
+  args: { id, unitId },
+});
+
+describe("deleting and restoring albums (FR-14.1 to FR-14.3)", () => {
+  test("an album leaves its lists as its own unit, keeping its entries; restored, it returns to active lists", async () => {
+    const doom = container("list", "Doom");
+    const later = container("list", "Later");
+    const dopesmoker = { ...album("Dopesmoker"), releaseGroupId: uuidv7() };
+    const addedAt = "2026-10-28T12:00:00.000Z";
+    const { run, albums, memberships, trashUnits } = setup([doom, later], {
+      albums: [dopesmoker],
+      memberships: [
+        { listId: doom.id, albumId: dopesmoker.id, addedAt, ownerId: owner },
+        { listId: later.id, albumId: dopesmoker.id, addedAt, ownerId: owner },
+      ],
+      positions: [{ viewKey: doom.id, itemId: dopesmoker.id, key: "a0", personId: owner }],
+    });
+    const unitId = uuidv7();
+    const deleted = await run(deleteAlbum(dopesmoker.id, unitId));
+    expect(deleted).toMatchObject({
+      status: "applied",
+      changes: [
+        { entity: "album", id: dopesmoker.id, op: "delete" },
+        { entity: "membership", op: "delete" },
+        { entity: "membership", op: "delete" },
+        { entity: "position", op: "delete" },
+        {
+          entity: "trashUnit",
+          op: "insert",
+          data: { id: unitId, kind: "album", name: "Dopesmoker", parentId: null },
+        },
+      ],
+    });
+    expect(albums.get(dopesmoker.id)?.trashed).toBe(true);
+    expect(memberships.size).toBe(2);
+    expect(await run(deleteAlbum(dopesmoker.id, unitId))).toEqual({
+      status: "applied",
+      changes: [],
+    });
+
+    // Later goes to Trash meanwhile: restoring skips it, with its name.
+    await run(remove(later.id));
+    const restored = await run(recover(unitId));
+    expect(restored).toMatchObject({
+      status: "applied",
+      result: {
+        skipped: [
+          { albumId: dopesmoker.id, listId: later.id, listName: "Later", reason: "list_in_trash" },
+        ],
+      },
+      changes: [
+        { entity: "album", id: dopesmoker.id, op: "insert", data: { title: "Dopesmoker" } },
+        { entity: "membership", op: "insert", data: { listId: doom.id } },
+        { entity: "trashUnit", id: unitId, op: "delete" },
+      ],
+    });
+    expect(albums.get(dopesmoker.id)?.trashed).toBe(false);
+    expect(trashUnits.has(unitId)).toBe(false);
+  });
+
+  test("with no active list to return to, a restored album enters Unsorted at its top", async () => {
+    const doom = container("list", "Doom");
+    const dopesmoker = album("Dopesmoker");
+    const addedAt = "2026-10-28T12:00:00.000Z";
+    const { run } = setup([doom], {
+      albums: [dopesmoker],
+      memberships: [{ listId: doom.id, albumId: dopesmoker.id, addedAt, ownerId: owner }],
+      positions: [{ viewKey: "unsorted", itemId: uuidv7(), key: "a0", personId: owner }],
+    });
+    const unitId = uuidv7();
+    await run(deleteAlbum(dopesmoker.id, unitId));
+    await run(remove(doom.id));
+    const restored = await run(recover(unitId));
+    expect(restored).toMatchObject({ status: "applied" });
+    const changes = restored.status === "applied" ? restored.changes : [];
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        entity: "position",
+        op: "insert",
+        data: expect.objectContaining({ viewKey: "unsorted", itemId: dopesmoker.id }),
+      }),
+    );
+  });
+
+  test("an active album of the same release group pauses the restore, and nothing changes", async () => {
+    const releaseGroupId = uuidv7();
+    const first = { ...album("Dopesmoker"), releaseGroupId };
+    const again = { ...album("Dopesmoker (again)"), releaseGroupId };
+    // Another active record of the same album: one captured again while the first was in Trash.
+    const { run, albums, trashUnits } = setup([], { albums: [first, again] });
+    const unitId = uuidv7();
+    await run(deleteAlbum(first.id, unitId));
+    const paused = await run(recover(unitId));
+    expect(paused).toEqual({
+      status: "needs_input",
+      need: "match",
+      candidates: [
+        {
+          unitId,
+          albumId: again.id,
+          title: "Dopesmoker (again)",
+          artistCredit: "Sleep",
+          originalYear: 1999,
+        },
+      ],
+    });
+    expect(albums.get(first.id)?.trashed).toBe(true);
+    expect(trashUnits.has(unitId)).toBe(true);
+  });
+});

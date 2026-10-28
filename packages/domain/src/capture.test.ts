@@ -267,6 +267,10 @@ describe("album.capture: re-addition from Trash (FR-14.4, TS-13, AC-07)", () => 
     });
     expect(t.albums.get(bleach.id)?.trashed).toBe(false);
     expect(t.listsOf(bleach.id)).toEqual([lateNight.id]);
+    // Clients hold active albums only: it comes back to them whole (TON-57).
+    expect(result.changes).toContainEqual(
+      expect.objectContaining({ entity: "album", id: bleach.id, op: "insert" }),
+    );
     expect(result.changes).toContainEqual({
       entity: "membership",
       id: membershipKey(favorites.id, bleach.id),

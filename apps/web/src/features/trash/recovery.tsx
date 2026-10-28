@@ -5,7 +5,9 @@
 // Nothing changes until then, and cancelling changes nothing; the unit's expiry keeps running meanwhile. These are
 // checked here against the collection the client holds, and again by the server, which answers `needs_input` if
 // something changed meanwhile. Once recovered, "Restored 'Doom'", or "Restored · 2 memberships skipped" with Details
-// listing each entry whose album is in Trash or gone for good.
+// listing each entry whose album is in Trash or gone for good. An album's restore that would make a second active
+// record of the same album pauses (FR-14.3): both records are shown, and the owner keeps the active one, or deletes it
+// into Trash, confirmed, and restores.
 
 import type { Deleted, RecoveryChoice } from "@/client/sync/trash";
 import { useCollectionData } from "@/features/collection/data";
@@ -25,6 +27,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { z } from "zod";
 
 import {
   containerNameProblem,
@@ -32,6 +35,7 @@ import {
   nameTakenProblem,
   recoveryResultSchema,
   type Container,
+  type SameAlbum,
   type SkippedEntry,
   type TrashUnitKind,
 } from "@tonaris/domain";
@@ -44,6 +48,8 @@ import {
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
 import { Input } from "@tonaris/ui/components/input";
+
+import { ConfirmDialog } from "../shell/confirm-dialog";
 
 /** A unit to recover: what it is, where it was, and, after a deletion just made, what that deletion took out. */
 export type RecoveryTarget = {
@@ -58,7 +64,9 @@ export type RecoveryTarget = {
 type Prompt =
   | { step: "destination"; target: RecoveryTarget; choice: RecoveryChoice }
   | { step: "name"; target: RecoveryTarget; choice: RecoveryChoice; parentId: string | null }
-  | { step: "skipped"; name: string; skipped: SkippedEntry[] };
+  | { step: "skipped"; name: string; skipped: SkippedEntry[] }
+  | { step: "same"; target: RecoveryTarget; active: SameAlbum }
+  | { step: "replace"; target: RecoveryTarget; active: SameAlbum };
 
 const RecoveryContext = createContext<(target: RecoveryTarget) => void>(() => {});
 
@@ -98,7 +106,17 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
       try {
         await transaction.isPersisted.promise;
       } catch {
-        // The save-state layer reports a recovery that wasn't made, a question that came up meanwhile included.
+        // A restore that would duplicate an active album asks here (FR-14.3), rather than in Activity.
+        const asked = client.states.get(mutationId)?.outcome;
+        const same =
+          asked?.status === "needs_input" && asked.need === "match"
+            ? sameAlbumSchema.safeParse(asked.candidates[0])
+            : undefined;
+        if (same?.success) {
+          client.states.dismiss(mutationId);
+          setPrompt({ step: "same", target, active: same.data });
+        }
+        // The save-state layer reports any other recovery that wasn't made.
         return;
       }
       const outcome = client.states.get(mutationId)?.outcome;
@@ -120,6 +138,12 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
 
   /** Recovers `target` with `choice`, or asks for what is missing first. */
   function proceed(target: RecoveryTarget, choice: RecoveryChoice) {
+    // An album returns to its lists; there is no place or name to choose (FR-14.2).
+    if (target.kind === "album") {
+      setPrompt(undefined);
+      send(target, {});
+      return;
+    }
     const now = latest.current;
     const parentId = choice.parentId === undefined ? target.parentId : choice.parentId;
     if (parentId !== null && now.byId.get(parentId)?.kind !== "folder") {
@@ -161,6 +185,40 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
           onName={(name) => proceed(prompt.target, { ...prompt.choice, name })}
         />
       )}
+      {prompt?.step === "same" && (
+        <SameAlbumPrompt
+          target={prompt.target}
+          active={prompt.active}
+          onKeep={() => setPrompt(undefined)}
+          onReplace={() => setPrompt({ ...prompt, step: "replace" })}
+        />
+      )}
+      <ConfirmDialog
+        confirmation={
+          prompt?.step === "replace"
+            ? {
+                title: `Delete '${prompt.active.title}' from your collection?`,
+                scope: [
+                  `The active '${prompt.active.title}', so '${prompt.target.name}' can come back.`,
+                ],
+                consequences: [
+                  "Removes it from every list and Unsorted.",
+                  "Recoverable from Trash for 30 days.",
+                ],
+                action: "Move to Trash and restore",
+                onConfirm: () => {
+                  if (!client) return;
+                  client.trash
+                    .deleteAlbum(prompt.active.albumId)
+                    .transaction.isPersisted.promise.catch(() => {});
+                  // Sent after the deletion, which the server applies first.
+                  send(prompt.target, {});
+                },
+              }
+            : undefined
+        }
+        onClose={() => setPrompt((shown) => (shown?.step === "replace" ? undefined : shown))}
+      />
       {prompt?.step === "skipped" && (
         <SkipReport
           name={prompt.name}
@@ -370,6 +428,7 @@ function NamePrompt({
 const reasons: Record<SkippedEntry["reason"], string> = {
   album_in_trash: "The album is in Trash",
   album_deleted: "The album was deleted permanently",
+  list_in_trash: "The list is in Trash",
 };
 
 /** Each entry recovery skipped, and why (DS-56). */
@@ -394,7 +453,9 @@ function SkipReport({
         </DialogHeader>
         <ul className="flex max-h-80 flex-col gap-2 overflow-y-auto">
           {skipped.map((entry) => {
-            const list = entry.listId === null ? undefined : tree.byId.get(entry.listId)?.name;
+            const list =
+              entry.listName ??
+              (entry.listId === null ? undefined : tree.byId.get(entry.listId)?.name);
             return (
               <li key={`${entry.listId ?? ""}:${entry.albumId}`} className="flex flex-col">
                 <span className="text-fg-primary">
@@ -411,6 +472,73 @@ function SkipReport({
         <div className="flex justify-end gap-2">
           <Button type="button" variant="primary" onClick={onClose}>
             Done
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const sameAlbumSchema = z.object({
+  unitId: z.string(),
+  albumId: z.string(),
+  title: z.string(),
+  artistCredit: z.string(),
+  originalYear: z.number().nullable(),
+});
+
+/** One of the two records a same-album pause shows. */
+function RecordCard({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="flex flex-1 flex-col rounded-md border border-subtle p-3">
+      <span className="text-fg-primary">{title}</span>
+      <span className="text-small text-fg-secondary">{detail}</span>
+    </div>
+  );
+}
+
+/** Both records, and the owner's choice: keep the active one, or delete it and restore (DS-56, FR-14.3). */
+function SameAlbumPrompt({
+  target,
+  active,
+  onKeep,
+  onReplace,
+}: {
+  target: RecoveryTarget;
+  active: SameAlbum;
+  onKeep: () => void;
+  onReplace: () => void;
+}) {
+  const keep = useRef<HTMLButtonElement>(null);
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onKeep()}>
+      <DialogContent initialFocus={keep}>
+        <DialogHeader>
+          <DialogTitle>Restore '{target.name}'?</DialogTitle>
+          <DialogDescription>
+            '{active.title}' is already in your collection as the same album. Restoring would make
+            two records of it, so nothing has changed: both stay as they are.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex gap-3">
+          <RecordCard title={target.name} detail="In Trash" />
+          <RecordCard
+            title={active.title}
+            detail={[active.artistCredit, active.originalYear, "In your collection"]
+              .filter(Boolean)
+              .join(" · ")}
+          />
+        </div>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button type="button" onClick={onKeep}>
+            Cancel
+          </Button>
+          <Button type="button" variant="danger" onClick={onReplace}>
+            Delete the active album, then restore…
+          </Button>
+          <Button ref={keep} type="button" variant="primary" onClick={onKeep}>
+            Keep the active album
           </Button>
         </div>
       </DialogContent>

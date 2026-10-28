@@ -138,7 +138,7 @@ export function createSyncClient({
     positions,
     trashUnits,
     /** Moves folders and lists to Trash, and recovers them (TON-55). */
-    trash: createTrash({ containers, memberships, trashUnits, writer }),
+    trash: createTrash({ albums, containers, memberships, trashUnits, writer }),
     /** Writes one move in a view: each item's new key, or null to clear its place (TS-16). */
     arrange: createArrange({ positions, writer }),
     elsewhere,

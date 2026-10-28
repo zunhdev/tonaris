@@ -841,6 +841,15 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **The live region** says "Moved Metal to Trash" and, on Undo, "Recovered Doom".
 - **Multi-select** comes with selection (X).
 
+*As built in TON-57:* **deleting an album.**
+- **Triggers:** ⌘⌫ (Ctrl+⌫ elsewhere) on the inspector's album, else the focused album; and **Delete from collection…** at the foot of the inspector in Editing mode.
+- **The confirmation:**
+  - title "Delete 'Bleach' from your collection?";
+  - scope "It leaves 2 lists: Doom, Later." or "It leaves Unsorted.";
+  - consequences "Removes it from every list and Unsorted." and "Recoverable from Trash for 30 days.";
+  - action "Move to Trash".
+- **After confirming:** "'Bleach' moved to Trash", and the inspector closes.
+
 **DS-51 Unsorted placement** *(handoff FR-05.4)*:
 - An album entering Unsorted, whether new or leaving its last list, is placed at the **top** of the owner's Unsorted manual order. Unsorted behaves like an inbox.
 - Positions are not retained when an album leaves and later returns.
@@ -878,6 +887,10 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
   - **Cancel**.
 
 *As built in TON-56:*
+- **Album restore** (TON-57) asks nothing about place or name. A same-album pause shows "Restore 'Bleach'?":
+  - "'Bleach' is already in your collection as the same album. Restoring would make two records of it, so nothing has changed: both stay as they are.";
+  - both records, the one in Trash and the active one;
+  - **Keep the active album** (focused), **Delete the active album, then restore…** (which confirms the deletion first: "Move to Trash and restore"), and **Cancel**.
 - **One flow for every surface:** Undo now, the Trash view later. The client asks before sending, from the collection it holds; the server checks again.
 - **Destination:**
   - title "Restore 'Doom'";

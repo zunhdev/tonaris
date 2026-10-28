@@ -60,7 +60,13 @@ import { placeAtTop, setOrder, type Position } from "./positions";
 import { actingUserId, type Principal } from "./principals";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
 import type { ChangeOp, Mutation } from "./sync";
-import { deleteContainer, recoverUnit, type StoredTrashUnit, type TrashUnit } from "./trash";
+import {
+  deleteAlbum,
+  deleteContainer,
+  recoverUnit,
+  type StoredTrashUnit,
+  type TrashUnit,
+} from "./trash";
 import { setDefaults, setView, type ViewDefaults, type ViewItems, type ViewPrefs } from "./views";
 
 /** An album as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
@@ -88,9 +94,15 @@ export type CollectionStore = {
   fillAlbum(id: string, plan: EnrichmentPlan): Promise<void>;
   /**
    * Takes a trashed album out of Trash for re-addition (FR-14.4, TS-13): its Trash unit goes, and so do its entries in
-   * active lists, while those in trashed lists stay for their recovery. Answers the lists it left.
+   * active lists, while those in trashed lists stay for their recovery. Answers the lists it left, and its unit.
    */
-  reactivateAlbum(id: string): Promise<string[]>;
+  reactivateAlbum(id: string): Promise<{ left: string[]; unitId: string | null }>;
+  /** The album's entries, in any list, active or in Trash. */
+  entriesOfAlbum(albumId: string): Promise<Membership[]>;
+  /** Records the album's own unit and moves it to Trash (FR-14.1). */
+  trashAlbum(unit: StoredTrashUnit, albumId: string): Promise<void>;
+  /** Takes the album out of Trash, and deletes its unit (FR-14.2). */
+  recoverAlbum(unitId: string, albumId: string): Promise<void>;
   /** The album's link for `service`, if it has one (FR-06.2). */
   findServiceLink(albumId: string, service: StreamingService): Promise<CapturedLink | undefined>;
   insertServiceLink(albumId: string, ownerId: string, link: CapturedLink): Promise<void>;
@@ -269,6 +281,7 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
     return renameContainer(mutation.args, mutation.base, context);
   }
   if (mutation.name === "container.delete") return deleteContainer(mutation.args, context);
+  if (mutation.name === "album.delete") return deleteAlbum(mutation.args, context);
   if (mutation.name === "trash.recover") return recoverUnit(mutation.args, context);
   if (mutation.name === "container.describe") {
     return describeContainer(mutation.args, mutation.base, context);

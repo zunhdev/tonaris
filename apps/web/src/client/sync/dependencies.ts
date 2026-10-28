@@ -21,7 +21,9 @@ function created(mutation: Mutation): string[] {
   // A capture may reuse an album instead; then nothing later in the request refers to the ID it proposed.
   if (mutation.name === "album.capture") return [mutation.args.albumId];
   // A deletion makes its Trash unit, which an undo recovers.
-  if (mutation.name === "container.delete") return [mutation.args.unitId];
+  if (mutation.name === "container.delete" || mutation.name === "album.delete") {
+    return [mutation.args.unitId];
+  }
   return [];
 }
 
@@ -56,7 +58,9 @@ function referenced(mutation: Mutation): (string | null)[] {
     return [mutation.args.id];
   }
   if (mutation.name === "container.create") return [mutation.args.parentId];
-  if (mutation.name === "container.delete") return [mutation.args.id];
+  if (mutation.name === "container.delete" || mutation.name === "album.delete") {
+    return [mutation.args.id];
+  }
   if (mutation.name === "trash.recover")
     return [mutation.args.unitId, mutation.args.parentId ?? null];
   if (mutation.name === "container.move") return [mutation.args.id, mutation.args.parentId];

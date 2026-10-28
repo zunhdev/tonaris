@@ -42,7 +42,7 @@ async function create(kind: "folder" | "list", name: string, parentId: string | 
   return id;
 }
 
-async function newAlbum(title: string) {
+async function newAlbum(title: string, mbReleaseGroupId: string | null = null) {
   const id = uuidv7();
   await t.db.insert(albums).values({
     id,
@@ -52,6 +52,7 @@ async function newAlbum(title: string) {
     originalYear: 1999,
     searchTitleKey: title.toLowerCase(),
     searchArtistKey: "sleep",
+    mbReleaseGroupId,
   });
   return id;
 }
@@ -129,5 +130,64 @@ describe("Trash in Postgres (FR-01.11 to FR-01.15)", () => {
     expect(toRoot.outcome.status).toBe("confirmed");
     const [doomNow] = await t.db.select().from(containers).where(eq(containers.id, doom));
     expect(doomNow).toMatchObject({ parentId: null, trashedAt: null, trashUnitId: null });
+  });
+});
+
+describe("albums in Trash, in Postgres (FR-14.1 to FR-14.3)", () => {
+  test("a deleted album leaves the bootstrap with its entries, and comes back to its active lists", async () => {
+    const doom = await create("list", "Doom");
+    const later = await create("list", "Later");
+    const dopesmoker = await newAlbum("Dopesmoker");
+    for (const listId of [doom, later]) {
+      // oxlint-disable-next-line no-await-in-loop
+      await run({
+        mutationId: uuidv7(),
+        name: "membership.add",
+        args: { listId, albumId: dopesmoker },
+      });
+    }
+    const unitId = uuidv7();
+    const deleted = await run({
+      mutationId: uuidv7(),
+      name: "album.delete",
+      args: { id: dopesmoker, unitId },
+    });
+    expect(deleted.outcome.status).toBe("confirmed");
+    const gone = await bootstrapSnapshot(t.db, anna.userId);
+    expect(gone.albums).toEqual([]);
+    expect(gone.memberships).toEqual([]);
+    expect(gone.trashUnits).toMatchObject([{ id: unitId, kind: "album", name: "Dopesmoker" }]);
+    expect(await t.db.select().from(memberships)).toHaveLength(2);
+
+    await run({
+      mutationId: uuidv7(),
+      name: "container.delete",
+      args: { id: later, unitId: uuidv7() },
+    });
+    const restored = await run({ mutationId: uuidv7(), name: "trash.recover", args: { unitId } });
+    expect(restored.outcome).toMatchObject({
+      status: "confirmed",
+      result: { skipped: [{ listId: later, listName: "Later", reason: "list_in_trash" }] },
+    });
+    const back = await bootstrapSnapshot(t.db, anna.userId);
+    expect(back.albums.map((album) => album.id)).toEqual([dopesmoker]);
+    expect(back.memberships).toMatchObject([{ listId: doom, albumId: dopesmoker }]);
+    expect(back.trashUnits.map((unit) => unit.kind)).toEqual(["list"]);
+  });
+
+  test("an active album of the same release group pauses the restore, changing nothing", async () => {
+    const releaseGroup = uuidv7();
+    const first = await newAlbum("Dopesmoker", releaseGroup);
+    const unitId = uuidv7();
+    await run({ mutationId: uuidv7(), name: "album.delete", args: { id: first, unitId } });
+    const again = await newAlbum("Dopesmoker", releaseGroup);
+    const paused = await run({ mutationId: uuidv7(), name: "trash.recover", args: { unitId } });
+    expect(paused.outcome).toMatchObject({
+      status: "needs_input",
+      need: "match",
+      candidates: [{ unitId, albumId: again, title: "Dopesmoker" }],
+    });
+    const [still] = await t.db.select().from(albums).where(eq(albums.id, first));
+    expect(still?.trashUnitId).toBe(unitId);
   });
 });
