@@ -356,6 +356,8 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 
 Typed confirmation is reserved for account deletion (DS-97).
 
+*As built in TON-53:* `ConfirmDialog` takes a title, scope lines, consequence lines, an action label and what to do on confirming. Cancel has the focus; the action uses the danger variant; Escape cancels. Removing a used option and deleting a field use it (DS-60).
+
 **DS-29 Other Tonaris components.**
 
 | Component | Purpose | Rules |
@@ -876,6 +878,26 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Delete field** always opens the standard confirmation dialog, even when unused. It lists the definition, options, and values across active and Trash albums, shared-view effects, and "This can't be undone — Trash and album restore won't bring it back". *(FR-03.18)*
 - **Applying fields to albums** happens in the inspector (DS-46). The "+ Add field" menu also has "Create field…", which opens the create dialog and then applies the new field.
 
+*As built in TON-53:*
+- **The table:** columns Name, Type, Options ("3 options", or "—" for other types) and Usage ("Used by 214 albums · 3 in Trash", "Used by 1 album", "Unused", or "—" before the counts arrive).
+  - Usage comes from `GET /v1/fields/usage`, read again whenever the fields or values change.
+  - **New field** sits above the table. At 50 fields it is disabled, with "You've reached 50 custom fields. Delete one to add another."
+  - With no fields: "No custom fields yet. Create one for anything you track, such as a rating or where you bought an album."
+- **Each row's name is a disclosure button** opening its edit panel below it.
+- **The panel's Name** saves on Enter or when left; Escape reverts. A refused name stays with its reason, such as "'Mood' already exists. Choose another name."
+- **Type:**
+  - **locked:** the select is disabled, with "Used by 1 album. Create a new field of the type you need instead." (or "Used by 3 albums (1 in Trash). …") and **Create new field**;
+  - **discarding:** "Changing to Text discards its options: Calm, Loud." with **Change type** and **Keep options**;
+  - any other change saves at once.
+- **Options:**
+  - each label is an input, "Option 'Calm'", saved like the name;
+  - × "Remove Calm";
+  - a "New option" input with **Add option** (or Enter), refusing a label in use: "'Calm' already exists. Choose another label.";
+  - "No options yet." when empty.
+- **Removing a used option:** title "Remove option 'Calm'?"; scope "Chosen on 12 albums in 'Mood'" and "3 of them in Trash"; consequences "Those albums keep the field, empty." (single choice) or "Those albums keep their other options.", then "This can't be undone."; action "Remove from 12 albums".
+- **Delete field:** title "Delete field 'Mood'?"; scope "The field and its 3 options: Calm, Loud, Odd" (or "The field"), and "Values on 214 albums, 3 of them in Trash" (or "No album uses it"); consequence "This can't be undone — Trash and album restore won't bring it back."; action "Delete field".
+- **If a read fails:** "Couldn't check where 'Calm' is chosen. Try again." or "Couldn't check what deleting 'Mood' affects. Try again."
+
 ---
 
 ## 8. Sharing
@@ -1213,7 +1235,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 *(FR-11.13)*
 
-*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues.
+*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues. Custom fields joined between them in TON-53.
 
 **DS-93 Profile and account.** *(FR-11.3, FR-11.4, FR-11.5)*
 - **Display name:** saved on blur. While sharing is on, clearing it shows an inline error that keeps the current value.

@@ -5,7 +5,7 @@
 // chosen option's removal carries the hash its confirmation showed, as `metadata.confirmed[optionId]` (TS-14).
 // Deleting a field is `field.delete`, always with its confirmed hash, as `metadata.confirmed[fieldId]` (FR-03.18).
 
-import { uuidv7, type CustomField, type Mutation } from "@tonaris/domain";
+import { isChoiceType, uuidv7, type CustomField, type Mutation } from "@tonaris/domain";
 
 import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
@@ -52,6 +52,8 @@ export function fieldWrites(
       base: { type: original.type },
     });
   }
+  // A change to a non-choice type discards the options on the server; there is nothing more to send (FR-03.13).
+  if (isChoiceType(original.type) && !isChoiceType(modified.type)) return writes;
   const confirmed = confirmedOf(metadata);
   const before = new Map(original.options.map((option) => [option.id, option]));
   const after = new Set(modified.options.map((option) => option.id));
