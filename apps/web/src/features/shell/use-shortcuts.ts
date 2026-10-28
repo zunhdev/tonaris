@@ -1,6 +1,8 @@
-// The workspace's shortcuts at work (DS-78): one keydown listener, in the capture phase so that a key that is a
+// The workspace's shortcuts at work (DS-78), and the palette's commands (DS-75): one runner for both, so a command
+// does what its key does. Keys come through one keydown listener, in the capture phase so that a key that is a
 // shortcut is claimed before the sidebar tree could type ahead with it (decided 22 October 2026). Keys typed in a
 // text field, or inside a dialog, popover or menu, are left alone, but for ⌘K in a text field, which searches.
+// A command acts on a target: what had the focus when its key was pressed, or when the palette opened.
 
 import { useCapture } from "@/features/capture/capture-context";
 import {
@@ -9,17 +11,19 @@ import {
   useStartEditor,
   useViewContainerId,
 } from "@/features/collection/collection-ui";
+import { useCollectionData } from "@/features/collection/data";
 import { useDeleteContainer } from "@/features/collection/delete-containers";
 import { useInspector } from "@/features/collection/inspector-state";
 import { useOpenIn } from "@/features/open/open-in";
-import { useConnection } from "@/features/sync/sync-provider";
+import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
+import { useRecover } from "@/features/trash/recovery";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
-import { createShortcutMatcher, inLayer, type ShortcutAction } from "./shortcuts";
+import { createShortcutMatcher, inLayer, type CommandId, type ShortcutAction } from "./shortcuts";
 
 const destinations: Partial<
-  Record<ShortcutAction, "/c" | "/unsorted" | "/trash" | "/settings/preferences">
+  Record<CommandId, "/c" | "/unsorted" | "/trash" | "/settings/preferences">
 > = {
   "go-root": "/c",
   "go-unsorted": "/unsorted",
@@ -27,19 +31,47 @@ const destinations: Partial<
   "go-settings": "/settings/preferences",
 };
 
-export function useShortcuts({
+/** What a command acts on: the focus when it was asked for. */
+export type CommandTarget = {
+  /** The focused folder or list: the tree's item, else a view's row. */
+  container?: string | undefined;
+  /** The inspector's album, else the focused one. */
+  album?: string | undefined;
+  /** The Trash unit whose row had the focus. */
+  unit?: string | undefined;
+};
+
+/** Edits wait while offline (DS-81); opening, going and viewing don't. */
+const edits = new Set<CommandId>([
+  "new-list",
+  "new-folder",
+  "rename",
+  "move",
+  "delete",
+  "delete-album",
+  "add-to-list",
+]);
+const onAlbum = new Set<CommandId>(["add-to-list", "open-in", "delete-album"]);
+const onContainer = new Set<CommandId>(["rename", "move", "delete"]);
+
+export type CommandRunner = {
+  run: (id: CommandId, target: CommandTarget) => void;
+  /** Why the command can't run on `target` now, if it can't. */
+  blocked: (id: CommandId, target: CommandTarget) => string | undefined;
+  /** The target the live focus gives. */
+  target: () => CommandTarget;
+};
+
+export function useCommandRunner({
   toggleSidebar,
   openShortcuts,
-  openSearch,
 }: {
   toggleSidebar: () => void;
   openShortcuts: () => void;
-  openSearch: () => void;
-}): void {
+}): CommandRunner {
   const navigate = useNavigate();
   const startEditor = useStartEditor();
   const ui = useCollectionUi();
-  const { editing, openViewOptions } = ui;
   const viewId = useViewContainerId();
   const mode = useMode();
   const offline = useConnection() === "offline";
@@ -47,103 +79,159 @@ export function useShortcuts({
   const capture = useCapture();
   const openIn = useOpenIn();
   const deleteContainer = useDeleteContainer();
-  // The latest of each, so the listener is installed once.
+  const recover = useRecover();
+  const client = useSyncClient();
+  const { tree } = useCollectionData();
+  // The latest of each, so what callers hold stays stable.
   const latest = useRef({
     navigate,
     startEditor,
-    editing,
-    offline,
-    toggleSidebar,
-    openShortcuts,
-    openSearch,
-    openViewOptions,
     ui,
     viewId,
     mode,
+    offline,
     inspected,
     capture,
     openIn,
     deleteContainer,
+    recover,
+    client,
+    tree,
+    toggleSidebar,
+    openShortcuts,
   });
   useEffect(() => {
     latest.current = {
       navigate,
       startEditor,
-      editing,
-      offline,
-      toggleSidebar,
-      openShortcuts,
-      openSearch,
-      openViewOptions,
       ui,
       viewId,
       mode,
+      offline,
       inspected,
       capture,
       openIn,
       deleteContainer,
+      recover,
+      client,
+      tree,
+      toggleSidebar,
+      openShortcuts,
     };
+  });
+
+  const target = useCallback((): CommandTarget => {
+    const now = latest.current;
+    return {
+      container: now.ui.focused() ?? now.ui.focusedRow(),
+      album: now.inspected ?? now.ui.focusedAlbum(),
+      unit:
+        (typeof document === "undefined"
+          ? undefined
+          : document.activeElement?.closest("tr[data-unit]")?.getAttribute("data-unit")) ??
+        undefined,
+    };
+  }, []);
+
+  /** Move and Rename also take the folder or list the view shows; Delete takes only a focused one. */
+  const containerOf = useCallback(
+    (id: CommandId, { container }: CommandTarget) =>
+      container ?? (id === "delete" ? undefined : latest.current.viewId),
+    [],
+  );
+
+  const blocked = useCallback(
+    (id: CommandId, on: CommandTarget): string | undefined => {
+      const now = latest.current;
+      if (edits.has(id) && now.offline) return "You're offline";
+      if (onAlbum.has(id) && on.album === undefined) return "Open or focus an album first";
+      if (onContainer.has(id) && containerOf(id, on) === undefined)
+        return "Focus a folder or list first";
+      if (id === "restore" && on.unit === undefined) return "Focus an item in Trash first";
+      return undefined;
+    },
+    [containerOf],
+  );
+
+  const run = useCallback(
+    (id: CommandId, on: CommandTarget) => {
+      const now = latest.current;
+      const to = destinations[id];
+      // One editor is open at a time: an edit waits for it, as it waits while offline (DS-81).
+      const canEdit = !now.offline && !now.ui.editing.current;
+      if (to) void now.navigate({ to });
+      else if (id === "toggle-sidebar") now.toggleSidebar();
+      else if (id === "shortcuts") now.openShortcuts();
+      // Choosing how a view looks isn't an edit, so it works offline (X-04).
+      else if (id === "view-options") now.ui.openViewOptions();
+      else if (id === "toggle-mode") now.mode.choose(now.mode.editing ? "view" : "edit");
+      else if (id === "open-in") {
+        // Opening isn't an edit: it works in Viewing mode and offline. The chooser sits by what has the focus
+        // (DS-25).
+        const anchor = document.activeElement === document.body ? null : document.activeElement;
+        if (on.album !== undefined) now.openIn?.show(on.album, anchor);
+      } else if (id === "restore") {
+        // As R does in Trash's table: no other check (TON-59).
+        const unit = on.unit === undefined ? undefined : now.client?.trashUnits.get(on.unit);
+        if (unit) {
+          now.recover({
+            unitId: unit.id,
+            rootId: unit.rootId,
+            kind: unit.kind,
+            name: unit.name,
+            parentId: unit.parentId,
+          });
+        }
+      } else if (id === "capture") {
+        // The dialog switches to Editing itself, and waits while offline (DS-48).
+        if (!now.ui.editing.current) now.capture?.openDialog();
+      } else if (!canEdit) {
+        // Every remaining command is an edit.
+      } else if (id === "new-list" || id === "new-folder") {
+        now.startEditor({ mode: "new", kind: id === "new-folder" ? "folder" : "list" });
+      } else if (id === "rename") {
+        // As F2 in the tree: the name's editor, in place.
+        const container = now.tree.byId.get(containerOf(id, on) ?? "");
+        if (container) now.startEditor({ mode: "rename", id: container.id, name: container.name });
+      } else if (id === "move" || id === "delete") {
+        // Edit intent switches to Editing first (DS-45).
+        const container = containerOf(id, on);
+        if (container === undefined) return;
+        now.mode.enterEditing();
+        if (id === "move") now.ui.startMove(container);
+        else now.deleteContainer(container);
+      } else if (id === "add-to-list" || id === "delete-album") {
+        if (on.album === undefined) return;
+        now.mode.enterEditing();
+        if (id === "add-to-list") now.ui.startAddToList(on.album);
+        else now.ui.startDeleteAlbum(on.album);
+      }
+    },
+    [containerOf],
+  );
+
+  return { run, blocked, target };
+}
+
+export function useShortcuts({
+  runner: { run, target },
+  openSearch,
+}: {
+  runner: CommandRunner;
+  openSearch: () => void;
+}): void {
+  const latest = useRef({ run, target, openSearch });
+  useEffect(() => {
+    latest.current = { run, target, openSearch };
   });
 
   useEffect(() => {
     const match = createShortcutMatcher();
     const act = (action: ShortcutAction) => {
       const now = latest.current;
-      const to = destinations[action];
-      if (to) void now.navigate({ to });
-      else if (action === "toggle-sidebar") now.toggleSidebar();
-      else if (action === "shortcuts") now.openShortcuts();
       // Searching works anywhere, offline and in Viewing mode too (DS-75).
-      else if (action === "search") now.openSearch();
-      // Choosing how a view looks isn't an edit, so it works offline (X-04).
-      else if (action === "view-options") now.openViewOptions();
-      // Moving is an edit: it waits while offline (DS-81), as N does. It moves the focused tree item, else the
-      // focused folder or list row of a view, else the folder or list the view shows.
-      else if (action === "move") {
-        const target = now.ui.focused() ?? now.ui.focusedRow() ?? now.viewId;
-        if (!now.offline && !now.editing.current && target !== undefined) {
-          // Edit intent switches to Editing first (DS-45).
-          now.mode.enterEditing();
-          now.ui.startMove(target);
-        }
-      } else if (action === "delete-album") {
-        // Deleting an album is an edit too: the inspector's album, else the focused album of a view.
-        const albumId = now.inspected ?? now.ui.focusedAlbum();
-        if (!now.offline && !now.editing.current && albumId !== undefined) {
-          now.mode.enterEditing();
-          now.ui.startDeleteAlbum(albumId);
-        }
-      } else if (action === "delete") {
-        // Deleting is an edit (DS-45): the focused tree item, else the focused folder or list row of a view. An
-        // album's row isn't one of them; ⌫ on it waits for removing albums from lists.
-        const target = now.ui.focused() ?? now.ui.focusedRow();
-        if (!now.offline && !now.editing.current && target !== undefined) {
-          now.mode.enterEditing();
-          now.deleteContainer(target);
-        }
-      } else if (action === "add-to-list") {
-        // Adding to a list is an edit too. It acts on the inspector's album, else the focused album of a view.
-        const albumId = now.inspected ?? now.ui.focusedAlbum();
-        if (!now.offline && !now.editing.current && albumId !== undefined) {
-          now.mode.enterEditing();
-          now.ui.startAddToList(albumId);
-        }
-      } else if (action === "open-in") {
-        // Opening isn't an edit: it works in Viewing mode and offline. It acts on the inspector's album, else the
-        // focused album, and the chooser sits by what has the focus (DS-25).
-        const albumId = now.inspected ?? now.ui.focusedAlbum();
-        const anchor = document.activeElement === document.body ? null : document.activeElement;
-        if (albumId !== undefined) now.openIn?.show(albumId, anchor);
-      } else if (action === "capture") {
-        // Capturing is an edit: the dialog switches to Editing first, and waits while offline (DS-48).
-        if (!now.editing.current) now.capture?.openDialog();
-      } else if (action === "toggle-mode") {
-        now.mode.choose(now.mode.editing ? "view" : "edit");
-      }
-      // Edit controls wait while offline (DS-81), and one editor is open at a time.
-      else if (!now.offline && !now.editing.current) {
-        now.startEditor({ mode: "new", kind: action === "new-folder" ? "folder" : "list" });
-      }
+      if (action === "search") now.openSearch();
+      else now.run(action, now.target());
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || inLayer(event.target)) return;

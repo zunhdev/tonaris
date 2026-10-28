@@ -114,6 +114,9 @@ export const accounts = {
   // The search palette (search.e2e.ts), one per test.
   searchResults: at("search-results"),
   searchOpening: at("search-opening"),
+  // Palette commands (palette-commands.e2e.ts), one per test.
+  paletteCommands: at("palette-commands"),
+  paletteRecent: at("palette-recent"),
 } as const;
 
 /** An address with no account. */

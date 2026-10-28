@@ -33,7 +33,7 @@ import { pageTitleId } from "./page-header";
 import { ShellContext, type ShellControl } from "./shell-context";
 import { ShortcutReference } from "./shortcut-reference";
 import { Sidebar } from "./sidebar";
-import { useShortcuts } from "./use-shortcuts";
+import { useCommandRunner, useShortcuts, type CommandTarget } from "./use-shortcuts";
 
 const wideQuery = "(min-width: 1100px)";
 
@@ -55,7 +55,11 @@ function useWideScreen(): boolean {
 export function Shell({ account, children }: { account: Account; children: ReactNode }) {
   const [layout, setLayout] = useState(() => sidebarLayout.read());
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  // The palette, and what had the focus when it opened, for its commands (DS-75).
+  const [search, setSearch] = useState<{ open: boolean; target: CommandTarget }>({
+    open: false,
+    target: {},
+  });
   const { editing } = useCollectionUi();
   const { albumId } = useInspector();
   const wide = useWideScreen();
@@ -68,7 +72,7 @@ export function Shell({ account, children }: { account: Account; children: React
     [],
   );
   const openShortcuts = useCallback(() => setShortcutsOpen(true), []);
-  const openSearch = useCallback(() => setSearchOpen(true), []);
+
   // An editor started while the sidebar is hidden shows it, since the editor is in it.
   useEffect(
     () =>
@@ -78,7 +82,18 @@ export function Shell({ account, children }: { account: Account; children: React
       }),
     [editing],
   );
-  useShortcuts({ toggleSidebar, openShortcuts, openSearch });
+  const runner = useCommandRunner({ toggleSidebar, openShortcuts });
+  const captureTarget = runner.target;
+  // Before the palette takes the focus.
+  const openSearch = useCallback(
+    () => setSearch({ open: true, target: captureTarget() }),
+    [captureTarget],
+  );
+  const setSearchOpen = useCallback(
+    (open: boolean) => setSearch((current) => ({ ...current, open })),
+    [],
+  );
+  useShortcuts({ runner, openSearch });
 
   const control = useMemo<ShellControl>(
     () => ({ sidebarHidden: layout.hidden, toggleSidebar, openShortcuts, openSearch }),
@@ -115,7 +130,12 @@ export function Shell({ account, children }: { account: Account; children: React
         </div>
       </DragProvider>
       <ShortcutReference open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-      <SearchPalette open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchPalette
+        open={search.open}
+        onOpenChange={setSearchOpen}
+        target={search.target}
+        runner={runner}
+      />
       <MoveDialog />
       <DeleteFolderDialog />
       <DeleteAlbumDialog />

@@ -1065,9 +1065,8 @@ The block never says "private" while another access path remains.
 - **The palette:**
   - It sits 12% from the top, 640px wide, on the palette layer (DS-18).
   - Below 768px it fills the screen, inside the safe area. There is no mobile shell yet (DS-110), so the sheet opens with ⌘K or the sidebar's item.
-  - Its field reads "Search folders, lists and albums…".
-  - Empty, it says "Search folder and list names, album titles and artists."; with no match, "No results for '{query}'."
-  - Commands and recent items come with TON-63.
+  - Its field reads "Search, or type > for commands…" (TON-63).
+  - With no match it says "No results for '{query}'."
 - **Groups:** Folders, Lists, Albums, each with a heading, up to 8 results, then a "Show all {n}" option that expands the group in place.
 - **Order within a group** (decided with the creator, 28 October 2026):
   - names that start with the query first;
@@ -1091,6 +1090,32 @@ The block never says "private" while another access path remains.
   - the field is a combobox over a listbox, with a group per heading;
   - the active option is `aria-activedescendant`;
   - a polite status gives the result count.
+
+*As built in TON-63 (commands):*
+- **Commands:** every action shortcut is a command (decided with the creator, 29 October 2026).
+  - The list:
+    - Go to Collection, Unsorted, Trash and Settings;
+    - Hide sidebar or Show sidebar;
+    - Switch to editing or Switch to viewing; View options;
+    - Add albums from links, Add to list…, Open in…, Delete an album from the collection;
+    - New list, New folder, Rename, Move to…, Delete a folder or list;
+    - Restore, in Trash;
+    - Keyboard shortcuts.
+  - Pure navigation keys aren't commands: arrows, J/K, Home/End, Enter, Esc, ⌥↑/⌥↓, ⌘Enter, and ⌘K, which is the palette itself.
+  - One list in code (`commands`) feeds both the palette and the reference, so they can't drift.
+- **Rows:** a command row shows its name and its keys as `Kbd` chips. Typed text matches commands by name, below the content groups. `>` lists commands only, all of them for a bare `>`, with "No commands match '{text}'." when none do.
+- **Acting on the focus:** a command acts on what had the focus when the palette opened, as its key would: the sidebar's focused folder or list, a view's focused row, the inspector's album or the focused album, Trash's focused row. Move to… and Rename also take the view's own folder or list.
+  - It runs once the palette has closed, so the focus it returns can't steal from the dialog or name editor the command opens.
+  - Opened from the sidebar's Search item, the focus is the button, so only the inspector's album and the view count.
+- **Unavailable commands** stay listed, dimmed, with the reason, and choosing one does nothing:
+  - "You're offline" for edits;
+  - "Open or focus an album first";
+  - "Focus a folder or list first";
+  - "Focus an item in Trash first".
+- **Rename** renames a folder or list in the sidebar's editor. An album's title keeps F2 in its row and the inspector's own field.
+- **Empty palette** (decided with the creator, 29 October 2026):
+  - **Recent:** the last 8 folders, lists and albums opened anywhere, newest first: a view's route, an album in the inspector, or an album's own page. Kept on this device (20 at most), per account. Ones deleted or in Trash drop out.
+  - **Frequent commands:** the 5 commands run most from the palette on this device, ties in list order, topped up with Add albums from links, New list, Go to Unsorted, Switch mode and Keyboard shortcuts.
 
 ---
 
@@ -1130,6 +1155,10 @@ The block never says "private" while another access path remains.
 - **TON-45 adds C,** which opens the capture dialog, switching to Editing first and waiting while offline. The reference lists it as "Add albums from links".
 - **TON-38 adds L,** "Add to list…", for the inspector's album, else the focused album, switching to Editing first and waiting while offline; **Enter** on an album, which opens the inspector; and **Esc,** which closes it. The reference lists them.
 - **TON-61 adds ⌘K** (Ctrl+K on Windows and Linux), which opens search (DS-75). It works from a text field too, and in the palette it closes it. The reference lists it as "Search", and the sidebar's Search item carries it in `aria-keyshortcuts`.
+- **TON-63 makes the reference complete,** built from the palette's command list plus the navigation keys:
+  - It gains R ("Restore", under Trash) and ⌘Enter ("Submit a form; in search, open an album on its own").
+  - Its sections are Moving around, Views, Albums, Folders and lists, Trash and Help.
+  - Every action in it is a palette command with the same keys (DS-75).
 
 ---
 
