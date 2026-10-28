@@ -137,4 +137,29 @@ describe("dependencies within a request", () => {
     };
     expect(dependenciesOf([list, capture])).toEqual([undefined, [list.mutationId]]);
   });
+
+  test("a link on a new album depends on the album's creation", () => {
+    const albumId = uuidv7();
+    const create: Mutation = {
+      mutationId: uuidv7(),
+      name: "album.create",
+      args: {
+        id: albumId,
+        title: "Bleach",
+        artistCredit: "Nirvana",
+        releaseType: "album",
+        isLive: false,
+        originalYear: 1989,
+        recordingYearStart: null,
+        recordingYearEnd: null,
+      },
+    };
+    const link: Mutation = {
+      mutationId: uuidv7(),
+      name: "link.set",
+      args: { albumId, service: "tidal", url: "https://tidal.com/album/1" },
+      base: { url: null },
+    };
+    expect(dependenciesOf([create, link])).toEqual([undefined, [create.mutationId]]);
+  });
 });

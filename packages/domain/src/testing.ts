@@ -162,6 +162,14 @@ export function memoryStore({
       linkRows.set(`${albumId}:${link.service}`, { ...link });
       return Promise.resolve();
     },
+    saveServiceLink: (albumId, _ownerId, link) => {
+      linkRows.set(`${albumId}:${link.service}`, { ...link });
+      return Promise.resolve();
+    },
+    deleteServiceLink: (albumId, service) => {
+      linkRows.delete(`${albumId}:${service}`);
+      return Promise.resolve();
+    },
 
     findContainer: (id) =>
       Promise.resolve(containerRows.has(id) ? { ...containerRows.get(id)! } : undefined),

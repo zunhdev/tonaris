@@ -31,7 +31,9 @@ import {
   type MutationResult,
   type Outcome,
   type Position,
+  type PreparedLink,
   type Principal,
+  type ServiceLink,
   type ViewDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
@@ -209,6 +211,20 @@ function collectionStore(tx: Transaction): CollectionStore {
     },
     async insertServiceLink(albumId, ownerId, link) {
       await tx.insert(albumServiceLinks).values({ albumId, ownerId, ...link });
+    },
+    async saveServiceLink(albumId, ownerId, link) {
+      await tx
+        .insert(albumServiceLinks)
+        .values({ albumId, ownerId, ...link })
+        .onConflictDoUpdate({
+          target: [albumServiceLinks.albumId, albumServiceLinks.service],
+          set: { url: link.url, entityId: link.entityId, updatedAt: sql`now()` },
+        });
+    },
+    async deleteServiceLink(albumId, service) {
+      await tx
+        .delete(albumServiceLinks)
+        .where(and(eq(albumServiceLinks.albumId, albumId), eq(albumServiceLinks.service, service)));
     },
 
     async findContainer(id) {
@@ -493,14 +509,19 @@ export type ExecutedMutation = {
  * 4. Record the outcome under `mutationId`, whatever it is, so every retry gets the same answer (FR-13.5).
  *
  * A mutation `claimMutation()` claimed, such as a capture whose providers ran outside the lock, passes `claimed`, and
- * its claim's row takes the outcome. `capture` is what the API found for an `album.capture`.
+ * its claim's row takes the outcome. `capture` is what the API found for an `album.capture`, and `link` how it read a
+ * `link.set`'s URL.
  */
 export async function executeMutation(
   db: Database,
   principal: Principal,
   mutation: Mutation,
   now: Date = new Date(),
-  { claimed = false, capture }: { claimed?: boolean; capture?: CaptureSource } = {},
+  {
+    claimed = false,
+    capture,
+    link,
+  }: { claimed?: boolean; capture?: CaptureSource; link?: PreparedLink } = {},
 ): Promise<ExecutedMutation> {
   const accountId = actingUserId(principal);
   const { mutationId } = mutation;
@@ -537,6 +558,7 @@ export async function executeMutation(
       store: collectionStore(tx),
       now,
       ...(capture ? { capture } : {}),
+      ...(link ? { link } : {}),
     });
     let changes: Change[] = [];
     const reported = result.status === "applied" ? (result.result ?? null) : null;
@@ -810,6 +832,15 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .from(memberships)
         .where(eq(memberships.ownerId, accountId))
         .orderBy(asc(memberships.listId), asc(memberships.albumId));
+      const links: ServiceLink[] = await tx
+        .select({
+          albumId: albumServiceLinks.albumId,
+          service: albumServiceLinks.service,
+          url: albumServiceLinks.url,
+        })
+        .from(albumServiceLinks)
+        .where(eq(albumServiceLinks.ownerId, accountId))
+        .orderBy(asc(albumServiceLinks.albumId), asc(albumServiceLinks.service));
       const views: ViewPrefs[] = await tx
         .select(viewPrefsColumns)
         .from(viewPrefs)
@@ -829,6 +860,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         albums: owned,
         containers: folders,
         memberships: entries.map(membershipOf),
+        links,
         views,
         positions: arranged,
         defaults: defaults ?? appViewDefaults,

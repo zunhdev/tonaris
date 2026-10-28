@@ -24,6 +24,7 @@ import { failure, type FieldConflict, type Outcome } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { placeAtTop, setOrder, type Position } from "./positions";
 import { actingUserId, type Principal } from "./principals";
+import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
 import type { ChangeOp, Mutation } from "./sync";
 import { setDefaults, setView, type ViewDefaults, type ViewItems, type ViewPrefs } from "./views";
 
@@ -55,6 +56,9 @@ export type CollectionStore = {
   /** The album's link for `service`, if it has one (FR-06.2). */
   findServiceLink(albumId: string, service: StreamingService): Promise<CapturedLink | undefined>;
   insertServiceLink(albumId: string, ownerId: string, link: CapturedLink): Promise<void>;
+  /** Inserts the album's link for `link.service`, or replaces the one it has (FR-06.2). */
+  saveServiceLink(albumId: string, ownerId: string, link: CapturedLink): Promise<void>;
+  deleteServiceLink(albumId: string, service: StreamingService): Promise<void>;
 
   /** The folder or list with this ID, whoever owns it, in Trash or not. */
   findContainer(id: string): Promise<StoredContainer | undefined>;
@@ -113,6 +117,7 @@ export type ChangeInput =
   | { entity: "album"; id: string; op: ChangeOp; data: Album | null }
   | { entity: "container"; id: string; op: ChangeOp; data: Container | null }
   | { entity: "membership"; id: string; op: ChangeOp; data: Membership | null }
+  | { entity: "link"; id: string; op: ChangeOp; data: ServiceLink | null }
   | { entity: "view"; id: string; op: ChangeOp; data: ViewPrefs | null }
   | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults }
   | { entity: "position"; id: string; op: ChangeOp; data: Position | null };
@@ -124,13 +129,14 @@ export type CommandResult =
 
 /**
  * `now` is the time a command records, such as when an album joined a list; the current time if absent. `capture`
- * is what the API found for an `album.capture` before the lock.
+ * is what the API found for an `album.capture` before the lock, and `link` how it read a `link.set`'s URL.
  */
 export type CommandContext = {
   principal: Principal;
   store: CollectionStore;
   now?: Date;
   capture?: CaptureSource;
+  link?: PreparedLink;
 };
 
 export function runCommand(mutation: Mutation, context: CommandContext): Promise<CommandResult> {
@@ -148,6 +154,8 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   }
   if (mutation.name === "membership.add") return addMembership(mutation.args, context);
   if (mutation.name === "membership.remove") return removeMembership(mutation.args, context);
+  if (mutation.name === "link.set") return setLink(mutation.args, mutation.base, context);
+  if (mutation.name === "link.remove") return removeLink(mutation.args, mutation.base, context);
   if (mutation.name === "view.set") return setView(mutation.args, mutation.base, context);
   if (mutation.name === "order.set") return setOrder(mutation.args, mutation.base, context);
   return setDefaults(mutation.args, mutation.base, context);

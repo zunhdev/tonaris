@@ -1,11 +1,20 @@
 // The manual entry form's rules (DS-47, FR-02.4, FR-02.6): its fields as typed, what is missing or malformed, and the
 // album they make. Title, artist and the applicable year are required: the original release year, or for a live
 // album the recording year or the release year (FR-02.6). Nothing is invented: a field left empty stays empty. The
-// domain's `albumProblem` checks the built album last. Pure, so the rules are tested without a DOM.
+// domain's `albumProblem` checks the built album last. A link per service is optional, and checked as the server
+// will read it (FR-06.3, TS-40). Pure, so the rules are tested without a DOM.
 
-import { albumProblem, uuidv7, type Album } from "@tonaris/domain";
+import {
+  albumProblem,
+  streamingServices,
+  uuidv7,
+  type Album,
+  type ServiceLink,
+  type StreamingService,
+} from "@tonaris/domain";
 
 import { cellText, formatRefusal, parseYears } from "./album-edit";
+import { checkLink } from "./link-check";
 
 /** The form as typed. Years are text until saved. */
 export type AlbumForm = {
@@ -16,11 +25,20 @@ export type AlbumForm = {
   originalYear: string;
   /** The recording year or range; only used for a live album. */
   recording: string;
+  /** Each service's link as typed; empty for none. */
+  links: Record<StreamingService, string>;
   /** The destination list; null for none, so the album goes to Unsorted. */
   listId: string | null;
 };
 
-export type FormField = "title" | "artistCredit" | "originalYear" | "recording";
+export type FormField = "title" | "artistCredit" | "originalYear" | "recording" | StreamingService;
+
+const noLinks = (): Record<StreamingService, string> => ({
+  spotify: "",
+  "apple-music": "",
+  qobuz: "",
+  tidal: "",
+});
 
 /** An empty form, going to `listId` if given. */
 export function emptyForm(listId: string | null): AlbumForm {
@@ -31,6 +49,7 @@ export function emptyForm(listId: string | null): AlbumForm {
     isLive: false,
     originalYear: "",
     recording: "",
+    links: noLinks(),
     listId,
   };
 }
@@ -44,6 +63,7 @@ export function formOf(album: Album, listId: string | null): AlbumForm {
     isLive: album.isLive === true,
     originalYear: cellText(album, "originalYear"),
     recording: cellText(album, "recording"),
+    links: noLinks(),
     listId,
   };
 }
@@ -57,7 +77,8 @@ export function isFormDirty(form: AlbumForm): boolean {
     form.releaseType !== empty.releaseType ||
     form.isLive !== empty.isLive ||
     form.originalYear !== empty.originalYear ||
-    form.recording !== empty.recording
+    form.recording !== empty.recording ||
+    streamingServices.some((service) => form.links[service] !== "")
   );
 }
 
@@ -85,7 +106,19 @@ export function formProblems(form: AlbumForm): Partial<Record<FormField, string>
       ? "Give the album its recording year or its release year."
       : "Give the album its original release year.";
   }
+  for (const service of streamingServices) {
+    const reason = checkLink(service, form.links[service]);
+    if (reason !== undefined) problems[service] = reason;
+  }
   return problems;
+}
+
+/** The links the form gives the album `albumId`, as typed: the server reads them (TS-40). */
+export function linksOfForm(form: AlbumForm, albumId: string): ServiceLink[] {
+  return streamingServices.flatMap((service) => {
+    const url = form.links[service].trim();
+    return url === "" ? [] : [{ albumId, service, url }];
+  });
 }
 
 /** The album the form makes, with a new ID; undefined while it has problems. */

@@ -279,9 +279,17 @@ describe("capturing a new album (FR-02.2, AC-07)", () => {
       expect.objectContaining({ title: "Bleach", artistCredit: "Nirvana", originalYear: 1989 }),
     ]);
     expect(snapshot.memberships).toEqual([]);
-    // The owner's sessions get the new album on the stream.
+    // The owner's sessions get the new album, and its link, on the stream (TON-46).
     expect(await readChanges(t.db, accountId, 0, 10)).toEqual([
       expect.objectContaining({ entity: "album", op: "insert", mutationId: mutation.mutationId }),
+      expect.objectContaining({
+        entity: "link",
+        op: "insert",
+        data: { albumId: mutation.args.albumId, service: "spotify", url: links.bleachSpotify },
+      }),
+    ]);
+    expect(snapshot.links).toEqual([
+      { albumId: mutation.args.albumId, service: "spotify", url: links.bleachSpotify },
     ]);
   });
 });
@@ -314,6 +322,25 @@ describe("a confident match reuses the saved album (FR-02.9, FR-02.12, AC-09)", 
       keptLink: { service: "spotify", kept: links.bleachSpotify, pasted: links.bleachOtherSpotify },
     });
     expect(listsOf(await bootstrap(), first.albumId)).toEqual([grunge]);
+  });
+
+  test("a kept link is replaced by an explicit edit, and the entry stays (FR-06.4, AC-19)", async () => {
+    const first = result((await send(capture(links.bleachSpotify))).outcome);
+    const grunge = await newList("Grunge");
+    const { keptLink } = result((await send(capture(links.bleachOtherSpotify, grunge))).outcome);
+    if (!keptLink) throw new Error("Expected a kept link");
+    const { outcome } = await send({
+      mutationId: uuidv7(),
+      name: "link.set",
+      args: { albumId: first.albumId, service: keptLink.service, url: keptLink.pasted },
+      base: { url: keptLink.kept },
+    });
+    expect(outcome.status).toBe("confirmed");
+    const snapshot = await bootstrap();
+    expect(snapshot.links).toEqual([
+      { albumId: first.albumId, service: "spotify", url: links.bleachOtherSpotify },
+    ]);
+    expect(listsOf(snapshot, first.albumId)).toEqual([grunge]);
   });
 
   test("a saved album under a release group MusicBrainz merged into this one is reused, under the new id (TS-44)", async () => {

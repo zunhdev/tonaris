@@ -1387,6 +1387,126 @@
                       },
                       "name": {
                         "type": "string",
+                        "const": "link.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "service": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal"
+                            ]
+                          },
+                          "url": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2048,
+                            "description": "The link as pasted (TS-40)."
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "service",
+                          "url"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "link.remove"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "service": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "service"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
                         "const": "view.set"
                       },
                       "args": {
@@ -2298,6 +2418,126 @@
                       },
                       "name": {
                         "type": "string",
+                        "const": "link.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "service": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal"
+                            ]
+                          },
+                          "url": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2048,
+                            "description": "The link as pasted (TS-40)."
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "service",
+                          "url"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "link.remove"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "service": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "service"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
                         "const": "view.set"
                       },
                       "args": {
@@ -3196,6 +3436,126 @@
                       "mutationId",
                       "name",
                       "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "link.set"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "service": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal"
+                            ]
+                          },
+                          "url": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2048,
+                            "description": "The link as pasted (TS-40)."
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "service",
+                          "url"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "link.remove"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "service": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "service"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
                     ]
                   },
                   {
@@ -4851,6 +5211,40 @@
                         "description": "An album's entry in a list (FR-01.6)."
                       }
                     },
+                    "links": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "service": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal"
+                            ]
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "The canonical URL (TS-40)."
+                          }
+                        },
+                        "required": [
+                          "albumId",
+                          "service",
+                          "url"
+                        ],
+                        "additionalProperties": false,
+                        "description": "An album's link to a streaming service (FR-06.2)."
+                      },
+                      "description": "The albums' links to the streaming services (FR-06.2)."
+                    },
                     "views": {
                       "type": "array",
                       "items": {
@@ -5030,6 +5424,7 @@
                     "albums",
                     "containers",
                     "memberships",
+                    "links",
                     "views",
                     "positions",
                     "defaults"
@@ -5497,6 +5892,91 @@
                     ],
                     "additionalProperties": false,
                     "description": "An album's entry in a list (FR-01.6)."
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "mutationId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "seq",
+              "entity",
+              "id",
+              "op",
+              "data",
+              "mutationId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "entity": {
+                "type": "string",
+                "const": "link"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:(spotify|apple-music|qobuz|tidal)$",
+                "description": "The album's ID and the service, joined by a colon."
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "albumId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "service": {
+                        "type": "string",
+                        "enum": [
+                          "spotify",
+                          "apple-music",
+                          "qobuz",
+                          "tidal"
+                        ]
+                      },
+                      "url": {
+                        "type": "string",
+                        "description": "The canonical URL (TS-40)."
+                      }
+                    },
+                    "required": [
+                      "albumId",
+                      "service",
+                      "url"
+                    ],
+                    "additionalProperties": false,
+                    "description": "An album's link to a streaming service (FR-06.2)."
                   },
                   {
                     "type": "null"
@@ -6571,6 +7051,132 @@
                   "mutationId",
                   "name",
                   "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "link.set"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "albumId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "service": {
+                        "type": "string",
+                        "enum": [
+                          "spotify",
+                          "apple-music",
+                          "qobuz",
+                          "tidal"
+                        ]
+                      },
+                      "url": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048,
+                        "description": "The link as pasted (TS-40)."
+                      }
+                    },
+                    "required": [
+                      "albumId",
+                      "service",
+                      "url"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "link.remove"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "albumId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "service": {
+                        "type": "string",
+                        "enum": [
+                          "spotify",
+                          "apple-music",
+                          "qobuz",
+                          "tidal"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "albumId",
+                      "service"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
                 ],
                 "additionalProperties": false
               },

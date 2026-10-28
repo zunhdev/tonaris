@@ -339,6 +339,13 @@ describe("album.capture: without a list (FR-02.2, AC-07)", () => {
     expect(t.provenance.get(albumId)?.get("artworkUrl")?.source).toBe("coverartarchive");
     expect(t.links.get(`${albumId}:spotify`)).toEqual(spotifyLink);
     expect(result.changes[0]).toMatchObject({ entity: "album", id: albumId, op: "insert" });
+    // Clients get the link with the album (TON-46).
+    expect(result.changes[1]).toEqual({
+      entity: "link",
+      id: `${albumId}:spotify`,
+      op: "insert",
+      data: { albumId, service: "spotify", url: spotifyLink.url },
+    });
   });
 
   test("a reused album keeps its lists", async () => {
@@ -478,10 +485,16 @@ describe("album.capture: links (FR-06.4)", () => {
   test("a second service's link is added", async () => {
     const bleach = saved("Bleach");
     const t = setup({ albums: [bleach], links: [{ albumId: bleach.id, ...spotifyLink }] });
-    applied(
+    const result = applied(
       await t.run(capture(null, { link: appleLink.url }), identified(bleachFacts, {}, appleLink)),
     );
     expect(t.links.get(`${bleach.id}:apple-music`)).toEqual(appleLink);
+    expect(result.changes).toContainEqual({
+      entity: "link",
+      id: `${bleach.id}:apple-music`,
+      op: "insert",
+      data: { albumId: bleach.id, service: "apple-music", url: appleLink.url },
+    });
     expect(t.links.get(`${bleach.id}:spotify`)).toEqual(spotifyLink);
   });
 
@@ -505,6 +518,7 @@ describe("album.capture: links (FR-06.4)", () => {
       keptLink: { service: "spotify", kept: spotifyLink.url, pasted: other.url },
     });
     expect(t.links.get(`${bleach.id}:spotify`)).toEqual(spotifyLink);
+    expect(result.changes.some((change) => change.entity === "link")).toBe(false);
     expect(t.listsOf(bleach.id)).toEqual([grunge.id]);
   });
 });

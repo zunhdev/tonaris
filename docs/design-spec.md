@@ -576,7 +576,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - **Refusals** stay with their reason and send nothing, as in DS-45. Switching Live off for an album with only a recording year reads "Give the album a year.", and Live stays on.
   - **Leaving Editing mode** saves open fields, or stays for a refused one (DS-45). Offline, the editors are read-only, with "You're offline. Changes can wait until the connection is back."
 - **The sort hints:** "Sorts by its original release year.", "Sorts by its recording year." or "Sorts by its release year, as the recording year is unknown."
-- **Links and Custom fields** show a line each until their features arrive: "Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture." and "Custom fields arrive in a later version."
+- **Links and Custom fields** show a line each until their features arrive: "Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture." and "Custom fields arrive in a later version." Links arrived in TON-46 (below).
 - **Lists:**
   - **The chips** link to their lists, with the folder path as their tooltip, or to Unsorted.
   - **In Editing mode,** a chip's × removes the album from the list, with "Removed from {list}" and Undo (DS-50). Undo puts the entry back at the end of the list.
@@ -584,6 +584,18 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Info** shows "Added {date}", from the album's ID. The source service arrives with capture (M3).
 - **Artwork** is the letter tile until capture brings artwork URLs (decided with the creator on 23 October 2026).
 - **Delete from collection…** arrives with Trash (M5).
+
+*As built in TON-46:* **Links** (FR-06.2, FR-06.3).
+- **Viewing mode:** a row per service the album has a link for: its name, and the URL's host and path as a link that opens the page in a new tab, until "Open in…" (DS-25, TON-47). With none: "No links yet."
+- **Editing mode:** a row for every service.
+  - **A linked service:** **Replace** and **Remove**.
+  - **Replace** turns the row into a field labelled "Spotify link", with the URL selected and the placeholder "Album or track link". Enter or leaving it saves; Escape discards. Empty or unchanged, it closes without sending anything.
+  - **A refused link** stays in the field with its reason, as capture gives it (DS-48), or "This is an Apple Music link. Paste a Spotify link here."
+  - **Remove** applies at once, with "Removed the Spotify link" and Undo (DS-50).
+  - **A service without a link:** "Add Spotify link", which opens the same field, empty.
+- **Each row** shows its save state (DS-80). The stream replaces the link as typed with its canonical URL.
+- **Offline,** the rows are read-only, as the album's fields are (DS-81).
+- **Capture's kept link** ("Another Spotify link was found for this album · Replace · Dismiss") comes with the capture interface (TON-45).
 
 **DS-47 Manual entry form.** A 560px dialog titled "New album" (desktop). Shortcut ⌘Enter saves; Esc asks before discarding entered data. *(FR-02.4, FR-02.6, FR-13.2)*
 
@@ -605,6 +617,10 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 *As built in TON-38:*
 - **Its description:** "Title, artist and a year are required. Everything else can wait."
 - **Artwork URL, links and custom fields** are shown in order with a line each until their features arrive: "Artwork arrives with link capture." (decided with the creator on 23 October 2026), and the same lines as the inspector's.
+
+*As built in TON-46:* **links** replace their line: "Spotify link", "Apple Music link", "Qobuz link" and "Tidal link", each optional, with the placeholder "Album or track link".
+- **Checked when left and on submit,** like the other fields, with the inspector's reasons, and named in the summary.
+- **Saving** adds the album, then its links, then its entry in the list. The server stores each link's canonical URL.
 - **Validation:**
   - **The messages:** "Give the album a title.", "Give the album an artist.", "Give the album its original release year.", for a live album "Give the album its recording year or its release year.", "Enter the year as four digits, such as 1986." and "The recording period ends before it starts."
   - **On submit,** an alert at the top reads "Check {n} fields: {names}.", and the first field with a problem takes the focus.

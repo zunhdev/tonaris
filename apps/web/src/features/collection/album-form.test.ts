@@ -10,6 +10,7 @@ import {
   formOf,
   formProblems,
   isFormDirty,
+  linksOfForm,
   type AlbumForm,
 } from "./album-form";
 
@@ -94,9 +95,61 @@ describe("the album it makes", () => {
       isLive: true,
       originalYear: "1982",
       recording: "1982",
+      links: { spotify: "", "apple-music": "", qobuz: "", tidal: "" },
       listId: "list",
     });
     expect(isFormDirty(emptyForm("list"))).toBe(false);
     expect(isFormDirty({ ...emptyForm("list"), title: "N" })).toBe(true);
+    const linked = emptyForm(null);
+    expect(
+      isFormDirty({ ...linked, links: { ...linked.links, tidal: "https://tidal.com/album/1" } }),
+    ).toBe(true);
+  });
+});
+
+describe("links (FR-06.3, TS-40)", () => {
+  const valid = {
+    ...emptyForm(null),
+    title: "Bleach",
+    artistCredit: "Nirvana",
+    originalYear: "1989",
+  };
+
+  test("each service's link is optional, checked as the server reads it, and saved as typed", () => {
+    expect(formProblems(valid)).toEqual({});
+    const typed = {
+      ...valid,
+      links: {
+        ...valid.links,
+        spotify: " https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv?si=x ",
+        tidal: "https://tidal.com/album/77654321",
+      },
+    };
+    expect(formProblems(typed)).toEqual({});
+    const albumId = uuidv7();
+    expect(linksOfForm(typed, albumId)).toEqual([
+      {
+        albumId,
+        service: "spotify",
+        url: "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv?si=x",
+      },
+      { albumId, service: "tidal", url: "https://tidal.com/album/77654321" },
+    ]);
+  });
+
+  test("another service's link, or unsupported input, is a problem at its field", () => {
+    const typed = {
+      ...valid,
+      links: {
+        ...valid.links,
+        spotify: "https://music.apple.com/us/album/1440828018",
+        qobuz: "not a link",
+      },
+    };
+    expect(formProblems(typed)).toEqual({
+      spotify: "This is an Apple Music link. Paste a Spotify link here.",
+      qobuz: "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.",
+    });
+    expect(albumOfForm(typed)).toBeUndefined();
   });
 });

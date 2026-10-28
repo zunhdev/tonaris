@@ -6,9 +6,11 @@
 import { albumFieldsSchema, albumSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
+import { streamingServices } from "./links";
 import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
 import { positionSchema } from "./positions";
+import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
 import { viewDefaultsSchema, viewKeySchema, viewPrefsFieldsSchema, viewPrefsSchema } from "./views";
 import { z } from "./zod";
 
@@ -103,6 +105,25 @@ export const membershipRemoveSchema = z.object({
 });
 
 /**
+ * `link.set`: adds an album's link for a service, or replaces it (FR-06.3). `url` is the link as pasted; the server
+ * reads it (TS-40) and stores its canonical URL. `base.url` is the link the client last saw, null for none (TS-21).
+ */
+export const linkSetSchema = z.object({
+  mutationId,
+  name: z.literal("link.set"),
+  args: linkSetArgsSchema,
+  base: z.object({ url: z.string().nullable() }),
+});
+
+/** `link.remove`: removes an album's link for a service, if it is still `base.url` (FR-06.3, TS-21). */
+export const linkRemoveSchema = z.object({
+  mutationId,
+  name: z.literal("link.remove"),
+  args: linkRemoveArgsSchema,
+  base: z.object({ url: z.string() }),
+});
+
+/**
  * `view.set`: remembers or clears a person's choices for one view (FR-11.7). A field left out stays; null clears it
  * back to the account default. The sort's mode and direction change together. `base` holds the prior value of every
  * field in `args`, null for one not set (TS-21, FR-09.4). Clearing every field forgets the view.
@@ -158,6 +179,8 @@ export const mutationSchema = z
     containerMoveSchema,
     membershipAddSchema,
     membershipRemoveSchema,
+    linkSetSchema,
+    linkRemoveSchema,
     viewSetSchema,
     defaultsSetSchema,
     orderSetSchema,
@@ -214,6 +237,17 @@ export const changeSchema = z
     }),
     z.object({
       seq: z.int().positive(),
+      entity: z.literal("link"),
+      id: z
+        .string()
+        .regex(new RegExp(`^${uuidPattern}:(${streamingServices.join("|")})$`, "i"))
+        .meta({ description: "The album's ID and the service, joined by a colon." }),
+      op: z.enum(changeOps),
+      data: serviceLinkSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
       entity: z.literal("view"),
       id: viewKeySchema,
       op: z.enum(changeOps),
@@ -247,6 +281,9 @@ export const bootstrapSchema = z
     albums: z.array(albumSchema),
     containers: z.array(containerSchema),
     memberships: z.array(membershipSchema),
+    links: z
+      .array(serviceLinkSchema)
+      .meta({ description: "The albums' links to the streaming services (FR-06.2)." }),
     views: z.array(viewPrefsSchema).meta({ description: "The person's remembered view choices." }),
     positions: z
       .array(positionSchema)

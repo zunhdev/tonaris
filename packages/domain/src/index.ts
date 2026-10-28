@@ -138,6 +138,17 @@ export {
   type StreamingService,
 } from "./links";
 export { membershipKey, membershipSchema, type Membership } from "./memberships";
+export {
+  linkRemoveArgsSchema,
+  linkSetArgsSchema,
+  serviceLinkKey,
+  serviceLinkSchema,
+  wrongServiceReason,
+  type LinkRemoveArgs,
+  type LinkSetArgs,
+  type PreparedLink,
+  type ServiceLink,
+} from "./service-links";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
 export { isOrderKey, maxOrderItems, positionKey, positionSchema, type Position } from "./positions";
 export { caseFold, nameKey, searchKey, searchMatches } from "./normalize";

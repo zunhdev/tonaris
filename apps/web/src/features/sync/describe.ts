@@ -3,13 +3,14 @@
 // back to the write itself for a record that was rolled back, such as a list whose creation failed. Plain and
 // specific, names in single quotes.
 
-import type {
-  Container,
-  ContainerKind,
-  ErrorCode,
-  Mutation,
-  Outcome,
-  OutcomeStatus,
+import {
+  serviceNames,
+  type Container,
+  type ContainerKind,
+  type ErrorCode,
+  type Mutation,
+  type Outcome,
+  type OutcomeStatus,
 } from "@tonaris/domain";
 
 /** The names the collections hold now. */
@@ -106,6 +107,21 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: "Your default view options",
     };
   }
+  if (mutation.name === "link.set" || mutation.name === "link.remove") {
+    const title = quoted(names.album(mutation.args.albumId), "an album");
+    const link = `the ${serviceNames[mutation.args.service]} link`;
+    const subject = capitalized(`${link} of ${title}`);
+    if (mutation.name === "link.remove") {
+      return {
+        summary: `Remove ${link} from ${title}`,
+        what: `the removal of ${link} from ${title}`,
+        subject,
+      };
+    }
+    return mutation.base.url === null
+      ? { summary: `Add ${link} to ${title}`, what: `${link} for ${title}`, subject }
+      : { summary: `Replace ${link} of ${title}`, what: `the new ${link} for ${title}`, subject };
+  }
   if (mutation.name === "order.set") {
     const view = viewNamed(mutation.args.viewKey, names);
     return {
@@ -193,6 +209,7 @@ const fieldLabels: Record<string, string> = {
   recordingYearEnd: "Recorded until",
   name: "Name",
   parentId: "Location",
+  url: "Link",
   sortMode: "Sort",
   sortDir: "Direction",
   grouped: "Grouping",

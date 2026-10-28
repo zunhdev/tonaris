@@ -26,7 +26,8 @@ export const allowedInternalDependencies: Readonly<Record<string, readonly strin
   "@tonaris/providers": ["@tonaris/domain"],
   "@tonaris/ui": [],
   "@tonaris/api": ["@tonaris/domain", "@tonaris/db", "@tonaris/providers"],
-  "@tonaris/web": ["@tonaris/domain", "@tonaris/ui"],
+  // Only `@tonaris/providers/links`, the pure link parser (TS-40); oxlint rejects the package's root.
+  "@tonaris/web": ["@tonaris/domain", "@tonaris/ui", "@tonaris/providers"],
   "@tonaris/tooling": ["@tonaris/domain", "@tonaris/db", "@tonaris/providers"],
 };
 

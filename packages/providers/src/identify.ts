@@ -24,7 +24,7 @@ import {
 import { cleanTitle, matchHints, type HintMatch, type Hints } from "./hints";
 import type { AppleAlbum, ItunesLookup } from "./itunes";
 import { barcodeForms, qobuzBarcode, urlForms } from "./link-forms";
-import { parseLink, resolveShortLink, type Fetcher, type ParsedLink } from "./links";
+import { readLink, type Fetcher, type ParsedLink } from "./links";
 import type { MusicBrainz } from "./musicbrainz";
 import { ProviderUnavailableError } from "./provider-cache";
 import { safeFetch } from "./safe-fetch";
@@ -270,9 +270,7 @@ export function createIdentifier(deps: IdentifierDeps) {
   /** What album `input`, as pasted, names (TS-41). */
   async function identify(input: string, context: IdentifyContext): Promise<Identification> {
     try {
-      let parsed = parseLink(input);
-      if (parsed.status === "short")
-        parsed = await resolveShortLink(parsed.url, deps.fetch ?? safeFetch);
+      const parsed = await readLink(input, deps.fetch ?? safeFetch);
       if (parsed.status === "failed") return { status: "failed", failure: parsed.failure };
       const { link } = parsed;
       const albumId = await context.linked(link.service, linkEntityId(link));

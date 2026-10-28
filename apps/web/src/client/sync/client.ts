@@ -1,5 +1,6 @@
 // One signed-in client's sync: the engine on the stream, the outbox for writes, the save states, and the
-// collections: the collection's content, and the person's view choices, defaults and manual order. The web app makes one per tab, for the signed-in account (src/features/sync). With tabs, the
+// collections: the collection's content with the albums' links, and the person's view choices, defaults and manual
+// order. The web app makes one per tab, for the signed-in account (src/features/sync). With tabs, the
 // account's tabs share one stream, and the outbox and the review queue are kept in the browser, so a reload loses
 // nothing: the next tab adopts what a gone tab left unsent (TS-22, TS-23). The client also tells changes saved
 // elsewhere from this tab's own, for the views to highlight (DS-82).
@@ -7,6 +8,7 @@
 import { createAlbumCollection } from "./albums";
 import { createChangesElsewhere } from "./elsewhere";
 import { createSyncEngine, type Fetch, type SyncEngineOptions } from "./engine";
+import { createLinkCollection } from "./links";
 import { createContainerCollection, createMembershipCollection } from "./lists";
 import { createOutbox } from "./outbox";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
@@ -58,6 +60,7 @@ export function createSyncClient({
   const albums = createAlbumCollection({ engine, writer });
   const containers = createContainerCollection({ engine, writer });
   const memberships = createMembershipCollection({ engine, writer });
+  const links = createLinkCollection({ engine, writer });
   const views = createViewCollection({ engine, writer });
   const defaults = createDefaultsCollection({ engine, writer });
   const positions = createPositionCollection({ engine });
@@ -74,6 +77,7 @@ export function createSyncClient({
       albums.cleanup(),
       containers.cleanup(),
       memberships.cleanup(),
+      links.cleanup(),
       views.cleanup(),
       defaults.cleanup(),
       positions.cleanup(),
@@ -87,6 +91,7 @@ export function createSyncClient({
     albums,
     containers,
     memberships,
+    links,
     views,
     defaults,
     positions,
