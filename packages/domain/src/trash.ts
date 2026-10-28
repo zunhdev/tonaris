@@ -49,6 +49,23 @@ export const trashUnitSchema = z
     expiresAt: z.iso.datetime(),
     folders: z.int().nonnegative().meta({ description: "Folders deleted with the root." }),
     lists: z.int().nonnegative().meta({ description: "Lists deleted with the root." }),
+    members: z
+      .array(
+        z.object({
+          id: z.uuid(),
+          kind: z.enum(containerKinds),
+          name: z.string(),
+          parentId: z.uuid().nullable(),
+        }),
+      )
+      .meta({
+        description:
+          "The folders and lists deleted with the root, for the Trash view to show read-only (DS-55); none for an album.",
+      }),
+    artist: z
+      .string()
+      .nullable()
+      .meta({ description: "An album's artist credit; null otherwise." }),
   })
   .meta({ description: "Content deleted together, recovered and purged as one (FR-01.13)." });
 export type TrashUnit = z.infer<typeof trashUnitSchema>;
@@ -127,7 +144,8 @@ const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applie
 export function trashUnitOf(
   unit: Omit<StoredTrashUnit, "tombstones">,
   name: string,
-  members: readonly Pick<Container, "id" | "kind" | "parentId">[],
+  members: readonly Pick<Container, "id" | "kind" | "parentId" | "name">[],
+  artist: string | null = null,
 ): TrashUnit {
   const below = members.filter((member) => member.id !== unit.rootId);
   return {
@@ -140,6 +158,13 @@ export function trashUnitOf(
     expiresAt: unit.expiresAt.toISOString(),
     folders: below.filter((member) => member.kind === "folder").length,
     lists: below.filter((member) => member.kind === "list").length,
+    members: below.map(({ id, kind, name: memberName, parentId }) => ({
+      id,
+      kind,
+      name: memberName,
+      parentId,
+    })),
+    artist,
   };
 }
 
@@ -436,7 +461,12 @@ export async function deleteAlbum(
       data: null,
     })),
     ...places,
-    { entity: "trashUnit", id: unit.id, op: "insert", data: trashUnitOf(unit, album.title, []) },
+    {
+      entity: "trashUnit",
+      id: unit.id,
+      op: "insert",
+      data: trashUnitOf(unit, album.title, [], album.artistCredit),
+    },
   );
 }
 

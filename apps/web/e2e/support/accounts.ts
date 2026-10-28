@@ -106,6 +106,9 @@ export const accounts = {
   recoveryName: at("recovery-name"),
   // Album deletion (album-trash.e2e.ts).
   albumTrash: at("album-trash"),
+  // The Trash view (trash-view.e2e.ts), one per test.
+  trashViewFolders: at("trash-view-folders"),
+  trashViewAlbums: at("trash-view-albums"),
 } as const;
 
 /** An address with no account. */

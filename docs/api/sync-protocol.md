@@ -49,7 +49,10 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   - the person's remembered view choices (`views`), one record per view they made a choice in;
   - their manual order (`positions`), one key per arranged item;
   - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own;
-  - the owner's Trash, unit by unit (`trashUnits`), each `{id, kind, rootId, name, parentId, deletedAt, expiresAt, folders, lists}` (TON-55). `parentId` is the root's folder at deletion, null for the top level or an album.
+  - the owner's Trash, unit by unit (`trashUnits`), each `{id, kind, rootId, name, parentId, deletedAt, expiresAt, folders, lists, members, artist}` (TON-55).
+    - `parentId` is the root's folder at deletion, null for the top level or an album.
+    - `members` are the folders and lists deleted with the root, `{id, kind, name, parentId}` (TON-59).
+    - `artist` is an album's credit.
 
   Custom fields and Shared with me join as their features arrive, as new fields (TS-24).
 - **Trash** (TON-55):
@@ -92,7 +95,7 @@ A client keeps one store per entity and applies each change by key:
 | `view` | the view key: `root`, `unsorted`, or a folder's or list's ID | `ViewPrefs` |
 | `defaults` | the account's ID | `ViewDefaults`, never `null` |
 | `position` | `<viewKey>:<itemId>` | `Position` |
-| `trashUnit` | the unit's ID | `TrashUnit`: `{id, kind, rootId, name, parentId, deletedAt, expiresAt, folders, lists}` |
+| `trashUnit` | the unit's ID | `TrashUnit`: `{id, kind, rootId, name, parentId, deletedAt, expiresAt, folders, lists, members, artist}` |
 
 Clients must ignore entities they don't know. New ones are added within v1 (TS-09).
 

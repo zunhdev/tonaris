@@ -876,6 +876,17 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
 Folder units expand to show their contents read-only. Contents are labelled "Part of '{folder}' — restore or delete the folder to act on these" and have no actions of their own. A local name filter narrows the table; this is not global search. Actions per unit: **Restore** (`R`) and **Delete permanently…**. The header has **Empty Trash…**. *(FR-01.12, FR-01.13, FR-01.17, FR-12.1)*
 
+*As built in TON-59:*
+- **The table:** "Trash", newest deletion first, with the columns Name (an album with its artist), Contents, Deleted (medium date), Expires and Was in.
+  - **Contents:** "Folder · 2 lists, 1 folder", "List" or "Album".
+  - **Expires:** "Expires in 12 days" or "Expires within a day", in `status.warning` under 3 days. Its focusable tooltip shows the date and time.
+  - **Was in:** "Collection", "'Metal'", "'Metal' (in Trash)", "A deleted folder", or "—" for albums.
+- **The header:** "Filter by name" and **Empty Trash…** (disabled when empty).
+- **Empty states:** "Nothing in Trash. Deleted items stay here for 30 days.", and "Nothing in Trash matches 'x'." for the filter.
+- **A folder's name** is a disclosure button. Its contents, nested and read-only, are under "Part of 'Metal' — restore or delete the folder to act on these."
+- **Row actions:** **Restore** (R anywhere in the row) and **Delete permanently…**.
+- **On a narrow screen:** "Trash is on the desktop app."
+
 **DS-56 Recovery prompts.** All prompts preview the effective sharing through SharingImpact (FR-07.14). *(FR-01.14–FR-01.16, FR-14.2, FR-14.3, FR-07.10)*
 
 - **Destination** (original parent unavailable): a dialog explains "'{parent}' is in Trash or no longer exists. Choose where to restore '{item}'." It offers a tree picker of active folders and the root, then **Restore** or **Cancel**.
@@ -908,6 +919,18 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 **DS-57 Permanent removal.** Both use the standard confirmation dialog (DS-28) with "This can't be undone", and the button names the count, e.g. "Permanently delete 34 items". *(FR-01.18, FR-14.5)*
 - **Delete permanently:** for an album unit, the dialog shows the slot that will be freed.
 - **Empty Trash:** totals by type.
+
+*As built in TON-59:*
+- **Delete permanently:**
+  - title "Permanently delete 'Bleach'?";
+  - scope "The album 'Bleach' · Nirvana, with its links and field values" and "Frees 1 album slot.", or "The list 'Doom'" / "The folder 'Metal' and the 2 lists inside it" with "Its albums stay in their other lists or in Unsorted.";
+  - "This can't be undone.";
+  - action "Permanently delete 3 items".
+- **Empty Trash:**
+  - title "Empty Trash?";
+  - totals ("2 albums", "1 list");
+  - "Albums still in your collection stay; purged albums free their slots." and "This can't be undone.".
+- **After:** "Deleted 'Bleach' permanently" or "Trash emptied", with "· 1 item was already gone" when a unit had left Trash meanwhile.
 
 ---
 

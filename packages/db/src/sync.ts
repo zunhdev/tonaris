@@ -283,7 +283,7 @@ async function unitsOfAccount(tx: Transaction, accountId: string): Promise<Trash
       ),
     );
   const titles = await tx
-    .select({ id: albums.id, title: albums.title })
+    .select({ id: albums.id, title: albums.title, artist: albums.artistCredit })
     .from(albums)
     .where(
       inArray(
@@ -297,7 +297,9 @@ async function unitsOfAccount(tx: Transaction, accountId: string): Promise<Trash
       unit.kind === "album"
         ? (titles.find((album) => album.id === unit.rootId)?.title ?? "")
         : (own.find((member) => member.id === unit.rootId)?.name ?? "");
-    return trashUnitOf(unit, name, own);
+    const album =
+      unit.kind === "album" ? titles.find((each) => each.id === unit.rootId) : undefined;
+    return trashUnitOf(unit, name, own, album?.artist ?? null);
   });
 }
 
