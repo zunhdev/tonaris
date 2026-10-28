@@ -194,7 +194,15 @@ export {
 } from "./service-links";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
 export { isOrderKey, maxOrderItems, positionKey, positionSchema, type Position } from "./positions";
-export { caseFold, nameKey, searchKey, searchMatches } from "./normalize";
+export {
+  caseFold,
+  matchRange,
+  nameKey,
+  searchKey,
+  searchMatches,
+  searchTier,
+  type SearchTier,
+} from "./normalize";
 export {
   errorCodes,
   errorCodeSchema,

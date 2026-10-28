@@ -4,8 +4,9 @@
 // list or folder, V opens the view's View options, M moves the focused folder or list, E switches between Viewing
 // and Editing mode, L adds the open or focused album to a list, C opens the capture dialog (DS-48), and O opens the
 // open or focused album's "Open in…" chooser (DS-25). ⌫ deletes the focused folder or list, and ⌘⌫ the open or
-// focused album (DS-50). Esc closing the inspector is the inspector's.
-// Nothing matches while a text field has focus, nor with ⌘, Ctrl or Alt held. Shortcuts come before the tree's
+// focused album (DS-50). ⌘K, or Ctrl+K, opens the search palette (DS-75), also from a text field. Esc closing the
+// inspector is the inspector's.
+// Nothing else matches while a text field has focus, nor with ⌘, Ctrl or Alt held. Shortcuts come before the tree's
 // type-ahead (decided 22 October 2026): a matched key is claimed, and the tree types ahead only with the others.
 
 export type ShortcutAction =
@@ -24,7 +25,8 @@ export type ShortcutAction =
   | "capture"
   | "open-in"
   | "delete"
-  | "delete-album";
+  | "delete-album"
+  | "search";
 
 /** What the matcher reads of a `KeyboardEvent`. */
 export type KeyPress = {
@@ -89,6 +91,16 @@ export function createShortcutMatcher({ sequenceMs = 1_500 } = {}): ShortcutMatc
   /** When G was pressed, while its sequence is open. */
   let started: number | undefined;
   return (press) => {
+    // ⌘K (Ctrl+K elsewhere) searches from anywhere, a text field included (DS-78).
+    if (
+      !press.repeat &&
+      !press.altKey &&
+      (press.metaKey || press.ctrlKey) &&
+      press.key.toLowerCase() === "k"
+    ) {
+      started = undefined;
+      return "search";
+    }
     // ⌘⌫ (Ctrl+⌫ elsewhere) deletes an album from the collection (DS-50), the one combination with a modifier.
     if (
       !press.repeat &&
@@ -133,6 +145,7 @@ export const shortcutReference = [
       { keys: ["G", "U"], action: "Go to Unsorted" },
       { keys: ["G", "T"], action: "Go to Trash" },
       { keys: ["G", "S"], action: "Go to Settings" },
+      { keys: ["⌘", "K"], action: "Search" },
       { keys: ["["], action: "Hide or show the sidebar" },
     ],
   },

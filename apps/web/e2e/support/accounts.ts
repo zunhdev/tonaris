@@ -111,6 +111,9 @@ export const accounts = {
   trashViewAlbums: at("trash-view-albums"),
   // Settings → Data's usage meter (usage.e2e.ts).
   usage: at("usage"),
+  // The search palette (search.e2e.ts), one per test.
+  searchResults: at("search-results"),
+  searchOpening: at("search-opening"),
 } as const;
 
 /** An address with no account. */
