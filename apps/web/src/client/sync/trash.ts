@@ -33,6 +33,9 @@ export function createTrashUnitCollection({ engine }: { engine: SyncEngine }) {
 
 export type TrashUnitCollection = ReturnType<typeof createTrashUnitCollection>;
 
+/** Where to recover a unit's root, and as what, when not where and as it was (FR-01.15, FR-01.16). */
+export type RecoveryChoice = { parentId?: string | null; name?: string };
+
 /** What a deletion took out of the collections, to put back if it is undone. */
 export type Deleted = {
   /** Each unit made: its ID and its root. */
@@ -52,31 +55,6 @@ export function createTrash({
   trashUnits: TrashUnitCollection;
   writer: Writer;
 }) {
-  /** One transaction recovering `units`, with what `mutate` puts back meanwhile. */
-  function recovery(units: readonly { unitId: string; rootId: string }[], mutate: () => void) {
-    const transaction = createTransaction({
-      mutationFn: async ({ transaction: written }) => {
-        await writer.persist(
-          written,
-          units.map(({ unitId, rootId }) => {
-            const mutation: Mutation = {
-              mutationId: uuidv7(),
-              name: "trash.recover",
-              args: { unitId },
-            };
-            return { key: rootId, mutation };
-          }),
-        );
-      },
-    });
-    transaction.mutate(() => {
-      const gone = units.map((unit) => unit.unitId).filter((id) => trashUnits.has(id));
-      if (gone.length > 0) trashUnits.delete(gone);
-      mutate();
-    });
-    return transaction;
-  }
-
   /** The folder or list and its descendants this client holds, itself first. */
   function subtree(rootId: string): Container[] {
     const root = containers.get(rootId);
@@ -134,24 +112,51 @@ export function createTrash({
       return { transaction, deleted };
     },
 
-    /** Recovers the units a deletion made, putting back what it took out (FR-01.14). */
-    recover(deleted: Deleted) {
-      return recovery(deleted.units, () => {
-        const back = deleted.containers.filter((row) => !containers.has(row.id));
+    /**
+     * Recovers a unit (FR-01.14 to FR-01.16): to `choice.parentId` and as `choice.name` when given, otherwise where and
+     * as it was. With `deleted`, what the deletion took out comes back at once, as chosen; otherwise it arrives from the
+     * server. Answers the transaction and its write's ID, whose outcome reports what was skipped.
+     */
+    recover(
+      unit: { unitId: string; rootId: string },
+      choice: RecoveryChoice = {},
+      deleted?: Deleted,
+    ) {
+      const mutation: Mutation = {
+        mutationId: uuidv7(),
+        name: "trash.recover",
+        args: { unitId: unit.unitId, ...choice },
+      };
+      const transaction = createTransaction({
+        mutationFn: async ({ transaction: written }) => {
+          await writer.persist(written, [{ key: unit.rootId, mutation }]);
+        },
+      });
+      transaction.mutate(() => {
+        if (trashUnits.has(unit.unitId)) trashUnits.delete(unit.unitId);
+        if (!deleted) return;
+        const back = deleted.containers
+          .filter((row) => !containers.has(row.id))
+          .map((row): Container => {
+            if (row.id !== unit.rootId) return row;
+            const { id, kind, description } = row;
+            return {
+              id,
+              kind,
+              description,
+              parentId: choice.parentId === undefined ? row.parentId : choice.parentId,
+              name: choice.name ?? row.name,
+            };
+          });
         if (back.length > 0) containers.insert(back);
+        const lists = new Set(back.map((row) => row.id));
         const entries = deleted.entries.filter(
-          (entry) => !memberships.has(membershipKey(entry.listId, entry.albumId)),
+          (entry) =>
+            lists.has(entry.listId) && !memberships.has(membershipKey(entry.listId, entry.albumId)),
         );
         if (entries.length > 0) memberships.insert(entries);
       });
-    },
-
-    /** Recovers units from Trash by ID; what they hold arrives from the server (FR-01.14). */
-    recoverUnits(unitIds: readonly string[]) {
-      return recovery(
-        unitIds.map((unitId) => ({ unitId, rootId: trashUnits.get(unitId)?.rootId ?? unitId })),
-        () => {},
-      );
+      return { transaction, mutationId: mutation.mutationId };
     },
   };
 }

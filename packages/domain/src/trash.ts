@@ -34,6 +34,10 @@ export const trashUnitSchema = z
     kind: z.enum(trashUnitKinds),
     rootId: z.uuid().meta({ description: "The folder, list or album deleted." }),
     name: z.string().meta({ description: "The root's name, or the album's title." }),
+    parentId: z.uuid().nullable().meta({
+      description:
+        "The folder the root was in, null for the root or an album: where recovery returns it if that folder is active (FR-01.15).",
+    }),
     deletedAt: z.iso.datetime(),
     expiresAt: z.iso.datetime(),
     folders: z.int().nonnegative().meta({ description: "Folders deleted with the root." }),
@@ -41,6 +45,9 @@ export const trashUnitSchema = z
   })
   .meta({ description: "Content deleted together, recovered and purged as one (FR-01.13)." });
 export type TrashUnit = z.infer<typeof trashUnitSchema>;
+
+/** An album purged while a unit still referred to it, so recovery can report it (TS-13). */
+export type Tombstone = { id: string; title: string; artist: string };
 
 /** A unit as the store keeps it. */
 export type StoredTrashUnit = {
@@ -50,7 +57,22 @@ export type StoredTrashUnit = {
   rootId: string;
   deletedAt: Date;
   expiresAt: Date;
+  tombstones: Tombstone[];
 };
+
+/** An entry recovery didn't bring back, and why (FR-01.14): its album is in Trash, or gone for good. */
+export const skippedEntrySchema = z.object({
+  albumId: z.uuid(),
+  title: z.string(),
+  artist: z.string(),
+  listId: z.uuid().nullable().meta({ description: "The list it was in; null when unknown." }),
+  reason: z.enum(["album_in_trash", "album_deleted"]),
+});
+export type SkippedEntry = z.infer<typeof skippedEntrySchema>;
+
+/** `trash.recover`'s `result` in a `confirmed` outcome: the entries it skipped (FR-01.14, DS-56). */
+export const recoveryResultSchema = z.object({ skipped: z.array(skippedEntrySchema) });
+export type RecoveryResult = z.infer<typeof recoveryResultSchema>;
 
 export const containerDeleteArgsSchema = z.object({
   id: z.uuid(),
@@ -87,9 +109,9 @@ const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applie
 
 /** The unit as clients see it, from its members as they were deleted. */
 export function trashUnitOf(
-  unit: StoredTrashUnit,
+  unit: Omit<StoredTrashUnit, "tombstones">,
   name: string,
-  members: readonly Pick<Container, "id" | "kind">[],
+  members: readonly Pick<Container, "id" | "kind" | "parentId">[],
 ): TrashUnit {
   const below = members.filter((member) => member.id !== unit.rootId);
   return {
@@ -97,6 +119,7 @@ export function trashUnitOf(
     kind: unit.kind,
     rootId: unit.rootId,
     name,
+    parentId: members.find((member) => member.id === unit.rootId)?.parentId ?? null,
     deletedAt: unit.deletedAt.toISOString(),
     expiresAt: unit.expiresAt.toISOString(),
     folders: below.filter((member) => member.kind === "folder").length,
@@ -151,6 +174,7 @@ export async function deleteContainer(
     rootId: container.id,
     deletedAt: now,
     expiresAt: new Date(now.getTime() + trashRetentionDays * 86_400_000),
+    tombstones: [],
   };
   await store.trashContainers(
     unit,
@@ -240,20 +264,30 @@ export async function recoverUnit(
 
   const lists = members.filter((member) => member.kind === "list").map((member) => member.id);
   const entries = await store.listEntries(lists);
-  const albums = new Map<string, { active: boolean; unsorted: boolean }>();
+  const albums = new Map<
+    string,
+    { active: boolean; unsorted: boolean; title: string; artist: string }
+  >();
   for (const albumId of new Set(entries.map((entry) => entry.albumId))) {
     // oxlint-disable-next-line no-await-in-loop
-    const active = await isActive(store, albumId);
-    // oxlint-disable-next-line no-await-in-loop
-    albums.set(albumId, { active, unsorted: active && !(await store.inActiveList(albumId)) });
+    const album = await store.findAlbum(albumId);
+    const active = album !== undefined && !album.trashed;
+    albums.set(albumId, {
+      active,
+      // oxlint-disable-next-line no-await-in-loop
+      unsorted: active && !(await store.inActiveList(albumId)),
+      title: album?.title ?? "",
+      artist: album?.artistCredit ?? "",
+    });
+  }
+  // Moved and renamed while still in Trash, so its old name never meets an active sibling's.
+  if (root.parentId !== parentId || root.name !== name) {
+    await store.updateContainer(root.id, { parentId, name });
   }
   await store.recoverContainers(
     unit.id,
     members.map((member) => member.id),
   );
-  if (root.parentId !== parentId || root.name !== name) {
-    await store.updateContainer(root.id, { parentId, name });
-  }
 
   const effective = entries.filter((entry) => albums.get(entry.albumId)?.active);
   const leftUnsorted: ChangeInput[] = [];
@@ -262,22 +296,51 @@ export async function recoverUnit(
     // oxlint-disable-next-line no-await-in-loop
     leftUnsorted.push(...(await forgetPlace(store, ownerId, "unsorted", albumId)));
   }
-  return applied(
-    ...members.map((member): ChangeInput => ({
-      entity: "container",
-      id: member.id,
-      op: "insert",
-      data: containerOf(member.id === root.id ? { ...member, parentId, name } : member),
-    })),
-    ...effective.map((entry): ChangeInput => ({
-      entity: "membership",
-      id: membershipKey(entry.listId, entry.albumId),
-      op: "insert",
-      data: membershipOf(entry),
-    })),
-    ...leftUnsorted,
-    { entity: "trashUnit", id: unit.id, op: "delete", data: null },
-  );
+  // What didn't come back: entries whose album is in Trash, and albums gone for good (FR-01.14).
+  const result: RecoveryResult = {
+    skipped: [
+      ...entries.flatMap((entry): SkippedEntry[] => {
+        const album = albums.get(entry.albumId);
+        if (!album || album.active) return [];
+        return [
+          {
+            albumId: entry.albumId,
+            title: album.title,
+            artist: album.artist,
+            listId: entry.listId,
+            reason: "album_in_trash",
+          },
+        ];
+      }),
+      ...unit.tombstones.map((tombstone): SkippedEntry => ({
+        albumId: tombstone.id,
+        title: tombstone.title,
+        artist: tombstone.artist,
+        listId: null,
+        reason: "album_deleted",
+      })),
+    ],
+  };
+  return {
+    status: "applied",
+    result,
+    changes: [
+      ...members.map((member): ChangeInput => ({
+        entity: "container",
+        id: member.id,
+        op: "insert",
+        data: containerOf(member.id === root.id ? { ...member, parentId, name } : member),
+      })),
+      ...effective.map((entry): ChangeInput => ({
+        entity: "membership",
+        id: membershipKey(entry.listId, entry.albumId),
+        op: "insert",
+        data: membershipOf(entry),
+      })),
+      ...leftUnsorted,
+      { entity: "trashUnit", id: unit.id, op: "delete", data: null },
+    ],
+  };
 }
 
 const membershipOf = ({ listId, albumId, addedAt }: Membership): Membership => ({

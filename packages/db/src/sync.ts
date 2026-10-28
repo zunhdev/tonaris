@@ -269,6 +269,7 @@ async function unitsOfAccount(tx: Transaction, accountId: string): Promise<Trash
       id: containers.id,
       kind: containers.kind,
       name: containers.name,
+      parentId: containers.parentId,
       unitId: containers.trashUnitId,
     })
     .from(containers)
@@ -744,6 +745,7 @@ function collectionStore(tx: Transaction): CollectionStore {
           rootId: trashUnits.rootId,
           deletedAt: trashUnits.deletedAt,
           expiresAt: trashUnits.expiresAt,
+          tombstones: trashUnits.tombstones,
         })
         .from(trashUnits)
         .where(eq(trashUnits.id, id));

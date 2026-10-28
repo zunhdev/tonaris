@@ -183,6 +183,45 @@ describe("recovering folders and lists (FR-01.14 to FR-01.16, TS-26)", () => {
     expect(await run(recover(unitId))).toMatchObject({ status: "failed", code: "not_found" });
   });
 
+  test("only active albums come back; entries of albums in Trash or gone are reported as skipped", async () => {
+    const doom = container("list", "Doom");
+    const dopesmoker = album("Dopesmoker");
+    const holy = { ...album("Holy Mountain"), trashed: true };
+    const addedAt = "2026-10-28T12:00:00.000Z";
+    const { run, trashUnits } = setup([doom], {
+      albums: [dopesmoker, holy],
+      memberships: [
+        { listId: doom.id, albumId: dopesmoker.id, addedAt, ownerId: owner },
+        { listId: doom.id, albumId: holy.id, addedAt, ownerId: owner },
+      ],
+    });
+    const unitId = uuidv7();
+    await run(remove(doom.id, unitId));
+    // An album purged while the unit referred to it leaves a tombstone (TS-13).
+    const gone = { id: uuidv7(), title: "Volume One", artist: "Sleep" };
+    trashUnits.get(unitId)?.tombstones.push(gone);
+    const result = await run(recover(unitId));
+    expect(result).toMatchObject({
+      status: "applied",
+      result: {
+        skipped: [
+          {
+            albumId: holy.id,
+            title: "Holy Mountain",
+            artist: "Sleep",
+            listId: doom.id,
+            reason: "album_in_trash",
+          },
+          { albumId: gone.id, title: "Volume One", listId: null, reason: "album_deleted" },
+        ],
+      },
+    });
+    const changes = result.status === "applied" ? result.changes : [];
+    expect(changes.filter((change) => change.entity === "membership")).toMatchObject([
+      { data: { albumId: dopesmoker.id } },
+    ]);
+  });
+
   test("a parent in Trash, or gone, asks for a destination; a chosen one is used", async () => {
     const metal = container("folder", "Metal");
     const doom = container("list", "Doom", metal.id);
