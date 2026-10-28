@@ -82,6 +82,10 @@ export const accounts = {
   captureBatch: at("capture-batch"),
   captureKept: at("capture-kept"),
   captureField: at("capture-field"),
+  // Opening a service (open-in.e2e.ts), one per test.
+  openDesktop: at("open-desktop"),
+  openKeys: at("open-keys"),
+  openMobile: at("open-mobile"),
 } as const;
 
 /** An address with no account. */

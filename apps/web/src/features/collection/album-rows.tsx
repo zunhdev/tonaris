@@ -3,18 +3,20 @@
 // is hidden while the view is grouped by it. Grouped, each group starts with its header, the one in view sticking
 // at the top (DS-43). A click, or Enter in Viewing mode, opens the album in the inspector (DS-46). In Editing mode,
 // the title, artist and year cells edit inline (DS-45): Enter or a double-click opens one, and F2 the title,
-// switching to Editing first. The checkbox and the services and Open button (M4) join
+// switching to Editing first. The services the album has links for follow the type, and collapse first; the status
+// cell has the Open button on hover or focus, which opens the "Open in…" chooser (DS-21, DS-25). The checkbox joins
 // these columns later. Each row is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 
 // Virtualized rows are absolutely positioned CSS grid rows, which table elements can't be without overriding their
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
+import { useOpenIn } from "@/features/open/open-in";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { useVirtualizer, type Range } from "@tanstack/react-virtual";
-import { GripVertical } from "lucide-react";
+import { ExternalLink, GripVertical } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -25,7 +27,7 @@ import {
   type KeyboardEvent,
 } from "react";
 
-import type { Album } from "@tonaris/domain";
+import { serviceNames, streamingServices, type Album, type ServiceLink } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { isTextField } from "../shell/shortcuts";
@@ -33,6 +35,7 @@ import { albumEdit, cellText, type AlbumCell } from "./album-edit";
 import { Artwork } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
 import { useCollectionUi, useMode } from "./collection-ui";
+import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
 import { useAlbumOpening } from "./inspector-state";
@@ -58,6 +61,8 @@ export const cellNames: Record<AlbumCell, string> = {
 type CellEdit = { albumId: string; cell: AlbumCell; draft: string; refusal?: string };
 /** Below this width, the type column collapses (DS-21). */
 const typeFrom = 640;
+/** Below this width, the services column collapses, before the type (DS-21). */
+const servicesFrom = 760;
 
 const typeNames: Record<NonNullable<Album["releaseType"]>, string> = {
   album: "Album",
@@ -109,7 +114,9 @@ export function AlbumRows({
   const width = useWidth(scroller);
   const grouped = sections[0]?.group !== undefined;
   const showType = !grouped && (width === 0 || width >= typeFrom);
-  const columns = showType ? 5 : 4;
+  const showServices = width === 0 || width >= servicesFrom;
+  const columns = 4 + (showType ? 1 : 0) + (showServices ? 1 : 0);
+  const { linksByAlbum } = useCollectionData();
   const items = useMemo(() => itemsOf(sections, collapsed), [sections, collapsed]);
   const headers = useMemo(
     () => items.flatMap((item, index) => (item.type === "header" ? [index] : [])),
@@ -261,9 +268,14 @@ export function AlbumRows({
     onKeyDown(event);
   }
 
-  const template = showType
-    ? "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_7rem_6.5rem_1.5rem]"
-    : "grid-cols-[minmax(0,3fr)_minmax(0,2fr)_7rem_1.5rem]";
+  const template = [
+    "minmax(0,3fr)",
+    "minmax(0,2fr)",
+    "7rem",
+    ...(showType ? ["6.5rem"] : []),
+    ...(showServices ? ["minmax(0,1.5fr)"] : []),
+    "3.25rem",
+  ].join(" ");
 
   return (
     <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-2">
@@ -292,6 +304,7 @@ export function AlbumRows({
             <span role="columnheader">Artist</span>
             <span role="columnheader">Year</span>
             {showType && <span role="columnheader">Type</span>}
+            {showServices && <span role="columnheader">Services</span>}
             <span role="columnheader">Status</span>
           </div>
         </div>
@@ -334,6 +347,8 @@ export function AlbumRows({
                 top={virtual.start}
                 template={template}
                 showType={showType}
+                services={showServices ? servicesOf(linksByAlbum.get(item.album.id)) : undefined}
+                hasLinks={(linksByAlbum.get(item.album.id)?.length ?? 0) > 0}
                 cellProps={cellProps}
                 edit={cellEdit?.albumId === item.album.id ? cellEdit : undefined}
                 onDraft={(draft) => {
@@ -365,6 +380,8 @@ function AlbumRow({
   top,
   template,
   showType,
+  services,
+  hasLinks,
   cellProps,
   edit,
   onDraft,
@@ -377,8 +394,13 @@ function AlbumRow({
   manual: boolean;
   index: number;
   top: number;
+  /** The grid's `grid-template-columns`. */
   template: string;
   showType: boolean;
+  /** The services the album has links for, in words, when that column shows. */
+  services: string | undefined;
+  /** Whether it has links to open, so the row offers Open (DS-25). */
+  hasLinks: boolean;
   cellProps: ReturnType<typeof useGridFocus>["cellProps"];
   /** This row's cell being edited, if one is. */
   edit: CellEdit | undefined;
@@ -441,13 +463,26 @@ function AlbumRow({
           </div>,
         ]
       : []),
+    ...(services === undefined
+      ? []
+      : [
+          <div
+            key="services"
+            role="gridcell"
+            className={cn(cell, "pr-3 text-fg-tertiary")}
+            {...cellProps(index, showType ? 4 : 3)}
+          >
+            <span className="truncate">{services}</span>
+          </div>,
+        ]),
     <div
       key="status"
       role="gridcell"
-      className={cn(cell, "justify-center")}
-      {...cellProps(index, showType ? 4 : 3)}
+      className={cn(cell, "justify-end gap-1")}
+      {...cellProps(index, 3 + (showType ? 1 : 0) + (services === undefined ? 0 : 1))}
     >
       <SaveStateMarker status={status} />
+      {hasLinks && <OpenButton albumId={album.id} title={album.title} />}
     </div>,
   ];
   return (
@@ -459,9 +494,8 @@ function AlbumRow({
       className={cn(
         "group/row absolute inset-x-0 top-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
         drag.dragging && "opacity-40",
-        template,
       )}
-      style={{ transform: `translateY(${top}px)` }}
+      style={{ transform: `translateY(${top}px)`, gridTemplateColumns: template }}
     >
       {manual && <DragHandle {...drag.handle} />}
       {drag.side && <DropLine side={drag.side} />}
@@ -560,5 +594,36 @@ function CellEditor({
         </span>
       )}
     </span>
+  );
+}
+
+/** "Spotify, Tidal": the services an album has links for, in their order (DS-21). */
+function servicesOf(links: readonly ServiceLink[] | undefined): string {
+  return streamingServices
+    .filter((service) => links?.some((link) => link.service === service))
+    .map((service) => serviceNames[service])
+    .join(", ");
+}
+
+/**
+ * The row's Open button (DS-21, DS-25): on hover or focus, and always on touch screens. It is pointer-only, as `O` is
+ * its keyboard path, and a click on it opens the chooser rather than the inspector.
+ */
+function OpenButton({ albumId, title }: { albumId: string; title: string }) {
+  const openIn = useOpenIn();
+  return (
+    <button
+      type="button"
+      tabIndex={-1}
+      aria-label={`Open '${title}' in…`}
+      data-slot="open-in"
+      onClick={(event) => {
+        event.stopPropagation();
+        openIn?.show(albumId, event.currentTarget);
+      }}
+      className="invisible flex size-6 shrink-0 items-center justify-center rounded-sm text-fg-tertiary outline-none group-focus-within/row:visible group-hover/row:visible hover:bg-hover hover:text-fg-primary [@media(hover:none)]:visible"
+    >
+      <ExternalLink aria-hidden strokeWidth={1.5} className="size-3.5" />
+    </button>
   );
 }

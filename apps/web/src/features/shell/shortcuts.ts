@@ -2,7 +2,8 @@
 // tested without a DOM. G starts a sequence: G then H, U, T or S within 1.5 s goes to the root, Unsorted, Trash or
 // Settings → Preferences. Single keys: `[` hides or shows the sidebar, `?` opens the reference, N and ⇧N make a new
 // list or folder, V opens the view's View options, M moves the focused folder or list, E switches between Viewing
-// and Editing mode, L adds the open or focused album to a list, and C opens the capture dialog (DS-48). Esc closing the inspector is the inspector's.
+// and Editing mode, L adds the open or focused album to a list, C opens the capture dialog (DS-48), and O opens the
+// open or focused album's "Open in…" chooser (DS-25). Esc closing the inspector is the inspector's.
 // Nothing matches while a text field has focus, nor with ⌘, Ctrl or Alt held. Shortcuts come before the tree's
 // type-ahead (decided 22 October 2026): a matched key is claimed, and the tree types ahead only with the others.
 
@@ -19,7 +20,8 @@ export type ShortcutAction =
   | "move"
   | "toggle-mode"
   | "add-to-list"
-  | "capture";
+  | "capture"
+  | "open-in";
 
 /** What the matcher reads of a `KeyboardEvent`. */
 export type KeyPress = {
@@ -68,6 +70,7 @@ const singles: Record<string, ShortcutAction> = {
   e: "toggle-mode",
   l: "add-to-list",
   c: "capture",
+  o: "open-in",
 };
 
 /**
@@ -133,6 +136,7 @@ export const shortcutReference = [
     keys: [
       { keys: ["C"], action: "Add albums from links" },
       { keys: ["L"], action: "Add to list…" },
+      { keys: ["O"], action: "Open in…" },
     ],
   },
   {

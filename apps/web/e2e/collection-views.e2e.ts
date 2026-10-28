@@ -66,11 +66,13 @@ test("a list's albums show as rows in chronological order, or as cards kept per 
     "TTales of Creation",
     "DDactylis Glomerata",
   ]);
+  // The services column is empty: these albums have no links (DS-21, TON-47).
   await expect(rows(page, "Doom").nth(2).getByRole("gridcell")).toHaveText([
     "LLive in Stockholm",
     "Candlemass",
     "rec. 1988",
     "Live",
+    "",
     "",
   ]);
   expect(await violations(page, '[role="grid"]')).toEqual([]);
@@ -79,7 +81,7 @@ test("a list's albums show as rows in chronological order, or as cards kept per 
   await page.goto("/unsorted");
   await expect(rows(page, "Unsorted").locator('[data-cell$=":0"]')).toHaveText(["AAncient Dreams"]);
 
-  // Narrower, the type collapses first (DS-21).
+  // Narrower, the services and the type collapse (DS-21).
   await page.setViewportSize({ width: 800, height: 700 });
   await page.goto(`/l/${doom.id}`);
   await expect(rows(page, "Doom").nth(2).getByRole("gridcell")).toHaveText([

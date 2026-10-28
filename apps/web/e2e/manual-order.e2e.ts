@@ -272,6 +272,8 @@ test("folders and lists move with M and by dragging onto the tree, and the root 
       .getByRole("link", { name: "Collection", exact: true }),
   );
   await expect(tree.getByRole("treeitem", { name: /^Funeral/ })).toHaveAttribute("aria-level", "1");
+  // Saved before the page reloads, so the root shows it.
+  await saved(page);
 
   // Unarranged, the root holds Funeral in creation order. Rearranging it moves no folder or list, and the tree
   // follows the new order.
