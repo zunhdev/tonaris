@@ -13,7 +13,7 @@ import {
   type Database,
   findApproval,
   listContainer,
-  searchAlbums,
+  searchCollection,
 } from "@tonaris/db";
 import { approvalState, approvalSummary, authorizeWrite, type McpPrincipal } from "@tonaris/domain";
 
@@ -118,8 +118,9 @@ export function createMcpServer({ db, principal, webOrigin }: McpServerOptions) 
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ query, limit }) => {
-      const matches = await searchAlbums(db, { ownerId: principal.userId, query, limit });
-      const albums = matches.map((album) => ({
+      // The app's search and order (X-02); folders and lists join this tool in M9 (TON-81).
+      const found = await searchCollection(db, { ownerId: principal.userId, query, limit });
+      const albums = found.albums.items.map((album) => ({
         id: album.id,
         title: album.title,
         artist: album.artistCredit,

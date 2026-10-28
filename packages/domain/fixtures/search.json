@@ -1,0 +1,150 @@
+{
+  "$comment": "Search parity (X-02, TS-50; FR-12.1, FR-12.4, FR-12.5): one collection, with some of it in Trash, and queries with the groups, order, totals and locations every search must give. The web app's index runs it on the active part, as the client holds only that; the server's search inserts all of it, Trash included. A location lists the names from the top of the collection down to the folder or list that holds the item; an album lists each of its active lists that way, ordered by path, and none means Unsorted.",
+  "containers": [
+    { "ref": "metal", "kind": "folder", "name": "Metal", "parent": null },
+    {
+      "ref": "doom",
+      "kind": "list",
+      "name": "Doom",
+      "parent": "metal",
+      "description": "heavy and slow"
+    },
+    { "ref": "funeral", "kind": "folder", "name": "Funeral Doom", "parent": "metal" },
+    { "ref": "deep", "kind": "list", "name": "Deep", "parent": "funeral" },
+    { "ref": "classic", "kind": "list", "name": "Classic Doom", "parent": null },
+    { "ref": "kaboom", "kind": "list", "name": "Kaboom-doomed", "parent": null },
+    { "ref": "grunge", "kind": "folder", "name": "Grunge", "parent": null },
+    { "ref": "nineties", "kind": "list", "name": "90s", "parent": "grunge" },
+    { "ref": "favorites", "kind": "list", "name": "Favorites", "parent": null },
+    { "ref": "sludge", "kind": "list", "name": "Sludge Doom", "parent": null, "trashed": true }
+  ],
+  "albums": [
+    { "ref": "bleach", "title": "Bleach", "artist": "Nirvana", "lists": ["nineties", "favorites"] },
+    { "ref": "nevermind", "title": "Nevermind", "artist": "Nirvana", "lists": [] },
+    { "ref": "homogenic", "title": "Homogenic", "artist": "Björk", "lists": ["favorites"] },
+    {
+      "ref": "epicus",
+      "title": "Epicus Doomicus Metallicus",
+      "artist": "Candlemass",
+      "lists": ["doom"]
+    },
+    { "ref": "nightfall", "title": "Nightfall", "artist": "Candlemass", "lists": ["deep", "doom"] },
+    { "ref": "metallica", "title": "Metallica", "artist": "Metallica", "lists": [] },
+    { "ref": "strasse", "title": "Straße", "artist": "Kraftwerk", "lists": [] },
+    { "ref": "dopesmoker", "title": "Dopesmoker", "artist": "Sleep", "lists": ["sludge"] },
+    { "ref": "gone", "title": "Doom Trashed", "artist": "Nobody", "lists": [], "trashed": true }
+  ],
+  "queries": [
+    {
+      "query": "doom",
+      "folders": { "total": 1, "items": [{ "name": "Funeral Doom", "location": ["Metal"] }] },
+      "lists": {
+        "total": 3,
+        "items": [
+          { "name": "Doom", "location": ["Metal"] },
+          { "name": "Classic Doom", "location": [] },
+          { "name": "Kaboom-doomed", "location": [] }
+        ]
+      },
+      "albums": {
+        "total": 1,
+        "items": [{ "title": "Epicus Doomicus Metallicus", "lists": [["Metal", "Doom"]] }]
+      }
+    },
+    {
+      "query": "METAL",
+      "folders": { "total": 1, "items": [{ "name": "Metal", "location": [] }] },
+      "lists": { "total": 0, "items": [] },
+      "albums": {
+        "total": 2,
+        "items": [
+          { "title": "Metallica", "lists": [] },
+          { "title": "Epicus Doomicus Metallicus", "lists": [["Metal", "Doom"]] }
+        ]
+      }
+    },
+    {
+      "query": "bjork",
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 0, "items": [] },
+      "albums": { "total": 1, "items": [{ "title": "Homogenic", "lists": [["Favorites"]] }] }
+    },
+    {
+      "query": "nirvana",
+      "limit": 1,
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 0, "items": [] },
+      "albums": {
+        "total": 2,
+        "items": [{ "title": "Bleach", "lists": [["Favorites"], ["Grunge", "90s"]] }]
+      }
+    },
+    {
+      "query": "candlemass",
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 0, "items": [] },
+      "albums": {
+        "total": 2,
+        "items": [
+          { "title": "Epicus Doomicus Metallicus", "lists": [["Metal", "Doom"]] },
+          {
+            "title": "Nightfall",
+            "lists": [
+              ["Metal", "Doom"],
+              ["Metal", "Funeral Doom", "Deep"]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "query": "ss",
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 1, "items": [{ "name": "Classic Doom", "location": [] }] },
+      "albums": {
+        "total": 3,
+        "items": [
+          { "title": "Epicus Doomicus Metallicus", "lists": [["Metal", "Doom"]] },
+          {
+            "title": "Nightfall",
+            "lists": [
+              ["Metal", "Doom"],
+              ["Metal", "Funeral Doom", "Deep"]
+            ]
+          },
+          { "title": "Straße", "lists": [] }
+        ]
+      }
+    },
+    {
+      "query": "90",
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 1, "items": [{ "name": "90s", "location": ["Grunge"] }] },
+      "albums": { "total": 0, "items": [] }
+    },
+    {
+      "query": "sleep",
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 0, "items": [] },
+      "albums": { "total": 1, "items": [{ "title": "Dopesmoker", "lists": [] }] }
+    },
+    {
+      "query": "heavy",
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 0, "items": [] },
+      "albums": { "total": 0, "items": [] }
+    },
+    {
+      "query": "trashed",
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 0, "items": [] },
+      "albums": { "total": 0, "items": [] }
+    },
+    {
+      "query": "sludge",
+      "folders": { "total": 0, "items": [] },
+      "lists": { "total": 0, "items": [] },
+      "albums": { "total": 0, "items": [] }
+    }
+  ]
+}

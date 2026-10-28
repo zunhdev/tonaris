@@ -253,6 +253,23 @@ describe("the MCP server (TS-60, TS-63)", () => {
     expect(overview.structuredContent).toMatchObject({ connection: { mode: "read_only" } });
   });
 
+  test("search orders albums as the app does (X-02)", async () => {
+    const clientId = await registerClient();
+    const { userId, tokens } = await connect("anna@example.com", clientId, "read_only");
+    await insertAlbum(userId, "Kadoom", "Abe", 2000);
+    await insertAlbum(userId, "Classic Doom", "Mid", 2001);
+    await insertAlbum(userId, "Doom Metal", "Zed", 2002);
+    const mcp = await mcpClient(tokens.access_token);
+    const found = await mcp.callTool({ name: "search", arguments: { query: "doom" } });
+    expect(found.structuredContent).toEqual({
+      albums: [
+        expect.objectContaining({ title: "Doom Metal" }),
+        expect.objectContaining({ title: "Classic Doom" }),
+        expect.objectContaining({ title: "Kadoom" }),
+      ],
+    });
+  });
+
   test("search treats % and _ as text", async () => {
     const clientId = await registerClient();
     const { userId, tokens } = await connect("anna@example.com", clientId, "read_only");

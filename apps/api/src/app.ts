@@ -24,6 +24,7 @@ import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
 import { fieldRoutes } from "./routes/v1/fields";
 import { meRoutes } from "./routes/v1/me";
+import { searchRoutes } from "./routes/v1/search";
 import { csrfGuard, securityHeaders } from "./security";
 import { databaseHub, type SyncHub } from "./sync/hub";
 import { syncRoutes } from "./sync/routes";
@@ -56,6 +57,7 @@ function v1(
     .use(connectionRoutes(session, { db: sync.db }))
     .use(approvalRoutes(session, { db: sync.db }))
     .use(fieldRoutes(session, { db: sync.db }))
+    .use(searchRoutes(session, { db: sync.db }))
     .use(syncRoutes(session, sync));
 }
 

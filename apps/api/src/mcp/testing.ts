@@ -172,7 +172,15 @@ export function mcpHarness(current: () => TestApp) {
     const id = Bun.randomUUIDv7();
     await current()
       .db.insert(containers)
-      .values({ id, ownerId, kind: "list", parentId: null, name, nameKey: nameKey(name) });
+      .values({
+        id,
+        ownerId,
+        kind: "list",
+        parentId: null,
+        name,
+        nameKey: nameKey(name),
+        searchNameKey: searchKey(name),
+      });
     if (albumIds.length > 0) {
       await current()
         .db.insert(memberships)

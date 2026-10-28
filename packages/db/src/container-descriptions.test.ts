@@ -7,8 +7,8 @@ import { eq } from "drizzle-orm";
 
 import { uuidv7, type Mutation, type Principal } from "@tonaris/domain";
 
-import { searchAlbums } from "./mcp";
 import { containers, trashUnits, users } from "./schema";
+import { searchCollection } from "./search";
 import { bootstrapSnapshot, executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
@@ -73,8 +73,11 @@ describe("descriptions in Postgres (FR-03.5, FR-12.4)", () => {
       .where(eq(containers.id, id));
     expect(await described()).toBe("Nirvana and friends");
 
-    expect(await searchAlbums(t.db, { ownerId: anna.userId, query: "Nirvana", limit: 10 })).toEqual(
-      [],
-    );
+    const found = await searchCollection(t.db, {
+      ownerId: anna.userId,
+      query: "Nirvana",
+      limit: 10,
+    });
+    expect([found.folders.total, found.lists.total, found.albums.total]).toEqual([0, 0, 0]);
   });
 });

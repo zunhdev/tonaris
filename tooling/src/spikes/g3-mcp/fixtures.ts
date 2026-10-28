@@ -55,6 +55,7 @@ try {
       parentId: null,
       name,
       nameKey: nameKey(name),
+      searchNameKey: searchKey(name),
     });
     return id;
   }

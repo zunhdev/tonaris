@@ -104,6 +104,7 @@ async function newList(ownerId: string, name: string, trashed = false) {
     kind: "list",
     name,
     nameKey: name.toLowerCase(),
+    searchNameKey: name.toLowerCase(),
     ...(trashed ? { trashedAt: new Date(), trashUnitId } : {}),
   });
   return id;

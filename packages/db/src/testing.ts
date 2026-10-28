@@ -10,6 +10,23 @@ import { migrateDatabase } from "./migrations";
 
 export { ensureDatabase };
 
+/**
+ * Creates pg_trgm in the test database's `public` before any schema migrates (TS-50): tests run in parallel, and
+ * two migrations creating it at once would collide. One that loses a race finds it made.
+ */
+async function ensureExtensions(url: string): Promise<void> {
+  const admin = postgres(url, { max: 1, onnotice: () => {} });
+  try {
+    await admin`create extension if not exists pg_trgm with schema public`;
+  } catch (error) {
+    // A concurrent create: the extension's name or type is already taken.
+    if (!(error instanceof postgres.PostgresError && ["23505", "42710"].includes(error.code)))
+      throw error;
+  } finally {
+    await admin.end();
+  }
+}
+
 export type TestDatabase = {
   db: Database;
   /** The schema the tables live in; it is the connections' `search_path`. */
@@ -23,6 +40,7 @@ export async function createTestDatabase(): Promise<TestDatabase> {
   const url = testDatabaseUrl();
   try {
     await ensureDatabase(url);
+    await ensureExtensions(url);
   } catch (error) {
     throw new Error(
       `Integration tests need Postgres 18 at ${redact(url)}: start it (README, Running locally) or set TEST_DATABASE_URL.`,

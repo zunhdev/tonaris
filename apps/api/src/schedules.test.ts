@@ -129,6 +129,7 @@ describe("trash-expiry (TS-91, FR-01.17)", () => {
       parentId: null,
       name: "Doom",
       nameKey: "doom",
+      searchNameKey: "doom",
       trashedAt: deletedAt,
       trashUnitId: unitId,
     });
