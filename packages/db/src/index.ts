@@ -20,7 +20,7 @@ export {
 export { createApproval, decideApproval, findApproval, type ApprovalRow } from "./approvals";
 export { maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";
 export { createDatabase, type Database, type Transaction } from "./client";
-export { readFieldDeletion, readOptionRemoval } from "./field-options";
+export { readFieldDeletion, readFieldUsage, readOptionRemoval } from "./field-options";
 export { databaseUrl, redact } from "./config";
 export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
 export {

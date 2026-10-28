@@ -70,6 +70,7 @@ describe("OpenAPI", () => {
       "/v1/connections/{id}",
       "/v1/approvals/{id}",
       "/v1/approvals/{id}/decision",
+      "/v1/fields/usage",
       "/v1/fields/{fieldId}/deletion",
       "/v1/fields/{fieldId}/options/{optionId}/removal",
       "/v1/mutations",

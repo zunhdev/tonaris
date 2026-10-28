@@ -56,6 +56,20 @@ export const fieldRemoveOptionArgsSchema = z.object({
 /** The albums that apply a field, active and in Trash (FR-03.12). */
 export type FieldUsage = { active: number; trashed: number };
 
+/** Every field's usage, for Settings (DS-60): albums applying it, active and in Trash, even empty. */
+export const fieldUsageListSchema = z
+  .object({
+    fields: z.array(
+      z.object({
+        fieldId: z.uuid(),
+        albums: z.int().nonnegative().meta({ description: "Active albums applying the field." }),
+        inTrash: z.int().nonnegative().meta({ description: "Albums in Trash applying the field." }),
+      }),
+    ),
+  })
+  .meta({ description: "How many albums apply each of the account's fields (FR-03.12, DS-60)." });
+export type FieldUsageList = z.infer<typeof fieldUsageListSchema>;
+
 /** An album choosing an option, and whether it is in Trash. */
 export type OptionUser = { id: string; trashed: boolean };
 

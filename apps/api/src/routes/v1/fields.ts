@@ -6,8 +6,13 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { readFieldDeletion, readOptionRemoval, type Database } from "@tonaris/db";
-import { fieldDeletionSchema, optionRemovalSchema, problemSchema } from "@tonaris/domain";
+import { readFieldDeletion, readFieldUsage, readOptionRemoval, type Database } from "@tonaris/db";
+import {
+  fieldDeletionSchema,
+  fieldUsageListSchema,
+  optionRemovalSchema,
+  problemSchema,
+} from "@tonaris/domain";
 
 import type { SessionGuard } from "../../auth/plugin";
 import { ProblemError } from "../../problem";
@@ -15,6 +20,21 @@ import { ProblemError } from "../../problem";
 export function fieldRoutes(session: SessionGuard, { db }: { db: Database }) {
   return new Elysia()
     .use(session)
+    .get(
+      "/fields/usage",
+      {
+        signedIn: true,
+        response: { 200: fieldUsageListSchema, 401: problemSchema },
+        detail: {
+          summary: "Get how many albums use each field",
+          description:
+            "Every field of the account, with the albums applying it, active and in Trash, even empty. Settings shows it, and a used field's type can't change (FR-03.12, DS-60).",
+          tags: ["fields"],
+          operationId: "getFieldUsage",
+        },
+      },
+      async ({ account }) => readFieldUsage(db, account.id),
+    )
     .get(
       "/fields/:fieldId/deletion",
       {

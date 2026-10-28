@@ -93,6 +93,9 @@ export const accounts = {
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),
   fieldsEntry: at("fields-entry"),
+  // Settings → Custom fields (custom-fields-settings.e2e.ts), one per test.
+  settingsFields: at("settings-fields"),
+  settingsOptions: at("settings-options"),
 } as const;
 
 /** An address with no account. */

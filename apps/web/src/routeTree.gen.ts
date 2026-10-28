@@ -25,6 +25,7 @@ import { Route as WorkspaceAAlbumIdRouteImport } from './routes/_workspace/a.$al
 import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$folderId'
 import { Route as WorkspaceLListIdRouteImport } from './routes/_workspace/l.$listId'
 import { Route as WorkspaceSettingsConnectionsRouteImport } from './routes/_workspace/settings.connections'
+import { Route as WorkspaceSettingsCustomFieldsRouteImport } from './routes/_workspace/settings.custom-fields'
 import { Route as WorkspaceSettingsPreferencesRouteImport } from './routes/_workspace/settings.preferences'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
@@ -107,6 +108,12 @@ const WorkspaceSettingsConnectionsRoute =
     path: '/settings/connections',
     getParentRoute: () => WorkspaceRoute,
   } as any)
+const WorkspaceSettingsCustomFieldsRoute =
+  WorkspaceSettingsCustomFieldsRouteImport.update({
+    id: '/settings/custom-fields',
+    path: '/settings/custom-fields',
+    getParentRoute: () => WorkspaceRoute,
+  } as any)
 const WorkspaceSettingsPreferencesRoute =
   WorkspaceSettingsPreferencesRouteImport.update({
     id: '/settings/preferences',
@@ -130,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
+  '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
 }
 export interface FileRoutesByTo {
@@ -147,6 +155,7 @@ export interface FileRoutesByTo {
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
+  '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
 }
 export interface FileRoutesById {
@@ -167,6 +176,7 @@ export interface FileRoutesById {
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
   '/_workspace/settings/connections': typeof WorkspaceSettingsConnectionsRoute
+  '/_workspace/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/_workspace/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
 }
 export interface FileRouteTypes {
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/f/$folderId'
     | '/l/$listId'
     | '/settings/connections'
+    | '/settings/custom-fields'
     | '/settings/preferences'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/f/$folderId'
     | '/l/$listId'
     | '/settings/connections'
+    | '/settings/custom-fields'
     | '/settings/preferences'
   id:
     | '__root__'
@@ -223,6 +235,7 @@ export interface FileRouteTypes {
     | '/_workspace/f/$folderId'
     | '/_workspace/l/$listId'
     | '/_workspace/settings/connections'
+    | '/_workspace/settings/custom-fields'
     | '/_workspace/settings/preferences'
   fileRoutesById: FileRoutesById
 }
@@ -348,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceSettingsConnectionsRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/settings/custom-fields': {
+      id: '/_workspace/settings/custom-fields'
+      path: '/settings/custom-fields'
+      fullPath: '/settings/custom-fields'
+      preLoaderRoute: typeof WorkspaceSettingsCustomFieldsRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/settings/preferences': {
       id: '/_workspace/settings/preferences'
       path: '/settings/preferences'
@@ -368,6 +388,7 @@ interface WorkspaceRouteChildren {
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
   WorkspaceSettingsConnectionsRoute: typeof WorkspaceSettingsConnectionsRoute
+  WorkspaceSettingsCustomFieldsRoute: typeof WorkspaceSettingsCustomFieldsRoute
   WorkspaceSettingsPreferencesRoute: typeof WorkspaceSettingsPreferencesRoute
 }
 
@@ -381,6 +402,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,
   WorkspaceSettingsConnectionsRoute: WorkspaceSettingsConnectionsRoute,
+  WorkspaceSettingsCustomFieldsRoute: WorkspaceSettingsCustomFieldsRoute,
   WorkspaceSettingsPreferencesRoute: WorkspaceSettingsPreferencesRoute,
 }
 

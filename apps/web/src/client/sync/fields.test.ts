@@ -44,6 +44,11 @@ describe("field writes (FR-03.11 to FR-03.17)", () => {
     expect(writes[3]).toMatchObject({ base: { label: "Loud" } });
   });
 
+  test("a change to a non-choice type sends only the type change, which discards the options", () => {
+    const writes = fieldWrites(mood, { ...mood, type: "text", options: [] });
+    expect(writes.map(({ name }) => name)).toEqual(["field.changeType"]);
+  });
+
   test("a removal without a confirmation sends no hash, and an unchanged field sends nothing", () => {
     const [removal] = fieldWrites(mood, { ...mood, options: [{ id: loud, label: "Loud" }] });
     expect(removal).toMatchObject({ name: "field.removeOption", args: { optionId: calm } });

@@ -162,6 +162,7 @@ The server ends a stream in four cases:
     - **A chosen option** needs `scopeHash` from `GET /v1/fields/{fieldId}/options/{optionId}/removal`. That read gives the albums choosing it, active and in Trash, for the confirmation. Without the hash, or once the albums changed, the removal is `field_in_use`.
     - **Removal clears the option** from every album that chose it, sending each one's value as a `fieldValue` change. A single choice becomes null, and a multiple choice keeps its other options, or becomes null with none left.
   - **Already done:** a removed option removed again, and an option added again with its ID and label, change nothing.
+- **Usage for Settings:** `GET /v1/fields/usage` gives each field's albums, active and in Trash, even empty: `{fields: [{fieldId, albums, inTrash}]}` (TON-53).
 - **Deleting a field** (FR-03.18), permanently (TON-52):
   - **`field.delete`** `{id, scopeHash}` deletes the field with its options and every album's usage and value, in Trash too.
   - **It is always confirmed:** `scopeHash` comes from `GET /v1/fields/{fieldId}/deletion`. That read gives the field's type and options and the albums applying it, active and in Trash.

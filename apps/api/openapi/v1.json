@@ -776,6 +776,87 @@
         }
       }
     },
+    "/v1/fields/usage": {
+      "get": {
+        "summary": "Get how many albums use each field",
+        "description": "Every field of the account, with the albums applying it, active and in Trash, even empty. Settings shows it, and a used field's type can't change (FR-03.12, DS-60).",
+        "tags": [
+          "fields"
+        ],
+        "operationId": "getFieldUsage",
+        "responses": {
+          "200": {
+            "description": "How many albums apply each of the account's fields (FR-03.12, DS-60).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "albums": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Active albums applying the field."
+                          },
+                          "inTrash": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Albums in Trash applying the field."
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "albums",
+                          "inTrash"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "fields"
+                  ],
+                  "additionalProperties": false,
+                  "description": "How many albums apply each of the account's fields (FR-03.12, DS-60)."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/fields/{fieldId}/deletion": {
       "get": {
         "summary": "Get what deleting a field affects",
