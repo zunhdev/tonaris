@@ -857,6 +857,7 @@
                             "maximum": 9999
                           },
                           "artworkUrl": {
+                            "default": null,
                             "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
                             "type": [
                               "string",
@@ -878,10 +879,9 @@
                           "originalYear",
                           "recordingYearStart",
                           "recordingYearEnd",
-                          "artworkUrl",
                           "id"
                         ],
-                        "description": "An album record (FR-01.6)."
+                        "description": "An album record (FR-01.6), as a request sends it."
                       }
                     },
                     "required": [
@@ -1137,6 +1137,7 @@
                                 "maximum": 9999
                               },
                               "artworkUrl": {
+                                "default": null,
                                 "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
                                 "type": [
                                   "string",
@@ -1152,8 +1153,7 @@
                               "isLive",
                               "originalYear",
                               "recordingYearStart",
-                              "recordingYearEnd",
-                              "artworkUrl"
+                              "recordingYearEnd"
                             ]
                           }
                         },
@@ -1922,6 +1922,7 @@
                             "maximum": 9999
                           },
                           "artworkUrl": {
+                            "default": null,
                             "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
                             "type": [
                               "string",
@@ -1943,10 +1944,9 @@
                           "originalYear",
                           "recordingYearStart",
                           "recordingYearEnd",
-                          "artworkUrl",
                           "id"
                         ],
-                        "description": "An album record (FR-01.6)."
+                        "description": "An album record (FR-01.6), as a request sends it."
                       }
                     },
                     "required": [
@@ -2202,6 +2202,7 @@
                                 "maximum": 9999
                               },
                               "artworkUrl": {
+                                "default": null,
                                 "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
                                 "type": [
                                   "string",
@@ -2217,8 +2218,7 @@
                               "isLive",
                               "originalYear",
                               "recordingYearStart",
-                              "recordingYearEnd",
-                              "artworkUrl"
+                              "recordingYearEnd"
                             ]
                           }
                         },
@@ -2987,6 +2987,7 @@
                             "maximum": 9999
                           },
                           "artworkUrl": {
+                            "default": null,
                             "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
                             "type": [
                               "string",
@@ -3008,10 +3009,9 @@
                           "originalYear",
                           "recordingYearStart",
                           "recordingYearEnd",
-                          "artworkUrl",
                           "id"
                         ],
-                        "description": "An album record (FR-01.6)."
+                        "description": "An album record (FR-01.6), as a request sends it."
                       }
                     },
                     "required": [
@@ -3267,6 +3267,7 @@
                                 "maximum": 9999
                               },
                               "artworkUrl": {
+                                "default": null,
                                 "description": "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
                                 "type": [
                                   "string",
@@ -3282,8 +3283,7 @@
                               "isLive",
                               "originalYear",
                               "recordingYearStart",
-                              "recordingYearEnd",
-                              "artworkUrl"
+                              "recordingYearEnd"
                             ]
                           }
                         },
@@ -6584,6 +6584,7 @@
                         ]
                       },
                       "artworkUrl": {
+                        "default": null,
                         "anyOf": [
                           {
                             "type": "string",
@@ -6613,7 +6614,7 @@
                       "id"
                     ],
                     "additionalProperties": false,
-                    "description": "An album record (FR-01.6)."
+                    "description": "An album record (FR-01.6), as a request sends it."
                   }
                 },
                 "required": [
@@ -6930,6 +6931,7 @@
                             ]
                           },
                           "artworkUrl": {
+                            "default": null,
                             "anyOf": [
                               {
                                 "type": "string",

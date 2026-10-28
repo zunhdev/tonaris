@@ -3,7 +3,7 @@
 // (TON-20) synced albums; folders and lists joined in TON-26 and list entries in TON-27, and each entity type M2
 // adds joins these unions.
 
-import { albumFieldsSchema, albumSchema } from "./albums";
+import { albumFieldsSchema, albumInputSchema, albumSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
 import { streamingServices } from "./links";
@@ -28,7 +28,7 @@ const mutationId = z.uuid({ version: "v7" }).meta({
 export const albumCreateSchema = z.object({
   mutationId,
   name: z.literal("album.create"),
-  args: albumSchema,
+  args: albumInputSchema,
 });
 
 /**

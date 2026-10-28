@@ -11,7 +11,7 @@
 
 import {
   albumFields,
-  albumFieldsSchema,
+  albumFieldsInputSchema,
   albumProblem,
   type Album,
   type AlbumFields,
@@ -49,7 +49,7 @@ export const captureArgsSchema = z.object({
   releaseGroupId: z.uuid().optional().meta({
     description: "The person's choice among a `match` answer's candidates (TS-26).",
   }),
-  details: albumFieldsSchema.optional().meta({
+  details: albumFieldsInputSchema.optional().meta({
     description: "The album's details from the person, after a `details` answer (FR-02.4).",
   }),
 });

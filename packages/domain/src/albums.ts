@@ -11,6 +11,11 @@ export const releaseTypes = ["album", "ep", "compilation"] as const;
 
 const year = z.int().min(1).max(9999);
 
+const artworkUrlSchema = z.string().max(maxLinkLength).nullable().meta({
+  description:
+    "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
+});
+
 /** The fields a person edits; each is one CAS unit (TS-21). */
 export const albumFieldsSchema = z.object({
   title: z.string(),
@@ -20,12 +25,17 @@ export const albumFieldsSchema = z.object({
   originalYear: year.nullable(),
   recordingYearStart: year.nullable(),
   recordingYearEnd: year.nullable(),
-  artworkUrl: z.string().max(maxLinkLength).nullable().meta({
-    description:
-      "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",
-  }),
+  artworkUrl: artworkUrlSchema,
 });
 export type AlbumFields = z.infer<typeof albumFieldsSchema>;
+
+/**
+ * The album fields as a request sends a whole album: `artworkUrl` may be left out for none, as requests could before it
+ * existed (TON-48), so no client's write breaks (TS-09). A partial update leaves it out to keep it.
+ */
+export const albumFieldsInputSchema = albumFieldsSchema.extend({
+  artworkUrl: artworkUrlSchema.default(null),
+});
 export type AlbumField = keyof AlbumFields;
 export const albumFields: readonly AlbumField[] = albumFieldsSchema.keyof().options;
 
@@ -33,6 +43,11 @@ export const albumSchema = albumFieldsSchema
   .extend({ id: z.uuid({ version: "v7" }) })
   .meta({ description: "An album record (FR-01.6)." });
 export type Album = z.infer<typeof albumSchema>;
+
+/** A whole album as a request sends it: `artworkUrl` may be left out (`albumFieldsInputSchema`). */
+export const albumInputSchema = albumFieldsInputSchema
+  .extend({ id: z.uuid({ version: "v7" }) })
+  .meta({ description: "An album record (FR-01.6), as a request sends it." });
 
 /**
  * Why `album` can't be saved, if it can't (FR-02.6): the title, the artist and the applicable year are
