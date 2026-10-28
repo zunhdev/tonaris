@@ -74,8 +74,11 @@ export function canonicalJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
-/** `sha256(canonical(scope))` in hex (TS-64), with Web Crypto, which Bun and browsers share. */
-export async function scopeHash(scope: ApprovalScope): Promise<string> {
+/**
+ * `sha256(canonical(scope))` in hex (TS-64), with Web Crypto, which Bun and browsers share. Approvals and in-app
+ * confirmations, such as removing a chosen option, hash their scopes alike (TS-14).
+ */
+export async function scopeHash(scope: object): Promise<string> {
   const digest = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(canonicalJson(scope)),

@@ -317,6 +317,12 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
   - **Shared-view effects** join the scope with sharing (M7).
 - **New options** take a key after the field's last (`generateKeyBetween(last, null)`).
 
+*As built in TON-52:*
+- **Field deletion is always confirmed.** The scope is `{operation: "delete_field", fieldId, name, type, options, albums: [{id, trashed}]}`, so a rename, type change, new option or new use after confirming makes the hash stale.
+- **The read:** `GET /v1/fields/{fieldId}/deletion` returns the field, its options, the counts and the hash.
+- **The deletion:** `field.delete` deletes the `field_definitions` row, and the foreign keys remove the options, values and selections, in Trash too. Recovery has nothing to bring back.
+- **Changes:** one `field` delete, and one `fieldValue` delete per album that applied the field.
+
 **TS-15 Provenance and policy flags (Decided; policy values decided 19 October 2026 in the [G1 terms review](spikes/2026-10-19-g1-terms-review.md)).**
 
 - Every metadata write records `album_provenance(field, source)`.

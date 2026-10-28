@@ -65,6 +65,7 @@ type Call =
   | "link.delete"
   | "field.insert"
   | "field.update"
+  | "field.delete"
   | "value.insert"
   | "value.update"
   | "value.delete"
@@ -93,6 +94,8 @@ function plan() {
     fieldUpdates: new Map<string, Partial<CustomField>>(),
     /** Each removed option's confirmed scope hash (FR-03.17). */
     fieldConfirmed: {} as Record<string, string>,
+    /** Fields to delete, each with its confirmed scope hash (FR-03.18). */
+    fieldDeletes: {} as Record<string, string>,
     valueInserts: [] as FieldValue[],
     valueUpdates: new Map<string, Partial<FieldValue>>(),
     valueDeletes: [] as string[],
@@ -221,6 +224,11 @@ function remake(
       name: mutation.args.name,
     });
     return planned.needs("field.update");
+  }
+  if (mutation.name === "field.delete") {
+    if (!fields.has(mutation.args.id)) return "unchanged";
+    planned.fieldDeletes[mutation.args.id] = mutation.args.scopeHash;
+    return planned.needs("field.delete");
   }
   if (
     mutation.name === "field.changeType" ||
@@ -402,7 +410,13 @@ function make(
   else if (call === "entry.delete") sent(memberships.delete(planned.entryDeletes));
   else if (call === "link.insert") sent(links.insert(planned.linkInserts));
   else if (call === "field.insert") sent(fields.insert(planned.fieldInserts));
-  else if (call === "value.insert") sent(fieldValues.insert(planned.valueInserts));
+  else if (call === "field.delete") {
+    sent(
+      fields.delete(Object.keys(planned.fieldDeletes), {
+        metadata: { confirmed: planned.fieldDeletes },
+      }),
+    );
+  } else if (call === "value.insert") sent(fieldValues.insert(planned.valueInserts));
   else if (call === "value.update") {
     sent(fieldValues.update([...planned.valueUpdates.keys()], applyTo(planned.valueUpdates)));
   } else if (call === "value.delete") sent(fieldValues.delete(planned.valueDeletes));

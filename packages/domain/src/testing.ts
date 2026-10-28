@@ -232,6 +232,22 @@ export function memoryStore({
       valueRows.delete(fieldValueKey(albumId, fieldId));
       return Promise.resolve();
     },
+    fieldUsers: (fieldId) =>
+      Promise.resolve(
+        [...valueRows.keys()].flatMap((key) => {
+          const [albumId = "", ofField] = key.split(":");
+          if (ofField !== fieldId) return [];
+          return [{ id: albumId, trashed: albumRows.get(albumId)?.trashed ?? false }];
+        }),
+      ),
+    deleteField: (fieldId) => {
+      for (const option of fieldRows.get(fieldId)?.options ?? []) optionKeys.delete(option.id);
+      fieldRows.delete(fieldId);
+      for (const key of valueRows.keys()) {
+        if (key.endsWith(`:${fieldId}`)) valueRows.delete(key);
+      }
+      return Promise.resolve();
+    },
     fieldUsage: (fieldId) => {
       const usage = { active: 0, trashed: 0 };
       for (const key of valueRows.keys()) {
