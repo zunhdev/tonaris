@@ -3,7 +3,8 @@
 // Settings → Preferences. Single keys: `[` hides or shows the sidebar, `?` opens the reference, N and ⇧N make a new
 // list or folder, V opens the view's View options, M moves the focused folder or list, E switches between Viewing
 // and Editing mode, L adds the open or focused album to a list, C opens the capture dialog (DS-48), and O opens the
-// open or focused album's "Open in…" chooser (DS-25). Esc closing the inspector is the inspector's.
+// open or focused album's "Open in…" chooser (DS-25). ⌫ deletes the focused folder or list (DS-50). Esc closing the
+// inspector is the inspector's.
 // Nothing matches while a text field has focus, nor with ⌘, Ctrl or Alt held. Shortcuts come before the tree's
 // type-ahead (decided 22 October 2026): a matched key is claimed, and the tree types ahead only with the others.
 
@@ -21,7 +22,8 @@ export type ShortcutAction =
   | "toggle-mode"
   | "add-to-list"
   | "capture"
-  | "open-in";
+  | "open-in"
+  | "delete";
 
 /** What the matcher reads of a `KeyboardEvent`. */
 export type KeyPress = {
@@ -71,6 +73,9 @@ const singles: Record<string, ShortcutAction> = {
   l: "add-to-list",
   c: "capture",
   o: "open-in",
+  // ⌫: Backspace, or Delete on keyboards that have it (DS-78).
+  Backspace: "delete",
+  Delete: "delete",
 };
 
 /**
@@ -146,6 +151,7 @@ export const shortcutReference = [
       { keys: ["⇧", "N"], action: "New folder" },
       { keys: ["F2"], action: "Rename" },
       { keys: ["M"], action: "Move to…" },
+      { keys: ["⌫"], action: "Delete a folder or list" },
     ],
   },
   { title: "Help", keys: [{ keys: ["?"], action: "Keyboard shortcuts" }] },

@@ -11,7 +11,7 @@ import { CaptureRows } from "@/features/capture/capture-rows";
 import { PageHeader } from "@/features/shell/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, type ReactNode } from "react";
 
 import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
@@ -25,6 +25,7 @@ import { useMode, useStartEditor } from "./collection-ui";
 import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
+import { useDeleteContainer } from "./delete-containers";
 import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
 import { ModeSwitch } from "./mode-switch";
@@ -179,13 +180,17 @@ function ViewHeader({
   breadcrumbs,
   viewKey,
   kind,
+  container,
 }: {
   title: string;
   breadcrumbs?: ReactNode[];
   viewKey: string;
   kind: "albums" | "containers";
+  /** The folder or list on view, which Editing mode can delete (DS-50). */
+  container?: { id: string; kind: "folder" | "list" };
 }) {
   const { editing } = useMode();
+  const deleteContainer = useDeleteContainer();
   return (
     <PageHeader
       title={title}
@@ -193,6 +198,12 @@ function ViewHeader({
       editing={editing}
       actions={
         <>
+          {editing && container && (
+            <Button variant="ghost" onClick={() => deleteContainer(container.id)}>
+              <Trash2 strokeWidth={1.5} aria-hidden />
+              {container.kind === "folder" ? "Delete folder" : "Delete list"}
+            </Button>
+          )}
           <ModeSwitch />
           <ViewOptions key={viewKey} viewKey={viewKey} kind={kind} />
         </>
@@ -364,6 +375,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
         breadcrumbs={breadcrumbs}
         viewKey={id}
         kind={container.kind === "folder" ? "containers" : "albums"}
+        container={container}
       />
       <ContainerDescription container={container} />
       {body}

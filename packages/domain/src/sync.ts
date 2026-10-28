@@ -20,6 +20,7 @@ import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
 import { positionSchema } from "./positions";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
+import { containerDeleteArgsSchema, trashRecoverArgsSchema, trashUnitSchema } from "./trash";
 import { viewDefaultsSchema, viewKeySchema, viewPrefsFieldsSchema, viewPrefsSchema } from "./views";
 import { z } from "./zod";
 
@@ -133,6 +134,27 @@ export const fieldDeleteSchema = z.object({
   mutationId,
   name: z.literal("field.delete"),
   args: fieldDeleteArgsSchema,
+});
+
+/**
+ * `container.delete`: moves a folder or list, with its active descendants, to Trash as one unit, whose ID the client
+ * chose (FR-01.11, FR-01.13, TS-10). Albums left in no active list enter Unsorted.
+ */
+export const containerDeleteSchema = z.object({
+  mutationId,
+  name: z.literal("container.delete"),
+  args: containerDeleteArgsSchema,
+});
+
+/**
+ * `trash.recover`: returns a unit from Trash to its root's parent, or to `parentId`, named as before or `name`
+ * (FR-01.14 to FR-01.16). It answers `needs_input` for a destination when the parent isn't active, and for a name when
+ * it is taken there; resubmit with the choice (TS-26).
+ */
+export const trashRecoverSchema = z.object({
+  mutationId,
+  name: z.literal("trash.recover"),
+  args: trashRecoverArgsSchema,
 });
 
 const fieldValueArgs = z.object({ albumId: z.uuid(), fieldId: z.uuid() });
@@ -309,6 +331,8 @@ export const mutationSchema = z
     containerRenameSchema,
     containerMoveSchema,
     containerDescribeSchema,
+    containerDeleteSchema,
+    trashRecoverSchema,
     membershipAddSchema,
     membershipRemoveSchema,
     linkSetSchema,
@@ -426,6 +450,14 @@ export const changeSchema = z
     }),
     z.object({
       seq: z.int().positive(),
+      entity: z.literal("trashUnit"),
+      id: z.uuid().meta({ description: "The unit's ID." }),
+      op: z.enum(changeOps),
+      data: trashUnitSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
       entity: z.literal("defaults"),
       id: z.uuid().meta({ description: "The account's ID." }),
       op: z.enum(changeOps),
@@ -460,6 +492,9 @@ export const bootstrapSchema = z
     defaults: viewDefaultsSchema.meta({
       description: "The person's account defaults, DS-44's until they save their own.",
     }),
+    trashUnits: z
+      .array(trashUnitSchema)
+      .meta({ description: "The owner's Trash, unit by unit (FR-01.12, FR-01.13)." }),
   })
   .meta({ description: "A snapshot of the account's data at `seq` (TS-24)." });
 export type Bootstrap = z.infer<typeof bootstrapSchema>;

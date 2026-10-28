@@ -278,3 +278,4 @@ export {
 } from "./views";
 export * from "./field-options";
 export * from "./field-deletion";
+export * from "./trash";

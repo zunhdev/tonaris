@@ -30,7 +30,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(41);
+  server = await startApiServer(42);
 }, 30_000);
 
 afterAll(async () => {
@@ -1425,5 +1425,52 @@ describe("folder and list descriptions (FR-03.5, FR-09.1)", () => {
       draft.description = null;
     }).isPersisted.promise;
     await until(() => phone.containers.get(id)?.description === null, 3_000, "the cleared one");
+  });
+});
+
+describe("Trash (FR-01.11, FR-01.13, TON-55)", () => {
+  test("a list deleted in one session leaves another, its entry too, and comes back when recovered", async () => {
+    const web = await openClient(41, 0);
+    const phone = await openClient(41, 1);
+    await Promise.all([
+      web.containers.preload(),
+      web.memberships.preload(),
+      web.trashUnits.preload(),
+      phone.containers.preload(),
+      phone.memberships.preload(),
+      phone.trashUnits.preload(),
+    ]);
+    const listId = uuidv7();
+    await web.containers.insert({
+      id: listId,
+      kind: "list",
+      parentId: null,
+      name: "Doom",
+      description: null,
+    }).isPersisted.promise;
+    const { id: albumId } = await saved(web);
+    await web.memberships.insert({ listId, albumId, addedAt: new Date().toISOString() }).isPersisted
+      .promise;
+    const entry = `${listId}:${albumId}`;
+    await until(() => phone.memberships.has(entry), 3_000, "the entry");
+
+    const { transaction, deleted } = web.trash.deleteContainers([listId]);
+    expect(web.containers.has(listId)).toBe(false);
+    await transaction.isPersisted.promise;
+    await until(
+      () => !phone.containers.has(listId) && !phone.memberships.has(entry),
+      3_000,
+      "the deletion",
+    );
+    const [unit] = deleted.units;
+    await until(() => phone.trashUnits.get(unit?.unitId ?? "")?.name === "Doom", 3_000, "the unit");
+
+    await web.trash.recover(deleted).isPersisted.promise;
+    await until(
+      () => phone.containers.has(listId) && phone.memberships.has(entry),
+      3_000,
+      "the recovery",
+    );
+    await until(() => !phone.trashUnits.has(unit?.unitId ?? ""), 3_000, "the unit's end");
   });
 });

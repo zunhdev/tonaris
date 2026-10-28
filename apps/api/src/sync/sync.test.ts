@@ -158,6 +158,7 @@ describe("bootstrap, write and stream (TS-24, FR-09.1)", () => {
       views: [],
       positions: [],
       defaults: appViewDefaults,
+      trashUnits: [],
     });
     const stream = await connect(anna.cookie, { after: 0 });
     expect(stream.response.headers.get("content-type")).toBe("text/event-stream");

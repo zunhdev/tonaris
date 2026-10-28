@@ -230,4 +230,15 @@ describe("dependencies within a request", () => {
       [field.mutationId, add.mutationId],
     ]);
   });
+
+  test("an undo's recovery depends on the deletion that made its unit", () => {
+    const [id, unitId] = [uuidv7(), uuidv7()];
+    const remove: Mutation = {
+      mutationId: uuidv7(),
+      name: "container.delete",
+      args: { id, unitId },
+    };
+    const recover: Mutation = { mutationId: uuidv7(), name: "trash.recover", args: { unitId } };
+    expect(dependenciesOf([remove, recover])).toEqual([undefined, [remove.mutationId]]);
+  });
 });

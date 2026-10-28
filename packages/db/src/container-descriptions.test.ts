@@ -65,7 +65,8 @@ describe("descriptions in Postgres (FR-03.5, FR-12.4)", () => {
       .update(containers)
       .set({ trashedAt: deletedAt, trashUnitId: unitId })
       .where(eq(containers.id, id));
-    expect(await described()).toBe("Nirvana and friends");
+    const [trashed] = await t.db.select().from(containers).where(eq(containers.id, id));
+    expect(trashed?.description).toBe("Nirvana and friends");
     await t.db
       .update(containers)
       .set({ trashedAt: null, trashUnitId: null })

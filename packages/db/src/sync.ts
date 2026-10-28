@@ -28,6 +28,7 @@ import {
   uuidv7Time,
   failure,
   maxContainerDepth,
+  trashUnitOf,
   nameKey,
   searchKey,
   type Album,
@@ -44,6 +45,7 @@ import {
   type FieldValue,
   type FieldValueData,
   type OptionUser,
+  type TrashUnit,
   type Membership,
   type Mutation,
   type MutationResult,
@@ -245,6 +247,54 @@ function selectionsOf(tx: Transaction, where: SQL | undefined, fieldId?: string)
     .innerJoin(fieldOptions, eq(fieldOptions.id, albumFieldMulti.optionId))
     .where(fieldId === undefined ? where : and(where, eq(albumFieldMulti.fieldId, fieldId)))
     .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
+}
+
+/** The account's Trash units as clients hold them, oldest first: each with its root's name and its members (FR-01.12). */
+async function unitsOfAccount(tx: Transaction, accountId: string): Promise<TrashUnit[]> {
+  const units = await tx
+    .select({
+      id: trashUnits.id,
+      ownerId: trashUnits.ownerId,
+      kind: trashUnits.kind,
+      rootId: trashUnits.rootId,
+      deletedAt: trashUnits.deletedAt,
+      expiresAt: trashUnits.expiresAt,
+    })
+    .from(trashUnits)
+    .where(eq(trashUnits.ownerId, accountId))
+    .orderBy(asc(trashUnits.deletedAt), asc(trashUnits.id));
+  if (units.length === 0) return [];
+  const members = await tx
+    .select({
+      id: containers.id,
+      kind: containers.kind,
+      name: containers.name,
+      unitId: containers.trashUnitId,
+    })
+    .from(containers)
+    .where(
+      inArray(
+        containers.trashUnitId,
+        units.map((unit) => unit.id),
+      ),
+    );
+  const titles = await tx
+    .select({ id: albums.id, title: albums.title })
+    .from(albums)
+    .where(
+      inArray(
+        albums.id,
+        units.filter((unit) => unit.kind === "album").map((unit) => unit.rootId),
+      ),
+    );
+  return units.map((unit) => {
+    const own = members.filter((member) => member.unitId === unit.id);
+    const name =
+      unit.kind === "album"
+        ? (titles.find((album) => album.id === unit.rootId)?.title ?? "")
+        : (own.find((member) => member.id === unit.rootId)?.name ?? "");
+    return trashUnitOf(unit, name, own);
+  });
 }
 
 /** The albums applying the field, even empty, in Trash or not (FR-03.18). */
@@ -656,6 +706,72 @@ function collectionStore(tx: Transaction): CollectionStore {
         .from(memberships)
         .where(eq(memberships.ownerId, ownerId));
       return row?.count ?? 0;
+    },
+    async activeSubtree(id) {
+      const rows = await tx.execute<{ id: string }>(sql`
+        with recursive tree (id, level) as (
+          select id, 1 from ${containers} where id = ${id} and trashed_at is null
+          union all
+          select c.id, tree.level + 1
+          from ${containers} c join tree on c.parent_id = tree.id
+          where c.trashed_at is null and tree.level <= ${maxContainerDepth}
+        )
+        select id from tree order by level, id
+      `);
+      const ids = rows.map((row) => row.id);
+      if (ids.length === 0) return [];
+      const found = await tx
+        .select(containerColumns)
+        .from(containers)
+        .where(inArray(containers.id, ids));
+      return ids.flatMap((each) => found.filter((row) => row.id === each));
+    },
+    async listEntries(listIds) {
+      if (listIds.length === 0) return [];
+      const rows = await tx
+        .select(membershipColumns)
+        .from(memberships)
+        .where(inArray(memberships.listId, listIds))
+        .orderBy(asc(memberships.listId), asc(memberships.albumId));
+      return rows.map(membershipOf);
+    },
+    async findTrashUnit(id) {
+      const [unit] = await tx
+        .select({
+          id: trashUnits.id,
+          ownerId: trashUnits.ownerId,
+          kind: trashUnits.kind,
+          rootId: trashUnits.rootId,
+          deletedAt: trashUnits.deletedAt,
+          expiresAt: trashUnits.expiresAt,
+        })
+        .from(trashUnits)
+        .where(eq(trashUnits.id, id));
+      return unit;
+    },
+    async unitContainers(unitId) {
+      return tx
+        .select(containerColumns)
+        .from(containers)
+        .where(eq(containers.trashUnitId, unitId))
+        .orderBy(asc(containers.id));
+    },
+    async trashContainers(unit, ids) {
+      await tx.insert(trashUnits).values(unit);
+      if (ids.length === 0) return;
+      await tx
+        .update(containers)
+        .set({ trashedAt: unit.deletedAt, trashUnitId: unit.id })
+        .where(inArray(containers.id, ids));
+    },
+    async recoverContainers(unitId, ids) {
+      if (ids.length > 0) {
+        await tx
+          .update(containers)
+          .set({ trashedAt: null, trashUnitId: null })
+          .where(and(inArray(containers.id, ids), eq(containers.trashUnitId, unitId)));
+      }
+      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
     },
     async insertMembership({ addedAt, ...membership }) {
       await tx.insert(memberships).values({ ...membership, addedAt: new Date(addedAt) });
@@ -1155,7 +1271,8 @@ export async function readChanges(
 /**
  * The account's collection, its view choices, manual order and defaults, and the `seq` they are current at (TS-24),
  * from one snapshot: a write commits its records and its `seq` together, so the snapshot sees both or neither.
- * Trashed records come too, marked by nothing yet: Trash arrives with M5, and its views filter them.
+ * Folders and lists come active only, with the entries of active lists: clients hold active content, and Trash comes
+ * as units (TS-13). Trashed albums still come, unmarked, until album deletion (TON-57).
  */
 export function bootstrapSnapshot(db: Database, accountId: string): Promise<Bootstrap> {
   return db.transaction(
@@ -1172,13 +1289,16 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
       const folders: Container[] = await tx
         .select(containerColumns)
         .from(containers)
-        .where(eq(containers.ownerId, accountId))
+        .where(and(eq(containers.ownerId, accountId), isNull(containers.trashedAt)))
         .orderBy(asc(containers.id));
+      // Only an active list's entries are effective (TS-13).
       const entries = await tx
         .select(membershipColumns)
         .from(memberships)
-        .where(eq(memberships.ownerId, accountId))
+        .innerJoin(containers, eq(containers.id, memberships.listId))
+        .where(and(eq(memberships.ownerId, accountId), isNull(containers.trashedAt)))
         .orderBy(asc(memberships.listId), asc(memberships.albumId));
+      const trash = await unitsOfAccount(tx, accountId);
       const fields = await fieldsOfAccount(tx, accountId);
       const fieldValues = await valuesOfAccount(tx, accountId);
       const links: ServiceLink[] = await tx
@@ -1215,6 +1335,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         views,
         positions: arranged,
         defaults: defaults ?? appViewDefaults,
+        trashUnits: trash,
       };
     },
     { isolationLevel: "repeatable read", accessMode: "read only" },

@@ -41,7 +41,7 @@ export type StoredContainer = Container & { ownerId: string; trashed: boolean };
 const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
 
 /** The container as clients see it. */
-function containerOf({ id, kind, parentId, name, description }: Container): Container {
+export function containerOf({ id, kind, parentId, name, description }: Container): Container {
   return { id, kind, parentId, name, description };
 }
 
@@ -77,7 +77,7 @@ export function containerNameProblem(name: string): Failure | undefined {
  * Answers the destination's path (empty for the root), or why it can't be one. A missing folder and someone
  * else's get the same answer, so nobody can probe for other people's IDs.
  */
-async function destinationPath(
+export async function destinationPath(
   parentId: string | null,
   ownerId: string,
   store: CollectionStore,
@@ -99,7 +99,7 @@ async function destinationPath(
   return store.containerPath(parentId);
 }
 
-const tooDeep = () =>
+export const tooDeep = () =>
   failure(
     "limit_exceeded",
     `Folders and lists can be nested up to ${maxContainerDepth} levels deep.`,
@@ -180,7 +180,7 @@ export async function createContainer(
 }
 
 /** The owner's active container `id`, or why it can't be changed. */
-async function changeableContainer(
+export async function changeableContainer(
   id: string,
   { principal, store }: CommandContext,
 ): Promise<StoredContainer | Failure> {

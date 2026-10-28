@@ -137,3 +137,6 @@ export function createMembershipCollection({
     },
   );
 }
+
+export type ContainerCollection = ReturnType<typeof createContainerCollection>;
+export type MembershipCollection = ReturnType<typeof createMembershipCollection>;

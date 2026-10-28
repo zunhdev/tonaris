@@ -47,6 +47,10 @@ type CollectionUi = {
   moving: string | undefined;
   startMove: (id: string) => void;
   endMove: () => void;
+  /** The folder whose deletion is being confirmed, if one is (DS-50). */
+  deleting: string | undefined;
+  startDelete: (id: string) => void;
+  endDelete: () => void;
   /** Viewing or Editing (DS-45); always Viewing on a narrow screen, which is for browsing (FR-04.1). */
   mode: Mode;
   /** Switches the mode; answers whether it did. Leaving Editing commits the open inline editors first. */
@@ -106,6 +110,7 @@ export function CollectionUiProvider({
   const viewOptions = useRef<(() => void) | undefined>(undefined);
   const focusedRow = useRef<string | undefined>(undefined);
   const [moving, setMoving] = useState<string | undefined>(undefined);
+  const [deleting, setDeleting] = useState<string | undefined>(undefined);
   const [stored, setStored] = useState<Mode>(() => editMode.read(accountId));
   const narrow = useNarrowScreen();
   const editors = useRef(new Set<() => boolean>());
@@ -155,6 +160,9 @@ export function CollectionUiProvider({
       moving,
       startMove: setMoving,
       endMove: () => setMoving(undefined),
+      deleting,
+      startDelete: setDeleting,
+      endDelete: () => setDeleting(undefined),
       mode: narrow ? "view" : stored,
       setMode: (next) => {
         if (next === stored) return true;
@@ -182,7 +190,18 @@ export function CollectionUiProvider({
       startNewAlbum: setNewAlbum,
       endNewAlbum: () => setNewAlbum(undefined),
     }),
-    [accountId, editing, expanded, update, moving, stored, narrow, addingToList, newAlbum],
+    [
+      accountId,
+      editing,
+      expanded,
+      update,
+      moving,
+      deleting,
+      stored,
+      narrow,
+      addingToList,
+      newAlbum,
+    ],
   );
 
   return <CollectionUiContext value={value}>{children}</CollectionUiContext>;

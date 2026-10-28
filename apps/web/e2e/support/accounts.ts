@@ -98,6 +98,9 @@ export const accounts = {
   settingsOptions: at("settings-options"),
   // Folder and list descriptions (descriptions.e2e.ts).
   descriptions: at("descriptions"),
+  // Trash (trash.e2e.ts), one per test.
+  trashList: at("trash-list"),
+  trashFolder: at("trash-folder"),
 } as const;
 
 /** An address with no account. */

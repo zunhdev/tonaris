@@ -827,6 +827,20 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 | Delete folder | Standard confirmation dialog: hierarchy counts and the first names, "albums stay in other lists or Unsorted", sharing effects |
 | Delete album from collection (`⌘⌫`) | Standard confirmation dialog: "Removes it from every list and Unsorted; recoverable from Trash for 30 days" |
 
+*As built in TON-55:*
+- **Triggers:**
+  - ⌫ (Backspace or Delete) deletes the focused folder or list, in the sidebar or a folder's rows, switching to Editing mode;
+  - Editing mode adds **Delete list** or **Delete folder** to a folder's or list's header.
+- **A list** goes at once, with "1 list moved to Trash" and Undo, which recovers it. A page showing what went goes to the nearest folder that stays, or the collection.
+- **A folder** asks first:
+  - the title "Delete folder 'Metal'?";
+  - the scope "The folder and 2 lists inside it: Doom, Sludge" (first three names, then "…"), or "The folder, which is empty";
+  - "Albums stay in their other lists or in Unsorted." and "Recoverable from Trash for 30 days.";
+  - the action "Move 1 folder and 2 lists to Trash";
+  - Cancel focused.
+- **The live region** says "Moved Metal to Trash" and, on Undo, "Recovered Doom".
+- **Multi-select** comes with selection (X).
+
 **DS-51 Unsorted placement** *(handoff FR-05.4)*:
 - An album entering Unsorted, whether new or leaving its last list, is placed at the **top** of the owner's Unsorted manual order. Unsorted behaves like an inbox.
 - Positions are not retained when an album leaves and later returns.
