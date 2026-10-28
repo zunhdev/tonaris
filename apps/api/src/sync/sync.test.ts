@@ -154,6 +154,7 @@ describe("bootstrap, write and stream (TS-24, FR-09.1)", () => {
       memberships: [],
       links: [],
       fields: [],
+      fieldValues: [],
       views: [],
       positions: [],
       defaults: appViewDefaults,

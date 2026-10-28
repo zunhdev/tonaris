@@ -28,7 +28,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(37);
+  server = await startApiServer(38);
 }, 30_000);
 
 afterAll(async () => {
@@ -1194,5 +1194,31 @@ describe("custom fields (FR-03.6, FR-03.11, FR-09.1)", () => {
       draft.name = "Feel";
     }).isPersisted.promise;
     await until(() => phone.fields.get(id)?.name === "Feel", 3_000, "the rename on the phone");
+  });
+});
+
+describe("custom field values (FR-03.7, FR-03.8, FR-09.1)", () => {
+  test("a field applied, set and removed in one session follows in another", async () => {
+    const web = await openClient(37, 0);
+    const phone = await openClient(37, 1);
+    await Promise.all([
+      web.fields.preload(),
+      web.fieldValues.preload(),
+      phone.fieldValues.preload(),
+    ]);
+    const { id: albumId } = await saved(web);
+    const fieldId = uuidv7();
+    await web.fields.insert({ id: fieldId, name: "Rating", type: "number", options: [] })
+      .isPersisted.promise;
+    const key = `${albumId}:${fieldId}`;
+    // Applied with a value: `fieldValue.apply`, then `fieldValue.set`, in one request.
+    await web.fieldValues.insert({ albumId, fieldId, value: "4.5" }).isPersisted.promise;
+    await until(() => phone.fieldValues.get(key)?.value === "4.5", 3_000, "the value");
+    await web.fieldValues.update(key, (draft) => {
+      draft.value = null;
+    }).isPersisted.promise;
+    await until(() => phone.fieldValues.get(key)?.value === null, 3_000, "applied-empty");
+    await web.fieldValues.delete(key).isPersisted.promise;
+    await until(() => !phone.fieldValues.has(key), 3_000, "the removal");
   });
 });

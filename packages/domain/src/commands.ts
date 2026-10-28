@@ -28,6 +28,13 @@ import {
 } from "./containers";
 import type { EnrichmentPlan } from "./enrichment";
 import {
+  applyField,
+  removeField,
+  setFieldValue,
+  type FieldValue,
+  type FieldValueData,
+} from "./field-values";
+import {
   createField,
   renameField,
   type CustomField,
@@ -90,6 +97,14 @@ export type CollectionStore = {
   ): Promise<void>;
   /** Renames the field; its name key follows (TS-12). */
   renameField(id: string, name: string): Promise<void>;
+  /** The album's value for the field: undefined when unused, null when applied-empty (FR-03.7). */
+  findFieldValue(albumId: string, fieldId: string): Promise<FieldValueData | undefined>;
+  /** Applies the field to the album, empty. */
+  applyField(albumId: string, fieldId: string): Promise<void>;
+  /** Sets the applied field's value, already checked against `field`'s type; null empties it. */
+  setFieldValue(albumId: string, field: CustomField, value: FieldValueData): Promise<void>;
+  /** Takes the field off the album with its value (FR-03.8). */
+  removeField(albumId: string, fieldId: string): Promise<void>;
 
   /** The folder or list with this ID, whoever owns it, in Trash or not. */
   findContainer(id: string): Promise<StoredContainer | undefined>;
@@ -150,6 +165,7 @@ export type ChangeInput =
   | { entity: "membership"; id: string; op: ChangeOp; data: Membership | null }
   | { entity: "link"; id: string; op: ChangeOp; data: ServiceLink | null }
   | { entity: "field"; id: string; op: ChangeOp; data: CustomField | null }
+  | { entity: "fieldValue"; id: string; op: ChangeOp; data: FieldValue | null }
   | { entity: "view"; id: string; op: ChangeOp; data: ViewPrefs | null }
   | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults }
   | { entity: "position"; id: string; op: ChangeOp; data: Position | null };
@@ -182,6 +198,11 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   }
   if (mutation.name === "field.create") return createField(mutation.args, context);
   if (mutation.name === "field.rename") return renameField(mutation.args, mutation.base, context);
+  if (mutation.name === "fieldValue.apply") return applyField(mutation.args, context);
+  if (mutation.name === "fieldValue.set") {
+    return setFieldValue(mutation.args, mutation.base, context);
+  }
+  if (mutation.name === "fieldValue.remove") return removeField(mutation.args, context);
   if (mutation.name === "container.create") return createContainer(mutation.args, context);
   if (mutation.name === "container.rename") {
     return renameContainer(mutation.args, mutation.base, context);

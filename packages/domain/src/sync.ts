@@ -6,6 +6,7 @@
 import { albumCreateArgsSchema, albumFieldsSchema, albumSchema, artworkUrlSchema } from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerSchema } from "./containers";
+import { fieldValueDataSchema, fieldValueSchema } from "./field-values";
 import { customFieldSchema, fieldCreateArgsSchema } from "./fields";
 import { streamingServices } from "./links";
 import { membershipSchema } from "./memberships";
@@ -78,6 +79,33 @@ export const fieldRenameSchema = z.object({
   name: z.literal("field.rename"),
   args: z.object({ id: z.uuid(), name: z.string() }),
   base: z.object({ name: z.string() }),
+});
+
+const fieldValueArgs = z.object({ albumId: z.uuid(), fieldId: z.uuid() });
+
+/** `fieldValue.apply`: applies a custom field to an album, empty (FR-03.7). Already applied, it changes nothing. */
+export const fieldValueApplySchema = z.object({
+  mutationId,
+  name: z.literal("fieldValue.apply"),
+  args: fieldValueArgs,
+});
+
+/**
+ * `fieldValue.set`: sets or clears the value of a field the album applies (FR-03.7, FR-03.10). `base.value` is the
+ * value the client last saw (TS-21). Null empties it; the field stays applied.
+ */
+export const fieldValueSetSchema = z.object({
+  mutationId,
+  name: z.literal("fieldValue.set"),
+  args: fieldValueArgs.extend({ value: fieldValueDataSchema }),
+  base: z.object({ value: fieldValueDataSchema }),
+});
+
+/** `fieldValue.remove`: takes a field off an album with its value (FR-03.8). Already unused, it changes nothing. */
+export const fieldValueRemoveSchema = z.object({
+  mutationId,
+  name: z.literal("fieldValue.remove"),
+  args: fieldValueArgs,
 });
 
 /**
@@ -204,6 +232,9 @@ export const mutationSchema = z
     albumCaptureSchema,
     fieldCreateSchema,
     fieldRenameSchema,
+    fieldValueApplySchema,
+    fieldValueSetSchema,
+    fieldValueRemoveSchema,
     containerCreateSchema,
     containerRenameSchema,
     containerMoveSchema,
@@ -297,6 +328,17 @@ export const changeSchema = z
     }),
     z.object({
       seq: z.int().positive(),
+      entity: z.literal("fieldValue"),
+      id: z
+        .string()
+        .regex(new RegExp(`^${uuidPattern}:${uuidPattern}$`, "i"))
+        .meta({ description: "The album's ID and the field's, joined by a colon." }),
+      op: z.enum(changeOps),
+      data: fieldValueSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
       entity: z.literal("view"),
       id: viewKeySchema,
       op: z.enum(changeOps),
@@ -336,6 +378,10 @@ export const bootstrapSchema = z
     fields: z
       .array(customFieldSchema)
       .meta({ description: "The account's custom fields, with their options (FR-03.6)." }),
+    fieldValues: z.array(fieldValueSchema).meta({
+      description:
+        "The fields each album applies, with their values; null is applied-empty (FR-03.7).",
+    }),
     views: z.array(viewPrefsSchema).meta({ description: "The person's remembered view choices." }),
     positions: z
       .array(positionSchema)

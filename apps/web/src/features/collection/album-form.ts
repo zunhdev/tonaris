@@ -11,6 +11,7 @@ import {
   streamingServices,
   uuidv7,
   type Album,
+  type FieldValueData,
   type ServiceLink,
   type StreamingService,
 } from "@tonaris/domain";
@@ -31,6 +32,8 @@ export type AlbumForm = {
   artworkUrl: string;
   /** Each service's link as typed; empty for none. */
   links: Record<StreamingService, string>;
+  /** The custom fields applied, with their values, already checked by their editors (FR-03.7). */
+  fieldValues: { fieldId: string; value: FieldValueData }[];
   /** The destination list; null for none, so the album goes to Unsorted. */
   listId: string | null;
 };
@@ -61,6 +64,7 @@ export function emptyForm(listId: string | null): AlbumForm {
     recording: "",
     artworkUrl: "",
     links: noLinks(),
+    fieldValues: [],
     listId,
   };
 }
@@ -76,6 +80,7 @@ export function formOf(album: Album, listId: string | null): AlbumForm {
     recording: cellText(album, "recording"),
     artworkUrl: album.artworkUrl ?? "",
     links: noLinks(),
+    fieldValues: [],
     listId,
   };
 }
@@ -91,7 +96,8 @@ export function isFormDirty(form: AlbumForm): boolean {
     form.originalYear !== empty.originalYear ||
     form.recording !== empty.recording ||
     form.artworkUrl !== empty.artworkUrl ||
-    streamingServices.some((service) => form.links[service] !== "")
+    streamingServices.some((service) => form.links[service] !== "") ||
+    form.fieldValues.length > 0
   );
 }
 

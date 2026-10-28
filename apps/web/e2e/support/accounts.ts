@@ -89,6 +89,10 @@ export const accounts = {
   // Artwork (artwork.e2e.ts), one per test.
   artworkShown: at("artwork-shown"),
   artworkEdited: at("artwork-edited"),
+  // Custom fields (custom-fields.e2e.ts), one per test.
+  fieldsApply: at("fields-apply"),
+  fieldsTypes: at("fields-types"),
+  fieldsEntry: at("fields-entry"),
 } as const;
 
 /** An address with no account. */

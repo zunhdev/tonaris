@@ -8,9 +8,12 @@
 
 import {
   albumFields,
+  fieldValueKey,
   membershipKey,
+  sameValue,
   type CaptureArgs,
   type CustomField,
+  type FieldValue,
   positionKey,
   serviceLinkKey,
   unsetView,
@@ -42,6 +45,7 @@ type Collections = Pick<
   | "memberships"
   | "links"
   | "fields"
+  | "fieldValues"
   | "views"
   | "defaults"
   | "positions"
@@ -61,6 +65,9 @@ type Call =
   | "link.delete"
   | "field.insert"
   | "field.update"
+  | "value.insert"
+  | "value.update"
+  | "value.delete"
   | "view.insert"
   | "view.update"
   | "view.delete"
@@ -84,6 +91,9 @@ function plan() {
     linkDeletes: [] as string[],
     fieldInserts: [] as CustomField[],
     fieldUpdates: new Map<string, Partial<CustomField>>(),
+    valueInserts: [] as FieldValue[],
+    valueUpdates: new Map<string, Partial<FieldValue>>(),
+    valueDeletes: [] as string[],
     viewInserts: [] as ViewPrefs[],
     viewUpdates: new Map<string, Partial<ViewPrefs>>(),
     viewDeletes: [] as string[],
@@ -129,7 +139,17 @@ export function resubmitAll(
 
 /** Adds `mutation`'s change to `planned`, unless the records already hold it or its record is gone. */
 function remake(
-  { albums, containers, memberships, links, fields, views, defaults, positions }: Collections,
+  {
+    albums,
+    containers,
+    memberships,
+    links,
+    fields,
+    fieldValues,
+    views,
+    defaults,
+    positions,
+  }: Collections,
   mutation: Mutation,
   planned: Plan,
 ): Resubmitted {
@@ -196,6 +216,30 @@ function remake(
     if (current.name === mutation.args.name) return "unchanged";
     planned.fieldUpdates.set(mutation.args.id, { name: mutation.args.name });
     return planned.needs("field.update");
+  }
+  if (
+    mutation.name === "fieldValue.apply" ||
+    mutation.name === "fieldValue.set" ||
+    mutation.name === "fieldValue.remove"
+  ) {
+    const { albumId, fieldId } = mutation.args;
+    if (!albums.has(albumId) || !fields.has(fieldId)) return "gone";
+    const key = fieldValueKey(albumId, fieldId);
+    const current = fieldValues.get(key);
+    if (mutation.name === "fieldValue.remove") {
+      if (!current) return "unchanged";
+      planned.valueDeletes.push(key);
+      return planned.needs("value.delete");
+    }
+    if (mutation.name === "fieldValue.apply") {
+      if (current) return "unchanged";
+      planned.valueInserts.push({ albumId, fieldId, value: null });
+      return planned.needs("value.insert");
+    }
+    if (!current) return "gone";
+    if (sameValue(current.value, mutation.args.value)) return "unchanged";
+    planned.valueUpdates.set(key, { value: mutation.args.value });
+    return planned.needs("value.update");
   }
   if (mutation.name === "container.create") {
     if (containers.has(mutation.args.id)) return "unchanged";
@@ -296,6 +340,7 @@ function make(
     memberships,
     links,
     fields,
+    fieldValues,
     views,
     defaults,
     arrange,
@@ -316,6 +361,10 @@ function make(
   else if (call === "entry.delete") sent(memberships.delete(planned.entryDeletes));
   else if (call === "link.insert") sent(links.insert(planned.linkInserts));
   else if (call === "field.insert") sent(fields.insert(planned.fieldInserts));
+  else if (call === "value.insert") sent(fieldValues.insert(planned.valueInserts));
+  else if (call === "value.update") {
+    sent(fieldValues.update([...planned.valueUpdates.keys()], applyTo(planned.valueUpdates)));
+  } else if (call === "value.delete") sent(fieldValues.delete(planned.valueDeletes));
   else if (call === "field.update") {
     sent(fields.update([...planned.fieldUpdates.keys()], applyTo(planned.fieldUpdates)));
   } else if (call === "link.update") {
