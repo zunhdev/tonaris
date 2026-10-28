@@ -47,6 +47,7 @@ export function namesOf(client: SyncClient): Names {
     album: (id) => client.albums.get(id)?.title,
     container: (id) => client.containers.get(id),
     field: (id) => client.fields.get(id)?.name,
+    trashUnit: (id) => client.trashUnits.get(id)?.name,
     option: (id) => {
       for (const field of client.fields.values()) {
         const option = field.options.find((each) => each.id === id);

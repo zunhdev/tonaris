@@ -17,6 +17,7 @@ import { createOutbox } from "./outbox";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
 import { createArrange, createPositionCollection } from "./positions";
 import { entrySender } from "./transport";
+import { createTrash, createTrashUnitCollection } from "./trash";
 import { createDefaultsCollection, createViewCollection } from "./views";
 import { createSaveStates, createWriter } from "./writer";
 
@@ -97,6 +98,7 @@ export function createSyncClient({
   const views = createViewCollection({ engine, writer });
   const defaults = createDefaultsCollection({ engine, writer });
   const positions = createPositionCollection({ engine });
+  const trashUnits = createTrashUnitCollection({ engine });
   // After the collections, so a listener hears of a change once its record is in them.
   const elsewhere = createChangesElsewhere({ engine, states });
 
@@ -117,6 +119,7 @@ export function createSyncClient({
       views.cleanup(),
       defaults.cleanup(),
       positions.cleanup(),
+      trashUnits.cleanup(),
     ]);
   }
 
@@ -133,6 +136,9 @@ export function createSyncClient({
     views,
     defaults,
     positions,
+    trashUnits,
+    /** Moves folders and lists to Trash, and recovers them (TON-55). */
+    trash: createTrash({ containers, memberships, trashUnits, writer }),
     /** Writes one move in a view: each item's new key, or null to clear its place (TS-16). */
     arrange: createArrange({ positions, writer }),
     elsewhere,

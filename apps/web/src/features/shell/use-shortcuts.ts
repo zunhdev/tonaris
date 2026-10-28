@@ -9,6 +9,7 @@ import {
   useStartEditor,
   useViewContainerId,
 } from "@/features/collection/collection-ui";
+import { useDeleteContainer } from "@/features/collection/delete-containers";
 import { useInspector } from "@/features/collection/inspector-state";
 import { useOpenIn } from "@/features/open/open-in";
 import { useConnection } from "@/features/sync/sync-provider";
@@ -43,6 +44,7 @@ export function useShortcuts({
   const inspected = useInspector().albumId;
   const capture = useCapture();
   const openIn = useOpenIn();
+  const deleteContainer = useDeleteContainer();
   // The latest of each, so the listener is installed once.
   const latest = useRef({
     navigate,
@@ -58,6 +60,7 @@ export function useShortcuts({
     inspected,
     capture,
     openIn,
+    deleteContainer,
   });
   useEffect(() => {
     latest.current = {
@@ -74,6 +77,7 @@ export function useShortcuts({
       inspected,
       capture,
       openIn,
+      deleteContainer,
     };
   });
 
@@ -95,6 +99,14 @@ export function useShortcuts({
           // Edit intent switches to Editing first (DS-45).
           now.mode.enterEditing();
           now.ui.startMove(target);
+        }
+      } else if (action === "delete") {
+        // Deleting is an edit (DS-45): the focused tree item, else the focused folder or list row of a view. An
+        // album's row isn't one of them; ⌫ on it waits for removing albums from lists.
+        const target = now.ui.focused() ?? now.ui.focusedRow();
+        if (!now.offline && !now.editing.current && target !== undefined) {
+          now.mode.enterEditing();
+          now.deleteContainer(target);
         }
       } else if (action === "add-to-list") {
         // Adding to a list is an edit too. It acts on the inspector's album, else the focused album of a view.

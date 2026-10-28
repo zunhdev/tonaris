@@ -20,6 +20,8 @@ import {
 export type Names = {
   album(id: string): string | undefined;
   container(id: string): Pick<Container, "name" | "kind"> | undefined;
+  /** A Trash unit's name, by ID (TON-55). */
+  trashUnit?(id: string): string | undefined;
   /** A custom field's name, and an option's label, by ID (TON-50). */
   field?(id: string): string | undefined;
   option?(id: string): string | undefined;
@@ -180,6 +182,24 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       summary: `Rename ${seen} to '${mutation.args.name}'`,
       what: `the new name for ${kindNamed(kind, mutation.base.name)}`,
       subject: seen,
+    };
+  }
+  if (mutation.name === "container.delete") {
+    const deleted = names.container(mutation.args.id);
+    const target = kindNamed(deleted?.kind, deleted?.name);
+    return {
+      summary: capitalized(`delete ${target}`),
+      what: `the deletion of ${target}`,
+      subject: capitalized(target),
+    };
+  }
+  if (mutation.name === "trash.recover") {
+    const name = names.trashUnit?.(mutation.args.unitId);
+    const target = quoted(name, "an item");
+    return {
+      summary: `Recover ${target} from Trash`,
+      what: `the recovery of ${target}`,
+      subject: capitalized(target),
     };
   }
   if (mutation.name === "container.describe") {

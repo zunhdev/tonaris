@@ -35,7 +35,8 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   "fieldValues": [...],
   "views": [...],
   "positions": [...],
-  "defaults": { ... }
+  "defaults": { ... },
+  "trashUnits": [...]
 }
 ```
 
@@ -47,10 +48,13 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   - the fields each album applies, with their values (`fieldValues`), Trash included (TON-50);
   - the person's remembered view choices (`views`), one record per view they made a choice in;
   - their manual order (`positions`), one key per arranged item;
-  - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own.
+  - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own;
+  - the owner's Trash, unit by unit (`trashUnits`), each `{id, kind, rootId, name, deletedAt, expiresAt, folders, lists}` (TON-55).
 
   Custom fields and Shared with me join as their features arrive, as new fields (TS-24).
-- **Trash.** Records in Trash are included, but not marked yet; Trash arrives in M5.
+- **Trash** (TON-55):
+  - Folders and lists come only when active, and entries only of active lists. What is in Trash is in `trashUnits`.
+  - Albums in Trash are still included, unmarked, until album deletion (TON-57).
 - **Artwork** (TON-48). Albums carry `artworkUrl`, set or cleared with `album.setArtwork {id, artworkUrl}` and `base.artworkUrl`; `album.create` makes an album without it. An album with `artworkUrl` carries `artworkSignature`, here and in album changes on the stream. Show the artwork only from `{API origin}/img/{artworkSignature}/{base64url(UTF-8 artworkUrl)}`, never from its own host (TS-103). A failed image means the fallback tile.
 - **Compression.** Send `Accept-Encoding: gzip`. The bootstrap is about 2.3 MB of JSON for 5,000 albums, and under 0.5 MB gzipped (TS-120).
 
@@ -88,6 +92,7 @@ A client keeps one store per entity and applies each change by key:
 | `view` | the view key: `root`, `unsorted`, or a folder's or list's ID | `ViewPrefs` |
 | `defaults` | the account's ID | `ViewDefaults`, never `null` |
 | `position` | `<viewKey>:<itemId>` | `Position` |
+| `trashUnit` | the unit's ID | `TrashUnit`: `{id, kind, rootId, name, deletedAt, expiresAt, folders, lists}` |
 
 Clients must ignore entities they don't know. New ones are added within v1 (TS-09).
 
@@ -133,7 +138,8 @@ The server ends a stream in four cases:
 - **`base`** holds the prior value of exactly the fields being changed (TS-21). A field whose saved value differs is a conflict, and nothing in the mutation applies. Fields not named are never compared, so edits to different fields of one record both apply.
 - **The mutations today:**
   - `album.create`, `album.update`, `album.setArtwork`, `album.capture`;
-  - `container.create`, `container.rename`, `container.move`, `container.describe`;
+  - `container.create`, `container.rename`, `container.move`, `container.describe`, `container.delete`;
+  - `trash.recover`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
   - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
@@ -147,6 +153,15 @@ The server ends a stream in four cases:
   - **It may need input** (TS-26): `match` with candidate albums, or `details` with a prefill. Resubmit as a new mutation with `releaseGroupId` or `details` added.
   - **The server asks metadata sources before saving,** so the request can take seconds. A copy sent while it runs answers `409 in_progress` (below).
   - **It sends the album's link** as a `link` change when it saves one (TON-46).
+- **Trash** (FR-01.11 to FR-01.16), for folders and lists (TON-55):
+  - **`container.delete`** `{id, unitId}` moves a folder or list, with its active descendants, to Trash as one unit.
+    - `unitId` is a UUIDv7 the client chose.
+    - The stream sends a `container` delete for each, a `membership` delete for each entry of the trashed lists, positions for albums entering Unsorted at its top, and the `trashUnit` insert.
+    - The entries stay stored for recovery.
+  - **`trash.recover`** `{unitId, parentId?, name?}` returns a unit to its root's parent, or to `parentId` (null for the root), named as before or `name`.
+    - With the parent missing or in Trash and no `parentId`, it answers `needs_input` `destination`, candidates `[{unitId, name, parentId, reason: "missing" | "trashed"}]`.
+    - With the name taken among the new siblings, it answers `needs_input` `name`, candidates `[{unitId, name, parentId}]`. Resubmit with the choice (TS-26).
+    - The stream sends the containers and the entries with active albums back, and the `trashUnit` delete.
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
 - **Custom fields** (FR-03.6, FR-03.9, FR-03.11), defined per account (TON-49):
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.

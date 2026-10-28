@@ -126,6 +126,12 @@ describe("describeWrite (DS-80, DS-81)", () => {
       subject: "'Later'",
     });
     expect(
+      write({ name: "container.delete", args: { id: later.id, unitId: uuidv7() } }).summary,
+    ).toBe("Delete the list 'Later'");
+    expect(write({ name: "trash.recover", args: { unitId: uuidv7() } }).summary).toBe(
+      "Recover an item from Trash",
+    );
+    expect(
       write({
         name: "container.describe",
         args: { id: later.id, description: "For the weekend" },

@@ -6,12 +6,13 @@ import { generateNKeysBetween } from "fractional-indexing";
 import type { Album } from "./albums";
 import type { CapturedLink, CaptureTarget } from "./capture";
 import type { CollectionStore, StoredAlbum } from "./commands";
-import type { Container, StoredContainer } from "./containers";
+import { containerOf, type Container, type StoredContainer } from "./containers";
 import { enrichableFields, type EnrichableField, type ProvenanceEntry } from "./enrichment";
 import { fieldValueKey, type FieldValue, type FieldValueData } from "./field-values";
 import type { StoredField } from "./fields";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
+import type { StoredTrashUnit } from "./trash";
 import type { ViewDefaults, ViewPrefs } from "./views";
 
 /** The entries of `values` that are set: an update leaves undefined fields as they are. */
@@ -110,6 +111,9 @@ export function memoryStore({
   const containerRows = new Map<string, StoredContainer>(
     containers.map((container) => [container.id, { description: null, ...container }]),
   );
+  /** Trash units by ID, and the unit each trashed folder or list is in (TS-13). */
+  const unitRows = new Map<string, StoredTrashUnit>();
+  const unitOf = new Map<string, string>();
   const membershipRows = new Map(
     memberships.map((entry) => [membershipKey(entry.listId, entry.albumId), { ...entry }]),
   );
@@ -373,6 +377,52 @@ export function memoryStore({
     },
     countMemberships: (ownerId) =>
       Promise.resolve([...membershipRows.values()].filter((row) => row.ownerId === ownerId).length),
+    activeSubtree: (id) => {
+      const root = containerRows.get(id);
+      if (!root || root.trashed) return Promise.resolve([]);
+      const found: Container[] = [containerOf(root)];
+      for (let index = 0; index < found.length; index += 1) {
+        const parent = found[index]?.id;
+        for (const row of containerRows.values()) {
+          if (row.parentId === parent && !row.trashed) found.push(containerOf(row));
+        }
+      }
+      return Promise.resolve(found);
+    },
+    listEntries: (listIds) =>
+      Promise.resolve(
+        [...membershipRows.values()]
+          .filter((entry) => listIds.includes(entry.listId))
+          .map(({ listId, albumId, addedAt }) => ({ listId, albumId, addedAt })),
+      ),
+    findTrashUnit: (id) => {
+      const unit = unitRows.get(id);
+      return Promise.resolve(unit && { ...unit });
+    },
+    unitContainers: (unitId) =>
+      Promise.resolve(
+        [...containerRows.values()]
+          .filter((row) => unitOf.get(row.id) === unitId)
+          .map((row) => containerOf(row)),
+      ),
+    trashContainers: (unit, ids) => {
+      unitRows.set(unit.id, { ...unit });
+      for (const id of ids) {
+        const row = containerRows.get(id);
+        if (row) containerRows.set(id, { ...row, trashed: true });
+        unitOf.set(id, unit.id);
+      }
+      return Promise.resolve();
+    },
+    recoverContainers: (unitId, ids) => {
+      for (const id of ids) {
+        const row = containerRows.get(id);
+        if (row) containerRows.set(id, { ...row, trashed: false });
+        unitOf.delete(id);
+      }
+      unitRows.delete(unitId);
+      return Promise.resolve();
+    },
     insertMembership: (membership) => {
       membershipRows.set(membershipKey(membership.listId, membership.albumId), { ...membership });
       return Promise.resolve();
@@ -461,6 +511,8 @@ export function memoryStore({
     provenance: provenanceRows,
     links: linkRows,
     fields: fieldRows,
+    trashUnits: unitRows,
+    unitOf,
     fieldValues: valueRows,
     containers: containerRows,
     memberships: membershipRows,

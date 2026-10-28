@@ -51,6 +51,8 @@ type Collections = Pick<
   | "positions"
   | "arrange"
   | "captures"
+  | "trash"
+  | "trashUnits"
 >;
 
 type Call =
@@ -74,7 +76,9 @@ type Call =
   | "view.delete"
   | "defaults.update"
   | "order"
-  | "capture";
+  | "capture"
+  | "trash.delete"
+  | "trash.recover";
 
 /** The collection calls that make the changes again, in the order of each call's first change. */
 function plan() {
@@ -105,6 +109,9 @@ function plan() {
     /** Each move made again: one transaction each, as each was one move. */
     orders: [] as { viewKey: string; keys: Map<string, string | null> }[],
     defaultsUpdate: {} as Partial<ViewDefaults>,
+    /** Folders and lists to move to Trash again, and units to recover again (TON-55). */
+    trashDeletes: [] as string[],
+    trashRecoveries: [] as string[],
     /** Captures sent again: one request each, as they were (TON-45). */
     captures: [] as CaptureArgs[],
     /** Notes that `call` is needed; answers `sent`. */
@@ -154,6 +161,7 @@ function remake(
     views,
     defaults,
     positions,
+    trashUnits,
   }: Collections,
   mutation: Mutation,
   planned: Plan,
@@ -290,6 +298,16 @@ function remake(
     planned.valueUpdates.set(key, { value: mutation.args.value });
     return planned.needs("value.update");
   }
+  if (mutation.name === "container.delete") {
+    if (!containers.has(mutation.args.id)) return "unchanged";
+    planned.trashDeletes.push(mutation.args.id);
+    return planned.needs("trash.delete");
+  }
+  if (mutation.name === "trash.recover") {
+    if (!trashUnits.has(mutation.args.unitId)) return "unchanged";
+    planned.trashRecoveries.push(mutation.args.unitId);
+    return planned.needs("trash.recover");
+  }
   if (mutation.name === "container.create") {
     if (containers.has(mutation.args.id)) return "unchanged";
     planned.containerInserts.push({ ...mutation.args, description: null });
@@ -401,6 +419,7 @@ function make(
     defaults,
     arrange,
     captures,
+    trash,
   }: Collections,
   planned: Plan,
   call: Call,
@@ -449,6 +468,8 @@ function make(
       }),
     );
   } else if (call === "capture") captures.send(planned.captures);
+  else if (call === "trash.delete") sent(trash.deleteContainers(planned.trashDeletes).transaction);
+  else if (call === "trash.recover") sent(trash.recoverUnits(planned.trashRecoveries));
   else for (const { viewKey, keys } of planned.orders) sent(arrange(viewKey, keys));
 }
 

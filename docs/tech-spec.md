@@ -301,6 +301,16 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
   - Purging an album deletes the album, its membership rows, and its field values. It also writes a tombstone `{id, title, artist}` into every trash unit that still references the album, so FR-01.14 can report the skip.
 - **Expiry:** the hourly job (TS-91) purges units past `expires_at`.
 
+*As built in TON-55:*
+- **Units:** `container.delete {id, unitId}` makes the unit with the client's UUIDv7. The root and its active descendants (a recursive CTE over active containers) get its `trashed_at` and `trash_unit_id`. It expires 30 days later.
+- **Clients hold active content:**
+  - the bootstrap filters containers and the entries of trashed lists;
+  - deletion logs a `container` delete per member and a `membership` delete per entry;
+  - recovery logs their inserts;
+  - units are a `trashUnit` record: `{id, kind, rootId, name, deletedAt, expiresAt, folders, lists}`.
+- **Unsorted:** an album left in no active list gets a key at Unsorted's top (DS-51). Recovery takes away the place of an album that leaves Unsorted.
+- **Recovery:** `trash.recover {unitId, parentId?, name?}` answers `needs_input` for a destination or a name (TS-26) and changes nothing until it can.
+
 **TS-14 Custom-field operations (Decided; FR-03.12, FR-03.17, FR-03.18).**
 
 - A type change takes `EXISTS(SELECT 1 FROM album_field_values WHERE field_id = $1)` inside the owner's write lock. That check covers trashed albums too, because the rows survive trashing.

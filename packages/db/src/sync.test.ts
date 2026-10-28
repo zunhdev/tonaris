@@ -279,6 +279,7 @@ describe("bootstrapSnapshot (TS-24)", () => {
       views: [],
       positions: [],
       defaults: appViewDefaults,
+      trashUnits: [],
     });
   });
 
@@ -738,9 +739,10 @@ describe("Unsorted (FR-01.9, FR-01.10, TS-13)", () => {
     expect(stillListed.kind === "list" && stillListed.albums.map((each) => each.id)).toEqual([
       kindOfBlue.id,
     ]);
-    // The entries stay, so recovering the list can restore them (TS-13).
+    // The entries stay stored, so recovering the list can restore them (TS-13); clients get the effective one.
+    expect(await t.db.select().from(memberships)).toHaveLength(3);
     const snapshot = await bootstrapSnapshot(t.db, anna.userId);
-    expect(snapshot.memberships).toHaveLength(3);
+    expect(snapshot.memberships).toMatchObject([{ listId: lateNight.id, albumId: kindOfBlue.id }]);
     expect(snapshot.albums).toEqual(expect.arrayContaining([kindOfBlue, blueTrain]));
   });
 });

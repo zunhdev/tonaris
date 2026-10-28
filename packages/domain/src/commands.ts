@@ -60,6 +60,7 @@ import { placeAtTop, setOrder, type Position } from "./positions";
 import { actingUserId, type Principal } from "./principals";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
 import type { ChangeOp, Mutation } from "./sync";
+import { deleteContainer, recoverUnit, type StoredTrashUnit, type TrashUnit } from "./trash";
 import { setDefaults, setView, type ViewDefaults, type ViewItems, type ViewPrefs } from "./views";
 
 /** An album as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
@@ -157,6 +158,19 @@ export type CollectionStore = {
     values: Partial<Pick<Container, "name" | "parentId" | "description">>,
   ): Promise<void>;
 
+  /** The folder or list and its active descendants, itself first (TS-13). */
+  activeSubtree(id: string): Promise<Container[]>;
+  /** The entries of these lists, whether or not their albums are in Trash. */
+  listEntries(listIds: string[]): Promise<Membership[]>;
+  /** The Trash unit with this ID, whoever owns it. */
+  findTrashUnit(id: string): Promise<StoredTrashUnit | undefined>;
+  /** The folders and lists in the unit, as they were deleted. */
+  unitContainers(unitId: string): Promise<Container[]>;
+  /** Records the unit and moves the folders and lists `ids` into it (FR-01.13). */
+  trashContainers(unit: StoredTrashUnit, ids: string[]): Promise<void>;
+  /** Takes the folders and lists `ids` out of Trash, and deletes their unit. */
+  recoverContainers(unitId: string, ids: string[]): Promise<void>;
+
   /** The entry for this album in this list, whether or not either is in Trash. */
   findMembership(listId: string, albumId: string): Promise<Membership | undefined>;
   /** The owner's list entries, those whose list or album is in Trash included (TS-18). */
@@ -205,7 +219,8 @@ export type ChangeInput =
   | { entity: "fieldValue"; id: string; op: ChangeOp; data: FieldValue | null }
   | { entity: "view"; id: string; op: ChangeOp; data: ViewPrefs | null }
   | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults }
-  | { entity: "position"; id: string; op: ChangeOp; data: Position | null };
+  | { entity: "position"; id: string; op: ChangeOp; data: Position | null }
+  | { entity: "trashUnit"; id: string; op: ChangeOp; data: TrashUnit | null };
 
 /** `result` is what the mutation reports in its `confirmed` outcome, if anything, such as `MembershipAddResult`. */
 export type CommandResult =
@@ -253,6 +268,8 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "container.rename") {
     return renameContainer(mutation.args, mutation.base, context);
   }
+  if (mutation.name === "container.delete") return deleteContainer(mutation.args, context);
+  if (mutation.name === "trash.recover") return recoverUnit(mutation.args, context);
   if (mutation.name === "container.describe") {
     return describeContainer(mutation.args, mutation.base, context);
   }
