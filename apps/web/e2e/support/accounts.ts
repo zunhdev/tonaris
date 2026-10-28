@@ -101,6 +101,9 @@ export const accounts = {
   // Trash (trash.e2e.ts), one per test.
   trashList: at("trash-list"),
   trashFolder: at("trash-folder"),
+  // Recovery prompts (recovery.e2e.ts), one per test.
+  recoveryDestination: at("recovery-destination"),
+  recoveryName: at("recovery-name"),
 } as const;
 
 /** An address with no account. */

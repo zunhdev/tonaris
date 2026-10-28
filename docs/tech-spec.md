@@ -550,6 +550,12 @@ The input is then resubmitted as a new mutation carrying the user's choice. Unre
 
 *As built in TON-44,* for `album.capture`:
 - **`match`:** each candidate is `{releaseGroupId, title, albumId}`, where `albumId` is the owner's album already saved as that release group, or null. The resubmission carries `releaseGroupId`, used only if the link still offers it; otherwise the candidates are answered again.
+- **`destination` and `name`** (TON-55, TON-56), for `trash.recover`:
+  - `destination`'s candidate is `{unitId, name, parentId, reason: "missing" | "trashed"}`;
+  - `name`'s is `{unitId, name, parentId}`;
+  - the resubmission carries `parentId` or `name`.
+
+  The web asks first, from the folders it holds, so the server's question only comes up after a change elsewhere. The confirmed result lists skipped entries: `{skipped: [{albumId, title, artist, listId, reason: "album_in_trash" | "album_deleted"}]}`.
 - **`details`:** the candidate is `{service, url, reason, prefill?}`, with `prefill` as `{source, values}` in the album's field names. It comes from Apple's hints (`itunes-lookup`), or from MusicBrainz for an identified album without a year (`musicbrainz`, FR-02.6).
   - The resubmission carries `details`, the album's values. Values left as offered keep their source; others are `user` (TS-15).
   - `details` without a chosen release group, after a `match`, means none of the candidates: the album is saved unidentified.

@@ -877,6 +877,21 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
   - **Delete the active album, then restore…**, which leads to the standard confirmation dialog;
   - **Cancel**.
 
+*As built in TON-56:*
+- **One flow for every surface:** Undo now, the Trash view later. The client asks before sending, from the collection it holds; the server checks again.
+- **Destination:**
+  - title "Restore 'Doom'";
+  - "'Metal' is in Trash or no longer exists. Choose where to restore 'Doom'." ("Its folder" when the parent's name is unknown);
+  - "Collection" and the active folders, nested, as a radio group;
+  - **Restore** or **Cancel**.
+- **Name:**
+  - the same title, and "'Collection' already has a list or folder named 'Doom'.";
+  - a "Name" field with the name selected, and "Choose another location…";
+  - **Restore** (or Enter) or **Cancel**. A taken or invalid name is refused with its reason.
+- **After:** "Restored 'Doom'", or "Restored · 2 memberships skipped" with **Details**.
+  - **The report:** "Skipped while restoring 'Doom'", "These albums weren't put back in their lists. Everything else was restored.", and each "{title} · {artist}" with "The album is in Trash" or "The album was deleted permanently", plus "· was in '{list}'";
+  - **Done**.
+
 **DS-57 Permanent removal.** Both use the standard confirmation dialog (DS-28) with "This can't be undone", and the button names the count, e.g. "Permanently delete 34 items". *(FR-01.18, FR-14.5)*
 - **Delete permanently:** for an album unit, the dialog shows the slot that will be freed.
 - **Empty Trash:** totals by type.

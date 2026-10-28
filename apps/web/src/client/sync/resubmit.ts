@@ -111,7 +111,7 @@ function plan() {
     defaultsUpdate: {} as Partial<ViewDefaults>,
     /** Folders and lists to move to Trash again, and units to recover again (TON-55). */
     trashDeletes: [] as string[],
-    trashRecoveries: [] as string[],
+    trashRecoveries: [] as { unitId: string; parentId?: string | null; name?: string }[],
     /** Captures sent again: one request each, as they were (TON-45). */
     captures: [] as CaptureArgs[],
     /** Notes that `call` is needed; answers `sent`. */
@@ -305,7 +305,7 @@ function remake(
   }
   if (mutation.name === "trash.recover") {
     if (!trashUnits.has(mutation.args.unitId)) return "unchanged";
-    planned.trashRecoveries.push(mutation.args.unitId);
+    planned.trashRecoveries.push(mutation.args);
     return planned.needs("trash.recover");
   }
   if (mutation.name === "container.create") {
@@ -420,6 +420,7 @@ function make(
     arrange,
     captures,
     trash,
+    trashUnits,
   }: Collections,
   planned: Plan,
   call: Call,
@@ -469,8 +470,12 @@ function make(
     );
   } else if (call === "capture") captures.send(planned.captures);
   else if (call === "trash.delete") sent(trash.deleteContainers(planned.trashDeletes).transaction);
-  else if (call === "trash.recover") sent(trash.recoverUnits(planned.trashRecoveries));
-  else for (const { viewKey, keys } of planned.orders) sent(arrange(viewKey, keys));
+  else if (call === "trash.recover") {
+    for (const { unitId, ...choice } of planned.trashRecoveries) {
+      const rootId = trashUnits.get(unitId)?.rootId ?? unitId;
+      sent(trash.recover({ unitId, rootId }, choice).transaction);
+    }
+  } else for (const { viewKey, keys } of planned.orders) sent(arrange(viewKey, keys));
 }
 
 /** The new writes report their own outcomes in the save states; a rejection is expected there, not here. */

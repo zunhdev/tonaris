@@ -6,6 +6,7 @@
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
+import { useRecover } from "@/features/trash/recovery";
 import { useNavigate } from "@tanstack/react-router";
 
 import { trashRetentionDays, type Container } from "@tonaris/domain";
@@ -40,6 +41,7 @@ export function useDeleteContainer(): (id: string) => void {
   const viewId = useViewContainerId();
   const { tree } = useCollectionData();
   const { startDelete } = useCollectionUi();
+  const recover = useRecover();
 
   return (id: string) => {
     const container = tree.byId.get(id);
@@ -63,8 +65,16 @@ export function useDeleteContainer(): (id: string) => void {
     notify?.undo({
       title: "1 list moved to Trash",
       onUndo: () => {
-        client.trash.recover(deleted).isPersisted.promise.catch(() => {});
-        announce(`Recovered ${container.name}`);
+        const [unit] = deleted.units;
+        if (!unit) return;
+        // Undo runs Trash recovery (DS-50): where it was if it can, asking otherwise.
+        recover({
+          ...unit,
+          kind: container.kind,
+          name: container.name,
+          parentId: container.parentId,
+          deleted,
+        });
       },
     });
   };

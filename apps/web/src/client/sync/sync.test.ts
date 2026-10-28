@@ -1465,7 +1465,9 @@ describe("Trash (FR-01.11, FR-01.13, TON-55)", () => {
     const [unit] = deleted.units;
     await until(() => phone.trashUnits.get(unit?.unitId ?? "")?.name === "Doom", 3_000, "the unit");
 
-    await web.trash.recover(deleted).isPersisted.promise;
+    const [made] = deleted.units;
+    await web.trash.recover(made ?? { unitId: "", rootId: listId }, {}, deleted).transaction
+      .isPersisted.promise;
     await until(
       () => phone.containers.has(listId) && phone.memberships.has(entry),
       3_000,

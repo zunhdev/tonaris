@@ -13,6 +13,7 @@ import { lastView } from "@/features/shell/device";
 import { Shell } from "@/features/shell/shell";
 import { SaveStateLayer } from "@/features/sync/save-state-layer";
 import { SyncProvider } from "@/features/sync/sync-provider";
+import { RecoveryProvider } from "@/features/trash/recovery";
 import { createFileRoute, Outlet, redirect, useLocation, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -45,9 +46,11 @@ function WorkspaceLayout() {
           <SaveStateLayer>
             <CaptureProvider>
               <OpenInProvider>
-                <Shell account={account}>
-                  <Outlet />
-                </Shell>
+                <RecoveryProvider>
+                  <Shell account={account}>
+                    <Outlet />
+                  </Shell>
+                </RecoveryProvider>
               </OpenInProvider>
             </CaptureProvider>
           </SaveStateLayer>

@@ -8164,6 +8164,15 @@
                             "type": "string",
                             "description": "The root's name, or the album's title."
                           },
+                          "parentId": {
+                            "description": "The folder the root was in, null for the root or an album: where recovery returns it if that folder is active (FR-01.15).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
                           "deletedAt": {
                             "type": "string",
                             "format": "date-time",
@@ -8192,6 +8201,7 @@
                           "kind",
                           "rootId",
                           "name",
+                          "parentId",
                           "deletedAt",
                           "expiresAt",
                           "folders",
@@ -9321,6 +9331,19 @@
                         "type": "string",
                         "description": "The root's name, or the album's title."
                       },
+                      "parentId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "The folder the root was in, null for the root or an album: where recovery returns it if that folder is active (FR-01.15)."
+                      },
                       "deletedAt": {
                         "type": "string",
                         "format": "date-time",
@@ -9349,6 +9372,7 @@
                       "kind",
                       "rootId",
                       "name",
+                      "parentId",
                       "deletedAt",
                       "expiresAt",
                       "folders",

@@ -49,7 +49,7 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   - the person's remembered view choices (`views`), one record per view they made a choice in;
   - their manual order (`positions`), one key per arranged item;
   - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own;
-  - the owner's Trash, unit by unit (`trashUnits`), each `{id, kind, rootId, name, deletedAt, expiresAt, folders, lists}` (TON-55).
+  - the owner's Trash, unit by unit (`trashUnits`), each `{id, kind, rootId, name, parentId, deletedAt, expiresAt, folders, lists}` (TON-55). `parentId` is the root's folder at deletion, null for the top level or an album.
 
   Custom fields and Shared with me join as their features arrive, as new fields (TS-24).
 - **Trash** (TON-55):
@@ -92,7 +92,7 @@ A client keeps one store per entity and applies each change by key:
 | `view` | the view key: `root`, `unsorted`, or a folder's or list's ID | `ViewPrefs` |
 | `defaults` | the account's ID | `ViewDefaults`, never `null` |
 | `position` | `<viewKey>:<itemId>` | `Position` |
-| `trashUnit` | the unit's ID | `TrashUnit`: `{id, kind, rootId, name, deletedAt, expiresAt, folders, lists}` |
+| `trashUnit` | the unit's ID | `TrashUnit`: `{id, kind, rootId, name, parentId, deletedAt, expiresAt, folders, lists}` |
 
 Clients must ignore entities they don't know. New ones are added within v1 (TS-09).
 
@@ -162,6 +162,7 @@ The server ends a stream in four cases:
     - With the parent missing or in Trash and no `parentId`, it answers `needs_input` `destination`, candidates `[{unitId, name, parentId, reason: "missing" | "trashed"}]`.
     - With the name taken among the new siblings, it answers `needs_input` `name`, candidates `[{unitId, name, parentId}]`. Resubmit with the choice (TS-26).
     - The stream sends the containers and the entries with active albums back, and the `trashUnit` delete.
+    - **Its `confirmed` result** lists what stayed out: `{skipped: [{albumId, title, artist, listId, reason}]}`. `reason` is `album_in_trash` (with the list), or `album_deleted` for an album purged while the unit referred to it (`listId` null) (TON-56).
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
 - **Custom fields** (FR-03.6, FR-03.9, FR-03.11), defined per account (TON-49):
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.
