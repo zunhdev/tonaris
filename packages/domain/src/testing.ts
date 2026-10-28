@@ -5,7 +5,7 @@ import { generateNKeysBetween } from "fractional-indexing";
 
 import type { Album } from "./albums";
 import type { CapturedLink, CaptureTarget } from "./capture";
-import type { CollectionStore, StoredAlbum } from "./commands";
+import type { CollectionStore, ShareGrant, StoredAlbum } from "./commands";
 import { containerOf, type Container, type StoredContainer } from "./containers";
 import { enrichableFields, type EnrichableField, type ProvenanceEntry } from "./enrichment";
 import { fieldValueKey, type FieldValue, type FieldValueData } from "./field-values";
@@ -50,6 +50,7 @@ export function memoryStore({
   views = [],
   defaults = [],
   positions = [],
+  accounts = [],
 }: {
   /** Albums; one without `artworkUrl` has none. */
   albums?: (Omit<Album, "artworkUrl"> & {
@@ -69,6 +70,8 @@ export function memoryStore({
   views?: (ViewPrefs & { personId: string })[];
   defaults?: (ViewDefaults & { personId: string })[];
   positions?: (Position & { personId: string })[];
+  /** Accounts, by email key, for invitations and display names. */
+  accounts?: { id: string; email: string; displayName?: string | null }[];
 } = {}) {
   const albumRows = new Map<string, StoredAlbum>(
     albums.map((row) => {
@@ -127,6 +130,17 @@ export function memoryStore({
   const positionRows = new Map<string, Position & { personId: string }>(
     positions.map((row) => [positionRowKey(row.personId, row.viewKey, row.itemId), { ...row }]),
   );
+  const accountRows = new Map(
+    accounts.map(({ displayName = null, ...account }) => [account.id, { ...account, displayName }]),
+  );
+  type GrantRow = ShareGrant & { containerId: string; granteeId: string; invitedEmail: string };
+  const grantRows = new Map<string, GrantRow>();
+  const shareLinkRows = new Map<
+    string,
+    { id: string; containerId: string; tokenHash: Uint8Array; revokedAt: Date | null }
+  >();
+  const ownedBy = (ownerId: string, containerId: string) =>
+    containerRows.get(containerId)?.ownerId === ownerId;
   const inActiveList = (albumId: string) =>
     [...membershipRows.values()].some(
       (entry) => entry.albumId === albumId && containerRows.get(entry.listId)?.trashed === false,
@@ -573,6 +587,56 @@ export function memoryStore({
       );
     },
     inActiveList: (albumId) => Promise.resolve(inActiveList(albumId)),
+
+    findAccountByEmail: (key) => {
+      const account = [...accountRows.values()].find((each) => each.email === key);
+      return Promise.resolve(account && { id: account.id });
+    },
+    displayNameOf: (userId) => Promise.resolve(accountRows.get(userId)?.displayName ?? null),
+    setDisplayName(userId, displayName) {
+      const account = accountRows.get(userId);
+      if (account) account.displayName = displayName;
+      return Promise.resolve();
+    },
+    activeShareCount(ownerId) {
+      const grants = [...grantRows.values()].filter(
+        (grant) =>
+          ownedBy(ownerId, grant.containerId) &&
+          (grant.status === "pending" || grant.status === "accepted"),
+      );
+      const live = [...shareLinkRows.values()].filter(
+        (link) => ownedBy(ownerId, link.containerId) && link.revokedAt === null,
+      );
+      return Promise.resolve(grants.length + live.length);
+    },
+    findOpenGrant(containerId, granteeId) {
+      const grant = [...grantRows.values()].find(
+        (each) =>
+          each.containerId === containerId &&
+          each.granteeId === granteeId &&
+          (each.status === "pending" || each.status === "accepted"),
+      );
+      return Promise.resolve(grant && { id: grant.id, status: grant.status });
+    },
+    insertGrant(grant) {
+      grantRows.set(grant.id, { ...grant });
+      return Promise.resolve();
+    },
+    findLiveLink(containerId) {
+      const link = [...shareLinkRows.values()].find(
+        (each) => each.containerId === containerId && each.revokedAt === null,
+      );
+      return Promise.resolve(link && { id: link.id });
+    },
+    insertLink(link) {
+      shareLinkRows.set(link.id, { ...link, revokedAt: null });
+      return Promise.resolve();
+    },
+    revokeLink(id, at) {
+      const link = shareLinkRows.get(id);
+      if (link) link.revokedAt = at;
+      return Promise.resolve();
+    },
   };
   return {
     store,
@@ -589,5 +653,8 @@ export function memoryStore({
     views: viewRows,
     defaults: defaultRows,
     positions: positionRows,
+    accounts: accountRows,
+    grants: grantRows,
+    shareLinks: shareLinkRows,
   };
 }

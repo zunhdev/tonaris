@@ -312,6 +312,14 @@ function remake(
     planned.albumDeletes.push(mutation.args.id);
     return planned.needs("album.delete");
   }
+  // Sharing and the display name are sent from their dialog, never queued: nothing to remake (TON-65).
+  if (
+    mutation.name === "share.invite" ||
+    mutation.name === "share.setLink" ||
+    mutation.name === "account.setDisplayName"
+  ) {
+    return "unchanged";
+  }
   if (mutation.name === "trash.purge") {
     const left = mutation.args.unitIds.filter((unitId) => trashUnits.has(unitId));
     if (left.length === 0) return "unchanged";

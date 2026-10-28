@@ -20,6 +20,7 @@ import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
 import { positionSchema } from "./positions";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
+import { setDisplayNameArgsSchema, shareInviteArgsSchema, shareSetLinkArgsSchema } from "./sharing";
 import {
   albumDeleteArgsSchema,
   containerDeleteArgsSchema,
@@ -337,6 +338,27 @@ export const membershipAddResultSchema = z
 export type MembershipAddResult = z.infer<typeof membershipAddResultSchema>;
 
 /** One write, from the app or MCP (TS-20). */
+/** `share.invite`: invites an existing account to view a folder or list (FR-07.4). App-only (X-03). */
+export const shareInviteSchema = z.object({
+  mutationId,
+  name: z.literal("share.invite"),
+  args: shareInviteArgsSchema,
+});
+
+/** `share.setLink`: turns a folder's or list's link on or off (FR-07.1, FR-07.16). App-only (X-03). */
+export const shareSetLinkSchema = z.object({
+  mutationId,
+  name: z.literal("share.setLink"),
+  args: shareSetLinkArgsSchema,
+});
+
+/** `account.setDisplayName`: sets or clears the display name (FR-11.3, TS-34). App-only (X-03). */
+export const accountSetDisplayNameSchema = z.object({
+  mutationId,
+  name: z.literal("account.setDisplayName"),
+  args: setDisplayNameArgsSchema,
+});
+
 export const mutationSchema = z
   .discriminatedUnion("name", [
     albumCreateSchema,
@@ -368,6 +390,9 @@ export const mutationSchema = z
     viewSetSchema,
     defaultsSetSchema,
     orderSetSchema,
+    shareInviteSchema,
+    shareSetLinkSchema,
+    accountSetDisplayNameSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

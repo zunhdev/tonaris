@@ -42,6 +42,8 @@ export const shareGrants = table(
     granteeId: uuid()
       .notNull()
       .references(() => users.id),
+    // The address the owner typed, which their dialog shows (DS-65, DS-69); the grantee's may change later.
+    invitedEmail: text().notNull(),
     status: text({ enum: shareGrantStatuses }).notNull(),
     emailStatus: text({ enum: emailStatuses }),
     ...timestamps,

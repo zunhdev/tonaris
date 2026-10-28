@@ -11,9 +11,9 @@ import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
 import {
-  createShareToken,
   readableContainers,
   shareGrantStatuses,
+  shareToken,
   shareTokenHash,
   sourcesOf,
   viewerOf,
@@ -42,14 +42,16 @@ const state = (values: Partial<SharingState>): SharingState => ({
 });
 
 describe("link tokens (TS-32)", () => {
-  test("256 random bits as 43 base64url characters, stored as their SHA-256", async () => {
-    const first = await createShareToken();
-    const second = await createShareToken();
-    expect(first.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    expect(first.token).not.toBe(second.token);
-    expect(first.hash).toHaveLength(32);
-    expect(await shareTokenHash(first.token)).toEqual(first.hash);
-    expect(await shareTokenHash(second.token)).not.toEqual(first.hash);
+  test("256 bits as 43 base64url characters, the same for a link, different across links and secrets", async () => {
+    const [one, two] = [uuidv7(), uuidv7()];
+    const token = await shareToken("secret", one);
+    expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(await shareToken("secret", one)).toBe(token);
+    expect(await shareToken("secret", two)).not.toBe(token);
+    expect(await shareToken("another secret", one)).not.toBe(token);
+    const hash = await shareTokenHash(token);
+    expect(hash).toHaveLength(32);
+    expect(await shareTokenHash(token)).toEqual(hash);
   });
 });
 

@@ -25,6 +25,7 @@ import { connectionRoutes } from "./routes/v1/connections";
 import { fieldRoutes } from "./routes/v1/fields";
 import { meRoutes } from "./routes/v1/me";
 import { searchRoutes } from "./routes/v1/search";
+import { sharingRoutes } from "./routes/v1/sharing";
 import { csrfGuard, securityHeaders } from "./security";
 import { databaseHub, type SyncHub } from "./sync/hub";
 import { syncRoutes } from "./sync/routes";
@@ -41,6 +42,8 @@ function v1(
     hub: SyncHub;
     capture?: CaptureDeps | undefined;
     artwork: ArtworkSigner;
+    shareSecret: string;
+    webOrigin: string;
   },
 ) {
   return new Elysia({ prefix: "/v1" })
@@ -58,6 +61,7 @@ function v1(
     .use(approvalRoutes(session, { db: sync.db }))
     .use(fieldRoutes(session, { db: sync.db }))
     .use(searchRoutes(session, { db: sync.db }))
+    .use(sharingRoutes(session, sync))
     .use(syncRoutes(session, sync));
 }
 
@@ -108,7 +112,16 @@ export function createApp({
       .use(mcpRoutes({ auth, db, config, logError }))
       // Artwork, outside the versioned contract: images the server signed (TS-103).
       .use(artworkRoutes(artwork, imageFetch ? { fetch: imageFetch } : {}))
-      .use(v1(sessionGuard(auth), { db, hub, capture, artwork }))
+      .use(
+        v1(sessionGuard(auth), {
+          db,
+          hub,
+          capture,
+          artwork,
+          shareSecret: config.authSecret,
+          webOrigin: config.webOrigin,
+        }),
+      )
   );
 }
 

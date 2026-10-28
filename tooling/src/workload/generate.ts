@@ -646,6 +646,8 @@ function share(
       id: rng.uuidv7(sharedAt),
       containerId: root.id,
       granteeId: viewerId,
+      // The address the sharer typed: the viewer's own (DS-65).
+      invitedEmail: b.rows.users.find((user) => user.id === viewerId)?.email ?? "",
       status: "accepted",
       emailStatus: "sent",
       ...stamps(sharedAt),

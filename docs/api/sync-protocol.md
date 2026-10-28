@@ -148,6 +148,7 @@ The server ends a stream in four cases:
   - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
   - `fieldValue.apply`, `fieldValue.set`, `fieldValue.remove`;
   - `view.set`, `defaults.set`;
+  - `share.invite`, `share.setLink`, `account.setDisplayName`;
   - `order.set`.
 
   The OpenAPI document has each one's `args` and `base`.
@@ -176,6 +177,16 @@ The server ends a stream in four cases:
     - The stream sends each unit's `trashUnit` delete, and for a purged album its `link` and `fieldValue` deletes.
   - **The hourly expiry** sends the same changes, with `mutationId` null, for units 30 days old.
   - **Later recoveries** report what was purged: `album_deleted` in a list's recovery, `list_deleted` in an album's restore.
+- **Sharing** (FR-07.1, FR-07.4, FR-07.16, FR-11.3, TON-65). These are app-only (`app_only` through MCP), change nothing a client holds, and so log no change; the owner reads the state with `GET /v1/containers/{id}/sharing`.
+  - **`share.invite`** `{grantId, containerId, email}` invites the account that signs in with `email`.
+    - Its `confirmed` result is `{grantId, status}`.
+    - Someone already invited, or viewing, keeps their invitation: the result names it.
+    - No account: `recipient_not_found`. Yourself: `validation_failed`.
+  - **`share.setLink`** `{containerId, linkId, enabled}` turns the link on, keeping a live one, or off for good.
+    - Its result is `{linkId}`, null when off.
+    - A new link takes `linkId`; the API derives its token and stores only the token's hash (TS-32).
+  - **`account.setDisplayName`** `{displayName}` sets the name, trimmed; blank or null clears it.
+  - **Display name:** inviting or turning a link on needs one (`display_name_required`). So does keeping one while any invitation is pending or accepted, or any link is on.
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
 - **Custom fields** (FR-03.6, FR-03.9, FR-03.11), defined per account (TON-49):
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.

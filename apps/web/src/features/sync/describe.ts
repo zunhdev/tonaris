@@ -193,6 +193,30 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: capitalized(target),
     };
   }
+  if (mutation.name === "share.invite") {
+    const container = quoted(names.container(mutation.args.containerId)?.name, "a folder or list");
+    return {
+      summary: `Invite ${mutation.args.email} to ${container}`,
+      what: `the invitation to ${container}`,
+      subject: capitalized(`the invitation to ${container}`),
+    };
+  }
+  if (mutation.name === "share.setLink") {
+    const container = quoted(names.container(mutation.args.containerId)?.name, "a folder or list");
+    const turn = mutation.args.enabled ? "on" : "off";
+    return {
+      summary: `Turn ${turn} the link to ${container}`,
+      what: `the link to ${container}`,
+      subject: capitalized(`the link to ${container}`),
+    };
+  }
+  if (mutation.name === "account.setDisplayName") {
+    return {
+      summary: "Change your display name",
+      what: "your display name",
+      subject: "Your display name",
+    };
+  }
   if (mutation.name === "trash.purge") {
     const count = mutation.args.unitIds.length;
     const items = `${count} ${count === 1 ? "item" : "items"}`;
@@ -324,6 +348,8 @@ const codeReasons: Record<ErrorCode, string> = {
   rate_limited: "Too many changes at once. Wait a moment, then retry.",
   expired: "This change is too old to be retried. Check what's saved, then make it again.",
   in_progress: "This change is still being saved. Wait a moment, then check again.",
+  recipient_not_found: "No Tonaris account uses this email. Share a link instead.",
+  display_name_required: "Add a display name first: people you share with see it.",
   internal_error: "Tonaris couldn't save this change. Try again.",
 };
 

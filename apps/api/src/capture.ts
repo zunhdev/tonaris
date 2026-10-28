@@ -30,6 +30,8 @@ import {
   type Outcome,
   type PreparedLink,
   type Principal,
+  shareToken,
+  shareTokenHash,
 } from "@tonaris/domain";
 import {
   identificationOutcome,
@@ -207,12 +209,21 @@ export async function prepareLink(
  * Runs a mutation as the API does: a capture claimed, prepared and then saved; a link edit with its URL read first;
  * anything else by `executeMutation`. Throws `MutationInProgressError` while another request runs the same capture.
  */
-export function mutationRunner(db: Database, deps: CaptureDeps | undefined) {
+export function mutationRunner(
+  db: Database,
+  deps: CaptureDeps | undefined,
+  { shareSecret }: { shareSecret: string },
+) {
   return async function run(
     principal: Principal,
     mutation: Mutation,
     now?: Date,
   ): Promise<ExecutedMutation> {
+    // A new link's token is derived with the server's secret, which commands never see: its hash goes in (TS-32).
+    if (mutation.name === "share.setLink" && mutation.args.enabled) {
+      const hash = await shareTokenHash(await shareToken(shareSecret, mutation.args.linkId));
+      return executeMutation(db, principal, mutation, now, { shareLink: { hash } });
+    }
     if (mutation.name === "link.set") {
       const link = await prepareLink(mutation.args.url, deps?.readLink);
       return executeMutation(db, principal, mutation, now, { link });

@@ -117,6 +117,8 @@ export const accounts = {
   // Palette commands (palette-commands.e2e.ts), one per test.
   paletteCommands: at("palette-commands"),
   paletteRecent: at("palette-recent"),
+  // The sharing dialog (sharing-dialog.e2e.ts).
+  sharingDialog: at("sharing-dialog"),
 } as const;
 
 /** An address with no account. */

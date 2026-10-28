@@ -999,6 +999,22 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Disabling the link** needs an inline confirmation: "Turn off link? This link stops working permanently; turning it back on creates a new one."
 - **Errors:** an unregistered recipient gets an inline error that keeps the typed email: "No Tonaris account uses this email. Invitations only work for existing members — you can share a link instead." *(FR-07.4)*
 
+*As built in TON-65:*
+- **Opening it:** a **Share** button in a folder's or list's header (hidden below 768px, disabled offline), **⇧S** for the focused or viewed folder or list, and the palette's "Share…".
+- **Title:** "Share "{name}" · folder" or "· list".
+- **Disclosures:** the description reads "Viewers see every custom field these albums use, including ones you add later.", plus, for a folder, "Sharing a folder includes everything inside it, now and in the future."
+- **Without a display name:** a field labelled "Add a display name to share", with "Viewers see this name instead of your email." and **Save**, takes the place of Invite and the link section.
+- **Inviting:**
+  - The field reads "Invite by email…", with **Invite**.
+  - A refusal shows under it in `status.danger`, as an alert, and keeps the address. Inviting yourself says "You can't invite yourself."
+  - **"People with access"** lists each invitation: the person's display name if they set one, the address as typed, and Pending or Accepted. Email delivery states and Resend come with TON-66; "Remove access" with TON-67.
+- **Inherited access:** "Access from folders above" lists each shared ancestor, nearest first: "Also visible through "{name}": 2 people · link". The name is a button that opens that folder's dialog.
+- **The link section:** "Link sharing", with "Anyone with the link can view and forward it." beside the switch.
+  - **On:** the link shows read-only, and **Copy** turns into "Copied".
+  - **Turning off** shows the confirmation inline, with **Turn off** and **Cancel**.
+  - **The link is the same each time the dialog opens** (TS-32).
+- **Offline:** "You're offline. Sharing waits until you're back.", and the controls are disabled.
+
 **DS-66 Invitations inbox.** `/invitations` lists pending invitations: the owner's display name, collection name and type, and date, each with **Accept** and **Decline**.
 - **From email:** the email link lands on `/invitations/:id`, which requires sign-in as the recipient.
 - **Wrong account:** "This invitation is for a different account — sign out and sign in with that email".
@@ -1159,6 +1175,7 @@ The block never says "private" while another access path remains.
   - It gains R ("Restore", under Trash) and ⌘Enter ("Submit a form; in search, open an album on its own").
   - Its sections are Moving around, Views, Albums, Folders and lists, Trash and Help.
   - Every action in it is a palette command with the same keys (DS-75).
+- **TON-65 adds ⇧S,** which opens the sharing dialog (DS-65) for the focused folder or list, else the one on view. It works in Viewing mode, waits while offline, and isn't offered on a phone. The reference and the palette list it as "Share…".
 
 ---
 

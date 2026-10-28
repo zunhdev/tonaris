@@ -1,7 +1,8 @@
 // Reads through sharing (FR-07.8–FR-07.13; TS-31 to TS-33): a link found by its token's hash, what a viewer may
 // read, and a shared container as its viewers see it. Access is `readableContainers` in packages/domain, walked here
 // with recursive CTEs over active containers only, cut off past the depth limit as the other hierarchy walks are;
-// property tests hold the two equal. Nothing here writes: sharing commands arrive with TON-65 to TON-67.
+// property tests hold the two equal. Also the owner's view of a container's sharing, for the dialog (DS-65); the
+// sharing commands are the domain's, run through `executeMutation`.
 
 import { and, asc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 
@@ -12,6 +13,7 @@ import {
   type CustomField,
   type ServiceLink,
   type SharedSnapshot,
+  type ShareSettings,
   type ShareViewer,
 } from "@tonaris/domain";
 
@@ -217,4 +219,78 @@ async function usedFields(
       .filter((option) => option.fieldId === id && chosen.has(option.id))
       .map((option) => ({ id: option.id, label: option.label })),
   }));
+}
+
+/** A folder's or list's sharing as its owner's dialog shows it (DS-65), with the live link's ID for the API's URL. */
+export type ShareSettingsRow = Omit<ShareSettings, "link"> & { link: { id: string } | null };
+
+/**
+ * The sharing of the container `id` (DS-65), for `ownerId` only: undefined for anyone else's. Invitations are the
+ * open ones; folders above are listed when they have any open invitation or a live link, nearest first.
+ */
+export async function shareSettings(
+  db: Database,
+  ownerId: string,
+  id: string,
+): Promise<ShareSettingsRow | undefined> {
+  const [container] = await db
+    .select({ ownerId: containers.ownerId, parentId: containers.parentId })
+    .from(containers)
+    .where(eq(containers.id, id));
+  if (container?.ownerId !== ownerId) return undefined;
+  const [owner] = await db
+    .select({ displayName: users.displayName })
+    .from(users)
+    .where(eq(users.id, ownerId));
+  const invitations = await db
+    .select({
+      id: shareGrants.id,
+      email: shareGrants.invitedEmail,
+      displayName: users.displayName,
+      status: shareGrants.status,
+      emailStatus: shareGrants.emailStatus,
+    })
+    .from(shareGrants)
+    .innerJoin(users, eq(users.id, shareGrants.granteeId))
+    .where(
+      and(eq(shareGrants.containerId, id), inArray(shareGrants.status, ["pending", "accepted"])),
+    )
+    .orderBy(asc(shareGrants.id));
+  const [link] = await db
+    .select({ id: shareLinks.id })
+    .from(shareLinks)
+    .where(and(eq(shareLinks.containerId, id), isNull(shareLinks.revokedAt)));
+  const above =
+    container.parentId === null
+      ? []
+      : await db.execute<{ id: string; name: string; people: number; link: boolean }>(sql`
+          with recursive up (id, parent_id, name, level) as (
+            select id, parent_id, name, 1 from ${containers} where id = ${container.parentId}
+            union all
+            select c.id, c.parent_id, c.name, up.level + 1 from ${containers} c join up on c.id = up.parent_id
+            where up.level <= ${maxContainerDepth}
+          )
+          select up.id, up.name,
+            (select count(*) from ${shareGrants} g
+              where g.container_id = up.id and g.status in ('pending', 'accepted'))::int as people,
+            exists (select 1 from ${shareLinks} l where l.container_id = up.id and l.revoked_at is null) as link
+          from up order by up.level`);
+  return {
+    containerId: id,
+    ownerDisplayName: owner?.displayName ?? null,
+    invitations: invitations.flatMap((each) =>
+      each.status === "pending" || each.status === "accepted"
+        ? [{ ...each, status: each.status }]
+        : [],
+    ),
+    link: link ?? null,
+    inherited: above
+      .filter((each) => each.people > 0 || each.link)
+      .map(({ id: containerId, name, people, link: linked }) => ({
+        containerId,
+        name,
+        people,
+        link: linked,
+      })),
+  };
 }

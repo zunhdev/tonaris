@@ -2,7 +2,8 @@
 // tested without a DOM. G starts a sequence: G then H, U, T or S within 1.5 s goes to the root, Unsorted, Trash or
 // Settings → Preferences. Single keys: `[` hides or shows the sidebar, `?` opens the reference, N and ⇧N make a new
 // list or folder, V opens the view's View options, M moves the focused folder or list, E switches between Viewing
-// and Editing mode, L adds the open or focused album to a list, C opens the capture dialog (DS-48), and O opens the
+// and Editing mode, L adds the open or focused album to a list, ⇧S shares the focused or viewed folder or list (DS-65),
+// C opens the capture dialog (DS-48), and O opens the
 // open or focused album's "Open in…" chooser (DS-25). ⌫ deletes the focused folder or list, and ⌘⌫ the open or
 // focused album (DS-50). ⌘K, or Ctrl+K, opens the search palette (DS-75), also from a text field. Esc closing the
 // inspector is the inspector's.
@@ -26,6 +27,7 @@ export type ShortcutAction =
   | "open-in"
   | "delete"
   | "delete-album"
+  | "share"
   | "search";
 
 /** What the matcher reads of a `KeyboardEvent`. */
@@ -70,6 +72,7 @@ const singles: Record<string, ShortcutAction> = {
   "?": "shortcuts",
   n: "new-list",
   N: "new-folder",
+  S: "share",
   v: "view-options",
   m: "move",
   e: "toggle-mode",
@@ -177,6 +180,7 @@ export const commands: readonly Command[] = [
   { id: "new-folder", title: "New folder", keys: ["⇧", "N"], section: "Folders and lists" },
   { id: "rename", title: "Rename", keys: ["F2"], section: "Folders and lists" },
   { id: "move", title: "Move to…", keys: ["M"], section: "Folders and lists" },
+  { id: "share", title: "Share…", keys: ["⇧", "S"], section: "Folders and lists" },
   { id: "delete", title: "Delete a folder or list", keys: ["⌫"], section: "Folders and lists" },
   { id: "restore", title: "Restore", keys: ["R"], section: "Trash" },
   { id: "shortcuts", title: "Keyboard shortcuts", keys: ["?"], section: "Help" },

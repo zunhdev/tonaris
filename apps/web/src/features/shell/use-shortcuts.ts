@@ -8,6 +8,7 @@ import { useCapture } from "@/features/capture/capture-context";
 import {
   useCollectionUi,
   useMode,
+  useNarrowScreen,
   useStartEditor,
   useViewContainerId,
 } from "@/features/collection/collection-ui";
@@ -52,7 +53,9 @@ const edits = new Set<CommandId>([
   "add-to-list",
 ]);
 const onAlbum = new Set<CommandId>(["add-to-list", "open-in", "delete-album"]);
-const onContainer = new Set<CommandId>(["rename", "move", "delete"]);
+const onContainer = new Set<CommandId>(["rename", "move", "delete", "share"]);
+/** Sharing is online-only: it waits while offline, but isn't a collection edit, so it needs no Editing mode. */
+const online = new Set<CommandId>(["share"]);
 
 export type CommandRunner = {
   run: (id: CommandId, target: CommandTarget) => void;
@@ -82,6 +85,7 @@ export function useCommandRunner({
   const recover = useRecover();
   const client = useSyncClient();
   const { tree } = useCollectionData();
+  const narrow = useNarrowScreen();
   // The latest of each, so what callers hold stays stable.
   const latest = useRef({
     navigate,
@@ -97,6 +101,7 @@ export function useCommandRunner({
     recover,
     client,
     tree,
+    narrow,
     toggleSidebar,
     openShortcuts,
   });
@@ -115,6 +120,7 @@ export function useCommandRunner({
       recover,
       client,
       tree,
+      narrow,
       toggleSidebar,
       openShortcuts,
     };
@@ -143,7 +149,7 @@ export function useCommandRunner({
   const blocked = useCallback(
     (id: CommandId, on: CommandTarget): string | undefined => {
       const now = latest.current;
-      if (edits.has(id) && now.offline) return "You're offline";
+      if ((edits.has(id) || online.has(id)) && now.offline) return "You're offline";
       if (onAlbum.has(id) && on.album === undefined) return "Open or focus an album first";
       if (onContainer.has(id) && containerOf(id, on) === undefined)
         return "Focus a folder or list first";
@@ -165,7 +171,11 @@ export function useCommandRunner({
       // Choosing how a view looks isn't an edit, so it works offline (X-04).
       else if (id === "view-options") now.ui.openViewOptions();
       else if (id === "toggle-mode") now.mode.choose(now.mode.editing ? "view" : "edit");
-      else if (id === "open-in") {
+      else if (id === "share") {
+        // The owner's dialog, desktop only (DS-65); it waits while offline.
+        const container = containerOf(id, on);
+        if (container !== undefined && !now.offline && !now.narrow) now.ui.startShare(container);
+      } else if (id === "open-in") {
         // Opening isn't an edit: it works in Viewing mode and offline. The chooser sits by what has the focus
         // (DS-25).
         const anchor = document.activeElement === document.body ? null : document.activeElement;

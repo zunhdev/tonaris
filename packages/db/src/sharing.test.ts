@@ -8,11 +8,12 @@ import { eq } from "drizzle-orm";
 import * as fc from "fast-check";
 
 import {
-  createShareToken,
   nameKey,
   readableContainers as modelReadable,
   searchKey,
   shareGrantStatuses,
+  shareToken,
+  shareTokenHash,
   trashRetentionDays,
   uuidv7,
   type Container,
@@ -105,12 +106,17 @@ async function grant(
   granteeId: string,
   status: ShareGrantStatus = "accepted",
 ) {
-  await t.db.insert(shareGrants).values({ id: uuidv7(), containerId, granteeId, status });
+  await t.db
+    .insert(shareGrants)
+    .values({ id: uuidv7(), containerId, granteeId, invitedEmail: "someone@example.com", status });
 }
 
-async function link(containerId: string) {
-  const { token, hash } = await createShareToken();
-  const id = uuidv7();
+const secret = "test secret";
+
+/** A live link on `containerId`, stored as the commands store it: by its token's hash. */
+async function link(containerId: string, id = uuidv7()) {
+  const token = await shareToken(secret, id);
+  const hash = await shareTokenHash(token);
   await t.db.insert(shareLinks).values({ id, containerId, tokenHash: Buffer.from(hash) });
   return { id, token };
 }
@@ -199,7 +205,13 @@ describe("the CTEs agree with the model (TS-31)", () => {
           grants.push(row);
         }
         if (grants.length > 0)
-          await t.db.insert(shareGrants).values(grants.map((each) => ({ id: uuidv7(), ...each })));
+          await t.db.insert(shareGrants).values(
+            grants.map((each) => ({
+              id: uuidv7(),
+              invitedEmail: "someone@example.com",
+              ...each,
+            })),
+          );
         // One live link per container, as the index requires.
         const links: (SharingState["links"][number] & { saved: boolean })[] = [];
         for (const each of plan.links) {
@@ -211,7 +223,7 @@ describe("the CTEs agree with the model (TS-31)", () => {
         }
         for (const each of links) {
           // oxlint-disable-next-line no-await-in-loop
-          const { hash } = await createShareToken();
+          const hash = await shareTokenHash(await shareToken(secret, each.id));
           // oxlint-disable-next-line no-await-in-loop
           await t.db.insert(shareLinks).values({
             id: each.id,
@@ -267,7 +279,7 @@ describe("links (TS-32)", () => {
     expect(Buffer.from(stored!.tokenHash).toString("utf8")).not.toContain(token);
     await t.db.update(shareLinks).set({ revokedAt: new Date() }).where(eq(shareLinks.id, id));
     expect(await findShareLink(t.db, token)).toBeUndefined();
-    expect(await findShareLink(t.db, (await createShareToken()).token)).toBeUndefined();
+    expect(await findShareLink(t.db, await shareToken(secret, uuidv7()))).toBeUndefined();
   });
 });
 
