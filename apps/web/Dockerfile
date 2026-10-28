@@ -19,6 +19,8 @@ COPY tooling/package.json tooling/
 RUN bun install --frozen-lockfile --filter @tonaris/web
 COPY tsconfig.base.json ./
 COPY packages/domain packages/domain
+# The pure link parser, `@tonaris/providers/links` (TS-02, TS-40).
+COPY packages/providers packages/providers
 COPY packages/ui packages/ui
 COPY apps/web apps/web
 RUN bun run --cwd apps/web build

@@ -57,6 +57,7 @@ export {
   maxLinkLength,
   maxShortLinkHops,
   parseLink,
+  readLink,
   resolveShortLink,
   type Fetcher,
   type LinkParse,

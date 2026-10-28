@@ -1,5 +1,5 @@
-// The collection as the sidebar and the views read it: the tree of folders and lists, the albums, each list's
-// entries and album count, Unsorted's albums, and the person's view choices, defaults and manual order, from the
+// The collection as the sidebar and the views read it: the tree of folders and lists, the albums and their links, each
+// list's entries and album count, Unsorted's albums, and the person's view choices, defaults and manual order, from the
 // sync client's collections, live (FR-09.1, FR-11.8). Optimistic writes show at once. Built once for the workspace,
 // so the tree and the view share one pass over the data. The tree orders each level as its folder's view is sorted,
 // and the top level as the root is (decided 23 October 2026), manual order included.
@@ -13,6 +13,7 @@ import {
   unsetView,
   type Album,
   type Membership,
+  type ServiceLink,
   type ViewDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
@@ -34,6 +35,8 @@ export type CollectionData = {
   entriesByList: ReadonlyMap<string, readonly Membership[]>;
   /** The albums in no list (FR-01.9). */
   unsortedAlbums: readonly Album[];
+  /** Each album's links to the streaming services (FR-06.2). */
+  linksByAlbum: ReadonlyMap<string, readonly ServiceLink[]>;
   /** The person's remembered choices, by view key (FR-11.7). */
   views: ReadonlyMap<string, ViewPrefs>;
   /** Their account defaults; DS-44's until the first snapshot or until they save their own. */
@@ -52,6 +55,7 @@ const empty: CollectionData = {
   albumsById: new Map(),
   entriesByList: new Map(),
   unsortedAlbums: [],
+  linksByAlbum: new Map(),
   views: new Map(),
   defaults: appViewDefaults,
   keys: new Map(),
@@ -65,6 +69,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
   const containers = useLiveQuery(() => client?.containers, [client]);
   const memberships = useLiveQuery(() => client?.memberships, [client]);
   const albums = useLiveQuery(() => client?.albums, [client]);
+  const links = useLiveQuery(() => client?.links, [client]);
   const viewRows = useLiveQuery(() => client?.views, [client]);
   const defaultRows = useLiveQuery(() => client?.defaults, [client]);
   const positionRows = useLiveQuery(() => client?.positions, [client]);
@@ -72,6 +77,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
   const containerData = containers.data;
   const membershipData = memberships.data;
   const albumData = albums.data;
+  const linkData = links.data;
   const viewData = viewRows.data;
   const defaultData = defaultRows.data;
   const positionData = positionRows.data;
@@ -79,6 +85,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
     containers.isReady &&
     memberships.isReady &&
     albums.isReady &&
+    links.isReady &&
     viewRows.isReady &&
     defaultRows.isReady &&
     positionRows.isReady;
@@ -95,6 +102,12 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       listed.add(entry.albumId);
     }
     const unsortedAlbums = owned.filter((album) => !listed.has(album.id));
+    const linksByAlbum = new Map<string, ServiceLink[]>();
+    for (const link of linkData ?? []) {
+      const ofAlbum = linksByAlbum.get(link.albumId);
+      if (ofAlbum) ofAlbum.push(link);
+      else linksByAlbum.set(link.albumId, [link]);
+    }
     const views = new Map((viewData ?? []).map((view) => [view.viewKey, view]));
     const defaults = defaultData?.[0] ?? appViewDefaults;
     const keys = new Map<string, Map<string, string>>();
@@ -120,12 +133,22 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       albumsById: new Map(owned.map((album) => [album.id, album])),
       entriesByList,
       unsortedAlbums,
+      linksByAlbum,
       views,
       defaults,
       keys,
       ready,
     };
-  }, [containerData, membershipData, albumData, viewData, defaultData, positionData, ready]);
+  }, [
+    containerData,
+    membershipData,
+    albumData,
+    linkData,
+    viewData,
+    defaultData,
+    positionData,
+    ready,
+  ]);
 
   useDeviceLayoutsSaved(value);
 

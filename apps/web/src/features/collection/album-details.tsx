@@ -1,7 +1,7 @@
 // An album's details (DS-46), as the inspector and `/a/:albumId` show them: the artwork, title and artist with the
-// album's save state; its chronology, with which year sorts (FR-05.5, FR-05.6); placeholders for links and custom
-// fields (M4); the lists it is in, or Unsorted; and when it was added. Viewing mode shows values; Editing mode makes
-// them editors (DS-45). Each edit is one `album.update` from the values it replaces (TS-21), checked by the album
+// album's save state; its chronology, with which year sorts (FR-05.5, FR-05.6); its links (FR-06.2, FR-06.3); a
+// placeholder for custom fields (M4); the lists it is in, or Unsorted; and when it was added. Viewing mode shows
+// values; Editing mode makes them editors (DS-45). Each edit is one `album.update` from the values it replaces (TS-21), checked by the album
 // rules first, so a refused value stays with its reason and nothing is sent (FR-02.6, X-05). Open fields commit when
 // Editing mode is left. A change from elsewhere never overwrites a field being edited (DS-82).
 
@@ -21,6 +21,7 @@ import { Switch } from "@tonaris/ui/components/switch";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { albumChoice, albumEdit, cellText, type AlbumCell } from "./album-edit";
+import { LinksSection } from "./album-links";
 import { cellNames } from "./album-rows";
 import { Artwork } from "./artwork";
 import { useCollectionUi, useMode } from "./collection-ui";
@@ -152,9 +153,7 @@ export function AlbumDetails({ album }: { album: Album }) {
       </Section>
 
       <Section title="Links">
-        <p className="text-small text-fg-tertiary">
-          Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture.
-        </p>
+        <LinksSection album={album} canEdit={canEdit} />
       </Section>
 
       <Section title="Custom fields">

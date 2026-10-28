@@ -34,6 +34,7 @@ import { failure, type Outcome } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { forgetPlace, placeAtTop } from "./positions";
 import { actingUserId } from "./principals";
+import { serviceLinkKey } from "./service-links";
 import { z } from "./zod";
 
 /** `album.capture`'s arguments. A capture needing input is resubmitted with the person's choice (TS-26). */
@@ -205,21 +206,33 @@ async function matchOf(
   return merged.find((match) => !match.target.trashed) ?? merged[0];
 }
 
+/** The change that tells clients an album has `link` (TON-46). */
+const linkInsert = (albumId: string, link: CapturedLink): ChangeInput => ({
+  entity: "link",
+  id: serviceLinkKey(albumId, link.service),
+  op: "insert",
+  data: { albumId, service: link.service, url: link.url },
+});
+
 /** Saves the link unless the album has another for its service, which is kept and reported (FR-06.4). */
 async function keepLink(
   albumId: string,
   ownerId: string,
   link: CapturedLink,
   { store }: CommandContext,
-): Promise<CaptureResult["keptLink"]> {
+): Promise<{ keptLink: CaptureResult["keptLink"]; changes: ChangeInput[] }> {
   const saved = await store.findServiceLink(albumId, link.service);
   if (!saved) {
     await store.insertServiceLink(albumId, ownerId, link);
-    return null;
+    return { keptLink: null, changes: [linkInsert(albumId, link)] };
   }
-  return saved.entityId === link.entityId
-    ? null
-    : { service: link.service, kept: saved.url, pasted: link.url };
+  return {
+    keptLink:
+      saved.entityId === link.entityId
+        ? null
+        : { service: link.service, kept: saved.url, pasted: link.url },
+    changes: [],
+  };
 }
 
 /** Puts the album in the list asked for, or, with none, at the top of Unsorted when it enters it (DS-51). */
@@ -309,9 +322,9 @@ async function reuse(
       });
     }
   }
-  const keptLink = await keepLink(target.id, ownerId, link, context);
+  const { keptLink, changes: linked } = await keepLink(target.id, ownerId, link, context);
   const placed = await place(target.id, ownerId, args.listId, restored, context);
-  return applied([...changes, ...placed.changes], {
+  return applied([...changes, ...linked, ...placed.changes], {
     albumId: target.id,
     match: restored ? "restored" : "reused",
     alreadyInList: placed.alreadyInList,
@@ -373,7 +386,11 @@ async function create(
   await store.insertServiceLink(args.albumId, ownerId, source.link);
   const placed = await place(args.albumId, ownerId, args.listId, true, context);
   return applied(
-    [{ entity: "album", id: args.albumId, op: "insert", data: album }, ...placed.changes],
+    [
+      { entity: "album", id: args.albumId, op: "insert", data: album },
+      linkInsert(args.albumId, source.link),
+      ...placed.changes,
+    ],
     {
       albumId: args.albumId,
       match: "created",

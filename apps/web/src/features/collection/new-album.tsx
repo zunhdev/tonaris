@@ -1,10 +1,10 @@
 // The manual entry form (DS-47, FR-02.4): "New album", every album field in order, with the ones whose features come
-// later shown as such (artwork with link capture, decided 23 October 2026; links and custom fields with M4), and a
-// destination list. Title, artist and the applicable year are required (FR-02.6); fields are checked when left and
-// on submit, each error shown at its field and, on submit, summarized at the top. Nothing incomplete is saved and
-// nothing invented (AC-08). ⌘Enter saves; Esc or closing asks before discarding what was typed. Saving creates the
-// album, then its entry in the list, through the collections, so save states apply; Edit on a failed save reopens it
-// as it was entered.
+// later shown as such (artwork with link capture, decided 23 October 2026; custom fields with M4), a link per service
+// (FR-06.3), and a destination list. Title, artist and the applicable year are required (FR-02.6); fields are checked
+// when left and on submit, each error shown at its field and, on submit, summarized at the top. Nothing incomplete is
+// saved and nothing invented (AC-08). ⌘Enter saves; Esc or closing asks before discarding what was typed. Saving
+// creates the album, then its links, then its entry in the list, through the collections, so save states apply; Edit
+// on a failed save reopens it as it was entered.
 
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSaveActions } from "@/features/sync/save-actions";
@@ -19,6 +19,7 @@ import {
   type RefObject,
 } from "react";
 
+import { streamingServices } from "@tonaris/domain";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +46,7 @@ import {
   albumOfForm,
   formProblems,
   isFormDirty,
+  linksOfForm,
   type AlbumForm,
   type FormField,
 } from "./album-form";
@@ -59,13 +61,23 @@ const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation
   { value: "unknown", label: "Unknown" },
 ];
 
-const formFields: readonly FormField[] = ["title", "artistCredit", "originalYear", "recording"];
+const formFields: readonly FormField[] = [
+  "title",
+  "artistCredit",
+  "originalYear",
+  "recording",
+  ...streamingServices,
+];
 
 const fieldNames: Record<FormField, string> = {
   title: "Title",
   artistCredit: "Artist",
   originalYear: "Original release year",
   recording: "Recording year or range",
+  spotify: "Spotify link",
+  "apple-music": "Apple Music link",
+  qobuz: "Qobuz link",
+  tidal: "Tidal link",
 };
 
 /** The time an entry is made; the server records its own (TON-27). */
@@ -136,6 +148,9 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       return;
     }
     client.albums.insert(album).isPersisted.promise.catch(() => {});
+    // The links go after the album, in one transaction; the server reads each (TS-40).
+    const links = linksOfForm(form, album.id);
+    if (links.length > 0) client.links.insert(links).isPersisted.promise.catch(() => {});
     if (form.listId !== null) {
       client.memberships
         .insert({ listId: form.listId, albumId: album.id, addedAt: now() })
@@ -265,9 +280,19 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
             )}
 
             <Placeholder label="Artwork">Artwork arrives with link capture.</Placeholder>
-            <Placeholder label="Links">
-              Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture.
-            </Placeholder>
+            {streamingServices.map((service) => (
+              <TextField
+                key={service}
+                name={service}
+                label={fieldNames[service]}
+                type="url"
+                placeholder="Album or track link"
+                value={form.links[service]}
+                problem={shownProblems[service]}
+                onChange={(url) => set({ links: { ...form.links, [service]: url } })}
+                onBlur={() => touch(service)}
+              />
+            ))}
             <Placeholder label="Custom fields">
               Custom fields arrive in a later version.
             </Placeholder>
@@ -345,6 +370,7 @@ function TextField({
   onBlur: () => void;
   inputRef?: RefObject<HTMLInputElement | null>;
   inputMode?: "numeric";
+  type?: "url";
   placeholder?: string;
 }) {
   const id = useId();

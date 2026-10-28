@@ -30,6 +30,7 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   "albums": [...],
   "containers": [...],
   "memberships": [...],
+  "links": [...],
   "views": [...],
   "positions": [...],
   "defaults": { ... }
@@ -39,6 +40,7 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
 - **One consistent point.** The records and `seq` come from one snapshot, so the data includes every change up to `seq` and none after it.
 - **Contents today:**
   - albums, folders and lists (`containers`), and list entries (`memberships`);
+  - the albums' links to the streaming services (`links`), one per album and service, as canonical URLs (TON-46);
   - the person's remembered view choices (`views`), one record per view they made a choice in;
   - their manual order (`positions`), one key per arranged item;
   - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own.
@@ -75,6 +77,7 @@ A client keeps one store per entity and applies each change by key:
 | `album` | the album's ID | `Album` |
 | `container` | the folder's or list's ID | `Container` |
 | `membership` | `<listId>:<albumId>` | `Membership` |
+| `link` | `<albumId>:<service>`, the service being `spotify`, `apple-music`, `qobuz` or `tidal` | `ServiceLink`: `{albumId, service, url}` |
 | `view` | the view key: `root`, `unsorted`, or a folder's or list's ID | `ViewPrefs` |
 | `defaults` | the account's ID | `ViewDefaults`, never `null` |
 | `position` | `<viewKey>:<itemId>` | `Position` |
@@ -125,6 +128,7 @@ The server ends a stream in four cases:
   - `album.create`, `album.update`, `album.capture`;
   - `container.create`, `container.rename`, `container.move`;
   - `membership.add`, `membership.remove`;
+  - `link.set`, `link.remove`;
   - `view.set`, `defaults.set`;
   - `order.set`.
 
@@ -133,6 +137,11 @@ The server ends a stream in four cases:
   - **It may reuse an album** of the owner's, in Trash or not, and its `confirmed` result says so: `{albumId, match: "created" | "reused" | "restored", alreadyInList, keptLink}`.
   - **It may need input** (TS-26): `match` with candidate albums, or `details` with a prefill. Resubmit as a new mutation with `releaseGroupId` or `details` added.
   - **The server asks metadata sources before saving,** so the request can take seconds. A copy sent while it runs answers `409 in_progress` (below).
+  - **It sends the album's link** as a `link` change when it saves one (TON-46).
+- **Links** (FR-06.2, FR-06.3), one per album and service (TON-46):
+  - **`link.set`** `{albumId, service, url}` adds or replaces the album's link for `service`. `url` is the link as pasted; the server reads it as capture does (TS-40), following a short link, and stores the canonical URL. `base.url` is the URL the client last saw, or `null` for none.
+  - **`link.remove`** `{albumId, service}` removes it; `base.url` is the URL the client last saw.
+  - **A changed link** is a conflict on the field `url`. Another service's link, or text that isn't a supported album or track link, fails with `unsupported_link` and its reason.
 - **Personal preferences follow the same rules** (FR-09.4).
   - **`view.set`** remembers or clears a person's choices for one view: `sortMode` with `sortDir`, `grouped` and `layout`.
     - A field left out stays as it is, and `null` clears it back to the account default. Its `base` is `null` for a choice not made.

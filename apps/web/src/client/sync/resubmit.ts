@@ -10,6 +10,7 @@ import {
   albumFields,
   membershipKey,
   positionKey,
+  serviceLinkKey,
   unsetView,
   viewDefaultsFields,
   viewPrefsFields,
@@ -17,6 +18,7 @@ import {
   type Container,
   type Membership,
   type Mutation,
+  type ServiceLink,
   type ViewDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
@@ -33,7 +35,7 @@ export type Resubmitted = "sent" | "unchanged" | "gone";
 
 type Collections = Pick<
   SyncClient,
-  "albums" | "containers" | "memberships" | "views" | "defaults" | "positions" | "arrange"
+  "albums" | "containers" | "memberships" | "links" | "views" | "defaults" | "positions" | "arrange"
 >;
 
 type Call =
@@ -43,6 +45,9 @@ type Call =
   | "container.update"
   | "entry.insert"
   | "entry.delete"
+  | "link.insert"
+  | "link.update"
+  | "link.delete"
   | "view.insert"
   | "view.update"
   | "view.delete"
@@ -60,6 +65,9 @@ function plan() {
     containerUpdates: new Map<string, Partial<Container>>(),
     entryInserts: [] as Membership[],
     entryDeletes: [] as string[],
+    linkInserts: [] as ServiceLink[],
+    linkUpdates: new Map<string, Partial<ServiceLink>>(),
+    linkDeletes: [] as string[],
     viewInserts: [] as ViewPrefs[],
     viewUpdates: new Map<string, Partial<ViewPrefs>>(),
     viewDeletes: [] as string[],
@@ -103,7 +111,7 @@ export function resubmitAll(
 
 /** Adds `mutation`'s change to `planned`, unless the records already hold it or its record is gone. */
 function remake(
-  { albums, containers, memberships, views, defaults, positions }: Collections,
+  { albums, containers, memberships, links, views, defaults, positions }: Collections,
   mutation: Mutation,
   planned: Plan,
 ): Resubmitted {
@@ -130,6 +138,25 @@ function remake(
     // A capture is made again by sending its link once more, from the capture interface (TON-45). Here it can only
     // be found saved; otherwise its state stays, for that interface to retry.
     return albums.has(mutation.args.albumId) ? "unchanged" : "gone";
+  }
+  if (mutation.name === "link.set" || mutation.name === "link.remove") {
+    const { albumId, service } = mutation.args;
+    if (!albums.has(albumId)) return "gone";
+    const key = serviceLinkKey(albumId, service);
+    const current = links.get(key);
+    if (mutation.name === "link.remove") {
+      if (!current) return "unchanged";
+      planned.linkDeletes.push(key);
+      return planned.needs("link.delete");
+    }
+    const { url } = mutation.args;
+    if (current?.url === url) return "unchanged";
+    if (!current) {
+      planned.linkInserts.push({ albumId, service, url });
+      return planned.needs("link.insert");
+    }
+    planned.linkUpdates.set(key, { url });
+    return planned.needs("link.update");
   }
   if (mutation.name === "container.create") {
     if (containers.has(mutation.args.id)) return "unchanged";
@@ -224,7 +251,7 @@ function applyTo<Row>(rows: Map<string, Partial<Row>>) {
 
 /** Makes one call: one transaction, so one batch when it holds several changes. */
 function make(
-  { albums, containers, memberships, views, defaults, arrange }: Collections,
+  { albums, containers, memberships, links, views, defaults, arrange }: Collections,
   planned: Plan,
   call: Call,
 ): void {
@@ -238,6 +265,10 @@ function make(
     );
   } else if (call === "entry.insert") sent(memberships.insert(planned.entryInserts));
   else if (call === "entry.delete") sent(memberships.delete(planned.entryDeletes));
+  else if (call === "link.insert") sent(links.insert(planned.linkInserts));
+  else if (call === "link.update") {
+    sent(links.update([...planned.linkUpdates.keys()], applyTo(planned.linkUpdates)));
+  } else if (call === "link.delete") sent(links.delete(planned.linkDeletes));
   else if (call === "view.insert") sent(views.insert(planned.viewInserts));
   else if (call === "view.update") {
     sent(views.update([...planned.viewUpdates.keys()], applyTo(planned.viewUpdates)));

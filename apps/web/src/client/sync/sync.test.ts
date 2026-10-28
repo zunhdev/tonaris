@@ -10,6 +10,7 @@ import {
   batchSchema,
   membershipKey,
   mutationSchema,
+  serviceLinkKey,
   uuidv7,
   type Album,
   type Container,
@@ -27,7 +28,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(30);
+  server = await startApiServer(32);
 }, 30_000);
 
 afterAll(async () => {
@@ -999,5 +1000,62 @@ describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
       conflict &&
         resubmit(phone, { ...conflict, mutation: { ...conflict.mutation, mutationId: uuidv7() } }),
     ).toBe("unchanged");
+  });
+});
+
+describe("links (FR-06.2, FR-06.3, FR-09.1)", () => {
+  const variant = "https://open.spotify.com/intl-de/album/1KQ1Pf4ikoK1jBbOtOHvOv?si=abc";
+  const canonical = "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv";
+
+  test("a link added as pasted settles as its canonical URL, and other sessions follow its changes", async () => {
+    const web = await openClient(30, 0);
+    const phone = await openClient(30, 1);
+    await Promise.all([web.links.preload(), phone.links.preload()]);
+    const { id: albumId } = await saved(web);
+    const key = serviceLinkKey(albumId, "spotify");
+
+    await web.links.insert({ albumId, service: "spotify", url: variant }).isPersisted.promise;
+    expect(web.links.get(key)?.url).toBe(canonical);
+    await until(() => phone.links.get(key)?.url === canonical, 3_000, "the link on the phone");
+
+    const other = "https://open.spotify.com/album/6jD6Wl5TgtrC8GJkplOtW9";
+    await web.links.update(key, (draft) => {
+      draft.url = other;
+    }).isPersisted.promise;
+    await until(() => phone.links.get(key)?.url === other, 3_000, "the replacement");
+    await web.links.delete(key).isPersisted.promise;
+    await until(() => !phone.links.has(key), 3_000, "the removal");
+  });
+
+  test("a removal over a replaced link conflicts, and Apply mine removes the newer one", async () => {
+    const web = await openClient(31, 0);
+    const phone = await openClient(31, 1);
+    await Promise.all([web.links.preload(), phone.links.preload()]);
+    const { id: albumId } = await saved(web);
+    const key = serviceLinkKey(albumId, "spotify");
+    await web.links.insert({ albumId, service: "spotify", url: canonical }).isPersisted.promise;
+    await until(() => phone.links.has(key), 3_000, "the link on the phone");
+
+    phone.network.faults.noStream = true;
+    phone.network.cutStreams();
+    const other = "https://open.spotify.com/album/6jD6Wl5TgtrC8GJkplOtW9";
+    await web.links.update(key, (draft) => {
+      draft.url = other;
+    }).isPersisted.promise;
+    await phone.links
+      .delete(key)
+      .isPersisted.promise.catch((error: unknown) =>
+        expect(error).toBeInstanceOf(MutationRejected),
+      );
+    const [conflict] = phone.states.conflicts();
+    expect(conflict?.outcome).toMatchObject({
+      status: "conflict",
+      conflicts: [{ field: "url", current: other, base: canonical }],
+    });
+
+    phone.network.faults.noStream = false;
+    await until(() => phone.links.get(key)?.url === other, 3_000, "the newer link");
+    expect(conflict && resubmit(phone, conflict)).toBe("sent");
+    await until(() => !web.links.has(key), 3_000, "the applied removal");
   });
 });

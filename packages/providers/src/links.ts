@@ -307,3 +307,15 @@ export async function resolveShortLink(
   }
   return deadEnd();
 }
+
+/**
+ * Reads pasted text as a link (TS-40): parsed locally, and a short link followed through `fetcher`. Capture's
+ * identification starts here (TS-41 step 0), and so does a link edit (TON-46).
+ */
+export async function readLink(
+  input: string,
+  fetcher: Fetcher,
+): Promise<Exclude<LinkParse, { status: "short" }>> {
+  const read = parseLink(input);
+  return read.status === "short" ? resolveShortLink(read.url, fetcher) : read;
+}

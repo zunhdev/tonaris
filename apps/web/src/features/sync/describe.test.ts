@@ -126,6 +126,36 @@ describe("describeWrite (DS-80, DS-81)", () => {
     ).toBe("Move 'Later' to Collection");
   });
 
+  test("links", () => {
+    const albumId = blue.id;
+    expect(
+      write({
+        name: "link.set",
+        args: { albumId, service: "spotify", url: "https://open.spotify.com/album/1" },
+        base: { url: null },
+      }),
+    ).toEqual({
+      summary: "Add the Spotify link to 'Kind of Blue'",
+      what: "the Spotify link for 'Kind of Blue'",
+      subject: "The Spotify link of 'Kind of Blue'",
+    });
+    expect(
+      write({
+        name: "link.set",
+        args: { albumId, service: "apple-music", url: "https://music.apple.com/us/album/2" },
+        base: { url: "https://music.apple.com/us/album/1" },
+      }).summary,
+    ).toBe("Replace the Apple Music link of 'Kind of Blue'");
+    expect(
+      write({
+        name: "link.remove",
+        args: { albumId, service: "tidal" },
+        base: { url: "https://tidal.com/album/1" },
+      }).summary,
+    ).toBe("Remove the Tidal link from 'Kind of Blue'");
+    expect(fieldLabel("url")).toBe("Link");
+  });
+
   test("list entries", () => {
     const args = { listId: later.id, albumId: blue.id };
     expect(write({ name: "membership.add", args })).toEqual({

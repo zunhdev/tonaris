@@ -41,6 +41,10 @@
               {
                 "name": "@tonaris/db",
                 "message": "The web app never touches the database; call the API (TS-02)."
+              },
+              {
+                "name": "@tonaris/providers",
+                "message": "The web app may use only the pure link parser, `@tonaris/providers/links` (TS-02, TS-40)."
               }
             ]
           }

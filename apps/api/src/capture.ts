@@ -2,7 +2,8 @@
 // A capture is claimed first, so a copy sent while it runs answers `409 in_progress` and nothing runs twice. Then the
 // link is identified, MusicBrainz is asked about its album and about saved albums it may have merged, and the domain
 // command matches and saves under the lock. Answers decided before the lock, such as a choice to make, are stored
-// like any outcome. Every other mutation runs as it always has.
+// like any outcome. A link edit's URL is read before the lock too (TON-46). Every other mutation runs as it always
+// has.
 
 import {
   claimMutation,
@@ -25,19 +26,27 @@ import {
   type FoundFacts,
   type Mutation,
   type Outcome,
+  type PreparedLink,
   type Principal,
 } from "@tonaris/domain";
 import {
   identificationOutcome,
   ProviderUnavailableError,
+  readLink,
+  safeFetch,
   unidentifiedReasons,
   type Identifier,
+  type LinkParse,
 } from "@tonaris/providers";
 
-/** What capture asks: the identification chain, and MusicBrainz's facts about a release group. */
+/**
+ * What capture asks: the identification chain, and MusicBrainz's facts about a release group. `readLink` reads a link
+ * edit's URL (TON-46), following a short link through `safeFetch` unless a test stubs it.
+ */
 export type CaptureDeps = {
   identify: Identifier["identify"];
   describe: (releaseGroupId: string) => Promise<AlbumFacts>;
+  readLink?: (input: string) => Promise<Exclude<LinkParse, { status: "short" }>>;
 };
 
 /** Thrown when a mutation is claimed by another request that is still running it (TS-22). */
@@ -171,8 +180,25 @@ export async function prepareCapture(
 }
 
 /**
- * Runs a mutation as the API does: a capture claimed, prepared and then saved; anything else by `executeMutation`.
- * Throws `MutationInProgressError` while another request runs the same capture.
+ * A `link.set`'s URL as the command needs it (TON-46, TS-40): read, a short link followed, and its canonical URL with
+ * `linkEntityId()`; or why it couldn't be read. Nothing is written, so this runs before the lock.
+ */
+export async function prepareLink(
+  input: string,
+  read: NonNullable<CaptureDeps["readLink"]> = (text) => readLink(text, safeFetch),
+): Promise<PreparedLink> {
+  const parsed = await read(input);
+  if (parsed.status === "failed") return parsed;
+  const { link } = parsed;
+  return {
+    status: "parsed",
+    link: { service: link.service, url: link.url, entityId: linkEntityId(link) },
+  };
+}
+
+/**
+ * Runs a mutation as the API does: a capture claimed, prepared and then saved; a link edit with its URL read first;
+ * anything else by `executeMutation`. Throws `MutationInProgressError` while another request runs the same capture.
  */
 export function mutationRunner(db: Database, deps: CaptureDeps | undefined) {
   return async function run(
@@ -180,6 +206,10 @@ export function mutationRunner(db: Database, deps: CaptureDeps | undefined) {
     mutation: Mutation,
     now?: Date,
   ): Promise<ExecutedMutation> {
+    if (mutation.name === "link.set") {
+      const link = await prepareLink(mutation.args.url, deps?.readLink);
+      return executeMutation(db, principal, mutation, now, { link });
+    }
     if (mutation.name !== "album.capture") return executeMutation(db, principal, mutation, now);
     const claim = await claimMutation(db, principal, mutation, now);
     if (claim.status === "answered") return claim.executed;

@@ -200,7 +200,7 @@ test("the form reports missing required information, saves nothing, and asks bef
   const form = page.getByRole("dialog", { name: "New album" });
   await expect(form.getByRole("textbox", { name: "Title" })).toBeFocused();
   await Promise.all(
-    ["Artwork", "Links", "Custom fields", "List"].map((field) =>
+    ["Artwork", "Spotify link", "Tidal link", "Custom fields", "List"].map((field) =>
       expect(form.getByText(field, { exact: true })).toBeVisible(),
     ),
   );

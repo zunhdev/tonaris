@@ -30,6 +30,9 @@ function referenced(mutation: Mutation): (string | null)[] {
     return viewKey === "root" || viewKey === "unsorted" ? [] : [viewKey];
   }
   if (mutation.name === "defaults.set") return [];
+  if (mutation.name === "link.set" || mutation.name === "link.remove") {
+    return [mutation.args.albumId];
+  }
   if (mutation.name === "order.set") {
     const { viewKey, keys } = mutation.args;
     const view = viewKey === "root" || viewKey === "unsorted" ? [] : [viewKey];

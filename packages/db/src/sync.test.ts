@@ -272,6 +272,7 @@ describe("bootstrapSnapshot (TS-24)", () => {
       albums: [],
       containers: [],
       memberships: [],
+      links: [],
       views: [],
       positions: [],
       defaults: appViewDefaults,
