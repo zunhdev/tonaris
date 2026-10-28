@@ -1306,7 +1306,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 *(FR-11.13)*
 
-*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues. Custom fields joined between them in TON-53.
+*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues. Custom fields joined between them in TON-53, and Data after Connections in TON-60.
 
 **DS-93 Profile and account.** *(FR-11.3, FR-11.4, FR-11.5)*
 - **Display name:** saved on blur. While sharing is on, clearing it shows an inline error that keeps the current value.
@@ -1345,6 +1345,12 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 **DS-98 Usage meter.** Settings → Data shows "4,812 of 5,000 albums · 37 in Trash", with a bar split into active and trashed. *(FR-15.2, FR-15.3)*
 - At 95% or more, a quiet notice appears in capture surfaces.
 - At the limit, capture shows "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more", with links.
+
+*As built in TON-60:*
+- **Settings → Data**, under "Usage", reads "2 of 5,000 albums · 1 in Trash" (without the Trash part at zero).
+  - A native meter ("Albums used") serves assistive technology; the bar is split into active (`accent.solid`) and trashed (`fg.tertiary`).
+  - The note says: "Albums in Trash count until they are deleted permanently. Restoring an album reuses its place."
+- **The capture dialog and manual entry** show the usage line from 95%, and the refusal's words at the limit (as an alert). Both have "Open Trash" and "See usage" links.
 
 **DS-100 Creator admin** (`/admin/admissions`, desktop). *(FR-11.6)*
 - **Header:** a switch labelled "Accepting new members" (on / paused), with status text.

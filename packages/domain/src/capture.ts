@@ -12,7 +12,9 @@
 import {
   albumFields,
   albumFieldsSchema,
+  albumCapacityProblem,
   albumProblem,
+  hasAlbumSlot,
   type Album,
   type AlbumFields,
 } from "./albums";
@@ -399,6 +401,8 @@ async function create(
   }
   const problem = albumProblem(values);
   if (problem) return problem;
+  // A new record needs a slot; reusing or restoring one never does (FR-15.2).
+  if (!(await hasAlbumSlot(store, ownerId))) return albumCapacityProblem();
 
   const album = clientAlbum(args.albumId, values, artworkUrl);
   await store.insertAlbum({ ...album, ownerId }, origin);

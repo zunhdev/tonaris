@@ -30,7 +30,9 @@ export {
 export {
   albumFields,
   albumFieldsSchema,
+  albumCapacityProblem,
   albumProblem,
+  hasAlbumSlot,
   artworkPath,
   artworkUrlRefusal,
   isArtworkUrl,
@@ -128,7 +130,9 @@ export {
 } from "./enrichment";
 export { uuidv7, uuidv7Time } from "./ids";
 export {
+  maxAlbums,
   maxBatchItems,
+  maxCapturesPerHour,
   maxContainerDepth,
   maxContainers,
   maxDescriptionLength,

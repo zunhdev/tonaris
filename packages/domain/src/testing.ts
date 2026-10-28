@@ -171,6 +171,8 @@ export function memoryStore({
       recordProvenance(id, provenance);
       return Promise.resolve();
     },
+    countAlbums: (ownerId) =>
+      Promise.resolve([...albumRows.values()].filter((album) => album.ownerId === ownerId).length),
     reactivateAlbum: (id) => {
       albumRows.set(id, { ...albumRows.get(id)!, trashed: false });
       const left = [...membershipRows.values()].filter(

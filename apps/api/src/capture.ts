@@ -6,6 +6,7 @@
 // has.
 
 import {
+  capturesSince,
   claimMutation,
   executeMutation,
   findLinkedAlbum,
@@ -19,6 +20,7 @@ import {
 import {
   actingUserId,
   failure,
+  maxCapturesPerHour,
   linkEntityId,
   type AlbumFacts,
   type CaptureArgs,
@@ -57,6 +59,11 @@ export class MutationInProgressError extends Error {
 }
 
 type Prepared = { outcome: Outcome } | { source: CaptureSource };
+
+const tooManyCaptures = failure(
+  "rate_limited",
+  `You've added ${maxCapturesPerHour} albums from links in the last hour. Try again later, or enter an album manually.`,
+);
 
 const unavailable = failure(
   "provider_unavailable",
@@ -214,6 +221,16 @@ export function mutationRunner(db: Database, deps: CaptureDeps | undefined) {
     const claim = await claimMutation(db, principal, mutation, now);
     if (claim.status === "answered") return claim.executed;
     if (claim.status === "in_progress") throw new MutationInProgressError(mutation.mutationId);
+    // At most 100 captures an hour, from the app or MCP (TS-18), refused before any provider is asked.
+    const ownerId = actingUserId(principal);
+    const at = now ?? new Date();
+    if (
+      ownerId &&
+      (await capturesSince(db, ownerId, new Date(at.getTime() - 3_600_000), mutation.mutationId)) >=
+        maxCapturesPerHour
+    ) {
+      return finishMutation(db, principal, mutation, tooManyCaptures, now);
+    }
     try {
       const prepared = deps
         ? await prepareCapture(db, deps, principal, mutation.args)

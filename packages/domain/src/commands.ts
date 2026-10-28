@@ -3,8 +3,10 @@
 // A command decides; it never commits. Rejections change nothing (X-05).
 
 import {
+  albumCapacityProblem,
   albumFields,
   albumProblem,
+  hasAlbumSlot,
   artworkUrlRefusal,
   isArtworkUrl,
   type Album,
@@ -83,6 +85,8 @@ export type CollectionStore = {
    * album (TS-15); without it, the values are the person's.
    */
   insertAlbum(album: Album & { ownerId: string }, origin?: AlbumOrigin): Promise<void>;
+  /** The owner's albums, those in Trash included (FR-15.2). */
+  countAlbums(ownerId: string): Promise<number>;
   /** Sets the fields in `values`, the artwork included; fields left undefined keep their value. */
   updateAlbum(
     id: string,
@@ -359,6 +363,8 @@ async function createAlbum(
     return conflicts.length > 0 ? { status: "conflict", conflicts } : applied();
   }
 
+  // A new record needs a slot; Trash counts (FR-15.2).
+  if (!(await hasAlbumSlot(store, ownerId))) return albumCapacityProblem();
   // Its artwork, if any, follows with `album.setArtwork` (TON-48).
   const album: Album = { ...args, artworkUrl: null };
   await store.insertAlbum({ ...album, ownerId });

@@ -109,6 +109,8 @@ export const accounts = {
   // The Trash view (trash-view.e2e.ts), one per test.
   trashViewFolders: at("trash-view-folders"),
   trashViewAlbums: at("trash-view-albums"),
+  // Settings → Data's usage meter (usage.e2e.ts).
+  usage: at("usage"),
 } as const;
 
 /** An address with no account. */

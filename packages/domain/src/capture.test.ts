@@ -14,6 +14,7 @@ import { runCommand, type CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
 import { maxMemberships } from "./limits";
+import { maxAlbums } from "./limits";
 import { membershipKey } from "./memberships";
 import type { Principal } from "./principals";
 import { changeSchema, mutationSchema, type Mutation } from "./sync";
@@ -571,5 +572,30 @@ describe("album.capture: refusals change nothing (X-05)", () => {
   test("with no source, as when providers can't be asked, it fails as unavailable", async () => {
     const t = setup();
     expect(await t.run(capture(null), undefined)).toMatchObject({ code: "provider_unavailable" });
+  });
+});
+
+/** 5,000 albums, none of them Bleach, and Bleach in Trash when `bleachInTrash`. */
+function atLimit(bleachInTrash: boolean) {
+  const others = Array.from({ length: maxAlbums - (bleachInTrash ? 1 : 0) }, (_, index) =>
+    saved(`A${index}`, { releaseGroupId: null }),
+  );
+  const bleach = saved("Bleach", { trashed: true });
+  return { t: setup({ albums: bleachInTrash ? [...others, bleach] : others }), bleach };
+}
+
+describe("album.capture at the album limit (FR-15.2, FR-15.3, AC-32)", () => {
+  test("a new album is refused with the reason", async () => {
+    const { t } = atLimit(false);
+    expect(await t.run(capture(null), identified(bleachFacts))).toMatchObject({
+      status: "failed",
+      code: "capacity_exceeded",
+    });
+  });
+
+  test("re-adding an album from Trash reuses its slot", async () => {
+    const { t, bleach } = atLimit(true);
+    const result = applied(await t.run(capture(null), identified(bleachFacts)));
+    expect(result.result).toMatchObject({ albumId: bleach.id, match: "restored" });
   });
 });

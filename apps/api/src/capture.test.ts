@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { albumProvenance, readChanges, trashUnits } from "@tonaris/db";
+import { albumProvenance, mutations, readChanges, trashUnits } from "@tonaris/db";
 import {
   batchResultSchema,
   bootstrapSchema,
@@ -508,5 +508,37 @@ describe("a capture still running says so (TS-22)", () => {
     const { outcome } = await send(capture(links.bleachSpotify));
     expect(outcome).toMatchObject({ status: "failed", code: "provider_unavailable" });
     expect((await bootstrap()).albums).toEqual([]);
+  });
+});
+
+describe("the capture limit (TS-18)", () => {
+  test("after 100 captures in an hour, another is refused before any provider is asked", async () => {
+    const receivedAt = new Date(Date.now() - 10 * 60_000);
+    await t.db.insert(mutations).values(
+      Array.from({ length: 100 }, () => ({
+        id: uuidv7(),
+        accountId,
+        principal: "user:web",
+        name: "album.capture",
+        status: "confirmed",
+        result: null,
+        receivedAt,
+      })),
+    );
+    const refused = await send(capture(links.bleachSpotify));
+    expect(refused.outcome).toMatchObject({
+      status: "failed",
+      code: "rate_limited",
+      problem: {
+        detail:
+          "You've added 100 albums from links in the last hour. Try again later, or enter an album manually.",
+      },
+    });
+    expect((await bootstrap()).albums).toEqual([]);
+
+    // An hour on, it goes through.
+    await t.db.update(mutations).set({ receivedAt: new Date(Date.now() - 2 * 3_600_000) });
+    const added = await send(capture(links.bleachSpotify));
+    expect(added.outcome.status).toBe("confirmed");
   });
 });

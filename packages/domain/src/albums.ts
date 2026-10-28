@@ -2,7 +2,8 @@
 // prototype (TON-20) carries the core metadata; the artwork URL joined in TON-48 (FR-03.4), edited with its own
 // mutation, and links, provenance, memberships and Trash have their own records.
 
-import { maxLinkLength } from "./limits";
+import type { CollectionStore } from "./commands";
+import { maxAlbums, maxLinkLength } from "./limits";
 import { failure, type Failure } from "./outcomes";
 import { z } from "./zod";
 
@@ -118,4 +119,20 @@ export function artworkPath(url: string, signature: string): string {
   for (const byte of new TextEncoder().encode(url)) binary += String.fromCodePoint(byte);
   const encoded = btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
   return `/img/${signature}/${encoded}`;
+}
+
+/**
+ * The refusal of a new album at the limit (FR-15.3, DS-98), with these words in the app too: only the new record is
+ * refused, and everything else keeps working.
+ */
+export function albumCapacityProblem(): Failure {
+  return failure(
+    "capacity_exceeded",
+    `You've reached ${maxAlbums.toLocaleString("en")} albums (including Trash). Permanently delete albums from Trash or remove albums to add more.`,
+  );
+}
+
+/** Whether the owner may save one more album: there is a slot left, Trash counting (FR-15.2). */
+export async function hasAlbumSlot(store: CollectionStore, ownerId: string): Promise<boolean> {
+  return (await store.countAlbums(ownerId)) < maxAlbums;
 }
