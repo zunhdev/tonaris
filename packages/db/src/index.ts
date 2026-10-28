@@ -47,6 +47,7 @@ export { albumProvenance } from "./provenance";
 export { providerCacheStore, pruneProviderCache } from "./provider-cache";
 export { fillSearchKeys } from "./migrations";
 export { searchCollection } from "./search";
+export { canReadContainer, findShareLink, readableContainers, sharedSnapshot } from "./sharing";
 export { findLinkedAlbum } from "./service-links";
 export * from "./schema";
 export {

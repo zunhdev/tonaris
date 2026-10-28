@@ -83,7 +83,8 @@ import {
   viewPrefs,
 } from "./schema";
 
-const albumColumns = {
+/** An album's columns as clients hold it (TS-11). */
+export const albumColumns = {
   id: albums.id,
   title: albums.title,
   artistCredit: albums.artistCredit,
@@ -95,7 +96,7 @@ const albumColumns = {
   artworkUrl: albums.artworkUrl,
 };
 
-const containerColumns = {
+export const containerColumns = {
   id: containers.id,
   kind: containers.kind,
   parentId: containers.parentId,
@@ -103,7 +104,7 @@ const containerColumns = {
   description: containers.description,
 };
 
-const membershipColumns = {
+export const membershipColumns = {
   listId: memberships.listId,
   albumId: memberships.albumId,
   addedAt: memberships.addedAt,
@@ -333,20 +334,30 @@ export async function optionUsersIn(
 }
 
 /** The fields the account's albums apply, with their values, Trash included (FR-03.7). */
-async function valuesOfAccount(tx: Transaction, accountId: string): Promise<FieldValue[]> {
+function valuesOfAccount(tx: Transaction, accountId: string): Promise<FieldValue[]> {
+  return valuesWhere(tx, eq(albums.ownerId, accountId));
+}
+
+/** The field values of the albums `ids`, for a shared snapshot (TON-64). */
+export async function valuesOfAlbums(
+  tx: Transaction,
+  ids: readonly string[],
+): Promise<FieldValue[]> {
+  return ids.length === 0 ? [] : valuesWhere(tx, inArray(albums.id, [...ids]));
+}
+
+/** The field values of the albums `albumWhere` picks, as clients hold them (FR-03.7). */
+async function valuesWhere(tx: Transaction, albumWhere: SQL): Promise<FieldValue[]> {
   const rows = await tx
     .select({ ...valueColumns, type: fieldDefinitions.type })
     .from(albumFieldValues)
     .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
     .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
-    .where(eq(albums.ownerId, accountId))
+    .where(albumWhere)
     .orderBy(asc(albumFieldValues.albumId), asc(albumFieldValues.fieldId));
   const selections = await selectionsOf(
     tx,
-    inArray(
-      albumFieldMulti.albumId,
-      tx.select({ id: albums.id }).from(albums).where(eq(albums.ownerId, accountId)),
-    ),
+    inArray(albumFieldMulti.albumId, tx.select({ id: albums.id }).from(albums).where(albumWhere)),
   );
   return rows.map((row) => ({
     albumId: row.albumId,
@@ -361,7 +372,7 @@ async function valuesOfAccount(tx: Transaction, accountId: string): Promise<Fiel
 }
 
 /** An entry as clients see it, with `addedAt` as the ISO string the protocol carries. */
-const membershipOf = (row: Omit<Membership, "addedAt"> & { addedAt: Date }): Membership => ({
+export const membershipOf = (row: Omit<Membership, "addedAt"> & { addedAt: Date }): Membership => ({
   ...row,
   addedAt: row.addedAt.toISOString(),
 });
