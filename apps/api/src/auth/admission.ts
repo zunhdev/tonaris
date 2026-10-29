@@ -10,9 +10,9 @@ import {
   admitAccount,
   admissionsPaused,
   type AdmissionInvitationRow,
+  createAdmissionInvitation,
   type Database,
   findAdmissionInvitation,
-  insertAdmissionInvitation,
 } from "@tonaris/db";
 import {
   admissionInvitationDays,
@@ -39,25 +39,52 @@ export function admissionTokenHash(token: string): Buffer {
   return new Bun.CryptoHasher("sha256").update(token).digest();
 }
 
+/** A new invitation token: 32 random bytes, for the link only. */
+export function newAdmissionToken(): string {
+  return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
+}
+
+/** An invitation issued, with its link's token, or refused for an address with an account or an invitation. */
+export type AdmissionIssued =
+  | { issued: true; id: string; token: string; expiresAt: Date }
+  | { issued: false; refusal: "registered" | "invited" };
+
 /**
- * Issues an invitation for `email`, valid for 14 days, and returns the link's token, which is stored only as its
- * hash. The creator's admin (TON-74) sends it; tests and fixtures call it directly.
+ * Issues an invitation for `email`, valid for 14 days (FR-11.6). The token is stored only as its hash. `emailed`
+ * marks its email as sending, for the creator's admin, which sends it; tests and fixtures issue without email.
  */
 export async function issueAdmissionInvitation(
   db: Database,
-  { email, createdBy, now = new Date() }: { email: string; createdBy: string; now?: Date },
-): Promise<{ id: string; token: string; expiresAt: Date }> {
-  const id = Bun.randomUUIDv7();
-  const token = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
-  const expiresAt = new Date(now.getTime() + admissionInvitationDays * day);
-  await insertAdmissionInvitation(db, {
-    id,
-    emailKey: emailKey(email),
-    tokenHash: admissionTokenHash(token),
-    expiresAt,
+  {
+    email,
     createdBy,
-  });
-  return { id, token, expiresAt };
+    emailed = false,
+    now = new Date(),
+  }: { email: string; createdBy: string; emailed?: boolean; now?: Date },
+): Promise<AdmissionIssued> {
+  const id = Bun.randomUUIDv7();
+  const token = newAdmissionToken();
+  const expiresAt = new Date(now.getTime() + admissionInvitationDays * day);
+  const issue = await createAdmissionInvitation(
+    db,
+    {
+      id,
+      emailKey: emailKey(email),
+      tokenHash: admissionTokenHash(token),
+      expiresAt,
+      createdBy,
+      ...(emailed ? { emailStatus: "sending" as const } : {}),
+    },
+    now,
+  );
+  return issue === "issued"
+    ? { issued: true, id, token, expiresAt }
+    : { issued: false, refusal: issue };
+}
+
+/** The invitation's landing page (DS-91, TON-75), which the invitation email links to. */
+export function invitationLink(webOrigin: string, token: string): string {
+  return `${webOrigin}/join/${encodeURIComponent(token)}`;
 }
 
 /** The invitation page (DS-91), which submits the code in the fragment, so it reaches no server log. */

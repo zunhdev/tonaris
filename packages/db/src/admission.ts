@@ -1,7 +1,7 @@
-// Admission storage (TS-71): the creator's invitations, the pause switch, and admitting an invited person. The
-// admin around them (issuing, revoking, statuses, email delivery) arrives with TON-74.
+// Admission storage (TS-71): the creator's invitations and their administration (FR-11.6, TON-74), the pause
+// switch, and admitting an invited person.
 
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, gt, lte } from "drizzle-orm";
 
 import { invitationStatus, type AdmissionRefusal, type EmailStatus } from "@tonaris/domain";
 
@@ -10,11 +10,95 @@ import { admissionInvitations, serviceState, users } from "./schema";
 
 export type AdmissionInvitationRow = typeof admissionInvitations.$inferSelect;
 
-export async function insertAdmissionInvitation(
+/** What issuing gave: the invitation, or a refusal for an address with an account or an available invitation. */
+export type AdmissionIssue = "issued" | "registered" | "invited";
+
+/**
+ * Issues an invitation, in one transaction (FR-11.6). An address with an account is refused. So is one with an
+ * available invitation: the partial unique index lets only one exist, so of two at once, one is refused too. An
+ * invitation past its expiry still holds the index until the daily job records it, so it is marked expired first,
+ * and stays on record.
+ */
+export async function createAdmissionInvitation(
   db: Database,
-  values: { id: string; emailKey: string; tokenHash: Buffer; expiresAt: Date; createdBy: string },
-): Promise<void> {
-  await db.insert(admissionInvitations).values(values);
+  values: {
+    id: string;
+    emailKey: string;
+    tokenHash: Buffer;
+    expiresAt: Date;
+    createdBy: string;
+    emailStatus?: "sending";
+  },
+  now = new Date(),
+): Promise<AdmissionIssue> {
+  return db.transaction(async (tx) => {
+    const [account] = await tx
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, values.emailKey));
+    if (account) return "registered";
+    await tx
+      .update(admissionInvitations)
+      .set({ status: "expired" })
+      .where(
+        and(
+          eq(admissionInvitations.emailKey, values.emailKey),
+          eq(admissionInvitations.status, "available"),
+          lte(admissionInvitations.expiresAt, now),
+        ),
+      );
+    const issued = await tx
+      .insert(admissionInvitations)
+      .values(values)
+      .onConflictDoNothing()
+      .returning({ id: admissionInvitations.id });
+    return issued.length > 0 ? "issued" : "invited";
+  });
+}
+
+/** Every invitation, newest first (DS-100). */
+export async function listAdmissionInvitations(db: Database): Promise<AdmissionInvitationRow[]> {
+  return db
+    .select()
+    .from(admissionInvitations)
+    .orderBy(desc(admissionInvitations.createdAt), desc(admissionInvitations.id));
+}
+
+export async function findAdmissionInvitationById(
+  db: Database,
+  id: string,
+): Promise<AdmissionInvitationRow | undefined> {
+  const [invitation] = await db
+    .select()
+    .from(admissionInvitations)
+    .where(eq(admissionInvitations.id, id));
+  return invitation;
+}
+
+/** An invitation that can still be used at `now`: available and unexpired. */
+const usable = (id: string, now: Date) =>
+  and(
+    eq(admissionInvitations.id, id),
+    eq(admissionInvitations.status, "available"),
+    gt(admissionInvitations.expiresAt, now),
+  );
+
+/**
+ * Gives a usable invitation a new token for its resent email, which is sending from now; the earlier link stops
+ * working, since only a token's hash is kept. Its address and expiry stay. Returns it, or undefined if it isn't
+ * usable.
+ */
+export async function rotateAdmissionToken(
+  db: Database,
+  id: string,
+  { tokenHash, now = new Date() }: { tokenHash: Buffer; now?: Date },
+): Promise<AdmissionInvitationRow | undefined> {
+  const [invitation] = await db
+    .update(admissionInvitations)
+    .set({ tokenHash, emailStatus: "sending" })
+    .where(usable(id, now))
+    .returning();
+  return invitation;
 }
 
 export async function findAdmissionInvitation(
@@ -28,14 +112,34 @@ export async function findAdmissionInvitation(
   return invitation;
 }
 
-/** Revokes an available invitation; returns whether it was available. Admitted accounts are untouched. */
-export async function revokeAdmissionInvitation(db: Database, id: string): Promise<boolean> {
-  const revoked = await db
+/**
+ * Revokes a usable invitation, which then can't be redeemed. Returns it, or undefined if it wasn't usable: a
+ * redeemed one stays redeemed, so the account it admitted is never touched (FR-11.6).
+ */
+export async function revokeAdmissionInvitation(
+  db: Database,
+  id: string,
+  now = new Date(),
+): Promise<AdmissionInvitationRow | undefined> {
+  const [invitation] = await db
     .update(admissionInvitations)
     .set({ status: "revoked" })
-    .where(and(eq(admissionInvitations.id, id), eq(admissionInvitations.status, "available")))
-    .returning({ id: admissionInvitations.id });
-  return revoked.length > 0;
+    .where(usable(id, now))
+    .returning();
+  return invitation;
+}
+
+/** Records the invitations past their 14 days as expired: the daily job (TS-91). Use already checks expiry. */
+export async function expireAdmissionInvitations(
+  db: Database | Transaction,
+  now: Date,
+): Promise<void> {
+  await db
+    .update(admissionInvitations)
+    .set({ status: "expired" })
+    .where(
+      and(eq(admissionInvitations.status, "available"), lte(admissionInvitations.expiresAt, now)),
+    );
 }
 
 /** Records how an invitation's email went, while it is still sending (FR-11.6, TS-72). */

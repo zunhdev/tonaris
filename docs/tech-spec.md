@@ -1231,9 +1231,19 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   Code errors are Better Auth's, as on sign-in.
 - **Invitations:**
   - expiry 14 days (approved 17 October 2026), checked on use before the daily job records it;
-  - the creator can re-issue an expired invitation. Until the daily job marks it `expired`, its row still holds the address's partial unique index, so re-issuing must renew that row or mark it first (TON-74 decides);
+  - the creator can re-issue an expired invitation. Until the daily job marks it `expired`, its row still holds the address's partial unique index, so re-issuing marks it `expired` first, in the same transaction, and the old row stays on record (decided in TON-74);
   - the token is hashed (SHA-256);
-  - emailed through TS-72, with `email_status` tracked separately.
+  - emailed through TS-72, with `email_status` tracked separately;
+  - resending gives the invitation a new token, since only the hash is kept. The earlier link stops working, and the address and expiry stay.
+- **Administration (as built in TON-74):**
+  - **Routes:** `/v1/admin/admissions` (`GET` the list and the pause switch; `POST …/invitations`; `POST …/invitations/:id/resend` and `…/revoke`; `PUT …/paused`). They are creator-only through `authorizeAdmissionAdmin`, and app-only, since MCP tokens never reach `/v1` (TS-62).
+  - **Issuing** is one transaction:
+    1. refuse an address that has an account;
+    2. mark this address's expired row;
+    3. insert, doing nothing on a conflict with the partial unique index, which refuses an address that already has an available invitation, even two at once.
+  - **Revoking and resending** apply only to an available, unexpired invitation. A redeemed one is never touched.
+  - **Refusals** are 422 `validation_failed` with a sentence in `detail`.
+  - **Email:** if the email can't even be queued, the invitation is recorded as `failed`.
 - **Creator bootstrap.** The `CREATOR_EMAIL` environment variable is read at first deploy, and a one-time seed command, `bun run seed:creator`, creates the creator with `role = creator` and a verified email. It is idempotent for the same address, so the pre-deploy step can run it every time. It refuses a second creator and an address that already belongs to an account. There is no UI path to grant the creator role.
 
 **TS-72 Email delivery (Decided; provider Resend, chosen 29 October 2026 in TON-73).**
@@ -1361,7 +1371,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Email send and retry | on demand | FR-07.5, FR-11.6 |
 | Account data deletion | on demand | FR-11.11 |
 | Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), approvals with M9 | TS-22, TS-64 |
-| Expire admission invitations | daily | FR-11.6 |
+| Expire admission invitations | daily (`expire-admission-invitations`, TON-74); use checks expiry already | FR-11.6 |
 | Off-site backup | nightly, through the host's scheduler (TS-110) | TS-112 |
 
 ---

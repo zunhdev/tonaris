@@ -3,6 +3,7 @@
 // retries, such as email, run in the job worker (src/jobs.ts).
 
 import {
+  expireAdmissionInvitations,
   pruneDeadJobs,
   pruneProviderCache,
   pruneSyncHistory,
@@ -42,6 +43,13 @@ export const pruneDeadJobsSchedule: Schedule = {
   name: "prune-dead-jobs",
   everyMs: day,
   run: (tx, now) => pruneDeadJobs(tx, now),
+};
+
+/** Admission invitations past their 14 days, recorded as expired (TS-91); use checks expiry already (TS-71). */
+export const expireAdmissionInvitationsSchedule: Schedule = {
+  name: "expire-admission-invitations",
+  everyMs: day,
+  run: (tx, now) => expireAdmissionInvitations(tx, now),
 };
 
 /**
@@ -106,6 +114,7 @@ export function apiSchedules(
     pruneSyncHistorySchedule,
     pruneProviderCacheSchedule,
     pruneDeadJobsSchedule,
+    expireAdmissionInvitationsSchedule,
     trashExpirySchedule(trash.db, trash.publish),
     ...(spotify ? [spotifyHealthSchedule(spotify)] : []),
   ];

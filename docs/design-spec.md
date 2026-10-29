@@ -419,7 +419,7 @@ Typed confirmation is reserved for account deletion (DS-97).
 
 **DS-31 Sidebar contents, top to bottom.** *(FR-01.9, FR-01.12, FR-07.6, FR-07.13, FR-11.6, FR-12.2)*
 
-1. **Account menu:** display name or email, Settings, Admin (creator only), keyboard shortcuts, Sign out.
+1. **Account menu:** display name or email, Settings, Admin (creator only; since TON-74), keyboard shortcuts, Sign out.
 2. **Search**, labelled with ⌘K.
 3. **+ Add album.**
 4. **Collection:** the root's folders and lists in the owner's root order.
@@ -1530,6 +1530,21 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
   3. A checkbox, "Also disconnect AI connections", is off by default.
 
   Every recovery is audit-logged. The user list shows only email, display name, and join date, never collection data. *(FR-11.5, TS-73)*
+
+*As built in TON-74* (recovery and the member list arrive with TON-78):
+- **Reaching it:** Admin in the account menu, for the creator only, opens `/admin/admissions`. For anyone else, the URL shows "Page not found".
+- **The switch,** in a bordered row, reads "Accepting new members". Its status text is "On: people you invite can join." or "Paused: no one can join until you turn this back on." While paused, the note "Existing members keep access; outstanding invitations stay as they are." sits under it.
+- **Invite** has a heading and the line "The invitation works once, only for this address, and expires in 14 days." The email input is labelled "Email address to invite", with an Invite button.
+  - A refusal keeps the typed address, with the reason under it:
+    - "{email} already has a Tonaris account.";
+    - "{email} already has an invitation. Resend it, or revoke it to invite them again.";
+    - "Enter an email address, such as anna@example.com.".
+- **The Invitations table** has columns Email, Status (Available, Redeemed, Revoked, Expired), Created, Expires, and Email delivery (Sending…, Sent, Failed, Not confirmed).
+  - **Resend** shows on an available invitation whose email failed or wasn't confirmed. It sends a new link, and the earlier one stops working.
+  - **Revoke** shows while an invitation is available.
+  - While an email is sending, the page reloads every 2 seconds until the outcome shows.
+  - On a narrow window, the table scrolls sideways inside its frame.
+  - With none yet, the section reads "No invitations yet."
 
 ---
 

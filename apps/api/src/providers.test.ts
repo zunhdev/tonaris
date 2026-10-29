@@ -30,6 +30,7 @@ test("the Spotify bridge and its health check exist only when configured", () =>
     "prune-sync-history",
     "prune-provider-cache",
     "prune-dead-jobs",
+    "expire-admission-invitations",
     "trash-expiry",
   ]);
   const on = createProviders({ spotify: { clientId: "id", clientSecret: "secret" } }, t.db, {

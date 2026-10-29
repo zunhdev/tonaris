@@ -18,8 +18,7 @@ import {
 } from "@tonaris/db";
 import { accountSchema, admissionRefusalDetails } from "@tonaris/domain";
 
-import { createTestApp, inSequence, insertUser, type SentEmail } from "../testing";
-import { issueAdmissionInvitation } from "./admission";
+import { createTestApp, inSequence, insertUser, inviteForTest, type SentEmail } from "../testing";
 
 let t: Awaited<ReturnType<typeof createTestApp>>;
 let creatorId: string;
@@ -34,7 +33,7 @@ afterEach(async () => {
 });
 
 function invite(email: string) {
-  return issueAdmissionInvitation(t.db, { email, createdBy: creatorId });
+  return inviteForTest(t.db, { email, createdBy: creatorId });
 }
 
 function requestCode(token: string) {
@@ -214,7 +213,7 @@ describe("joining with an invitation (FR-11.2, DS-91)", () => {
     expect(revokedResponse.status).toBe(403);
     expect((await problem(revokedResponse)).detail).toBe(admissionRefusalDetails.revoked);
 
-    const expired = await issueAdmissionInvitation(t.db, {
+    const expired = await inviteForTest(t.db, {
       email: "late@example.com",
       createdBy: creatorId,
       now: new Date(Date.now() - 15 * 24 * 60 * 60_000),
@@ -323,14 +322,16 @@ describe("concurrent and repeated registrations (FR-11.6, FR-13.5)", () => {
   });
 
   test("an invitation to an address that already has an account signs its owner in", async () => {
-    const memberId = await insertUser(t.db, "member@example.com");
+    // Issued before the address had an account, as when a member's email changes to it (TON-77): the admin
+    // refuses to invite an address with an account.
     const { id, token } = await invite("member@example.com");
+    const memberId = await insertUser(t.db, "member@example.com");
 
     const joined = await join(token, await emailedCode(token, "member@example.com"));
     expect(joined.status).toBe(200);
     expect((await accountOf(joined)).id).toBe(memberId);
     expect(await accountsWith("member@example.com")).toHaveLength(1);
-    // The invitation stays as it was; revoking it is the creator's call (TON-74).
+    // The invitation stays as it was; revoking it is the creator's call.
     expect((await invitation(id)).status).toBe("available");
   });
 

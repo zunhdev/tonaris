@@ -20,6 +20,7 @@ import { webCors } from "./cors";
 import { mcpRoutes } from "./mcp/routes";
 import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
+import { admissionAdminRoutes } from "./routes/v1/admissions";
 import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
 import { fieldRoutes } from "./routes/v1/fields";
@@ -71,6 +72,14 @@ function v1(
       }),
     )
     .use(invitationRoutes(session, { db: sync.db }))
+    .use(
+      admissionAdminRoutes(session, {
+        db: sync.db,
+        email: sync.sharing.email,
+        webOrigin: sync.sharing.webOrigin,
+        logError: sync.sharing.logError,
+      }),
+    )
     .use(sharedRoutes(session, sync))
     .use(guestRoutes(sync))
     .use(syncRoutes(session, sync));
