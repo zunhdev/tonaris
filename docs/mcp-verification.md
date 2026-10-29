@@ -36,4 +36,39 @@ One prompt at a time, as `fixtures.ts` prints them:
 
 ## Results
 
-To be filled in by the live run: one row per client, each step Passed, Failed (with what happened) or Not run.
+**29 October 2026, a short run: steps 1, 2, 6 and 9 in each client.** The creator chose it, because the G3 spikes already ran steps 3–5 in these clients ([TON-23](spikes/2026-10-21-g3-approvals.md)). Steps 7 and 8 are server rules that the contract tests cover. The run checked what the spikes couldn't:
+- M9's 36 tools as each client takes them;
+- Read-only, live;
+- the steps in Settings → Connections;
+- a folder's deletion and recovery.
+
+The clients were Claude web and ChatGPT Plus in Firefox, and the Codex CLI 0.162.1, driven with `codex exec`.
+
+| # | Claude web | ChatGPT web (Plus) | Codex CLI |
+| --- | --- | --- | --- |
+| 1 | Passed | Passed | Passed: the injection listed as an album title, nothing done |
+| 2 | Passed: no tool called | Passed | Passed: "the Tonaris connection is read-only" |
+| 3–5 | Not run | Not run | Not run |
+| 6 | Passed | Passed, after a Refresh (finding 1) | Passed: the approval named "its one list"; recovered "with its list intact" |
+| 7–8 | Not run | Not run | Not run |
+| 9 | Passed: asked to reconnect | Passed | Passed: "no Tonaris connector is available"; see finding 2 |
+
+Tonaris refused every revoked connection the same way: the next call got `401`, and the refresh token got `400`.
+
+**Findings:**
+1. **ChatGPT keeps the tool list it fetched first.** Reconnected as Manage collection, it still had only the 10 read tools, and said so. It fetched the full list only after **Refresh** on the plugin's page, so Settings → Connections now says to refresh after reconnecting in another mode (DS-86). Claude fetches the list again after a reconnect, and Codex fetches it each session.
+2. **Codex also sees ChatGPT's plugins,** as `codex_apps` tools next to its own servers.
+   - Once the `tonaris` server was revoked, Codex tried the ChatGPT plugin instead. Its approval policy `never` blocked that call, and the reply said to "enable approval".
+   - With `--disable apps`, it said no Tonaris connector was available.
+   - Either way, Tonaris refused the connection.
+3. **Codex asked `search` for 100 results.** The schema's limit is 50, so the call failed validation, and Codex retried with 50.
+4. **Protocols:** Claude and ChatGPT spoke 2026-07-28. Codex used `initialize` at 2025-06-18, through the stateless fallback.
+5. **The tunnel proxy hid the collection,** but the app was fine.
+   - Bun's `fetch` asked the API for gzip, decompressed the reply, and passed its `Content-Encoding` on. The browser couldn't read the 4 MB sync bootstrap, and the sidebar stayed empty.
+   - The proxy now asks for no compression, and leaves the sync stream without its 30 s timeout.
+
+**Codex, for a rerun:**
+- `codex mcp add tonaris --url $T/mcp` signs in.
+- `codex exec` runs non-read-only tools only when they're allowed, one flag per tool: `-c 'mcp_servers.tonaris.tools.delete_items.approval_mode="approve"'`, and likewise `recover_from_trash`.
+- `codex exec resume --last "I approved it."` continues after the approval.
+- `codex mcp remove tonaris` clears the global config afterwards.

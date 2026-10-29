@@ -1764,7 +1764,10 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
   - **ChatGPT Plus allows write actions.** They ran without a ChatGPT confirmation under the default "Allow low-risk tools" permission.
   - **Codex asks before any tool not marked read-only.** In `codex exec` that is a per-tool `approval_mode`.
   - **App-only rejection** needs no client run: no tool exists for those operations (TS-63), and `/v1` refuses MCP tokens (TS-62).
-- **TON-85** re-runs the script with M9's tools, in each client, connecting from the in-app instructions (TON-86). The steps, fixtures and results are in [`docs/mcp-verification.md`](mcp-verification.md), with `tooling/src/mcp-verification/fixtures.ts`.
+- **TON-85** re-ran the script with M9's tools, in each client, connecting from the in-app instructions (TON-86). The steps, fixtures and results are in [`docs/mcp-verification.md`](mcp-verification.md), with `tooling/src/mcp-verification/fixtures.ts`.
+  - **All three clients passed a short run:** Read-only reads and search with the injection, no write tool in Read-only, a folder's gated deletion and recovery, and revocation.
+  - **ChatGPT keeps the tool list it fetched first,** so after reconnecting in another mode it needs **Refresh** on the plugin's page. Settings → Connections says so (DS-86).
+  - **Codex also sees ChatGPT's plugins** as `codex_apps` tools, and falls back to them when its own server is revoked.
 
 **TS-124 CI and CD (Decided; built in TON-11).** GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request to `main` and every push to it, in two jobs:
 
