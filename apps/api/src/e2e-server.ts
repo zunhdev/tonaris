@@ -6,7 +6,7 @@
 import { createTestDatabase } from "@tonaris/db/testing";
 
 import { accountDeletionJob } from "./account-deletion";
-import { createApp } from "./app";
+import { createApp, maxRequestBodySize } from "./app";
 import { createAuth } from "./auth/auth";
 import { seedCreator } from "./auth/seed-creator";
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
@@ -54,7 +54,7 @@ const app = createApp({
   wakeJobs: worker.wake,
   capture: fixtureCapture(),
   imageFetch: fixtureImageFetch,
-}).listen(port);
+}).listen({ port, maxRequestBodySize });
 console.log(`e2e API on ${app.server?.url.href}, schema ${database.schema}`);
 
 async function stop() {

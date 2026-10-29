@@ -13,7 +13,7 @@ import {
 } from "@tonaris/domain";
 
 import { accountDeletionJob } from "./account-deletion";
-import { createApp } from "./app";
+import { createApp, maxRequestBodySize } from "./app";
 import type { ImageFetch } from "./artwork";
 import { issueAdmissionInvitation } from "./auth/admission";
 import { type AuthOptions, createAuth } from "./auth/auth";
@@ -190,7 +190,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
 
   /** Listens on `port` (default: a free one), for clients that need a real connection. Returns the origin. */
   const listen = (port = 0): string => {
-    app.listen({ port });
+    app.listen({ port, maxRequestBodySize });
     return (app.server?.url.href ?? "").replace(/\/$/, "");
   };
 

@@ -14,6 +14,12 @@ export const maxCapturesPerHour = 100;
 /** Data exports per account per hour (TS-18, TS-80). */
 export const maxExportsPerHour = 5;
 
+/**
+ * Characters in an album's title or artist credit, counted in code points (decided by the creator on 29 October 2026,
+ * TON-95). Real titles reach about 450, and classical credits run long.
+ */
+export const maxAlbumTextLength = 1_000;
+
 /** Folders and lists per account, counting those in Trash until they are purged (decided 21 October 2026). */
 export const maxContainers = 2_000;
 

@@ -176,6 +176,7 @@ export {
 } from "./enrichment";
 export { uuidv7, uuidv7Time } from "./ids";
 export {
+  maxAlbumTextLength,
   maxAlbums,
   maxBatchItems,
   maxCapturesPerHour,
