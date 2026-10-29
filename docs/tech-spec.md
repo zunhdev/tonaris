@@ -426,7 +426,8 @@ At a limit, only the new item is rejected, with `capacity_exceeded` (albums) or 
   - reuse, re-addition and restore never create a record, so they work at the limit;
   - the refusal is "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more."
 - **Captures** (`maxCapturesPerHour`): the mutation runner counts the account's `album.capture` mutations received in the last hour, this one excepted. At 100 it answers `rate_limited` before asking any provider: "You've added 100 albums from links in the last hour. Try again later, or enter an album manually."
-- **MCP's per-grant rates** came with TON-85 (TS-66). **Still to come:** export rates, with TON-89.
+- **MCP's per-grant rates** came with TON-85 (TS-66).
+- **Exports** (`maxExportsPerHour`) came with TON-89 (TS-80): 5 per account per hour, counted in memory like the sign-in limits. The sixth answers `rate_limited` with `Retry-After`: "You've exported your data 5 times in the last hour. Try again in {n} minutes."
 
 ---
 
@@ -1414,6 +1415,13 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Performance target:** TS-120 (≤ 3 s for 5,000 albums). If exports grow larger, the same builder runs as a job with a short-lived signed download.
 - **Limits:** 5 exports per hour per account (TS-18).
 - **Errors** follow FR-08.6. Exports never mutate data.
+
+*As built in TON-89* (`apps/api/src/routes/v1/export.ts`):
+- **The ZIP** is streamed by fflate's `Zip` with deflate, each entry dated at the export's time. `tonaris-export.json` and the schema are indented two spaces for reading.
+- **The limit** is checked first, and the export is counted only once it is built, so a failed build can be retried at once. Counters live in memory (TS-104).
+- **OpenAPI:** `exportData` documents the `application/zip` answer and its problems in `detail.responses`, because a binary answer can't sit beside them in `response`.
+- **CORS** exposes `Content-Disposition`, so the web app names the file as the server does.
+- **The workload:** 5,005 albums download in 0.19–0.27 s, end to end against a local API, as a 1.27 MB ZIP.
 
 **TS-81 JSON format (Decided shape; version 1).** IDs are stable UUIDs. Albums appear once, and lists reference them.
 

@@ -19,7 +19,8 @@ import {
 const openapiVersion = "3.1.2";
 export const committedDocumentPath = path.join(import.meta.dir, "../openapi/v1.json");
 
-const problemResponse = {
+/** A problem answer, by reference; routes documenting their own responses list it for their error statuses. */
+export const problemResponse = {
   description: "Problem details (RFC 9457) with a TS-27 `code`",
   content: {
     "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } },

@@ -1,10 +1,11 @@
 // Settings → Account's Danger zone (DS-97, FR-11.10): **Delete account** opens a dialog that lists every
 // consequence; typing the sign-in email enables **Delete account permanently**. Confirming clears what this
 // browser keeps for the account, as signing out does, and moves to `/account-deleted`, outside the workspace,
-// which follows the deletion. The creator's account can't be deleted. "Download your data first" joins with the
-// export (TON-89).
+// which follows the deletion. The creator's account can't be deleted. "Download your data first" offers the export
+// before anything else (DS-97, FR-08.7).
 
 import { api, refusalOf } from "@/api";
+import { ExportButton } from "@/features/export/data-export";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
 import { useId, useState } from "react";
@@ -107,6 +108,18 @@ function DeleteAccountDialog({ account, onClose }: { account: Account; onClose: 
             <li key={line}>{line}</li>
           ))}
         </ul>
+        <section
+          aria-labelledby={`${id}-export`}
+          className="flex flex-col gap-2 rounded-lg border border-subtle bg-raised p-3"
+        >
+          <h3 id={`${id}-export`} className="text-fg-primary">
+            Download your data first
+          </h3>
+          <p className="text-small text-fg-secondary">
+            A ZIP of your whole collection, to keep or use elsewhere. Tonaris can't restore it.
+          </p>
+          <ExportButton />
+        </section>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${id}-email`}>Type {account.email} to confirm</Label>
           <Input

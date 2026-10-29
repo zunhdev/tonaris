@@ -11,6 +11,9 @@ export const maxAlbums = 5_000;
 /** Link captures per account per hour, from the app or MCP (TS-18). */
 export const maxCapturesPerHour = 100;
 
+/** Data exports per account per hour (TS-18, TS-80). */
+export const maxExportsPerHour = 5;
+
 /** Folders and lists per account, counting those in Trash until they are purged (decided 21 October 2026). */
 export const maxContainers = 2_000;
 

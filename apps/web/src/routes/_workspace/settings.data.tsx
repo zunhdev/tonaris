@@ -1,5 +1,6 @@
-// Settings → Data (DS-92, DS-98): the album usage meter for now; export joins with M10.
+// Settings → Data (DS-92, DS-96, DS-98): the album usage meter, and downloading your data (TON-89).
 
+import { DataExport } from "@/features/export/data-export";
 import { SettingsNav } from "@/features/settings/settings-nav";
 import { UsageMeter } from "@/features/settings/usage";
 import { PageHeader } from "@/features/shell/page-header";
@@ -22,6 +23,7 @@ function Data() {
           </h2>
           <UsageMeter />
         </section>
+        <DataExport />
       </div>
     </>
   );

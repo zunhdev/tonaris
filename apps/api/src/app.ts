@@ -28,6 +28,7 @@ import { admissionAdminRoutes } from "./routes/v1/admissions";
 import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
 import { emailChangeRoutes, type EmailChangeDeps } from "./routes/v1/email-change";
+import { exportRoutes } from "./routes/v1/export";
 import { fieldRoutes } from "./routes/v1/fields";
 import { guestRoutes } from "./routes/v1/guests";
 import { invitationRoutes } from "./routes/v1/invitations";
@@ -77,6 +78,7 @@ function v1(
     .use(approvalRoutes(session, { db: sync.db }))
     .use(fieldRoutes(session, { db: sync.db }))
     .use(searchRoutes(session, { db: sync.db }))
+    .use(exportRoutes(session, { db: sync.db }))
     .use(
       sharingRoutes(session, {
         db: sync.db,

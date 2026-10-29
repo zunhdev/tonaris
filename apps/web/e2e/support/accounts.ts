@@ -150,6 +150,8 @@ export const accounts = {
   recoverCancelled: at("recover-cancelled"),
   // Deleting an account (account-deletion.e2e.ts), one per test.
   deleter: at("deleter"),
+  exporter: at("exporter"),
+  exportBeforeDeleting: at("export-first"),
   deleteCancel: at("delete-cancel"),
 } as const;
 

@@ -2,6 +2,7 @@
 // account is kept: a signed-out answer or a failure is asked again next time.
 
 import { api } from "@/api";
+import { forgetExport } from "@/features/export/export-state";
 
 import type { Account } from "@tonaris/domain";
 
@@ -24,7 +25,8 @@ export function currentAccount(): Promise<Account | undefined> {
   return current;
 }
 
-/** Drops the loaded account, after signing in or out. */
+/** Drops the loaded account, after signing in or out, and with it the account's export (TON-89). */
 export function forgetAccount(): void {
   current = undefined;
+  forgetExport();
 }
