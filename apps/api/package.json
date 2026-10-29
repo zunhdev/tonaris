@@ -24,6 +24,7 @@
     "@elysia/cors": "2.0.0-rc.0",
     "@elysia/openapi": "2.0.0-rc.0",
     "@modelcontextprotocol/server": "2.3.1",
+    "@sentry/bun": "11.10.0",
     "@tonaris/db": "workspace:*",
     "@tonaris/domain": "workspace:*",
     "@tonaris/providers": "workspace:*",

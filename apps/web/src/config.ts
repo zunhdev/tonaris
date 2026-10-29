@@ -27,6 +27,19 @@ export const apiUrl: string = readApiUrl();
 export const serverApiUrl: string =
   typeof document === "undefined" ? process.env.API_INTERNAL_URL || apiUrl : apiUrl;
 
+/** The `<meta>` carrying the web app's Sentry key (TS-115), when the server has `SENTRY_DSN`. */
+export const sentryDsnMeta = "tonaris:sentry-dsn";
+
+function readSentryDsn(): string | undefined {
+  if (typeof document === "undefined") return process.env.SENTRY_DSN || undefined;
+  return (
+    document.querySelector<HTMLMetaElement>(`meta[name="${sentryDsnMeta}"]`)?.content || undefined
+  );
+}
+
+/** Where the browser reports errors (TS-115); undefined keeps them in the browser's console. */
+export const sentryDsn: string | undefined = readSentryDsn();
+
 /**
  * The `<meta>` that switches on hooks for the browser tests (TS-121): the root route renders it only when the
  * server runs with `TEST_HOOKS=1`, as the e2e setup does, so the production build is the one under test.

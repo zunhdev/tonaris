@@ -1767,6 +1767,21 @@ The "30 days" matches the backup retention the creator set (Q-04).
 - An external uptime check on both services' `/healthz` and on a synthetic `/s/` page.
 - The admin view shows job-queue failures and the age of the last successful backup.
 
+*As built in TON-91* (runbook: `docs/runbooks/monitoring.md`):
+- **Redaction:** `redact` and `redactText` (`packages/domain/src/telemetry.ts`) are shared by the API and the web app.
+  - **Under a key:** values named token, secret, password, cookie, authorization, code, otp or email are replaced.
+  - **In free text:** bearer tokens, JWTs, email addresses, the tokens in `/s/`, `/join/` and `/recover/` paths, and token-like query values are replaced.
+  - **Titles and descriptions** stay out because request bodies are never sent.
+- **Logs:** the API writes JSON lines (`apps/api/src/observability.ts`) from every error path: requests, jobs, schedules, auth and the stream hub.
+- **Sentry**, on when `SENTRY_DSN` is set:
+  - **The API** uses `@sentry/bun` 11 with traces at 5%.
+  - **The web app** uses `@sentry/browser` 11, with its DSN in a `<meta>` and the project's exact ingest host in `connect-src`. It loads Sentry only when there is a DSN, as a 31 KB gzipped chunk of the three functions it uses, and reports what route boundaries catch (`defaultOnCatch`).
+  - **Collected:** Sentry 11 collects users, cookies, headers, bodies and query strings unless told not to, so `dataCollection` turns each off. `beforeSend` and `beforeBreadcrumb` redact what's left.
+  - **Breadcrumbs:** the browser keeps no console or DOM breadcrumbs.
+- **Admin → Operations:** `GET /v1/admin/operations` (creator only) gives the 50 latest jobs that gave up, their errors redacted, and the last `backup_runs` row. The page shows the backup's age, in red after 26 hours.
+  - **Send a test error** calls `POST /v1/admin/operations/test-error`, which fails on purpose with a fake address and token, and also reports a browser error. Sentry must show both redacted: the done-when's check.
+- **Uptime checks** are the host's or a monitor's, set up by the creator, on `/healthz` of both services and a "Status check" share link.
+
 **TS-116 Monthly cost estimate.** Retired 17 Oct 2026: hosting and budget are creator-owned.
 
 ---

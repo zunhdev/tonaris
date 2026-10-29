@@ -12,14 +12,23 @@ export function createNonce(): string {
  * calls come from this origin or the API's (artwork goes through the API's `/img`, TS-103). Nothing may frame
  * the app, and `<base>`, plugins and foreign form targets are refused.
  */
-export function contentSecurityPolicy({ nonce, apiOrigin }: { nonce: string; apiOrigin: string }) {
+export function contentSecurityPolicy({
+  nonce,
+  apiOrigin,
+  reportOrigin,
+}: {
+  nonce: string;
+  apiOrigin: string;
+  /** Where errors are reported (TS-115), if anywhere: Sentry's ingest host. */
+  reportOrigin?: string | undefined;
+}) {
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'`,
     `style-src 'self' 'nonce-${nonce}'`,
     `img-src 'self' data: ${apiOrigin}`,
     "font-src 'self'",
-    `connect-src 'self' ${apiOrigin}`,
+    `connect-src 'self' ${apiOrigin}${reportOrigin ? ` ${reportOrigin}` : ""}`,
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'self'",
@@ -30,14 +39,16 @@ export function contentSecurityPolicy({ nonce, apiOrigin }: { nonce: string; api
 export function securityHeaders({
   nonce,
   apiOrigin,
+  reportOrigin,
   pathname,
 }: {
   nonce: string;
   apiOrigin: string;
+  reportOrigin?: string | undefined;
   pathname: string;
 }): Record<string, string> {
   return {
-    "content-security-policy": contentSecurityPolicy({ nonce, apiOrigin }),
+    "content-security-policy": contentSecurityPolicy({ nonce, apiOrigin, reportOrigin }),
     // One year, subdomains included (the API's too); browsers ignore it over plain HTTP.
     "strict-transport-security": "max-age=31536000; includeSubDomains",
     "x-content-type-options": "nosniff",

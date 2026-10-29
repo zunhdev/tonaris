@@ -72,6 +72,7 @@ export {
 export { exportSource } from "./export";
 export { ledgerStore, recordInLedger, type LedgerStore } from "./ledger";
 export { replayLedger, type ReplayReport } from "./ledger-replay";
+export { operationsStatus, type OperationsStatus } from "./operations";
 export { findFieldIn, lockAccount, purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
 export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
