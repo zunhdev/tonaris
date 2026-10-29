@@ -1,0 +1,7 @@
+# One-time exceptions to the breaking-change check, each approved by the creator. Each entry matches only its change.
+# TON-83, 29 October 2026: the approval scope's operation became an enum of the gated operations (G3 typed it as
+# one value). Its only reader is the web app's approval page.
+GET /v1/approvals/{id} the `operation` response property const value `delete_albums` was removed for the status `200`
+GET /v1/approvals/{id} the 'operation' response property const value 'delete_albums' was removed for the status '200'
+POST /v1/approvals/{id}/decision the `operation` response property const value `delete_albums` was removed for the status `200`
+POST /v1/approvals/{id}/decision the 'operation' response property const value 'delete_albums' was removed for the status '200'

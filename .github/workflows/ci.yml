@@ -64,8 +64,11 @@ jobs:
           # A new member of a response's oneOf, such as a new entity on the change stream, and a new value of a
           # response enum, such as a TS-27 outcome reason, are additive: clients must tolerate them (TS-09), so
           # they are reported as warnings rather than failing the check.
+          # oasdiff-ignore.txt lists one-time exceptions the creator approved, each named in it. Its entries match
+          # only the change they name, so they do nothing once it is on main.
           "$RUNNER_TEMP/oasdiff" breaking "$RUNNER_TEMP/base.json" apps/api/openapi/v1.json --fail-on ERR \
-            --severity-levels apps/api/openapi/oasdiff-levels.txt
+            --severity-levels apps/api/openapi/oasdiff-levels.txt \
+            --err-ignore apps/api/openapi/oasdiff-ignore.txt
       - name: Build both apps (the production bundles the images copy)
         run: bun run build
 
