@@ -1,6 +1,6 @@
-// Settings → Connections (DS-86, FR-10.3): the AI clients connected through MCP, each with its mode and a
-// Revoke action, and the server URL to connect a new one. TON-22's version: approvals and per-client setup
-// steps arrive with M9.
+// Settings → Connections (DS-86, FR-10.3): the AI clients connected through MCP, each with its mode, when it
+// connected and last called, and a Revoke action, and the server URL to connect a new one. Pending approvals
+// (TON-83) and per-client setup steps (TON-86) join it later in M9.
 
 import { api } from "@/api";
 import { apiUrl } from "@/config";
@@ -28,6 +28,18 @@ const modeNames: Record<NonNullable<Connection["mode"]>, string> = {
 };
 
 const date = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+/** "Manage collection · Connected 29 Oct 2026 · Last used 29 Oct 2026, 16:02" (DS-86). */
+function connectionDetails(connection: Connection): string {
+  return [
+    connection.mode ? modeNames[connection.mode] : "No access",
+    `Connected ${date.format(new Date(connection.connectedAt))}`,
+    connection.lastUsedAt
+      ? `Last used ${dateTime.format(new Date(connection.lastUsedAt))}`
+      : "Not used yet",
+  ].join(" · ");
+}
 
 function Connections() {
   const connections = Route.useLoaderData();
@@ -73,6 +85,9 @@ function Connections() {
           <h2 id="connected" className="text-title text-fg-primary">
             Connected clients
           </h2>
+          <p className="text-fg-secondary">
+            To change what a client may do, revoke it and connect it again.
+          </p>
           {error && (
             <p role="alert" className="text-status-danger">
               {error}
@@ -89,8 +104,7 @@ function Connections() {
                       {connection.clientName ?? connection.clientId}
                     </span>
                     <span className="text-small text-fg-secondary">
-                      {connection.mode ? modeNames[connection.mode] : "No access"} · Connected{" "}
-                      {date.format(new Date(connection.connectedAt))}
+                      {connectionDetails(connection)}
                     </span>
                   </div>
                   <Button

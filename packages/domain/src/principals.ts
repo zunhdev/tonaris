@@ -38,6 +38,10 @@ export const connectionSchema = z
       .nullable()
       .meta({ description: "What the connection may do; null if it was granted no access." }),
     connectedAt: z.iso.datetime(),
+    lastUsedAt: z.iso
+      .datetime()
+      .nullable()
+      .meta({ description: "The client's last call, to the minute; null if it hasn't made one." }),
   })
   .meta({ description: "An AI client connected through MCP (FR-10.3)." });
 export type Connection = z.infer<typeof connectionSchema>;

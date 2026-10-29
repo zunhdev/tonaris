@@ -1122,7 +1122,7 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
   - Advertise `client_id_metadata_document_supported: true` with token auth methods `none` and `private_key_jwt`. This is the path Claude.ai, ChatGPT (`https://chatgpt.com/oauth/client.json`), and Codex prefer; all three used it in TON-22.
   - ChatGPT authenticates at the token endpoint with `private_key_jwt`, signed with the keys at its `jwks_uri`. Claude and Codex are public clients; Codex redirects to a loopback address on any port.
   - Metadata documents are fetched once per host resolution, from public addresses only, without redirects (`@better-auth/cimd`'s transport).
-  - Keep DCR enabled as a fallback, limited to 10 registrations per IP per hour (proposed in TON-22, pending the creator's approval).
+  - Keep DCR enabled as a fallback, limited to 10 registrations per IP per hour (proposed in TON-22; the creator approved it on 29 October 2026, TON-80).
 - **Unauthenticated calls** get `401` with `WWW-Authenticate` pointing to the resource metadata, because Claude only starts sign-in on a 401. Authorization-server endpoints must respond within 10 s.
   - The challenge names the scopes to ask for: `collection:read collection:manage offline_access`. Better Auth leaves `offline_access` out of the resource metadata, and ChatGPT asks only for the scopes it is told about, so without it ChatGPT gets no refresh token (TON-22; confirmed with a fresh plugin in TON-23).
 - **Token checks.** The API verifies MCP tokens in-process against its own keys: signature, issuer, audience `/mcp`, expiry, `azp`, and any DPoP binding. Better Auth's `requireMcpAuth` would fetch the JWKS from the API's public URL over HTTP.
@@ -1130,7 +1130,8 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
   - **The mode is stored as scopes:** `collection:read` for Read-only, plus `collection:manage` for Manage collection (`mcpScopes` in `packages/domain`). The page grants a subset of what the client asked for, and only that, so Manage needs a client that asked for `collection:manage`. Every client does, since the challenge and the resource metadata name it.
   - **A grant is Better Auth's consent:** one per person and client. Authorizing again within it skips the page; `prompt=consent` shows it again.
 - **Connection management.** Settings lists each grant with its mode, created and last-used times, and a revoke action that deletes its tokens (FR-10.3, FR-11.13).
-  - `GET /v1/connections` and `DELETE /v1/connections/{id}` serve it (TON-22). Last-used times need a column of Tonaris's own (M9).
+  - `GET /v1/connections` and `DELETE /v1/connections/{id}` serve it (TON-22).
+  - *As built in TON-80:* last use is `oauth_consent.last_used_at`, Tonaris's own column, which Better Auth never writes. `/mcp` records it with the connection check, at most once a minute (`recordConnectionUse()`), and Settings shows it to the minute.
   - **Revocation is immediate.** Access tokens are JWTs that live an hour, so every MCP call checks that the token's grant still exists. In TON-22, Claude and ChatGPT were refused on the next call and asked the person to reconnect.
 - **Tokens:**
 
