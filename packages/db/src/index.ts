@@ -12,6 +12,7 @@ export {
   admitAccount,
   findAdmissionInvitation,
   insertAdmissionInvitation,
+  recordAdmissionEmail,
   revokeAdmissionInvitation,
   setAdmissionsPaused,
   type Admission,
@@ -41,6 +42,16 @@ export {
   type ListAddition,
   type TrashResult,
 } from "./mcp";
+export {
+  buryJob,
+  claimJob,
+  deadJobRetentionMs,
+  enqueueJob,
+  finishJob,
+  pruneDeadJobs,
+  retryJob,
+  type JobRow,
+} from "./jobs";
 export { runExclusively } from "./locks";
 export { migrateDatabase, migrationsFolder } from "./migrations";
 export { albumProvenance } from "./provenance";

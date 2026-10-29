@@ -46,7 +46,8 @@ Set these as environment secrets; `.env.example` lists every setting. In product
 | api | `API_ORIGIN` | `https://api.tonaris.<tld>` |
 | api | `WEB_ORIGIN` | `https://tonaris.<tld>` |
 | api | `BETTER_AUTH_SECRET` | At least 32 random bytes, e.g. `openssl rand -hex 32`. It also derives share links' tokens (TS-32): changing it signs everyone out **and breaks every share link**, which owners then turn off and on again for new ones. |
-| api | `SMTP_URL`, `EMAIL_FROM` | The mail provider's SMTP URL and the sender, such as `Tonaris <no-reply@tonaris.<tld>>` |
+| api | `RESEND_API_KEY` | Resend's API key, with sending access only (see [Email](#email)). Without it, the API sends through `SMTP_URL`. |
+| api | `EMAIL_FROM` | The sender, on the domain verified in Resend: `Tonaris <no-reply@mail.tonaris.app>` |
 | api | `CLIENT_IP_HEADER` | The header the host's proxy puts the client address in, e.g. `X-Forwarded-For`. Without it, the per-IP sign-in limit sees only the proxy's address (TS-104). |
 | api | `CREATOR_EMAIL` | The creator's address, read by the creator bootstrap |
 | web | `API_URL` | `https://api.tonaris.<tld>`, read at start-up and given to browsers |
@@ -54,6 +55,19 @@ Set these as environment secrets; `.env.example` lists every setting. In product
 | both | `PORT` | Optional: 3001 for the API, 3000 for the web app |
 
 The images set `NODE_ENV=production`. When running Bun directly, set it yourself.
+
+## Email
+
+Tonaris sends email through [Resend](https://resend.com) (TS-72): sign-in and join codes, sharing and admission invitations, email changes and recovery. Each email is queued and retried (TS-90), so a slow or failed send never fails a request.
+
+**Once, before the first deploy:**
+
+1. **The domain:** in Resend's [Domains](https://resend.com/domains), `mail.tonaris.app` is added in the Ireland (`eu-west-1`) region, and its DNS records are set at the registrar, Spaceship. The records are a DKIM `TXT` at `resend._domainkey.mail`, plus an `MX` and an SPF `TXT` at `send.mail`. `tonaris.app` also has `_dmarc` `TXT` `v=DMARC1; p=none;`. The domain shows **Verified**.
+2. **The key:** in [API keys](https://resend.com/api-keys), create a key named for production, with **Sending access** for `mail.tonaris.app` only. Set it as `RESEND_API_KEY` in the API's secrets. Resend shows a key once; a lost one is replaced, not recovered.
+
+**To check it** after a deploy, sign in as the creator: the code arrives from `no-reply@mail.tonaris.app`. Resend's [Emails](https://resend.com/emails) page lists each email and whether it was delivered.
+
+**Limits:** Resend's free plan sends 3,000 emails a month, at most 100 a day. Past that, Resend refuses, and Tonaris records the email as failed. An invitation's owner can send it again from its sharing dialog.
 
 ## Each deploy
 
@@ -71,7 +85,7 @@ The images set `NODE_ENV=production`. When running Bun directly, set it yourself
 
 3. **Start the API**, and wait until `/healthz` answers. The API always deploys before the web app (TS-01). Changes within `/v1` are additive, so the web app still running works with the newer API.
 4. **Start the web app** with `API_URL` set.
-5. **Check** that `https://api.tonaris.<tld>/v1/health` answers `{"status":"ok"}` and that `https://tonaris.<tld>/sign-in` loads. To check email, sign in as the creator.
+5. **Check** that `https://api.tonaris.<tld>/v1/health` answers `{"status":"ok"}` and that `https://tonaris.<tld>/sign-in` loads. To check email, sign in as the creator (see [Email](#email)).
 
 ## Things to get right on the host
 

@@ -105,6 +105,7 @@ describe("migrations", () => {
       "containers",
       "field_definitions",
       "field_options",
+      "jobs",
       "jwks",
       "memberships",
       "mutations",

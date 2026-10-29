@@ -11,7 +11,9 @@ import { seedCreator } from "./auth/seed-creator";
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
 import { fixtureCapture, fixtureImageFetch } from "./capture-fixtures";
 import { apiConfig } from "./config";
+import { emailJob, emailOutbox } from "./email/outbox";
 import { smtpEmail } from "./email/smtp";
+import { startJobWorker } from "./jobs";
 import { databaseHub } from "./sync/hub";
 import { insertUser } from "./testing";
 
@@ -28,7 +30,8 @@ const config = apiConfig({
   API_ORIGIN: `http://localhost:${port}`,
   WEB_ORIGIN: process.env.WEB_ORIGIN ?? "http://localhost:3100",
 });
-const email = smtpEmail(config);
+const worker = startJobWorker(database.db, [emailJob(database.db, smtpEmail(config))]);
+const email = emailOutbox(database.db, worker.wake);
 const auth = createAuth({ config, db: database.db, email });
 // Every test signs in from 127.0.0.1, so the per-address limit would count the whole suite as one person.
 const limiter = createSignInLimiter({
@@ -52,6 +55,7 @@ console.log(`e2e API on ${app.server?.url.href}, schema ${database.schema}`);
 async function stop() {
   hub.close();
   await app.stop();
+  await worker.stop();
   await database.drop();
   process.exit(0);
 }

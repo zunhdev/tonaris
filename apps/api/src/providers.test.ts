@@ -29,6 +29,7 @@ test("the Spotify bridge and its health check exist only when configured", () =>
   expect(apiSchedules(off.spotify, trash).map((schedule) => schedule.name)).toEqual([
     "prune-sync-history",
     "prune-provider-cache",
+    "prune-dead-jobs",
     "trash-expiry",
   ]);
   const on = createProviders({ spotify: { clientId: "id", clientSecret: "secret" } }, t.db, {

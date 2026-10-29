@@ -148,7 +148,7 @@ export function createAuth({
       database: { generateId: () => Bun.randomUUIDv7() },
       // Sessions store no IP addresses; the limiter keeps them in memory only.
       ipAddress: { disableIpTracking: true },
-      // Email goes out after the response, so sending neither delays nor fails it.
+      // Email is queued after the response, so sending neither delays nor fails it (TS-90).
       backgroundTasks: {
         handler: (promise) =>
           void promise.catch((error) => logError(error, "auth background task")),

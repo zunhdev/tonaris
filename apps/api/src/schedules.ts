@@ -1,8 +1,9 @@
 // Periodic jobs in the API process (TS-90, TS-91). Each runs on its interval, in one transaction holding an
 // advisory lock named after it, so a second instance skips a run rather than overlapping it. Queued jobs with
-// retries (the `jobs` table) arrive with the work that needs them, such as email retries and MusicBrainz lookups.
+// retries, such as email, run in the job worker (src/jobs.ts).
 
 import {
+  pruneDeadJobs,
   pruneProviderCache,
   pruneSyncHistory,
   purgeExpiredTrash,
@@ -34,6 +35,13 @@ export const pruneProviderCacheSchedule: Schedule = {
   name: "prune-provider-cache",
   everyMs: day,
   run: (tx, now) => pruneProviderCache(tx, now),
+};
+
+/** Jobs that gave up more than 30 days ago (TS-90). */
+export const pruneDeadJobsSchedule: Schedule = {
+  name: "prune-dead-jobs",
+  everyMs: day,
+  run: (tx, now) => pruneDeadJobs(tx, now),
 };
 
 /**
@@ -97,6 +105,7 @@ export function apiSchedules(
   return [
     pruneSyncHistorySchedule,
     pruneProviderCacheSchedule,
+    pruneDeadJobsSchedule,
     trashExpirySchedule(trash.db, trash.publish),
     ...(spotify ? [spotifyHealthSchedule(spotify)] : []),
   ];
