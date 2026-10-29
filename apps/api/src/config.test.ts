@@ -10,6 +10,7 @@ const production = {
   SMTP_URL: "smtps://user:pass@smtp.example:465",
   EMAIL_FROM: "Tonaris <no-reply@tonaris.example>",
   SUPPORT_EMAIL: "help@tonaris.example",
+  LEDGER_URL: "s3://tonaris-ledger/events",
 };
 
 describe("apiConfig", () => {
@@ -23,13 +24,15 @@ describe("apiConfig", () => {
       supportEmail: "support@tonaris.test",
       clientIpHeader: undefined,
     });
+    // The ledger's local default, a directory beside the API.
+    expect(config.ledgerUrl).toMatch(/^file:\/\/.*\/\.ledger$/);
     // A host-only localhost cookie reaches both ports.
     expect(config.cookieDomain).toBeUndefined();
   });
 
   test("requires every origin and secret in production (TS-105)", () => {
     expect(() => apiConfig({ NODE_ENV: "production" })).toThrow(
-      "Set API_ORIGIN, WEB_ORIGIN, BETTER_AUTH_SECRET, EMAIL_FROM, SUPPORT_EMAIL, RESEND_API_KEY (or SMTP_URL) in production",
+      "Set API_ORIGIN, WEB_ORIGIN, BETTER_AUTH_SECRET, EMAIL_FROM, SUPPORT_EMAIL, LEDGER_URL, RESEND_API_KEY (or SMTP_URL) in production",
     );
     const { BETTER_AUTH_SECRET: _, ...withoutSecret } = production;
     expect(() => apiConfig(withoutSecret)).toThrow("Set BETTER_AUTH_SECRET in production");
@@ -37,6 +40,10 @@ describe("apiConfig", () => {
     const { SUPPORT_EMAIL: __, ...withoutSupport } = production;
     expect(() => apiConfig(withoutSupport)).toThrow("Set SUPPORT_EMAIL in production");
     expect(apiConfig(production).supportEmail).toBe("help@tonaris.example");
+    // The revocation ledger must be off-site (TS-113): no local default in production.
+    const { LEDGER_URL: ___, ...withoutLedger } = production;
+    expect(() => apiConfig(withoutLedger)).toThrow("Set LEDGER_URL in production");
+    expect(apiConfig(production).ledgerUrl).toBe("s3://tonaris-ledger/events");
   });
 
   test("sends email through Resend when its key is set, and through SMTP otherwise (TS-72)", () => {

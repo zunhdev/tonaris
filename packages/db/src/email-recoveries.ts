@@ -10,6 +10,7 @@ import { and, asc, eq, isNull, ne, sql } from "drizzle-orm";
 import { emailRecoveryHours, signInCode } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
+import { recordInLedger } from "./ledger";
 import {
   auditLog,
   emailRecoveries,
@@ -117,6 +118,7 @@ async function disconnectAll(tx: Transaction, userId: string): Promise<void> {
   await tx.delete(oauthAccessTokens).where(eq(oauthAccessTokens.userId, userId));
   await tx.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.userId, userId));
   await tx.delete(oauthConsents).where(eq(oauthConsents.userId, userId));
+  await recordInLedger(tx, { type: "connection.revoked", userId, clientId: null });
 }
 
 /**

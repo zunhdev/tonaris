@@ -14,6 +14,7 @@ import {
 
 import { albumsOfReleaseGroupIn } from "./album-writes";
 import type { Database, Transaction } from "./client";
+import { recordInLedger } from "./ledger";
 import {
   albums,
   containers,
@@ -117,6 +118,7 @@ export function revokeConnection(
       and(eq(table.userId, userId), eq(table.clientId, consent.clientId));
     await tx.delete(oauthAccessTokens).where(ofGrant(oauthAccessTokens));
     await tx.delete(oauthRefreshTokens).where(ofGrant(oauthRefreshTokens));
+    await recordInLedger(tx, { type: "connection.revoked", userId, clientId: consent.clientId });
     return true;
   });
 }

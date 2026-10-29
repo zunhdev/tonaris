@@ -194,7 +194,11 @@ describe("beginAccountDeletion", () => {
         details: {},
       }),
     ]);
-    expect((await t.db.select().from(jobs)).map((job) => job.kind)).toEqual(["account-deletion"]);
+    // The deletion's job, and its record for the revocation ledger (TS-113).
+    expect((await t.db.select().from(jobs)).map((job) => job.kind).toSorted()).toEqual([
+      "account-deletion",
+      "ledger.append",
+    ]);
     expect((await findAccountDeletion(t.db, hash(`token-${anna}`)))?.status).toBe("deleting");
     // The creator's list never shows the placeholder.
     expect((await listMembers(t.db)).map((member) => member.email)).toEqual(["ben@example.com"]);
@@ -249,7 +253,9 @@ describe("progress", () => {
 
     await finishAccountDeletion(t.db, deletion.id, "failed");
     expect(await retryAccountDeletion(t.db, tokenHash, { jobId: uuidv7() })).toBe("deleting");
-    expect(await t.db.select().from(jobs)).toHaveLength(2);
+    expect(
+      (await t.db.select().from(jobs)).filter((job) => job.kind === "account-deletion"),
+    ).toHaveLength(2);
     expect(await retryAccountDeletion(t.db, hash("unknown"), { jobId: uuidv7() })).toBeUndefined();
 
     const now = new Date();

@@ -88,6 +88,7 @@ jobs:
           SMTP_URL=smtp://localhost:1025
           EMAIL_FROM=Tonaris <no-reply@tonaris.example>
           SUPPORT_EMAIL=help@tonaris.example
+          LEDGER_URL=file:///tmp/ledger/
           EOF
       - name: Pre-deploy steps (migrate, then seed the creator twice)
         run: |

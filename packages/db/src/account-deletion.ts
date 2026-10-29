@@ -9,6 +9,7 @@ import { accountDeletionJobKind, type AccountDeletionStatus } from "@tonaris/dom
 
 import type { Database, Transaction } from "./client";
 import { enqueueJob } from "./jobs";
+import { recordInLedger } from "./ledger";
 import {
   accountDeletions,
   accountSettings,
@@ -47,6 +48,40 @@ export const deletionChunkSize = 500;
  * Starts deleting `userId` (TS-74), in one transaction. Refused for an unknown account, the creator, and one
  * already being deleted; otherwise answers "started", with the job queued on the same transaction.
  */
+/**
+ * Ends every way into `userId`'s account and what it shares, at once (FR-11.11): its sign-in email, sessions and AI
+ * connections, its links and the grants it gave or held. Its data goes after, chunk by chunk. A restore's replay
+ * of the deletion does the same (TS-113).
+ */
+export async function endAccountAccess(tx: Transaction, userId: string, now: Date): Promise<void> {
+  await tx
+    .update(users)
+    .set({ email: deletedEmailKey(userId), deletingAt: now })
+    .where(eq(users.id, userId));
+  await tx.delete(sessions).where(eq(sessions.userId, userId));
+  await tx.delete(oauthAccessTokens).where(eq(oauthAccessTokens.userId, userId));
+  await tx.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.userId, userId));
+  await tx.delete(oauthConsents).where(eq(oauthConsents.userId, userId));
+
+  const owned = tx
+    .select({ id: containers.id })
+    .from(containers)
+    .where(eq(containers.ownerId, userId));
+  await tx
+    .update(shareLinks)
+    .set({ revokedAt: now })
+    .where(and(inArray(shareLinks.containerId, owned), isNull(shareLinks.revokedAt)));
+  const open = inArray(shareGrants.status, ["pending", "accepted"]);
+  await tx
+    .update(shareGrants)
+    .set({ status: "revoked" })
+    .where(and(inArray(shareGrants.containerId, owned), open));
+  await tx
+    .update(shareGrants)
+    .set({ status: "withdrawn" })
+    .where(and(eq(shareGrants.granteeId, userId), open));
+}
+
 export async function beginAccountDeletion(
   db: Database,
   {
@@ -67,32 +102,9 @@ export async function beginAccountDeletion(
     if (account.role === "creator") return "creator";
     if (account.deletingAt) return "deleting";
 
-    await tx
-      .update(users)
-      .set({ email: deletedEmailKey(userId), deletingAt: now })
-      .where(eq(users.id, userId));
-    await tx.delete(sessions).where(eq(sessions.userId, userId));
-    await tx.delete(oauthAccessTokens).where(eq(oauthAccessTokens.userId, userId));
-    await tx.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.userId, userId));
-    await tx.delete(oauthConsents).where(eq(oauthConsents.userId, userId));
-
-    const owned = tx
-      .select({ id: containers.id })
-      .from(containers)
-      .where(eq(containers.ownerId, userId));
-    await tx
-      .update(shareLinks)
-      .set({ revokedAt: now })
-      .where(and(inArray(shareLinks.containerId, owned), isNull(shareLinks.revokedAt)));
-    const open = inArray(shareGrants.status, ["pending", "accepted"]);
-    await tx
-      .update(shareGrants)
-      .set({ status: "revoked" })
-      .where(and(inArray(shareGrants.containerId, owned), open));
-    await tx
-      .update(shareGrants)
-      .set({ status: "withdrawn" })
-      .where(and(eq(shareGrants.granteeId, userId), open));
+    await endAccountAccess(tx, userId, now);
+    // Off-site too, so a restored backup deletes it again (TS-113).
+    await recordInLedger(tx, { type: "account.deleted", userId }, now);
 
     // No address or name stays behind in the log (FR-11.11).
     await tx.insert(auditLog).values({

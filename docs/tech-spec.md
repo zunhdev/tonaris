@@ -1712,6 +1712,10 @@ The creator chooses the host, region, and budget; the current preference is Rend
   - **recovery time:** 24 hours;
   - **the host's point-in-time recovery:** not relied on, since the daily encrypted backup meets the recovery point;
   - **the drill schedule:** every 3 months.
+- *As built in TON-96* (`tooling/src/backup/`, runbook `docs/runbooks/restore.md`): the scripts live in `tooling/src/backup/` beside the rest of the repository's tools.
+  - **`backup.ts`** pipes `pg_dump -Fc` into `age --encrypt` and stores `tonaris-YYYYMMDDTHHMMSSZ.dump.age` at `BACKUP_URL`: a `file:` directory, or `s3://bucket/prefix` through Bun's S3 client. It removes backups past 30 days and records each success in `backup_runs`, for TS-115's admin view.
+  - **`restore.ts`** decrypts a backup and restores it with `pg_restore` into an empty database. It then runs TS-113's reconciliation and reports.
+  - **The first drill** (30 October 2026, local, the 5,000-album workload): a backup in 0.2 s and a restore in 0.4 s, with nothing revived.
 
 **TS-113 Restore reconciliation (Decided; Q-04).**
 
@@ -1733,7 +1737,21 @@ The creator chooses the host, region, and budget; the current preference is Rend
 
   Deleted accounts, revoked access, and expired recovery rights are therefore never revived.
 
-  *Status, 29 October 2026:* no event is appended yet. Account deletion (TON-79), revocations and Trash purges are recorded only in the database. M11-06 builds the ledger and its appends together.
+  *As built in TON-96:*
+  - **Recording:** each change queues a `ledger.append` job in its own transaction (`recordInLedger`, `packages/db/src/ledger.ts`). The events are:
+    - `account.deleted`, when the deletion starts;
+    - `connection.revoked`, for a revoked connection, or every connection at a recovery's AI disconnect;
+    - `shareLink.revoked`;
+    - `shareGrant.ended` (declined, withdrawn or revoked);
+    - `trash.purged`, by hand or by the expiry;
+    - `admission.revoked`.
+  - **Writing:** the API's worker appends each event to `LEDGER_URL`, which production requires, with the queue's retries.
+    - `file:` writes monthly JSON-lines files.
+    - `s3://bucket/prefix` writes one object per event, since objects can't be appended to.
+    - Events carry IDs only.
+  - **Replay:** `replayLedger` applies events in order and idempotently. The restore replays from 10 minutes before the backup was taken, as replaying an event again is harmless.
+  - **Maintenance mode** is restoring into a new database that nothing serves until the switch-over (runbook step 1).
+  - **Step 4, the secrets:** the restore ends every session and MCP token in the restored database, rather than rotating `BETTER_AUTH_SECRET`. That secret also derives every share link's address (`shareToken`), so rotating it would break every shared link. Ending the sessions and tokens does what rotation was for: nothing signed in before the restore still is. The secret is rotated only if it may have leaked.
 
 **TS-114 Historical-backup deletion disclosure (Decided 30 October 2026, Q-04; TON-97).** The creator approved this wording, as written, for the account-deletion screen and the privacy notice:
 

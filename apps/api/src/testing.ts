@@ -22,6 +22,7 @@ import type { CaptureDeps } from "./capture";
 import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
 import { startJobWorker } from "./jobs";
+import { ledgerJob, memoryLedger } from "./ledger";
 import type { McpLimiter } from "./mcp/limits";
 import { databaseHub, type SyncHubOptions } from "./sync/hub";
 
@@ -117,9 +118,14 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
   // Email is queued and sent by a worker as in production, quickly retried so failures show at once.
   const email = memoryEmail();
   const hub = databaseHub(db, options.hub);
+  const ledger = memoryLedger();
   const worker = startJobWorker(
     db,
-    [emailJob(db, email), accountDeletionJob(db, (accountId) => hub.notify(accountId))],
+    [
+      emailJob(db, email),
+      accountDeletionJob(db, (accountId) => hub.notify(accountId)),
+      ledgerJob(ledger),
+    ],
     { retryDelaysMs: [10, 10], logError: () => {} },
   );
   const outbox = emailOutbox(db, worker.wake);
@@ -200,7 +206,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     if (app.server) await app.stop();
     await worker.stop();
   };
-  return { app, auth, config, db, email, hub, call, signIn, listen, stop };
+  return { app, auth, config, db, email, hub, ledger, call, signIn, listen, stop };
 }
 
 /** The app on its own test schema; call `drop()` afterwards. */

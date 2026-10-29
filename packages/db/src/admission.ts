@@ -6,6 +6,7 @@ import { and, desc, eq, gt, lte } from "drizzle-orm";
 import { invitationStatus, type AdmissionRefusal, type EmailStatus } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
+import { recordInLedger } from "./ledger";
 import { admissionInvitations, serviceState, users } from "./schema";
 
 export type AdmissionInvitationRow = typeof admissionInvitations.$inferSelect;
@@ -121,12 +122,15 @@ export async function revokeAdmissionInvitation(
   id: string,
   now = new Date(),
 ): Promise<AdmissionInvitationRow | undefined> {
-  const [invitation] = await db
-    .update(admissionInvitations)
-    .set({ status: "revoked" })
-    .where(usable(id, now))
-    .returning();
-  return invitation;
+  return db.transaction(async (tx) => {
+    const [invitation] = await tx
+      .update(admissionInvitations)
+      .set({ status: "revoked" })
+      .where(usable(id, now))
+      .returning();
+    if (invitation) await recordInLedger(tx, { type: "admission.revoked", invitationId: id }, now);
+    return invitation;
+  });
 }
 
 /** Records the invitations past their 14 days as expired: the daily job (TS-91). Use already checks expiry. */
