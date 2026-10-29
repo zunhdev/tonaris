@@ -28,7 +28,7 @@ export const exportFormatVersion = "1.0";
 
 /** What replaces a value a provider's policy keeps out of exports and from agents (TS-15, FR-08.8). */
 export const withheld = { withheld: "provider-policy" } as const;
-export type Withheld = typeof withheld;
+export type Withheld = { withheld: typeof withheld.withheld };
 
 const withheldSchema = z
   .object({ withheld: z.literal(withheld.withheld) })
