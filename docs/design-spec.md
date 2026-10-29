@@ -1585,6 +1585,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
   - "Everything you share becomes unavailable to everyone, including people with a link.";
   - "Your AI connections are disconnected.";
   - "It can't be undone: nothing goes to Trash, and the account can't be recovered.".
+- **How deletion reaches backups** (TS-114, TON-97) follows the list, in secondary text: "Deleted data is removed from the live service immediately and disappears from encrypted backups within 30 days. If we ever restore a backup, your deletion is re-applied before the service reopens."
 - **"Download your data first"** (TON-89) follows the list, in a bordered block: "A ZIP of your whole collection, to keep or use elsewhere. Tonaris can't restore it.", then DS-96's button and states.
 - **Confirming:** "Type {email} to confirm" enables **Delete account permanently** once the typed email matches, whatever its case. **Cancel** closes it.
 - **`/account-deleted`:** "Deleting your account…" with an indeterminate bar, then "Your account has been deleted" and "Everything in it is gone. Thanks for using Tonaris.". A failure reads "Couldn't finish deleting your account" and "Try again to finish it.", with **Retry**.

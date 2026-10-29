@@ -35,6 +35,10 @@ const consequences = [
   "It can't be undone: nothing goes to Trash, and the account can't be recovered.",
 ];
 
+/** How deletion reaches backups (TS-114, approved by the creator on 30 October 2026). */
+const backups =
+  "Deleted data is removed from the live service immediately and disappears from encrypted backups within 30 days. If we ever restore a backup, your deletion is re-applied before the service reopens.";
+
 export function DangerZone({ account }: { account: Account }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -108,6 +112,7 @@ function DeleteAccountDialog({ account, onClose }: { account: Account; onClose: 
             <li key={line}>{line}</li>
           ))}
         </ul>
+        <p className="text-small text-fg-secondary">{backups}</p>
         <section
           aria-labelledby={`${id}-export`}
           className="flex flex-col gap-2 rounded-lg border border-subtle bg-raised p-3"
