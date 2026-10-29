@@ -148,7 +148,13 @@ export const sharedSnapshotSchema = z
     containers: z.array(containerSchema).meta({
       description: "The root, with no parent, and its active folders and lists.",
     }),
-    albums: z.array(albumSchema),
+    albums: z.array(
+      albumSchema.extend({
+        artworkSignature: z.string().optional().meta({
+          description: "The API's signature of the artwork URL, for its image proxy (TS-103).",
+        }),
+      }),
+    ),
     memberships: z.array(membershipSchema),
     links: z.array(serviceLinkSchema),
     fields: z.array(customFieldSchema).meta({
@@ -506,3 +512,16 @@ export const invitationStateSchema = z.discriminatedUnion("state", [
   z.object({ state: z.literal("unavailable") }),
 ]);
 export type InvitationState = z.infer<typeof invitationStateSchema>;
+
+/**
+ * What a guest's stream sends when the owner's saved content or sharing changes (TS-23): read the share again. A
+ * read that fails means the link stopped working.
+ */
+export const sharedInvalidateSchema = z
+  .object({ rootId: z.uuid() })
+  .meta({ description: "The shared root to read again (`shared-invalidate`, TS-23)." });
+export type SharedInvalidate = z.infer<typeof sharedInvalidateSchema>;
+
+/** What a guest page says of any link that doesn't work, revealing nothing about the content (DS-72). */
+export const unavailableLink =
+  "This link isn't available. Ask the person who shared it for a new one.";

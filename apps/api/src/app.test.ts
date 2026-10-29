@@ -77,6 +77,8 @@ describe("OpenAPI", () => {
       "/v1/containers/{id}/sharing",
       "/v1/invitations",
       "/v1/invitations/{id}",
+      "/v1/s/{token}",
+      "/v1/s/{token}/stream",
       "/v1/mutations",
       "/v1/batches",
       "/v1/mutations/{id}",

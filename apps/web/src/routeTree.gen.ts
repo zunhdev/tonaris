@@ -19,6 +19,7 @@ import { Route as WorkspaceUnsortedRouteImport } from './routes/_workspace/unsor
 import { Route as ApprovalsIdRouteImport } from './routes/approvals.$id'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
+import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as SignInIndexRouteImport } from './routes/sign-in.index'
 import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
 import { Route as WorkspaceAAlbumIdRouteImport } from './routes/_workspace/a.$albumId'
@@ -78,6 +79,11 @@ const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
 const OauthConsentRoute = OauthConsentRouteImport.update({
   id: '/oauth/consent',
   path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const STokenRoute = STokenRouteImport.update({
+  id: '/s/$token',
+  path: '/s/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInIndexRoute = SignInIndexRouteImport.update({
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/sign-in/': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/': typeof WorkspaceIndexRoute
   '/sign-in': typeof SignInIndexRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/approvals/$id': typeof ApprovalsIdRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/_workspace/': typeof WorkspaceIndexRoute
   '/sign-in/': typeof SignInIndexRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
+    | '/s/$token'
     | '/sign-in/verify'
     | '/sign-in/'
     | '/a/$albumId'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
+    | '/s/$token'
     | '/sign-in/verify'
     | '/'
     | '/sign-in'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/approvals/$id'
     | '/oauth/authorize'
     | '/oauth/consent'
+    | '/s/$token'
     | '/sign-in/verify'
     | '/_workspace/'
     | '/sign-in/'
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   ApprovalsIdRoute: typeof ApprovalsIdRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthConsentRoute: typeof OauthConsentRoute
+  STokenRoute: typeof STokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -354,6 +367,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth/consent'
       fullPath: '/oauth/consent'
       preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$token': {
+      id: '/s/$token'
+      path: '/s/$token'
+      fullPath: '/s/$token'
+      preLoaderRoute: typeof STokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-in/': {
@@ -493,6 +513,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApprovalsIdRoute: ApprovalsIdRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthConsentRoute: OauthConsentRoute,
+  STokenRoute: STokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

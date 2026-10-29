@@ -103,6 +103,11 @@ export type ProblemDetailsOptions = {
  * (`code: "validation"`). Such routes declare `422: problemSchema` (from @tonaris/domain) in their `response` map, which replaces
  * that type with what this plugin actually sends and documents it in OpenAPI.
  */
+/** `path` with a shared link's token replaced, for logs (TS-32): `/v1/s/[token]/stream`. */
+export function withoutShareToken(path: string): string {
+  return path.replace(/^\/v1\/s\/[^/?#]+/u, "/v1/s/[token]");
+}
+
 export function problemDetails({
   logError = (error, path) => console.error(`Unhandled error on ${path}`, error),
 }: ProblemDetailsOptions = {}) {
@@ -124,8 +129,9 @@ export function problemDetails({
     if (error instanceof NotFound) {
       return problemFor(404, "not_found", path, { detail: "There is nothing at this path." });
     }
-    // A response that fails its own schema is a server bug, like anything unexpected.
-    logError(error, path);
+    // A response that fails its own schema is a server bug, like anything unexpected. A link's token is a
+    // credential, so it never reaches the log (TS-32).
+    logError(error, withoutShareToken(path));
     return problemFor(500, "internal_error", path);
   };
 

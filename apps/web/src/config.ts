@@ -21,6 +21,13 @@ function readApiUrl(): string {
 export const apiUrl: string = readApiUrl();
 
 /**
+ * Where the server's loaders reach the API (TS-03): `API_INTERNAL_URL`, over the host's private network, when set;
+ * otherwise `API_URL`. In the browser, `apiUrl`.
+ */
+export const serverApiUrl: string =
+  typeof document === "undefined" ? process.env.API_INTERNAL_URL || apiUrl : apiUrl;
+
+/**
  * The `<meta>` that switches on hooks for the browser tests (TS-121): the root route renders it only when the
  * server runs with `TEST_HOOKS=1`, as the e2e setup does, so the production build is the one under test.
  */

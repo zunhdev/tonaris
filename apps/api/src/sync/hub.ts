@@ -187,6 +187,11 @@ export function createSyncHub(options: SyncHubOptions) {
   } = options;
   const settings: StreamSettings = { pageSize: 500, bufferLimit: 1_000, ...rest };
   const streams = new Map<string, Set<Subscription>>();
+  /** Who watches an account's writes without streaming its changes: guests of its shares (TS-23). */
+  const watchers = new Map<string, Set<() => void>>();
+  const notify = (accountId: string) => {
+    for (const listener of watchers.get(accountId) ?? []) listener();
+  };
   const shutdown = new AbortController();
   let checks: ReturnType<typeof setInterval> | undefined;
 
@@ -228,6 +233,20 @@ export function createSyncHub(options: SyncHubOptions) {
     publish(accountId: string, changes: readonly Change[]): void {
       if (changes.length === 0) return;
       for (const stream of streams.get(accountId) ?? []) stream.offer(changes);
+      notify(accountId);
+    },
+
+    /** Tells the account's watchers it wrote something the change log doesn't carry, such as sharing (TON-70). */
+    notify,
+
+    /** Calls `listener` after each of the account's writes; answers how to stop. */
+    watch(accountId: string, listener: () => void): () => void {
+      const account = watchers.get(accountId) ?? new Set();
+      watchers.set(accountId, account.add(listener));
+      return () => {
+        account.delete(listener);
+        if (account.size === 0) watchers.delete(accountId);
+      };
     },
 
     /**

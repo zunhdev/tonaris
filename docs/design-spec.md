@@ -1075,6 +1075,27 @@ The block never says "private" while another access path remains.
 - **Unavailable or revoked link:** "This link isn't available. Ask the person who shared it for a new one." It reveals nothing about whether the content exists.
 - **Link previews:** title, owner display name, and album count, with no artwork until G1 clears artwork use (decided 17 October 2026).
 
+*As built in TON-70:*
+- **The frame:** "Tonaris" in `text.title` at the top, and a "Sign in" link at the foot.
+- **The header:** the container's name in `text.display`, "Shared by {name}" ("a Tonaris member" with no name), and the description.
+- **A folder:**
+  - breadcrumbs from the shared root, linking within the share;
+  - its folders and lists, folders first and then by name, since the owner's arrangement isn't shared (FR-07.17);
+  - each opens with `?c={id}`;
+  - an empty one says "This folder is empty."
+- **A list:** albums as rows (title, artist, year, Open) or a grid of cards. Rows are 56px with 44px artwork below 768px (DS-110). An empty list says "This list is empty."
+- **View options:** segmented controls for Sort (Year, Name), Direction, Grouping (Not grouped, By type) and Layout (Rows, Grid).
+  - They start from DS-44's defaults, so year ascending.
+  - They're kept in the tab's session per link, under the note.
+- **Open:** a popover of the album's services. Each opens in a new tab with `rel="noopener noreferrer"`. An album without links has none.
+- **Live:** changes simply appear; DS-82's highlight isn't applied yet.
+- **Unavailable:** the title "Not available" and DS-72's sentence.
+- **Previews:**
+  - the page title is "{name} · Tonaris";
+  - `og:title` is the name;
+  - `og:description` and `description` are "Shared by {name} · {n} albums", counting the whole share;
+  - plus `twitter:card` summary and `robots: noindex`; no image.
+
 ---
 
 ## 10. Search palette

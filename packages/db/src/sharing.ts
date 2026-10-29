@@ -43,11 +43,12 @@ import {
 export async function findShareLink(
   db: Database | Transaction,
   token: string,
-): Promise<{ id: string; containerId: string } | undefined> {
+): Promise<{ id: string; containerId: string; ownerId: string } | undefined> {
   const hash = Buffer.from(await shareTokenHash(token));
   const [link] = await db
-    .select({ id: shareLinks.id, containerId: shareLinks.containerId })
+    .select({ id: shareLinks.id, containerId: shareLinks.containerId, ownerId: containers.ownerId })
     .from(shareLinks)
+    .innerJoin(containers, eq(containers.id, shareLinks.containerId))
     .where(and(eq(shareLinks.tokenHash, hash), isNull(shareLinks.revokedAt)));
   return link;
 }

@@ -131,7 +131,7 @@ describe("sharing (DS-65)", () => {
     expect(first?.url).toMatch(new RegExp(`^${t.config.webOrigin}/s/[A-Za-z0-9_-]{43}$`));
     expect((await settings(doom)).body?.link).toEqual(first);
     const token = first?.url.split("/s/")[1] ?? "";
-    expect(await findShareLink(t.db, token)).toEqual({ id: linkId, containerId: doom });
+    expect(await findShareLink(t.db, token)).toMatchObject({ id: linkId, containerId: doom });
 
     await send({
       name: "share.setLink",
