@@ -51,7 +51,7 @@ export type Account = z.infer<typeof accountSchema>;
 export const emailRecoveryHours = 24;
 
 /** What the audit log records (TS-11): admin actions, recovery and deletions, each as one action name. */
-export const auditActions = ["email.change", "email.recover"] as const;
+export const auditActions = ["email.change", "email.recover", "account.delete"] as const;
 export type AuditAction = (typeof auditActions)[number];
 
 /**
@@ -152,3 +152,33 @@ export const emailRecoveryConfirmSchema = z.object({
 export const supportSchema = z
   .object({ email: z.string() })
   .meta({ description: "The support address (`SUPPORT_EMAIL`)." });
+
+/** An account deletion's progress (FR-11.11, TS-74): the data job is running, done, or gave up and can be retried. */
+export const accountDeletionStatuses = ["deleting", "deleted", "failed"] as const;
+export type AccountDeletionStatus = (typeof accountDeletionStatuses)[number];
+
+/** The job that removes a deleted account's data (TS-90, TS-74). */
+export const accountDeletionJobKind = "account-deletion";
+
+/** Why deleting the account is refused, or its progress can't be found (DS-97), one sentence each. */
+export const accountDeletionRefusalDetails = {
+  mismatch: "Type your sign-in email exactly to confirm.",
+  creator: "The creator's account can't be deleted: it runs admissions.",
+  none: "There's no account deletion for this page.",
+} as const;
+
+/** Confirms deleting the account: the sign-in email, typed. */
+export const accountDeletionConfirmSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1)
+    .max(320)
+    .meta({ description: "The account's sign-in email, typed to confirm." }),
+});
+
+/** The token that follows a deletion once its session is gone. */
+export const accountDeletionTokenSchema = z.object({ token: z.string().min(1).max(200) });
+
+/** A deletion's progress. */
+export const accountDeletionProgressSchema = z.object({ status: z.enum(accountDeletionStatuses) });

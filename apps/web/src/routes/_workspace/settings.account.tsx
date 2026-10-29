@@ -1,9 +1,11 @@
 // Settings → Account (DS-93, FR-11.4): the sign-in email, and changing it in three steps: the new address, the
 // code sent to the current address, then the code sent to the new one. The swap keeps the account and signs its
-// other sessions out (TS-73). Cancelling at any step changes nothing, and a change in progress resumes here.
+// other sessions out (TS-73). Cancelling at any step changes nothing, and a change in progress resumes here. The
+// Danger zone, at the bottom, deletes the account (DS-97).
 
 import { api, refusalOf } from "@/api";
 import { CodeField, useResendCountdown } from "@/features/account/code-field";
+import { DangerZone } from "@/features/account/delete-account";
 import { forgetAccount } from "@/features/account/session";
 import { SettingsNav } from "@/features/settings/settings-nav";
 import { PageHeader } from "@/features/shell/page-header";
@@ -73,6 +75,7 @@ function AccountPage() {
             />
           )}
         </section>
+        <DangerZone account={account} />
       </div>
     </>
   );

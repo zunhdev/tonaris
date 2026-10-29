@@ -5,7 +5,7 @@
 
 import { timingSafeEqual } from "node:crypto";
 
-import { and, asc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, ne, sql } from "drizzle-orm";
 
 import { emailRecoveryHours, signInCode } from "@tonaris/domain";
 
@@ -42,6 +42,8 @@ export async function listMembers(db: Database): Promise<MemberRow[]> {
     })
     .from(users)
     .leftJoin(emailRecoveries, eq(emailRecoveries.userId, users.id))
+    // An account being deleted holds a placeholder address until it goes (TS-74).
+    .where(isNull(users.deletingAt))
     .orderBy(asc(users.createdAt), asc(users.id));
   return rows.map(({ id, email, displayName, joinedAt, newEmailKey, requestedAt }) => ({
     id,

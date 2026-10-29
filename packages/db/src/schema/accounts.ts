@@ -1,10 +1,11 @@
-// Account changes (TS-73): a sign-in email change in progress, a creator's recovery waiting for the new address,
-// and the audit log (TS-11), which records admin actions, recovery and deletions.
+// Account changes (TS-73, TS-74): a sign-in email change in progress, a creator's recovery waiting for the new
+// address, an account deletion's progress, and the audit log (TS-11), which records admin actions, recovery and
+// deletions.
 
 import { sql } from "drizzle-orm";
 import { boolean, bytea, check, index, jsonb, smallint, text, uuid } from "drizzle-orm/pg-core";
 
-import { auditActions, emailChangeStages } from "@tonaris/domain";
+import { accountDeletionStatuses, auditActions, emailChangeStages } from "@tonaris/domain";
 
 import { users } from "./auth";
 import { instant, oneOf, table, timestamps } from "./columns";
@@ -60,6 +61,23 @@ export const emailRecoveries = table(
     ...timestamps,
   },
   (t) => [check("email_recoveries_attempts_check", sql`${t.attempts} >= 0`)],
+);
+
+/**
+ * An account deletion's progress (TS-74), followed by the token its browser holds, since its session ends when it
+ * starts. No foreign key: the account goes before its deletion is reported done. Finished ones are pruned.
+ */
+export const accountDeletions = table(
+  "account_deletions",
+  {
+    id: uuid().primaryKey(),
+    userId: uuid().notNull(),
+    tokenHash: bytea().notNull().unique(),
+    status: text({ enum: accountDeletionStatuses }).notNull(),
+    finishedAt: instant(),
+    ...timestamps,
+  },
+  (t) => [check("account_deletions_status_check", oneOf(t.status, accountDeletionStatuses))],
 );
 
 /**

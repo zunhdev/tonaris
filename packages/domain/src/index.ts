@@ -3,6 +3,12 @@
 // Node imports (enforced by oxlint).
 
 export {
+  accountDeletionConfirmSchema,
+  accountDeletionJobKind,
+  accountDeletionProgressSchema,
+  accountDeletionRefusalDetails,
+  accountDeletionStatuses,
+  accountDeletionTokenSchema,
   accountSchema,
   auditActions,
   emailChangeCodeSchema,
@@ -22,6 +28,7 @@ export {
   signInCode,
   userRoles,
   type Account,
+  type AccountDeletionStatus,
   type AuditAction,
   type EmailChange,
   type EmailChangeStage,

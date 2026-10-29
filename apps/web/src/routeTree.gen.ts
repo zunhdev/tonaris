@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspaceRouteImport } from './routes/_workspace'
+import { Route as AccountDeletedRouteImport } from './routes/account-deleted'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as WorkspaceIndexRouteImport } from './routes/_workspace/index'
 import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
@@ -42,6 +43,11 @@ import { Route as WorkspaceSharedContainerIdRouteImport } from './routes/_worksp
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: '/_workspace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountDeletedRoute = AccountDeletedRouteImport.update({
+  id: '/account-deleted',
+  path: '/account-deleted',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -200,6 +206,7 @@ const WorkspaceSharedContainerIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof WorkspaceIndexRoute
+  '/account-deleted': typeof AccountDeletedRoute
   '/sign-in': typeof SignInRouteWithChildren
   '/c': typeof WorkspaceCRoute
   '/trash': typeof WorkspaceTrashRoute
@@ -230,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/shared/': typeof WorkspaceSharedIndexRoute
 }
 export interface FileRoutesByTo {
+  '/account-deleted': typeof AccountDeletedRoute
   '/c': typeof WorkspaceCRoute
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
@@ -262,6 +270,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_workspace': typeof WorkspaceRouteWithChildren
+  '/account-deleted': typeof AccountDeletedRoute
   '/sign-in': typeof SignInRouteWithChildren
   '/_workspace/c': typeof WorkspaceCRoute
   '/_workspace/trash': typeof WorkspaceTrashRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account-deleted'
     | '/sign-in'
     | '/c'
     | '/trash'
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/shared/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/account-deleted'
     | '/c'
     | '/trash'
     | '/unsorted'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_workspace'
+    | '/account-deleted'
     | '/sign-in'
     | '/_workspace/c'
     | '/_workspace/trash'
@@ -390,6 +402,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
+  AccountDeletedRoute: typeof AccountDeletedRoute
   SignInRoute: typeof SignInRouteWithChildren
   ApprovalsIdRoute: typeof ApprovalsIdRoute
   HelpRecoveryRoute: typeof HelpRecoveryRoute
@@ -407,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof WorkspaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account-deleted': {
+      id: '/account-deleted'
+      path: '/account-deleted'
+      fullPath: '/account-deleted'
+      preLoaderRoute: typeof AccountDeletedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-in': {
@@ -678,6 +698,7 @@ const SignInRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   WorkspaceRoute: WorkspaceRouteWithChildren,
+  AccountDeletedRoute: AccountDeletedRoute,
   SignInRoute: SignInRouteWithChildren,
   ApprovalsIdRoute: ApprovalsIdRoute,
   HelpRecoveryRoute: HelpRecoveryRoute,

@@ -12,6 +12,7 @@ import {
   type UserRole,
 } from "@tonaris/domain";
 
+import { accountDeletionJob } from "./account-deletion";
 import { createApp } from "./app";
 import type { ImageFetch } from "./artwork";
 import { issueAdmissionInvitation } from "./auth/admission";
@@ -112,10 +113,12 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
   const config = apiConfig({ CLIENT_IP_HEADER: "x-forwarded-for", ...options.env });
   // Email is queued and sent by a worker as in production, quickly retried so failures show at once.
   const email = memoryEmail();
-  const worker = startJobWorker(db, [emailJob(db, email)], {
-    retryDelaysMs: [10, 10],
-    logError: () => {},
-  });
+  const hub = databaseHub(db, options.hub);
+  const worker = startJobWorker(
+    db,
+    [emailJob(db, email), accountDeletionJob(db, (accountId) => hub.notify(accountId))],
+    { retryDelaysMs: [10, 10], logError: () => {} },
+  );
   const outbox = emailOutbox(db, worker.wake);
   const auth = createAuth({
     config,
@@ -124,7 +127,6 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     logError: () => {},
     fetchClientMetadata: options.fetchClientMetadata,
   });
-  const hub = databaseHub(db, options.hub);
   const app = createApp({
     config,
     auth,
@@ -132,6 +134,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     email: outbox,
     hub,
     limiter: options.limiter ?? createSignInLimiter(),
+    wakeJobs: worker.wake,
     capture: options.capture,
     imageFetch: options.imageFetch,
     logError: () => {},

@@ -9,6 +9,7 @@ import type { Database } from "@tonaris/db";
 import type { EmailPort } from "@tonaris/domain";
 
 import { artworkRoutes, artworkSigner, type ArtworkSigner, type ImageFetch } from "./artwork";
+import { accountDeletionProgressRoutes } from "./auth/account-deletion";
 import { admissionRoutes } from "./auth/admission";
 import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
@@ -21,6 +22,7 @@ import { webCors } from "./cors";
 import { mcpRoutes } from "./mcp/routes";
 import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
+import { accountDeletionRoutes, type AccountDeletionDeps } from "./routes/v1/account-deletion";
 import { admissionAdminRoutes } from "./routes/v1/admissions";
 import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
@@ -52,6 +54,7 @@ function v1(
     artwork: ArtworkSigner;
     sharing: SharingDeps;
     emailChange: EmailChangeDeps;
+    accountDeletion: AccountDeletionDeps;
     supportEmail: string;
   },
 ) {
@@ -68,6 +71,7 @@ function v1(
     .use(supportRoutes(sync))
     .use(meRoutes(session))
     .use(emailChangeRoutes(session, sync.emailChange))
+    .use(accountDeletionRoutes(session, sync.accountDeletion))
     .use(connectionRoutes(session, { db: sync.db }))
     .use(approvalRoutes(session, { db: sync.db }))
     .use(fieldRoutes(session, { db: sync.db }))
@@ -110,6 +114,8 @@ export type AppOptions = ProblemDetailsOptions & {
   hub?: SyncHub;
   /** The sign-in limits; the default holds the TS-104 limits for this process. */
   limiter?: SignInLimiter;
+  /** Wakes the job worker after queueing a job, such as an account's deletion (TS-90); it polls otherwise. */
+  wakeJobs?: () => void;
   /** What captures ask (TS-41); without it, a capture fails as `provider_unavailable`. */
   capture?: CaptureDeps | undefined;
   /** How the image proxy fetches artwork: `safeFetch` unless a test stands in (TS-103). */
@@ -123,6 +129,7 @@ export function createApp({
   email,
   hub = databaseHub(db),
   limiter = createSignInLimiter(),
+  wakeJobs = () => {},
   capture,
   imageFetch,
   ...problemOptions
@@ -144,6 +151,7 @@ export function createApp({
       .get("/healthz", { detail: { hide: true } }, () => "ok")
       .use(admissionRoutes({ auth, db, config, email, limiter, logError }))
       .use(recoveryRoutes({ db, limiter, clientIpHeader: config.clientIpHeader }))
+      .use(accountDeletionProgressRoutes({ db, wakeJobs }))
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
       .use(mcpRoutes({ auth, db, config, logError }))
       // Artwork, outside the versioned contract: images the server signed (TS-103).
@@ -156,6 +164,7 @@ export function createApp({
           artwork,
           sharing: { shareSecret: config.authSecret, email, webOrigin: config.webOrigin, logError },
           emailChange: { db, email, limiter, clientIpHeader: config.clientIpHeader },
+          accountDeletion: { db, wakeJobs, notify: (accountId) => hub.notify(accountId) },
           supportEmail: config.supportEmail,
         }),
       )

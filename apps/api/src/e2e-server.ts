@@ -5,6 +5,7 @@
 
 import { createTestDatabase } from "@tonaris/db/testing";
 
+import { accountDeletionJob } from "./account-deletion";
 import { createApp } from "./app";
 import { createAuth } from "./auth/auth";
 import { seedCreator } from "./auth/seed-creator";
@@ -30,7 +31,11 @@ const config = apiConfig({
   API_ORIGIN: `http://localhost:${port}`,
   WEB_ORIGIN: process.env.WEB_ORIGIN ?? "http://localhost:3100",
 });
-const worker = startJobWorker(database.db, [emailJob(database.db, smtpEmail(config))]);
+const hub = databaseHub(database.db);
+const worker = startJobWorker(database.db, [
+  emailJob(database.db, smtpEmail(config)),
+  accountDeletionJob(database.db, (accountId) => hub.notify(accountId)),
+]);
 const email = emailOutbox(database.db, worker.wake);
 const auth = createAuth({ config, db: database.db, email });
 // Every test signs in from 127.0.0.1, so the per-address limit would count the whole suite as one person.
@@ -38,7 +43,6 @@ const limiter = createSignInLimiter({
   perEmail: signInLimits.perEmail,
   perIp: { ...signInLimits.perIp, max: 10_000 },
 });
-const hub = databaseHub(database.db);
 // Captures and artwork are answered from fixtures, not MusicBrainz or image hosts (TON-45, TON-48).
 const app = createApp({
   config,
@@ -47,6 +51,7 @@ const app = createApp({
   email,
   hub,
   limiter,
+  wakeJobs: worker.wake,
   capture: fixtureCapture(),
   imageFetch: fixtureImageFetch,
 }).listen(port);

@@ -70,6 +70,7 @@ describe("OpenAPI", () => {
       "/v1/account/email-change",
       "/v1/account/email-change/verify",
       "/v1/account/email-change/resend",
+      "/v1/account/deletion",
       "/v1/connections",
       "/v1/connections/{id}",
       "/v1/approvals/{id}",
