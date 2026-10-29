@@ -87,6 +87,7 @@ jobs:
           BETTER_AUTH_SECRET=$(openssl rand -hex 32)
           SMTP_URL=smtp://localhost:1025
           EMAIL_FROM=Tonaris <no-reply@tonaris.example>
+          SUPPORT_EMAIL=help@tonaris.example
           EOF
       - name: Pre-deploy steps (migrate, then seed the creator twice)
         run: |

@@ -12,6 +12,13 @@ export {
   emailChangeStartSchema,
   emailChangeStepSchema,
   emailKey,
+  emailRecoveryConfirmSchema,
+  emailRecoveryHours,
+  emailRecoveryRefusalDetails,
+  emailRecoveryStartSchema,
+  maxRecoveryReasonLength,
+  memberSchema,
+  supportSchema,
   signInCode,
   userRoles,
   type Account,
@@ -19,6 +26,7 @@ export {
   type EmailChange,
   type EmailChangeStage,
   type EmailChangeStep,
+  type Member,
   type UserRole,
 } from "./accounts";
 export {

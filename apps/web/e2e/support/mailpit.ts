@@ -77,3 +77,11 @@ export async function emailedCode(address: string, count: number): Promise<strin
   if (!code) throw new Error(`No code in the email to ${address}:\n${text}`);
   return code;
 }
+
+/** The confirmation link, with its code, in the newest email to `address` (TS-73). */
+export async function recoveryEmail(address: string): Promise<{ link: string }> {
+  const { text } = await latestEmail(address);
+  const link = /^(http\S+\/recover\/\S+#code=\d+)\r?$/m.exec(text)?.[1];
+  if (!link) throw new Error(`No recovery link in the email to ${address}:\n${text}`);
+  return { link };
+}

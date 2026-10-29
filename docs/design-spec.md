@@ -1510,7 +1510,12 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **Done:** "Done — use {new} to sign in." shows under the new address, and the account menu follows.
 - **Resuming:** a change in progress resumes at its step after a reload.
 
-*As built in TON-76* (Settings → Profile; the recovery link arrives with TON-78):
+*As built in TON-78* (the help page):
+- **The link:** "Lost access to your email?" sits under the sign-in email step and beside **Change sign-in email** on Settings → Account.
+- **`/help/recovery`** is public, in the sign-in card. It has the heading "Lost access to your email?", explains that the creator can move the account to a new address, and says to write to the `SUPPORT_EMAIL` address (a mailto link) from the address the person uses now. It closes with "Back to sign in".
+- **The recovery email's link** opens `/recover/:token`, "Confirm your new sign-in email". The code is filled from the link, under the hint "Confirming moves your Tonaris account to the address this email came to, and signs it out everywhere." After **Confirm** comes "Done — use {email} to sign in." with **Sign in**. Refusals show under the field, such as "This recovery link isn't valid. Ask the creator for a new one."
+
+*As built in TON-76* (Settings → Profile):
 - **Display name** is a field with the hint "People you share with see this name instead of your email. It's optional until you share."
 - **Saving:** a change is saved when the field loses focus, or on Enter, and "Saved." follows. The account menu shows the new name at once, or the email once the name is cleared.
 - **While sharing,** clearing it is refused with "People you share with see your display name. Stop sharing to clear it." under the field, and the field shows the saved name again.
@@ -1561,7 +1566,19 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
   Every recovery is audit-logged. The user list shows only email, display name, and join date, never collection data. *(FR-11.5, TS-73)*
 
-*As built in TON-74* (recovery and the member list arrive with TON-78):
+*As built in TON-78* (Admin → Members, a tab beside Admissions):
+- **The intro:** "Recover a sign-in email only once you're sure the account is theirs. The new address confirms it before anything changes, and the reason goes in the audit log."
+- **The table** has columns Email, Display name, Joined, and Recovery ("Waiting for verification · {new}" or "—").
+  - Each row has **Recover sign-in email**.
+  - A waiting row also has **Cancel recovery**.
+- **The dialog,** "Recover sign-in email", has:
+  - "New email address";
+  - "Reason", hinted "How you confirmed it's theirs. It goes in the audit log.";
+  - "Also disconnect AI connections", off;
+  - **Send verification**.
+- **Refusals** show in the dialog: the new address isn't an address, is already theirs, or belongs to another account, or the reason is blank.
+
+*As built in TON-74* (Admin → Admissions):
 - **Reaching it:** Admin in the account menu, for the creator only, opens `/admin/admissions`. For anyone else, the URL shows "Page not found".
 - **The switch,** in a bordered row, reads "Accepting new members". Its status text is "On: people you invite can join." or "Paused: no one can join until you turn this back on." While paused, the note "Existing members keep access; outstanding invitations stay as they are." sits under it.
 - **Invite** has a heading and the line "The invitation works once, only for this address, and expires in 14 days." The email input is labelled "Email address to invite", with an Invite button.

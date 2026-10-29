@@ -61,7 +61,8 @@ function listed(row: AdmissionInvitationRow, now = new Date()): AdmissionInvitat
   };
 }
 
-function requireCreator(principal: Principal): void {
+/** Admission administration is the creator's, in the app only (FR-11.6, X-03). */
+export function requireCreator(principal: Principal): void {
   if (!authorizeAdmissionAdmin(principal).allowed) {
     throw new ProblemError(403, "permission_denied", "Only the creator administers admissions.");
   }

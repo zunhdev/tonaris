@@ -3,6 +3,7 @@
 // the creator only; anyone else finds no page here.
 
 import { api, refusalOf } from "@/api";
+import { AdminNav } from "@/features/admin/admin-nav";
 import { PageHeader } from "@/features/shell/page-header";
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useId, useState } from "react";
@@ -61,6 +62,7 @@ function AdmissionsPage() {
   return (
     <>
       <PageHeader title="Admissions" />
+      <AdminNav />
       <div className="flex max-w-5xl flex-col gap-6 p-6">
         <Accepting paused={admissions.paused} onChanged={reload} />
         <InviteForm onInvited={reload} />

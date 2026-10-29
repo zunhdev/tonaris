@@ -29,20 +29,17 @@ import type { ApiConfig } from "../config";
 import { ProblemError } from "../problem";
 import type { Auth } from "./auth";
 import { clientIp, rateLimited } from "./plugin";
+import { newToken, sha256 } from "./secrets";
 import type { SignInLimiter } from "./sign-in-limits";
 import { inAuthTransaction } from "./transaction";
 
 const day = 24 * 60 * 60_000;
 
 /** What the database keeps of an invitation's token: its SHA-256. */
-export function admissionTokenHash(token: string): Buffer {
-  return new Bun.CryptoHasher("sha256").update(token).digest();
-}
+export const admissionTokenHash = sha256;
 
 /** A new invitation token: 32 random bytes, for the link only. */
-export function newAdmissionToken(): string {
-  return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
-}
+export const newAdmissionToken = newToken;
 
 /** An invitation issued, with its link's token, or refused for an address with an account or an invitation. */
 export type AdmissionIssued =

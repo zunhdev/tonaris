@@ -48,6 +48,7 @@ Set these as environment secrets; `.env.example` lists every setting. In product
 | api | `BETTER_AUTH_SECRET` | At least 32 random bytes, e.g. `openssl rand -hex 32`. It also derives share links' tokens (TS-32): changing it signs everyone out **and breaks every share link**, which owners then turn off and on again for new ones. |
 | api | `RESEND_API_KEY` | Resend's API key, with sending access only (see [Email](#email)). Without it, the API sends through `SMTP_URL`. |
 | api | `EMAIL_FROM` | The sender, on the domain verified in Resend: `Tonaris <no-reply@mail.tonaris.app>` |
+| api | `SUPPORT_EMAIL` | Where people write for help, shown on `/help/recovery`: a mailbox you read (TS-73) |
 | api | `CLIENT_IP_HEADER` | The header the host's proxy puts the client address in, e.g. `X-Forwarded-For`. Without it, the per-IP sign-in limit sees only the proxy's address (TS-104). |
 | api | `CREATOR_EMAIL` | The creator's address, read by the creator bootstrap |
 | web | `API_URL` | `https://api.tonaris.<tld>`, read at start-up and given to browsers |

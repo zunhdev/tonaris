@@ -1,8 +1,8 @@
-// Account changes (TS-73): a sign-in email change in progress, and the audit log (TS-11), which records admin
-// actions, recovery and deletions.
+// Account changes (TS-73): a sign-in email change in progress, a creator's recovery waiting for the new address,
+// and the audit log (TS-11), which records admin actions, recovery and deletions.
 
 import { sql } from "drizzle-orm";
-import { bytea, check, index, jsonb, smallint, text, uuid } from "drizzle-orm/pg-core";
+import { boolean, bytea, check, index, jsonb, smallint, text, uuid } from "drizzle-orm/pg-core";
 
 import { auditActions, emailChangeStages } from "@tonaris/domain";
 
@@ -33,6 +33,33 @@ export const emailChanges = table(
     check("email_changes_stage_check", oneOf(t.stage, emailChangeStages)),
     check("email_changes_attempts_check", sql`${t.attempts} >= 0`),
   ],
+);
+
+/**
+ * A creator's recovery of an account's sign-in email (FR-11.5), until the new address confirms it. One per account:
+ * a new request replaces it, and cancelling or confirming deletes it. A deleted account takes it along, so a
+ * deleted account is never recovered. Only hashes of the link's token and the code are kept.
+ */
+export const emailRecoveries = table(
+  "email_recoveries",
+  {
+    userId: uuid()
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    newEmailKey: text().notNull(),
+    tokenHash: bytea().notNull().unique(),
+    codeHash: bytea().notNull(),
+    attempts: smallint().notNull().default(0),
+    expiresAt: instant().notNull(),
+    // Why the creator recovers it, for the audit log.
+    reason: text().notNull(),
+    // Whether confirming also disconnects the account's AI connections (TS-73).
+    disconnectConnections: boolean().notNull(),
+    // The creator who asked; no foreign key, as in the audit log.
+    requestedBy: uuid().notNull(),
+    ...timestamps,
+  },
+  (t) => [check("email_recoveries_attempts_check", sql`${t.attempts} >= 0`)],
 );
 
 /**

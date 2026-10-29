@@ -181,7 +181,8 @@ test("the inspector takes an album out of its only list with Undo, and L adds it
   await page.keyboard.press("l");
   const picker = page.getByRole("dialog", { name: "Add 'Nightfall' to a list" });
   await expect(picker).toBeVisible();
-  expect(await violations(page, '[role="dialog"]')).toEqual([]);
+  // The Undo toast is a dialog too, and may still be fading out: check the picker alone.
+  expect(await violations(page, '[data-slot="dialog-content"]')).toEqual([]);
   await picker.getByRole("button", { name: "Epic" }).click();
   await expect(picker).toHaveCount(0);
   await expect(lists(page).getByRole("link", { name: "Epic" })).toBeVisible();

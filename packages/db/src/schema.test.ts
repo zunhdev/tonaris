@@ -105,6 +105,7 @@ describe("migrations", () => {
       "change_log",
       "containers",
       "email_changes",
+      "email_recoveries",
       "field_definitions",
       "field_options",
       "jobs",

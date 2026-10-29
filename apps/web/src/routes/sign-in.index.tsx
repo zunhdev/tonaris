@@ -1,13 +1,14 @@
 // `/sign-in` (DS-90): an email field and **Continue**. Every address gets the same next step, so the page reveals
-// nothing about who has an account; the email itself says when there is none. When the API's authorization
-// server sends someone here to connect an AI client (TS-61), signing in continues that request.
+// nothing about who has an account; the email itself says when there is none. "Lost access to your email?" leads
+// to `/help/recovery` (DS-93). When the API's authorization server sends someone here to connect an AI client
+// (TS-61), signing in continues that request.
 
 import { authFailureMessage, requestSignInCode } from "@/features/account/auth-client";
 import { rememberSignIn } from "@/features/account/pending-sign-in";
 import { safeRedirect } from "@/features/account/redirect";
 import { signInTitleId } from "@/features/account/sign-in-card";
 import { authorizeContinuation } from "@/features/connections/oauth";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 
 import { emailKey } from "@tonaris/domain";
@@ -79,6 +80,12 @@ function EmailStep() {
           Continue
         </Button>
       </form>
+      <Link
+        to="/help/recovery"
+        className="self-start text-accent-solid underline-offset-4 hover:underline"
+      >
+        Lost access to your email?
+      </Link>
     </>
   );
 }

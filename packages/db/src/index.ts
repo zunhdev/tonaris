@@ -8,6 +8,14 @@ export {
   type UserRow,
 } from "./accounts";
 export {
+  cancelEmailRecovery,
+  confirmEmailRecovery,
+  issueEmailRecovery,
+  listMembers,
+  type EmailRecoveryConfirmation,
+  type MemberRow,
+} from "./email-recoveries";
+export {
   cancelEmailChange,
   findEmailChange,
   renewEmailChangeCode,

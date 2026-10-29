@@ -7,7 +7,7 @@ import { CodeField, useResendCountdown } from "@/features/account/code-field";
 import { forgetAccount } from "@/features/account/session";
 import { SettingsNav } from "@/features/settings/settings-nav";
 import { PageHeader } from "@/features/shell/page-header";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useId, useRef, useState } from "react";
 
 import { type EmailChangeStage, signInCode } from "@tonaris/domain";
@@ -55,9 +55,15 @@ function AccountPage() {
             <output className="block text-fg-secondary">Done — use {step.email} to sign in.</output>
           )}
           {step.kind === "idle" || step.kind === "done" ? (
-            <Button className="self-start" onClick={() => setStep({ kind: "address" })}>
-              Change sign-in email
-            </Button>
+            <div className="flex flex-wrap items-center gap-4">
+              <Button onClick={() => setStep({ kind: "address" })}>Change sign-in email</Button>
+              <Link
+                to="/help/recovery"
+                className="text-accent-solid underline-offset-4 hover:underline"
+              >
+                Lost access to your email?
+              </Link>
+            </div>
           ) : (
             <ChangeEmail
               currentEmail={account.email}

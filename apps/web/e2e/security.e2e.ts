@@ -60,8 +60,12 @@ test.describe("security headers", () => {
     expect(new Set(nonces).size).toBe(nonces.length);
   });
 
-  test("guest share and invitation pages send no referrer", async ({ request }) => {
-    for (const path of ["/s/some-share-token", "/join/some-invitation-token"]) {
+  test("guest share, invitation and recovery pages send no referrer", async ({ request }) => {
+    for (const path of [
+      "/s/some-share-token",
+      "/join/some-invitation-token",
+      "/recover/some-token",
+    ]) {
       // oxlint-disable-next-line no-await-in-loop
       const response = await request.get(path);
       expect({ path, policy: response.headers()["referrer-policy"] }).toEqual({

@@ -16,14 +16,17 @@ import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
 import { Route as WorkspaceTrashRouteImport } from './routes/_workspace/trash'
 import { Route as WorkspaceUnsortedRouteImport } from './routes/_workspace/unsorted'
 import { Route as ApprovalsIdRouteImport } from './routes/approvals.$id'
+import { Route as HelpRecoveryRouteImport } from './routes/help.recovery'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
+import { Route as RecoverTokenRouteImport } from './routes/recover.$token'
 import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as SignInIndexRouteImport } from './routes/sign-in.index'
 import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
 import { Route as WorkspaceAAlbumIdRouteImport } from './routes/_workspace/a.$albumId'
 import { Route as WorkspaceAdminAdmissionsRouteImport } from './routes/_workspace/admin.admissions'
+import { Route as WorkspaceAdminMembersRouteImport } from './routes/_workspace/admin.members'
 import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$folderId'
 import { Route as WorkspaceInvitationsIndexRouteImport } from './routes/_workspace/invitations.index'
 import { Route as WorkspaceInvitationsIdRouteImport } from './routes/_workspace/invitations.$id'
@@ -71,6 +74,11 @@ const ApprovalsIdRoute = ApprovalsIdRouteImport.update({
   path: '/approvals/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpRecoveryRoute = HelpRecoveryRouteImport.update({
+  id: '/help/recovery',
+  path: '/help/recovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JoinTokenRoute = JoinTokenRouteImport.update({
   id: '/join/$token',
   path: '/join/$token',
@@ -84,6 +92,11 @@ const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
 const OauthConsentRoute = OauthConsentRouteImport.update({
   id: '/oauth/consent',
   path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecoverTokenRoute = RecoverTokenRouteImport.update({
+  id: '/recover/$token',
+  path: '/recover/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const STokenRoute = STokenRouteImport.update({
@@ -112,6 +125,11 @@ const WorkspaceAdminAdmissionsRoute =
     path: '/admin/admissions',
     getParentRoute: () => WorkspaceRoute,
   } as any)
+const WorkspaceAdminMembersRoute = WorkspaceAdminMembersRouteImport.update({
+  id: '/admin/members',
+  path: '/admin/members',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const WorkspaceFFolderIdRoute = WorkspaceFFolderIdRouteImport.update({
   id: '/f/$folderId',
   path: '/f/$folderId',
@@ -187,14 +205,17 @@ export interface FileRoutesByFullPath {
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/help/recovery': typeof HelpRecoveryRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/sign-in/': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
+  '/admin/members': typeof WorkspaceAdminMembersRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
@@ -213,15 +234,18 @@ export interface FileRoutesByTo {
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/help/recovery': typeof HelpRecoveryRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/': typeof WorkspaceIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
+  '/admin/members': typeof WorkspaceAdminMembersRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
@@ -243,15 +267,18 @@ export interface FileRoutesById {
   '/_workspace/trash': typeof WorkspaceTrashRoute
   '/_workspace/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/help/recovery': typeof HelpRecoveryRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/_workspace/': typeof WorkspaceIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/_workspace/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/_workspace/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
+  '/_workspace/admin/members': typeof WorkspaceAdminMembersRoute
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
@@ -274,14 +301,17 @@ export interface FileRouteTypes {
     | '/trash'
     | '/unsorted'
     | '/approvals/$id'
+    | '/help/recovery'
     | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
+    | '/recover/$token'
     | '/s/$token'
     | '/sign-in/verify'
     | '/sign-in/'
     | '/a/$albumId'
     | '/admin/admissions'
+    | '/admin/members'
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
@@ -300,15 +330,18 @@ export interface FileRouteTypes {
     | '/trash'
     | '/unsorted'
     | '/approvals/$id'
+    | '/help/recovery'
     | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
+    | '/recover/$token'
     | '/s/$token'
     | '/sign-in/verify'
     | '/'
     | '/sign-in'
     | '/a/$albumId'
     | '/admin/admissions'
+    | '/admin/members'
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
@@ -329,15 +362,18 @@ export interface FileRouteTypes {
     | '/_workspace/trash'
     | '/_workspace/unsorted'
     | '/approvals/$id'
+    | '/help/recovery'
     | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
+    | '/recover/$token'
     | '/s/$token'
     | '/sign-in/verify'
     | '/_workspace/'
     | '/sign-in/'
     | '/_workspace/a/$albumId'
     | '/_workspace/admin/admissions'
+    | '/_workspace/admin/members'
     | '/_workspace/f/$folderId'
     | '/_workspace/invitations/$id'
     | '/_workspace/l/$listId'
@@ -356,9 +392,11 @@ export interface RootRouteChildren {
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
   SignInRoute: typeof SignInRouteWithChildren
   ApprovalsIdRoute: typeof ApprovalsIdRoute
+  HelpRecoveryRoute: typeof HelpRecoveryRoute
   JoinTokenRoute: typeof JoinTokenRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthConsentRoute: typeof OauthConsentRoute
+  RecoverTokenRoute: typeof RecoverTokenRoute
   STokenRoute: typeof STokenRoute
 }
 
@@ -413,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApprovalsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help/recovery': {
+      id: '/help/recovery'
+      path: '/help/recovery'
+      fullPath: '/help/recovery'
+      preLoaderRoute: typeof HelpRecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/join/$token': {
       id: '/join/$token'
       path: '/join/$token'
@@ -432,6 +477,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth/consent'
       fullPath: '/oauth/consent'
       preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recover/$token': {
+      id: '/recover/$token'
+      path: '/recover/$token'
+      fullPath: '/recover/$token'
+      preLoaderRoute: typeof RecoverTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/s/$token': {
@@ -467,6 +519,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/admissions'
       fullPath: '/admin/admissions'
       preLoaderRoute: typeof WorkspaceAdminAdmissionsRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/admin/members': {
+      id: '/_workspace/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof WorkspaceAdminMembersRouteImport
       parentRoute: typeof WorkspaceRoute
     }
     '/_workspace/f/$folderId': {
@@ -563,6 +622,7 @@ interface WorkspaceRouteChildren {
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   WorkspaceAAlbumIdRoute: typeof WorkspaceAAlbumIdRoute
   WorkspaceAdminAdmissionsRoute: typeof WorkspaceAdminAdmissionsRoute
+  WorkspaceAdminMembersRoute: typeof WorkspaceAdminMembersRoute
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceInvitationsIdRoute: typeof WorkspaceInvitationsIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
@@ -584,6 +644,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceIndexRoute: WorkspaceIndexRoute,
   WorkspaceAAlbumIdRoute: WorkspaceAAlbumIdRoute,
   WorkspaceAdminAdmissionsRoute: WorkspaceAdminAdmissionsRoute,
+  WorkspaceAdminMembersRoute: WorkspaceAdminMembersRoute,
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceInvitationsIdRoute: WorkspaceInvitationsIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,
@@ -619,9 +680,11 @@ const rootRouteChildren: RootRouteChildren = {
   WorkspaceRoute: WorkspaceRouteWithChildren,
   SignInRoute: SignInRouteWithChildren,
   ApprovalsIdRoute: ApprovalsIdRoute,
+  HelpRecoveryRoute: HelpRecoveryRoute,
   JoinTokenRoute: JoinTokenRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthConsentRoute: OauthConsentRoute,
+  RecoverTokenRoute: RecoverTokenRoute,
   STokenRoute: STokenRoute,
 }
 export const routeTree = rootRouteImport

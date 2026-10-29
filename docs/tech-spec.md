@@ -276,7 +276,8 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `service_state` | singleton: `admissions_paused` | Its one row is inserted by its migration, with admissions open | FR-11.2 |
 | `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error` | | TS-90 |
 | `provider_cache` | `key` (PK, namespaced: `musicbrainz:url:{url}`), `value jsonb`, `expires_at` (indexed) | MusicBrainz and Cover Art Archive answers for 7 days; pruned daily. No user data (TS-41, TON-41). | TS-41 |
-| `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions. `action` is checked against `auditActions` (`email.change` since TON-77). `actor` and `subject` carry no foreign key, so a record outlives a deleted account | FR-11.4–FR-11.6 |
+| `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions. `action` is checked against `auditActions`: `email.change` (TON-77) and `email.recover` (TON-78). `actor` and `subject` carry no foreign key, so a record outlives a deleted account | FR-11.4–FR-11.6 |
+| `email_recoveries` | `user_id` (PK, cascades), `new_email_key`, `token_hash bytea` (unique), `code_hash bytea`, `attempts`, `expires_at`, `reason`, `disconnect_connections`, `requested_by` | One creator's recovery per account, waiting 24 hours for the new address to confirm it; a deleted account takes it along (TON-78) | FR-11.5 |
 | `email_changes` | `user_id` (PK, cascades), `new_email_key`, `stage` (`current`\|`new`), `code_hash bytea`, `attempts`, `expires_at` | One sign-in email change per account; starting again replaces it, and the swap deletes it (TON-77) | FR-11.4 |
 | Better Auth tables | `user`, `session`, `account`, `verification`; later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
 
@@ -1294,6 +1295,15 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   - MCP grants are kept unless the creator ticks **Also revoke AI connections**.
   - The old address stops signing in. Deleted accounts can't be recovered (FR-11.11).
 
+  *As built in TON-78:*
+  - **The support address:** `SUPPORT_EMAIL` is required in production. `GET /v1/support` answers it, publicly, for `/help/recovery`.
+  - **The member list:** Admin → Members (`GET /v1/admin/members`) lists each account's email, display name and join date. It reads only `user`, and the recovery waiting for each account.
+  - **Starting a recovery:** `POST /v1/admin/members/:id/recovery {newEmail, reason, disconnectConnections}` stores `email_recoveries` (token and code as SHA-256, 24 hours, 5 attempts) and emails `recovery-verification` with `/recover/:token#code=…`. `DELETE` cancels it.
+    - It refuses a non-address, the member's own address, another account's address, and a blank reason.
+    - A new request replaces the waiting one, so its link stops working.
+  - **Confirming:** `POST /auth/recovery/confirm {token, code}` is public, behind the code-submission limit. Under the recovery's row lock it runs the shared swap (`swapSignInEmail`, which TON-77's change uses too), keeping no session. It disconnects AI connections when asked, and writes `email.recover` with the creator as actor and `{from, to, reason, disconnectedConnections}`.
+  - **The person** then signs in with the new address; confirming doesn't sign them in.
+
 **TS-74 Account deletion (Decided; FR-11.10, FR-11.11).**
 
 - **Within the confirming transaction:**
@@ -1488,7 +1498,7 @@ There is no resizing in v1.
 
 **TS-105 Secrets.**
 
-- Secrets live in the host's secret store, not in the repo. `.env.example` lists them, together with the other settings and their local defaults. The API refuses to start in production without `BETTER_AUTH_SECRET`, `API_ORIGIN`, `WEB_ORIGIN`, `EMAIL_FROM`, and `RESEND_API_KEY` or `SMTP_URL` (TS-72).
+- Secrets live in the host's secret store, not in the repo. `.env.example` lists them, together with the other settings and their local defaults. The API refuses to start in production without `BETTER_AUTH_SECRET`, `API_ORIGIN`, `WEB_ORIGIN`, `EMAIL_FROM`, `SUPPORT_EMAIL` (TS-73, since TON-78), and `RESEND_API_KEY` or `SMTP_URL` (TS-72).
 - Key material:
   - `BETTER_AUTH_SECRET`
   - the image-proxy HMAC key
