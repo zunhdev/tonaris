@@ -59,6 +59,29 @@ describe("authFailure", () => {
     });
   });
 
+  test("reads an invitation's refusal and says its sentence (DS-91)", () => {
+    const withdrawn = {
+      type: "about:blank",
+      status: 403,
+      code: "permission_denied",
+      detail: "This invitation has been withdrawn.",
+    };
+    const refused = authFailure(403, withdrawn, null);
+    expect(refused).toEqual({ reason: "refused", detail: "This invitation has been withdrawn." });
+    expect(authFailureMessage(refused)).toBe("This invitation has been withdrawn.");
+    expect(
+      authFailure(410, { code: "expired", detail: "This invitation has expired." }, null),
+    ).toEqual({
+      reason: "refused",
+      detail: "This invitation has expired.",
+    });
+    // A code's error stays the code's, and a server failure isn't a refusal.
+    expect(authFailure(403, { code: "TOO_MANY_ATTEMPTS", detail: "x" }, null)).toEqual({
+      reason: "too_many_attempts",
+    });
+    expect(authFailure(500, { detail: "Broke" }, null)).toEqual({ reason: "unknown" });
+  });
+
   test("says when to try again, in minutes", () => {
     expect(authFailureMessage({ reason: "rate_limited", retryAfterSeconds: 600 })).toBe(
       "Too many sign-in attempts. Try again in 10 minutes.",

@@ -16,6 +16,7 @@ import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
 import { Route as WorkspaceTrashRouteImport } from './routes/_workspace/trash'
 import { Route as WorkspaceUnsortedRouteImport } from './routes/_workspace/unsorted'
 import { Route as ApprovalsIdRouteImport } from './routes/approvals.$id'
+import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
 import { Route as STokenRouteImport } from './routes/s.$token'
@@ -66,6 +67,11 @@ const WorkspaceUnsortedRoute = WorkspaceUnsortedRouteImport.update({
 const ApprovalsIdRoute = ApprovalsIdRouteImport.update({
   id: '/approvals/$id',
   path: '/approvals/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/s/$token': typeof STokenRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/s/$token': typeof STokenRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/_workspace/trash': typeof WorkspaceTrashRoute
   '/_workspace/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/s/$token': typeof STokenRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/trash'
     | '/unsorted'
     | '/approvals/$id'
+    | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/s/$token'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/trash'
     | '/unsorted'
     | '/approvals/$id'
+    | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/s/$token'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/_workspace/trash'
     | '/_workspace/unsorted'
     | '/approvals/$id'
+    | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
     | '/s/$token'
@@ -318,6 +330,7 @@ export interface RootRouteChildren {
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
   SignInRoute: typeof SignInRouteWithChildren
   ApprovalsIdRoute: typeof ApprovalsIdRoute
+  JoinTokenRoute: typeof JoinTokenRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthConsentRoute: typeof OauthConsentRoute
   STokenRoute: typeof STokenRoute
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       path: '/approvals/$id'
       fullPath: '/approvals/$id'
       preLoaderRoute: typeof ApprovalsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oauth/authorize': {
@@ -555,6 +575,7 @@ const rootRouteChildren: RootRouteChildren = {
   WorkspaceRoute: WorkspaceRouteWithChildren,
   SignInRoute: SignInRouteWithChildren,
   ApprovalsIdRoute: ApprovalsIdRoute,
+  JoinTokenRoute: JoinTokenRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthConsentRoute: OauthConsentRoute,
   STokenRoute: STokenRoute,

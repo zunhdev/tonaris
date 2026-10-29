@@ -202,37 +202,47 @@ describe("joining with an invitation (FR-11.2, DS-91)", () => {
     expect((await invitation(id)).status).toBe("available");
   });
 
+  test("the landing's lookup answers the invited address, and sends nothing", async () => {
+    const { token } = await invite("New.Member@Example.com");
+    const response = await t.call("/auth/admission/invitation", { json: { token } });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ email: "new.member@example.com" });
+    expect(t.email.sent.filter((email) => email.to === "new.member@example.com")).toEqual([]);
+    expect(await storedCodes("new.member@example.com")).toEqual([]);
+  });
+
   test("an unknown link, a revoked, expired or used invitation, and a pause each get their sentence", async () => {
-    const unknown = await requestCode("not-a-token");
-    expect(unknown.status).toBe(404);
-    expect(await problem(unknown)).toMatchObject({ detail: admissionRefusalDetails.invalid });
+    /** The landing's lookup and the code request both refuse `token` with `status` and `detail`. */
+    async function refusedWith(token: string, status: number, detail: string) {
+      for (const path of ["/auth/admission/invitation", "/auth/admission/code"]) {
+        // oxlint-disable-next-line no-await-in-loop
+        const response = await t.call(path, { json: { token } });
+        // oxlint-disable-next-line no-await-in-loop
+        const { detail: given } = await problem(response);
+        expect({ path, status: response.status, detail: given }).toEqual({ path, status, detail });
+      }
+    }
+
+    await refusedWith("not-a-token", 404, admissionRefusalDetails.invalid);
 
     const revoked = await invite("revoked@example.com");
     await revokeAdmissionInvitation(t.db, revoked.id);
-    const revokedResponse = await requestCode(revoked.token);
-    expect(revokedResponse.status).toBe(403);
-    expect((await problem(revokedResponse)).detail).toBe(admissionRefusalDetails.revoked);
+    await refusedWith(revoked.token, 403, admissionRefusalDetails.revoked);
 
     const expired = await inviteForTest(t.db, {
       email: "late@example.com",
       createdBy: creatorId,
       now: new Date(Date.now() - 15 * 24 * 60 * 60_000),
     });
-    const expiredResponse = await requestCode(expired.token);
-    expect(expiredResponse.status).toBe(410);
-    expect((await problem(expiredResponse)).detail).toBe(admissionRefusalDetails.expired);
+    await refusedWith(expired.token, 410, admissionRefusalDetails.expired);
 
     const used = await invite("used@example.com");
     await join(used.token, await emailedCode(used.token, "used@example.com"));
-    const usedResponse = await requestCode(used.token);
-    expect(usedResponse.status).toBe(403);
-    expect((await problem(usedResponse)).detail).toBe(admissionRefusalDetails.redeemed);
+    await refusedWith(used.token, 403, admissionRefusalDetails.redeemed);
 
     const later = await invite("later@example.com");
     await setAdmissionsPaused(t.db, true);
-    const pausedResponse = await requestCode(later.token);
-    expect(pausedResponse.status).toBe(403);
-    expect((await problem(pausedResponse)).detail).toBe(admissionRefusalDetails.paused);
+    await refusedWith(later.token, 403, admissionRefusalDetails.paused);
   });
 
   test("a pause refuses joining with a code sent before it, while existing members still sign in", async () => {
