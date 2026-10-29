@@ -17,6 +17,13 @@
   * {
     @apply border-border outline-focus;
   }
+  /*
+   * DS-115's ring wherever a component draws none of its own, such as a plain link: 2px, solid, 2px off. Components
+   * that draw their own keep it, since utilities win over this layer.
+   */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-solid;
+  }
   html {
     @apply font-sans;
   }

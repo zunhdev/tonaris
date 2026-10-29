@@ -188,7 +188,7 @@ function ResizeHandle({ width, onResize }: { width: number; onResize: (width: nu
       onPointerUp={() => {
         drag.current = undefined;
       }}
-      className="absolute top-0 -right-1 bottom-0 w-2 cursor-col-resize outline-none hover:bg-accent-soft focus-visible:bg-accent-soft"
+      className="absolute top-0 -right-1 bottom-0 w-2 cursor-col-resize outline-none hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
     />
   );
 }

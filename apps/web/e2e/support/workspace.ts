@@ -118,11 +118,10 @@ export const announcements = (page: Page) => page.locator('[data-slot="announcer
 
 /** Axe's findings in `selector`, once its opening animation is over: mid-fade, its text is still faint. */
 export async function violations(page: Page, selector: string) {
-  await page
-    .locator(selector)
-    .evaluate((element) =>
-      Promise.all(element.getAnimations({ subtree: true }).map((each) => each.finished)),
-    );
+  await page.locator(selector).evaluate((element) =>
+    // A cancelled animation is as done as a finished one.
+    Promise.allSettled(element.getAnimations({ subtree: true }).map((each) => each.finished)),
+  );
   return (await new AxeBuilder({ page }).include(selector).analyze()).violations;
 }
 
