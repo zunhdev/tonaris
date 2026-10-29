@@ -136,6 +136,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 *(Q-02)*
 
 **DS-18 Layers (z-index).** base 0 · sticky headers 10 · sidebar resize handle 20 · dropdowns, popovers, and context menus 40 · inspector overlay (narrow screens) and sheets 50 · dialogs 60 · command palette 70 · toasts 80 · tooltips 90.
+- *As built in TON-67:* a dropdown opened from inside a dialog takes the dialog's layer (`DropdownMenuContent inDialog`). Its portal comes after the dialog's, so it stacks above.
 
 **DS-19 Iconography.**
 - **Lucide** at 16px with a 1.5 stroke; 14px inside dense rows and chips. It is consistent, tree-shakable, and matches the shadcn defaults.
@@ -1016,6 +1017,7 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
   - **Turning off** shows the confirmation inline, with **Turn off** and **Cancel**.
   - **The link is the same each time the dialog opens** (TS-32).
 - **Offline:** "You're offline. Sharing waits until you're back.", and the controls are disabled.
+- *TON-67 adds the row menu:* a "More for {name or address}" button opens a menu with **Remove access**, which revokes the invitation, pending or accepted, and reads the dialog again.
 - *TON-66 adds delivery:* a pending row reads "Pending · sending…", "· sent", "· email failed" or "· email not confirmed", with **Resend** for the last two. While anything is sending, the dialog reads again every 1.5 s until it settles.
 
 **DS-66 Invitations inbox.** `/invitations` lists pending invitations: the owner's display name, collection name and type, and date, each with **Accept** and **Decline**.

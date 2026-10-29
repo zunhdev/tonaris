@@ -655,6 +655,11 @@ export function memoryStore({
       if (grant) grant.emailStatus = status;
       return Promise.resolve();
     },
+    dropGrantReference(viewerId, containerId) {
+      const key = `${viewerId}:${containerId}`;
+      if (referenceRows.get(key)?.linkId === null) referenceRows.delete(key);
+      return Promise.resolve();
+    },
     saveReference(viewerId, containerId) {
       const key = `${viewerId}:${containerId}`;
       if (!referenceRows.has(key)) referenceRows.set(key, { viewerId, containerId, linkId: null });

@@ -1,6 +1,6 @@
 // Sharing invitations in a real browser (DS-31, DS-65, DS-66; FR-07.5, FR-07.6; AC-22): the email in Mailpit linking
 // to its page, its delivery in the owner's dialog, the recipient's sidebar count, accepting from the email, declining
-// from the inbox, and the page for an answered invitation and for someone else.
+// from the inbox, the page for an answered invitation and for someone else, and the owner removing access.
 
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
@@ -125,4 +125,18 @@ test("an invitation is emailed, accepted from its link, and another declined fro
     "This invitation is for a different account — sign out and sign in with that email.",
   );
   await expect(ben.getByRole("main")).not.toContainText("Crust");
+
+  // The owner removes Anna's access to Doom (FR-07.15): her row goes, and her invitation is no longer available.
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  await page.getByRole("button", { name: "Share" }).click();
+  const people = page
+    .getByRole("dialog", { name: `Share "Doom" · list` })
+    .getByRole("list", { name: "People with access" });
+  await expect(people).toContainText("Accepted");
+  await people.getByRole("button", { name: `More for ${accounts.invitedAnna}` }).click();
+  await page.getByRole("menuitem", { name: "Remove access" }).click();
+  await expect(people).toHaveCount(0);
+  await anna.goto(`/invitations/${doomGrant}`);
+  await expect(anna.getByRole("main")).toContainText("This invitation is no longer available.");
 });

@@ -705,6 +705,10 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - **Accept:** set the grant to `accepted`, upsert `saved_references`, and emit a change to the grantee's stream.
 - **Leave:** set the grant to `withdrawn`, and delete the reference if it has no `link_id`.
 - **Recovery:** active statuses resume after Trash recovery. `withdrawn` and `revoked` never resume (FR-07.10).
+- *As built in TON-67:*
+  - **`share.leave {containerId}`** moves the viewer's accepted grant to `withdrawn` and drops their reference if it has no link. Without an accepted grant, it's `not_found`.
+  - **`share.revoke {grantId}`** moves the owner's pending or accepted grant to `revoked`, even in Trash. The viewer's reference stays, to show as no longer available (DS-67).
+  - Both are app-only. Neither status is ever a source again, so Trash recovery revives neither.
 - *As built in TON-66:*
   - **Delivery:** `share.invite` saves a new grant with `email_status = 'sending'` and reports `emailing: true`; `share.resendInvitation` sets `sending` again on a pending one. After a confirmed, non-replayed outcome, the API emails the recipient's current address (`apps/api/src/invitations.ts`). The result is recorded only while the grant is still pending and sending: `sent`, `failed`, or `unknown` when the send outlasts 30 s. The owner's dialog reads a `sending` older than 5 minutes as `unknown`.
   - **Answering:** `share.accept` and `share.decline` act only on the principal's own pending grant whose container is active. The move from pending is conditional, so a concurrent revoke wins. Anything else is `not_found` "This invitation is no longer available.", including someone else's.

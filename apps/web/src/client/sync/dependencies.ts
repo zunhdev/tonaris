@@ -71,13 +71,18 @@ function referenced(mutation: Mutation): (string | null)[] {
     return viewKey === "root" || viewKey === "unsorted" ? [] : [viewKey];
   }
   if (mutation.name === "defaults.set" || mutation.name === "account.setDisplayName") return [];
-  if (mutation.name === "share.invite" || mutation.name === "share.setLink") {
+  if (
+    mutation.name === "share.invite" ||
+    mutation.name === "share.setLink" ||
+    mutation.name === "share.leave"
+  ) {
     return [mutation.args.containerId];
   }
   if (
     mutation.name === "share.resendInvitation" ||
     mutation.name === "share.accept" ||
-    mutation.name === "share.decline"
+    mutation.name === "share.decline" ||
+    mutation.name === "share.revoke"
   ) {
     return [mutation.args.grantId];
   }

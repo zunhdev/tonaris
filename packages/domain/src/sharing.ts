@@ -195,8 +195,11 @@ export const shareInviteResultSchema = z.object({
     .meta({ description: "Whether an email goes out now: for a new invitation." }),
 });
 
-/** `share.resendInvitation`'s, `share.accept`'s and `share.decline`'s argument: the invitation. */
+/** `share.resendInvitation`'s, `share.accept`'s, `share.decline`'s and `share.revoke`'s argument: the invitation. */
 export const grantArgsSchema = z.object({ grantId: z.uuid() });
+
+/** `share.leave`'s argument: the shared folder or list, which is what a viewer knows of a share. */
+export const leaveArgsSchema = z.object({ containerId: z.uuid() });
 
 /** What `share.setLink` reports: the live link's ID, or null once it is off. */
 export const shareSetLinkResultSchema = z.object({ linkId: z.uuid().nullable() });
@@ -434,6 +437,49 @@ export const shareSettingsSchema = z
   })
   .meta({ description: "A folder's or list's sharing, for its owner (DS-65)." });
 export type ShareSettings = z.infer<typeof shareSettingsSchema>;
+
+/**
+ * `share.leave` (FR-07.7, TS-33): the viewer withdraws the invitation they accepted to this folder or list, with the
+ * access inside it through that grant. Their reference goes if it came from the grant alone; one saved through a link
+ * stays, as do other grants. Withdrawn never resumes, through Trash recovery or anything else. App-only (X-03).
+ */
+export async function leaveShare(
+  { containerId }: z.infer<typeof leaveArgsSchema>,
+  { principal, store }: CommandContext,
+): Promise<CommandResult> {
+  const userId = actingUserId(principal);
+  if (userId === undefined) return failure("permission_denied", "Sign in to leave a share.");
+  const decision = authorizeWrite(principal, { ownerId: userId, scope: "sharing" });
+  if (!decision.allowed) return failure(decision.code, "Shares are left in the app.");
+  const grant = await store.findOpenGrant(containerId, userId);
+  const notShared = "You don't have an invitation to this to leave.";
+  if (grant?.status !== "accepted") return failure("not_found", notShared);
+  if (!(await store.moveGrant(grant.id, "accepted", "withdrawn"))) {
+    return failure("not_found", notShared);
+  }
+  await store.dropGrantReference(userId, containerId);
+  return { status: "applied", changes: [] };
+}
+
+/**
+ * `share.revoke` (FR-07.15): the owner revokes a pending or accepted invitation, blocking that path only. The viewer's
+ * reference stays, to show as no longer available until they remove it (DS-67). Works in Trash too, as turning a link
+ * off does: a revocation made meanwhile stays in effect (FR-07.10). App-only (X-03).
+ */
+export async function revokeGrant(
+  { grantId }: z.infer<typeof grantArgsSchema>,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const grant = await context.store.findGrant(grantId);
+  if (!grant) return failure("not_found", unavailable);
+  const container = await shareable(grant.containerId, context, { evenInTrash: true });
+  if ("status" in container) return container;
+  const revoked =
+    (grant.status === "pending" || grant.status === "accepted") &&
+    (await context.store.moveGrant(grantId, grant.status, "revoked"));
+  if (!revoked) return failure("not_found", unavailable);
+  return { status: "applied", changes: [] };
+}
 
 /** A pending invitation as its recipient sees it (DS-66): who shares what, and since when. */
 export const invitationSchema = z

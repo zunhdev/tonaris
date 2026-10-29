@@ -229,3 +229,70 @@ describe("answering invitations (FR-07.5, FR-07.6)", () => {
     );
   });
 });
+
+const leave = (containerId: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.leave",
+  args: { containerId },
+});
+const revoke = (grantId: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.revoke",
+  args: { grantId },
+});
+
+describe("leaving and revoking (FR-07.7, FR-07.15)", () => {
+  test("the recipient leaves an accepted invitation, and its link-less reference goes", async () => {
+    const { run, grants, references } = setup();
+    const grantId = uuidv7();
+    await run(invite("anna@example.com", grantId));
+    // Only an accepted invitation can be left.
+    expect(codeOf(await run(leave(doom.id), anna))).toBe("not_found");
+    await run(answer("share.accept", grantId), anna);
+    expect(references.size).toBe(1);
+    const agentOfAnna: Principal = {
+      kind: "mcp",
+      userId: annaId,
+      grantId: uuidv7(),
+      mode: "manage",
+    };
+    expect(codeOf(await run(leave(doom.id), agentOfAnna))).toBe("app_only");
+    expect(codeOf(await run(leave(doom.id), anna))).toBe("applied");
+    expect(grants.get(grantId)?.status).toBe("withdrawn");
+    expect(references.size).toBe(0);
+    expect(codeOf(await run(leave(doom.id), anna))).toBe("not_found");
+    // A new invitation starts as pending.
+    expect(await run(invite("anna@example.com"))).toMatchObject({
+      result: { status: "pending", emailing: true },
+    });
+  });
+
+  test("a reference saved through a link stays when the invitation is left", async () => {
+    const { run, references } = setup();
+    const grantId = uuidv7();
+    await run(invite("anna@example.com", grantId));
+    await run(answer("share.accept", grantId), anna);
+    const reference = references.get(`${annaId}:${doom.id}`);
+    if (reference) reference.linkId = uuidv7();
+    await run(leave(doom.id), anna);
+    expect(references.size).toBe(1);
+  });
+
+  test("the owner revokes pending and accepted invitations; the reference stays to show as gone", async () => {
+    const { run, grants, references } = setup();
+    const pending = uuidv7();
+    await run(invite("anna@example.com", pending));
+    expect(codeOf(await run(revoke(pending), anna))).toBe("permission_denied");
+    expect(codeOf(await run(revoke(pending), agent))).toBe("app_only");
+    expect(codeOf(await run(revoke(pending)))).toBe("applied");
+    expect(grants.get(pending)?.status).toBe("revoked");
+    expect(codeOf(await run(revoke(pending)))).toBe("not_found");
+
+    const accepted = uuidv7();
+    await run(invite("anna@example.com", accepted));
+    await run(answer("share.accept", accepted), anna);
+    expect(codeOf(await run(revoke(accepted)))).toBe("applied");
+    expect(grants.get(accepted)?.status).toBe("revoked");
+    expect(references.size).toBe(1);
+  });
+});

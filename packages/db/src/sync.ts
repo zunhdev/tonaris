@@ -1071,6 +1071,17 @@ function collectionStore(tx: Transaction): CollectionStore {
     async setGrantEmailStatus(id, status) {
       await tx.update(shareGrants).set({ emailStatus: status }).where(eq(shareGrants.id, id));
     },
+    async dropGrantReference(viewerId, containerId) {
+      await tx
+        .delete(savedReferences)
+        .where(
+          and(
+            eq(savedReferences.viewerId, viewerId),
+            eq(savedReferences.containerId, containerId),
+            isNull(savedReferences.linkId),
+          ),
+        );
+    },
     async saveReference(viewerId, containerId) {
       await tx.insert(savedReferences).values({ viewerId, containerId }).onConflictDoNothing();
     },

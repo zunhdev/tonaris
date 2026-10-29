@@ -148,7 +148,7 @@ The server ends a stream in four cases:
   - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
   - `fieldValue.apply`, `fieldValue.set`, `fieldValue.remove`;
   - `view.set`, `defaults.set`;
-  - `share.invite`, `share.setLink`, `share.resendInvitation`, `share.accept`, `share.decline`, `account.setDisplayName`;
+  - `share.invite`, `share.setLink`, `share.resendInvitation`, `share.accept`, `share.decline`, `share.leave`, `share.revoke`, `account.setDisplayName`;
   - `order.set`.
 
   The OpenAPI document has each one's `args` and `base`.
@@ -188,6 +188,11 @@ The server ends a stream in four cases:
   - **`account.setDisplayName`** `{displayName}` sets the name, trimmed; blank or null clears it.
   - **Email** (TON-66): a new invitation reports `emailing: true`, and its email goes to the recipient's current address after the response. The owner sees how it went in `GET /v1/containers/{id}/sharing` as `emailStatus`: `sending`, `sent`, `failed`, or `unknown`. **`share.resendInvitation`** `{grantId}` sends it again. A replay never sends twice.
   - **Answering** (TON-66): the recipient's **`share.accept`** and **`share.decline`** `{grantId}`. Accepting saves the collection to their references. Anyone else's invitation, or one no longer pending, is `not_found`.
+  - **Ending access** (TON-67):
+    - **`share.leave`** `{containerId}`: the viewer leaves the share they accepted by invitation, and their reference goes unless it was saved through a link;
+    - **`share.revoke`** `{grantId}`: the owner revokes a pending or accepted invitation.
+
+    Neither comes back through Trash recovery, and other paths stay.
   - **The recipient's reads:** `GET /v1/invitations` lists pending invitations; `GET /v1/invitations/{id}` answers `{state}`: `pending` or `accepted` (with `invitation`), `wrong_account`, or `unavailable`.
   - **Display name:** inviting or turning a link on needs one (`display_name_required`). So does keeping one while any invitation is pending or accepted, or any link is on.
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
