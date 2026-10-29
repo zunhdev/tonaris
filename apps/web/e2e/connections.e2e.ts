@@ -17,6 +17,7 @@ import {
   registerClient,
 } from "./support/mcp";
 import { requestCode } from "./support/sign-in";
+import { live } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -80,7 +81,8 @@ test("connecting without changing the mode grants Read-only", async ({ page, pla
   await page
     .getByLabel("Code", { exact: true })
     .fill((await signInEmail(accounts.mcpDefault)).code);
-  await expect(page).not.toHaveURL(/\/sign-in/);
+  // Signed in and the workspace loaded: a load still under way would interrupt the next one (WebKit, TON-94).
+  await live(page);
 
   await page.goto(authorizeUrl(clientId, challenge, bothModes));
   await page.getByRole("button", { name: "Connect" }).click();
@@ -104,7 +106,8 @@ test("cancelling consent sends the client access_denied", async ({ page, playwri
   await page.goto("/sign-in");
   await requestCode(page, accounts.mcpCancel, "");
   await page.getByLabel("Code", { exact: true }).fill((await signInEmail(accounts.mcpCancel)).code);
-  await expect(page).not.toHaveURL(/\/sign-in/);
+  // Signed in and the workspace loaded: a load still under way would interrupt the next one (WebKit, TON-94).
+  await live(page);
 
   await page.goto(authorizeUrl(clientId, challenge, "collection:read offline_access"));
   // The client asked for reading only, so Manage collection isn't offered.

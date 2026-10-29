@@ -21,7 +21,23 @@ export default defineConfig({
     {
       name: "chromium",
       testMatch: "**/*.e2e.ts",
+      testIgnore: "**/mobile.e2e.ts",
       use: { ...devices["Desktop Chrome"], storageState: creatorState },
+      dependencies: ["setup"],
+    },
+    // The rest of TS-122's matrix in Playwright's engines (TON-94): `bun run test:e2e:matrix`. Edge is Chromium.
+    {
+      name: "firefox",
+      testMatch: "**/*.e2e.ts",
+      testIgnore: "**/mobile.e2e.ts",
+      use: { ...devices["Desktop Firefox"], storageState: creatorState },
+      dependencies: ["setup"],
+    },
+    {
+      name: "webkit",
+      testMatch: "**/*.e2e.ts",
+      testIgnore: "**/mobile.e2e.ts",
+      use: { ...devices["Desktop Safari"], storageState: creatorState },
       dependencies: ["setup"],
     },
   ],
@@ -34,6 +50,8 @@ export default defineConfig({
         PORT: "3101",
         WEB_ORIGIN: `http://localhost:${port}`,
         E2E_ACCOUNTS: Object.values(accounts).join(","),
+        // Set by `test:e2e:webkit` for WebKit, which keeps no Secure cookie on http://localhost (TON-94).
+        E2E_INSECURE_COOKIES: process.env.E2E_INSECURE_COOKIES ?? "",
       },
       // SIGTERM lets the server drop its schema.
       gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },

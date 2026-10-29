@@ -37,7 +37,13 @@ const worker = startJobWorker(database.db, [
   accountDeletionJob(database.db, (accountId) => hub.notify(accountId)),
 ]);
 const email = emailOutbox(database.db, worker.wake);
-const auth = createAuth({ config, db: database.db, email });
+// Playwright's WebKit keeps no `Secure` cookie on http://localhost, so its run asks for plain ones (TON-94).
+const auth = createAuth({
+  config,
+  db: database.db,
+  email,
+  secureCookies: process.env.E2E_INSECURE_COOKIES !== "1",
+});
 // Every test signs in from 127.0.0.1, so the per-address limit would count the whole suite as one person.
 const limiter = createSignInLimiter({
   perEmail: signInLimits.perEmail,

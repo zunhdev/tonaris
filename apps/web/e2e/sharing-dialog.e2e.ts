@@ -29,8 +29,11 @@ const dialog = (page: Page, name: string) => page.getByRole("dialog", { name });
 test("share a folder by invitation and link, then see it from a list inside", async ({
   page,
   context,
+  browserName,
 }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  // Only Chromium takes clipboard permissions; the other engines still show Copied (TON-94).
+  const clipboard = browserName === "chromium";
+  if (clipboard) await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await signIn(page, accounts.sharingDialog);
   await live(page);
   const metal = container("folder", "Metal");
@@ -79,7 +82,7 @@ test("share a folder by invitation and link, then see it from a list inside", as
   const url = await link.inputValue();
   await share.getByRole("button", { name: "Copy" }).click();
   await expect(share.getByRole("button", { name: "Copied" })).toBeVisible();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(url);
+  if (clipboard) expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(url);
   expect(await violations(page, '[data-slot="dialog-content"]')).toEqual([]);
   await page.keyboard.press("Escape");
   await expect(share).toHaveCount(0);

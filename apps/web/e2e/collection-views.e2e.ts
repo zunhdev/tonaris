@@ -219,7 +219,9 @@ test("5,000 albums stay virtualized in both layouts", async ({ page }) => {
   expect(await rows(page, "Unsorted").count()).toBeLessThan(60);
   await rows(page, "Unsorted").first().getByRole("gridcell").first().click();
   await page.keyboard.press("ControlOrMeta+End");
-  await expect(page.locator(":focus")).toHaveText("");
+  // The jump scrolls past 5,000 rows, which a busy machine can take beyond the default 5 s to draw; this test is
+  // about virtualization, and TS-120's measurements time the views (TON-102).
+  await expect(page.locator(":focus")).toHaveText("", { timeout: 15_000 });
   await expect(rows(page, "Unsorted").filter({ hasText: "Album 5000" })).toBeVisible();
   await page.keyboard.press("Home");
   await expect(page.locator(":focus")).toHaveText("AAlbum 5000");
@@ -237,7 +239,7 @@ test("5,000 albums stay virtualized in both layouts", async ({ page }) => {
   expect(await cards.getByRole("gridcell").count()).toBeLessThan(120);
   await cards.getByRole("gridcell").first().click();
   await page.keyboard.press("ControlOrMeta+End");
-  await expect(page.locator(":focus")).toHaveAccessibleName(/^Album 5000/);
+  await expect(page.locator(":focus")).toHaveAccessibleName(/^Album 5000/, { timeout: 15_000 });
   if (process.env.MEASURE_SCROLL) {
     await page.mouse.move(800, 450);
     report("Grid", await scrollFrames(page));

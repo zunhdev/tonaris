@@ -76,6 +76,11 @@ export type AuthOptions = {
   /** Receives failures of work done after the response, such as sending email (default: `console.error`). */
   logError?: (error: unknown, context: string) => void;
   /**
+   * `Secure` cookies with the `__Secure-` prefix (default). Only the browser tests' WebKit run turns it off:
+   * Playwright's WebKit keeps no `Secure` cookie on `http://localhost` (TON-94). Every served API keeps it on.
+   */
+  secureCookies?: boolean;
+  /**
    * Fetches a client's metadata document (CIMD). The default resolves the host once, refuses private
    * addresses, pins the connection and never follows redirects; tests serve documents from memory.
    */
@@ -93,6 +98,7 @@ export function createAuth({
   email,
   logError = (error, context) => console.error(`Failed: ${context}`, error),
   fetchClientMetadata = fetchClientMetadataResource,
+  secureCookies = true,
 }: AuthOptions) {
   return betterAuth({
     appName: "Tonaris",
@@ -138,7 +144,7 @@ export function createAuth({
     advanced: {
       cookiePrefix: "tonaris",
       // `__Secure-` and `Secure` locally too, so cookie behavior matches production (TS-06).
-      useSecureCookies: true,
+      useSecureCookies: secureCookies,
       crossSubDomainCookies: config.cookieDomain
         ? { enabled: true, domain: config.cookieDomain }
         : undefined,
