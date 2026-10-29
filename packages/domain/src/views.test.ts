@@ -356,6 +356,7 @@ describe("the protocol", () => {
       fieldValues: [],
       positions: [],
       trashUnits: [],
+      references: [],
     };
     expect(bootstrapSchema.safeParse(snapshot).success).toBe(false);
     const views: ViewPrefs[] = [

@@ -8,11 +8,12 @@
 import { api } from "@/api";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
+import { failureOf, sendNow } from "@/features/sharing/send";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Check, Copy, Ellipsis, Folder } from "lucide-react";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 
-import { uuidv7, type Mutation, type MutationResult, type ShareSettings } from "@tonaris/domain";
+import { uuidv7, type ShareSettings } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -30,32 +31,8 @@ import {
 import { Input } from "@tonaris/ui/components/input";
 import { Switch } from "@tonaris/ui/components/switch";
 
-type Unsent = Mutation extends infer M
-  ? M extends Mutation
-    ? Omit<M, "mutationId">
-    : never
-  : never;
-
-/** Sends a mutation now, and once more with the same ID if no answer came (TS-22). */
-async function send(mutation: Unsent): Promise<MutationResult["outcome"]> {
-  const body = { mutationId: uuidv7(), ...mutation };
-  const post = async () => {
-    const { data } = await api.v1.mutations.post(body);
-    if (!data) throw new Error("No answer from Tonaris.");
-    return data.outcome;
-  };
-  try {
-    return await post();
-  } catch {
-    return post();
-  }
-}
-
-/** What went wrong, in the outcome's words, or a general sentence. */
-const reasonOf = (outcome: MutationResult["outcome"]) =>
-  outcome.status === "failed"
-    ? (outcome.problem.detail ?? "That didn't work. Try again.")
-    : undefined;
+const send = sendNow;
+const reasonOf = failureOf;
 
 export function ShareDialog() {
   const { sharing, endShare } = useCollectionUi();

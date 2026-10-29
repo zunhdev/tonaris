@@ -27,6 +27,7 @@ import { guestRoutes } from "./routes/v1/guests";
 import { invitationRoutes } from "./routes/v1/invitations";
 import { meRoutes } from "./routes/v1/me";
 import { searchRoutes } from "./routes/v1/search";
+import { sharedRoutes } from "./routes/v1/shared";
 import { sharingRoutes } from "./routes/v1/sharing";
 import { csrfGuard, securityHeaders } from "./security";
 import { databaseHub, type SyncHub } from "./sync/hub";
@@ -70,6 +71,7 @@ function v1(
       }),
     )
     .use(invitationRoutes(session, { db: sync.db }))
+    .use(sharedRoutes(session, { db: sync.db }))
     .use(guestRoutes(sync))
     .use(syncRoutes(session, sync));
 }

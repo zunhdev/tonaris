@@ -334,8 +334,11 @@ export async function acceptInvitation(
   ) {
     return failure("not_found", unavailable);
   }
-  await context.store.saveReference(grant.userId, grant.containerId);
-  return { status: "applied", changes: [] };
+  const saved = await context.store.saveReference(grant.userId, grant.containerId);
+  return {
+    status: "applied",
+    changes: saved === "inserted" ? [referenceChange(grant.containerId, "insert")] : [],
+  };
 }
 
 /** `share.decline` (FR-07.6): the recipient declines, granting nothing and taking no other access away. */
@@ -463,8 +466,8 @@ export async function leaveShare(
   if (!(await store.moveGrant(grant.id, "accepted", "withdrawn"))) {
     return failure("not_found", notShared);
   }
-  await store.dropGrantReference(userId, containerId);
-  return { status: "applied", changes: [] };
+  const dropped = await store.dropGrantReference(userId, containerId);
+  return { status: "applied", changes: dropped ? [referenceChange(containerId, "delete")] : [] };
 }
 
 /**
@@ -525,3 +528,98 @@ export type SharedInvalidate = z.infer<typeof sharedInvalidateSchema>;
 /** What a guest page says of any link that doesn't work, revealing nothing about the content (DS-72). */
 export const unavailableLink =
   "This link isn't available. Ask the person who shared it for a new one.";
+
+/** A folder or list the person keeps in Shared with me (FR-07.13), as their change log and bootstrap carry it. */
+export const referenceSchema = z
+  .object({ containerId: z.uuid() })
+  .meta({ description: "A shared folder or list in the person's Shared with me (FR-07.13)." });
+export type Reference = z.infer<typeof referenceSchema>;
+
+/** `share.saveLink`'s argument: the link's token, sent in the body, which is never stored (TS-32). */
+export const saveLinkArgsSchema = z.object({
+  token: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{43}$/)
+    .meta({ description: "The link's token." }),
+});
+
+/** `share.removeReference`'s argument: the folder or list to drop from Shared with me. */
+export const removeReferenceArgsSchema = z.object({ containerId: z.uuid() });
+
+const referenceChange = (containerId: string, op: "insert" | "update" | "delete") =>
+  ({
+    entity: "reference",
+    id: containerId,
+    op,
+    data: op === "delete" ? null : { containerId },
+  }) as const;
+
+/**
+ * `share.saveLink` (FR-07.13, DS-68): a signed-in person keeps the folder or list a link shares in Shared with me,
+ * on purpose. It reuses a reference they have, pointing it at this link, so a re-added link never duplicates
+ * (FR-07.16). Nothing is copied. A link that doesn't work says so, as its page does. App-only (X-03).
+ */
+export async function saveLink(
+  { token }: z.infer<typeof saveLinkArgsSchema>,
+  { principal, store }: CommandContext,
+): Promise<CommandResult> {
+  const userId = actingUserId(principal);
+  if (userId === undefined) return failure("permission_denied", "Sign in to keep a shared link.");
+  const decision = authorizeWrite(principal, { ownerId: userId, scope: "sharing" });
+  if (!decision.allowed) return failure(decision.code, "Shared links are kept in the app.");
+  const link = await store.findLinkByHash(await shareTokenHash(token));
+  if (!link) return failure("not_found", unavailableLink);
+  if (link.ownerId === userId) {
+    return failure("validation_failed", "This is your own folder or list.");
+  }
+  const saved = await store.saveReference(userId, link.containerId, link.id);
+  if (saved === "unchanged") return { status: "applied", changes: [] };
+  return {
+    status: "applied",
+    changes: [referenceChange(link.containerId, saved === "inserted" ? "insert" : "update")],
+  };
+}
+
+/**
+ * `share.removeReference` (FR-07.13): drops a folder or list from Shared with me, accessible or not. It revokes no
+ * grant: an accepted invitation is left with `share.leave`. App-only (X-03).
+ */
+export async function removeReference(
+  { containerId }: z.infer<typeof removeReferenceArgsSchema>,
+  { principal, store }: CommandContext,
+): Promise<CommandResult> {
+  const userId = actingUserId(principal);
+  if (userId === undefined)
+    return failure("permission_denied", "Sign in to change Shared with me.");
+  const decision = authorizeWrite(principal, { ownerId: userId, scope: "sharing" });
+  if (!decision.allowed) return failure(decision.code, "Shared with me is changed in the app.");
+  if (!(await store.removeReference(userId, containerId))) {
+    return failure("not_found", "This isn't in your Shared with me.");
+  }
+  return { status: "applied", changes: [referenceChange(containerId, "delete")] };
+}
+
+/** A Shared with me entry as the person sees it (DS-67): its owner, how it was shared, and whether it still works. */
+export const sharedEntrySchema = z
+  .object({
+    containerId: z.uuid(),
+    owner: z.object({ id: z.uuid(), displayName: z.string().nullable() }),
+    name: z
+      .string()
+      .nullable()
+      .meta({ description: "The folder's or list's name while available; null once it isn't." }),
+    kind: z.enum(["folder", "list"]).nullable(),
+    via: z.object({
+      invitation: z.boolean().meta({ description: "An accepted invitation gives access." }),
+      link: z.boolean().meta({ description: "It was saved through a link that still works." }),
+    }),
+    available: z.boolean().meta({ description: "Whether it can be opened now (FR-07.13)." }),
+  })
+  .meta({ description: "A folder or list in Shared with me (FR-07.13)." });
+export type SharedEntry = z.infer<typeof sharedEntrySchema>;
+
+/** `GET /v1/shared`: Shared with me, by owner display name, then name. */
+export const sharedWithMeSchema = z.object({ entries: z.array(sharedEntrySchema) });
+
+/** `GET /v1/s/{token}/reference`: whether a signed-in visitor keeps this link's collection, or owns it (DS-68). */
+export const linkReferenceStateSchema = z.object({ saved: z.boolean(), own: z.boolean() });

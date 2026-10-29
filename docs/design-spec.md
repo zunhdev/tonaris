@@ -1045,7 +1045,19 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 
 *(FR-07.7, FR-07.13)*
 
+*As built in TON-68:*
+- **`/shared`:** a section per owner, headed by their display name.
+  - **Each reference:** a people glyph for an invitation, a link glyph for a link, its name in quotes, and "Folder · by invitation" or "List · from a link".
+  - **Unavailable:** the name is withheld ("A shared folder or list"), the row is dimmed, and it reads "No longer available" with **Remove**.
+- **Leave share…** opens an inline confirmation: "Leave "{name}"? {owner} would have to invite you again.", with **Leave** and **Cancel**.
+- **Remove from Shared with me** shows for link-only references.
+- **When it's empty:** "Nothing is shared with you yet. Invitations you accept and links you add show here."
+- **Later:** the sidebar's per-owner entries, and opening a reference, come with TON-69.
+
 **DS-68 Signed-in visit to a shared link.** A banner reads "Shared by {name} · **Add to Shared with me**". It changes to "In Shared with me" after adding. Adding never happens implicitly. *(FR-07.13)*
+- *As built in TON-68:*
+  - The banner is a strip above the guest page's header, asked for in the browser after the server rendered the page. Guests and the owner don't see it.
+  - "In Shared with me" links to `/shared`.
 
 **DS-69 SharingImpact.** A compact block, used in move pickers, move confirmations, recovery dialogs, and the standard confirmation dialog. Each line names people by display name or email as the owner entered it, and link audiences by their source. *(FR-07.9, FR-07.10, FR-07.14)*
 

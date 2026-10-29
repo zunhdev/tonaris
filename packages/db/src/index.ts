@@ -57,8 +57,10 @@ export {
   canReadContainer,
   findShareLink,
   readableContainers,
+  linkReferenceState,
   shareSettings,
   sharedSnapshot,
+  sharedWithMe,
   type ShareSettingsRow,
 } from "./sharing";
 export { findLinkedAlbum } from "./service-links";

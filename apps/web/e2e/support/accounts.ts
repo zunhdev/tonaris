@@ -125,6 +125,9 @@ export const accounts = {
   invitedBen: at("invited-ben"),
   // Guest pages (guest.e2e.ts).
   guestOwner: at("guest-owner"),
+  // Shared with me (shared-with-me.e2e.ts): an owner and a viewer.
+  sharingOwner: at("sharing-owner"),
+  sharingViewer: at("sharing-viewer"),
 } as const;
 
 /** An address with no account. */

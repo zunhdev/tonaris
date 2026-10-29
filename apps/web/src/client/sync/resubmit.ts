@@ -321,6 +321,8 @@ function remake(
     mutation.name === "share.decline" ||
     mutation.name === "share.leave" ||
     mutation.name === "share.revoke" ||
+    mutation.name === "share.saveLink" ||
+    mutation.name === "share.removeReference" ||
     mutation.name === "account.setDisplayName"
   ) {
     return "unchanged";

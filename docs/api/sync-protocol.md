@@ -193,6 +193,11 @@ The server ends a stream in four cases:
     - **`share.revoke`** `{grantId}`: the owner revokes a pending or accepted invitation.
 
     Neither comes back through Trash recovery, and other paths stay.
+  - **Shared with me** (TON-68):
+    - **`share.saveLink`** `{token}` keeps a link's folder or list, or points an existing reference at this link. The token travels in the body, which is never stored. A link that doesn't work is `not_found`; your own is `validation_failed`.
+    - **`share.removeReference`** `{containerId}` drops one, accessible or not, and revokes no grant.
+    - **The changes:** these, `share.accept` and `share.leave` log `reference` changes (`data: {containerId}` or null). The bootstrap carries `references`.
+    - **The reads:** `GET /v1/shared` lists the entries, each with its owner, `via` (invitation, link), `available`, and the name only while available. `GET /v1/s/{token}/reference` tells a signed-in visitor `{saved, own}`.
   - **Guests** (TON-70), with no session:
     - `GET /v1/s/{token}` gives a link's content: the root, its active folders and lists, their albums with signed artwork, links, and the fields they use. Any link that doesn't work is `404`.
     - `GET /v1/s/{token}/stream` sends `shared-invalidate {rootId}` (the `SharedInvalidate` component) after each of the owner's saves.

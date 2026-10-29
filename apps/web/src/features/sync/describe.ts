@@ -221,6 +221,20 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
     const verb = mutation.name === "share.accept" ? "Accept" : "Decline";
     return { summary: `${verb} an invitation`, what: "the invitation", subject: "The invitation" };
   }
+  if (mutation.name === "share.saveLink") {
+    return {
+      summary: "Add to Shared with me",
+      what: "adding to Shared with me",
+      subject: "Adding to Shared with me",
+    };
+  }
+  if (mutation.name === "share.removeReference") {
+    return {
+      summary: "Remove from Shared with me",
+      what: "removing from Shared with me",
+      subject: "Removing from Shared with me",
+    };
+  }
   if (mutation.name === "share.leave") {
     return { summary: "Leave a share", what: "leaving the share", subject: "Leaving the share" };
   }

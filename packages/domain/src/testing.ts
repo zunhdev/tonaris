@@ -657,13 +657,35 @@ export function memoryStore({
     },
     dropGrantReference(viewerId, containerId) {
       const key = `${viewerId}:${containerId}`;
-      if (referenceRows.get(key)?.linkId === null) referenceRows.delete(key);
-      return Promise.resolve();
+      if (referenceRows.get(key)?.linkId !== null) return Promise.resolve(false);
+      return Promise.resolve(referenceRows.delete(key));
     },
-    saveReference(viewerId, containerId) {
+    saveReference(viewerId, containerId, linkId) {
       const key = `${viewerId}:${containerId}`;
-      if (!referenceRows.has(key)) referenceRows.set(key, { viewerId, containerId, linkId: null });
-      return Promise.resolve();
+      const row = referenceRows.get(key);
+      if (!row) {
+        referenceRows.set(key, { viewerId, containerId, linkId: linkId ?? null });
+        return Promise.resolve("inserted");
+      }
+      if (linkId === undefined || row.linkId === linkId) return Promise.resolve("unchanged");
+      row.linkId = linkId;
+      return Promise.resolve("updated");
+    },
+    removeReference(viewerId, containerId) {
+      return Promise.resolve(referenceRows.delete(`${viewerId}:${containerId}`));
+    },
+    findLinkByHash(hash) {
+      const link = [...shareLinkRows.values()].find(
+        (each) =>
+          each.revokedAt === null &&
+          each.tokenHash.length === hash.length &&
+          each.tokenHash.every((byte, at) => byte === hash[at]) &&
+          containerRows.get(each.containerId)?.trashed === false,
+      );
+      const ownerId = link && containerRows.get(link.containerId)?.ownerId;
+      return Promise.resolve(
+        link && ownerId ? { id: link.id, containerId: link.containerId, ownerId } : undefined,
+      );
     },
     findLiveLink(containerId) {
       const link = [...shareLinkRows.values()].find(

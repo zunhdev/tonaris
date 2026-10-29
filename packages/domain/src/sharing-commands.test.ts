@@ -8,6 +8,7 @@ import { runCommand, type CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
+import { shareTokenHash } from "./sharing";
 import { mutationSchema, type Mutation } from "./sync";
 import { memoryStore } from "./testing";
 
@@ -294,5 +295,73 @@ describe("leaving and revoking (FR-07.7, FR-07.15)", () => {
     expect(codeOf(await run(revoke(accepted)))).toBe("applied");
     expect(grants.get(accepted)?.status).toBe("revoked");
     expect(references.size).toBe(1);
+  });
+});
+
+const save = (token: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.saveLink",
+  args: { token },
+});
+const remove = (containerId: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.removeReference",
+  args: { containerId },
+});
+
+describe("Shared with me (FR-07.13)", () => {
+  test("saving a link adds one reference; again, nothing; through a new link, the same one updated", async () => {
+    const { run, references, shareLinks } = setup();
+    const token = "T".repeat(43);
+    const linkId = uuidv7();
+    await run(setLink(true, linkId), me, await shareTokenHash(token));
+    expect(await run(save(token), anna)).toEqual({
+      status: "applied",
+      changes: [{ entity: "reference", id: doom.id, op: "insert", data: { containerId: doom.id } }],
+    });
+    expect(await run(save(token), anna)).toEqual({ status: "applied", changes: [] });
+    // The owner turns the link off and on: the old token opens nothing; the new one updates the reference.
+    await run(setLink(false));
+    expect(await run(save(token), anna)).toMatchObject({ status: "failed", code: "not_found" });
+    const fresh = "F".repeat(43);
+    await run(setLink(true, uuidv7()), me, await shareTokenHash(fresh));
+    expect(await run(save(fresh), anna)).toMatchObject({
+      changes: [{ entity: "reference", op: "update" }],
+    });
+    expect(references.size).toBe(1);
+    expect(shareLinks.size).toBe(2);
+    // Your own, or through MCP: no.
+    expect(codeOf(await run(save(fresh)))).toBe("validation_failed");
+    const agentOfAnna: Principal = {
+      kind: "mcp",
+      userId: annaId,
+      grantId: uuidv7(),
+      mode: "manage",
+    };
+    expect(codeOf(await run(save(fresh), agentOfAnna))).toBe("app_only");
+  });
+
+  test("removing logs the delete; accepting and leaving log theirs", async () => {
+    const { run, references } = setup();
+    const grantId = uuidv7();
+    await run(invite("anna@example.com", grantId));
+    expect(await run(answer("share.accept", grantId), anna)).toMatchObject({
+      changes: [{ entity: "reference", id: doom.id, op: "insert" }],
+    });
+    expect(await run(remove(doom.id), anna)).toMatchObject({
+      changes: [{ entity: "reference", id: doom.id, op: "delete", data: null }],
+    });
+    expect(references.size).toBe(0);
+    expect(codeOf(await run(remove(doom.id), anna))).toBe("not_found");
+    // Removing revoked nothing: Anna may still leave the invitation, which has nothing left to drop.
+    expect(
+      await run(
+        { mutationId: uuidv7(), name: "share.leave", args: { containerId: doom.id } },
+        anna,
+      ),
+    ).toEqual({
+      status: "applied",
+      changes: [],
+    });
   });
 });

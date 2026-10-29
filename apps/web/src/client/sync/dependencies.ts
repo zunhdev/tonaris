@@ -71,10 +71,12 @@ function referenced(mutation: Mutation): (string | null)[] {
     return viewKey === "root" || viewKey === "unsorted" ? [] : [viewKey];
   }
   if (mutation.name === "defaults.set" || mutation.name === "account.setDisplayName") return [];
+  if (mutation.name === "share.saveLink") return [];
   if (
     mutation.name === "share.invite" ||
     mutation.name === "share.setLink" ||
-    mutation.name === "share.leave"
+    mutation.name === "share.leave" ||
+    mutation.name === "share.removeReference"
   ) {
     return [mutation.args.containerId];
   }
