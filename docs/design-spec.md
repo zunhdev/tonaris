@@ -1482,7 +1482,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 *(FR-11.13)*
 
-*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues. Custom fields joined between them in TON-53, and Data after Connections in TON-60.
+*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues. Custom fields joined between them in TON-53, and Data after Connections in TON-60. Profile joined first in TON-76; Account joins with TON-77–TON-79. The account menu's Settings still opens Preferences.
 
 **DS-93 Profile and account.** *(FR-11.3, FR-11.4, FR-11.5)*
 - **Display name:** saved on blur. While sharing is on, clearing it shows an inline error that keeps the current value.
@@ -1493,6 +1493,11 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
   Then "Done — use {new} to sign in". Cancelling at any step changes nothing.
 - **Lost access to your email?** is a link from sign-in and Account to `/help/recovery`. That page explains creator-assisted recovery and shows the support contact address (TS-73). There is no in-app request form.
+
+*As built in TON-76* (Settings → Profile; the email change and recovery link arrive with TON-77 and TON-78):
+- **Display name** is a field with the hint "People you share with see this name instead of your email. It's optional until you share."
+- **Saving:** a change is saved when the field loses focus, or on Enter, and "Saved." follows. The account menu shows the new name at once, or the email once the name is cleared.
+- **While sharing,** clearing it is refused with "People you share with see your display name. Stop sharing to clear it." under the field, and the field shows the saved name again.
 
 **DS-94 Preferences.** Default sort and direction for lists, default sort for folders, default grouping, and default layout. A note explains that remembered per-view choices are kept when defaults change. *(FR-11.7)*
 

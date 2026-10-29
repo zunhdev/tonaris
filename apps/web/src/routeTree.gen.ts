@@ -32,6 +32,7 @@ import { Route as WorkspaceSettingsConnectionsRouteImport } from './routes/_work
 import { Route as WorkspaceSettingsCustomFieldsRouteImport } from './routes/_workspace/settings.custom-fields'
 import { Route as WorkspaceSettingsDataRouteImport } from './routes/_workspace/settings.data'
 import { Route as WorkspaceSettingsPreferencesRouteImport } from './routes/_workspace/settings.preferences'
+import { Route as WorkspaceSettingsProfileRouteImport } from './routes/_workspace/settings.profile'
 import { Route as WorkspaceSharedIndexRouteImport } from './routes/_workspace/shared.index'
 import { Route as WorkspaceSharedContainerIdRouteImport } from './routes/_workspace/shared.$containerId'
 
@@ -154,6 +155,12 @@ const WorkspaceSettingsPreferencesRoute =
     path: '/settings/preferences',
     getParentRoute: () => WorkspaceRoute,
   } as any)
+const WorkspaceSettingsProfileRoute =
+  WorkspaceSettingsProfileRouteImport.update({
+    id: '/settings/profile',
+    path: '/settings/profile',
+    getParentRoute: () => WorkspaceRoute,
+  } as any)
 const WorkspaceSharedIndexRoute = WorkspaceSharedIndexRouteImport.update({
   id: '/shared/',
   path: '/shared/',
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/settings/data': typeof WorkspaceSettingsDataRoute
   '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
+  '/settings/profile': typeof WorkspaceSettingsProfileRoute
   '/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/invitations/': typeof WorkspaceInvitationsIndexRoute
   '/shared/': typeof WorkspaceSharedIndexRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByTo {
   '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/settings/data': typeof WorkspaceSettingsDataRoute
   '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
+  '/settings/profile': typeof WorkspaceSettingsProfileRoute
   '/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/invitations': typeof WorkspaceInvitationsIndexRoute
   '/shared': typeof WorkspaceSharedIndexRoute
@@ -241,6 +250,7 @@ export interface FileRoutesById {
   '/_workspace/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/_workspace/settings/data': typeof WorkspaceSettingsDataRoute
   '/_workspace/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
+  '/_workspace/settings/profile': typeof WorkspaceSettingsProfileRoute
   '/_workspace/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/_workspace/invitations/': typeof WorkspaceInvitationsIndexRoute
   '/_workspace/shared/': typeof WorkspaceSharedIndexRoute
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/settings/custom-fields'
     | '/settings/data'
     | '/settings/preferences'
+    | '/settings/profile'
     | '/shared/$containerId'
     | '/invitations/'
     | '/shared/'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/settings/custom-fields'
     | '/settings/data'
     | '/settings/preferences'
+    | '/settings/profile'
     | '/shared/$containerId'
     | '/invitations'
     | '/shared'
@@ -321,6 +333,7 @@ export interface FileRouteTypes {
     | '/_workspace/settings/custom-fields'
     | '/_workspace/settings/data'
     | '/_workspace/settings/preferences'
+    | '/_workspace/settings/profile'
     | '/_workspace/shared/$containerId'
     | '/_workspace/invitations/'
     | '/_workspace/shared/'
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceSettingsPreferencesRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/settings/profile': {
+      id: '/_workspace/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof WorkspaceSettingsProfileRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/shared/': {
       id: '/_workspace/shared/'
       path: '/shared'
@@ -530,6 +550,7 @@ interface WorkspaceRouteChildren {
   WorkspaceSettingsCustomFieldsRoute: typeof WorkspaceSettingsCustomFieldsRoute
   WorkspaceSettingsDataRoute: typeof WorkspaceSettingsDataRoute
   WorkspaceSettingsPreferencesRoute: typeof WorkspaceSettingsPreferencesRoute
+  WorkspaceSettingsProfileRoute: typeof WorkspaceSettingsProfileRoute
   WorkspaceSharedContainerIdRoute: typeof WorkspaceSharedContainerIdRoute
   WorkspaceInvitationsIndexRoute: typeof WorkspaceInvitationsIndexRoute
   WorkspaceSharedIndexRoute: typeof WorkspaceSharedIndexRoute
@@ -549,6 +570,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceSettingsCustomFieldsRoute: WorkspaceSettingsCustomFieldsRoute,
   WorkspaceSettingsDataRoute: WorkspaceSettingsDataRoute,
   WorkspaceSettingsPreferencesRoute: WorkspaceSettingsPreferencesRoute,
+  WorkspaceSettingsProfileRoute: WorkspaceSettingsProfileRoute,
   WorkspaceSharedContainerIdRoute: WorkspaceSharedContainerIdRoute,
   WorkspaceInvitationsIndexRoute: WorkspaceInvitationsIndexRoute,
   WorkspaceSharedIndexRoute: WorkspaceSharedIndexRoute,
