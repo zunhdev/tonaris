@@ -92,6 +92,7 @@ describe("migrations", () => {
     expect(rows.map((row) => row.table_name)).toEqual([
       "__drizzle_migrations",
       "account",
+      "account_deletions",
       "account_settings",
       "account_sync",
       "admission_invitations",

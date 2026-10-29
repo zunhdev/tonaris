@@ -8,6 +8,17 @@ export {
   type UserRow,
 } from "./accounts";
 export {
+  beginAccountDeletion,
+  deleteAccountData,
+  deletedEmailKey,
+  deletionChunkSize,
+  findAccountDeletion,
+  finishAccountDeletion,
+  pruneAccountDeletions,
+  retryAccountDeletion,
+  type AccountDeletionRow,
+} from "./account-deletion";
+export {
   cancelEmailRecovery,
   confirmEmailRecovery,
   issueEmailRecovery,

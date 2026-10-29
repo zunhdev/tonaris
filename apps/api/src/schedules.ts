@@ -4,6 +4,7 @@
 
 import {
   expireAdmissionInvitations,
+  pruneAccountDeletions,
   pruneDeadJobs,
   pruneProviderCache,
   pruneSyncHistory,
@@ -43,6 +44,13 @@ export const pruneDeadJobsSchedule: Schedule = {
   name: "prune-dead-jobs",
   everyMs: day,
   run: (tx, now) => pruneDeadJobs(tx, now),
+};
+
+/** Finished account deletions' progress, a week on: their pages are long closed (TS-74). */
+export const pruneAccountDeletionsSchedule: Schedule = {
+  name: "prune-account-deletions",
+  everyMs: day,
+  run: (tx, now) => pruneAccountDeletions(tx, now),
 };
 
 /** Admission invitations past their 14 days, recorded as expired (TS-91); use checks expiry already (TS-71). */
@@ -115,6 +123,7 @@ export function apiSchedules(
     pruneProviderCacheSchedule,
     pruneDeadJobsSchedule,
     expireAdmissionInvitationsSchedule,
+    pruneAccountDeletionsSchedule,
     trashExpirySchedule(trash.db, trash.publish),
     ...(spotify ? [spotifyHealthSchedule(spotify)] : []),
   ];

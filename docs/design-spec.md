@@ -1544,6 +1544,17 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - A progress state follows, then the user is signed out to a plain "Your account has been deleted" page.
 - Failure shows the reason and retry, without claiming partial success.
 
+*As built in TON-79* (without the export block, which TON-89 adds):
+- **The Danger zone** is the last section of Settings → Account, under a rule: "Deleting your account removes it and everything in it, for good." with **Delete account** (danger). The creator reads "The creator's account can't be deleted: it runs admissions." instead.
+- **The dialog,** "Delete your account?", says "Deleting your account means:" and lists:
+  - "Your whole collection is removed permanently, including Unsorted and Trash.";
+  - "Your settings, and the shares saved to Shared with me, are removed.";
+  - "Everything you share becomes unavailable to everyone, including people with a link.";
+  - "Your AI connections are disconnected.";
+  - "It can't be undone: nothing goes to Trash, and the account can't be recovered.".
+- **Confirming:** "Type {email} to confirm" enables **Delete account permanently** once the typed email matches, whatever its case. **Cancel** closes it.
+- **`/account-deleted`:** "Deleting your account…" with an indeterminate bar, then "Your account has been deleted" and "Everything in it is gone. Thanks for using Tonaris.". A failure reads "Couldn't finish deleting your account" and "Try again to finish it.", with **Retry**.
+
 **DS-98 Usage meter.** Settings → Data shows "4,812 of 5,000 albums · 37 in Trash", with a bar split into active and trashed. *(FR-15.2, FR-15.3)*
 - At 95% or more, a quiet notice appears in capture surfaces.
 - At the limit, capture shows "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more", with links.

@@ -152,3 +152,30 @@ export async function confirmRecovery(
   const email = textOf(result.json, "email");
   return email ? { ok: true, email } : { ok: false, reason: "unknown" };
 }
+
+/** An account deletion's progress (TS-74), asked with its token once the session is gone. */
+export type DeletionProgress =
+  | { ok: true; status: "deleting" | "deleted" | "failed" }
+  | ({ ok: false } & AuthFailure);
+
+const deletionStatuses = new Set(["deleting", "deleted", "failed"] as const);
+
+async function deletionCall(
+  path: string,
+  token: string,
+  fetcher: typeof fetch,
+): Promise<DeletionProgress> {
+  const result = await call(path, { token }, fetcher);
+  if (!result.ok) return result;
+  const status = [...deletionStatuses].find((each) => each === textOf(result.json, "status"));
+  return status ? { ok: true, status } : { ok: false, reason: "unknown" };
+}
+
+export function deletionProgress(token: string, fetcher: typeof fetch = fetch) {
+  return deletionCall("/account-deletion/progress", token, fetcher);
+}
+
+/** Queues a failed deletion again (DS-97's Retry). */
+export function retryDeletion(token: string, fetcher: typeof fetch = fetch) {
+  return deletionCall("/account-deletion/retry", token, fetcher);
+}

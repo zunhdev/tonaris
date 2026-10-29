@@ -276,10 +276,11 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `service_state` | singleton: `admissions_paused` | Its one row is inserted by its migration, with admissions open | FR-11.2 |
 | `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error` | | TS-90 |
 | `provider_cache` | `key` (PK, namespaced: `musicbrainz:url:{url}`), `value jsonb`, `expires_at` (indexed) | MusicBrainz and Cover Art Archive answers for 7 days; pruned daily. No user data (TS-41, TON-41). | TS-41 |
-| `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions. `action` is checked against `auditActions`: `email.change` (TON-77) and `email.recover` (TON-78). `actor` and `subject` carry no foreign key, so a record outlives a deleted account | FR-11.4–FR-11.6 |
+| `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions. `action` is checked against `auditActions`: `email.change` (TON-77), `email.recover` (TON-78) and `account.delete` (TON-79). `actor` and `subject` carry no foreign key, so a record outlives a deleted account | FR-11.4–FR-11.6 |
+| `account_deletions` | `id`, `user_id` (no foreign key), `token_hash bytea` (unique), `status` (`deleting`\|`deleted`\|`failed`), `finished_at` | An account deletion's progress, followed by the token its browser holds; pruned 7 days after it finishes (TON-79) | FR-11.11 |
 | `email_recoveries` | `user_id` (PK, cascades), `new_email_key`, `token_hash bytea` (unique), `code_hash bytea`, `attempts`, `expires_at`, `reason`, `disconnect_connections`, `requested_by` | One creator's recovery per account, waiting 24 hours for the new address to confirm it; a deleted account takes it along (TON-78) | FR-11.5 |
 | `email_changes` | `user_id` (PK, cascades), `new_email_key`, `stage` (`current`\|`new`), `code_hash bytea`, `attempts`, `expires_at` | One sign-in email change per account; starting again replaces it, and the swap deletes it (TON-77) | FR-11.4 |
-| Better Auth tables | `user`, `session`, `account`, `verification`; later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
+| Better Auth tables | `user`, `session`, `account`, `verification`; later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `user.deleting_at` is set while the account is being deleted (TS-74). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
 
 **TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/src/normalize.ts` exports two functions, and the same code runs on the server, the client, and in migrations:
 
@@ -1314,6 +1315,19 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Afterwards:** a job deletes the owned data in chunks, and a progress endpoint reports status. The user row is finally hard-deleted, so the email key becomes free and any later account requires admission.
 - The export offer before deletion is a link to the FR-08 export.
 
+*As built in TON-79* (decided 29 October 2026: without the export block, which TON-89 adds):
+- **Confirming:** `POST /v1/account/deletion {email}` (session, an `account` write) checks the typed email's key. It refuses the creator, who runs admissions. Then one transaction (`beginAccountDeletion`):
+  - sets `deleting_at` and moves `email` to the placeholder `{id}@deleted.invalid`, so the address signs in to nothing at once and can be invited again;
+  - deletes sessions, OAuth consents and tokens;
+  - revokes the account's live links and its open grants, and withdraws its own open grants as a viewer;
+  - writes `audit_log` (`account.delete`, empty details);
+  - inserts `account_deletions` and queues the `account-deletion` job.
+
+  The route then wakes the worker, and notifies the hub, so guest pages and viewers re-read and find nothing.
+- **The job** (`deleteAccountData`) removes the albums 500 to a transaction, then the rest in one: memberships, containers, Trash units, fields, the account's grants and references, preferences, approvals, mutations, the change log, and the user row. It is idempotent. Its end marks the deletion `deleted`; burial marks it `failed`.
+- **Progress:** the confirmation answers a random token. Then `POST /auth/account-deletion/progress {token}` answers the status, and `…/retry` queues a failed deletion again. Both are public, since the session is gone. `prune-account-deletions` removes finished ones after 7 days.
+- **Not yet:** TS-113's ledger events, which M11-06 builds for every deletion-class event.
+
 ---
 
 ## 10. Data export
@@ -1397,7 +1411,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Expire provider answers (> 7 d) | daily (`prune-provider-cache`) | TS-41 |
 | Spotify bridge health check | daily (`spotify-health`), while the bridge is on (TON-42) | TS-41 |
 | Email send and retry | on demand | FR-07.5, FR-11.6 |
-| Account data deletion | on demand | FR-11.11 |
+| Account data deletion | on demand (`account-deletion`, TON-79); finished deletions' progress pruned daily (`prune-account-deletions`) | FR-11.11 |
 | Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), approvals with M9 | TS-22, TS-64 |
 | Expire admission invitations | daily (`expire-admission-invitations`, TON-74); use checks expiry already | FR-11.6 |
 | Off-site backup | nightly, through the host's scheduler (TS-110) | TS-112 |
@@ -1578,6 +1592,8 @@ The creator chooses the host, region, and budget; the current preference is Rend
   6. reopen.
 
   Deleted accounts, revoked access, and expired recovery rights are therefore never revived.
+
+  *Status, 29 October 2026:* no event is appended yet. Account deletion (TON-79), revocations and Trash purges are recorded only in the database. M11-06 builds the ledger and its appends together.
 
 **TS-114 Historical-backup deletion disclosure (Proposed; Pending approval, Q-04).** Proposed wording for the account-deletion screen and the privacy notice:
 

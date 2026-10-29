@@ -148,6 +148,9 @@ export const accounts = {
   // Recovering a sign-in email (email-recovery.e2e.ts), one per test.
   recoverMember: at("recover-member"),
   recoverCancelled: at("recover-cancelled"),
+  // Deleting an account (account-deletion.e2e.ts), one per test.
+  deleter: at("deleter"),
+  deleteCancel: at("delete-cancel"),
 } as const;
 
 /** An address with no account. */

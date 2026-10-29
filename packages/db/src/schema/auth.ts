@@ -19,6 +19,8 @@ export const users = table(
     displayName: text(),
     image: text(),
     role: text({ enum: userRoles }).notNull().default("user"),
+    // Set when deletion starts (TS-74): the email has moved to a placeholder, and a job is removing the data.
+    deletingAt: instant(),
     ...timestamps,
   },
   (t) => [

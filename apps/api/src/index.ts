@@ -5,6 +5,7 @@
 
 import { createDatabase } from "@tonaris/db";
 
+import { accountDeletionJob } from "./account-deletion";
 import { createApp } from "./app";
 import { createAuth } from "./auth/auth";
 import { apiConfig } from "./config";
@@ -17,14 +18,23 @@ import { databaseHub } from "./sync/hub";
 
 const config = apiConfig();
 const db = createDatabase();
-const worker = startJobWorker(db, [emailJob(db, emailTransport(config))]);
+const hub = databaseHub(db);
+const worker = startJobWorker(db, [
+  emailJob(db, emailTransport(config)),
+  accountDeletionJob(db, (accountId) => hub.notify(accountId)),
+]);
 const email = emailOutbox(db, worker.wake);
 const auth = createAuth({ config, db, email });
-const hub = databaseHub(db);
 const providers = createProviders(config, db, hub);
-const app = createApp({ config, auth, db, email, hub, capture: providers.capture }).listen(
-  config.port,
-);
+const app = createApp({
+  config,
+  auth,
+  db,
+  email,
+  hub,
+  wakeJobs: worker.wake,
+  capture: providers.capture,
+}).listen(config.port);
 const schedules = startSchedules(
   db,
   apiSchedules(providers.spotify, {
