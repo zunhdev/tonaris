@@ -557,7 +557,8 @@ const referenceChange = (containerId: string, op: "insert" | "update" | "delete"
 /**
  * `share.saveLink` (FR-07.13, DS-68): a signed-in person keeps the folder or list a link shares in Shared with me,
  * on purpose. It reuses a reference they have, pointing it at this link, so a re-added link never duplicates
- * (FR-07.16). Nothing is copied. A link that doesn't work says so, as its page does. App-only (X-03).
+ * (FR-07.16). Nothing is copied. A link that doesn't work says so, as its page does. A Manage collection agent may
+ * save one too; a Read-only one may not (FR-07.13, FR-10.4, AC-24).
  */
 export async function saveLink(
   { token }: z.infer<typeof saveLinkArgsSchema>,
@@ -565,8 +566,9 @@ export async function saveLink(
 ): Promise<CommandResult> {
   const userId = actingUserId(principal);
   if (userId === undefined) return failure("permission_denied", "Sign in to keep a shared link.");
-  const decision = authorizeWrite(principal, { ownerId: userId, scope: "sharing" });
-  if (!decision.allowed) return failure(decision.code, "Shared links are kept in the app.");
+  // The person's own collection's references, not sharing management (X-03).
+  const decision = authorizeWrite(principal, { ownerId: userId, scope: "collection" });
+  if (!decision.allowed) return failure(decision.code, "You can't change Shared with me here.");
   const link = await store.findLinkByHash(await shareTokenHash(token));
   if (!link) return failure("not_found", unavailableLink);
   if (link.ownerId === userId) {
@@ -582,7 +584,8 @@ export async function saveLink(
 
 /**
  * `share.removeReference` (FR-07.13): drops a folder or list from Shared with me, accessible or not. It revokes no
- * grant: an accepted invitation is left with `share.leave`. App-only (X-03).
+ * grant: an accepted invitation is left with `share.leave`, which is app-only. A Manage collection agent may remove
+ * one (FR-10.4).
  */
 export async function removeReference(
   { containerId }: z.infer<typeof removeReferenceArgsSchema>,
@@ -591,8 +594,8 @@ export async function removeReference(
   const userId = actingUserId(principal);
   if (userId === undefined)
     return failure("permission_denied", "Sign in to change Shared with me.");
-  const decision = authorizeWrite(principal, { ownerId: userId, scope: "sharing" });
-  if (!decision.allowed) return failure(decision.code, "Shared with me is changed in the app.");
+  const decision = authorizeWrite(principal, { ownerId: userId, scope: "collection" });
+  if (!decision.allowed) return failure(decision.code, "You can't change Shared with me here.");
   if (!(await store.removeReference(userId, containerId))) {
     return failure("not_found", "This isn't in your Shared with me.");
   }

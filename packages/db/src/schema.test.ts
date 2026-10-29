@@ -111,6 +111,7 @@ describe("migrations", () => {
       "field_options",
       "jobs",
       "jwks",
+      "mcp_operations",
       "memberships",
       "mutations",
       "oauth_access_token",

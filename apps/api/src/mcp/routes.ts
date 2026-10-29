@@ -18,18 +18,30 @@ import {
 import { Elysia } from "elysia";
 import { errors as joseErrors, type JWTPayload } from "jose";
 
-import { type Database, findConnection, recordConnectionUse } from "@tonaris/db";
+import {
+  type Database,
+  type ExecutedMutation,
+  findConnection,
+  recordConnectionUse,
+} from "@tonaris/db";
 import { mcpModeOf, mcpScopes, type McpPrincipal } from "@tonaris/domain";
 
 import { type Auth, mcpResource } from "../auth/auth";
+import { mutationRunner, type CaptureDeps, type SharingDeps } from "../capture";
 import type { ApiConfig } from "../config";
+import type { SyncHub } from "../sync/hub";
 import { createMcpServer } from "./server";
+import { mcpWriter } from "./writes";
 
 export type McpRoutesOptions = {
   auth: Auth;
   db: Database;
   config: Pick<ApiConfig, "apiOrigin" | "webOrigin">;
   logError: (error: unknown, context: string) => void;
+  /** The streams agents' writes go to, as the app's do (X-08). */
+  hub: SyncHub;
+  capture?: CaptureDeps | undefined;
+  sharing: SharingDeps;
 };
 
 /**
@@ -127,7 +139,7 @@ function principalOf(extra: Record<string, unknown> = {}): McpPrincipal {
   return { kind: "mcp", userId, grantId, mode };
 }
 
-export function mcpRoutes({ auth, db, config, logError }: McpRoutesOptions) {
+export function mcpRoutes({ auth, db, config, logError, hub, capture, sharing }: McpRoutesOptions) {
   const resource = mcpResource(config.apiOrigin);
   const verify = tokenVerifier(auth, { issuer: `${config.apiOrigin}/auth`, resource });
   const challenge = (error: unknown) => {
@@ -136,9 +148,23 @@ export function mcpRoutes({ auth, db, config, logError }: McpRoutesOptions) {
     return challengeResponse(response);
   };
 
+  const write = mcpWriter({
+    db,
+    run: mutationRunner(db, capture, sharing),
+    // As the sync routes announce: a confirmed write without changes, such as sharing, still tells guest pages.
+    announce: (accountId: string, { result, changes, replayed }: ExecutedMutation) => {
+      if (changes.length > 0) hub.publish(accountId, changes);
+      else if (!replayed && result.outcome.status === "confirmed") hub.notify(accountId);
+    },
+  });
   const handler = createMcpHandler(
     ({ authInfo }) =>
-      createMcpServer({ db, principal: principalOf(authInfo?.extra), webOrigin: config.webOrigin }),
+      createMcpServer({
+        db,
+        principal: principalOf(authInfo?.extra),
+        write,
+        webOrigin: config.webOrigin,
+      }),
     { onerror: (error) => logError(error, "MCP request") },
   );
 

@@ -232,7 +232,15 @@ export {
   type ServiceLink,
 } from "./service-links";
 export { findNameConflict, isBlankName, type NamedItem } from "./names";
-export { isOrderKey, maxOrderItems, positionKey, positionSchema, type Position } from "./positions";
+export {
+  isOrderKey,
+  maxOrderItems,
+  planMove,
+  positionKey,
+  positionSchema,
+  type Place,
+  type Position,
+} from "./positions";
 export {
   caseFold,
   matchRange,

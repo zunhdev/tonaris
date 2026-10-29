@@ -55,11 +55,10 @@ export { createApproval, decideApproval, findApproval, type ApprovalRow } from "
 export { capturesSince, maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";
 export { createDatabase, type Database, type Transaction } from "./client";
 export { readFieldDeletion, readFieldUsage, readOptionRemoval } from "./field-options";
-export { purgeExpiredTrash } from "./sync";
+export { findFieldIn, purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
 export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
 export {
-  addToList,
   albumDeletionTargets,
   collectionOverview,
   connectionUseInterval,
@@ -74,7 +73,6 @@ export {
   type ConnectionRow,
   type ContainerListing,
   type ContainerRef,
-  type ListAddition,
   type TrashResult,
 } from "./mcp";
 export {
@@ -98,6 +96,17 @@ export {
   type SourcedAlbum,
   type TreeEntry,
 } from "./mcp-reads";
+export {
+  albumBase,
+  claimOperation,
+  containerBase,
+  fieldValueBase,
+  findOperation,
+  linkBase,
+  viewPrefsBase,
+  viewSequence,
+  type OperationClaim,
+} from "./mcp-writes";
 export {
   buryJob,
   claimJob,

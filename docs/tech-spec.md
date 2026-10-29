@@ -272,6 +272,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `change_log` | `id bigserial`, `account_id`, `seq bigint`, `entity`, `entity_id`, `op`, `data jsonb`, `mutation_id`. Unique `(account_id, seq)` | Retention 30 days | FR-09.1 |
 | `mutations` | `id uuid` PK (client `mutationId`), `account_id`, `principal` (session\|mcp grant), `name`, `status`, `result jsonb`, `received_at`, `completed_at` | Retention 30 days | FR-13.5 |
 | `approvals` | `id`, `account_id`, `grant_id`, `operation`, `args jsonb`, `scope jsonb`, `scope_hash`, `status`, `expires_at`, `decided_at`, `used_at` | | FR-10.6 |
+| `mcp_operations` | `grant_id`, `key`, `batch_id`, `request_hash`, `items` | PK `(grant_id, key)`; an agent's `idempotencyKey` and the batch it names (TON-82) | TS-22 |
 | `admission_invitations` | `id`, `email_key`, `token_hash bytea`, `status` (`available`\|`redeemed`\|`revoked`\|`expired`), `expires_at`, `created_by`, `redeemed_by`, `redeemed_at`, `email_status` | Partial unique index on `email_key` for available invitations. `redeemed_at` is set exactly when the status is `redeemed`. `redeemed_by` becomes null when its account is deleted, so the redemption stays on record ([TON-24](spikes/2026-10-21-admission-gate.md)) | FR-11.6 |
 | `service_state` | singleton: `admissions_paused` | Its one row is inserted by its migration, with admissions open | FR-11.2 |
 | `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error` | | TS-90 |
@@ -492,7 +493,12 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - **One request per link,** sent one at a time, with a 120 s timeout instead of 10 s.
   - **Kept and adopted lane by lane.** Entries carry their lane; one without a lane is the main lane's. A tab adopts a gone tab's entries one lane after the other, since a gone tab's lock is taken only when free.
   - **A single capture waiting for a choice or details** is kept in the browser like a failure, so its link survives a reload (FR-02.5, FR-02.10).
-- **MCP.** Agents get the same guarantees through an optional `idempotencyKey` (= `mutationId`) on every write tool, plus `get_operation(id)`.
+- **MCP.** Agents get the same guarantees through an optional `idempotencyKey` on every write tool, plus `get_operation(id)`.
+  - *As built in TON-82:* the key is any text up to 100 characters, each connection's own. It isn't a `mutationId`, since agents can't be relied on to make UUIDv7s.
+  - **`mcp_operations`** maps `(grant, key)` to a v7 `batchId` and a hash of the tool and its arguments.
+  - **Derived IDs:** every mutation's ID, and every new record's, is derived from the batch's ID: its timestamp, with SHA-256 for the rest (`derivedId()`). Sending the key again therefore replays what ran, and judges the rest again, as a batch sent again does (TS-25).
+  - **Reuse:** the same key with different arguments is refused, and nothing runs. Without a key, the tool makes one and reports it.
+  - Rows go with the mutations after 30 days.
 - **Retention.** Idempotency records are kept 30 days. A replay after that window is rejected as `expired` rather than run again. The server knows a replay is that old from the time inside its UUIDv7 `mutationId`: no record, and older than the window. That relies on the client's clock; a replay misjudged by a wrong clock still meets CAS and the client's entity IDs.
 
 **TS-23 Change stream: SSE (Decided; FR-09.1–FR-09.2).**
@@ -1161,6 +1167,19 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 
 There are deliberately **no** tools for sharing management, Trash purge, export, account actions, or administration (X-03).
 
+*As built in TON-82:* the ordinary write tools (`apps/api/src/mcp/write-tools.ts`), for Manage collection connections.
+- **The path.** Each tool plans the app's own mutation envelopes, and `mcpWriter()` runs them as a batch: through the API's mutation runner, by `executeBatch`'s rules, item by item. Each item's changes go to the person's streams as it commits (X-08). A step that needs an earlier one, such as setting a field after applying it, depends on it (TS-25).
+- **Tools beyond the table:**
+  - `move_albums`, a list-to-list move of albums: join the target, then leave the source;
+  - `set_artwork`, `set_link` and `remove_link`, over `album.setArtwork`, `link.set` and `link.remove`.
+- **`base`.** A change the agent doesn't base on values it read is based on the values saved now. Passing `base` gets a `conflict` with the current values when they changed (TS-21).
+- **`set_order`** places items, in the order given, at the top, at the bottom, or before or after an item, with the app's own `planMove` (now in `packages/domain`), as one `order.set`.
+- **`add_albums`** takes links or details, with an optional list. A link's `needs_input` (`match` or `details`) is answered by sending the item again with `releaseGroupId` or `details` (TS-26). Captures read no store page for agents (FR-10.5).
+- **Outcomes.** Each item is TS-27's outcome, with `failed` carrying `code` and `message`. A `skipped` item names the item it waited for by index.
+- **References.** `share.saveLink` and `share.removeReference` now authorize as collection writes, so a Manage agent may keep or drop references, and a Read-only one may not (FR-07.13, AC-24). Leaving an invitation stays app-only.
+- **`remove_options`** removes unused options. A chosen option is `field_in_use` until TON-83 gates it.
+- **The G3 `add_to_list`** is gone; `delete_albums` stays until TON-83.
+
 *As built in TON-81:* the read group (`apps/api/src/mcp/read-tools.ts`, over `packages/db/src/mcp-reads.ts`), for both modes.
 - **Names:** album values use the API's field names (`artistCredit`, `originalYear`), as the write tools take them. G3's `artist` and `year` are gone.
 - **Order:** listings follow the reader's manual order, then TS-16's fallback: folders and lists as created, a list's albums as added, Unsorted newest first, Trash oldest first.
@@ -1426,7 +1445,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Spotify bridge health check | daily (`spotify-health`), while the bridge is on (TON-42) | TS-41 |
 | Email send and retry | on demand | FR-07.5, FR-11.6 |
 | Account data deletion | on demand (`account-deletion`, TON-79); finished deletions' progress pruned daily (`prune-account-deletions`) | FR-11.11 |
-| Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), approvals with M9 | TS-22, TS-64 |
+| Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), agents' keys (`mcp_operations`) since TON-82, approvals with M9 | TS-22, TS-64 |
 | Expire admission invitations | daily (`expire-admission-invitations`, TON-74); use checks expiry already | FR-11.6 |
 | Off-site backup | nightly, through the host's scheduler (TS-110) | TS-112 |
 
