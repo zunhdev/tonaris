@@ -7,7 +7,7 @@ import { apiUrl } from "@/config";
 export type AuthFailure =
   | { reason: "wrong_code" | "expired" | "too_many_attempts" | "invalid_email" | "unreachable" }
   | { reason: "rate_limited"; retryAfterSeconds: number }
-  /** An invitation that can't be used (DS-91), with the API's sentence for why. */
+  /** A refusal the API explains, such as an invitation that can't be used (DS-91), with its sentence. */
   | { reason: "refused"; detail: string }
   | { reason: "unknown" };
 
@@ -32,8 +32,11 @@ const messages: Record<PlainReason, string> = {
   unknown: "Something went wrong. Try again.",
 };
 
-/** The statuses of an invitation's refusals (TS-71): unknown, expired, or revoked, used or paused. */
-const refusalStatuses = new Set([403, 404, 410]);
+/**
+ * The statuses of refusals the API explains: an invitation unknown, expired, or revoked, used or paused (TS-71); a
+ * recovery link unknown or expired, or its code wrong (TS-73).
+ */
+const refusalStatuses = new Set([403, 404, 410, 422]);
 
 /** `body[key]`, when `body` is an object and that is a string. */
 function textOf(body: unknown, key: string): string | undefined {
@@ -136,4 +139,16 @@ export function joinWithCode(
   fetcher: typeof fetch = fetch,
 ): Promise<AuthResult> {
   return post("/admission/join", { token, otp: code }, fetcher);
+}
+
+/** Confirms the creator's recovery with its link's token and code (TS-73); answers the new sign-in email. */
+export async function confirmRecovery(
+  token: string,
+  code: string,
+  fetcher: typeof fetch = fetch,
+): Promise<{ ok: true; email: string } | ({ ok: false } & AuthFailure)> {
+  const result = await call("/recovery/confirm", { token, code }, fetcher);
+  if (!result.ok) return result;
+  const email = textOf(result.json, "email");
+  return email ? { ok: true, email } : { ok: false, reason: "unknown" };
 }

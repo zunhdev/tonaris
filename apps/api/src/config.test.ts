@@ -9,6 +9,7 @@ const production = {
   BETTER_AUTH_SECRET: "a-production-secret",
   SMTP_URL: "smtps://user:pass@smtp.example:465",
   EMAIL_FROM: "Tonaris <no-reply@tonaris.example>",
+  SUPPORT_EMAIL: "help@tonaris.example",
 };
 
 describe("apiConfig", () => {
@@ -19,6 +20,7 @@ describe("apiConfig", () => {
       apiOrigin: "http://localhost:3001",
       webOrigin: "http://localhost:3000",
       smtpUrl: "smtp://localhost:1025",
+      supportEmail: "support@tonaris.test",
       clientIpHeader: undefined,
     });
     // A host-only localhost cookie reaches both ports.
@@ -27,10 +29,14 @@ describe("apiConfig", () => {
 
   test("requires every origin and secret in production (TS-105)", () => {
     expect(() => apiConfig({ NODE_ENV: "production" })).toThrow(
-      "Set API_ORIGIN, WEB_ORIGIN, BETTER_AUTH_SECRET, EMAIL_FROM, RESEND_API_KEY (or SMTP_URL) in production",
+      "Set API_ORIGIN, WEB_ORIGIN, BETTER_AUTH_SECRET, EMAIL_FROM, SUPPORT_EMAIL, RESEND_API_KEY (or SMTP_URL) in production",
     );
     const { BETTER_AUTH_SECRET: _, ...withoutSecret } = production;
     expect(() => apiConfig(withoutSecret)).toThrow("Set BETTER_AUTH_SECRET in production");
+    // The help page's address (TS-73).
+    const { SUPPORT_EMAIL: __, ...withoutSupport } = production;
+    expect(() => apiConfig(withoutSupport)).toThrow("Set SUPPORT_EMAIL in production");
+    expect(apiConfig(production).supportEmail).toBe("help@tonaris.example");
   });
 
   test("sends email through Resend when its key is set, and through SMTP otherwise (TS-72)", () => {

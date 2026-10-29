@@ -41,9 +41,13 @@ export function securityHeaders({
     // One year, subdomains included (the API's too); browsers ignore it over plain HTTP.
     "strict-transport-security": "max-age=31536000; includeSubDomains",
     "x-content-type-options": "nosniff",
-    // Guest share and invitation URLs carry their token, so they never leak in a Referer (TS-32, TS-71).
+    // Guest share, invitation and recovery URLs carry their token, so they never leak in a Referer (TS-32, TS-71,
+    // TS-73).
     "referrer-policy":
-      pathname === "/s" || pathname.startsWith("/s/") || pathname.startsWith("/join/")
+      pathname === "/s" ||
+      pathname.startsWith("/s/") ||
+      pathname.startsWith("/join/") ||
+      pathname.startsWith("/recover/")
         ? "no-referrer"
         : "strict-origin-when-cross-origin",
   };

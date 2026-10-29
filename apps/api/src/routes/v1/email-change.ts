@@ -25,11 +25,11 @@ import {
   type EmailPort,
   type Principal,
   problemSchema,
-  signInCode,
 } from "@tonaris/domain";
 
 import { clientIp, rateLimited } from "../../auth/plugin";
 import type { SessionGuard } from "../../auth/plugin";
+import { codeDigits, newCode, sha256 } from "../../auth/secrets";
 import type { SignInLimiter } from "../../auth/sign-in-limits";
 import { ProblemError } from "../../problem";
 
@@ -40,20 +40,6 @@ export type EmailChangeDeps = {
   limiter: SignInLimiter;
   clientIpHeader: string | undefined;
 };
-
-/** The largest multiple of 1,000,000 below 2^32: values from it up would favour the low codes. */
-const unbiasedLimit = 4_294_000_000;
-
-/** Six random digits, like a sign-in code. */
-export function newEmailChangeCode(): string {
-  let value: number;
-  do [value = unbiasedLimit] = crypto.getRandomValues(new Uint32Array(1));
-  while (value >= unbiasedLimit);
-  return String(value % 10 ** signInCode.length).padStart(signInCode.length, "0");
-}
-
-/** What the database keeps of a code: its SHA-256. */
-const codeHash = (code: string) => new Bun.CryptoHasher("sha256").update(code).digest();
 
 function authorize(principal: Principal, ownerId: string): void {
   const decision = authorizeWrite(principal, { ownerId, scope: "account" });
@@ -133,11 +119,11 @@ export function emailChangeRoutes(
         const wait = limiter.codeRequest(account.email, clientIp(request, server, clientIpHeader));
         if (wait !== undefined) throw rateLimited(wait);
 
-        const code = newEmailChangeCode();
+        const code = newCode();
         const started = await startEmailChange(db, {
           userId: account.id,
           newEmailKey: newEmail,
-          codeHash: codeHash(code),
+          codeHash: sha256(code),
         });
         if (started === "taken") throw refused(refusals.taken);
         await email.send("email-change-current", account.email, { code, newEmail });
@@ -171,13 +157,12 @@ export function emailChangeRoutes(
         const wait = limiter.codeSubmission(clientIp(request, server, clientIpHeader));
         if (wait !== undefined) throw rateLimited(wait);
 
-        const next = newEmailChangeCode();
+        const next = newCode();
         const submitted = await submitEmailChangeCode(db, {
           userId: account.id,
           sessionId,
-          // Pasted codes may carry spaces or a dash; only the digits count.
-          codeHash: codeHash(body.code.replaceAll(/\D/g, "")),
-          nextCodeHash: codeHash(next),
+          codeHash: sha256(codeDigits(body.code)),
+          nextCodeHash: sha256(next),
           auditId: Bun.randomUUIDv7(),
         });
         if (submitted.outcome === "advanced") {
@@ -217,10 +202,10 @@ export function emailChangeRoutes(
         const wait = limiter.codeRequest(to, clientIp(request, server, clientIpHeader));
         if (wait !== undefined) throw rateLimited(wait);
 
-        const code = newEmailChangeCode();
+        const code = newCode();
         const renewed = await renewEmailChangeCode(db, {
           userId: account.id,
-          codeHash: codeHash(code),
+          codeHash: sha256(code),
         });
         if (!renewed) throw noChange();
         const newEmail = renewed.newEmailKey;

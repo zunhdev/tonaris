@@ -65,6 +65,7 @@ describe("OpenAPI", () => {
     // Only the versioned contract: no /healthz, /auth/* or openapi.json itself.
     expect(Object.keys(document.paths)).toEqual([
       "/v1/health",
+      "/v1/support",
       "/v1/me",
       "/v1/account/email-change",
       "/v1/account/email-change/verify",
@@ -86,6 +87,8 @@ describe("OpenAPI", () => {
       "/v1/admin/admissions/invitations/{id}/resend",
       "/v1/admin/admissions/invitations/{id}/revoke",
       "/v1/admin/admissions/paused",
+      "/v1/admin/members",
+      "/v1/admin/members/{id}/recovery",
       "/v1/shared",
       "/v1/shared/{id}",
       "/v1/shared/{id}/stream",

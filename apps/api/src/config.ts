@@ -22,6 +22,8 @@ export type ApiConfig = {
   smtpUrl: string;
   /** The sender, such as `Tonaris <no-reply@mail.tonaris.app>`: an address on a domain the provider verified. */
   emailFrom: string;
+  /** Where people write for help, shown on `/help/recovery` (TS-73): a mailbox the creator reads. */
+  supportEmail: string;
   /** The header the host's proxy puts the client address in; unset means the socket address (TS-104). */
   clientIpHeader: string | undefined;
   /**
@@ -42,6 +44,7 @@ const localDefaults = {
   BETTER_AUTH_SECRET: localAuthSecret,
   SMTP_URL: "smtp://localhost:1025",
   EMAIL_FROM: "Tonaris <no-reply@tonaris.test>",
+  SUPPORT_EMAIL: "support@tonaris.test",
 } as const;
 
 const requiredInProduction = [
@@ -49,6 +52,7 @@ const requiredInProduction = [
   "WEB_ORIGIN",
   "BETTER_AUTH_SECRET",
   "EMAIL_FROM",
+  "SUPPORT_EMAIL",
 ] as const satisfies (keyof typeof localDefaults)[];
 type Required = (typeof requiredInProduction)[number] | "SMTP_URL";
 
@@ -80,6 +84,7 @@ export function apiConfig(env: Env = process.env): ApiConfig {
     resendApiKey: env.RESEND_API_KEY || undefined,
     smtpUrl: value("SMTP_URL"),
     emailFrom: value("EMAIL_FROM"),
+    supportEmail: value("SUPPORT_EMAIL"),
     clientIpHeader: env.CLIENT_IP_HEADER?.toLowerCase() || undefined,
     spotify:
       env.SPOTIFY_BRIDGE?.toLowerCase() !== "off" &&

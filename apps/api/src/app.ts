@@ -12,6 +12,7 @@ import { artworkRoutes, artworkSigner, type ArtworkSigner, type ImageFetch } fro
 import { admissionRoutes } from "./auth/admission";
 import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
+import { recoveryRoutes } from "./auth/recovery";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import type { CaptureDeps, SharingDeps } from "./capture";
 import { compression } from "./compression";
@@ -28,9 +29,11 @@ import { fieldRoutes } from "./routes/v1/fields";
 import { guestRoutes } from "./routes/v1/guests";
 import { invitationRoutes } from "./routes/v1/invitations";
 import { meRoutes } from "./routes/v1/me";
+import { memberAdminRoutes } from "./routes/v1/members";
 import { searchRoutes } from "./routes/v1/search";
 import { sharedRoutes } from "./routes/v1/shared";
 import { sharingRoutes } from "./routes/v1/sharing";
+import { supportRoutes } from "./routes/v1/support";
 import { csrfGuard, securityHeaders } from "./security";
 import { databaseHub, type SyncHub } from "./sync/hub";
 import { syncRoutes } from "./sync/routes";
@@ -49,6 +52,7 @@ function v1(
     artwork: ArtworkSigner;
     sharing: SharingDeps;
     emailChange: EmailChangeDeps;
+    supportEmail: string;
   },
 ) {
   return new Elysia({ prefix: "/v1" })
@@ -61,6 +65,7 @@ function v1(
       },
       () => ({ status: "ok" as const }),
     )
+    .use(supportRoutes(sync))
     .use(meRoutes(session))
     .use(emailChangeRoutes(session, sync.emailChange))
     .use(connectionRoutes(session, { db: sync.db }))
@@ -81,6 +86,13 @@ function v1(
         email: sync.sharing.email,
         webOrigin: sync.sharing.webOrigin,
         logError: sync.sharing.logError,
+      }),
+    )
+    .use(
+      memberAdminRoutes(session, {
+        db: sync.db,
+        email: sync.sharing.email,
+        webOrigin: sync.sharing.webOrigin,
       }),
     )
     .use(sharedRoutes(session, sync))
@@ -131,6 +143,7 @@ export function createApp({
       // The host's health check (TS-110), outside the versioned contract.
       .get("/healthz", { detail: { hide: true } }, () => "ok")
       .use(admissionRoutes({ auth, db, config, email, limiter, logError }))
+      .use(recoveryRoutes({ db, limiter, clientIpHeader: config.clientIpHeader }))
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
       .use(mcpRoutes({ auth, db, config, logError }))
       // Artwork, outside the versioned contract: images the server signed (TS-103).
@@ -143,6 +156,7 @@ export function createApp({
           artwork,
           sharing: { shareSecret: config.authSecret, email, webOrigin: config.webOrigin, logError },
           emailChange: { db, email, limiter, clientIpHeader: config.clientIpHeader },
+          supportEmail: config.supportEmail,
         }),
       )
   );

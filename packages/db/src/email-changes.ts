@@ -4,12 +4,12 @@
 import { timingSafeEqual } from "node:crypto";
 
 import { and, eq, ne, sql } from "drizzle-orm";
-import postgres from "postgres";
 
 import { signInCode } from "@tonaris/domain";
 
 import type { Database } from "./client";
-import { auditLog, emailChanges, sessions, users } from "./schema";
+import { auditLog, emailChanges, users } from "./schema";
+import { isUniqueViolation, swapSignInEmail } from "./sign-in-email";
 
 export type EmailChangeRow = typeof emailChanges.$inferSelect;
 
@@ -84,8 +84,8 @@ export type EmailChangeSubmission =
 /**
  * Checks a code for the change's step under its row's lock, so two right codes can't both act. A wrong one
  * counts an attempt, which commits. The current address's code moves the change to the new address's step, with
- * `nextCodeHash`. The new address's code swaps in this transaction: it changes the email unless another account
- * has the key, ends the account's sessions other than `sessionId`, and writes the audit log (TS-73).
+ * `nextCodeHash`. The new address's code swaps in this transaction (`swapSignInEmail`), keeping `sessionId`, and
+ * writes the audit log (TS-73).
  */
 export async function submitEmailChangeCode(
   db: Database,
@@ -129,46 +129,26 @@ export async function submitEmailChangeCode(
         return advanced ? { outcome: "advanced", change: advanced } : { outcome: "none" };
       }
 
-      const [account] = await tx
-        .select({ email: users.email })
-        .from(users)
-        .where(eq(users.id, userId))
-        .for("update");
-      const [owner] = await tx
-        .select({ id: users.id })
-        .from(users)
-        .where(and(eq(users.email, change.newEmailKey), ne(users.id, userId)));
       await tx.delete(emailChanges).where(mine);
-      if (!account || owner) return { outcome: "taken" };
-
-      await tx
-        .update(users)
-        .set({ email: change.newEmailKey, emailVerified: true })
-        .where(eq(users.id, userId));
-      await tx.delete(sessions).where(and(eq(sessions.userId, userId), ne(sessions.id, sessionId)));
+      const swapped = await swapSignInEmail(tx, {
+        userId,
+        newEmailKey: change.newEmailKey,
+        keepSessionId: sessionId,
+      });
+      if (swapped === "taken") return { outcome: "taken" };
       await tx.insert(auditLog).values({
         id: auditId,
         actor: userId,
         action: "email.change",
         subject: userId,
-        details: { from: account.email, to: change.newEmailKey },
+        details: { from: swapped.from, to: change.newEmailKey },
         at: now,
       });
-      return { outcome: "changed", from: account.email, to: change.newEmailKey };
+      return { outcome: "changed", from: swapped.from, to: change.newEmailKey };
     });
   } catch (error) {
     // An account took the key between the check and the swap.
     if (isUniqueViolation(error)) return { outcome: "taken" };
     throw error;
   }
-}
-
-/** A unique violation, as postgres.js reports it, whether or not Drizzle wrapped it. */
-function isUniqueViolation(error: unknown): boolean {
-  let current: unknown = error;
-  while (current instanceof Error) {
-    if (current instanceof postgres.PostgresError && current.code === "23505") return true;
-    current = current.cause;
-  }
-  return false;
 }

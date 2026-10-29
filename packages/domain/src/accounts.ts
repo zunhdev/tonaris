@@ -47,8 +47,11 @@ export const accountSchema = z
   .meta({ description: "The signed-in account." });
 export type Account = z.infer<typeof accountSchema>;
 
+/** How long a creator's recovery waits for the new address to confirm it (FR-11.5, TS-73). */
+export const emailRecoveryHours = 24;
+
 /** What the audit log records (TS-11): admin actions, recovery and deletions, each as one action name. */
-export const auditActions = ["email.change"] as const;
+export const auditActions = ["email.change", "email.recover"] as const;
 export type AuditAction = (typeof auditActions)[number];
 
 /**
@@ -97,3 +100,55 @@ export const emailChangeStepSchema = z.discriminatedUnion("stage", [
   }),
 ]);
 export type EmailChangeStep = z.infer<typeof emailChangeStepSchema>;
+
+/** Why the creator's recovery, or its confirmation, is refused (FR-11.5, DS-100), one sentence each. */
+export const emailRecoveryRefusalDetails = {
+  notEmail: "Enter an email address, such as anna@example.com.",
+  same: "That's already their sign-in email.",
+  taken: "That address belongs to another Tonaris account.",
+  noReason: "Say why you're recovering this account. It goes in the audit log.",
+  none: "There's no member with this ID.",
+  invalid: "This recovery link isn't valid. Ask the creator for a new one.",
+  expired: "This recovery link has expired. Ask the creator for a new one.",
+  wrongCode: "That code isn't right. Check the email and try again.",
+  tooManyAttempts: "Too many wrong codes. Ask the creator for a new link.",
+} as const;
+
+/** The longest reason a recovery records. */
+export const maxRecoveryReasonLength = 500;
+
+/** A member as Admin → Members lists them (DS-100): never anything of their collection (FR-11.6). */
+export const memberSchema = z
+  .object({
+    id: z.uuid(),
+    email: z.string().meta({ description: "The sign-in email, as its email key." }),
+    displayName: z.string().nullable(),
+    joinedAt: z.iso.datetime(),
+    recovery: z
+      .object({ newEmail: z.string(), requestedAt: z.iso.datetime() })
+      .nullable()
+      .meta({ description: "A recovery waiting for its new address to confirm it (FR-11.5)." }),
+  })
+  .meta({ description: "An account, as the creator's admin lists it." });
+export type Member = z.infer<typeof memberSchema>;
+
+/** Starts recovering a member's sign-in email: the new address, why, and whether AI connections end too. */
+export const emailRecoveryStartSchema = z.object({
+  newEmail: z.string().trim().min(1).max(320),
+  reason: z
+    .string()
+    .max(maxRecoveryReasonLength)
+    .meta({ description: "Why the creator recovers it, for the audit log." }),
+  disconnectConnections: z.boolean(),
+});
+
+/** Confirms a recovery from its email: the link's token and the code. */
+export const emailRecoveryConfirmSchema = z.object({
+  token: z.string().min(1).max(200),
+  code: z.string().min(1).max(32),
+});
+
+/** Where people write for help, such as recovering a lost address (TS-73). */
+export const supportSchema = z
+  .object({ email: z.string() })
+  .meta({ description: "The support address (`SUPPORT_EMAIL`)." });

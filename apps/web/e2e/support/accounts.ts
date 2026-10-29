@@ -145,13 +145,22 @@ export const accounts = {
   // Settings → Account (settings-account.e2e.ts), one per test.
   emailChanger: at("email-changer"),
   emailCanceller: at("email-canceller"),
+  // Recovering a sign-in email (email-recovery.e2e.ts), one per test.
+  recoverMember: at("recover-member"),
+  recoverCancelled: at("recover-cancelled"),
 } as const;
 
 /** An address with no account. */
 export const nobody = at("nobody");
 
-/** Where settings-account.e2e.ts moves an account, and an address it leaves unused; neither has an account. */
-export const newAddresses = { moved: at("moved-here"), unused: at("never-used") } as const;
+/** New addresses for the email change and recovery tests; none has an account. */
+export const newAddresses = {
+  moved: at("moved-here"),
+  unused: at("never-used"),
+  // Where email-recovery.e2e.ts recovers accounts to.
+  recovered: at("recovered-here"),
+  notRecovered: at("not-recovered"),
+} as const;
 
 /** An address the creator invites in admission.e2e.ts; it has no account. */
 export const invitee = at("admission-invitee");
