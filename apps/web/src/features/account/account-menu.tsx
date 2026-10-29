@@ -2,12 +2,13 @@
 // **Settings** leads to Settings → Preferences, the first settings page built (DS-92); **Admin**, for the creator
 // only, to Admin → Admissions (DS-100); and **Keyboard shortcuts** opens the reference (DS-78). Signing out deletes
 // what this browser keeps for the account: unsent changes and conflicts waiting for review. With changes still
-// unsent, it asks first (decided 22 October 2026).
+// unsent, it asks first (decided 22 October 2026). On a phone it is the top bar's Account button, without Admin or
+// the shortcuts, which a phone doesn't have (DS-110).
 
 import { useShell } from "@/features/shell/shell-context";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
-import { ChevronsUpDown, Keyboard, LogOut, Settings, ShieldCheck } from "lucide-react";
+import { ChevronsUpDown, CircleUser, Keyboard, LogOut, Settings, ShieldCheck } from "lucide-react";
 import { useRef, useState } from "react";
 
 import type { Account } from "@tonaris/domain";
@@ -33,7 +34,14 @@ import { authFailureMessage, signOut } from "./auth-client";
 import { forgetSignIn } from "./pending-sign-in";
 import { forgetAccount } from "./session";
 
-export function AccountMenu({ account }: { account: Account }) {
+export function AccountMenu({
+  account,
+  compact = false,
+}: {
+  account: Account;
+  /** The phone's top bar: an icon button, and only what a phone offers (DS-110). */
+  compact?: boolean;
+}) {
   const router = useRouter();
   const sync = useSyncClient();
   const { openShortcuts } = useShell();
@@ -64,32 +72,46 @@ export function AccountMenu({ account }: { account: Account }) {
   }
 
   return (
-    <div className="flex flex-col gap-1 px-2">
+    <div className={compact ? "flex shrink-0" : "flex flex-col gap-1 px-2"}>
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={<Button variant="ghost" className="w-full justify-start" />}
+          render={
+            compact ? (
+              <Button variant="ghost" size="icon" className="size-11" />
+            ) : (
+              <Button variant="ghost" className="w-full justify-start" />
+            )
+          }
           aria-label={`Account: ${account.displayName ?? account.email}`}
         >
-          <span className="min-w-0 flex-1 truncate text-left">
-            {account.displayName ?? account.email}
-          </span>
-          <ChevronsUpDown strokeWidth={1.5} aria-hidden />
+          {compact ? (
+            <CircleUser strokeWidth={1.5} aria-hidden />
+          ) : (
+            <>
+              <span className="min-w-0 flex-1 truncate text-left">
+                {account.displayName ?? account.email}
+              </span>
+              <ChevronsUpDown strokeWidth={1.5} aria-hidden />
+            </>
+          )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align={compact ? "end" : "start"}>
           <DropdownMenuItem onClick={() => void router.navigate({ to: "/settings/preferences" })}>
             <Settings strokeWidth={1.5} aria-hidden />
             Settings
           </DropdownMenuItem>
-          {account.role === "creator" && (
+          {account.role === "creator" && !compact && (
             <DropdownMenuItem onClick={() => void router.navigate({ to: "/admin/admissions" })}>
               <ShieldCheck strokeWidth={1.5} aria-hidden />
               Admin
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={openShortcuts}>
-            <Keyboard strokeWidth={1.5} aria-hidden />
-            Keyboard shortcuts
-          </DropdownMenuItem>
+          {!compact && (
+            <DropdownMenuItem onClick={openShortcuts}>
+              <Keyboard strokeWidth={1.5} aria-hidden />
+              Keyboard shortcuts
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={chooseSignOut}>
             <LogOut strokeWidth={1.5} aria-hidden />
             Sign out

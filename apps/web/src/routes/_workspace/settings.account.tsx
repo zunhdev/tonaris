@@ -45,7 +45,7 @@ function AccountPage() {
 
   return (
     <>
-      <PageHeader title="Account" />
+      <PageHeader title="Account" back={{ to: "/c", label: "Collection" }} />
       <SettingsNav />
       <div className="flex max-w-2xl flex-col gap-6 p-6">
         <section aria-labelledby={`${id}-email`} className="flex flex-col gap-3">

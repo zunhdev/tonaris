@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_workspace/settings/data")({
 function Data() {
   return (
     <>
-      <PageHeader title="Data" />
+      <PageHeader title="Data" back={{ to: "/c", label: "Collection" }} />
       <SettingsNav />
       <div className="flex max-w-2xl flex-col gap-6 p-6">
         <section aria-labelledby="usage" className="flex flex-col gap-3">

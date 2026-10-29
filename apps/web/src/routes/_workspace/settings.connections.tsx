@@ -104,7 +104,7 @@ function Connections() {
 
   return (
     <>
-      <PageHeader title="Connections" />
+      <PageHeader title="Connections" back={{ to: "/c", label: "Collection" }} />
       <SettingsNav />
       <div className="flex max-w-2xl flex-col gap-6 p-6">
         <WaitingForApproval />

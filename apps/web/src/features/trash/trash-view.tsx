@@ -7,6 +7,7 @@
 import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
+import { DesktopOnly } from "@/features/shell/desktop-only";
 import { PageHeader } from "@/features/shell/page-header";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
@@ -171,8 +172,8 @@ export function TrashView() {
   if (narrow) {
     return (
       <>
-        <PageHeader title="Trash" />
-        <p className="p-8 text-center text-fg-secondary">Trash is on the desktop app.</p>
+        <PageHeader title="Trash" back={{ to: "/c", label: "Collection" }} />
+        <DesktopOnly what="Trash" />
       </>
     );
   }

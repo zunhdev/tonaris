@@ -3,12 +3,13 @@
 // sidebar is 240 px wide by default, resizable from 200 to 360 px and hideable with `[`, both kept on this device.
 // Offline, a banner tops the main view (DS-81). The workspace's shortcuts and their reference live here (DS-78), as
 // does the search palette (DS-75), and so do dragging, which spans the sidebar and the view, "Move to…" (DS-49), "Add to list…" (DS-46) and the manual
-// entry form (DS-47).
+// entry form (DS-47). On a phone the shell is a drill-down (DS-110): no sidebar, each view's header is its top bar,
+// and an album opens as a sheet over the view.
 
 import { CaptureDialog } from "@/features/capture/capture-dialog";
 import { CapturePanel } from "@/features/capture/capture-panel";
 import { AddToListDialog } from "@/features/collection/add-to-list";
-import { useCollectionUi } from "@/features/collection/collection-ui";
+import { useCollectionUi, useNarrowScreen } from "@/features/collection/collection-ui";
 import { DeleteAlbumDialog, DeleteFolderDialog } from "@/features/collection/delete-containers";
 import { DragProvider } from "@/features/collection/drag";
 import { AlbumInspector } from "@/features/collection/inspector";
@@ -64,7 +65,9 @@ export function Shell({ account, children }: { account: Account; children: React
   const { editing } = useCollectionUi();
   const { albumId } = useInspector();
   const wide = useWideScreen();
+  const narrow = useNarrowScreen();
   const beside = albumId !== undefined && wide;
+  const sidebar = !layout.hidden && !narrow;
 
   useEffect(() => sidebarLayout.write(layout), [layout]);
 
@@ -97,8 +100,8 @@ export function Shell({ account, children }: { account: Account; children: React
   useShortcuts({ runner, openSearch });
 
   const control = useMemo<ShellControl>(
-    () => ({ sidebarHidden: layout.hidden, toggleSidebar, openShortcuts, openSearch }),
-    [layout.hidden, toggleSidebar, openShortcuts, openSearch],
+    () => ({ account, sidebarHidden: layout.hidden, toggleSidebar, openShortcuts, openSearch }),
+    [account, layout.hidden, toggleSidebar, openShortcuts, openSearch],
   );
 
   return (
@@ -108,7 +111,7 @@ export function Shell({ account, children }: { account: Account; children: React
           className="grid h-dvh bg-app"
           style={{
             gridTemplateColumns: [
-              layout.hidden ? undefined : `${layout.width}px`,
+              sidebar ? `${layout.width}px` : undefined,
               "minmax(0,1fr)",
               beside ? "380px" : undefined,
             ]
@@ -116,7 +119,7 @@ export function Shell({ account, children }: { account: Account; children: React
               .join(" "),
           }}
         >
-          {!layout.hidden && (
+          {sidebar && (
             <Sidebar
               account={account}
               width={layout.width}
@@ -127,7 +130,9 @@ export function Shell({ account, children }: { account: Account; children: React
             <OfflineBanner />
             {children}
           </main>
-          {albumId !== undefined && <AlbumInspector overlay={!wide} />}
+          {albumId !== undefined && (
+            <AlbumInspector placement={narrow ? "sheet" : wide ? "beside" : "overlay"} />
+          )}
         </div>
       </DragProvider>
       <ShortcutReference open={shortcutsOpen} onOpenChange={setShortcutsOpen} />

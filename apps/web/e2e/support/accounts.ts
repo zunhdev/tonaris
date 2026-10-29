@@ -153,6 +153,9 @@ export const accounts = {
   exporter: at("exporter"),
   exportBeforeDeleting: at("export-first"),
   hostile: at("hostile"),
+  phone: at("phone"),
+  phoneOptions: at("phone-options"),
+  phoneSearch: at("phone-search"),
   deleteCancel: at("delete-cancel"),
 } as const;
 

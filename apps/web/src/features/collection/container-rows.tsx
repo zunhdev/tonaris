@@ -12,19 +12,21 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useId, useMemo, useRef } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef } from "react";
 
 import { uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { DragHandle, DropLine } from "./album-rows";
-import { useCollectionUi } from "./collection-ui";
+import { useCollectionUi, useNarrowScreen } from "./collection-ui";
 import { useRowDrag } from "./drag";
 import { ContainerIcon } from "./icons";
 import { useGridFocus, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
+/** A phone's rows (DS-110): tall enough for a 44 px touch target. */
+const phoneRowHeight = 48;
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -41,7 +43,7 @@ export function ContainerRows({
   label,
   albumCounts,
   childCounts,
-  showCreated = false,
+  showCreated: createdChosen = false,
   viewKey,
   moves,
 }: {
@@ -55,6 +57,10 @@ export function ContainerRows({
   viewKey: string;
   moves: ViewMoves;
 }) {
+  const compact = useNarrowScreen();
+  const height = compact ? phoneRowHeight : rowHeight;
+  // A phone has no room for the creation date.
+  const showCreated = createdChosen && !compact;
   const columns = showCreated ? 3 : 2;
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
@@ -66,11 +72,12 @@ export function ContainerRows({
   const virtualizer = useVirtualizer({
     count: containers.length,
     getScrollElement: () => scroller.current,
-    estimateSize: () => rowHeight,
+    estimateSize: () => height,
     overscan: 10,
   });
+  useEffect(() => virtualizer.measure(), [virtualizer, height]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
-  const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? 360) / rowHeight) - 1);
+  const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? 360) / height) - 1);
   const rearrange = useMemo<GridRearrange>(
     () => ({
       itemAt: ({ row }) => containers[row]?.id,
@@ -135,6 +142,8 @@ export function ContainerRows({
                 manual={moves.handles}
                 index={item.index}
                 top={item.start}
+                height={height}
+                compact={compact}
                 cellProps={cellProps}
               />
             );
@@ -156,6 +165,8 @@ function ContainerRow({
   manual,
   index,
   top,
+  height,
+  compact,
   cellProps,
 }: {
   container: Container;
@@ -167,6 +178,9 @@ function ContainerRow({
   manual: boolean;
   index: number;
   top: number;
+  height: number;
+  /** A phone's row: the count in a narrower column (DS-110). */
+  compact: boolean;
   cellProps: ReturnType<typeof useGridFocus>["cellProps"];
 }) {
   const row = useRef<HTMLDivElement>(null);
@@ -209,13 +223,15 @@ function ContainerRow({
       onFocus={() => setFocusedRow(container.id)}
       onBlur={() => setFocusedRow(undefined)}
       className={cn(
-        "group/row absolute inset-x-0 top-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
+        "group/row absolute inset-x-0 top-0 grid items-stretch rounded-md px-2 hover:bg-hover",
         drag.dragging && "opacity-40",
-        createdOn === undefined
-          ? "grid-cols-[minmax(0,1fr)_12rem]"
-          : "grid-cols-[minmax(0,1fr)_9rem_12rem]",
+        compact
+          ? "grid-cols-[minmax(0,1fr)_auto]"
+          : createdOn === undefined
+            ? "grid-cols-[minmax(0,1fr)_12rem]"
+            : "grid-cols-[minmax(0,1fr)_9rem_12rem]",
       )}
-      style={{ transform: `translateY(${top}px)` }}
+      style={{ height, transform: `translateY(${top}px)` }}
     >
       {manual && <DragHandle {...drag.handle} />}
       {drag.side && <DropLine side={drag.side} />}
