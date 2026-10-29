@@ -54,6 +54,7 @@ export {
 export { fillSearchKeys } from "./migrations";
 export { searchCollection } from "./search";
 export { canReadContainer, readableContainers } from "./access";
+export { sharingImpact, type ImpactQuery } from "./sharing-impact";
 export {
   findShareLink,
   linkReferenceState,

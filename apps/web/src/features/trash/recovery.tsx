@@ -7,11 +7,17 @@
 // something changed meanwhile. Once recovered, "Restored 'Doom'", or "Restored · 2 memberships skipped" with Details
 // listing each entry whose album is in Trash or gone for good. An album's restore that would make a second active
 // record of the same album pauses (FR-14.3): both records are shown, and the owner keeps the active one, or deletes it
-// into Trash, confirmed, and restores.
+// into Trash, confirmed, and restores. A recovery that would make content visible to anyone asks first, showing to
+// whom (DS-69, FR-07.14); choosing a destination previews it for the one chosen, and an Undo doesn't ask.
 
 import type { Deleted, RecoveryChoice } from "@/client/sync/trash";
 import { useCollectionData } from "@/features/collection/data";
 import type { Tree } from "@/features/collection/tree";
+import {
+  readImpact,
+  SharingImpactBlock,
+  SharingImpactPreview,
+} from "@/features/sharing/sharing-impact";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -36,6 +42,7 @@ import {
   recoveryResultSchema,
   type Container,
   type SameAlbum,
+  type SharingImpact,
   type SkippedEntry,
   type TrashUnitKind,
 } from "@tonaris/domain";
@@ -66,6 +73,12 @@ type Prompt =
   | { step: "name"; target: RecoveryTarget; choice: RecoveryChoice; parentId: string | null }
   | { step: "skipped"; name: string; skipped: SkippedEntry[] }
   | { step: "same"; target: RecoveryTarget; active: SameAlbum }
+  | {
+      step: "sharing";
+      target: RecoveryTarget;
+      choice: RecoveryChoice;
+      impact: SharingImpact | "failed";
+    }
   | { step: "replace"; target: RecoveryTarget; active: SameAlbum };
 
 const RecoveryContext = createContext<(target: RecoveryTarget) => void>(() => {});
@@ -136,12 +149,31 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
     })();
   }
 
+  /**
+   * Recovers at once if nobody else would see it, or after an Undo; otherwise asks first, showing to whom (DS-69).
+   * `to` is where a folder or list goes.
+   */
+  function checkSharing(target: RecoveryTarget, choice: RecoveryChoice, to?: string | null) {
+    setPrompt(undefined);
+    if (target.deleted) {
+      send(target, choice);
+      return;
+    }
+    readImpact({ recover: target.unitId, ...(to === undefined ? {} : { to }) }).then(
+      (impact) => {
+        if (impact.added.length === 0 && impact.direct.length === 0) send(target, choice);
+        else setPrompt({ step: "sharing", target, choice, impact });
+        return impact;
+      },
+      () => setPrompt({ step: "sharing", target, choice, impact: "failed" }),
+    );
+  }
+
   /** Recovers `target` with `choice`, or asks for what is missing first. */
   function proceed(target: RecoveryTarget, choice: RecoveryChoice) {
     // An album returns to its lists; there is no place or name to choose (FR-14.2).
     if (target.kind === "album") {
-      setPrompt(undefined);
-      send(target, {});
+      checkSharing(target, {});
       return;
     }
     const now = latest.current;
@@ -155,8 +187,13 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
       setPrompt({ step: "name", target, choice, parentId });
       return;
     }
-    setPrompt(undefined);
-    send(target, choice);
+    // A destination chosen in the prompt was previewed there.
+    if (choice.parentId !== undefined) {
+      setPrompt(undefined);
+      send(target, choice);
+      return;
+    }
+    checkSharing(target, choice, parentId);
   }
 
   // The latest `proceed`, so the context's function stays the same.
@@ -183,6 +220,17 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
           onCancel={() => setPrompt(undefined)}
           onElsewhere={() => setPrompt({ ...prompt, step: "destination" })}
           onName={(name) => proceed(prompt.target, { ...prompt.choice, name })}
+        />
+      )}
+      {prompt?.step === "sharing" && (
+        <SharingPrompt
+          target={prompt.target}
+          impact={prompt.impact}
+          onCancel={() => setPrompt(undefined)}
+          onRestore={() => {
+            setPrompt(undefined);
+            send(prompt.target, prompt.choice);
+          }}
         />
       )}
       {prompt?.step === "same" && (
@@ -314,6 +362,9 @@ function DestinationPrompt({
               );
             })}
           </fieldset>
+          <SharingImpactPreview
+            query={{ recover: target.unitId, to: chosen === "root" ? null : chosen }}
+          />
           <div className="flex justify-end gap-2">
             <Button type="button" onClick={onCancel}>
               Cancel
@@ -323,6 +374,43 @@ function DestinationPrompt({
             </Button>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** "Restore '{name}'?" when it would be visible to anyone: to whom (DS-69). */
+function SharingPrompt({
+  target,
+  impact,
+  onRestore,
+  onCancel,
+}: {
+  target: RecoveryTarget;
+  impact: SharingImpact | "failed";
+  onRestore: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Dialog open onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Restore '{target.name}'?</DialogTitle>
+          <DialogDescription>
+            {impact === "failed"
+              ? "Who can see it once it's back couldn't be checked."
+              : "Once it's back, others can see it."}
+          </DialogDescription>
+        </DialogHeader>
+        <SharingImpactBlock impact={impact} />
+        <div className="flex justify-end gap-2">
+          <Button type="button" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="button" variant="primary" onClick={onRestore}>
+            Restore
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

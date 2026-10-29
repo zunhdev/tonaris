@@ -1070,6 +1070,25 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 
 The block never says "private" while another access path remains.
 
+*As built in TON-71:*
+- **The block** is a bordered panel of short lines, announced politely:
+  - "Newly visible to Anna, Ben (invited) and anyone with the link to 'Metal'";
+  - "No longer visible through 'Metal': Anna and anyone with its link", one line per folder left;
+  - "Sharing unchanged" when nothing is gained or lost;
+  - "Still shared directly with …" for shares on the item and its contents.
+- **People** go by display name, else the address as typed; "(invited)" until they accept.
+- **While reading:** "Checking sharing…". **When it can't be read:** "Sharing effects couldn't be checked."
+- **Where it shows:**
+  - **Move to…:** under the destinations, for the one last focused or pointed at;
+  - **dragging** a folder or list over a folder it can move into: under its name in the drag overlay, after 150 ms;
+  - **recovery:**
+    - a restore that would make content visible to anyone asks "Restore '{name}'?", "Once it's back, others can see it.", with the block and Cancel or Restore. An unshared one restores at once, and Undo never asks;
+    - the destination prompt shows the block for the chosen place.
+- **Rules** (`packages/domain/src/sharing-impact.ts`), previewed by `GET /v1/sharing/impact`:
+  - a move adds the destination's audiences and removes those of the folders it leaves, less those on the item itself;
+  - recovery adds the destination's, and its own shares resume;
+  - an album's adds those of its active lists.
+
 **DS-70 Viewer chrome (signed-in).** Same shell. The header shows a "View only · Shared by {name}" pill, has no mode toggle or edit affordances, and offers view options. Desktop viewers can rearrange (DS-49) in their own arrangement. *(FR-05.2, FR-07.17)*
 - *As built in TON-69:*
   - **Where:** `/shared/{id}`, opened from Shared with me, with `?c=` for a folder or list inside the share. The header's breadcrumb is "Shared with me"; breadcrumbs inside the share sit above the content.

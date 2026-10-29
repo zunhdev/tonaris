@@ -3,8 +3,10 @@
 // land; a drop rearranges (TS-16). A folder or list, dragged from its row or the tree, moves when dropped onto a
 // folder in the tree or onto Collection, which highlight while it is over them (FR-01.4, FR-01.5). Pointer only:
 // the keyboard rearranges with ⌥↑ / ⌥↓ and moves with M. Only rows in view can be targets, since the rest are not
-// drawn; the overlay keeps the dragged item's name in sight as the view scrolls.
+// drawn; the overlay keeps the dragged item's name in sight as the view scrolls, and over a folder it can move into,
+// what the move would do to sharing (DS-69, FR-07.14).
 
+import { SharingImpactPreview } from "@/features/sharing/sharing-impact";
 import { useConnection } from "@/features/sync/sync-provider";
 import {
   DndContext,
@@ -96,6 +98,9 @@ export function DragProvider({ children }: { children: ReactNode }) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const [active, setActive] = useState<DragItem | undefined>(undefined);
   const [indicator, setIndicator] = useState<Indicator | undefined>(undefined);
+  // The folder, or the root, a dragged folder or list is over.
+  const [destination, setDestination] = useState<{ to: string | null } | undefined>(undefined);
+  const { tree } = useCollectionData();
   const drops = useRef(new Map<string, ViewMoves["drop"]>());
   const move = useMoveContainer();
   const { enterEditing } = useMode();
@@ -110,6 +115,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
   const end = () => {
     setActive(undefined);
     setIndicator(undefined);
+    setDestination(undefined);
   };
 
   const state = useMemo<DragState>(
@@ -142,6 +148,10 @@ export function DragProvider({ children }: { children: ReactNode }) {
         onDragStart={({ active: started }) => {
           const data = started.data.current;
           if (isDragItem(data)) setActive(data);
+        }}
+        onDragOver={({ over }) => {
+          const data = over?.data.current;
+          setDestination(isDestination(data) ? { to: data.parentId } : undefined);
         }}
         onDragMove={(event) => {
           const target = rowTargetOf(event);
@@ -177,8 +187,21 @@ export function DragProvider({ children }: { children: ReactNode }) {
         {children}
         <DragOverlay dropAnimation={null}>
           {active && (
-            <div className="inline-flex max-w-72 items-center rounded-md bg-raised px-3 py-1.5 text-fg-primary shadow-floating">
-              <span className="truncate">{active.name}</span>
+            <div className="flex max-w-72 flex-col items-start gap-1">
+              <div className="inline-flex max-w-full items-center rounded-md bg-raised px-3 py-1.5 text-fg-primary shadow-floating">
+                <span className="truncate">{active.name}</span>
+              </div>
+              <SharingImpactPreview
+                query={
+                  active.kind === "container" &&
+                  destination !== undefined &&
+                  canMoveInto(tree, active.id, destination.to)
+                    ? { move: active.id, to: destination.to }
+                    : undefined
+                }
+                delay={150}
+                className="bg-raised shadow-floating"
+              />
             </div>
           )}
         </DragOverlay>
