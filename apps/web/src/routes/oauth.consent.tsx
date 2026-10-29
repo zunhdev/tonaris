@@ -4,6 +4,7 @@
 
 import { currentAccount } from "@/features/account/session";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
+import { modeText } from "@/features/connections/modes";
 import { availableModes, clientName, consentRequest, decide } from "@/features/connections/oauth";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useState } from "react";
@@ -23,17 +24,7 @@ export const Route = createFileRoute("/oauth/consent")({
   component: Consent,
 });
 
-const modes: Record<McpMode, { title: string; description: string }> = {
-  read_only: {
-    title: "Read-only",
-    description: "Read and search your collection and Trash. Can't change anything.",
-  },
-  manage: {
-    title: "Manage collection",
-    description:
-      "Add, edit, move and organize. Deleting, removing used options and deleting fields always need your approval in Tonaris. Sharing, account settings, export and permanently deleting Trash stay in the app.",
-  },
-};
+const modes = modeText;
 
 function Consent() {
   const { account } = Route.useRouteContext();

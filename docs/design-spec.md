@@ -1421,6 +1421,14 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   - The sidebar shows **Approvals**, with the count, only while requests wait, between Invitations and Trash (DS-31). It opens Settings → Connections.
   - Both read the requests on load, when the window regains focus, every 30 seconds, and after a decision.
 - **Setup instructions** for Claude web, ChatGPT web, and Codex desktop: the MCP server URL with Copy, and 3–4 steps each.
+  - *As built in TON-86:* "Connect an AI client", above Connected clients.
+    - **The URL:** "Use your own AI account: Claude, ChatGPT or Codex reads and organizes your collection through this server URL.", then the URL with **Copy**.
+    - **The picker:** a segmented control for Claude, ChatGPT and Codex. Each shows its prerequisites and four steps, following the vendor's help as of 29 October 2026:
+      - **Claude:** any plan, one custom connector on Free, and a Team or Enterprise owner adds it first. Customize › Connectors › + Add › Add custom connector; the name and URL, Continue twice, Sign in now, Add; sign in and choose the mode; turn it on in a chat under + › Connectors.
+      - **ChatGPT:** a paid plan such as Plus, with a workspace admin possibly needing to allow it. chatgpt.com/plugins › + Add › Add custom MCP server; the name, Server URL and OAuth, accept the warning, Create as a plugin; install it, sign in and choose; `@` Tonaris in a chat.
+      - **Codex:** the ChatGPT desktop app or the CLI, signed in with ChatGPT. Settings › MCP servers › Add server; Streamable HTTP, the URL, save, Restart; Authenticate, sign in and choose; or `codex mcp add tonaris --url …` and `codex mcp login tonaris`.
+    - **What a client may do:** DS-85's two mode descriptions, then "When a client asks to delete something, it gives you a link to approve it here. Requests waiting for you show above, and under Approvals in the sidebar."
+    - The consent page and this guide share the mode text (`features/connections/modes.ts`).
 
 *(FR-10.1, FR-10.3)*
 

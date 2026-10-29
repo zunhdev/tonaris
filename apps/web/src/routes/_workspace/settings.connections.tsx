@@ -1,10 +1,11 @@
-// Settings → Connections (DS-86, FR-10.3): the AI clients' requests waiting for approval, the clients connected through
-// MCP, each with its mode, when it connected and last called, and a Revoke action, and the server URL to connect a new
-// one. Per-client setup steps (TON-86) join it later in M9.
+// Settings → Connections (DS-86, FR-10.1, FR-10.3): the AI clients' requests waiting for approval; how to connect
+// Claude, ChatGPT or Codex, with the server URL; and the clients connected through MCP, each with its mode, when it
+// connected and last called, and a Revoke action.
 
 import { api } from "@/api";
 import { apiUrl } from "@/config";
 import { usePendingApprovals } from "@/features/connections/pending-approvals";
+import { SetupGuide } from "@/features/connections/setup-guide";
 import { SettingsNav } from "@/features/settings/settings-nav";
 import { PageHeader } from "@/features/shell/page-header";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
@@ -107,21 +108,7 @@ function Connections() {
       <SettingsNav />
       <div className="flex max-w-2xl flex-col gap-6 p-6">
         <WaitingForApproval />
-        <section aria-labelledby="server-url" className="flex flex-col gap-1.5">
-          <h2 id="server-url" className="text-title text-fg-primary">
-            MCP server URL
-          </h2>
-          <p className="text-fg-secondary">
-            Add it as a custom connector in Claude, ChatGPT or Codex, then sign in and choose what
-            the client may do.
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="min-w-0 flex-1 truncate rounded-md border border-subtle bg-raised px-2.5 py-1.5 text-fg-primary">
-              {serverUrl}
-            </code>
-            <Button onClick={() => void navigator.clipboard.writeText(serverUrl)}>Copy</Button>
-          </div>
-        </section>
+        <SetupGuide serverUrl={serverUrl} />
 
         <section aria-labelledby="connected" className="flex flex-col gap-2">
           <h2 id="connected" className="text-title text-fg-primary">
