@@ -34,3 +34,96 @@ A one-time command SHALL create the creator's account from the `CREATOR_EMAIL` s
 #### Scenario: The setting is missing
 - **WHEN** the bootstrap runs without `CREATOR_EMAIL`, or with a value that is not an email address
 - **THEN** it fails with an explanation and changes nothing
+
+### Requirement: Admission administration is the creator's alone
+Only the creator SHALL issue, inspect, resend and revoke admission invitations, and pause or resume admissions (FR-11.6). This SHALL happen in the app only, never through MCP (X-03). Other accounts SHALL NOT see the administration or reach it. Administration SHALL grant no access to other people's private collections.
+
+#### Scenario: Another account is refused
+- **WHEN** a signed-in account without the creator role opens Admin → Admissions or calls its API
+- **THEN** the page is not found, the API answers `permission_denied`, and the account menu shows no Admin entry
+
+#### Scenario: Signed out
+- **WHEN** a signed-out visitor calls the administration API
+- **THEN** it answers `unauthenticated`
+
+#### Scenario: The creator sees Admin
+- **WHEN** the creator opens the account menu
+- **THEN** it has Admin, which opens Admin → Admissions
+
+### Requirement: Issuing an invitation
+The creator SHALL issue an invitation for one email address (FR-11.6). It SHALL be bound to that address, work once, and expire 14 days after it is issued, and it SHALL be emailed to that address at once. An address that already has an account, or already has an available invitation, SHALL be refused with an explanation. An address whose invitation expired SHALL be invited again.
+
+#### Scenario: The creator invites someone
+- **WHEN** the creator invites `anna@example.com`
+- **THEN** the table shows her invitation as available, created now and expiring in 14 days, and she receives the invitation email with a link to her invitation page
+
+#### Scenario: A member is refused
+- **WHEN** the creator invites an address that already has an account
+- **THEN** no invitation is created, and the explanation says the address already has an account
+
+#### Scenario: An address already invited is refused
+- **WHEN** the creator invites an address that has an available invitation
+- **THEN** no second invitation is created, and the explanation points to that invitation
+
+#### Scenario: An expired invitation's address is invited again
+- **WHEN** the creator invites an address whose invitation has expired
+- **THEN** the old invitation stays as expired, and a new available invitation is issued and emailed
+
+### Requirement: Status and delivery are reported separately
+Each invitation SHALL show its status (available, redeemed, revoked or expired) and, apart from it, how its email went: sending, sent, failed, or not confirmed (FR-11.6, FR-07.5). Created and expiry dates SHALL be shown. An available invitation past its expiry SHALL show as expired, and a daily job SHALL record it as such.
+
+#### Scenario: Delivery follows the send
+- **WHEN** an invitation's email is sent, or the provider refuses it, or the last try timed out
+- **THEN** its delivery shows sent, failed, or not confirmed, and its status stays available
+
+#### Scenario: A redeemed invitation
+- **WHEN** the invited person joins with the invitation
+- **THEN** its status shows redeemed
+
+#### Scenario: Past its 14 days
+- **WHEN** an available invitation is past its expiry
+- **THEN** it shows as expired, can't be used to join, and is recorded as expired by the daily job
+
+### Requirement: Resending an invitation
+The creator SHALL resend an available invitation whose email failed or wasn't confirmed (FR-11.6). Resending SHALL email a new link and SHALL make the earlier link stop working. The invitation SHALL keep its address and expiry. An invitation that isn't available SHALL NOT be resent.
+
+#### Scenario: A failed email is resent
+- **WHEN** the creator resends an invitation whose email failed
+- **THEN** the address receives a new invitation email, the delivery shows the new send's outcome, and the earlier link no longer works
+
+#### Scenario: A revoked invitation isn't resent
+- **WHEN** a resend is asked for an invitation that is revoked, redeemed or expired
+- **THEN** it is refused with an explanation, and nothing is emailed
+
+### Requirement: Revoking an invitation
+The creator SHALL revoke an available invitation (FR-11.6). A revoked invitation SHALL NOT be redeemed. Revoking SHALL NOT delete or change an account that an invitation already admitted.
+
+#### Scenario: A revoked invitation can't be used
+- **WHEN** the creator revokes an available invitation and the invited person then tries to join with it
+- **THEN** the invitation shows revoked, and joining is refused as withdrawn
+
+#### Scenario: Admitted accounts are kept
+- **WHEN** the creator tries to revoke an invitation that was already redeemed
+- **THEN** it is refused with an explanation, and the account it admitted keeps its access
+
+### Requirement: Pausing and resuming admissions
+The creator SHALL pause and resume admissions with a switch labelled "Accepting new members" (FR-11.6, FR-11.2). While admissions are paused, no account SHALL be created. Pausing SHALL keep existing members' access, and SHALL neither redeem nor revoke outstanding invitations. Resuming SHALL make outstanding invitations work again.
+
+#### Scenario: Pausing
+- **WHEN** the creator turns "Accepting new members" off
+- **THEN** the page notes that existing members keep access and outstanding invitations stay as they are, invited people can't join, and members still sign in
+
+#### Scenario: Resuming
+- **WHEN** the creator turns it back on
+- **THEN** an invitation issued before the pause, still available, works again
+
+### Requirement: An invitation admits only its address, once
+An invitation SHALL create at most one account, for its own address only (FR-11.6, FR-13.5). A forwarded invitation SHALL NOT enroll another address. A retried or concurrent registration SHALL NOT duplicate an account or consume an invitation without creating its account.
+
+#### Scenario: A forwarded invitation
+- **WHEN** someone other than the invited person opens a forwarded invitation and asks for a code
+- **THEN** the code goes only to the invited address, so no other address can register with it
+
+#### Scenario: A retried registration
+- **WHEN** the same registration is sent twice, or two arrive at once
+- **THEN** one account exists, the invitation shows redeemed, and the retry signs in or is refused without creating another
