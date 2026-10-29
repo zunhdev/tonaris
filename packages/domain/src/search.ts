@@ -90,14 +90,55 @@ const groupOf = <T extends z.ZodType>(item: T) =>
     items: z.array(item).meta({ description: "The best matches, at most `limit`." }),
   });
 
+const ownerSchema = z
+  .object({ id: z.uuid(), displayName: z.string().nullable() })
+  .meta({ description: "Whose it is." });
+const rootIdSchema = z.uuid().meta({
+  description:
+    "The shared folder or list it's reached through, where its location starts: the highest one the caller can see.",
+});
+
+export const sharedSearchContainerSchema = searchContainerSchema.extend({
+  parentId: z
+    .uuid()
+    .nullable()
+    .meta({ description: "Its folder, if the caller can see it; else null." }),
+  location: locationSchema.meta({
+    description:
+      "Where it is, from its shared root down to the folder holding it; never a folder the caller can't see. Empty for the root.",
+  }),
+  rootId: rootIdSchema,
+  owner: ownerSchema,
+});
+export type SharedSearchContainer = z.infer<typeof sharedSearchContainerSchema>;
+
+export const sharedSearchAlbumSchema = searchAlbumSchema.extend({
+  owner: ownerSchema,
+  lists: z.array(z.object({ id: z.uuid(), location: locationSchema, rootId: rootIdSchema })).meta({
+    description:
+      "The shared lists it is in that the caller can see, each located from its shared root down to the list, ordered by that path.",
+  }),
+});
+export type SharedSearchAlbum = z.infer<typeof sharedSearchAlbumSchema>;
+
 export const searchResultsSchema = z
   .object({
     folders: groupOf(searchContainerSchema),
     lists: groupOf(searchContainerSchema),
     albums: groupOf(searchAlbumSchema),
+    shared: z
+      .object({
+        folders: groupOf(sharedSearchContainerSchema),
+        lists: groupOf(sharedSearchContainerSchema),
+        albums: groupOf(sharedSearchAlbumSchema),
+      })
+      .meta({
+        description:
+          "What others share with the caller, through accepted invitations and links saved to Shared with me, matched and ordered the same way (FR-12.3).",
+      }),
   })
   .meta({
     description:
-      "The caller's active folders, lists and albums matching the query by name, title or artist, ignoring case and accents, best first (FR-12, TS-50).",
+      "The caller's active folders, lists and albums matching the query by name, title or artist, ignoring case and accents, best first, then what's shared with them (FR-12, TS-50).",
   });
 export type SearchResults = z.infer<typeof searchResultsSchema>;

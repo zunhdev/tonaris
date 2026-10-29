@@ -1213,6 +1213,14 @@ The block never says "private" while another access path remains.
   - **Recent:** the last 8 folders, lists and albums opened anywhere, newest first: a view's route, an album in the inspector, or an album's own page. Kept on this device (20 at most), per account. Ones deleted or in Trash drop out.
   - **Frequent commands:** the 5 commands run most from the palette on this device, ties in list order, topped up with Add albums from links, New list, Go to Unsorted, Switch mode and Keyboard shortcuts.
 
+*As built in TON-72 (shared content):*
+- **"Shared with me"** is a group after Albums and before Commands: shared folders, then lists, then albums, collapsed to 8 with "Show all".
+- **Where they come from:** the server's search, 150 ms after typing stops, while online (decided with the creator, 29 October 2026).
+- **Each row** reads "Shared by {name} · {path}". The path starts at the highest shared folder or list the person can see, so nothing private is named. A shared album shows its first shared list's path, "+n more" for others, and its letter tile.
+- **Opening:** a shared folder or list opens in the viewer page (DS-70), from its shared root with `?c=`. An album opens its list there; ⌘Enter does the same.
+- **"No results"** waits for the shared answer, reading "Searching…" until then.
+- **Offline:** "Shared content isn't searched while offline." shows under the results.
+
 ---
 
 ## 11. Keyboard map

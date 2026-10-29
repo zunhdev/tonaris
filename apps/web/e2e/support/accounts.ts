@@ -134,6 +134,9 @@ export const accounts = {
   // Sharing previews on moves and recovery (sharing-impact.e2e.ts): an owner and the person they share with.
   impactOwner: at("impact-owner"),
   impactViewer: at("impact-viewer"),
+  // Shared content in search (shared-search.e2e.ts): an owner and the person they share with.
+  searchOwner: at("search-owner"),
+  searchViewer: at("search-viewer"),
 } as const;
 
 /** An address with no account. */

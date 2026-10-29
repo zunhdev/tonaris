@@ -48,6 +48,12 @@ const searchOutput = z.object({
       title: z.string(),
       artist: z.string(),
       year: z.number().nullable().describe("The original release year, when known."),
+      sharedBy: z
+        .string()
+        .nullable()
+        .describe(
+          "Who shared it with the user, for an album in someone else's collection; else null.",
+        ),
     }),
   ),
 });
@@ -112,20 +118,30 @@ export function createMcpServer({ db, principal, webOrigin }: McpServerOptions) 
     "search",
     {
       title: "Search albums",
-      description: `Finds the user's albums whose title or artist contains the query, ignoring case and accents. ${userData}`,
+      description: `Finds the user's albums whose title or artist contains the query, ignoring case and accents, then albums others share with them. ${userData}`,
       inputSchema: searchInput,
       outputSchema: searchOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ query, limit }) => {
-      // The app's search and order (X-02); folders and lists join this tool in M9 (TON-81).
+      // The app's search and order (X-02), the user's own first, then what's shared with them (FR-12.3); folders and
+      // lists join this tool in M9 (TON-81).
       const found = await searchCollection(db, { ownerId: principal.userId, query, limit });
-      const albums = found.albums.items.map((album) => ({
-        id: album.id,
-        title: album.title,
-        artist: album.artistCredit,
-        year: album.originalYear,
-      }));
+      const albums = [
+        ...found.albums.items.map((album) => ({ album, sharedBy: null })),
+        ...found.shared.albums.items.map((album) => ({
+          album,
+          sharedBy: album.owner.displayName ?? "a Tonaris member",
+        })),
+      ]
+        .slice(0, limit)
+        .map(({ album, sharedBy }) => ({
+          id: album.id,
+          title: album.title,
+          artist: album.artistCredit,
+          year: album.originalYear,
+          sharedBy,
+        }));
       return result(`${albums.length === 0 ? "No" : albums.length} albums found.`, { albums });
     },
   );
