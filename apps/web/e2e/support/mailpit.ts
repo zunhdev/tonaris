@@ -69,3 +69,11 @@ export async function joinEmail(address: string, count: number) {
   if (!code || !link) throw new Error(`No join code in the email to ${address}:\n${text}`);
   return { code, link };
 }
+
+/** The code in the newest of `count` emails to `address`, for emails that carry only a code (DS-93). */
+export async function emailedCode(address: string, count: number): Promise<string> {
+  const { text } = await latestEmail(address, count);
+  const code = /^(\d{6})\r?$/m.exec(text)?.[1];
+  if (!code) throw new Error(`No code in the email to ${address}:\n${text}`);
+  return code;
+}

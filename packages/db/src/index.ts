@@ -8,6 +8,15 @@ export {
   type UserRow,
 } from "./accounts";
 export {
+  cancelEmailChange,
+  findEmailChange,
+  renewEmailChangeCode,
+  startEmailChange,
+  submitEmailChangeCode,
+  type EmailChangeRow,
+  type EmailChangeSubmission,
+} from "./email-changes";
+export {
   admissionsPaused,
   admitAccount,
   createAdmissionInvitation,

@@ -46,3 +46,54 @@ export const accountSchema = z
   })
   .meta({ description: "The signed-in account." });
 export type Account = z.infer<typeof accountSchema>;
+
+/** What the audit log records (TS-11): admin actions, recovery and deletions, each as one action name. */
+export const auditActions = ["email.change"] as const;
+export type AuditAction = (typeof auditActions)[number];
+
+/**
+ * A sign-in email change's steps (FR-11.4, TS-73): the code sent to the current address is entered first, then
+ * the one sent to the new address.
+ */
+export const emailChangeStages = ["current", "new"] as const;
+export type EmailChangeStage = (typeof emailChangeStages)[number];
+
+/** Why a step of the email change is refused (DS-90, DS-93), one sentence each. */
+export const emailChangeRefusalDetails = {
+  notEmail: "Enter an email address, such as anna@example.com.",
+  same: "That's already your sign-in email.",
+  taken: "That address belongs to another Tonaris account.",
+  none: "There's no email change in progress. Start again.",
+  wrongCode: "That code isn't right. Check the email and try again.",
+  expired: "This code has expired. Send a new code.",
+  tooManyAttempts: "Too many wrong codes. Send a new code.",
+} as const;
+
+/** The change in progress: the new address and the step its code is for. */
+export const emailChangeSchema = z
+  .object({
+    newEmail: z.string().meta({ description: "The new address, as its email key." }),
+    stage: z.enum(emailChangeStages).meta({
+      description: "Whose code is asked for: the current address's, then the new one's.",
+    }),
+  })
+  .meta({ description: "A sign-in email change in progress (FR-11.4)." });
+export type EmailChange = z.infer<typeof emailChangeSchema>;
+
+/** Starts a change to `newEmail`; a change in progress is replaced. */
+export const emailChangeStartSchema = z.object({
+  newEmail: z.string().trim().min(1).max(320).meta({ description: "The new address, as typed." }),
+});
+
+/** A step's code, from its email. */
+export const emailChangeCodeSchema = z.object({ code: z.string().min(1).max(32) });
+
+/** What a right code leads to: the new address's step, or the change done. */
+export const emailChangeStepSchema = z.discriminatedUnion("stage", [
+  z.object({ stage: z.literal("new"), newEmail: z.string() }),
+  z.object({
+    stage: z.literal("done"),
+    email: z.string().meta({ description: "The account's sign-in email from now on." }),
+  }),
+]);
+export type EmailChangeStep = z.infer<typeof emailChangeStepSchema>;

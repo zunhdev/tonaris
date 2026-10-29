@@ -1,11 +1,12 @@
 // The Settings subnav (DS-92): the settings pages built so far, in DS-92's order, with the current one marked for
-// assistive technology too. Profile has the display name (TON-76); Account joins with its issues (M8); Data has the
+// assistive technology too. Profile has the display name (TON-76); Account the sign-in email (TON-77); Data the
 // usage meter (TON-60).
 
 import { Link } from "@tanstack/react-router";
 
 const pages = [
   { to: "/settings/profile", label: "Profile" },
+  { to: "/settings/account", label: "Account" },
   { to: "/settings/preferences", label: "Preferences" },
   { to: "/settings/custom-fields", label: "Custom fields" },
   { to: "/settings/connections", label: "Connections" },

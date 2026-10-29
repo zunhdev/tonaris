@@ -142,10 +142,16 @@ export const accounts = {
   // Settings → Profile (settings-profile.e2e.ts), one per test.
   profileName: at("profile-name"),
   profileGuard: at("profile-guard"),
+  // Settings → Account (settings-account.e2e.ts), one per test.
+  emailChanger: at("email-changer"),
+  emailCanceller: at("email-canceller"),
 } as const;
 
 /** An address with no account. */
 export const nobody = at("nobody");
+
+/** Where settings-account.e2e.ts moves an account, and an address it leaves unused; neither has an account. */
+export const newAddresses = { moved: at("moved-here"), unused: at("never-used") } as const;
 
 /** An address the creator invites in admission.e2e.ts; it has no account. */
 export const invitee = at("admission-invitee");
