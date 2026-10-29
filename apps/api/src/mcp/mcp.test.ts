@@ -55,6 +55,13 @@ const connectionsSchema = z.array(z.object({ id: z.string() }));
 
 const listTools = { jsonrpc: "2.0", id: 1, method: "tools/list" };
 
+/** The titles of the user's own albums a `search` found, in its order. */
+const albumTitles = (found: { structuredContent?: unknown }) =>
+  z
+    .object({ albums: z.object({ items: z.array(z.object({ title: z.string() })) }) })
+    .parse(found.structuredContent)
+    .albums.items.map((album) => album.title);
+
 describe("discovery (TS-61)", () => {
   test("the protected resource names /mcp, its authorization server and the mode scopes", async () => {
     const responses = await Promise.all(
@@ -211,9 +218,15 @@ describe("the MCP server (TS-60, TS-63)", () => {
     const { tools } = await mcp.listTools();
     // Read tools only (TS-62): the write tools are for Manage collection connections.
     expect(tools.map((tool) => tool.name).toSorted()).toEqual([
+      "get_album",
       "get_approval",
+      "get_operation",
       "get_overview",
       "list_container",
+      "list_fields",
+      "list_shared_with_me",
+      "list_trash",
+      "list_unsorted",
       "search",
     ]);
     expect(tools.every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
@@ -224,7 +237,7 @@ describe("the MCP server (TS-60, TS-63)", () => {
       type: "text",
       text: JSON.stringify(overview.structuredContent),
     });
-    expect(overview.structuredContent).toEqual({
+    expect(overview.structuredContent).toMatchObject({
       albums: 2,
       unsorted: 2,
       lists: 0,
@@ -234,11 +247,14 @@ describe("the MCP server (TS-60, TS-63)", () => {
     });
 
     const found = await mcp.callTool({ name: "search", arguments: { query: "bjork" } });
-    expect(found.structuredContent).toEqual({
-      albums: [
-        expect.objectContaining({ title: "Homogenic", artist: "Björk", year: 1997 }),
-        expect.objectContaining({ title: "Vespertine", artist: "Björk", year: 2001 }),
-      ],
+    expect(albumTitles(found)).toEqual(["Homogenic", "Vespertine"]);
+    expect(found.structuredContent).toMatchObject({
+      albums: {
+        items: [
+          { title: "Homogenic", artistCredit: "Björk", originalYear: 1997 },
+          { title: "Vespertine", artistCredit: "Björk", originalYear: 2001 },
+        ],
+      },
     });
     await mcp.close();
   });
@@ -261,13 +277,7 @@ describe("the MCP server (TS-60, TS-63)", () => {
     await insertAlbum(userId, "Doom Metal", "Zed", 2002);
     const mcp = await mcpClient(tokens.access_token);
     const found = await mcp.callTool({ name: "search", arguments: { query: "doom" } });
-    expect(found.structuredContent).toEqual({
-      albums: [
-        expect.objectContaining({ title: "Doom Metal" }),
-        expect.objectContaining({ title: "Classic Doom" }),
-        expect.objectContaining({ title: "Kadoom" }),
-      ],
-    });
+    expect(albumTitles(found)).toEqual(["Doom Metal", "Classic Doom", "Kadoom"]);
   });
 
   test("search finds what's shared with the user after their own, saying who shared it (FR-12.3)", async () => {
@@ -309,15 +319,21 @@ describe("the MCP server (TS-60, TS-63)", () => {
     await send(anna.cookie, "share.accept", { grantId });
     const mcp = await mcpClient(tokens.access_token);
     const found = await mcp.callTool({ name: "search", arguments: { query: "doom" } });
-    expect(found.structuredContent).toEqual({
-      albums: [
-        expect.objectContaining({ title: "Doom Days", sharedBy: null }),
-        expect.objectContaining({
-          id: album,
-          title: "Epicus Doomicus Metallicus",
-          sharedBy: "Denis",
-        }),
-      ],
+    expect(albumTitles(found)).toEqual(["Doom Days"]);
+    expect(found.structuredContent).toMatchObject({
+      shared: {
+        albums: {
+          total: 1,
+          items: [
+            {
+              id: album,
+              title: "Epicus Doomicus Metallicus",
+              sharedBy: "Denis",
+              lists: [{ id: list, location: ["Epic"] }],
+            },
+          ],
+        },
+      },
     });
   });
 
@@ -328,9 +344,7 @@ describe("the MCP server (TS-60, TS-63)", () => {
     await insertAlbum(userId, "Plain", "Other", 2001);
     const mcp = await mcpClient(tokens.access_token);
     const found = await mcp.callTool({ name: "search", arguments: { query: "%" } });
-    expect(found.structuredContent).toEqual({
-      albums: [expect.objectContaining({ title: "100% Pure" })],
-    });
+    expect(albumTitles(found)).toEqual(["100% Pure"]);
   });
 });
 

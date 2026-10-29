@@ -172,7 +172,7 @@ export async function findFieldIn(
 }
 
 /** The account's custom fields, each with its options in order, as clients hold them (FR-03.6). */
-async function fieldsOfAccount(tx: Transaction, accountId: string): Promise<CustomField[]> {
+export async function fieldsOfAccount(tx: Transaction, accountId: string): Promise<CustomField[]> {
   const definitions = await tx
     .select({ id: fieldDefinitions.id, name: fieldDefinitions.name, type: fieldDefinitions.type })
     .from(fieldDefinitions)
@@ -260,7 +260,7 @@ function selectionsOf(tx: Transaction, where: SQL | undefined, fieldId?: string)
 }
 
 /** The account's Trash units as clients hold them, oldest first: each with its root's name and its members (FR-01.12). */
-async function unitsOfAccount(tx: Transaction, accountId: string): Promise<TrashUnit[]> {
+export async function unitsOfAccount(tx: Transaction, accountId: string): Promise<TrashUnit[]> {
   const units = await tx
     .select({
       id: trashUnits.id,

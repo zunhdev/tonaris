@@ -78,6 +78,27 @@ export {
   type TrashResult,
 } from "./mcp";
 export {
+  albumDetail,
+  albumSources,
+  collectionTree,
+  collectionUsage,
+  containerPage,
+  fieldsWithUsage,
+  trashContents,
+  unsortedPage,
+  type AlbumDetail,
+  type AlbumFieldValue,
+  type AlbumSources,
+  type CollectionUsage,
+  type ContainerInfo,
+  type ContainerPage,
+  type FieldWithUsage,
+  type Page,
+  type SharedOwner,
+  type SourcedAlbum,
+  type TreeEntry,
+} from "./mcp-reads";
+export {
   buryJob,
   claimJob,
   deadJobRetentionMs,
