@@ -254,6 +254,8 @@ export type CollectionStore = {
    * list), or a folder's or the root's active folders and lists.
    */
   viewItems(personId: string, viewKey: string, kind: ViewItems): Promise<Set<string>>;
+  /** Whether the person may read someone else's folder or list through sharing (TS-33, FR-07.17). */
+  canReadShared(personId: string, containerId: string): Promise<boolean>;
   /** Whether the album is in any active list. If not, it is in Unsorted (TS-13). */
   inActiveList(albumId: string): Promise<boolean>;
 

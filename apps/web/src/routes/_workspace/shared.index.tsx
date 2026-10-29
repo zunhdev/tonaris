@@ -3,7 +3,7 @@
 import { SharedWithMeView } from "@/features/sharing/shared-with-me";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_workspace/shared")({
+export const Route = createFileRoute("/_workspace/shared/")({
   head: () => ({ meta: [{ title: "Shared with me · Tonaris" }] }),
   component: SharedWithMeView,
 });

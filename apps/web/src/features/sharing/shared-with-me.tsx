@@ -2,13 +2,14 @@
 // as shared by invitation or saved from a link. One that no longer works is dimmed, "No longer available", with
 // Remove. An invitation-based one offers Leave share…, confirming that the owner would have to invite again; a
 // link-saved one, Remove from Shared with me. Read from `GET /v1/shared` when shown, when the window regains focus,
-// and whenever the person's references change, here or on another device (their collection, TON-68). Opening one
-// comes with TON-69.
+// and whenever the person's references change, here or on another device (their collection, TON-68). An available
+// one opens in the app, view-only (shared-view.tsx).
 
 import { api } from "@/api";
 import { PageHeader } from "@/features/shell/page-header";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { useLiveQuery } from "@tanstack/react-db";
+import { Link } from "@tanstack/react-router";
 import { Link2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -113,7 +114,17 @@ function SharedRow({ entry, onChanged }: { entry: SharedEntry; onChanged: () => 
           {entry.via.link && <Link2 strokeWidth={1.5} aria-hidden className="size-4" />}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-fg-primary">{entry.name ? `"${entry.name}"` : name}</span>
+          {entry.available ? (
+            <Link
+              to="/shared/$containerId"
+              params={{ containerId: entry.containerId }}
+              className="truncate text-fg-primary hover:underline"
+            >
+              {entry.name ? `"${entry.name}"` : name}
+            </Link>
+          ) : (
+            <span className="truncate text-fg-primary">{name}</span>
+          )}
           <span className="text-small text-fg-secondary">
             {entry.available
               ? [

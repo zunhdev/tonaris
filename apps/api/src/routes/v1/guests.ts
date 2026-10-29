@@ -13,6 +13,7 @@ import {
   sharedSnapshotSchema,
   unavailableLink,
   type SharedInvalidate,
+  type SharedSnapshot,
 } from "@tonaris/domain";
 
 import type { ArtworkSigner } from "../../artwork";
@@ -25,9 +26,17 @@ const token = z
   .regex(/^[A-Za-z0-9_-]{43}$/)
   .meta({ description: "The link's token (TS-32)." });
 
-type InvalidateEvent = SSEPayload<SharedInvalidate, "shared-invalidate"> & {
+export type InvalidateEvent = SSEPayload<SharedInvalidate, "shared-invalidate"> & {
   data: SharedInvalidate;
 };
+
+/** The snapshot with its artwork signed, to show through the API's image proxy (TS-103). */
+export function signed(snapshot: SharedSnapshot, artwork: ArtworkSigner): SharedSnapshot {
+  for (const album of snapshot.albums) {
+    if (album.artworkUrl) album.artworkSignature = artwork.sign(album.artworkUrl);
+  }
+  return snapshot;
+}
 
 const unavailable = () => new ProblemError(404, "not_found", unavailableLink);
 
@@ -65,11 +74,7 @@ export function guestRoutes({
       },
       async ({ params }) => {
         const { snapshot } = await working(params.token);
-        // Artwork shows through the API's image proxy, signed (TS-103).
-        for (const album of snapshot.albums) {
-          if (album.artworkUrl) album.artworkSignature = artwork.sign(album.artworkUrl);
-        }
-        return snapshot;
+        return signed(snapshot, artwork);
       },
     )
     .get(

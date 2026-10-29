@@ -13,7 +13,6 @@ import { Route as WorkspaceRouteImport } from './routes/_workspace'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as WorkspaceIndexRouteImport } from './routes/_workspace/index'
 import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
-import { Route as WorkspaceSharedRouteImport } from './routes/_workspace/shared'
 import { Route as WorkspaceTrashRouteImport } from './routes/_workspace/trash'
 import { Route as WorkspaceUnsortedRouteImport } from './routes/_workspace/unsorted'
 import { Route as ApprovalsIdRouteImport } from './routes/approvals.$id'
@@ -31,6 +30,8 @@ import { Route as WorkspaceSettingsConnectionsRouteImport } from './routes/_work
 import { Route as WorkspaceSettingsCustomFieldsRouteImport } from './routes/_workspace/settings.custom-fields'
 import { Route as WorkspaceSettingsDataRouteImport } from './routes/_workspace/settings.data'
 import { Route as WorkspaceSettingsPreferencesRouteImport } from './routes/_workspace/settings.preferences'
+import { Route as WorkspaceSharedIndexRouteImport } from './routes/_workspace/shared.index'
+import { Route as WorkspaceSharedContainerIdRouteImport } from './routes/_workspace/shared.$containerId'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: '/_workspace',
@@ -49,11 +50,6 @@ const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
 const WorkspaceCRoute = WorkspaceCRouteImport.update({
   id: '/c',
   path: '/c',
-  getParentRoute: () => WorkspaceRoute,
-} as any)
-const WorkspaceSharedRoute = WorkspaceSharedRouteImport.update({
-  id: '/shared',
-  path: '/shared',
   getParentRoute: () => WorkspaceRoute,
 } as any)
 const WorkspaceTrashRoute = WorkspaceTrashRouteImport.update({
@@ -145,12 +141,22 @@ const WorkspaceSettingsPreferencesRoute =
     path: '/settings/preferences',
     getParentRoute: () => WorkspaceRoute,
   } as any)
+const WorkspaceSharedIndexRoute = WorkspaceSharedIndexRouteImport.update({
+  id: '/shared/',
+  path: '/shared/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceSharedContainerIdRoute =
+  WorkspaceSharedContainerIdRouteImport.update({
+    id: '/shared/$containerId',
+    path: '/shared/$containerId',
+    getParentRoute: () => WorkspaceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof WorkspaceIndexRoute
   '/sign-in': typeof SignInRouteWithChildren
   '/c': typeof WorkspaceCRoute
-  '/shared': typeof WorkspaceSharedRoute
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
@@ -167,11 +173,12 @@ export interface FileRoutesByFullPath {
   '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/settings/data': typeof WorkspaceSettingsDataRoute
   '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
+  '/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/invitations/': typeof WorkspaceInvitationsIndexRoute
+  '/shared/': typeof WorkspaceSharedIndexRoute
 }
 export interface FileRoutesByTo {
   '/c': typeof WorkspaceCRoute
-  '/shared': typeof WorkspaceSharedRoute
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
@@ -189,14 +196,15 @@ export interface FileRoutesByTo {
   '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/settings/data': typeof WorkspaceSettingsDataRoute
   '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
+  '/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/invitations': typeof WorkspaceInvitationsIndexRoute
+  '/shared': typeof WorkspaceSharedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_workspace': typeof WorkspaceRouteWithChildren
   '/sign-in': typeof SignInRouteWithChildren
   '/_workspace/c': typeof WorkspaceCRoute
-  '/_workspace/shared': typeof WorkspaceSharedRoute
   '/_workspace/trash': typeof WorkspaceTrashRoute
   '/_workspace/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
@@ -214,7 +222,9 @@ export interface FileRoutesById {
   '/_workspace/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/_workspace/settings/data': typeof WorkspaceSettingsDataRoute
   '/_workspace/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
+  '/_workspace/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/_workspace/invitations/': typeof WorkspaceInvitationsIndexRoute
+  '/_workspace/shared/': typeof WorkspaceSharedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -222,7 +232,6 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/c'
-    | '/shared'
     | '/trash'
     | '/unsorted'
     | '/approvals/$id'
@@ -239,11 +248,12 @@ export interface FileRouteTypes {
     | '/settings/custom-fields'
     | '/settings/data'
     | '/settings/preferences'
+    | '/shared/$containerId'
     | '/invitations/'
+    | '/shared/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/c'
-    | '/shared'
     | '/trash'
     | '/unsorted'
     | '/approvals/$id'
@@ -261,13 +271,14 @@ export interface FileRouteTypes {
     | '/settings/custom-fields'
     | '/settings/data'
     | '/settings/preferences'
+    | '/shared/$containerId'
     | '/invitations'
+    | '/shared'
   id:
     | '__root__'
     | '/_workspace'
     | '/sign-in'
     | '/_workspace/c'
-    | '/_workspace/shared'
     | '/_workspace/trash'
     | '/_workspace/unsorted'
     | '/approvals/$id'
@@ -285,7 +296,9 @@ export interface FileRouteTypes {
     | '/_workspace/settings/custom-fields'
     | '/_workspace/settings/data'
     | '/_workspace/settings/preferences'
+    | '/_workspace/shared/$containerId'
     | '/_workspace/invitations/'
+    | '/_workspace/shared/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -325,13 +338,6 @@ declare module '@tanstack/react-router' {
       path: '/c'
       fullPath: '/c'
       preLoaderRoute: typeof WorkspaceCRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
-    '/_workspace/shared': {
-      id: '/_workspace/shared'
-      path: '/shared'
-      fullPath: '/shared'
-      preLoaderRoute: typeof WorkspaceSharedRouteImport
       parentRoute: typeof WorkspaceRoute
     }
     '/_workspace/trash': {
@@ -453,12 +459,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceSettingsPreferencesRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/shared/': {
+      id: '/_workspace/shared/'
+      path: '/shared'
+      fullPath: '/shared/'
+      preLoaderRoute: typeof WorkspaceSharedIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/shared/$containerId': {
+      id: '/_workspace/shared/$containerId'
+      path: '/shared/$containerId'
+      fullPath: '/shared/$containerId'
+      preLoaderRoute: typeof WorkspaceSharedContainerIdRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
   }
 }
 
 interface WorkspaceRouteChildren {
   WorkspaceCRoute: typeof WorkspaceCRoute
-  WorkspaceSharedRoute: typeof WorkspaceSharedRoute
   WorkspaceTrashRoute: typeof WorkspaceTrashRoute
   WorkspaceUnsortedRoute: typeof WorkspaceUnsortedRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
@@ -470,12 +489,13 @@ interface WorkspaceRouteChildren {
   WorkspaceSettingsCustomFieldsRoute: typeof WorkspaceSettingsCustomFieldsRoute
   WorkspaceSettingsDataRoute: typeof WorkspaceSettingsDataRoute
   WorkspaceSettingsPreferencesRoute: typeof WorkspaceSettingsPreferencesRoute
+  WorkspaceSharedContainerIdRoute: typeof WorkspaceSharedContainerIdRoute
   WorkspaceInvitationsIndexRoute: typeof WorkspaceInvitationsIndexRoute
+  WorkspaceSharedIndexRoute: typeof WorkspaceSharedIndexRoute
 }
 
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceCRoute: WorkspaceCRoute,
-  WorkspaceSharedRoute: WorkspaceSharedRoute,
   WorkspaceTrashRoute: WorkspaceTrashRoute,
   WorkspaceUnsortedRoute: WorkspaceUnsortedRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
@@ -487,7 +507,9 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceSettingsCustomFieldsRoute: WorkspaceSettingsCustomFieldsRoute,
   WorkspaceSettingsDataRoute: WorkspaceSettingsDataRoute,
   WorkspaceSettingsPreferencesRoute: WorkspaceSettingsPreferencesRoute,
+  WorkspaceSharedContainerIdRoute: WorkspaceSharedContainerIdRoute,
   WorkspaceInvitationsIndexRoute: WorkspaceInvitationsIndexRoute,
+  WorkspaceSharedIndexRoute: WorkspaceSharedIndexRoute,
 }
 
 const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(

@@ -128,6 +128,9 @@ export const accounts = {
   // Shared with me (shared-with-me.e2e.ts): an owner and a viewer.
   sharingOwner: at("sharing-owner"),
   sharingViewer: at("sharing-viewer"),
+  // Viewing shared content (shared-viewing.e2e.ts): an owner and a viewer.
+  viewingOwner: at("viewing-owner"),
+  viewingViewer: at("viewing-viewer"),
 } as const;
 
 /** An address with no account. */

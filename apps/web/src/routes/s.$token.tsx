@@ -59,7 +59,7 @@ function SharedLinkPage() {
   const { snapshot } = Route.useLoaderData();
   const router = useRouter();
   const reread = useCallback(() => void router.invalidate(), [router]);
-  useShareStream(token, snapshot !== undefined, reread);
+  useShareStream(`/v1/s/${token}/stream`, snapshot !== undefined, reread);
   if (!snapshot) return <UnavailableShare />;
   return <GuestPage token={token} snapshot={snapshot} containerId={c} />;
 }

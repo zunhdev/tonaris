@@ -365,3 +365,67 @@ describe("Shared with me (FR-07.13)", () => {
     });
   });
 });
+
+describe("viewers' own presentation (FR-07.17, FR-05.2)", () => {
+  test("a viewer sorts and arranges a shared list in their own records; others can't", async () => {
+    const nightfall = uuidv7();
+    const memory = memoryStore({
+      containers: [doom],
+      albums: [
+        {
+          id: nightfall,
+          title: "Nightfall",
+          artistCredit: "Candlemass",
+          releaseType: "album",
+          isLive: false,
+          originalYear: 1987,
+          recordingYearStart: null,
+          recordingYearEnd: null,
+          ownerId: owner,
+        },
+      ],
+      memberships: [
+        { listId: doom.id, albumId: nightfall, ownerId: owner, addedAt: "2026-10-23T09:00:00Z" },
+      ],
+      accounts: [
+        { id: owner, email: "denis@example.com", displayName: "Denis" },
+        { id: annaId, email: "anna@example.com" },
+      ],
+    });
+    const run = (mutation: Record<string, unknown>, principal = me) =>
+      runCommand(mutationSchema.parse({ mutationId: uuidv7(), ...mutation }), {
+        principal,
+        store: memory.store,
+      });
+    const sort = {
+      name: "view.set",
+      args: { viewKey: doom.id, sortMode: "name", sortDir: "asc" },
+      base: { sortMode: null, sortDir: null },
+    };
+    const place = {
+      name: "order.set",
+      args: { viewKey: doom.id, keys: { [nightfall]: "a0" } },
+      base: { [nightfall]: null },
+    };
+    // Before the invitation is accepted, Doom isn't Anna's to view.
+    const grantId = uuidv7();
+    await run({
+      name: "share.invite",
+      args: { grantId, containerId: doom.id, email: "anna@example.com" },
+    });
+    expect(codeOf(await run(sort, anna))).toBe("not_found");
+    await run({ name: "share.accept", args: { grantId } }, anna);
+    expect(await run(sort, anna)).toMatchObject({
+      status: "applied",
+      changes: [{ entity: "view" }],
+    });
+    expect(await run(place, anna)).toMatchObject({
+      status: "applied",
+      changes: [{ entity: "position" }],
+    });
+    // Anna's records only: the owner's view of Doom has none.
+    expect([...memory.views.keys()].every((key) => key.startsWith(annaId))).toBe(true);
+    expect([...memory.positions.keys()].every((key) => key.startsWith(annaId))).toBe(true);
+    expect([...memory.views.keys()]).toHaveLength(1);
+  });
+});

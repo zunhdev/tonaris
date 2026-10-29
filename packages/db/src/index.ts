@@ -53,11 +53,11 @@ export {
 } from "./invitations";
 export { fillSearchKeys } from "./migrations";
 export { searchCollection } from "./search";
+export { canReadContainer, readableContainers } from "./access";
 export {
-  canReadContainer,
   findShareLink,
-  readableContainers,
   linkReferenceState,
+  sharedOwner,
   shareSettings,
   sharedSnapshot,
   sharedWithMe,
