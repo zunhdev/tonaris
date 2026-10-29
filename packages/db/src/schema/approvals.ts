@@ -30,6 +30,8 @@ export const approvals = table(
     expiresAt: instant().notNull(),
     decidedAt: instant(),
     usedAt: instant(),
+    // The batch that used it (TS-22): sending that batch's key again replays it under the same approval.
+    batchId: uuid(),
     ...timestamps,
   },
   (t) => [

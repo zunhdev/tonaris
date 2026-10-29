@@ -42,6 +42,8 @@ export const places = [
   { place: "shared", name: "Shared with me" },
   // Only while invitations are pending (DS-31).
   { place: "invitations", name: "Invitations" },
+  // Only while AI clients' requests wait for approval (DS-86, TS-64).
+  { place: "approvals", name: "Approvals" },
   { place: "trash", name: "Trash" },
 ] as const;
 
@@ -54,16 +56,18 @@ export type TreeRow =
   | (Position & { type: "place"; place: Place; name: string });
 
 /**
- * The rows a person can see: the folders and lists, inside the expanded folders, then the places, Invitations only
- * while some are pending (DS-31).
+ * The rows a person can see: the folders and lists, inside the expanded folders, then the places, Invitations and
+ * Approvals only while some are pending (DS-31, DS-86).
  */
 export function visibleRows(
   tree: Tree,
   expanded: ReadonlySet<string>,
-  { invitations = false }: { invitations?: boolean } = {},
+  { invitations = false, approvals = false }: { invitations?: boolean; approvals?: boolean } = {},
 ): TreeRow[] {
   const rows: TreeRow[] = [];
-  const shown = places.filter(({ place }) => place !== "invitations" || invitations);
+  const shown = places.filter(
+    ({ place }) => (place !== "invitations" || invitations) && (place !== "approvals" || approvals),
+  );
   const topLevel = tree.roots.length + shown.length;
   const walk = (siblings: readonly Container[], level: number, setSize: number) => {
     for (const [index, container] of siblings.entries()) {

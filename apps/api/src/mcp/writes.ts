@@ -6,11 +6,23 @@
 
 import { createHash } from "node:crypto";
 
-import { claimOperation, executeBatch, type Database, type ExecutedMutation } from "@tonaris/db";
+import {
+  claimOperation,
+  executeBatch,
+  executeMutation,
+  lockAccount,
+  useApproval,
+  type Database,
+  type ExecutedMutation,
+  type Transaction,
+} from "@tonaris/db";
 import {
   canonicalJson,
   failure,
+  scopeHash,
   uuidv7,
+  type ApprovalScope,
+  type Batch,
   type Mutation,
   type McpPrincipal,
   type MutationResult,
@@ -87,6 +99,34 @@ const stillRunning = failure(
   "This change is still being saved. Check it with get_operation in a moment.",
 );
 
+/**
+ * A gated write (TS-64): the approved operation's envelopes, run only while the approval is usable. `scope` computes
+ * the operation's scope again inside the transaction that uses the approval, after the owner's lock, so nothing can
+ * grow it before the change commits. `outsideLock` runs the envelopes after that transaction instead, through the
+ * mutation runner, for a capture, which asks its providers before it takes the lock.
+ */
+export type ApprovedWrite = {
+  tool: string;
+  args: Record<string, unknown>;
+  idempotencyKey: string | undefined;
+  approvalId: string;
+  scope: (tx: Transaction) => Promise<ApprovalScope | undefined>;
+  plan: (ids: PlanIds) => PlannedItem[];
+  outsideLock?: boolean;
+};
+
+export type ApprovedWriteResult =
+  | WriteResult
+  /** The scope grew or changed since the owner approved: nothing ran, and it needs a new approval. */
+  | { status: "scope_changed"; idempotencyKey: string; scope: ApprovalScope | undefined }
+  /** The approval isn't approved, unexpired and unused for this connection: nothing ran. */
+  | { status: "not_usable"; idempotencyKey: string };
+
+export type McpWriter = {
+  write: Writer;
+  writeApproved: (principal: McpPrincipal, request: ApprovedWrite) => Promise<ApprovedWriteResult>;
+};
+
 export function mcpWriter({
   db,
   run,
@@ -96,8 +136,12 @@ export function mcpWriter({
   run: MutationRunner;
   /** Hands a write's changes to the account's streams, as the sync routes do. */
   announce: (accountId: string, executed: ExecutedMutation) => void;
-}): Writer {
-  return async (principal, { tool, args, idempotencyKey, plan }) => {
+}): McpWriter {
+  /** Claims the key for the request's batch, and plans its envelopes with the batch's IDs. */
+  async function claim(
+    principal: McpPrincipal,
+    { tool, args, idempotencyKey, plan }: Parameters<Writer>[1],
+  ) {
     const key = idempotencyKey ?? uuidv7();
     const build = (batchId: string) => {
       const ids: PlanIds = { record: (name) => derivedId(batchId, `record:${name}`) };
@@ -113,37 +157,88 @@ export function mcpWriter({
     };
     let batchId = uuidv7();
     let items = build(batchId);
-    const claim = await claimOperation(db, {
+    const claimed = await claimOperation(db, {
       grantId: principal.grantId,
       key,
       requestHash: requestHash(tool, args),
       batchId,
       items: items.length,
     });
-    if (claim.status === "reused") return { status: "key_reused", idempotencyKey: key };
-    if (claim.batchId !== batchId) {
-      batchId = claim.batchId;
+    if (claimed.status === "reused") return { key, reused: true as const };
+    if (claimed.batchId !== batchId) {
+      batchId = claimed.batchId;
       items = build(batchId);
     }
-    const result = await executeBatch(
-      db,
-      principal,
-      { batchId, items },
-      {
-        execute: async (mutation) => {
-          try {
-            const executed = await run(principal, mutation);
-            announce(principal.userId, executed);
-            return executed;
-          } catch (error) {
-            // A capture another request is running: this item waits, and its dependents with it.
-            if (!(error instanceof MutationInProgressError)) throw error;
-            const { mutationId } = mutation;
-            return { result: { mutationId, outcome: stillRunning }, changes: [], replayed: false };
-          }
-        },
+    return { key, reused: false as const, batch: { batchId, items } };
+  }
+
+  /** Runs a batch through the mutation runner, as `POST /v1/batches` does, announcing each item as it commits. */
+  const runBatch = (principal: McpPrincipal, batch: Batch) =>
+    executeBatch(db, principal, batch, {
+      execute: async (mutation) => {
+        try {
+          const executed = await run(principal, mutation);
+          announce(principal.userId, executed);
+          return executed;
+        } catch (error) {
+          // A capture another request is running: this item waits, and its dependents with it.
+          if (!(error instanceof MutationInProgressError)) throw error;
+          const { mutationId } = mutation;
+          return { result: { mutationId, outcome: stillRunning }, changes: [], replayed: false };
+        }
       },
-    );
-    return { status: "ran", idempotencyKey: key, items: result.items };
+    });
+
+  return {
+    async write(principal, request) {
+      const claimed = await claim(principal, request);
+      if (claimed.reused) return { status: "key_reused", idempotencyKey: claimed.key };
+      const result = await runBatch(principal, claimed.batch);
+      return { status: "ran", idempotencyKey: claimed.key, items: result.items };
+    },
+
+    async writeApproved(principal, { approvalId, scope, outsideLock = false, ...request }) {
+      const claimed = await claim(principal, request);
+      if (claimed.reused) return { status: "key_reused", idempotencyKey: claimed.key };
+      const { batch } = claimed;
+      const executed: ExecutedMutation[] = [];
+      type Answer =
+        | { status: "scope_changed"; scope: ApprovalScope | undefined }
+        | { status: "not_usable" }
+        | { status: "approved" }
+        | { status: "ran"; items: MutationResult[] };
+      const answer = await db.transaction(async (tx): Promise<Answer> => {
+        await lockAccount(tx, principal.userId);
+        const now = await scope(tx);
+        const use = await useApproval(tx, {
+          id: approvalId,
+          grantId: principal.grantId,
+          scopeHash: now ? await scopeHash(now) : "",
+          batchId: batch.batchId,
+        });
+        if (use === "scope_changed") return { status: use, scope: now };
+        if (use === "not_usable") return { status: use };
+        if (outsideLock) return { status: "approved" };
+        // The envelopes run here, each as a savepoint, so they commit with the approval's use or not at all.
+        const result = await executeBatch(tx, principal, batch, {
+          execute: async (mutation) => {
+            const done = await executeMutation(tx, principal, mutation);
+            executed.push(done);
+            return done;
+          },
+        });
+        return { status: "ran", items: result.items };
+      });
+      // Only committed changes reach the streams.
+      for (const done of executed) announce(principal.userId, done);
+      const idempotencyKey = claimed.key;
+      if (answer.status === "scope_changed") {
+        return { status: answer.status, idempotencyKey, scope: answer.scope };
+      }
+      if (answer.status === "not_usable") return { status: answer.status, idempotencyKey };
+      if (answer.status === "ran") return { status: "ran", idempotencyKey, items: answer.items };
+      const result = await runBatch(principal, batch);
+      return { status: "ran", idempotencyKey, items: result.items };
+    },
   };
 }

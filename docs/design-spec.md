@@ -435,6 +435,7 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 - **Collection** is a heading link to the root, with a "+" menu: New list (N) and New folder (⇧N). Offline, the menu is disabled with "You're offline" (DS-81).
 - **Below the folders and lists,** the tree shows Unsorted with its count, then Shared with me and Trash, as placeholders until M7 and M5.
 - **Invitations** waits for sharing (M7).
+- **Approvals** (TON-83) shows, with its count, only while AI clients' requests wait for approval, after Invitations (DS-86).
 - **The account menu** has Keyboard shortcuts, which opens the reference (DS-78).
 
 *As built in TON-35:*
@@ -1416,6 +1417,9 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - A list of connections showing client name, mode, connected date, last used, and **Revoke**. Changing the mode means reconnecting.
   - *As built in TON-80:* each row reads "{Mode} · Connected {date} · Last used {date, time}", or "Not used yet" before the first call. Above the list: "To change what a client may do, revoke it and connect it again."
 - **Waiting for your approval ({n})** lists pending approvals with links to DS-87.
+  - *As built in TON-83:* the section shows only while requests wait, above the server URL. Each row reads "{summary}" over "{client} · Expires in {n} min", with **Review**, which opens DS-87.
+  - The sidebar shows **Approvals**, with the count, only while requests wait, between Invitations and Trash (DS-31). It opens Settings → Connections.
+  - Both read the requests on load, when the window regains focus, every 30 seconds, and after a decision.
 - **Setup instructions** for Claude web, ChatGPT web, and Codex desktop: the MCP server URL with Copy, and 3–4 steps each.
 
 *(FR-10.1, FR-10.3)*
@@ -1429,8 +1433,16 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **Expiry:** "Expires in 9:42". The page stops accepting decisions at expiry.
 - **Buttons:** **Approve** (danger variant for deletions) and **Decline**.
 - **Uncertain-match variant:** the DS-48 decision card, with **Same album** / **Different album** / **Decline**.
+  - *As built in TON-83:* the agent proposes one of the link's candidates (`confirm_match`), and the owner approves or declines that choice. The page says: "Add "{title}" from this link"; the link and the list it goes in; and whether it joins an album already in the collection or is saved as a new one. To choose another candidate, the owner declines and tells the agent.
 - **After a decision:** "Approved — return to {client} to continue" or "Declined". Revisiting the page shows the recorded decision. An expired or already-used request is explained, and nothing happens.
 - **Mobile:** the page is fully responsive and usable. Approving authorizes an MCP operation, so it isn't a browser collection edit (FR-10.6, X-04).
+- *As built in TON-83*, the scope's parts, each expandable:
+  - the folders and lists, each "List", or "Folder with {n} lists and {n} folders";
+  - the albums, each with the lists it leaves, or "In Unsorted";
+  - a field with its type and the albums it is on, and each option with the albums choosing it;
+  - **Who no longer sees it:** each person ("(invited)" while pending) and "Anyone with the link", through which folder or list.
+
+  Approve uses the danger variant for every operation but a match.
 
 ---
 

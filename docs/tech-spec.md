@@ -1178,7 +1178,7 @@ There are deliberately **no** tools for sharing management, Trash purge, export,
 - **Outcomes.** Each item is TS-27's outcome, with `failed` carrying `code` and `message`. A `skipped` item names the item it waited for by index.
 - **References.** `share.saveLink` and `share.removeReference` now authorize as collection writes, so a Manage agent may keep or drop references, and a Read-only one may not (FR-07.13, AC-24). Leaving an invitation stays app-only.
 - **`remove_options`** removes unused options. A chosen option is `field_in_use` until TON-83 gates it.
-- **The G3 `add_to_list`** is gone; `delete_albums` stays until TON-83.
+- **The G3 `add_to_list`** is gone. TON-83 replaced `delete_albums` with the gated tools, and moved `remove_options` among them.
 
 *As built in TON-81:* the read group (`apps/api/src/mcp/read-tools.ts`, over `packages/db/src/mcp-reads.ts`), for both modes.
 - **Names:** album values use the API's field names (`artistCredit`, `originalYear`), as the write tools take them. G3's `artist` and `year` are gone.
@@ -1207,6 +1207,29 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Atomic use.** The operation locks its targets (`FOR UPDATE`), recomputes the scope, and marks the approval `used` in the same transaction, conditioned on the hash. Adding a reference needs a key-share lock on the target, so the scope can't grow between the check and the change.
 - **Expiry** is derived from `expires_at`, so an approved but unused approval also expires.
 - **Retries.** A call with a pending approval returns the same `needs_approval` with a note; a declined one returns `declined`; a used one fails as `expired`. An expired approval, or a grown scope, gets a fresh `needs_approval`.
+
+*As built in TON-83* (`apps/api/src/mcp/approvals.ts`, `gated-tools.ts`): `delete_items`, `delete_field`, `remove_options` and `confirm_match`, over the app's own commands.
+- **One scope shape** (`approvalScopeSchema`) serves every operation: `operation`, the affected `albums`, `recoverableDays` (0 when it can't be undone), and optional parts.
+  - The parts: `containers`, `unsorted`, `sharing`, `field`, `options`, `checks` and `match`. The `GET /v1/approvals/{id}` response only gained properties.
+  - `checks` holds the in-app confirmations' scope hashes (TS-14). A field or option gaining an album therefore changes the approval's hash too.
+- **Atomic use.** The approved batch runs in one transaction:
+  1. the owner's write lock (TS-20);
+  2. the scope computed again;
+  3. `useApproval()`, conditioned on the hash;
+  4. each envelope by `executeMutation` as a savepoint.
+
+  So the approval's use and the change commit together, and changes go to the streams only after the commit. `confirm_match` is the exception: its capture asks providers before the lock (TS-22), so it runs right after the transaction that uses the approval, and the capture command checks again that the link still offers the album.
+- **Retries by key.** An approval records the batch that used it (`approvals.batch_id`). Sending that batch's `idempotencyKey` again replays it; a new change under a used approval fails as `expired`.
+- **Deletion's scope** (`deletionTargets()`) has four parts:
+  - the albums, with the lists each leaves;
+  - the folders and lists, a container inside another named one being left out because it goes with it;
+  - the albums left in no list, which go to Unsorted;
+  - `sharing`, everyone who sees the content now through it or its folders (`deletionImpact()`, FR-07.14).
+- **`remove_options`** removes options no album chooses at once, as an ordinary change. If any is chosen, the whole removal needs one approval, run with each option's scope hash.
+- **`confirm_match {link, releaseGroupId, listId?}`** first asks the link's candidates again, by running the capture, so the page names Tonaris's candidate, not the agent's. `add_albums` no longer takes `releaseGroupId`, so a match is confirmed only through it (FR-10.6). A link that needs no choice any more is simply added, as an ordinary capture.
+- **`GET /v1/approvals`** lists the account's pending, unexpired approvals for Settings and the sidebar.
+- **Clean-up:** approvals go with the sync history 30 days after they expire.
+- G3's `delete_albums` and its `trashAlbums` stand-in are gone; the `delete_albums` operation stays only for approvals stored before.
 
 **TS-65 Agent-facing responses (Decided; FR-10.9, Q-05).**
 
@@ -1445,7 +1468,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Spotify bridge health check | daily (`spotify-health`), while the bridge is on (TON-42) | TS-41 |
 | Email send and retry | on demand | FR-07.5, FR-11.6 |
 | Account data deletion | on demand (`account-deletion`, TON-79); finished deletions' progress pruned daily (`prune-account-deletions`) | FR-11.11 |
-| Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), agents' keys (`mcp_operations`) since TON-82, approvals with M9 | TS-22, TS-64 |
+| Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), agents' keys (`mcp_operations`) since TON-82, approvals since TON-83 | TS-22, TS-64 |
 | Expire admission invitations | daily (`expire-admission-invitations`, TON-74); use checks expiry already | FR-11.6 |
 | Off-site backup | nightly, through the host's scheduler (TS-110) | TS-112 |
 

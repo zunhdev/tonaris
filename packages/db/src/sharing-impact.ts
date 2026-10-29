@@ -21,7 +21,7 @@ export type ImpactQuery =
   | { kind: "recover"; unitId: string; to?: string | null };
 
 /** The owner's sharing, and which of their containers are folders. */
-async function impactState(
+export async function impactState(
   tx: Transaction,
   ownerId: string,
 ): Promise<{ state: ImpactState; folders: Set<string> }> {

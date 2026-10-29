@@ -158,3 +158,27 @@ export function listsImpact(state: ImpactState, listIds: readonly string[]): Sha
   const ids = listIds.flatMap((listId) => chainOf(index, listId));
   return { added: audiencesOn(index, ids), removed: [], direct: [] };
 }
+
+/**
+ * Deleting folders, lists and albums to Trash (FR-07.14, FR-10.6): everyone who sees them now stops, since Trash shows
+ * them to nobody. That is the audiences on each deleted container, those below it and those of its folders, and for an
+ * album, those of the lists it leaves and their folders. An audience that keeps another path to an album, through a
+ * list that stays, still loses the deleted folders and lists, so it is listed.
+ */
+export function deletionImpact(
+  state: ImpactState,
+  {
+    containerIds,
+    albumListIds,
+  }: { containerIds: readonly string[]; albumListIds: readonly string[] },
+): Audience[] {
+  const index = indexOf(state);
+  const ids = [
+    ...containerIds.flatMap((id) => [
+      ...subtreeOf(index, id),
+      ...chainOf(index, index.byId.get(id)?.parentId ?? null),
+    ]),
+    ...albumListIds.flatMap((listId) => chainOf(index, listId)),
+  ];
+  return audiencesOn(index, ids);
+}

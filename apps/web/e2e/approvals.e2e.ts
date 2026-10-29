@@ -1,6 +1,6 @@
-// MCP approvals (FR-10.6, DS-87, TS-64): an agent's gated `delete_albums` waits for the owner, who approves on
-// the approval page (here on a phone-sized screen, X-04), and only then does the agent's next call run. Another
-// account can't see the request.
+// MCP approvals (FR-10.6, DS-86, DS-87, TS-64): an agent's gated `delete_items` waits for the owner, who finds it in
+// the sidebar and Settings → Connections and approves on the approval page (here on a phone-sized screen, X-04), and
+// only then does the agent's next call run. Another account can't see the request.
 
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
@@ -82,9 +82,21 @@ test("the owner approves on a phone, and the agent's next call deletes the album
   await page.goto("/c");
   const album = await createAlbum(page, "Kind of Blue");
   const asked = needsApproval.parse(
-    await callTool(client, token, "delete_albums", { albumIds: [album] }),
+    await callTool(client, token, "delete_items", { albumIds: [album] }),
   );
   expect(asked.url).toBe(`http://localhost:3100/approvals/${asked.approvalId}`);
+
+  // The app shows it waiting: in the sidebar, and in Settings → Connections with a link to its page.
+  await page.goto("/settings/connections");
+  await expect(page.getByRole("heading", { name: "Waiting for your approval (1)" })).toBeVisible();
+  await expect(page.getByText("Move 1 album to Trash")).toBeVisible();
+  await expect(
+    page.getByRole("tree").getByRole("treeitem", { name: "Approvals 1 request to approve" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Review" })).toHaveAttribute(
+    "href",
+    `/approvals/${asked.approvalId}`,
+  );
 
   // The owner opens the link on a phone.
   await page.setViewportSize({ width: 390, height: 844 });
@@ -103,7 +115,7 @@ test("the owner approves on a phone, and the agent's next call deletes the album
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
   // Before the owner decides, the agent's retry still waits.
-  const early = await callTool(client, token, "delete_albums", {
+  const early = await callTool(client, token, "delete_items", {
     albumIds: [album],
     approvalId: asked.approvalId,
   });
@@ -112,11 +124,14 @@ test("the owner approves on a phone, and the agent's next call deletes the album
   await page.getByRole("button", { name: "Approve" }).click();
   await expect(page.getByText("Approved — return to E2E Client to continue.")).toBeVisible();
 
-  const done = await callTool(client, token, "delete_albums", {
+  const done = await callTool(client, token, "delete_items", {
     albumIds: [album],
     approvalId: asked.approvalId,
   });
-  expect(done).toEqual({ status: "confirmed", trashed: [album], unavailable: [] });
+  expect(done).toMatchObject({
+    status: "ran",
+    items: [{ albumId: album, outcome: { status: "confirmed" } }],
+  });
   await page.reload();
   await expect(page.getByText("Approved, and E2E Client has done it.")).toBeVisible();
 
@@ -130,7 +145,10 @@ test("the owner approves on a phone, and the agent's next call deletes the album
   await client.dispose();
 });
 
-test("declining tells the agent, and nothing is deleted", async ({ page, playwright }) => {
+test("declining a list's deletion tells the agent, and nothing is deleted", async ({
+  page,
+  playwright,
+}) => {
   const client = await playwright.request.newContext();
   const clientId = await registerClient(client);
   const { verifier, challenge } = await pkce();
@@ -152,16 +170,29 @@ test("declining tells the agent, and nothing is deleted", async ({ page, playwri
   });
 
   await page.goto("/c");
-  const album = await createAlbum(page, "Sketches of Spain");
+  const list = uuidv7();
+  const created = await page.request.post(`${apiUrl}/v1/mutations`, {
+    headers: { origin: new URL(page.url()).origin },
+    data: {
+      mutationId: uuidv7(),
+      name: "container.create",
+      args: { id: list, kind: "list", parentId: null, name: "Late Miles" },
+    },
+  });
+  expect(created.status()).toBe(200);
   const asked = needsApproval.parse(
-    await callTool(client, token, "delete_albums", { albumIds: [album] }),
+    await callTool(client, token, "delete_items", { containerIds: [list] }),
   );
   await page.goto(asked.url);
+  await expect(page.getByText("Move 1 list to Trash")).toBeVisible();
+  await page.getByText("1 list", { exact: true }).click();
+  await expect(page.getByText("Late Miles")).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.getByRole("button", { name: "Decline" }).click();
   await expect(page.getByText("Declined. Nothing will change.")).toBeVisible();
   expect(
-    await callTool(client, token, "delete_albums", {
-      albumIds: [album],
+    await callTool(client, token, "delete_items", {
+      containerIds: [list],
       approvalId: asked.approvalId,
     }),
   ).toEqual({ status: "declined" });

@@ -76,8 +76,10 @@ describe("the tools a Manage connection gets (TS-62, TS-63, X-03)", () => {
         "add_to_lists",
         "change_field_type",
         "create_container",
+        "confirm_match",
         "create_field",
-        "delete_albums",
+        "delete_field",
+        "delete_items",
         "get_album",
         "get_approval",
         "get_operation",
@@ -114,7 +116,7 @@ describe("the tools a Manage connection gets (TS-62, TS-63, X-03)", () => {
       ),
     ).toEqual([]);
     const writing = tools.filter((tool) => tool.annotations?.readOnlyHint === false);
-    expect(writing.length).toBe(24);
+    expect(writing.length).toBe(26);
   });
 
   test("a Read-only connection can't call a write tool, even by name", async () => {
@@ -435,9 +437,14 @@ describe("custom fields (FR-10.4)", () => {
     await write(mcp, "set_album_fields", {
       changes: [{ albumId, fieldId, action: "set", value: cd }],
     });
-    const removed = await write(mcp, "remove_options", { fieldId, optionIds: [tape, cd] });
-    expect(statuses(removed)).toEqual(["confirmed", "failed"]);
-    expect(removed.items[1]?.outcome).toMatchObject({ code: "field_in_use" });
+    const removed = await mcp.callTool({
+      name: "remove_options",
+      arguments: { fieldId, optionIds: [tape, cd] },
+    });
+    expect(removed.structuredContent).toMatchObject({ status: "needs_approval" });
+    // Nothing was removed: the unused option waits with the chosen one, under one approval.
+    const unused = await write(mcp, "remove_options", { fieldId, optionIds: [tape] });
+    expect(statuses(unused)).toEqual(["confirmed"]);
 
     // A used field keeps its type; an unused one changes.
     const retyped = await write(mcp, "change_field_type", { fieldId, type: "text" });

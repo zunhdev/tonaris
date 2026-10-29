@@ -5,10 +5,11 @@
 
 import { api } from "@/api";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
+import { refreshPendingApprovals } from "@/features/connections/pending-approvals";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import type { Approval } from "@tonaris/domain";
+import type { Approval, ApprovalScope } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 
 export const Route = createFileRoute("/approvals/$id")({
@@ -22,6 +23,132 @@ type Load =
   | { kind: "other-account" }
   | { kind: "missing" }
   | { kind: "unreachable" };
+
+const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+const fieldTypeNames: Record<NonNullable<ApprovalScope["field"]>["type"], string> = {
+  text: "Text",
+  number: "Number",
+  date: "Date",
+  yes_no: "Yes/no",
+  single_choice: "Single choice",
+  multiple_choice: "Multiple choice",
+};
+
+/** "12 albums, 2 in Trash". */
+const albumsAffected = ({ albums, inTrash }: { albums: number; inTrash: number }) =>
+  `${count(albums + inTrash, "album", "albums")}${inTrash > 0 ? `, ${inTrash} in Trash` : ""}`;
+
+/** One expandable part of the scope (DS-87). */
+function Part({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <details className="rounded-lg border border-subtle bg-raised p-3">
+      <summary className="cursor-pointer text-fg-primary">{title}</summary>
+      <ul className="mt-2 flex flex-col gap-2">{children}</ul>
+    </details>
+  );
+}
+
+function Row({ name, detail }: { name: string; detail?: string }) {
+  return (
+    <li className="flex flex-col">
+      <span className="text-fg-primary">{name}</span>
+      {detail && <span className="text-small text-fg-secondary">{detail}</span>}
+    </li>
+  );
+}
+
+/** The exact scope, in Tonaris's words: what goes, what's affected, and who no longer sees it (DS-87, FR-07.14). */
+function ScopeDetails({ scope }: { scope: ApprovalScope }) {
+  const containers = scope.containers ?? [];
+  const sharing = scope.sharing ?? [];
+  return (
+    <div className="flex flex-col gap-2">
+      {scope.match && (
+        <Part title={`"${scope.match.title}"`}>
+          <Row name="The link" detail={scope.match.link} />
+          {scope.match.listName && <Row name="Goes in" detail={scope.match.listName} />}
+        </Part>
+      )}
+      {containers.length > 0 && (
+        <Part
+          title={[
+            count(containers.filter((c) => c.kind === "folder").length, "folder", "folders"),
+            count(containers.filter((c) => c.kind === "list").length, "list", "lists"),
+          ]
+            .filter((part) => !part.startsWith("0 "))
+            .join(", ")}
+        >
+          {containers.map((container) => (
+            <Row
+              key={container.id}
+              name={container.name}
+              detail={
+                container.kind === "list"
+                  ? "List"
+                  : container.folders + container.lists === 0
+                    ? "Folder, empty"
+                    : `Folder with ${[
+                        container.lists > 0 && count(container.lists, "list", "lists"),
+                        container.folders > 0 && count(container.folders, "folder", "folders"),
+                      ]
+                        .filter(Boolean)
+                        .join(" and ")}`
+              }
+            />
+          ))}
+        </Part>
+      )}
+      {scope.albums.length > 0 && (
+        <Part title={count(scope.albums.length, "album", "albums")}>
+          {scope.albums.map((album) => (
+            <Row
+              key={album.id}
+              name={`${album.title} · ${album.artist}`}
+              detail={
+                scope.operation === "confirm_match"
+                  ? "In your collection"
+                  : album.lists.length === 0
+                    ? "In Unsorted"
+                    : `Leaves ${album.lists.map((list) => list.name).join(", ")}`
+              }
+            />
+          ))}
+        </Part>
+      )}
+      {scope.field && (
+        <Part title={`The field "${scope.field.name}"`}>
+          <Row
+            name={fieldTypeNames[scope.field.type]}
+            detail={`On ${albumsAffected(scope.field)}`}
+          />
+          {(scope.options ?? []).map((option) => (
+            <Row
+              key={option.id}
+              name={`Option "${option.label}"`}
+              detail={`Chosen on ${albumsAffected(option)}`}
+            />
+          ))}
+        </Part>
+      )}
+      {sharing.length > 0 && (
+        <Part title="Who no longer sees it">
+          {sharing.map((audience) => (
+            <Row
+              key={audience.kind === "person" ? audience.id : audience.via.id}
+              name={
+                audience.kind === "person"
+                  ? `${audience.name}${audience.pending ? " (invited)" : ""}`
+                  : "Anyone with the link"
+              }
+              detail={`Through "${audience.via.name}"`}
+            />
+          ))}
+        </Part>
+      )}
+    </div>
+  );
+}
 
 /** "9:42": minutes and seconds left. */
 function remaining(ms: number): string {
@@ -62,6 +189,7 @@ function ApprovalPage() {
     setError(undefined);
     const { data, status } = await api.v1.approvals({ id }).decision.post({ decision });
     setBusy(false);
+    refreshPendingApprovals();
     if (data) setLoad({ kind: "loaded", approval: data });
     else if (status === 410 && load.kind === "loaded") {
       setLoad({ kind: "loaded", approval: { ...load.approval, state: "expired" } });
@@ -108,27 +236,7 @@ function ApprovalPage() {
         <p className="text-fg-primary">{approval.summary}</p>
       </div>
 
-      <details className="rounded-lg border border-subtle bg-raised p-3">
-        <summary className="cursor-pointer text-fg-primary">
-          {approval.scope.albums.length === 1
-            ? "1 album"
-            : `${approval.scope.albums.length} albums`}
-        </summary>
-        <ul className="mt-2 flex flex-col gap-2">
-          {approval.scope.albums.map((album) => (
-            <li key={album.id} className="flex flex-col">
-              <span className="text-fg-primary">
-                {album.title} · {album.artist}
-              </span>
-              <span className="text-small text-fg-secondary">
-                {album.lists.length === 0
-                  ? "In Unsorted"
-                  : `Leaves ${album.lists.map((list) => list.name).join(", ")}`}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </details>
+      <ScopeDetails scope={approval.scope} />
 
       <ul className="flex list-disc flex-col gap-1 pl-5 text-fg-secondary">
         {approval.consequences.map((line) => (
@@ -152,7 +260,7 @@ function ApprovalPage() {
             </Button>
             <Button
               size="lg"
-              variant="danger"
+              variant={approval.scope.operation === "confirm_match" ? "primary" : "danger"}
               disabled={busy}
               onClick={() => void decide("approve")}
             >
