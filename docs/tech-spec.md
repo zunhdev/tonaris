@@ -276,7 +276,8 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `service_state` | singleton: `admissions_paused` | Its one row is inserted by its migration, with admissions open | FR-11.2 |
 | `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error` | | TS-90 |
 | `provider_cache` | `key` (PK, namespaced: `musicbrainz:url:{url}`), `value jsonb`, `expires_at` (indexed) | MusicBrainz and Cover Art Archive answers for 7 days; pruned daily. No user data (TS-41, TON-41). | TS-41 |
-| `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions | FR-11.5–FR-11.6 |
+| `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions. `action` is checked against `auditActions` (`email.change` since TON-77). `actor` and `subject` carry no foreign key, so a record outlives a deleted account | FR-11.4–FR-11.6 |
+| `email_changes` | `user_id` (PK, cascades), `new_email_key`, `stage` (`current`\|`new`), `code_hash bytea`, `attempts`, `expires_at` | One sign-in email change per account; starting again replaces it, and the swap deletes it (TON-77) | FR-11.4 |
 | Better Auth tables | `user`, `session`, `account`, `verification`; later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
 
 **TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/src/normalize.ts` exports two functions, and the same code runs on the server, the client, and in migrations:
@@ -1266,6 +1267,22 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   1. OTP to the current address;
   2. OTP to the new address;
   3. in one transaction: swap the email, provided no other user has the new key; revoke all other sessions; write `audit_log`.
+
+  *As built in TON-77:*
+  - **Routes:** `/v1/account/email-change`:
+    - `GET` answers the change in progress;
+    - `POST {newEmail}` sends the current address's code (`email-change-current`, naming the new address);
+    - `POST …/verify {code}` moves to the new address's code (`email-change-new`), or swaps;
+    - `POST …/resend` sends a new code for the step;
+    - `DELETE` cancels.
+
+    They need the session and are authorized as `account` writes, so they are app-only.
+  - **Codes** are six random digits stored as SHA-256 in `email_changes`. Like sign-in codes, they last 10 minutes and allow 5 attempts, and sending and submitting share the sign-in limits.
+  - **Refusals:**
+    - a non-address, the current address, or another account's address is refused at the start;
+    - an address that gets an account before the last code refuses the swap.
+  - **Verifying** happens under the change's row lock, so two right codes swap once. The swap also locks the user, ends every session but the one making the change, and writes `email.change` with `{from, to}` in `details`.
+  - **Better Auth's** email-OTP change endpoints aren't used. They lowercase instead of using the email key, need an `email-verification` code that the sign-in hook refuses, and don't end sessions or write the audit log in the swap.
 - **Creator-assisted recovery (Decided 17 October 2026: the creator's judgment):**
   - The user contacts the creator at the support address shown on `/help/recovery`, which comes from the `SUPPORT_EMAIL` setting. There is no in-app request form.
   - The creator establishes ownership out of band, using their own judgment. Tonaris has no recovery phrase or challenge tool.

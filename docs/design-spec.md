@@ -1482,7 +1482,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 *(FR-11.13)*
 
-*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues. Custom fields joined between them in TON-53, and Data after Connections in TON-60. Profile joined first in TON-76; Account joins with TON-77–TON-79. The account menu's Settings still opens Preferences.
+*As built in TON-35:* the subnav is a row of links under each settings page's header, the current one underlined in `accent.solid` and marked `aria-current="page"`. It lists the pages built so far, Preferences and Connections; the others join with their issues. Custom fields joined between them in TON-53, and Data after Connections in TON-60. Profile joined first in TON-76, and Account second in TON-77. The account menu's Settings still opens Preferences.
 
 **DS-93 Profile and account.** *(FR-11.3, FR-11.4, FR-11.5)*
 - **Display name:** saved on blur. While sharing is on, clearing it shows an inline error that keeps the current value.
@@ -1494,7 +1494,23 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
   Then "Done — use {new} to sign in". Cancelling at any step changes nothing.
 - **Lost access to your email?** is a link from sign-in and Account to `/help/recovery`. That page explains creator-assisted recovery and shows the support contact address (TS-73). There is no in-app request form.
 
-*As built in TON-76* (Settings → Profile; the email change and recovery link arrive with TON-77 and TON-78):
+*As built in TON-77* (Settings → Account, second in the subnav):
+- **"Sign-in email"** shows the address and **Change sign-in email**.
+- **The stepper** sits in a bordered box headed "Step n of 3":
+  1. a "New email address" field and **Continue**;
+  2. "Check {current}" with the code field, hinted "We sent a code to your current address, to confirm it's you.", and **Continue**;
+  3. "Check {new}", hinted "We sent a code to the new address, to confirm it's yours.", and **Change email**.
+- **On steps 2 and 3:** six digits submit by themselves, "Resend code" becomes available after 30 seconds, and **Cancel** is on every step.
+- **Refusals** show under the field:
+  - "Enter an email address, such as anna@example.com.";
+  - "That's already your sign-in email.";
+  - "That address belongs to another Tonaris account.";
+  - "There's no email change in progress. Start again.";
+  - and DS-90's code messages.
+- **Done:** "Done — use {new} to sign in." shows under the new address, and the account menu follows.
+- **Resuming:** a change in progress resumes at its step after a reload.
+
+*As built in TON-76* (Settings → Profile; the recovery link arrives with TON-78):
 - **Display name** is a field with the hint "People you share with see this name instead of your email. It's optional until you share."
 - **Saving:** a change is saved when the field loses focus, or on Enter, and "Saved." follows. The account menu shows the new name at once, or the email once the name is cleared.
 - **While sharing,** clearing it is refused with "People you share with see your display name. Stop sharing to clear it." under the field, and the field shows the saved name again.

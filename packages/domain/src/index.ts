@@ -4,10 +4,21 @@
 
 export {
   accountSchema,
+  auditActions,
+  emailChangeCodeSchema,
+  emailChangeRefusalDetails,
+  emailChangeSchema,
+  emailChangeStages,
+  emailChangeStartSchema,
+  emailChangeStepSchema,
   emailKey,
   signInCode,
   userRoles,
   type Account,
+  type AuditAction,
+  type EmailChange,
+  type EmailChangeStage,
+  type EmailChangeStep,
   type UserRole,
 } from "./accounts";
 export {

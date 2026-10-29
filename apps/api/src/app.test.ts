@@ -66,6 +66,9 @@ describe("OpenAPI", () => {
     expect(Object.keys(document.paths)).toEqual([
       "/v1/health",
       "/v1/me",
+      "/v1/account/email-change",
+      "/v1/account/email-change/verify",
+      "/v1/account/email-change/resend",
       "/v1/connections",
       "/v1/connections/{id}",
       "/v1/approvals/{id}",

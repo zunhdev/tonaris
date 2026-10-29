@@ -28,6 +28,7 @@ import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$f
 import { Route as WorkspaceInvitationsIndexRouteImport } from './routes/_workspace/invitations.index'
 import { Route as WorkspaceInvitationsIdRouteImport } from './routes/_workspace/invitations.$id'
 import { Route as WorkspaceLListIdRouteImport } from './routes/_workspace/l.$listId'
+import { Route as WorkspaceSettingsAccountRouteImport } from './routes/_workspace/settings.account'
 import { Route as WorkspaceSettingsConnectionsRouteImport } from './routes/_workspace/settings.connections'
 import { Route as WorkspaceSettingsCustomFieldsRouteImport } from './routes/_workspace/settings.custom-fields'
 import { Route as WorkspaceSettingsDataRouteImport } from './routes/_workspace/settings.data'
@@ -132,6 +133,12 @@ const WorkspaceLListIdRoute = WorkspaceLListIdRouteImport.update({
   path: '/l/$listId',
   getParentRoute: () => WorkspaceRoute,
 } as any)
+const WorkspaceSettingsAccountRoute =
+  WorkspaceSettingsAccountRouteImport.update({
+    id: '/settings/account',
+    path: '/settings/account',
+    getParentRoute: () => WorkspaceRoute,
+  } as any)
 const WorkspaceSettingsConnectionsRoute =
   WorkspaceSettingsConnectionsRouteImport.update({
     id: '/settings/connections',
@@ -191,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
+  '/settings/account': typeof WorkspaceSettingsAccountRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
   '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/settings/data': typeof WorkspaceSettingsDataRoute
@@ -217,6 +225,7 @@ export interface FileRoutesByTo {
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
+  '/settings/account': typeof WorkspaceSettingsAccountRoute
   '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
   '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/settings/data': typeof WorkspaceSettingsDataRoute
@@ -246,6 +255,7 @@ export interface FileRoutesById {
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
+  '/_workspace/settings/account': typeof WorkspaceSettingsAccountRoute
   '/_workspace/settings/connections': typeof WorkspaceSettingsConnectionsRoute
   '/_workspace/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
   '/_workspace/settings/data': typeof WorkspaceSettingsDataRoute
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
+    | '/settings/account'
     | '/settings/connections'
     | '/settings/custom-fields'
     | '/settings/data'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
+    | '/settings/account'
     | '/settings/connections'
     | '/settings/custom-fields'
     | '/settings/data'
@@ -329,6 +341,7 @@ export interface FileRouteTypes {
     | '/_workspace/f/$folderId'
     | '/_workspace/invitations/$id'
     | '/_workspace/l/$listId'
+    | '/_workspace/settings/account'
     | '/_workspace/settings/connections'
     | '/_workspace/settings/custom-fields'
     | '/_workspace/settings/data'
@@ -484,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceLListIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/settings/account': {
+      id: '/_workspace/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof WorkspaceSettingsAccountRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/settings/connections': {
       id: '/_workspace/settings/connections'
       path: '/settings/connections'
@@ -546,6 +566,7 @@ interface WorkspaceRouteChildren {
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceInvitationsIdRoute: typeof WorkspaceInvitationsIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
+  WorkspaceSettingsAccountRoute: typeof WorkspaceSettingsAccountRoute
   WorkspaceSettingsConnectionsRoute: typeof WorkspaceSettingsConnectionsRoute
   WorkspaceSettingsCustomFieldsRoute: typeof WorkspaceSettingsCustomFieldsRoute
   WorkspaceSettingsDataRoute: typeof WorkspaceSettingsDataRoute
@@ -566,6 +587,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceInvitationsIdRoute: WorkspaceInvitationsIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,
+  WorkspaceSettingsAccountRoute: WorkspaceSettingsAccountRoute,
   WorkspaceSettingsConnectionsRoute: WorkspaceSettingsConnectionsRoute,
   WorkspaceSettingsCustomFieldsRoute: WorkspaceSettingsCustomFieldsRoute,
   WorkspaceSettingsDataRoute: WorkspaceSettingsDataRoute,

@@ -4,6 +4,7 @@
 import { treaty } from "@elysia/eden";
 
 import type { App } from "@tonaris/api";
+import { problemSchema } from "@tonaris/domain";
 
 import { apiUrl } from "./config";
 
@@ -19,3 +20,9 @@ export function createApiClient(baseUrl: string, options: { fetcher?: typeof fet
 
 /** The browser's client. */
 export const api = createApiClient(apiUrl);
+
+/** An API refusal's sentence (its problem's `detail`), `fallback` when it has none, or undefined without an error. */
+export function refusalOf(error: { value: unknown } | null, fallback: string): string | undefined {
+  if (!error) return undefined;
+  return problemSchema.safeParse(error.value).data?.detail ?? fallback;
+}

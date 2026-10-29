@@ -2,7 +2,7 @@
 // every invitation with its status, dates and email delivery, apart, with Resend and Revoke. A desktop page for
 // the creator only; anyone else finds no page here.
 
-import { api } from "@/api";
+import { api, refusalOf } from "@/api";
 import { PageHeader } from "@/features/shell/page-header";
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useId, useState } from "react";
@@ -11,7 +11,6 @@ import {
   type AdmissionInvitation,
   type AdmissionInvitationStatus,
   type Admissions,
-  problemSchema,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Input } from "@tonaris/ui/components/input";
@@ -45,12 +44,6 @@ const deliveryNames: Record<NonNullable<AdmissionInvitation["emailStatus"]>, str
 };
 
 const date = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
-
-/** The server's sentence for a refusal, or `fallback` when there is none. */
-function reasonOf(error: { value: unknown } | null, fallback: string): string | undefined {
-  if (!error) return undefined;
-  return problemSchema.safeParse(error.value).data?.detail ?? fallback;
-}
 
 function AdmissionsPage() {
   const admissions = Route.useLoaderData();
@@ -87,7 +80,7 @@ function Accepting({ paused, onChanged }: { paused: boolean; onChanged: () => vo
     setError(undefined);
     const { error: failed } = await api.v1.admin.admissions.paused.put({ paused: !accepting });
     setBusy(false);
-    setError(reasonOf(failed, "Couldn't change admissions. Try again."));
+    setError(refusalOf(failed, "Couldn't change admissions. Try again."));
     onChanged();
   }
   return (
@@ -137,7 +130,7 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
     setBusy(true);
     const { error: failed } = await api.v1.admin.admissions.invitations.post({ email });
     setBusy(false);
-    const reason = reasonOf(failed, "Couldn't invite them. Try again.");
+    const reason = refusalOf(failed, "Couldn't invite them. Try again.");
     setError(reason);
     if (reason === undefined) {
       setEmail("");
@@ -198,7 +191,7 @@ function Invitations({
       action === "resend" ? await one.resend.post({}) : await one.revoke.post({});
     setBusy(undefined);
     setError(
-      reasonOf(
+      refusalOf(
         failed,
         action === "resend"
           ? "Couldn't send the invitation again. Try again."
