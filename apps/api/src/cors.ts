@@ -11,8 +11,8 @@ export function webCors({ webOrigin }: Pick<ApiConfig, "webOrigin">) {
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["content-type"],
-    // The web app reads Retry-After from rate-limited responses (TS-104).
-    exposeHeaders: ["retry-after"],
+    // The web app reads Retry-After from rate-limited responses (TS-104), and the export's file name (TS-80).
+    exposeHeaders: ["retry-after", "content-disposition"],
     maxAge: 600,
   });
 }

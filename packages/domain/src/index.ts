@@ -179,6 +179,7 @@ export {
   maxAlbums,
   maxBatchItems,
   maxCapturesPerHour,
+  maxExportsPerHour,
   maxContainerDepth,
   maxContainers,
   maxDescriptionLength,

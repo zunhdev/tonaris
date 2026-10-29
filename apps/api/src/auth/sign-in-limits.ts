@@ -19,8 +19,8 @@ export const signInLimits = {
 /** Dynamic client registrations per client address (TS-61). Claude, ChatGPT and Codex use CIMD instead. */
 export const registrationLimit: Limit = { max: 10, windowMs: 60 * 60_000 };
 
-/** Hit times per key within a sliding window. */
-class SlidingWindow {
+/** Hit times per key within a sliding window. The export limit counts with one too (TS-80). */
+export class SlidingWindow {
   readonly #hits = new Map<string, number[]>();
 
   constructor(

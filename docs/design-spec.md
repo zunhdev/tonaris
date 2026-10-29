@@ -1559,6 +1559,17 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
   - **Ready:** the download starts automatically, with a "Download again" link while it's available.
   - **Failed:** the reason plus **Retry**.
 
+*As built in TON-89* (`apps/web/src/features/export/`):
+- **The section** "Download your data" follows Usage in Settings → Data. It shows the explanation as above, then two short lists:
+  - **Included:** "Every album, including Unsorted and Trash"; "Your folders and lists, with their descriptions"; "Custom fields and their values"; "Your arrangements and view choices".
+  - **Not included:** "Your sign-in email and display name"; "Sharing: invitations, people and links"; "Shared with me, and what others own"; "AI connections"; "Artwork images (their addresses are included)".
+- **The button,** **Download your data** (primary), then:
+  - **Preparing:** an indeterminate progress bar and "Preparing your export…", the button disabled.
+  - **Ready:** the download starts, and "Your export is downloading as {file name}." with a **Download again** link, until the next export or signing out.
+  - **Failed:** the reason in danger text, such as the rate limit's, or "Couldn't reach Tonaris. Check your connection and try again.", then **Retry**.
+- **Activity isn't used.** The state lives outside the page, so moving to another page keeps it, and the download still starts there. A 5,000-album export takes well under a second.
+- **Narrow screens** read "Downloading your data is on the desktop app." (FR-08.1).
+
 **DS-97 Account deletion** (Account → Danger zone). *(FR-11.10, FR-11.11, FR-08.7)*
 - A full-height dialog lists the consequences (FR-11.10).
 - A **Download your data first** block embeds the DS-96 states.
@@ -1566,7 +1577,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - A progress state follows, then the user is signed out to a plain "Your account has been deleted" page.
 - Failure shows the reason and retry, without claiming partial success.
 
-*As built in TON-79* (without the export block, which TON-89 adds):
+*As built in TON-79*, with the export block added in TON-89:
 - **The Danger zone** is the last section of Settings → Account, under a rule: "Deleting your account removes it and everything in it, for good." with **Delete account** (danger). The creator reads "The creator's account can't be deleted: it runs admissions." instead.
 - **The dialog,** "Delete your account?", says "Deleting your account means:" and lists:
   - "Your whole collection is removed permanently, including Unsorted and Trash.";
@@ -1574,6 +1585,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
   - "Everything you share becomes unavailable to everyone, including people with a link.";
   - "Your AI connections are disconnected.";
   - "It can't be undone: nothing goes to Trash, and the account can't be recovered.".
+- **"Download your data first"** (TON-89) follows the list, in a bordered block: "A ZIP of your whole collection, to keep or use elsewhere. Tonaris can't restore it.", then DS-96's button and states.
 - **Confirming:** "Type {email} to confirm" enables **Delete account permanently** once the typed email matches, whatever its case. **Cancel** closes it.
 - **`/account-deleted`:** "Deleting your account…" with an indeterminate bar, then "Your account has been deleted" and "Everything in it is gone. Thanks for using Tonaris.". A failure reads "Couldn't finish deleting your account" and "Try again to finish it.", with **Retry**.
 
