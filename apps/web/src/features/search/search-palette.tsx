@@ -7,12 +7,16 @@
 // with the inspector; ⌘Enter opens an album on its own page. A command runs once the palette has closed, on what
 // had the focus when it opened, as its key would (use-shortcuts.ts); one that can't run says why. The field is a
 // combobox over a listbox (DS-115), whose rows are virtualized so a group of thousands stays quick; the active
-// option is always rendered, for `aria-activedescendant`. Built only while open.
+// option is always rendered, for `aria-activedescendant`. Built only while open. What others share with the person
+// comes from the server's search instead (FR-12.3; decided with the creator, 29 October 2026), 150 ms after typing
+// stops, while online: a "Shared with me" group after Albums, each result "Shared by {name}" with the path it can be
+// seen by, opening in the viewer page. "No results" waits for its answer.
 
 // The combobox pattern's listbox, groups and options are plain elements with ARIA roles: virtualized rows are
 // absolutely positioned, which a native `select` and its options can't be.
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
+import { api } from "@/api";
 import { Artwork, artworkSrc } from "@/features/collection/artwork";
 import { useCollectionUi, useMode } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
@@ -27,6 +31,7 @@ import {
   type CommandId,
 } from "@/features/shell/shortcuts";
 import type { CommandRunner, CommandTarget } from "@/features/shell/use-shortcuts";
+import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { defaultRangeExtractor, useVirtualizer } from "@tanstack/react-virtual";
 import { CornerDownLeft, Search } from "lucide-react";
@@ -49,7 +54,10 @@ import {
   searchTier,
   type Album,
   type Container,
+  type SearchResults,
   type SearchTier,
+  type SharedSearchAlbum,
+  type SharedSearchContainer,
 } from "@tonaris/domain";
 import { CommandDialog, CommandDialogContent } from "@tonaris/ui/components/command";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -67,7 +75,7 @@ const groupLimit = 8;
 /** How many recent items an empty palette shows. */
 const recentShown = 8;
 
-type Group = "recent" | "folders" | "lists" | "albums" | "commands" | "frequent";
+type Group = "recent" | "folders" | "lists" | "albums" | "shared" | "commands" | "frequent";
 
 /** A command as the palette shows it: its label now, and why it can't run, if it can't. */
 type CommandRow = { command: Command; label: string; blocked: string | undefined };
@@ -76,6 +84,8 @@ type Row =
   | { type: "heading"; group: Group; title: string }
   | { type: "container"; group: Group; container: Container }
   | { type: "album"; group: Group; album: Album }
+  | { type: "shared-container"; group: Group; item: SharedSearchContainer }
+  | { type: "shared-album"; group: Group; item: SharedSearchAlbum }
   | ({ type: "command"; group: Group } & CommandRow)
   | { type: "more"; group: Group; total: number };
 
@@ -91,6 +101,8 @@ const heights: Record<Row["type"], number> = {
   heading: 32,
   container: 36,
   album: 48,
+  "shared-container": 36,
+  "shared-album": 48,
   command: 36,
   more: 32,
 };
@@ -111,6 +123,8 @@ function rowsOf(sections: readonly Section[], expanded: ReadonlySet<Group>): Row
 const rowKey = (row: Row): string => {
   if (row.type === "container") return `${row.group}-container-${row.container.id}`;
   if (row.type === "album") return `${row.group}-album-${row.album.id}`;
+  if (row.type === "shared-container") return `${row.group}-container-${row.item.id}`;
+  if (row.type === "shared-album") return `${row.group}-album-${row.item.id}`;
   if (row.type === "command") return `${row.group}-command-${row.command.id}`;
   return `${row.type}-${row.group}`;
 };
@@ -129,6 +143,47 @@ function matchCommands(rows: readonly CommandRow[], text: string): CommandRow[] 
   }
   return matched.toSorted((a, b) => a.tier - b.tier || a.at - b.at).map(({ row }) => row);
 }
+
+/** How long typing must pause before shared content is searched. */
+const sharedDelayMs = 150;
+
+/**
+ * What others share with the person matching `text`, from the server (FR-12.3): read 150 ms after it last changed,
+ * while online. `settled` once the answer for this text is in, or there won't be one.
+ */
+function useSharedSearch(text: string, wanted: boolean) {
+  const offline = useConnection() === "offline";
+  const q = text.trim().slice(0, 200);
+  const asking = wanted && !offline && q !== "";
+  const [read, setRead] = useState<{ q: string; shared: SearchResults["shared"] | undefined }>();
+  useEffect(() => {
+    if (!asking) return () => {};
+    let current = true;
+    const timer = setTimeout(() => {
+      api.v1.search.get({ query: { q, limit: 100 } }).then(
+        ({ data }) => {
+          if (current) setRead({ q, shared: data?.shared });
+          return data;
+        },
+        () => {
+          if (current) setRead({ q, shared: undefined });
+        },
+      );
+    }, sharedDelayMs);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [asking, q]);
+  const answer = asking && read?.q === q ? read : undefined;
+  return { shared: answer?.shared, settled: !asking || answer !== undefined, offline };
+}
+
+/** "Shared by {name}", then the path the person can see (DS-29). */
+const sharedPlace = (owner: { displayName: string | null }, location: readonly string[]) =>
+  [`Shared by ${owner.displayName ?? "a Tonaris member"}`, location.join(" › ")]
+    .filter(Boolean)
+    .join(" · ");
 
 export function SearchPalette({
   open,
@@ -223,6 +278,7 @@ function PaletteBody({
   /** What the field matches: its text, less a leading `>`. */
   const text = commandMode ? query.trimStart().slice(1) : query;
   const blank = text.trim() === "";
+  const found = useSharedSearch(text, !commandMode && !blank);
 
   const sections = useMemo((): Section[] => {
     const toCommand =
@@ -290,12 +346,36 @@ function PaletteBody({
         items: results.albums.map((album) => ({ type: "album", group: "albums", album })),
       },
       {
+        group: "shared",
+        title: "Shared with me",
+        items: [...(found.shared?.folders.items ?? []), ...(found.shared?.lists.items ?? [])]
+          .map((item): Row => ({ type: "shared-container", group: "shared", item }))
+          .concat(
+            (found.shared?.albums.items ?? []).map((item) => ({
+              type: "shared-album",
+              group: "shared",
+              item,
+            })),
+          ),
+      },
+      {
         group: "commands",
         title: "Commands",
         items: matchCommands(commandRows, text).map(toCommand("commands")),
       },
     ];
-  }, [commandMode, blank, text, commandRows, recent, frequent, albumsById, tree, index]);
+  }, [
+    commandMode,
+    blank,
+    text,
+    commandRows,
+    recent,
+    frequent,
+    albumsById,
+    tree,
+    index,
+    found.shared,
+  ]);
 
   const rows = useMemo(() => rowsOf(sections, expanded), [sections, expanded]);
   const options = useMemo(
@@ -350,6 +430,17 @@ function PaletteBody({
       return;
     }
     close();
+    if (row.type === "shared-container" || row.type === "shared-album") {
+      // In the viewer page, from its shared root; an album in its first list there.
+      const place = row.type === "shared-container" ? row.item : row.item.lists[0];
+      if (!place) return;
+      void navigate({
+        to: "/shared/$containerId",
+        params: { containerId: place.rootId },
+        search: place.id === place.rootId ? {} : { c: place.id },
+      });
+      return;
+    }
     if (row.type === "container") {
       const { container } = row;
       if (container.kind === "folder")
@@ -453,7 +544,14 @@ function PaletteBody({
         <p className="px-4 py-6 text-center text-fg-tertiary">
           {commandMode
             ? `No commands match '${text.trim()}'.`
-            : `No results for '${query.trim()}'.`}
+            : found.settled
+              ? `No results for '${query.trim()}'.`
+              : "Searching…"}
+        </p>
+      )}
+      {found.offline && !commandMode && !blank && (
+        <p className="border-t border-subtle px-4 py-2 text-small text-fg-tertiary">
+          Shared content isn't searched while offline.
         </p>
       )}
       <output className="sr-only">
@@ -551,6 +649,46 @@ function ResultRow({
             </kbd>
           ))}
         </span>
+      </div>
+    );
+  }
+  if (row.type === "shared-container") {
+    const { item } = row;
+    return (
+      <div {...optionProps}>
+        <span className="text-fg-secondary">
+          <ContainerIcon kind={item.kind} />
+        </span>
+        <span className="min-w-0 flex-1 truncate text-fg-primary">
+          <Highlighted text={item.name} query={query} />
+        </span>
+        <Location>{sharedPlace(item.owner, item.location)}</Location>
+      </div>
+    );
+  }
+  if (row.type === "shared-album") {
+    const { item } = row;
+    const { year, recorded } = chronology(item);
+    const others = item.lists.length - 1;
+    return (
+      <div {...optionProps}>
+        <Artwork title={item.title} className="size-6" letterClassName="text-micro" />
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-fg-primary">
+            <Highlighted text={item.title} query={query} />
+          </span>
+          <span className="truncate text-small text-fg-secondary">
+            <Highlighted text={item.artistCredit} query={query} />
+            <span aria-hidden> · </span>
+            <span className="sr-only">, </span>
+            {recorded && "rec. "}
+            {year}
+          </span>
+        </span>
+        <Location>
+          {sharedPlace(item.owner, item.lists[0]?.location ?? [])}
+          {others > 0 && ` +${others} more`}
+        </Location>
       </div>
     );
   }

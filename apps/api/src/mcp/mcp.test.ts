@@ -270,6 +270,57 @@ describe("the MCP server (TS-60, TS-63)", () => {
     });
   });
 
+  test("search finds what's shared with the user after their own, saying who shared it (FR-12.3)", async () => {
+    const clientId = await registerClient();
+    const { userId, tokens } = await connect("anna@example.com", clientId, "read_only");
+    await insertAlbum(userId, "Doom Days", "Someone", 2000);
+    const [denis, anna] = [await t.signIn("denis@example.com"), await t.signIn("anna@example.com")];
+    const send = async (cookie: string, name: string, args: Record<string, unknown>) => {
+      const response = await t.call("/v1/mutations", {
+        json: { mutationId: Bun.randomUUIDv7(), name, args },
+        headers: { cookie },
+      });
+      expect(await response.json()).toMatchObject({ outcome: { status: "confirmed" } });
+    };
+    const [list, album, grantId] = [Bun.randomUUIDv7(), Bun.randomUUIDv7(), Bun.randomUUIDv7()];
+    await send(denis.cookie, "account.setDisplayName", { displayName: "Denis" });
+    await send(denis.cookie, "container.create", {
+      id: list,
+      kind: "list",
+      parentId: null,
+      name: "Epic",
+    });
+    await send(denis.cookie, "album.create", {
+      id: album,
+      title: "Epicus Doomicus Metallicus",
+      artistCredit: "Candlemass",
+      releaseType: "album",
+      isLive: false,
+      originalYear: 1986,
+      recordingYearStart: null,
+      recordingYearEnd: null,
+    });
+    await send(denis.cookie, "membership.add", { listId: list, albumId: album });
+    await send(denis.cookie, "share.invite", {
+      grantId,
+      containerId: list,
+      email: "anna@example.com",
+    });
+    await send(anna.cookie, "share.accept", { grantId });
+    const mcp = await mcpClient(tokens.access_token);
+    const found = await mcp.callTool({ name: "search", arguments: { query: "doom" } });
+    expect(found.structuredContent).toEqual({
+      albums: [
+        expect.objectContaining({ title: "Doom Days", sharedBy: null }),
+        expect.objectContaining({
+          id: album,
+          title: "Epicus Doomicus Metallicus",
+          sharedBy: "Denis",
+        }),
+      ],
+    });
+  });
+
   test("search treats % and _ as text", async () => {
     const clientId = await registerClient();
     const { userId, tokens } = await connect("anna@example.com", clientId, "read_only");

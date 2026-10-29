@@ -1077,6 +1077,19 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
   - **MCP's `search` tool** takes its albums from `searchCollection()`, in the app's order. Folders and lists join it with TON-81.
   - **Parity:** `packages/domain/fixtures/search.json` is a collection, with content in Trash, and queries with their expected groups, order, totals and locations. The web index's tests run its active part; the server's tests insert all of it. The server also runs `normalize.json`'s search cases.
   - **Measured** (local Postgres 18, this Mac, the 5,000-album workload account, one run per query after a warm-up): the slowest was "a", 27 ms with 4,519 albums matching; "e" took 22 ms; "do", "the" and "live" 5–8 ms; longer queries 1–4 ms. The target is 300 ms.
+- **As built in TON-72 (shared content; FR-12.3):**
+  - **The plan changed.** The creator chose server search for shared content over the per-root index in the bootstrap (29 October 2026). Owned search stays on the device and instant; shared search is online-only, and always as current as access.
+  - **`searchCollection()`:**
+    - also answers `shared: {folders, lists, albums}`, from `readableContainers()`: accepted invitations, and live links saved to Shared with me;
+    - containers match on `search_name_key` among the readable ones. Albums match on their keys, joined to memberships of readable lists;
+    - ranking and limits are the owned groups'.
+  - **A shared result:**
+    - names its owner (`{id, displayName}`) and its `rootId`, the highest readable container above it or itself;
+    - is located from that root, over readable rows only, so a private ancestor is never named; `parentId` is null when the parent isn't readable;
+    - **for an album,** lists only readable lists, each with its root.
+  - **`GET /v1/search`** answers it too.
+  - **MCP's `search`:** the person's albums, then shared ones, up to `limit` together, each with `sharedBy` (the owner's display name, or null for their own).
+  - **The palette** asks `GET /v1/search?limit=100` 150 ms after typing stops and keeps the `shared` part (DS-75).
 
 ---
 
