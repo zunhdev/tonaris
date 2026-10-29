@@ -1,6 +1,7 @@
 // accounts spec, MCP connections (FR-10.3, DS-85, DS-86, TS-61): an AI client's authorization request, from a
 // signed-out browser through sign-in and consent back to the client, then the connection in Settings and its
-// revocation. The client is registered by DCR and its callback is caught in the browser.
+// revocation, with when the client last called. The client is registered by DCR and its callback is caught in the
+// browser.
 
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
@@ -61,6 +62,7 @@ test("a client connects through sign-in and consent, and Settings revokes it", a
   await page.goto("/settings/connections");
   const connection = page.getByRole("listitem").filter({ hasText: "E2E Client" });
   await expect(connection).toContainText("Manage collection");
+  await expect(connection).toContainText("Last used");
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await connection.getByRole("button", { name: "Revoke E2E Client" }).click();
   await expect(page.getByText("No AI client is connected.")).toBeVisible();

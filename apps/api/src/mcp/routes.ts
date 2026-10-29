@@ -1,7 +1,8 @@
 // POST /mcp (TS-60, TS-61): the MCP endpoint, for the 2026-07-28 protocol and, through the SDK's stateless
 // fallback, 2025-era clients. A request needs an access token bound to `/mcp`; without one it gets a 401 whose
 // WWW-Authenticate points to the resource metadata, which is how clients start sign-in. The token's connection
-// must still exist, so revoking one takes effect at once, and its mode is what both grant (TS-62).
+// must still exist, so revoking one takes effect at once, and its mode is what both grant (TS-62). Each call records
+// when the connection was last used, for Settings (DS-86).
 
 import { createResourceServerChallenge } from "@better-auth/oauth-provider";
 import { createMcpHandler } from "@modelcontextprotocol/server";
@@ -17,7 +18,7 @@ import {
 import { Elysia } from "elysia";
 import { errors as joseErrors, type JWTPayload } from "jose";
 
-import { type Database, findConnection } from "@tonaris/db";
+import { type Database, findConnection, recordConnectionUse } from "@tonaris/db";
 import { mcpModeOf, mcpScopes, type McpPrincipal } from "@tonaris/domain";
 
 import { type Auth, mcpResource } from "../auth/auth";
@@ -160,6 +161,7 @@ export function mcpRoutes({ auth, db, config, logError }: McpRoutesOptions) {
     if (!userId || !clientId || !connection || !mode) {
       return challenge(unauthorized("This connection was revoked.", "invalid_token"));
     }
+    await recordConnectionUse(db, connection);
 
     return handler.fetch(request, {
       authInfo: {

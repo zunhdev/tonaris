@@ -35,23 +35,34 @@ export function authorizeUrl(search: string): string {
 /** What the consent page shows about the client (DS-85). */
 export type ConsentRequest = {
   clientId: string;
+  /**
+   * The client's domain: the host of its metadata document's URL, which is its ID (CIMD), and which the authorization
+   * server fetched it from. Undefined for a client registered by DCR, whose ID is random.
+   */
+  clientDomain: string | undefined;
   /** The host the client gets the answer at. */
   redirectHost: string | undefined;
   /** The scopes the client asked for. */
   scopes: string[];
 };
 
+/** The host of `url`, if it is a URL with one. */
+function hostOf(url: string | null, protocol?: string): string | undefined {
+  try {
+    const parsed = new URL(url ?? "");
+    return protocol && parsed.protocol !== protocol ? undefined : parsed.host || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function consentRequest(search: string): ConsentRequest {
   const params = new URLSearchParams(search);
-  let redirectHost: string | undefined;
-  try {
-    redirectHost = new URL(params.get("redirect_uri") ?? "").host || undefined;
-  } catch {
-    redirectHost = undefined;
-  }
+  const clientId = params.get("client_id") ?? "";
   return {
-    clientId: params.get("client_id") ?? "",
-    redirectHost,
+    clientId,
+    clientDomain: hostOf(clientId, "https:"),
+    redirectHost: hostOf(params.get("redirect_uri")),
     scopes: (params.get("scope") ?? "").split(" ").filter(Boolean),
   };
 }

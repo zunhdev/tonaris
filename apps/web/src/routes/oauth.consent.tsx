@@ -68,7 +68,8 @@ function Consent() {
     void answer(mode);
   }
 
-  const client = name ?? request.redirectHost ?? "An AI client";
+  const client = name ?? request.clientDomain ?? request.redirectHost ?? "An AI client";
+  const returnsElsewhere = request.redirectHost && request.redirectHost !== request.clientDomain;
   return (
     <SignInCard>
       <div className="flex flex-col gap-1">
@@ -77,7 +78,8 @@ function Consent() {
         </h1>
         <p className="text-small text-fg-secondary">
           {name && "Name as provided by the client. "}
-          {request.redirectHost && <>Returns to {request.redirectHost}.</>}
+          {request.clientDomain && <>From {request.clientDomain}. </>}
+          {returnsElsewhere && <>Returns to {request.redirectHost}.</>}
         </p>
       </div>
       <p className="text-fg-secondary">

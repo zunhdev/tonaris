@@ -37,6 +37,8 @@ export type ConnectionRow = {
   clientName: string | null;
   scopes: string[];
   createdAt: Date;
+  /** The last MCP call through it, to the minute; null before the first (DS-86). */
+  lastUsedAt: Date | null;
 };
 
 const connectionColumns = {
@@ -45,7 +47,11 @@ const connectionColumns = {
   clientName: oauthClients.name,
   scopes: oauthConsents.scopes,
   createdAt: oauthConsents.createdAt,
+  lastUsedAt: oauthConsents.lastUsedAt,
 };
+
+/** How stale a connection's last-used time may get before a call records it again: one write a minute at most. */
+export const connectionUseInterval = 60_000;
 
 /** `userId`'s connection to `clientId`: what an MCP token is checked against on every call. */
 export async function findConnection(
@@ -58,6 +64,27 @@ export async function findConnection(
     .innerJoin(oauthClients, eq(oauthClients.clientId, oauthConsents.clientId))
     .where(and(eq(oauthConsents.userId, userId), eq(oauthConsents.clientId, clientId)));
   return connection;
+}
+
+/**
+ * Records a call through the connection at `now`, unless one was recorded within `connectionUseInterval`, so an
+ * agent's burst of calls writes once (DS-86).
+ */
+export async function recordConnectionUse(
+  db: Database,
+  connection: Pick<ConnectionRow, "id" | "lastUsedAt">,
+  now: Date = new Date(),
+): Promise<void> {
+  if (
+    connection.lastUsedAt &&
+    now.getTime() - connection.lastUsedAt.getTime() < connectionUseInterval
+  ) {
+    return;
+  }
+  await db
+    .update(oauthConsents)
+    .set({ lastUsedAt: now })
+    .where(eq(oauthConsents.id, connection.id));
 }
 
 /** `userId`'s connections, newest first (DS-86). */

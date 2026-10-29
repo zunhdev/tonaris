@@ -40,8 +40,21 @@ describe("the consent request (DS-85)", () => {
   test("names the client, its redirect host and the scopes it asked for", () => {
     expect(consentRequest(`?${signed}`)).toEqual({
       clientId: "abc",
+      clientDomain: undefined,
       redirectHost: "claude.ai",
       scopes: [mcpScopes.read, mcpScopes.manage],
+    });
+  });
+
+  test("a client registered by its metadata document is from that document's domain (DS-85)", () => {
+    const codex = new URLSearchParams({
+      client_id: "https://chatgpt.com/oauth/codex/client.json",
+      redirect_uri: "http://127.0.0.1:52713/callback",
+      scope: mcpScopes.read,
+    });
+    expect(consentRequest(`?${codex}`)).toMatchObject({
+      clientDomain: "chatgpt.com",
+      redirectHost: "127.0.0.1:52713",
     });
   });
 

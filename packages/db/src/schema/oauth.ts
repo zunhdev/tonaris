@@ -118,6 +118,9 @@ export const oauthConsents = table(
     resources: text().array(),
     requestedUserInfoClaims: text().array(),
     scopes: text().array().notNull(),
+    // Tonaris's own column, which Better Auth never writes: the last MCP call through the connection, to the minute
+    // (DS-86, TON-80). Null until the first.
+    lastUsedAt: instant(),
     ...timestamps,
   },
   (t) => [index().on(t.userId), index().on(t.clientId)],

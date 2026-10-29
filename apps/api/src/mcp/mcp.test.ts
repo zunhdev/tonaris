@@ -396,6 +396,26 @@ describe("connections in Settings (FR-10.3, DS-86)", () => {
     ]);
   });
 
+  test("show when each client last called, written at most once a minute", async () => {
+    const clientId = await registerClient();
+    const { cookie, tokens } = await connect("anna@example.com", clientId, "read_only");
+    const lastUsed = async () => {
+      const [connection] = z
+        .array(z.object({ lastUsedAt: z.string().nullable() }))
+        .parse(await (await t.call("/v1/connections", { headers: { cookie } })).json());
+      return connection?.lastUsedAt;
+    };
+    expect(await lastUsed()).toBeNull();
+
+    const before = Date.now();
+    expect((await mcpPost(tokens.access_token, listTools)).status).toBe(200);
+    const first = await lastUsed();
+    expect(new Date(first ?? 0).getTime()).toBeGreaterThanOrEqual(before - 1000);
+
+    expect((await mcpPost(tokens.access_token, listTools)).status).toBe(200);
+    expect(await lastUsed()).toBe(first);
+  });
+
   test("revoking stops its access token at once, and its refresh token", async () => {
     const clientId = await registerClient();
     const { cookie, tokens } = await connect("anna@example.com", clientId, "manage");

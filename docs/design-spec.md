@@ -1405,6 +1405,7 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 
 **DS-85 Connection consent** (`/oauth/consent`). *(FR-10.1–FR-10.3, X-03)*
 - **Header:** "{Client name} wants access to your Tonaris collection". The client's domain is shown, and names the client supplies are labelled "as provided by the client".
+  - *As built in TON-80:* "Name as provided by the client. From {domain}. Returns to {redirect host}." The domain is the host of a CIMD client's ID, the URL its metadata came from, such as chatgpt.com. "Returns to" follows only when the redirect host differs, as for Codex's loopback callback. A DCR client has only the redirect host.
 - **Signed in as:** shows the account's email.
 - **Mode choice:** radio cards, with **Read-only** preselected.
   - **Read-only:** "Read and search your collection and Trash. Can't change anything."
@@ -1413,6 +1414,7 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 
 **DS-86 Settings → Connections.**
 - A list of connections showing client name, mode, connected date, last used, and **Revoke**. Changing the mode means reconnecting.
+  - *As built in TON-80:* each row reads "{Mode} · Connected {date} · Last used {date, time}", or "Not used yet" before the first call. Above the list: "To change what a client may do, revoke it and connect it again."
 - **Waiting for your approval ({n})** lists pending approvals with links to DS-87.
 - **Setup instructions** for Claude web, ChatGPT web, and Codex desktop: the MCP server URL with Copy, and 3–4 steps each.
 

@@ -20,7 +20,8 @@ export function connectionRoutes(session: SessionGuard, { db }: { db: Database }
         response: { 200: z.array(connectionSchema), 401: problemSchema },
         detail: {
           summary: "List MCP connections",
-          description: "The AI clients connected to this account, newest first, with their mode.",
+          description:
+            "The AI clients connected to this account, newest first, with their mode and when each last called.",
           tags: ["connections"],
           operationId: "listConnections",
         },
@@ -33,6 +34,7 @@ export function connectionRoutes(session: SessionGuard, { db }: { db: Database }
           clientId: connection.clientId,
           mode: mcpModeOf(connection.scopes) ?? null,
           connectedAt: connection.createdAt.toISOString(),
+          lastUsedAt: connection.lastUsedAt?.toISOString() ?? null,
         }));
       },
     )
