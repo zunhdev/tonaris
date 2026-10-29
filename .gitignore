@@ -21,3 +21,6 @@ playwright-report/
 
 # G1 spike: MusicBrainz responses cached by --cache (TON-14)
 tooling/fixtures/**/cache/
+
+# The revocation ledger's local default (TS-113).
+.ledger/

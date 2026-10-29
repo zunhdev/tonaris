@@ -3,7 +3,7 @@
 // graceful stop doesn't wait on them and clients reconnect to the new instance (TS-23). Jobs in progress finish
 // before the database closes.
 
-import { createDatabase } from "@tonaris/db";
+import { createDatabase, ledgerStore } from "@tonaris/db";
 
 import { accountDeletionJob } from "./account-deletion";
 import { createApp, maxRequestBodySize } from "./app";
@@ -12,6 +12,7 @@ import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
 import { emailTransport } from "./email/transport";
 import { startJobWorker } from "./jobs";
+import { ledgerJob } from "./ledger";
 import { createProviders } from "./providers";
 import { apiSchedules, startSchedules } from "./schedules";
 import { databaseHub } from "./sync/hub";
@@ -22,6 +23,7 @@ const hub = databaseHub(db);
 const worker = startJobWorker(db, [
   emailJob(db, emailTransport(config)),
   accountDeletionJob(db, (accountId) => hub.notify(accountId)),
+  ledgerJob(ledgerStore(config.ledgerUrl)),
 ]);
 const email = emailOutbox(db, worker.wake);
 const auth = createAuth({ config, db, email });

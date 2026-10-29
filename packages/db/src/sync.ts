@@ -66,6 +66,7 @@ import {
 import { canReadContainer } from "./access";
 import { albumsOfReleaseGroupIn, applyPlan, findCaptureTarget } from "./album-writes";
 import type { Database, Transaction } from "./client";
+import { recordInLedger } from "./ledger";
 import { recordUserValues, userEntries, writeProvenance } from "./provenance";
 import {
   accountSettings,
@@ -511,6 +512,12 @@ function collectionStore(tx: Transaction): CollectionStore {
       // Their entries cascade (TS-11); albums stay where else they are (FR-01.17).
       if (ids.length > 0) await tx.delete(containers).where(inArray(containers.id, ids));
       await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
+      await recordInLedger(tx, {
+        type: "trash.purged",
+        unitId,
+        containerIds: [...ids],
+        albumIds: [],
+      });
     },
     async purgeAlbum(unitId, albumId) {
       const links = await tx
@@ -525,6 +532,12 @@ function collectionStore(tx: Transaction): CollectionStore {
       await tx.delete(positions).where(eq(positions.itemId, albumId));
       await tx.delete(albums).where(eq(albums.id, albumId));
       await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
+      await recordInLedger(tx, {
+        type: "trash.purged",
+        unitId,
+        containerIds: [],
+        albumIds: [albumId],
+      });
       return {
         services: links.map((link) => link.service),
         fieldIds: values.map((value) => value.fieldId),
@@ -1075,6 +1088,9 @@ function collectionStore(tx: Transaction): CollectionStore {
         .set({ status: to })
         .where(and(eq(shareGrants.id, id), eq(shareGrants.status, from)))
         .returning({ id: shareGrants.id });
+      // An ended grant stays ended after a restore (TS-113).
+      if (moved.length > 0 && (to === "declined" || to === "withdrawn" || to === "revoked"))
+        await recordInLedger(tx, { type: "shareGrant.ended", grantId: id, status: to });
       return moved.length > 0;
     },
     async setGrantEmailStatus(id, status) {
@@ -1149,6 +1165,7 @@ function collectionStore(tx: Transaction): CollectionStore {
     },
     async revokeLink(id, at) {
       await tx.update(shareLinks).set({ revokedAt: at }).where(eq(shareLinks.id, id));
+      await recordInLedger(tx, { type: "shareLink.revoked", linkId: id }, at);
     },
   };
 }

@@ -1,6 +1,9 @@
 // What tonaris-api listens on and whom it trusts (TS-08, TS-105). Local development runs on defaults (TS-06);
 // production must set every origin and secret, and start-up fails without them. `.env.example` lists them.
 
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
 export type ApiConfig = {
   port: number;
   /** The API's own origin, `https://api.tonaris.<tld>` (TS-08): Better Auth's base URL. */
@@ -24,6 +27,11 @@ export type ApiConfig = {
   emailFrom: string;
   /** Where people write for help, shown on `/help/recovery` (TS-73): a mailbox the creator reads. */
   supportEmail: string;
+  /**
+   * Where the revocation ledger is written (TS-113): `s3://bucket/prefix` off-site in production, or a `file:` URL.
+   * Locally it defaults to `.ledger/` beside the API.
+   */
+  ledgerUrl: string;
   /** The header the host's proxy puts the client address in; unset means the socket address (TS-104). */
   clientIpHeader: string | undefined;
   /**
@@ -54,11 +62,15 @@ const requiredInProduction = [
   "EMAIL_FROM",
   "SUPPORT_EMAIL",
 ] as const satisfies (keyof typeof localDefaults)[];
+/** Required in production with no local default: the ledger must be off-site (TS-113). */
+const requiredOffSite = ["LEDGER_URL"] as const;
 type Required = (typeof requiredInProduction)[number] | "SMTP_URL";
 
 export function apiConfig(env: Env = process.env): ApiConfig {
   const production = env.NODE_ENV === "production";
-  const missing: string[] = requiredInProduction.filter((name) => !env[name]);
+  const missing: string[] = [...requiredInProduction, ...requiredOffSite].filter(
+    (name) => !env[name],
+  );
   if (!env.RESEND_API_KEY && !env.SMTP_URL) missing.push("RESEND_API_KEY (or SMTP_URL)");
   if (production && missing.length > 0) {
     throw new Error(`Set ${missing.join(", ")} in production (see .env.example).`);
@@ -85,6 +97,7 @@ export function apiConfig(env: Env = process.env): ApiConfig {
     smtpUrl: value("SMTP_URL"),
     emailFrom: value("EMAIL_FROM"),
     supportEmail: value("SUPPORT_EMAIL"),
+    ledgerUrl: env.LEDGER_URL || pathToFileURL(path.resolve(".ledger")).href,
     clientIpHeader: env.CLIENT_IP_HEADER?.toLowerCase() || undefined,
     spotify:
       env.SPOTIFY_BRIDGE?.toLowerCase() !== "off" &&

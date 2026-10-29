@@ -15,6 +15,7 @@ import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
 import { smtpEmail } from "./email/smtp";
 import { startJobWorker } from "./jobs";
+import { ledgerJob, memoryLedger } from "./ledger";
 import { databaseHub } from "./sync/hub";
 import { insertUser } from "./testing";
 
@@ -35,6 +36,8 @@ const hub = databaseHub(database.db);
 const worker = startJobWorker(database.db, [
   emailJob(database.db, smtpEmail(config)),
   accountDeletionJob(database.db, (accountId) => hub.notify(accountId)),
+  // The browser tests check the app, not the ledger: it is kept in memory and dropped with the schema.
+  ledgerJob(memoryLedger()),
 ]);
 const email = emailOutbox(database.db, worker.wake);
 // Playwright's WebKit keeps no `Secure` cookie on http://localhost, so its run asks for plain ones (TON-94).

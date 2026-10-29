@@ -129,6 +129,17 @@ async function finished(token: string) {
   return "deleting";
 }
 
+/** The ledger's first event of `type`, once the worker has written it. */
+async function ledgered(type: string) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const event = t.ledger.appended.find((each) => each.type === type);
+    if (event) return event;
+    // oxlint-disable-next-line no-await-in-loop
+    await Bun.sleep(20);
+  }
+  return undefined;
+}
+
 async function tokenOf(response: Response): Promise<string> {
   expect(response.status).toBe(200);
   return z.object({ token: z.string() }).parse(await response.json()).token;
@@ -180,6 +191,8 @@ describe("deleting (FR-11.11)", () => {
     expect((await t.db.select().from(containers)).map((row) => row.id)).toEqual([bens]);
     expect((await t.db.select().from(albums)).map((row) => row.ownerId)).toEqual([ben.id]);
     expect((await t.call("/v1/me", { headers: { cookie: ben.cookie } })).status).toBe(200);
+    // The revocation ledger has it, off-site, so a restored backup deletes it again (TS-113).
+    expect(await ledgered("account.deleted")).toMatchObject({ userId: anna.id });
   });
 
   test("the address then reaches no account, and signing in recreates nothing", async () => {
