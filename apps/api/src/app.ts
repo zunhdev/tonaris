@@ -19,6 +19,7 @@ import type { CaptureDeps, SharingDeps } from "./capture";
 import { compression } from "./compression";
 import type { ApiConfig } from "./config";
 import { webCors } from "./cors";
+import type { McpLimiter } from "./mcp/limits";
 import { mcpRoutes } from "./mcp/routes";
 import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
@@ -120,6 +121,8 @@ export type AppOptions = ProblemDetailsOptions & {
   capture?: CaptureDeps | undefined;
   /** How the image proxy fetches artwork: `safeFetch` unless a test stands in (TS-103). */
   imageFetch?: ImageFetch | undefined;
+  /** MCP's per-connection limits; the default holds the TS-66 limits for this process. */
+  mcpLimiter?: McpLimiter | undefined;
 };
 
 export function createApp({
@@ -132,6 +135,7 @@ export function createApp({
   wakeJobs = () => {},
   capture,
   imageFetch,
+  mcpLimiter,
   ...problemOptions
 }: AppOptions) {
   const artwork = artworkSigner(config.authSecret);
@@ -154,7 +158,18 @@ export function createApp({
       .use(recoveryRoutes({ db, limiter, clientIpHeader: config.clientIpHeader }))
       .use(accountDeletionProgressRoutes({ db, wakeJobs }))
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
-      .use(mcpRoutes({ auth, db, config, logError, hub, capture, sharing }))
+      .use(
+        mcpRoutes({
+          auth,
+          db,
+          config,
+          logError,
+          hub,
+          capture,
+          sharing,
+          ...(mcpLimiter ? { limiter: mcpLimiter } : {}),
+        }),
+      )
       // Artwork, outside the versioned contract: images the server signed (TS-103).
       .use(artworkRoutes(artwork, imageFetch ? { fetch: imageFetch } : {}))
       .use(

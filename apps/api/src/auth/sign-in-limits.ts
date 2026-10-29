@@ -3,7 +3,7 @@
 // as the API runs as a single instance. Better Auth's own limiter can't key by email and, without a trusted
 // client address, puts everyone in one bucket, so it is off.
 // The same limiter bounds open client registration for MCP (DCR, TS-61): 10 per IP address per hour, proposed
-// in TON-22 and pending the creator's approval.
+// in TON-22 and approved by the creator on 29 October 2026 (TON-80).
 
 export type Limit = { max: number; windowMs: number };
 

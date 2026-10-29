@@ -30,6 +30,7 @@ import { type Auth, mcpResource } from "../auth/auth";
 import { mutationRunner, type CaptureDeps, type SharingDeps } from "../capture";
 import type { ApiConfig } from "../config";
 import type { SyncHub } from "../sync/hub";
+import { createMcpLimiter, mcpLimits, type McpLimiter } from "./limits";
 import { createMcpServer } from "./server";
 import { mcpWriter } from "./writes";
 
@@ -42,6 +43,8 @@ export type McpRoutesOptions = {
   hub: SyncHub;
   capture?: CaptureDeps | undefined;
   sharing: SharingDeps;
+  /** The per-connection limits (TS-66); a test may pass its own clock. */
+  limiter?: McpLimiter;
 };
 
 /**
@@ -123,6 +126,21 @@ function challengeResponse(
   );
 }
 
+/** A JSON-RPC error for a connection with too many requests in flight: the client may send it again in a second. */
+function tooManyAtOnce(): Response {
+  return new Response(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      error: {
+        code: -32000,
+        message: `Too many requests at once from this connection: at most ${mcpLimits.concurrent}. Wait for one to finish.`,
+      },
+      id: null,
+    }),
+    { status: 429, headers: { "content-type": "application/json", "retry-after": "1" } },
+  );
+}
+
 /** The scopes in a token's `scope` claim. */
 function scopesOf(claim: unknown): string[] {
   return typeof claim === "string" ? claim.split(" ").filter(Boolean) : [];
@@ -139,7 +157,16 @@ function principalOf(extra: Record<string, unknown> = {}): McpPrincipal {
   return { kind: "mcp", userId, grantId, mode };
 }
 
-export function mcpRoutes({ auth, db, config, logError, hub, capture, sharing }: McpRoutesOptions) {
+export function mcpRoutes({
+  auth,
+  db,
+  config,
+  logError,
+  hub,
+  capture,
+  sharing,
+  limiter = createMcpLimiter(),
+}: McpRoutesOptions) {
   const resource = mcpResource(config.apiOrigin);
   const verify = tokenVerifier(auth, { issuer: `${config.apiOrigin}/auth`, resource });
   const challenge = (error: unknown) => {
@@ -162,6 +189,7 @@ export function mcpRoutes({ auth, db, config, logError, hub, capture, sharing }:
       createMcpServer({
         db,
         principal: principalOf(authInfo?.extra),
+        limiter,
         writer,
         webOrigin: config.webOrigin,
       }),
@@ -189,16 +217,23 @@ export function mcpRoutes({ auth, db, config, logError, hub, capture, sharing }:
     }
     await recordConnectionUse(db, connection);
 
-    return handler.fetch(request, {
-      authInfo: {
-        token,
-        clientId,
-        scopes: tokenScopes,
-        expiresAt: claims.exp,
-        resource: new URL(resource),
-        extra: { userId, grantId: connection.id, mode },
-      },
-    });
+    // At most four requests in flight per connection (TS-66).
+    const release = limiter.enter(connection.id);
+    if (!release) return tooManyAtOnce();
+    try {
+      return await handler.fetch(request, {
+        authInfo: {
+          token,
+          clientId,
+          scopes: tokenScopes,
+          expiresAt: claims.exp,
+          resource: new URL(resource),
+          extra: { userId, grantId: connection.id, mode },
+        },
+      });
+    } finally {
+      release();
+    }
   }
 
   return new Elysia().all("/mcp", { parse: "none", detail: { hide: true } }, ({ request }) =>
