@@ -43,7 +43,7 @@ function targetOf(pathname: string): string {
 
 Bun.serve({
   port,
-  // MCP and sign-in requests are short; the sync stream (TS-23) is not used through the tunnel.
+  // MCP and sign-in requests are short; the web app's sync stream (TS-23) sends a keepalive every 20 s.
   idleTimeout: 60,
   async fetch(request) {
     const started = performance.now();
@@ -52,8 +52,9 @@ Bun.serve({
     const mcp =
       url.pathname === "/mcp" && request.method === "POST" ? await mcpSummary(request) : "";
     const headers = new Headers(request.headers);
-    // Bun decompresses upstream bodies; asking for none keeps Content-Encoding truthful.
-    headers.delete("accept-encoding");
+    // Bun decompresses upstream bodies but keeps their Content-Encoding, so ask for none. Deleting the header isn't
+    // enough: Bun's fetch then asks for gzip itself, and the 4 MB sync bootstrap came back compressed (TON-85).
+    headers.set("accept-encoding", "identity");
     headers.delete("host");
     let response: Response;
     try {
@@ -62,7 +63,8 @@ Bun.serve({
         headers,
         body: request.body,
         redirect: "manual",
-        signal: AbortSignal.timeout(30_000),
+        // The timeout would cut the sync stream, which stays open; the web app reconnects, but needn't.
+        signal: url.pathname === "/v1/sync/stream" ? undefined : AbortSignal.timeout(30_000),
       });
     } catch (error) {
       response = new Response(`Proxy: ${target} is unreachable (${String(error)})`, {
