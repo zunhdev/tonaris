@@ -1770,6 +1770,15 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 | Performance | Workload generator plus Playwright with Chrome's network and CPU throttling: `bun run --cwd apps/web test:perf` (`apps/web/perf/`, TON-21) | TS-120 |
 | Security | TS-106 fixtures; dependency audit | Q-05 |
 
+*The export validator, as built in TON-90* (`tooling/src/export-validator/`, `bun run export:validate <archive.zip>`) checks an archive the way a program receiving it would:
+- **Files:** it holds exactly the four files.
+- **Schema:** the JSON passes the archive's own JSON Schema, with ajv's 2020-12 validator and formats. The schema has `additionalProperties: false` at every level, so no unnamed key passes. The schema must also be the format version's current one.
+- **References:** each album appears once, and every reference resolves: list entries, parents, fields and option labels, views and their order, Trash units' contents and former memberships.
+- **Trash is marked:** an item is `trashed` exactly when it is in a unit that lists it.
+- **Exclusions:** no key names credentials, sharing or the profile (FR-08.4).
+- **The seeded export:** `--seeded` builds one without a database, covering every part of the format. CI's static job validates it. Its tests break archives in each of those ways and expect the failure.
+- **The workload's real download** (5,005 albums) validates.
+
 **TS-122 Verification matrix (Approved 17 October 2026; Q-03).**
 
 - **Desktop:** the latest two major versions of Chrome, Edge, and Firefox on Windows 11 and macOS (current and previous), plus Safari's latest two majors on macOS.
@@ -1816,6 +1825,7 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
   - `openspec validate --all --strict`
   - `drizzle-kit check` plus a no-diff `generate`
   - the regenerated OpenAPI diffed against `apps/api/openapi/v1.json`, plus, on pull requests, `oasdiff breaking` against the base branch's document
+  - the export validator on a seeded export, which needs no database (TON-90)
   - the web app's build
 - **Tests:**
   - `bun test` (unit and integration) against Postgres 18;

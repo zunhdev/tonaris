@@ -69,6 +69,8 @@ jobs:
           "$RUNNER_TEMP/oasdiff" breaking "$RUNNER_TEMP/base.json" apps/api/openapi/v1.json --fail-on ERR \
             --severity-levels apps/api/openapi/oasdiff-levels.txt \
             --err-ignore apps/api/openapi/oasdiff-ignore.txt
+      - name: Export validator on a seeded export (AC-41, TON-90)
+        run: bun run export:validate --seeded
       - name: Build both apps (the production bundles the images copy)
         run: bun run build
 

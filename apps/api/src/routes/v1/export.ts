@@ -8,14 +8,7 @@ import { Elysia } from "elysia";
 import { strToU8, Zip, ZipDeflate } from "fflate";
 
 import { exportSource, type Database } from "@tonaris/db";
-import {
-  buildExport,
-  exportJsonSchema,
-  exportReadme,
-  maxExportsPerHour,
-  renderCollection,
-  type TonarisExport,
-} from "@tonaris/domain";
+import { buildExport, exportFiles, maxExportsPerHour } from "@tonaris/domain";
 import { policy } from "@tonaris/providers";
 
 import type { SessionGuard } from "../../auth/plugin";
@@ -29,16 +22,6 @@ const hour = 60 * 60_000;
 export function exportFileName(exportedAt: string): string {
   const [date = "", time = ""] = exportedAt.split("T");
   return `tonaris-export-${date.replaceAll("-", "")}-${time.slice(0, 5).replace(":", "")}.zip`;
-}
-
-/** The archive's files, in the order the ZIP lists them. */
-function filesOf(data: TonarisExport): [string, string][] {
-  return [
-    ["tonaris-export.json", `${JSON.stringify(data, null, 2)}\n`],
-    ["tonaris-export.schema.json", `${JSON.stringify(exportJsonSchema(), null, 2)}\n`],
-    ["collection.md", renderCollection(data)],
-    ["README.md", exportReadme(data)],
-  ];
 }
 
 /** A ZIP of `files`, streamed as fflate deflates them; each entry is dated `modified`. */
@@ -104,7 +87,7 @@ export function exportRoutes(
         (source) => policy[source].exportable,
       );
       recent.hit(account.id);
-      return new Response(zipStream(filesOf(data), exportedAt), {
+      return new Response(zipStream(exportFiles(data), exportedAt), {
         headers: {
           "content-type": "application/zip",
           "content-disposition": `attachment; filename="${exportFileName(data.exportedAt)}"`,

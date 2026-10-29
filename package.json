@@ -12,6 +12,7 @@
     "check": "bun run format:check && bun run lint && bun run typecheck && bun run check:workspace && bun run check:specs && bun run db:check && bun run openapi:check && bun test && bun run test:e2e",
     "check:specs": "openspec validate --all --strict",
     "check:workspace": "bun tooling/src/workspace-check.ts",
+    "export:validate": "bun tooling/src/export-validator/cli.ts",
     "db:check": "bun run --cwd packages/db db:check",
     "db:create": "bun run --cwd packages/db db:create",
     "db:generate": "bun run --cwd packages/db db:generate",
