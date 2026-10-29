@@ -118,7 +118,7 @@ Each collection view SHALL show its path from Collection as breadcrumbs, each an
 
 #### Scenario: An empty collection
 - **WHEN** an owner with no folders, lists or albums opens `/c`
-- **THEN** the view says "Start your collection — paste an album link or create a list." and offers New list
+- **THEN** the view says "Start your collection — paste an album link or create a list.", offers New list, and offers "Connect an AI assistant", which opens Settings → Connections
 
 ### Requirement: Keyboard shortcuts move around the workspace
 The workspace SHALL offer DS-78's shortcuts:
