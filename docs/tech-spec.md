@@ -705,6 +705,10 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - **Accept:** set the grant to `accepted`, upsert `saved_references`, and emit a change to the grantee's stream.
 - **Leave:** set the grant to `withdrawn`, and delete the reference if it has no `link_id`.
 - **Recovery:** active statuses resume after Trash recovery. `withdrawn` and `revoked` never resume (FR-07.10).
+- *As built in TON-66:*
+  - **Delivery:** `share.invite` saves a new grant with `email_status = 'sending'` and reports `emailing: true`; `share.resendInvitation` sets `sending` again on a pending one. After a confirmed, non-replayed outcome, the API emails the recipient's current address (`apps/api/src/invitations.ts`). The result is recorded only while the grant is still pending and sending: `sent`, `failed`, or `unknown` when the send outlasts 30 s. The owner's dialog reads a `sending` older than 5 minutes as `unknown`.
+  - **Answering:** `share.accept` and `share.decline` act only on the principal's own pending grant whose container is active. The move from pending is conditional, so a concurrent revoke wins. Anything else is `not_found` "This invitation is no longer available.", including someone else's.
+  - **Accepting** upserts `saved_references (viewer, container)`, keeping an existing reference and its link. It logs no change yet: references reach clients with TON-68.
 - *As built in TON-64:* Trash changes no grant or link. A trashed container is simply never on an active path, so recovery resumes accepted grants and live links by itself, and leaves pending and revoked ones as they were. The statuses (`shareGrantStatuses`, `emailStatuses`) live in `packages/domain/src/sharing.ts`, and the db schema imports them.
 
 **TS-34 Display-name guard (Decided; FR-11.3).** Sharing commands and display-name updates check the invariant "a non-blank name exists while any share is active" under the owner lock.
@@ -1210,6 +1214,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Adapter.** `packages/domain` defines `EmailPort.send(template, to, data)`; implementations use a provider HTTP API, with SMTP as a fallback.
 - **Provider.** The creator chooses before the first real invitation is sent, taking EU data processing into account (Q-06). Candidates: Resend, Postmark, and Scaleway Transactional Email. Until then, development uses Mailpit (TS-06).
 - **Sending.** All email goes through the job queue (TS-90) with retries. Sending outcomes are recorded on the invitation or grant rows (FR-07.5, FR-11.6). Templates are plain, English, and DS-worded.
+- *As built in TON-66:* sharing invitations (`share-invitation`) are sent after the response too, from `mutationRunner`. Their outcome is recorded on the grant (TS-33) rather than only logged.
 - **Until the job queue exists**, sign-in email and admission's join codes (TS-71) are sent after the response, through the SMTP adapter (`apps/api/src/email/smtp.ts`, `SMTP_URL`), and a failure is logged. TON-73 moves it to the queue with the chosen provider. The templates render in `packages/domain/src/email.ts`, so every adapter sends the same text.
 
 **TS-73 Email change and recovery (Decided; FR-11.4, FR-11.5).**

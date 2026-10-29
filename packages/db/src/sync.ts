@@ -79,6 +79,7 @@ import {
   memberships,
   mutations,
   positions,
+  savedReferences,
   shareGrants,
   shareLinks,
   trashUnits,
@@ -1046,6 +1047,32 @@ function collectionStore(tx: Transaction): CollectionStore {
     },
     async insertGrant(grant) {
       await tx.insert(shareGrants).values(grant);
+    },
+    async findGrant(id) {
+      const [grant] = await tx
+        .select({
+          id: shareGrants.id,
+          status: shareGrants.status,
+          containerId: shareGrants.containerId,
+          granteeId: shareGrants.granteeId,
+        })
+        .from(shareGrants)
+        .where(eq(shareGrants.id, id));
+      return grant;
+    },
+    async moveGrant(id, from, to) {
+      const moved = await tx
+        .update(shareGrants)
+        .set({ status: to })
+        .where(and(eq(shareGrants.id, id), eq(shareGrants.status, from)))
+        .returning({ id: shareGrants.id });
+      return moved.length > 0;
+    },
+    async setGrantEmailStatus(id, status) {
+      await tx.update(shareGrants).set({ emailStatus: status }).where(eq(shareGrants.id, id));
+    },
+    async saveReference(viewerId, containerId) {
+      await tx.insert(savedReferences).values({ viewerId, containerId }).onConflictDoNothing();
     },
     async findLiveLink(containerId) {
       const [link] = await tx

@@ -13,6 +13,7 @@ import type { StoredField } from "./fields";
 import { streamingServices } from "./links";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
+import type { EmailStatus } from "./sharing";
 import type { StoredTrashUnit } from "./trash";
 import type { ViewDefaults, ViewPrefs } from "./views";
 
@@ -133,7 +134,17 @@ export function memoryStore({
   const accountRows = new Map(
     accounts.map(({ displayName = null, ...account }) => [account.id, { ...account, displayName }]),
   );
-  type GrantRow = ShareGrant & { containerId: string; granteeId: string; invitedEmail: string };
+  type GrantRow = ShareGrant & {
+    containerId: string;
+    granteeId: string;
+    invitedEmail: string;
+    emailStatus: EmailStatus | null;
+  };
+  /** Saved references, by viewer and container (TS-33). */
+  const referenceRows = new Map<
+    string,
+    { viewerId: string; containerId: string; linkId: string | null }
+  >();
   const grantRows = new Map<string, GrantRow>();
   const shareLinkRows = new Map<
     string,
@@ -622,6 +633,33 @@ export function memoryStore({
       grantRows.set(grant.id, { ...grant });
       return Promise.resolve();
     },
+    findGrant(id) {
+      const grant = grantRows.get(id);
+      return Promise.resolve(
+        grant && {
+          id: grant.id,
+          status: grant.status,
+          containerId: grant.containerId,
+          granteeId: grant.granteeId,
+        },
+      );
+    },
+    moveGrant(id, from, to) {
+      const grant = grantRows.get(id);
+      if (grant?.status !== from) return Promise.resolve(false);
+      grant.status = to;
+      return Promise.resolve(true);
+    },
+    setGrantEmailStatus(id, status) {
+      const grant = grantRows.get(id);
+      if (grant) grant.emailStatus = status;
+      return Promise.resolve();
+    },
+    saveReference(viewerId, containerId) {
+      const key = `${viewerId}:${containerId}`;
+      if (!referenceRows.has(key)) referenceRows.set(key, { viewerId, containerId, linkId: null });
+      return Promise.resolve();
+    },
     findLiveLink(containerId) {
       const link = [...shareLinkRows.values()].find(
         (each) => each.containerId === containerId && each.revokedAt === null,
@@ -656,5 +694,6 @@ export function memoryStore({
     accounts: accountRows,
     grants: grantRows,
     shareLinks: shareLinkRows,
+    references: referenceRows,
   };
 }

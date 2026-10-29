@@ -13,7 +13,7 @@ import { customFieldSchema } from "./fields";
 import { maxNameLength } from "./limits";
 import { membershipSchema } from "./memberships";
 import { isBlankName } from "./names";
-import { failure } from "./outcomes";
+import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { actingUserId, type Principal } from "./principals";
 import { serviceLinkSchema } from "./service-links";
@@ -190,7 +190,13 @@ export const setDisplayNameArgsSchema = z.object({
 export const shareInviteResultSchema = z.object({
   grantId: z.uuid(),
   status: z.enum(["pending", "accepted"]),
+  emailing: z
+    .boolean()
+    .meta({ description: "Whether an email goes out now: for a new invitation." }),
 });
+
+/** `share.resendInvitation`'s, `share.accept`'s and `share.decline`'s argument: the invitation. */
+export const grantArgsSchema = z.object({ grantId: z.uuid() });
 
 /** What `share.setLink` reports: the live link's ID, or null once it is off. */
 export const shareSetLinkResultSchema = z.object({ linkId: z.uuid().nullable() });
@@ -246,16 +252,97 @@ export async function inviteToShare(
     ]);
   }
   const open = await context.store.findOpenGrant(containerId, recipient.id);
-  if (open)
-    return { status: "applied", changes: [], result: { grantId: open.id, status: open.status } };
+  if (open) {
+    return {
+      status: "applied",
+      changes: [],
+      result: { grantId: open.id, status: open.status, emailing: false },
+    };
+  }
   await context.store.insertGrant({
     id: grantId,
     containerId,
     granteeId: recipient.id,
     invitedEmail: email.trim(),
     status: "pending",
+    // The API sends the email once this is saved, and records how it went (FR-07.5, TS-72).
+    emailStatus: "sending",
   });
-  return { status: "applied", changes: [], result: { grantId, status: "pending" } };
+  return { status: "applied", changes: [], result: { grantId, status: "pending", emailing: true } };
+}
+
+const unavailable = "This invitation is no longer available.";
+
+/** `share.resendInvitation` (FR-07.5): the owner sends a pending invitation's email again. App-only (X-03). */
+export async function resendInvitation(
+  { grantId }: z.infer<typeof grantArgsSchema>,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const grant = await context.store.findGrant(grantId);
+  if (!grant) return failure("not_found", unavailable);
+  const container = await shareable(grant.containerId, context);
+  if ("status" in container) return container;
+  if (grant.status !== "pending") return failure("not_found", unavailable);
+  await context.store.setGrantEmailStatus(grantId, "sending");
+  return { status: "applied", changes: [], result: { grantId, emailing: true } };
+}
+
+/**
+ * The principal's own invitation, with its container active, or why not: someone else's, or one whose collection is
+ * gone or in Trash, is "no longer available", so nobody can probe for invitations (FR-07.6). App-only (X-03).
+ */
+async function ownInvitation(
+  grantId: string,
+  { principal, store }: CommandContext,
+): Promise<Failure | { userId: string; containerId: string; grantStatus: ShareGrantStatus }> {
+  const userId = actingUserId(principal);
+  if (userId === undefined) return failure("permission_denied", "Sign in to answer an invitation.");
+  const decision = authorizeWrite(principal, { ownerId: userId, scope: "sharing" });
+  if (!decision.allowed) return failure(decision.code, "Invitations are answered in the app.");
+  const grant = await store.findGrant(grantId);
+  if (!grant || grant.granteeId !== userId) return failure("not_found", unavailable);
+  const container = await store.findContainer(grant.containerId);
+  if (!container || container.trashed) return failure("not_found", unavailable);
+  return { userId, containerId: grant.containerId, grantStatus: grant.status };
+}
+
+/**
+ * `share.accept` (FR-07.6, TS-33): the recipient's pending invitation becomes access to the folder or list and what is
+ * inside it, and the collection joins their references, reusing one they have. Nothing is copied. Accepting again
+ * changes nothing.
+ */
+export async function acceptInvitation(
+  { grantId }: z.infer<typeof grantArgsSchema>,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const grant = await ownInvitation(grantId, context);
+  if ("problem" in grant) return grant;
+  if (grant.grantStatus === "accepted") return { status: "applied", changes: [] };
+  // Only from pending: an owner who revoked it meanwhile wins (TON-67).
+  if (
+    grant.grantStatus !== "pending" ||
+    !(await context.store.moveGrant(grantId, "pending", "accepted"))
+  ) {
+    return failure("not_found", unavailable);
+  }
+  await context.store.saveReference(grant.userId, grant.containerId);
+  return { status: "applied", changes: [] };
+}
+
+/** `share.decline` (FR-07.6): the recipient declines, granting nothing and taking no other access away. */
+export async function declineInvitation(
+  { grantId }: z.infer<typeof grantArgsSchema>,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const grant = await ownInvitation(grantId, context);
+  if ("problem" in grant) return grant;
+  if (
+    grant.grantStatus !== "pending" ||
+    !(await context.store.moveGrant(grantId, "pending", "declined"))
+  ) {
+    return failure("not_found", unavailable);
+  }
+  return { status: "applied", changes: [] };
 }
 
 /**
@@ -347,3 +434,29 @@ export const shareSettingsSchema = z
   })
   .meta({ description: "A folder's or list's sharing, for its owner (DS-65)." });
 export type ShareSettings = z.infer<typeof shareSettingsSchema>;
+
+/** A pending invitation as its recipient sees it (DS-66): who shares what, and since when. */
+export const invitationSchema = z
+  .object({
+    id: z.uuid(),
+    owner: z.object({ displayName: z.string().nullable() }),
+    container: z.object({ id: z.uuid(), name: z.string(), kind: z.enum(["folder", "list"]) }),
+    invitedAt: z.iso.datetime(),
+  })
+  .meta({ description: "An invitation to view a folder or list (FR-07.5)." });
+export type Invitation = z.infer<typeof invitationSchema>;
+
+/** `GET /v1/invitations`: the signed-in person's pending invitations to active collections, oldest first. */
+export const invitationListSchema = z.object({ invitations: z.array(invitationSchema) });
+
+/**
+ * `GET /v1/invitations/{id}` (DS-66): the recipient's invitation, pending or accepted; someone else's still pending,
+ * without its details; or unavailable, for anything else.
+ */
+export const invitationStateSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("pending"), invitation: invitationSchema }),
+  z.object({ state: z.literal("accepted"), invitation: invitationSchema }),
+  z.object({ state: z.literal("wrong_account") }),
+  z.object({ state: z.literal("unavailable") }),
+]);
+export type InvitationState = z.infer<typeof invitationStateSchema>;

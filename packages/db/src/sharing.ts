@@ -18,6 +18,7 @@ import {
 } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
+import { sendingStale } from "./invitations";
 import {
   albums,
   albumServiceLinks,
@@ -232,6 +233,7 @@ export async function shareSettings(
   db: Database,
   ownerId: string,
   id: string,
+  now: Date = new Date(),
 ): Promise<ShareSettingsRow | undefined> {
   const [container] = await db
     .select({ ownerId: containers.ownerId, parentId: containers.parentId })
@@ -249,6 +251,7 @@ export async function shareSettings(
       displayName: users.displayName,
       status: shareGrants.status,
       emailStatus: shareGrants.emailStatus,
+      updatedAt: shareGrants.updatedAt,
     })
     .from(shareGrants)
     .innerJoin(users, eq(users.id, shareGrants.granteeId))
@@ -278,9 +281,17 @@ export async function shareSettings(
   return {
     containerId: id,
     ownerDisplayName: owner?.displayName ?? null,
-    invitations: invitations.flatMap((each) =>
+    invitations: invitations.flatMap(({ updatedAt, emailStatus, ...each }) =>
       each.status === "pending" || each.status === "accepted"
-        ? [{ ...each, status: each.status }]
+        ? [
+            {
+              ...each,
+              status: each.status,
+              // A send that never reported back is unconfirmed: the server may have stopped (FR-07.5).
+              emailStatus:
+                emailStatus === "sending" && sendingStale(updatedAt, now) ? "unknown" : emailStatus,
+            },
+          ]
         : [],
     ),
     link: link ?? null,

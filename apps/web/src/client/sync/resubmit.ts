@@ -316,6 +316,9 @@ function remake(
   if (
     mutation.name === "share.invite" ||
     mutation.name === "share.setLink" ||
+    mutation.name === "share.resendInvitation" ||
+    mutation.name === "share.accept" ||
+    mutation.name === "share.decline" ||
     mutation.name === "account.setDisplayName"
   ) {
     return "unchanged";

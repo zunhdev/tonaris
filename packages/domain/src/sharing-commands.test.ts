@@ -71,7 +71,7 @@ describe("share.invite (FR-07.4, FR-07.5)", () => {
     expect(first).toEqual({
       status: "applied",
       changes: [],
-      result: { grantId, status: "pending" },
+      result: { grantId, status: "pending", emailing: true },
     });
     expect([...grants.values()]).toEqual([
       {
@@ -80,10 +80,12 @@ describe("share.invite (FR-07.4, FR-07.5)", () => {
         granteeId: annaId,
         invitedEmail: "Anna@Example.com",
         status: "pending",
+        emailStatus: "sending",
       },
     ]);
+    // Inviting again names the same invitation, and sends nothing (FR-07.5).
     const again = await run(invite("anna@example.com"));
-    expect(again).toMatchObject({ result: { grantId, status: "pending" } });
+    expect(again).toMatchObject({ result: { grantId, status: "pending", emailing: false } });
     expect(grants.size).toBe(1);
   });
 
@@ -153,5 +155,77 @@ describe("account.setDisplayName (FR-11.3, TS-34)", () => {
     expect(codeOf(await run(rename(null)))).toBe("display_name_required");
     expect(accounts.get(owner)?.displayName).toBe("Denis");
     expect(codeOf(await run(rename("D."), agent))).toBe("app_only");
+  });
+});
+
+const answer = (
+  name: "share.accept" | "share.decline" | "share.resendInvitation",
+  grantId: string,
+): Mutation => ({
+  mutationId: uuidv7(),
+  name,
+  args: { grantId },
+});
+const anna: Principal = { kind: "user", userId: annaId, role: "user", client: "web" };
+
+describe("answering invitations (FR-07.5, FR-07.6)", () => {
+  test("the recipient accepts: access, a reference, and accepting again changes nothing", async () => {
+    const { run, grants, references } = setup();
+    const grantId = uuidv7();
+    await run(invite("anna@example.com", grantId));
+    // The owner can't answer for Anna, nor can her MCP connection.
+    expect(codeOf(await run(answer("share.accept", grantId)))).toBe("not_found");
+    const agentOfAnna: Principal = {
+      kind: "mcp",
+      userId: annaId,
+      grantId: uuidv7(),
+      mode: "manage",
+    };
+    expect(codeOf(await run(answer("share.accept", grantId), agentOfAnna))).toBe("app_only");
+    expect(codeOf(await run(answer("share.accept", grantId), anna))).toBe("applied");
+    expect(grants.get(grantId)?.status).toBe("accepted");
+    expect([...references.values()]).toEqual([
+      { viewerId: annaId, containerId: doom.id, linkId: null },
+    ]);
+    expect(codeOf(await run(answer("share.accept", grantId), anna))).toBe("applied");
+    expect(references.size).toBe(1);
+    // An accepted invitation can't be declined, nor resent.
+    expect(codeOf(await run(answer("share.decline", grantId), anna))).toBe("not_found");
+    expect(codeOf(await run(answer("share.resendInvitation", grantId)))).toBe("not_found");
+  });
+
+  test("declining grants nothing; a declined or trashed invitation is no longer available", async () => {
+    const { run, grants, references, containers } = setup();
+    const declined = uuidv7();
+    await run(invite("anna@example.com", declined));
+    expect(codeOf(await run(answer("share.decline", declined), anna))).toBe("applied");
+    expect(grants.get(declined)?.status).toBe("declined");
+    expect(references.size).toBe(0);
+    expect(await run(answer("share.accept", declined), anna)).toMatchObject({
+      status: "failed",
+      code: "not_found",
+      problem: { detail: "This invitation is no longer available." },
+    });
+    const pending = uuidv7();
+    await run(invite("anna@example.com", pending));
+    containers.set(doom.id, { ...doom, trashed: true });
+    expect(codeOf(await run(answer("share.accept", pending), anna))).toBe("not_found");
+    expect(grants.get(pending)?.status).toBe("pending");
+  });
+
+  test("the owner resends a pending invitation's email", async () => {
+    const { run, grants } = setup();
+    const grantId = uuidv7();
+    await run(invite("anna@example.com", grantId));
+    const grant = grants.get(grantId);
+    if (grant) grant.emailStatus = "failed";
+    expect(await run(answer("share.resendInvitation", grantId))).toMatchObject({
+      status: "applied",
+      result: { grantId, emailing: true },
+    });
+    expect(grants.get(grantId)?.emailStatus).toBe("sending");
+    expect(codeOf(await run(answer("share.resendInvitation", grantId), anna))).toBe(
+      "permission_denied",
+    );
   });
 });

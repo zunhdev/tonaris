@@ -210,6 +210,17 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: capitalized(`the link to ${container}`),
     };
   }
+  if (mutation.name === "share.resendInvitation") {
+    return {
+      summary: "Send an invitation again",
+      what: "the invitation's email",
+      subject: "The invitation's email",
+    };
+  }
+  if (mutation.name === "share.accept" || mutation.name === "share.decline") {
+    const verb = mutation.name === "share.accept" ? "Accept" : "Decline";
+    return { summary: `${verb} an invitation`, what: "the invitation", subject: "The invitation" };
+  }
   if (mutation.name === "account.setDisplayName") {
     return {
       summary: "Change your display name",

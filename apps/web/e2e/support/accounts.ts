@@ -119,6 +119,10 @@ export const accounts = {
   paletteRecent: at("palette-recent"),
   // The sharing dialog (sharing-dialog.e2e.ts).
   sharingDialog: at("sharing-dialog"),
+  // Invitations (invitations.e2e.ts): the owner, the recipient, and someone else.
+  invitingOwner: at("inviting-owner"),
+  invitedAnna: at("invited-anna"),
+  invitedBen: at("invited-ben"),
 } as const;
 
 /** An address with no account. */

@@ -6,11 +6,12 @@
 // list shows its save state, is busy while saving, and is highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 // Folders and lists can be dragged onto a folder, or onto Collection, to move them (DS-49, drag.tsx).
 
+import { usePendingInvitations } from "@/features/sharing/pending-invitations";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronRight, Inbox, Trash2, Users, type LucideIcon } from "lucide-react";
+import { ChevronRight, Inbox, MailOpen, Trash2, Users, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import type { ContainerKind } from "@tonaris/domain";
@@ -30,13 +31,19 @@ type Row = TreeRow | { type: "new"; level: number; kind: ContainerKind; parentId
 const keyOf = (row: Row) =>
   row.type === "container" ? row.container.id : row.type === "place" ? row.place : "new";
 
-const placePaths: Record<Place, "/unsorted" | "/shared" | "/trash"> = {
+const placePaths: Record<Place, "/unsorted" | "/shared" | "/invitations" | "/trash"> = {
   unsorted: "/unsorted",
   shared: "/shared",
+  invitations: "/invitations",
   trash: "/trash",
 };
 
-const placeIcons: Record<Place, LucideIcon> = { unsorted: Inbox, shared: Users, trash: Trash2 };
+const placeIcons: Record<Place, LucideIcon> = {
+  unsorted: Inbox,
+  shared: Users,
+  invitations: MailOpen,
+  trash: Trash2,
+};
 
 /** The place a path shows, if it shows one. */
 function placeAt(pathname: string): Place | undefined {
@@ -85,9 +92,10 @@ export function CollectionTree() {
     if (viewId !== undefined) expand(ancestorsOf(data.tree, viewId).map((folder) => folder.id));
   }, [viewId, data.tree, expand]);
 
+  const invitations = usePendingInvitations();
   const rows = useMemo(
-    () => withEditor(visibleRows(data.tree, ui.expanded), editor),
-    [data.tree, ui.expanded, editor],
+    () => withEditor(visibleRows(data.tree, ui.expanded, { invitations: invitations > 0 }), editor),
+    [data.tree, ui.expanded, editor, invitations],
   );
 
   const [focusedKey, setFocusedKey] = useState<string>();
@@ -259,6 +267,9 @@ export function CollectionTree() {
               <Icon strokeWidth={1.5} aria-hidden className="size-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{row.name}</span>
               {row.place === "unsorted" && <Count n={data.unsorted} />}
+              {row.place === "invitations" && (
+                <Count n={invitations} one="pending invitation" many="pending invitations" />
+              )}
             </Link>
           );
         }
@@ -290,12 +301,20 @@ export function CollectionTree() {
   );
 }
 
-/** An album count, said with its noun, so the item reads "Doom 2 albums" and shows "Doom 2". */
-function Count({ n }: { n: number }): ReactNode {
+/** A count, said with its noun, so the item reads "Doom 2 albums" and shows "Doom 2". */
+function Count({
+  n,
+  one = "album",
+  many = "albums",
+}: {
+  n: number;
+  one?: string;
+  many?: string;
+}): ReactNode {
   return (
     <span className="shrink-0 text-small text-fg-tertiary tabular-nums">
       {n}
-      <span className="sr-only">{n === 1 ? " album" : " albums"}</span>
+      <span className="sr-only">{` ${n === 1 ? one : many}`}</span>
     </span>
   );
 }
