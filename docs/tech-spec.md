@@ -1706,11 +1706,12 @@ The creator chooses the host, region, and budget; the current preference is Rend
 
 - `tooling/backup` is a portable script. It runs `pg_dump -Fc` (PG18 client), encrypts the dump with `age` to an offline-held public key, and uploads it to S3-compatible off-site storage. It runs on any host's scheduler or a developer machine.
 - `tooling/restore` and the runbook `docs/runbooks/restore.md` restore a dump into a fresh database and run the TS-113 reconciliation.
-- These are the creator's decisions (Q-04):
-  - retention;
-  - recovery-point and recovery-time objectives;
-  - whether to also rely on the host's point-in-time recovery;
-  - the drill schedule.
+- These are the creator's decisions (Q-04), made on 30 October 2026 (TON-97):
+  - **retention:** 30 days, one backup a day;
+  - **recovery point:** 24 hours;
+  - **recovery time:** 24 hours;
+  - **the host's point-in-time recovery:** not relied on, since the daily encrypted backup meets the recovery point;
+  - **the drill schedule:** every 3 months.
 
 **TS-113 Restore reconciliation (Decided; Q-04).**
 
@@ -1734,11 +1735,12 @@ The creator chooses the host, region, and budget; the current preference is Rend
 
   *Status, 29 October 2026:* no event is appended yet. Account deletion (TON-79), revocations and Trash purges are recorded only in the database. M11-06 builds the ledger and its appends together.
 
-**TS-114 Historical-backup deletion disclosure (Proposed; Pending approval, Q-04).** Proposed wording for the account-deletion screen and the privacy notice:
+**TS-114 Historical-backup deletion disclosure (Decided 30 October 2026, Q-04; TON-97).** The creator approved this wording, as written, for the account-deletion screen and the privacy notice:
 
 > "Deleted data is removed from the live service immediately and disappears from encrypted backups within 30 days. If we ever restore a backup, your deletion is re-applied before the service reopens."
 
-The "30 days" must match the backup retention the creator sets (Q-04).
+The "30 days" matches the backup retention the creator set (Q-04).
+- *As built in TON-97:* the account-deletion dialog shows it under the consequences (DS-97). The app has no privacy notice yet; when one is written, it carries the same words.
 
 **TS-115 Observability (Decided).**
 

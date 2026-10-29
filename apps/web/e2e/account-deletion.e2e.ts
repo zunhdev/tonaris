@@ -51,6 +51,7 @@ test.describe("a member", () => {
       "Your whole collection is removed permanently, including Unsorted and Trash.",
       "Everything you share becomes unavailable to everyone, including people with a link.",
       "Your AI connections are disconnected.",
+      "Deleted data is removed from the live service immediately and disappears from encrypted backups within 30 days. If we ever restore a backup, your deletion is re-applied before the service reopens.",
     ]) {
       // oxlint-disable-next-line no-await-in-loop
       await expect(dialog.getByText(line)).toBeVisible();

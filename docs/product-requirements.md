@@ -848,9 +848,14 @@ The assistive-technology, browser, and device matrix is defined in the tech spec
 
 **Q-04 Service disaster recovery.** Tonaris keeps automated, access-restricted operator backups of the state needed to recover the service. Restoration is documented and tested before acceptance, then re-verified on a recurring schedule. Trash and synchronization are not substitutes for backups.
 
-- **Pending approval:** backup retention, recovery-point and recovery-time objectives, and backup protection, recorded here.
+- **Decided by the creator on 30 October 2026 (TON-97):**
+  - **Backups:** one a day, kept for 30 days.
+  - **Recovery point:** at most 24 hours of changes can be lost.
+  - **Recovery time:** the service is back within 24 hours.
+  - **Drills:** a restore drill every 3 months after acceptance.
+  - **Protection:** each backup is encrypted to an offline-held key, and stored off-site with restricted access (TS-112).
 - Restoring an older backup never revives deleted accounts, revoked MCP authorizations, revoked sharing, or expired recovery rights. Later deletions, revocations, and expiries are reconciled before access resumes.
-- **Pending approval:** how account deletion applies to historical backups, including any bounded residual retention. This is disclosed to users, and immediate erasure from every backup copy is never claimed.
+- **Account deletion and historical backups (decided 30 October 2026, TON-97):** deleted data leaves the backups as they age out, within 30 days, and a restore re-applies every later deletion first (TS-113). The account-deletion screen and the privacy notice say so: "Deleted data is removed from the live service immediately and disappears from encrypted backups within 30 days. If we ever restore a backup, your deletion is re-applied before the service reopens." Immediate erasure from every backup copy is never claimed.
 - Operator recovery is never a user account-recovery path (FR-11.5).
 - Operator backups are separate from user exports (FR-08).
 
@@ -1014,7 +1019,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 ## 10. Readiness and maintenance
 
 - This baseline supports design, technical feasibility work, and delivery planning. It does not establish that all provider integrations are permitted. Investigate G1–G3 early.
-- Before first-version acceptance, record the remaining **Pending approval** items: backup objectives and historical-backup deletion treatment. The performance targets were all approved on 29 October 2026 (Q-01). Budget and hosting are creator-owned and are not tracked here.
+- No **Pending approval** items remain. The performance targets were approved on 29 October 2026 (Q-01), and the backup objectives and historical-backup deletion treatment on 30 October 2026 (Q-04). Budget and hosting are creator-owned and are not tracked here.
 - The design spec, tech spec, Linear issues, and OpenSpec changes reference rule IDs. OpenSpec capability specs grow change by change from these rules; this document is not bulk-converted.
 - When evidence or a decision changes a promise, update this document first, add a change-log entry, and keep IDs stable.
 
@@ -1072,6 +1077,11 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decisions (29 October 2026), M11** ([performance report](performance-verification.md)):
   - **Q-01.** The four provisional targets are approved as they stood, after measurements on the real app: quick search, MCP search, guest pages and export (TON-92). Updated Q-01, FR-12.6 and section 10.
   - **Limits.** Album titles and artist credits have a limit of 1,000 characters, set in TS-18 with the others (TON-95).
+- **Decisions (30 October 2026), Q-04** (TON-97):
+  - **Backups:** daily, kept 30 days, with a recovery point of 24 hours and a recovery time of 24 hours.
+  - **Drills:** a restore drill every 3 months.
+  - **Disclosure:** TS-114's wording, as written.
+  - **Updated** Q-04 and section 10.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);
