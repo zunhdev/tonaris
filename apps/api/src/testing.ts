@@ -28,11 +28,16 @@ export type SentEmail = {
   text: string;
 };
 
-/** An email port that keeps what it sends. `next(to)` waits for the next email to that address. */
+/**
+ * An email port that keeps what it sends. `next(to)` waits for the next email to that address; an address in
+ * `failing` makes sending fail, as an unreachable provider would.
+ */
 export function memoryEmail() {
   const sent: SentEmail[] = [];
+  const failing = new Set<string>();
   const waiting: { to: string; after: number; resolve: (email: SentEmail) => void }[] = [];
   const send: EmailPort["send"] = (template, to, data) => {
+    if (failing.has(to)) return Promise.reject(new Error(`Couldn't send to ${to}`));
     const email = { template, to, data, ...renderEmail(template, data) };
     sent.push(email);
     for (const waiter of waiting.filter((w) => w.to === to)) {
@@ -44,6 +49,7 @@ export function memoryEmail() {
   return {
     send,
     sent,
+    failing,
     /** Resolves with the first email to `to` sent after `after` emails had gone to it (default: all so far). */
     next(to: string, after = sent.filter((email) => email.to === to).length): Promise<SentEmail> {
       const already = sent.filter((email) => email.to === to)[after];

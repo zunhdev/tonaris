@@ -13,7 +13,7 @@ import { admissionRoutes } from "./auth/admission";
 import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
-import type { CaptureDeps } from "./capture";
+import type { CaptureDeps, SharingDeps } from "./capture";
 import { compression } from "./compression";
 import type { ApiConfig } from "./config";
 import { webCors } from "./cors";
@@ -23,6 +23,7 @@ import { problemDetails, type ProblemDetailsOptions } from "./problem";
 import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
 import { fieldRoutes } from "./routes/v1/fields";
+import { invitationRoutes } from "./routes/v1/invitations";
 import { meRoutes } from "./routes/v1/me";
 import { searchRoutes } from "./routes/v1/search";
 import { sharingRoutes } from "./routes/v1/sharing";
@@ -42,8 +43,7 @@ function v1(
     hub: SyncHub;
     capture?: CaptureDeps | undefined;
     artwork: ArtworkSigner;
-    shareSecret: string;
-    webOrigin: string;
+    sharing: SharingDeps;
   },
 ) {
   return new Elysia({ prefix: "/v1" })
@@ -61,7 +61,14 @@ function v1(
     .use(approvalRoutes(session, { db: sync.db }))
     .use(fieldRoutes(session, { db: sync.db }))
     .use(searchRoutes(session, { db: sync.db }))
-    .use(sharingRoutes(session, sync))
+    .use(
+      sharingRoutes(session, {
+        db: sync.db,
+        shareSecret: sync.sharing.shareSecret,
+        webOrigin: sync.sharing.webOrigin,
+      }),
+    )
+    .use(invitationRoutes(session, { db: sync.db }))
     .use(syncRoutes(session, sync));
 }
 
@@ -118,8 +125,7 @@ export function createApp({
           hub,
           capture,
           artwork,
-          shareSecret: config.authSecret,
-          webOrigin: config.webOrigin,
+          sharing: { shareSecret: config.authSecret, email, webOrigin: config.webOrigin, logError },
         }),
       )
   );

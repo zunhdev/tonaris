@@ -40,6 +40,8 @@ export function buildTree(
 export const places = [
   { place: "unsorted", name: "Unsorted" },
   { place: "shared", name: "Shared with me" },
+  // Only while invitations are pending (DS-31).
+  { place: "invitations", name: "Invitations" },
   { place: "trash", name: "Trash" },
 ] as const;
 
@@ -51,10 +53,18 @@ export type TreeRow =
   | (Position & { type: "container"; container: Container; expanded: boolean })
   | (Position & { type: "place"; place: Place; name: string });
 
-/** The rows a person can see: the folders and lists, inside the expanded folders, then the places. */
-export function visibleRows(tree: Tree, expanded: ReadonlySet<string>): TreeRow[] {
+/**
+ * The rows a person can see: the folders and lists, inside the expanded folders, then the places, Invitations only
+ * while some are pending (DS-31).
+ */
+export function visibleRows(
+  tree: Tree,
+  expanded: ReadonlySet<string>,
+  { invitations = false }: { invitations?: boolean } = {},
+): TreeRow[] {
   const rows: TreeRow[] = [];
-  const topLevel = tree.roots.length + places.length;
+  const shown = places.filter(({ place }) => place !== "invitations" || invitations);
+  const topLevel = tree.roots.length + shown.length;
   const walk = (siblings: readonly Container[], level: number, setSize: number) => {
     for (const [index, container] of siblings.entries()) {
       const open = container.kind === "folder" && expanded.has(container.id);
@@ -73,7 +83,7 @@ export function visibleRows(tree: Tree, expanded: ReadonlySet<string>): TreeRow[
     }
   };
   walk(tree.roots, 1, topLevel);
-  for (const [index, { place, name }] of places.entries()) {
+  for (const [index, { place, name }] of shown.entries()) {
     rows.push({
       type: "place",
       place,

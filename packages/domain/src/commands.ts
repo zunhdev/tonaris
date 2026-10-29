@@ -61,7 +61,16 @@ import { authorizeWrite } from "./policies";
 import { placeAtTop, setOrder, type Position } from "./positions";
 import { actingUserId, type Principal } from "./principals";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
-import { inviteToShare, setDisplayName, setShareLink, type ShareGrantStatus } from "./sharing";
+import {
+  acceptInvitation,
+  declineInvitation,
+  inviteToShare,
+  resendInvitation,
+  setDisplayName,
+  setShareLink,
+  type EmailStatus,
+  type ShareGrantStatus,
+} from "./sharing";
 import type { ChangeOp, Mutation } from "./sync";
 import {
   deleteAlbum,
@@ -253,8 +262,22 @@ export type CollectionStore = {
   /** The person's pending or accepted grant on the container, if any: one at most (TS-11). */
   findOpenGrant(containerId: string, granteeId: string): Promise<ShareGrant | undefined>;
   insertGrant(
-    grant: ShareGrant & { containerId: string; granteeId: string; invitedEmail: string },
+    grant: ShareGrant & {
+      containerId: string;
+      granteeId: string;
+      invitedEmail: string;
+      emailStatus: EmailStatus | null;
+    },
   ): Promise<void>;
+  /** The grant, if it exists. */
+  findGrant(
+    id: string,
+  ): Promise<(ShareGrant & { containerId: string; granteeId: string }) | undefined>;
+  /** Sets the grant's status if it is still `from`; answers whether it was (TS-33). */
+  moveGrant(id: string, from: ShareGrantStatus, to: ShareGrantStatus): Promise<boolean>;
+  setGrantEmailStatus(id: string, status: EmailStatus): Promise<void>;
+  /** Saves the container to the viewer's references, keeping one they have and its link (TS-33, FR-07.6). */
+  saveReference(viewerId: string, containerId: string): Promise<void>;
   /** The container's link that isn't revoked, if any: one at most (FR-07.16). */
   findLiveLink(containerId: string): Promise<{ id: string } | undefined>;
   insertLink(link: { id: string; containerId: string; tokenHash: Uint8Array }): Promise<void>;
@@ -301,6 +324,9 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "share.invite") return inviteToShare(mutation.args, context);
   if (mutation.name === "share.setLink") return setShareLink(mutation.args, context);
   if (mutation.name === "account.setDisplayName") return setDisplayName(mutation.args, context);
+  if (mutation.name === "share.resendInvitation") return resendInvitation(mutation.args, context);
+  if (mutation.name === "share.accept") return acceptInvitation(mutation.args, context);
+  if (mutation.name === "share.decline") return declineInvitation(mutation.args, context);
   if (mutation.name === "album.update") return updateAlbum(mutation.args, mutation.base, context);
   if (mutation.name === "album.setArtwork") {
     return setArtwork(mutation.args, mutation.base, context);

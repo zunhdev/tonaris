@@ -11,6 +11,13 @@ export type EmailTemplates = {
   "sign-in-no-account": Record<string, never>;
   /** The code that creates an invited account, plus a link to the invitation page that submits it (DS-91). */
   "join-code": { code: string; link: string };
+  /** A sharing invitation (FR-07.5): who shares what, and the invitation's page, which needs sign-in. */
+  "share-invitation": {
+    ownerName: string;
+    containerName: string;
+    kind: "folder" | "list";
+    link: string;
+  };
 };
 export type EmailTemplate = keyof EmailTemplates;
 
@@ -45,6 +52,17 @@ const renderers: { [T in EmailTemplate]: (data: EmailTemplates[T]) => RenderedEm
       "Tonaris is invite-only, so accounts are created from an invitation. If you have an account under a different address, sign in with that one.",
       "",
       ignoreLine,
+    ].join("\n"),
+  }),
+  "share-invitation": ({ ownerName, containerName, kind, link }) => ({
+    subject: `${ownerName} invited you to view "${containerName}" on Tonaris`,
+    text: [
+      `${ownerName} invited you to view the ${kind} "${containerName}" on Tonaris.`,
+      "",
+      "Open the invitation to accept or decline it:",
+      link,
+      "",
+      "You'll be asked to sign in with this address. The link works only for you: forwarding it gives no one access.",
     ].join("\n"),
   }),
   "join-code": ({ code, link }) => ({

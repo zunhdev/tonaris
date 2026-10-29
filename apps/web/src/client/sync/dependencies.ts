@@ -74,6 +74,13 @@ function referenced(mutation: Mutation): (string | null)[] {
   if (mutation.name === "share.invite" || mutation.name === "share.setLink") {
     return [mutation.args.containerId];
   }
+  if (
+    mutation.name === "share.resendInvitation" ||
+    mutation.name === "share.accept" ||
+    mutation.name === "share.decline"
+  ) {
+    return [mutation.args.grantId];
+  }
   if (mutation.name === "link.set" || mutation.name === "link.remove") {
     return [mutation.args.albumId];
   }

@@ -107,7 +107,8 @@ describe("sharing (DS-65)", () => {
           email: "Anna@Example.com",
           displayName: null,
           status: "pending",
-          emailStatus: null,
+          // Its email goes out after the response (TON-66).
+          emailStatus: expect.stringMatching(/^(sending|sent)$/),
         },
       ],
       link: null,

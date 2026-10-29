@@ -45,6 +45,12 @@ export { runExclusively } from "./locks";
 export { migrateDatabase, migrationsFolder } from "./migrations";
 export { albumProvenance } from "./provenance";
 export { providerCacheStore, pruneProviderCache } from "./provider-cache";
+export {
+  invitationState,
+  invitationToDeliver,
+  pendingInvitations,
+  recordInvitationEmail,
+} from "./invitations";
 export { fillSearchKeys } from "./migrations";
 export { searchCollection } from "./search";
 export {

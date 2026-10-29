@@ -79,24 +79,32 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
     failed: false,
   });
   const read = useCallback(
-    (isCurrent: () => boolean = () => true) =>
-      api.v1
-        .containers({ id })
-        .sharing.get()
-        .then(
-          ({ data }) => {
-            if (isCurrent()) {
+    (isCurrent: () => boolean = () => true) => {
+      const once = (): Promise<ShareSettings | undefined> =>
+        api.v1
+          .containers({ id })
+          .sharing.get()
+          .then(
+            ({ data }) => {
+              if (!isCurrent()) return data ?? undefined;
               setLoaded((previous) =>
                 data ? { settings: data, failed: false } : { ...previous, failed: true },
               );
-            }
-            return data;
-          },
-          () => {
-            if (isCurrent()) setLoaded((previous) => ({ ...previous, failed: true }));
-            return undefined;
-          },
-        ),
+              // An email still going out is read again shortly, so "sending…" settles (FR-07.5).
+              if (data?.invitations.some((each) => each.emailStatus === "sending")) {
+                setTimeout(() => {
+                  if (isCurrent()) void once();
+                }, 1500);
+              }
+              return data ?? undefined;
+            },
+            () => {
+              if (isCurrent()) setLoaded((previous) => ({ ...previous, failed: true }));
+              return undefined;
+            },
+          );
+      return once();
+    },
     [id],
   );
   useEffect(() => {
@@ -147,8 +155,15 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
                       <span className="text-fg-secondary">{invitation.email}</span>
                     </span>
                     <span className="text-small text-fg-secondary">
-                      {invitation.status === "accepted" ? "Accepted" : "Pending"}
+                      {invitation.status === "accepted"
+                        ? "Accepted"
+                        : `Pending${deliveryOf(invitation.emailStatus)}`}
                     </span>
+                    {invitation.status === "pending" &&
+                      (invitation.emailStatus === "failed" ||
+                        invitation.emailStatus === "unknown") && (
+                        <ResendButton grantId={invitation.id} disabled={offline} onSent={load} />
+                      )}
                   </li>
                 ))}
               </ul>
@@ -185,6 +200,46 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
           </>
         ))}
     </>
+  );
+}
+
+/** A pending invitation's email, after "Pending" (DS-65, FR-07.5): reported apart from the invitation. */
+function deliveryOf(status: ShareSettings["invitations"][number]["emailStatus"]): string {
+  if (status === "sending") return " · sending…";
+  if (status === "sent") return " · sent";
+  if (status === "failed") return " · email failed";
+  if (status === "unknown") return " · email not confirmed";
+  return "";
+}
+
+/** Sends a pending invitation's email again (FR-07.5). */
+function ResendButton({
+  grantId,
+  disabled,
+  onSent,
+}: {
+  grantId: string;
+  disabled: boolean;
+  onSent: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      disabled={disabled || busy}
+      onClick={() => {
+        setBusy(true);
+        void send({ name: "share.resendInvitation", args: { grantId } })
+          .catch(() => undefined)
+          .finally(() => {
+            setBusy(false);
+            onSent();
+          });
+      }}
+    >
+      Resend
+    </Button>
   );
 }
 

@@ -75,6 +75,8 @@ describe("OpenAPI", () => {
       "/v1/fields/{fieldId}/options/{optionId}/removal",
       "/v1/search",
       "/v1/containers/{id}/sharing",
+      "/v1/invitations",
+      "/v1/invitations/{id}",
       "/v1/mutations",
       "/v1/batches",
       "/v1/mutations/{id}",

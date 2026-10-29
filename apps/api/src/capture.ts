@@ -25,6 +25,7 @@ import {
   type AlbumFacts,
   type CaptureArgs,
   type CaptureSource,
+  type EmailPort,
   type FoundFacts,
   type Mutation,
   type Outcome,
@@ -42,6 +43,8 @@ import {
   type Identifier,
   type LinkParse,
 } from "@tonaris/providers";
+
+import { deliverInvitation } from "./invitations";
 
 /**
  * What capture asks: the identification chain, and MusicBrainz's facts about a release group. `readLink` reads a link
@@ -209,10 +212,49 @@ export async function prepareLink(
  * Runs a mutation as the API does: a capture claimed, prepared and then saved; a link edit with its URL read first;
  * anything else by `executeMutation`. Throws `MutationInProgressError` while another request runs the same capture.
  */
-export function mutationRunner(
+export type SharingDeps = {
+  /** Derives link tokens (TS-32). */
+  shareSecret: string;
+  /** Sends invitations (TS-72), with the web app's origin for their links. */
+  email: EmailPort;
+  webOrigin: string;
+  logError: (error: unknown, context: string) => void;
+};
+
+export function mutationRunner(db: Database, deps: CaptureDeps | undefined, sharing: SharingDeps) {
+  const run = runMutation(db, deps, sharing);
+  return async function runAndDeliver(
+    principal: Principal,
+    mutation: Mutation,
+    now?: Date,
+  ): Promise<ExecutedMutation> {
+    const executed = await run(principal, mutation, now);
+    // A saved invitation's email goes out after the response; a replay never sends again (FR-07.5).
+    const { outcome } = executed.result;
+    if (
+      (mutation.name === "share.invite" || mutation.name === "share.resendInvitation") &&
+      !executed.replayed &&
+      outcome.status === "confirmed" &&
+      typeof outcome.result === "object" &&
+      outcome.result !== null &&
+      "emailing" in outcome.result &&
+      outcome.result.emailing === true &&
+      "grantId" in outcome.result &&
+      typeof outcome.result.grantId === "string"
+    ) {
+      void deliverInvitation(
+        { db, email: sharing.email, webOrigin: sharing.webOrigin },
+        outcome.result.grantId,
+      ).catch((error: unknown) => sharing.logError(error, "invitation email"));
+    }
+    return executed;
+  };
+}
+
+function runMutation(
   db: Database,
   deps: CaptureDeps | undefined,
-  { shareSecret }: { shareSecret: string },
+  { shareSecret }: Pick<SharingDeps, "shareSecret">,
 ) {
   return async function run(
     principal: Principal,

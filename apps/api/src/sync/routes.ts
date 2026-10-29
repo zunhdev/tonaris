@@ -28,7 +28,12 @@ import {
 
 import { presentBootstrap, presentChange, type ArtworkSigner } from "../artwork";
 import type { SessionGuard } from "../auth/plugin";
-import { MutationInProgressError, mutationRunner, type CaptureDeps } from "../capture";
+import {
+  MutationInProgressError,
+  mutationRunner,
+  type CaptureDeps,
+  type SharingDeps,
+} from "../capture";
 import { ProblemError } from "../problem";
 import { eventStream, type StreamSource } from "../sse";
 import type { SyncEvent, SyncHub } from "./hub";
@@ -89,17 +94,16 @@ export function syncRoutes(
     hub,
     capture,
     artwork,
-    shareSecret,
+    sharing,
   }: {
     db: Database;
     hub: SyncHub;
     capture?: CaptureDeps | undefined;
     artwork: ArtworkSigner;
-    /** Derives link tokens (TS-32). */
-    shareSecret: string;
+    sharing: SharingDeps;
   },
 ) {
-  const run = mutationRunner(db, capture, { shareSecret });
+  const run = mutationRunner(db, capture, sharing);
   return new Elysia()
     .use(session)
     .post(

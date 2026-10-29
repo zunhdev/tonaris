@@ -20,7 +20,12 @@ import { membershipSchema } from "./memberships";
 import { outcomeSchema } from "./outcomes";
 import { positionSchema } from "./positions";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
-import { setDisplayNameArgsSchema, shareInviteArgsSchema, shareSetLinkArgsSchema } from "./sharing";
+import {
+  grantArgsSchema,
+  setDisplayNameArgsSchema,
+  shareInviteArgsSchema,
+  shareSetLinkArgsSchema,
+} from "./sharing";
 import {
   albumDeleteArgsSchema,
   containerDeleteArgsSchema,
@@ -352,6 +357,27 @@ export const shareSetLinkSchema = z.object({
   args: shareSetLinkArgsSchema,
 });
 
+/** `share.resendInvitation`: emails a pending invitation again (FR-07.5). App-only (X-03). */
+export const shareResendInvitationSchema = z.object({
+  mutationId,
+  name: z.literal("share.resendInvitation"),
+  args: grantArgsSchema,
+});
+
+/** `share.accept`: the recipient accepts an invitation (FR-07.6). App-only (X-03). */
+export const shareAcceptSchema = z.object({
+  mutationId,
+  name: z.literal("share.accept"),
+  args: grantArgsSchema,
+});
+
+/** `share.decline`: the recipient declines an invitation (FR-07.6). App-only (X-03). */
+export const shareDeclineSchema = z.object({
+  mutationId,
+  name: z.literal("share.decline"),
+  args: grantArgsSchema,
+});
+
 /** `account.setDisplayName`: sets or clears the display name (FR-11.3, TS-34). App-only (X-03). */
 export const accountSetDisplayNameSchema = z.object({
   mutationId,
@@ -393,6 +419,9 @@ export const mutationSchema = z
     shareInviteSchema,
     shareSetLinkSchema,
     accountSetDisplayNameSchema,
+    shareResendInvitationSchema,
+    shareAcceptSchema,
+    shareDeclineSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

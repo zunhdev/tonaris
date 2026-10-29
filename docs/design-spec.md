@@ -443,6 +443,8 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 *As built in TON-38:*
 - **+ Add album** opens the manual entry form (DS-47) until capture arrives (M3), switching to Editing first. Offline, it is disabled with "You're offline" (DS-81).
 
+*As built in TON-66:* **Invitations** is a tree place between Shared with me and Trash, with an envelope icon and the pending count ("2 pending invitations" to screen readers). It shows only while invitations are pending. Another account's invitation can't reach this client's stream, so the count is read on load, when the window regains focus, every minute, and after an answer.
+
 **DS-32 Route map.** These are conceptual paths; final paths are decided in the tech spec. *(Section 2.2)*
 
 | Path | Screen |
@@ -1014,6 +1016,7 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
   - **Turning off** shows the confirmation inline, with **Turn off** and **Cancel**.
   - **The link is the same each time the dialog opens** (TS-32).
 - **Offline:** "You're offline. Sharing waits until you're back.", and the controls are disabled.
+- *TON-66 adds delivery:* a pending row reads "Pending · sending…", "· sent", "· email failed" or "· email not confirmed", with **Resend** for the last two. While anything is sending, the dialog reads again every 1.5 s until it settles.
 
 **DS-66 Invitations inbox.** `/invitations` lists pending invitations: the owner's display name, collection name and type, and date, each with **Accept** and **Decline**.
 - **From email:** the email link lands on `/invitations/:id`, which requires sign-in as the recipient.
@@ -1021,6 +1024,18 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Invalid invitation:** "This invitation is no longer available".
 
 *(FR-07.5, FR-07.6)*
+
+*As built in TON-66:*
+- **The inbox:** each pending invitation is a row: the collection's name in quotes, then "A list from Denis · 29 Oct 2026", with **Accept** and **Decline**, named for the collection.
+  - Accepting says "Accepted "{name}". It's in Shared with me."
+  - With none it says "No invitations are waiting for you."
+- **The email's page** shows the same row. Then:
+  - after accepting, or opened again later: "You accepted this invitation. It's in Shared with me.";
+  - after declining: "Declined. Nothing was shared with you.";
+  - for someone else's, the wrong-account sentence, and nothing about the invitation;
+  - for anything not available (declined, revoked, left, gone or in Trash): the unavailable sentence.
+- **Answering** is online-only: offline, the buttons are disabled.
+- **The email** reads: subject "Denis invited you to view "Doom" on Tonaris"; text "Denis invited you to view the list "Doom" on Tonaris. Open the invitation to accept or decline it:", the link, then "You'll be asked to sign in with this address. The link works only for you: forwarding it gives no one access."
 
 **DS-67 Shared with me.** The sidebar section and `/shared` index group references by owner display name.
 - **Context menu:** **Leave share…** for invitation-based references, with a small confirmation explaining that the owner must re-invite you; **Remove from Shared with me** for link references.
