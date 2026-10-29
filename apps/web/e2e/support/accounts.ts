@@ -139,6 +139,9 @@ export const accounts = {
   searchViewer: at("search-viewer"),
   // Admin → Admissions (admission.e2e.ts): a member, who has no Admin.
   adminOutsider: at("admin-outsider"),
+  // Settings → Profile (settings-profile.e2e.ts), one per test.
+  profileName: at("profile-name"),
+  profileGuard: at("profile-guard"),
 } as const;
 
 /** An address with no account. */
