@@ -1180,6 +1180,13 @@ There are deliberately **no** tools for sharing management, Trash purge, export,
 - **`remove_options`** removes unused options. A chosen option is `field_in_use` until TON-83 gates it.
 - **The G3 `add_to_list`** is gone. TON-83 replaced `delete_albums` with the gated tools, and moved `remove_options` among them.
 
+*As built in TON-84:*
+- **`recover_from_trash {items: [{unitId, parentId?, name?}]}`** runs `trash.recover` per unit, each on its own (FR-10.7, FR-14).
+  - A missing or trashed parent answers `needs_input` `destination`, and a taken name `name` (TS-26). The agent sends the item again with `parentId` or `name`.
+  - The confirmed result carries the skip report.
+- **Sharing effects.** Each recovered unit, and each `move_items` move, reports its sharing effects as the app previews them (`sharingImpact()`, FR-07.14): `newlySeenBy`, `noLongerSeenBy`, `stillSharedWith`, each an audience with the folder or list it comes through.
+- **Expiry is enforced at recovery.** `trash.recover` refuses a unit past `expires_at` as `expired`, even before the hourly purge removes it (FR-01.17). The app and MCP both get the refusal.
+
 *As built in TON-81:* the read group (`apps/api/src/mcp/read-tools.ts`, over `packages/db/src/mcp-reads.ts`), for both modes.
 - **Names:** album values use the API's field names (`artistCredit`, `originalYear`), as the write tools take them. G3's `artist` and `year` are gone.
 - **Order:** listings follow the reader's manual order, then TS-16's fallback: folders and lists as created, a list's albums as added, Unsorted newest first, Trash oldest first.

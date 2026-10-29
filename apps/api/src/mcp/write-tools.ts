@@ -1,4 +1,5 @@
-// The write tools for ordinary operations (TS-63, FR-10.4), offered to Manage collection connections only (TS-62).
+// The write tools for ordinary operations (TS-63, FR-10.4), recovery from Trash among them (FR-10.7), offered to
+// Manage collection connections only (TS-62).
 // Each is a thin wrapper over the app's own commands: it plans their mutation envelopes, and `Writer` runs them as a
 // batch under the tool's `idempotencyKey` (TS-22, TS-25). Outcomes use TS-27's vocabulary, item by item: confirmed,
 // failed with why, a conflict with the current values, a choice the command needs, or skipped after a failed step.
@@ -14,9 +15,11 @@ import {
   fieldValueBase,
   findFieldIn,
   linkBase,
+  sharingImpact,
   viewPrefsBase,
   viewSequence,
   type Database,
+  type ImpactQuery,
 } from "@tonaris/db";
 import {
   albumFields,
@@ -30,6 +33,7 @@ import {
   streamingServices,
   viewLayouts,
   type AlbumFields,
+  type Audience,
   type McpPrincipal,
   type MutationResult,
   type Outcome,
@@ -140,6 +144,27 @@ function shareTokenOf(url: string): string | undefined {
   const trimmed = url.trim();
   const token = /(?:^|\/s\/)([A-Za-z0-9_-]{43})(?:[/?#]|$)/.exec(trimmed)?.[1];
   return token;
+}
+
+/** Someone who sees content, as an agent reads it: a person by name, or anyone with a link, and through what. */
+const agentAudience = (audience: Audience) =>
+  audience.kind === "person"
+    ? { kind: "person", name: audience.name, invited: audience.pending, via: audience.via.name }
+    : { kind: "link", via: audience.via.name };
+
+/**
+ * What a move or a recovery does to sharing (FR-07.14), as the app previews it: who newly sees it, who no longer sees
+ * it through the folders it leaves, and the shares it keeps. Undefined when there is nothing to say.
+ */
+async function sharingEffects(db: Database, ownerId: string, query: ImpactQuery) {
+  const impact = await sharingImpact(db, ownerId, query);
+  if (typeof impact === "string") return undefined;
+  const effects = {
+    newlySeenBy: impact.added.map(agentAudience),
+    noLongerSeenBy: impact.removed.map(agentAudience),
+    stillSharedWith: impact.direct.map(agentAudience),
+  };
+  return Object.values(effects).some((list) => list.length > 0) ? effects : undefined;
 }
 
 export type WriteToolsContext = { db: Database; principal: McpPrincipal; writer: McpWriter };
@@ -293,7 +318,7 @@ export function registerWriteTools(
     {
       title: "Move folders and lists",
       description:
-        "Moves folders and lists into a folder, or to the top level with parentId null, with everything inside them. Each moves on its own: one that can't, such as a folder into itself or a name already there, fails alone.",
+        "Moves folders and lists into a folder, or to the top level with parentId null, with everything inside them. Each moves on its own: one that can't, such as a folder into itself or a name already there, fails alone. Each reports its sharing effects: who newly sees it, who no longer does through the folders it leaves, and the shares it keeps.",
       inputSchema: z.object({
         containerIds: ids(200),
         parentId: uuid.nullable().describe("The folder to move them into; null for the top level."),
@@ -303,9 +328,19 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const bases = await Promise.all(
-        args.containerIds.map((containerId) => containerBase(db, { ownerId: userId, containerId })),
-      );
+      const [bases, effects] = await Promise.all([
+        Promise.all(
+          args.containerIds.map((containerId) =>
+            containerBase(db, { ownerId: userId, containerId }),
+          ),
+        ),
+        // As the app shows them before a move (FR-07.14), reported with each outcome.
+        Promise.all(
+          args.containerIds.map((id) =>
+            sharingEffects(db, userId, { kind: "move", id, to: args.parentId }),
+          ),
+        ),
+      ]);
       return run("move_items", args, () =>
         each(
           args.containerIds.map((id, index) => ({
@@ -313,7 +348,10 @@ export function registerWriteTools(
             args: { id, parentId: args.parentId },
             base: { parentId: bases[index]?.parentId ?? null },
           })),
-          args.containerIds.map((containerId) => ({ containerId })),
+          args.containerIds.map((containerId, index) => ({
+            containerId,
+            ...(effects[index] ? { sharing: effects[index] } : {}),
+          })),
         ),
       );
     },
@@ -902,6 +940,65 @@ export function registerWriteTools(
             },
           ],
           [{ optionId: args.optionId }],
+        ),
+      );
+    },
+  );
+
+  // Trash (FR-10.7, FR-01.13 to FR-01.16, FR-14.2).
+
+  server.registerTool(
+    "recover_from_trash",
+    {
+      title: "Recover from Trash",
+      description:
+        "Recovers what was deleted to Trash, unit by unit (list_trash gives the unitIds): a folder with what was inside it, a list, or an album, back where it was. Each recovers on its own. One whose folder is gone or in Trash answers needs_input with need destination: send it again with parentId, a folder or null for the top level. One whose name is taken there answers need name: send it again with another name. A recovered list's albums that are in Trash or gone are reported as skipped. An album comes back to its lists. Each reports who sees it again. A unit past its 30 days is no longer recoverable. Deleting from Trash for good stays in the app.",
+      inputSchema: z.object({
+        items: z
+          .array(
+            z.object({
+              unitId: uuid,
+              parentId: uuid
+                .nullable()
+                .optional()
+                .describe(
+                  "Where to put a folder or list instead: a folder, or null for the top level.",
+                ),
+              name: z.string().optional().describe("Another name, when its own is taken there."),
+            }),
+          )
+          .min(1)
+          .max(50),
+        idempotencyKey,
+      }),
+      outputSchema: output({ unitId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      // As the app previews them (FR-07.14), reported with each outcome.
+      const effects = await Promise.all(
+        args.items.map(({ unitId, parentId }) =>
+          sharingEffects(db, userId, {
+            kind: "recover",
+            unitId,
+            ...(parentId === undefined ? {} : { to: parentId }),
+          }),
+        ),
+      );
+      return run("recover_from_trash", args, () =>
+        each(
+          args.items.map(({ unitId, parentId, name }) => ({
+            name: "trash.recover",
+            args: {
+              unitId,
+              ...(parentId === undefined ? {} : { parentId }),
+              ...(name === undefined ? {} : { name }),
+            },
+          })),
+          args.items.map(({ unitId }, index) => ({
+            unitId,
+            ...(effects[index] ? { sharing: effects[index] } : {}),
+          })),
         ),
       );
     },
