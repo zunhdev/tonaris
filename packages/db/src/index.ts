@@ -69,6 +69,7 @@ export {
   readFieldUsage,
   readOptionRemoval,
 } from "./field-options";
+export { exportSource } from "./export";
 export { findFieldIn, lockAccount, purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
 export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";

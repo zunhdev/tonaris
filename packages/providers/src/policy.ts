@@ -2,7 +2,9 @@
 // Decided on 19 October 2026 in the G1 terms review: no current source withholds anything. The marker stays for a
 // source added later, so a withheld value is replaced, never silently dropped.
 
-import type { ProvenanceSource } from "@tonaris/domain";
+import { withheld, type ProvenanceSource } from "@tonaris/domain";
+
+export { withheld, type Withheld } from "@tonaris/domain";
 
 /** Bumped whenever a flag changes, so exports and agents can say which policy filtered them. */
 export const policyVersion = 1;
@@ -30,10 +32,6 @@ export const policy: Record<ProvenanceSource, PolicyFlags> = {
   coverartarchive: open,
   "itunes-lookup": open,
 };
-
-/** What replaces a value a policy withholds (FR-08.8). */
-export const withheld = { withheld: "provider-policy" } as const;
-export type Withheld = typeof withheld;
 
 /** Who the values are for: an agent through MCP, or an export. */
 export type PolicyUse = "agent" | "export";
