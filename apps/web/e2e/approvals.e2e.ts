@@ -9,6 +9,7 @@ import { z } from "zod";
 import { uuidv7 } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
+import { faults, tabThrough } from "./support/keyboard";
 import { signInEmail } from "./support/mailpit";
 import {
   authorizeUrl,
@@ -72,6 +73,10 @@ test("the owner approves on a phone, and the agent's next call deletes the album
   await page.goto(
     authorizeUrl(clientId, challenge, "collection:read collection:manage offline_access"),
   );
+  // The consent page by keyboard (TON-93): every stop named and ringed, and nothing for axe.
+  await expect(page.getByRole("radio", { name: /Manage collection/ })).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(faults(await tabThrough(page))).toEqual([]);
   await page.getByRole("radio", { name: /Manage collection/ }).check();
   await page.getByRole("button", { name: "Connect" }).click();
   await expect(page.getByText("Connected")).toBeVisible();
@@ -115,6 +120,7 @@ test("the owner approves on a phone, and the agent's next call deletes the album
     true,
   );
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(faults(await tabThrough(page))).toEqual([]);
 
   // Before the owner decides, the agent's retry still waits.
   const early = await callTool(client, token, "delete_items", {

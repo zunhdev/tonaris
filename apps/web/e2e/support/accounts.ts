@@ -157,6 +157,10 @@ export const accounts = {
   phoneOptions: at("phone-options"),
   phoneSearch: at("phone-search"),
   deleteCancel: at("delete-cancel"),
+  // Keyboard-only walkthroughs (walkthrough.e2e.ts, TON-93), one per test.
+  walker: at("a11y-walker"),
+  arrival: at("a11y-arrival"),
+  guide: at("a11y-guide"),
 } as const;
 
 /** An address with no account. */

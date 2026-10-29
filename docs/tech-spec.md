@@ -1874,6 +1874,7 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
 
   With those fixed, every test passes. Four pass alone but can fail under the full suite's load (TON-102).
 - **Firefox** can't start inside the agent's sandbox. The creator runs `test:e2e:firefox`.
+- **The AT walkthrough checklist** is `docs/accessibility-walkthrough.md` (TON-93). It lists the matrix entries, and gives each its results.
 - **Phones:** DS-110's mobile shell wasn't built, and no issue had covered it. The creator chose to build it in M11. Its tests run on iPhone (WebKit) and Pixel (Chromium) profiles.
 
 **TS-123 MCP client verification (Decided; G3, AC-36).** Each required client (Claude web custom connector, ChatGPT web custom MCP server, and Codex desktop) runs one script:

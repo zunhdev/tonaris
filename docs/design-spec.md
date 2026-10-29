@@ -1743,6 +1743,17 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 - **The fix.** Every ring now adds `focus-visible:outline-solid`.
 - **The guard.** A browser test checks a keyboard-focused button and a focused card. axe doesn't check focus visibility.
 
+*Walked through in TON-93* (checklist and results: `docs/accessibility-walkthrough.md`):
+- **Automated, by keyboard alone** (`apps/web/e2e/walkthrough.e2e.ts`). Every page of the workspace, Admin, sign-in, the guest page, the failure pages, and the consent and approval pages pass:
+  - axe finds nothing;
+  - every Tab stop has a name and shows the ring;
+  - focus never goes round a page;
+  - modal dialogs keep focus, popovers let it go on, and both return it on Escape.
+- **What it found, now fixed:**
+  - **Missing rings.** Plain links showed only the browser's default ring, the sidebar's resize handle only a tint, and the palette's field none. The base layer now gives the ring to anything that draws none of its own.
+  - **The approval page's scope parts** were `<details>`, whose `<summary>` Safari exposes without a role. They're now buttons with `aria-expanded`.
+- **Screen readers:** VoiceOver, NVDA and TalkBack follow the checklist on real devices, the creator's.
+
 **DS-118 Perceived speed.** *(Q-01, FR-09.3)*
 - Apply locally first (DS-01).
 - Keep the command palette and inspector open-time imperceptible, with no network on open.

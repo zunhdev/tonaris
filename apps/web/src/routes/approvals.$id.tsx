@@ -7,10 +7,12 @@ import { api } from "@/api";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
 import { refreshPendingApprovals } from "@/features/connections/pending-approvals";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { useEffect, useId, useState } from "react";
 
 import type { Approval, ApprovalScope } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
+import { cn } from "@tonaris/ui/lib/utils";
 
 export const Route = createFileRoute("/approvals/$id")({
   head: () => ({ meta: [{ title: "Approve a request · Tonaris" }] }),
@@ -39,13 +41,36 @@ const fieldTypeNames: Record<NonNullable<ApprovalScope["field"]>["type"], string
 const albumsAffected = ({ albums, inTrash }: { albums: number; inTrash: number }) =>
   `${count(albums + inTrash, "album", "albums")}${inTrash > 0 ? `, ${inTrash} in Trash` : ""}`;
 
-/** One expandable part of the scope (DS-87). */
+/**
+ * One expandable part of the scope (DS-87): a button that says whether it's expanded, which every browser and screen
+ * reader announces alike, unlike a `<summary>`, which Safari exposes without a role (TON-93).
+ */
 function Part({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
   return (
-    <details className="rounded-lg border border-subtle bg-raised p-3">
-      <summary className="cursor-pointer text-fg-primary">{title}</summary>
-      <ul className="mt-2 flex flex-col gap-2">{children}</ul>
-    </details>
+    <div className="rounded-lg border border-subtle bg-raised p-3">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((was) => !was)}
+        className="flex w-full items-center gap-1.5 rounded-sm text-left text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
+      >
+        <ChevronRight
+          aria-hidden
+          strokeWidth={1.5}
+          className={cn(
+            "size-4 shrink-0 text-fg-tertiary motion-safe:transition-transform",
+            open && "rotate-90",
+          )}
+        />
+        {title}
+      </button>
+      <ul id={id} hidden={!open} className="mt-2 flex flex-col gap-2">
+        {children}
+      </ul>
+    </div>
   );
 }
 
