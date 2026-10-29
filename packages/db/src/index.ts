@@ -10,13 +10,18 @@ export {
 export {
   admissionsPaused,
   admitAccount,
+  createAdmissionInvitation,
+  expireAdmissionInvitations,
   findAdmissionInvitation,
-  insertAdmissionInvitation,
+  findAdmissionInvitationById,
+  listAdmissionInvitations,
   recordAdmissionEmail,
   revokeAdmissionInvitation,
+  rotateAdmissionToken,
   setAdmissionsPaused,
   type Admission,
   type AdmissionInvitationRow,
+  type AdmissionIssue,
 } from "./admission";
 export { createApproval, decideApproval, findApproval, type ApprovalRow } from "./approvals";
 export { capturesSince, maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";

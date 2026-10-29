@@ -22,6 +22,7 @@ import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as SignInIndexRouteImport } from './routes/sign-in.index'
 import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
 import { Route as WorkspaceAAlbumIdRouteImport } from './routes/_workspace/a.$albumId'
+import { Route as WorkspaceAdminAdmissionsRouteImport } from './routes/_workspace/admin.admissions'
 import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$folderId'
 import { Route as WorkspaceInvitationsIndexRouteImport } from './routes/_workspace/invitations.index'
 import { Route as WorkspaceInvitationsIdRouteImport } from './routes/_workspace/invitations.$id'
@@ -97,6 +98,12 @@ const WorkspaceAAlbumIdRoute = WorkspaceAAlbumIdRouteImport.update({
   path: '/a/$albumId',
   getParentRoute: () => WorkspaceRoute,
 } as any)
+const WorkspaceAdminAdmissionsRoute =
+  WorkspaceAdminAdmissionsRouteImport.update({
+    id: '/admin/admissions',
+    path: '/admin/admissions',
+    getParentRoute: () => WorkspaceRoute,
+  } as any)
 const WorkspaceFFolderIdRoute = WorkspaceFFolderIdRouteImport.update({
   id: '/f/$folderId',
   path: '/f/$folderId',
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/sign-in/': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
+  '/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
@@ -189,6 +197,7 @@ export interface FileRoutesByTo {
   '/': typeof WorkspaceIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
+  '/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
@@ -215,6 +224,7 @@ export interface FileRoutesById {
   '/_workspace/': typeof WorkspaceIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/_workspace/a/$albumId': typeof WorkspaceAAlbumIdRoute
+  '/_workspace/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/sign-in/'
     | '/a/$albumId'
+    | '/admin/admissions'
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/a/$albumId'
+    | '/admin/admissions'
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
@@ -289,6 +301,7 @@ export interface FileRouteTypes {
     | '/_workspace/'
     | '/sign-in/'
     | '/_workspace/a/$albumId'
+    | '/_workspace/admin/admissions'
     | '/_workspace/f/$folderId'
     | '/_workspace/invitations/$id'
     | '/_workspace/l/$listId'
@@ -403,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceAAlbumIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/admin/admissions': {
+      id: '/_workspace/admin/admissions'
+      path: '/admin/admissions'
+      fullPath: '/admin/admissions'
+      preLoaderRoute: typeof WorkspaceAdminAdmissionsRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/f/$folderId': {
       id: '/_workspace/f/$folderId'
       path: '/f/$folderId'
@@ -482,6 +502,7 @@ interface WorkspaceRouteChildren {
   WorkspaceUnsortedRoute: typeof WorkspaceUnsortedRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   WorkspaceAAlbumIdRoute: typeof WorkspaceAAlbumIdRoute
+  WorkspaceAdminAdmissionsRoute: typeof WorkspaceAdminAdmissionsRoute
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceInvitationsIdRoute: typeof WorkspaceInvitationsIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
@@ -500,6 +521,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceUnsortedRoute: WorkspaceUnsortedRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
   WorkspaceAAlbumIdRoute: WorkspaceAAlbumIdRoute,
+  WorkspaceAdminAdmissionsRoute: WorkspaceAdminAdmissionsRoute,
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceInvitationsIdRoute: WorkspaceInvitationsIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,

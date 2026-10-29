@@ -1,13 +1,13 @@
 // The account menu at the top of the sidebar (DS-31): the display name, or the email until there is one.
-// **Settings** leads to Settings → Preferences, the first settings page built (DS-92), and **Keyboard shortcuts**
-// opens the reference (DS-78); Admin joins **Sign out** with its issue. Signing out deletes what this browser keeps for the account:
-// unsent changes and conflicts waiting for review. With changes still unsent, it asks first (decided 22 October
-// 2026).
+// **Settings** leads to Settings → Preferences, the first settings page built (DS-92); **Admin**, for the creator
+// only, to Admin → Admissions (DS-100); and **Keyboard shortcuts** opens the reference (DS-78). Signing out deletes
+// what this browser keeps for the account: unsent changes and conflicts waiting for review. With changes still
+// unsent, it asks first (decided 22 October 2026).
 
 import { useShell } from "@/features/shell/shell-context";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
-import { ChevronsUpDown, Keyboard, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, Keyboard, LogOut, Settings, ShieldCheck } from "lucide-react";
 import { useRef, useState } from "react";
 
 import type { Account } from "@tonaris/domain";
@@ -80,6 +80,12 @@ export function AccountMenu({ account }: { account: Account }) {
             <Settings strokeWidth={1.5} aria-hidden />
             Settings
           </DropdownMenuItem>
+          {account.role === "creator" && (
+            <DropdownMenuItem onClick={() => void router.navigate({ to: "/admin/admissions" })}>
+              <ShieldCheck strokeWidth={1.5} aria-hidden />
+              Admin
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={openShortcuts}>
             <Keyboard strokeWidth={1.5} aria-hidden />
             Keyboard shortcuts

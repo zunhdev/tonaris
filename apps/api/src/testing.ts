@@ -14,6 +14,7 @@ import {
 
 import { createApp } from "./app";
 import type { ImageFetch } from "./artwork";
+import { issueAdmissionInvitation } from "./auth/admission";
 import { type AuthOptions, createAuth } from "./auth/auth";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import type { CaptureDeps } from "./capture";
@@ -70,6 +71,16 @@ export async function insertUser(
   const id = Bun.randomUUIDv7();
   await db.insert(users).values({ id, email: emailKey(email), emailVerified: true, ...values });
   return id;
+}
+
+/** Issues an admission invitation that must succeed, as a fixture (TS-71). */
+export async function inviteForTest(
+  db: Database,
+  values: { email: string; createdBy: string; now?: Date },
+): Promise<{ id: string; token: string; expiresAt: Date }> {
+  const issued = await issueAdmissionInvitation(db, values);
+  if (!issued.issued) throw new Error(`Couldn't invite ${values.email}: ${issued.refusal}`);
+  return issued;
 }
 
 /** Runs `step` for 0 … count-1, each after the previous one finished: for tests that depend on order. */

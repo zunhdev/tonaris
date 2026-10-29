@@ -137,10 +137,15 @@ export const accounts = {
   // Shared content in search (shared-search.e2e.ts): an owner and the person they share with.
   searchOwner: at("search-owner"),
   searchViewer: at("search-viewer"),
+  // Admin → Admissions (admin-admissions.e2e.ts): a member, who has no Admin.
+  adminOutsider: at("admin-outsider"),
 } as const;
 
 /** An address with no account. */
 export const nobody = at("nobody");
+
+/** An address the creator invites in admin-admissions.e2e.ts; it has no account. */
+export const invitee = at("admission-invitee");
 
 /** Where the setup project saves the creator's signed-in browser state. */
 export const creatorState = "playwright/.auth/creator.json";

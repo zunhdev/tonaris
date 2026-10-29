@@ -8,9 +8,8 @@ import { admissionInvitations, jobs } from "@tonaris/db";
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { EmailDeliveryError, type EmailOptions, type EmailPort } from "@tonaris/domain";
 
-import { issueAdmissionInvitation } from "../auth/admission";
 import { startJobWorker, type JobWorker } from "../jobs";
-import { insertUser } from "../testing";
+import { insertUser, inviteForTest } from "../testing";
 import { emailJob, emailOutbox } from "./outbox";
 
 let t: TestDatabase;
@@ -57,7 +56,7 @@ async function sendingInvitations(...addresses: string[]): Promise<string[]> {
   const ids = [];
   for (const email of addresses) {
     // oxlint-disable-next-line no-await-in-loop
-    ids.push((await issueAdmissionInvitation(t.db, { email, createdBy: creator })).id);
+    ids.push((await inviteForTest(t.db, { email, createdBy: creator })).id);
   }
   await t.db.update(admissionInvitations).set({ emailStatus: "sending" });
   return ids;

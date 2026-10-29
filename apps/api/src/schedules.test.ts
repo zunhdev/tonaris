@@ -3,11 +3,19 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { changeLog, containers, mutations, trashUnits, users } from "@tonaris/db";
+import {
+  admissionInvitations,
+  changeLog,
+  containers,
+  mutations,
+  trashUnits,
+  users,
+} from "@tonaris/db";
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { syncRetentionMs, uuidv7 } from "@tonaris/domain";
 
 import {
+  expireAdmissionInvitationsSchedule,
   pruneSyncHistorySchedule,
   runSchedule,
   startSchedules,
@@ -48,6 +56,30 @@ function slowSchedule(ms: number) {
     },
   };
 }
+
+describe("expire-admission-invitations (TS-91)", () => {
+  test("records invitations past their 14 days as expired, and leaves the rest", async () => {
+    const creator = uuidv7();
+    await t.db.insert(users).values({ id: creator, email: "creator@example.com", role: "creator" });
+    const now = new Date("2026-10-29T12:00:00.000Z");
+    const invitation = (email: string, expiresAt: Date) => ({
+      id: uuidv7(),
+      emailKey: email,
+      tokenHash: Buffer.from(email),
+      expiresAt,
+      createdBy: creator,
+    });
+    const past = invitation("past@example.com", now);
+    const current = invitation("current@example.com", new Date(now.getTime() + 1_000));
+    await t.db.insert(admissionInvitations).values([past, current]);
+
+    expect(await runSchedule(t.db, expireAdmissionInvitationsSchedule, now)).toBe(true);
+    const statuses = Object.fromEntries(
+      (await t.db.select().from(admissionInvitations)).map((row) => [row.emailKey, row.status]),
+    );
+    expect(statuses).toEqual({ "past@example.com": "expired", "current@example.com": "available" });
+  });
+});
 
 describe("prune-sync-history (TS-91)", () => {
   test("removes changes and outcomes older than 30 days, and keeps the rest", async () => {
