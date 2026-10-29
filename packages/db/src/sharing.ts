@@ -12,6 +12,7 @@ import {
   shareTokenHash,
   type CustomField,
   type ServiceLink,
+  type SharedEntry,
   type SharedSnapshot,
   type ShareSettings,
   type ShareViewer,
@@ -305,4 +306,86 @@ export async function shareSettings(
         link: linked,
       })),
   };
+}
+
+/**
+ * The person's Shared with me (FR-07.13, DS-67): each reference with its owner, how it is shared with them, and
+ * whether it can be opened now. A name shows only while it can: a revoked or suspended collection reveals nothing new.
+ */
+export async function sharedWithMe(db: Database, viewerId: string): Promise<SharedEntry[]> {
+  const rows = await db
+    .select({
+      containerId: savedReferences.containerId,
+      linkId: savedReferences.linkId,
+      ownerId: containers.ownerId,
+      ownerName: users.displayName,
+      name: containers.name,
+      kind: containers.kind,
+    })
+    .from(savedReferences)
+    .innerJoin(containers, eq(containers.id, savedReferences.containerId))
+    .innerJoin(users, eq(users.id, containers.ownerId))
+    .where(eq(savedReferences.viewerId, viewerId));
+  if (rows.length === 0) return [];
+  const ids = rows.map((row) => row.containerId);
+  const [readable, grants, links] = await Promise.all([
+    readableContainers(db, { kind: "person", userId: viewerId }),
+    db
+      .select({ containerId: shareGrants.containerId })
+      .from(shareGrants)
+      .where(
+        and(
+          eq(shareGrants.granteeId, viewerId),
+          eq(shareGrants.status, "accepted"),
+          inArray(shareGrants.containerId, ids),
+        ),
+      ),
+    db
+      .select({ id: shareLinks.id })
+      .from(shareLinks)
+      .where(and(inArray(shareLinks.containerId, ids), isNull(shareLinks.revokedAt))),
+  ]);
+  const invited = new Set(grants.map((grant) => grant.containerId));
+  const live = new Set(links.map((link) => link.id));
+  return rows
+    .map((row): SharedEntry => {
+      const available = readable.has(row.containerId);
+      return {
+        containerId: row.containerId,
+        owner: { id: row.ownerId, displayName: row.ownerName },
+        name: available ? row.name : null,
+        kind: available ? row.kind : null,
+        via: {
+          invitation: invited.has(row.containerId),
+          link: row.linkId !== null && live.has(row.linkId),
+        },
+        available,
+      };
+    })
+    .toSorted(
+      (a, b) =>
+        (a.owner.displayName ?? "").localeCompare(b.owner.displayName ?? "") ||
+        (a.name ?? "").localeCompare(b.name ?? "") ||
+        (a.containerId < b.containerId ? -1 : 1),
+    );
+}
+
+/** Whether `viewerId` keeps the collection `token`'s link shares, or owns it (DS-68); undefined if it doesn't work. */
+export async function linkReferenceState(
+  db: Database,
+  viewerId: string,
+  token: string,
+): Promise<{ saved: boolean; own: boolean } | undefined> {
+  const link = await findShareLink(db, token);
+  if (!link) return undefined;
+  const [reference] = await db
+    .select({ containerId: savedReferences.containerId })
+    .from(savedReferences)
+    .where(
+      and(
+        eq(savedReferences.viewerId, viewerId),
+        eq(savedReferences.containerId, link.containerId),
+      ),
+    );
+  return { saved: reference !== undefined, own: link.ownerId === viewerId };
 }

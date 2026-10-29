@@ -23,6 +23,9 @@ import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./se
 import {
   grantArgsSchema,
   leaveArgsSchema,
+  referenceSchema,
+  removeReferenceArgsSchema,
+  saveLinkArgsSchema,
   setDisplayNameArgsSchema,
   shareInviteArgsSchema,
   shareSetLinkArgsSchema,
@@ -393,6 +396,20 @@ export const shareRevokeSchema = z.object({
   args: grantArgsSchema,
 });
 
+/** `share.saveLink`: keeps a link's folder or list in Shared with me (FR-07.13). App-only (X-03). */
+export const shareSaveLinkSchema = z.object({
+  mutationId,
+  name: z.literal("share.saveLink"),
+  args: saveLinkArgsSchema,
+});
+
+/** `share.removeReference`: drops a folder or list from Shared with me (FR-07.13). App-only (X-03). */
+export const shareRemoveReferenceSchema = z.object({
+  mutationId,
+  name: z.literal("share.removeReference"),
+  args: removeReferenceArgsSchema,
+});
+
 /** `account.setDisplayName`: sets or clears the display name (FR-11.3, TS-34). App-only (X-03). */
 export const accountSetDisplayNameSchema = z.object({
   mutationId,
@@ -439,6 +456,8 @@ export const mutationSchema = z
     shareDeclineSchema,
     shareLeaveSchema,
     shareRevokeSchema,
+    shareSaveLinkSchema,
+    shareRemoveReferenceSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;
@@ -557,6 +576,14 @@ export const changeSchema = z
     }),
     z.object({
       seq: z.int().positive(),
+      entity: z.literal("reference"),
+      id: z.uuid().meta({ description: "The shared folder's or list's ID." }),
+      op: z.enum(changeOps),
+      data: referenceSchema.nullable(),
+      mutationId: z.uuid().nullable(),
+    }),
+    z.object({
+      seq: z.int().positive(),
       entity: z.literal("defaults"),
       id: z.uuid().meta({ description: "The account's ID." }),
       op: z.enum(changeOps),
@@ -594,6 +621,10 @@ export const bootstrapSchema = z
     trashUnits: z
       .array(trashUnitSchema)
       .meta({ description: "The owner's Trash, unit by unit (FR-01.12, FR-01.13)." }),
+    references: z.array(referenceSchema).meta({
+      description:
+        "The person's Shared with me: the shared folders and lists they keep, newest first (FR-07.13). `GET /v1/shared` gives their names, owners and availability.",
+    }),
   })
   .meta({ description: "A snapshot of the account's data at `seq` (TS-24)." });
 export type Bootstrap = z.infer<typeof bootstrapSchema>;

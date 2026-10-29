@@ -66,11 +66,14 @@ import {
   declineInvitation,
   inviteToShare,
   leaveShare,
+  removeReference,
   resendInvitation,
   revokeGrant,
+  saveLink,
   setDisplayName,
   setShareLink,
   type EmailStatus,
+  type Reference,
   type ShareGrantStatus,
 } from "./sharing";
 import type { ChangeOp, Mutation } from "./sync";
@@ -278,10 +281,23 @@ export type CollectionStore = {
   /** Sets the grant's status if it is still `from`; answers whether it was (TS-33). */
   moveGrant(id: string, from: ShareGrantStatus, to: ShareGrantStatus): Promise<boolean>;
   setGrantEmailStatus(id: string, status: EmailStatus): Promise<void>;
-  /** Saves the container to the viewer's references, keeping one they have and its link (TS-33, FR-07.6). */
-  saveReference(viewerId: string, containerId: string): Promise<void>;
+  /**
+   * Saves the container to the viewer's references (TS-33, FR-07.13). With `linkId`, the reference points at that
+   * link; without, one they have keeps its link. Answers what happened.
+   */
+  saveReference(
+    viewerId: string,
+    containerId: string,
+    linkId?: string,
+  ): Promise<"inserted" | "updated" | "unchanged">;
   /** Drops the viewer's reference to the container if it came from a grant alone, with no link (TS-33). */
-  dropGrantReference(viewerId: string, containerId: string): Promise<void>;
+  dropGrantReference(viewerId: string, containerId: string): Promise<boolean>;
+  /** Drops the viewer's reference to the container; answers whether there was one. */
+  removeReference(viewerId: string, containerId: string): Promise<boolean>;
+  /** The link a token's hash names, while it is live and its container active (TS-32). */
+  findLinkByHash(
+    hash: Uint8Array,
+  ): Promise<{ id: string; containerId: string; ownerId: string } | undefined>;
   /** The container's link that isn't revoked, if any: one at most (FR-07.16). */
   findLiveLink(containerId: string): Promise<{ id: string } | undefined>;
   insertLink(link: { id: string; containerId: string; tokenHash: Uint8Array }): Promise<void>;
@@ -302,7 +318,8 @@ export type ChangeInput =
   | { entity: "view"; id: string; op: ChangeOp; data: ViewPrefs | null }
   | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults }
   | { entity: "position"; id: string; op: ChangeOp; data: Position | null }
-  | { entity: "trashUnit"; id: string; op: ChangeOp; data: TrashUnit | null };
+  | { entity: "trashUnit"; id: string; op: ChangeOp; data: TrashUnit | null }
+  | { entity: "reference"; id: string; op: ChangeOp; data: Reference | null };
 
 /** `result` is what the mutation reports in its `confirmed` outcome, if anything, such as `MembershipAddResult`. */
 export type CommandResult =
@@ -333,6 +350,8 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "share.decline") return declineInvitation(mutation.args, context);
   if (mutation.name === "share.leave") return leaveShare(mutation.args, context);
   if (mutation.name === "share.revoke") return revokeGrant(mutation.args, context);
+  if (mutation.name === "share.saveLink") return saveLink(mutation.args, context);
+  if (mutation.name === "share.removeReference") return removeReference(mutation.args, context);
   if (mutation.name === "album.update") return updateAlbum(mutation.args, mutation.base, context);
   if (mutation.name === "album.setArtwork") {
     return setArtwork(mutation.args, mutation.base, context);

@@ -289,6 +289,7 @@ describe("bootstrapSnapshot (TS-24)", () => {
       positions: [],
       defaults: appViewDefaults,
       trashUnits: [],
+      references: [],
     });
   });
 

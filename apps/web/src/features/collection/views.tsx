@@ -416,16 +416,6 @@ export function UnsortedView() {
 }
 
 /** Shared with me, until sharing arrives (M7). */
-export function SharedView() {
-  useDocumentTitle("Shared with me");
-  return (
-    <>
-      <PageHeader title="Shared with me" />
-      <Empty text="Collections people share with you appear here." />
-    </>
-  );
-}
-
 /** Trash, until deleting arrives (M5): nothing can be in it yet. */
 /** An album on its own page (DS-32): `/a/{albumId}`, its details as the inspector shows them. */
 export function AlbumView({ id }: { id: string }) {

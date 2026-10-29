@@ -1,9 +1,9 @@
-// Shared with me (DS-32): a placeholder until sharing (M7).
+// Shared with me (DS-32, DS-67): the shared folders and lists the person keeps.
 
-import { SharedView } from "@/features/collection/views";
+import { SharedWithMeView } from "@/features/sharing/shared-with-me";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_workspace/shared")({
   head: () => ({ meta: [{ title: "Shared with me · Tonaris" }] }),
-  component: SharedView,
+  component: SharedWithMeView,
 });

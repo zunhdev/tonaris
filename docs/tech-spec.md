@@ -531,6 +531,9 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 **TS-24 Client store (Decided; Q-01, FR-09.3).**
 
 - **Bootstrap.** `GET /v1/sync/bootstrap` returns the owned collection, preferences, positions, field definitions, the Shared with me list, and a compact search index for each shared root (TS-50), all at `seq = N`. So far it carries albums, folders and lists, list entries, and the person's view choices and account defaults, each with its commands (TON-20, TON-26, TON-27, TON-35).
+  - *As built in TON-68:*
+    - **`references`** lists the person's Shared with me by container, newest first, and the `reference` change entity keeps it current. Accepting, saving a link, removing and leaving write it.
+    - **Names, owners and availability** come from `GET /v1/shared`, read on view, on window focus and after any reference change, since they depend on the owners' data.
   - Entries stay a flat list. Grouped by list, the reference bootstrap would be 1.90 MB instead of 2.32 MB raw, but 0.454 MB instead of 0.446 MB gzipped, so grouping gains nothing once compressed (TON-29).
   - The API gzips it, as every JSON response of 1 KB or more, for clients that accept gzip (TS-120).
 - **TanStack DB loading.** Each entity type is a custom sync collection, fed by one sync engine per client: it bootstraps, writes the snapshot to every collection and calls `markReady()`, then streams from the snapshot's `seq`. The stream replays the log from that cursor, so nothing has to be buffered, unlike the documented pattern for streams without replay ([TON-20](spikes/2026-10-20-sync-prototype.md)).

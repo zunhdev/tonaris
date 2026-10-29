@@ -32,6 +32,7 @@ import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useGuestView, type GuestView } from "./guest-view";
+import { LinkBanner } from "./link-banner";
 
 type SharedAlbum = SharedSnapshot["albums"][number];
 
@@ -88,6 +89,7 @@ export function GuestPage({
 
   return (
     <GuestFrame>
+      <LinkBanner token={token} owner={owner} />
       <main aria-labelledby="share-title" className="flex flex-1 flex-col gap-5 px-6 py-6">
         {path.length > 0 && (
           <nav aria-label="Breadcrumbs">

@@ -6,6 +6,7 @@ import {
   and,
   asc,
   count,
+  desc,
   eq,
   exists,
   gt,
@@ -1072,7 +1073,7 @@ function collectionStore(tx: Transaction): CollectionStore {
       await tx.update(shareGrants).set({ emailStatus: status }).where(eq(shareGrants.id, id));
     },
     async dropGrantReference(viewerId, containerId) {
-      await tx
+      const dropped = await tx
         .delete(savedReferences)
         .where(
           and(
@@ -1080,10 +1081,53 @@ function collectionStore(tx: Transaction): CollectionStore {
             eq(savedReferences.containerId, containerId),
             isNull(savedReferences.linkId),
           ),
-        );
+        )
+        .returning({ containerId: savedReferences.containerId });
+      return dropped.length > 0;
     },
-    async saveReference(viewerId, containerId) {
-      await tx.insert(savedReferences).values({ viewerId, containerId }).onConflictDoNothing();
+    async saveReference(viewerId, containerId, linkId) {
+      const where = and(
+        eq(savedReferences.viewerId, viewerId),
+        eq(savedReferences.containerId, containerId),
+      );
+      const [existing] = await tx
+        .select({ linkId: savedReferences.linkId })
+        .from(savedReferences)
+        .where(where);
+      if (!existing) {
+        await tx.insert(savedReferences).values({ viewerId, containerId, linkId: linkId ?? null });
+        return "inserted";
+      }
+      if (linkId === undefined || existing.linkId === linkId) return "unchanged";
+      await tx.update(savedReferences).set({ linkId }).where(where);
+      return "updated";
+    },
+    async removeReference(viewerId, containerId) {
+      const removed = await tx
+        .delete(savedReferences)
+        .where(
+          and(eq(savedReferences.viewerId, viewerId), eq(savedReferences.containerId, containerId)),
+        )
+        .returning({ containerId: savedReferences.containerId });
+      return removed.length > 0;
+    },
+    async findLinkByHash(hash) {
+      const [link] = await tx
+        .select({
+          id: shareLinks.id,
+          containerId: shareLinks.containerId,
+          ownerId: containers.ownerId,
+        })
+        .from(shareLinks)
+        .innerJoin(containers, eq(containers.id, shareLinks.containerId))
+        .where(
+          and(
+            eq(shareLinks.tokenHash, Buffer.from(hash)),
+            isNull(shareLinks.revokedAt),
+            isNull(containers.trashedAt),
+          ),
+        );
+      return link;
     },
     async findLiveLink(containerId) {
       const [link] = await tx
@@ -1540,6 +1584,11 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .select(defaultsColumns)
         .from(accountSettings)
         .where(eq(accountSettings.accountId, accountId));
+      const references = await tx
+        .select({ containerId: savedReferences.containerId })
+        .from(savedReferences)
+        .where(eq(savedReferences.viewerId, accountId))
+        .orderBy(desc(savedReferences.createdAt), asc(savedReferences.containerId));
       return {
         seq: sync?.seq ?? 0,
         albums: owned,
@@ -1552,6 +1601,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         positions: arranged,
         defaults: defaults ?? appViewDefaults,
         trashUnits: trash,
+        references,
       };
     },
     { isolationLevel: "repeatable read", accessMode: "read only" },
