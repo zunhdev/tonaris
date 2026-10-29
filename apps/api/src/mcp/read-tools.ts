@@ -16,6 +16,7 @@ import {
   fieldsWithUsage,
   findApproval,
   findMutationResult,
+  findOperation,
   mutationRunning,
   searchCollection,
   sharedWithMe,
@@ -55,6 +56,7 @@ import {
   summaryKeys,
   userData,
 } from "./results";
+import { batchMutationIds } from "./writes";
 
 const readOnly = { readOnlyHint: true, openWorldHint: false } as const;
 
@@ -504,34 +506,41 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
     {
       title: "Check a change",
       description:
-        "The outcome of a change made earlier with this idempotencyKey: confirmed, failed with why, a conflict, a choice it needs, or pending while it still runs. Use it when a write's answer was lost, before trying again.",
+        "What happened to a change this connection made with this idempotencyKey: each of its steps confirmed, failed with why, a conflict, a choice it needs, still running (pending), or not run. Use it when a write's answer was lost. To finish the change, send it again with the same key and arguments: nothing already done is done twice.",
       inputSchema: z.object({
-        idempotencyKey: z.uuid().describe("The idempotencyKey the write was sent with."),
+        idempotencyKey: z.string().min(1).max(100).describe("The key the change was made with."),
       }),
       outputSchema: z.object({
-        idempotencyKey: z.uuid(),
-        outcome: z.union([outcomeSchema, z.object({ status: z.literal("pending") })]),
+        idempotencyKey: z.string(),
+        steps: z.array(
+          z.union([outcomeSchema, z.object({ status: z.enum(["pending", "not_run"]) })]),
+        ),
       }),
       annotations: readOnly,
     },
     async ({ idempotencyKey }) => {
-      const found = await findMutationResult(db, userId, idempotencyKey);
-      if (found) {
-        return result(`The change is ${found.outcome.status}.`, {
-          idempotencyKey,
-          outcome: found.outcome,
-        });
+      const operation = await findOperation(db, {
+        grantId: principal.grantId,
+        key: idempotencyKey,
+      });
+      if (!operation) {
+        return failed(
+          "not_found",
+          "This connection made no change with this key in the last 30 days, so nothing was applied.",
+        );
       }
-      if (await mutationRunning(db, userId, idempotencyKey)) {
-        return result("The change is still running. Check again in a moment.", {
-          idempotencyKey,
-          outcome: { status: "pending" as const },
-        });
-      }
-      return failed(
-        "not_found",
-        "No change was received with this key in the last 30 days, so nothing was applied. It is safe to make it.",
+      const steps = await Promise.all(
+        batchMutationIds(operation.batchId, operation.items).map(async (mutationId) => {
+          const found = await findMutationResult(db, userId, mutationId);
+          if (found) return found.outcome;
+          const running = await mutationRunning(db, userId, mutationId);
+          return { status: running ? ("pending" as const) : ("not_run" as const) };
+        }),
       );
+      return result(`The change's steps: ${steps.map((step) => step.status).join(", ")}.`, {
+        idempotencyKey,
+        steps,
+      });
     },
   );
 

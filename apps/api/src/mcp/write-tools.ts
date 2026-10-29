@@ -1,0 +1,995 @@
+// The write tools for ordinary operations (TS-63, FR-10.4), offered to Manage collection connections only (TS-62).
+// Each is a thin wrapper over the app's own commands: it plans their mutation envelopes, and `Writer` runs them as a
+// batch under the tool's `idempotencyKey` (TS-22, TS-25). Outcomes use TS-27's vocabulary, item by item: confirmed,
+// failed with why, a conflict with the current values, a choice the command needs, or skipped after a failed step.
+// A change the agent doesn't base on values it read is based on the values saved now (TS-21). Batch size alone never
+// asks for approval (FR-10.4); the gated operations are TON-83's, and app-only operations have no tool (X-03).
+
+import type { McpServer } from "@modelcontextprotocol/server";
+import { z } from "zod";
+
+import {
+  albumBase,
+  containerBase,
+  fieldValueBase,
+  findFieldIn,
+  linkBase,
+  viewPrefsBase,
+  viewSequence,
+  type Database,
+} from "@tonaris/db";
+import {
+  albumFields,
+  containerKinds,
+  fieldTypes,
+  maxOrderItems,
+  planMove,
+  releaseTypes,
+  sortDirections,
+  sortModes,
+  streamingServices,
+  viewLayouts,
+  type AlbumFields,
+  type McpPrincipal,
+  type MutationResult,
+  type Outcome,
+  type Place,
+  viewPrefsFields,
+} from "@tonaris/domain";
+
+import { failed, result } from "./results";
+import type { PlanIds, PlannedItem, Writer } from "./writes";
+
+const writes = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: false,
+  openWorldHint: false,
+} as const;
+
+const idempotencyKey = z
+  .string()
+  .min(1)
+  .max(100)
+  .optional()
+  .describe(
+    "Any unique text, up to 100 characters, made once for this change. Send the same key with the same arguments to retry safely: nothing already done is done twice. Without one, the result names the key it used.",
+  );
+
+const uuid = z.uuid();
+const ids = (max: number) => z.array(uuid).min(1).max(max);
+const year = z.number().int();
+
+const viewInput = z
+  .union([z.enum(["root", "unsorted"]), uuid])
+  .describe("`root` for the top level, `unsorted`, or a folder's or list's ID.");
+
+const albumValues = z.object({
+  title: z.string().optional(),
+  artistCredit: z.string().optional().describe("The artist as credited."),
+  releaseType: z.enum(releaseTypes).nullable().optional().describe("Null for unclassified."),
+  isLive: z.boolean().nullable().optional(),
+  originalYear: year.nullable().optional(),
+  recordingYearStart: year.nullable().optional().describe("For a live album."),
+  recordingYearEnd: year.nullable().optional(),
+});
+
+/** What an agent reads of one item's outcome (TS-27): a skipped item names the item, by index, it waited for. */
+function agentOutcome(outcome: Outcome, items: readonly MutationResult[]) {
+  if (outcome.status === "confirmed") {
+    return outcome.result == null
+      ? { status: outcome.status }
+      : { status: outcome.status, result: outcome.result };
+  }
+  if (outcome.status === "failed") {
+    const { problem } = outcome;
+    return {
+      status: outcome.status,
+      code: outcome.code,
+      message: problem.detail ?? problem.title,
+      ...(problem.errors ? { errors: problem.errors } : {}),
+    };
+  }
+  if (outcome.status === "skipped") {
+    return {
+      status: outcome.status,
+      because: outcome.because,
+      after: items.findIndex((item) => item.mutationId === outcome.dependsOn),
+    };
+  }
+  return outcome;
+}
+
+const outcomeOutput = z
+  .looseObject({
+    status: z
+      .enum(["confirmed", "failed", "conflict", "needs_input", "needs_approval", "skipped"])
+      .describe(
+        "confirmed: saved. failed: nothing changed; code and message say why. conflict: it changed since the values the change was based on; conflicts give the current ones. needs_input: a choice to make (need, candidates); send the change again with it. skipped: not run, because the step it needed didn't succeed.",
+      ),
+  })
+  .describe("The outcome, in Tonaris's vocabulary.");
+
+const output = (target: z.ZodRawShape) =>
+  z.object({
+    idempotencyKey: z.string().describe("The key this change ran under."),
+    items: z.array(z.object({ ...target, outcome: outcomeOutput })),
+  });
+
+function countsOf(outcomes: readonly { status: string }[]): string {
+  const counts = new Map<string, number>();
+  for (const { status } of outcomes) counts.set(status, (counts.get(status) ?? 0) + 1);
+  return [...counts].map(([status, n]) => `${n} ${status.replace("_", " ")}`).join(", ");
+}
+
+/** A planned change: its envelopes, and what each is about for the agent; steps without a target aren't reported. */
+type Plan = { items: PlannedItem[]; targets: (Record<string, unknown> | undefined)[] };
+
+/** One target per envelope. */
+const each = (items: PlannedItem[], targets: Record<string, unknown>[]): Plan => ({
+  items,
+  targets,
+});
+
+/** Every album in every list, as membership pairs. */
+const pairsOf = (albumIds: readonly string[], listIds: readonly string[]) =>
+  listIds.flatMap((listId) => albumIds.map((albumId) => ({ listId, albumId })));
+
+/** The share link's token in `url`, or `url` itself if it is a bare token (TS-32). */
+function shareTokenOf(url: string): string | undefined {
+  const trimmed = url.trim();
+  const token = /(?:^|\/s\/)([A-Za-z0-9_-]{43})(?:[/?#]|$)/.exec(trimmed)?.[1];
+  return token;
+}
+
+export type WriteToolsContext = { db: Database; principal: McpPrincipal; write: Writer };
+
+export function registerWriteTools(
+  server: McpServer,
+  { db, principal, write }: WriteToolsContext,
+): void {
+  const { userId } = principal;
+
+  /** Runs the plan under the tool's key, and answers with each target and its outcome. */
+  async function run(
+    tool: string,
+    args: Record<string, unknown> & { idempotencyKey?: string | undefined },
+    plan: (ids: PlanIds) => Plan,
+  ) {
+    let targets: Plan["targets"] = [];
+    const written = await write(principal, {
+      tool,
+      args,
+      idempotencyKey: args.idempotencyKey,
+      plan: (planIds) => {
+        const planned = plan(planIds);
+        targets = planned.targets;
+        return planned.items;
+      },
+    });
+    if (written.status === "key_reused") {
+      return failed(
+        "validation_failed",
+        "This idempotencyKey was already used for a different change, so nothing was done. Use a new key for a new change.",
+      );
+    }
+    const items = written.items.flatMap((item, index) => {
+      const target = targets[index];
+      return target ? [{ ...target, outcome: agentOutcome(item.outcome, written.items) }] : [];
+    });
+    const done = items.every((item) => item.outcome.status === "confirmed");
+    return result(
+      `${done ? "Done" : "Not all done"}: ${countsOf(items.map((item) => item.outcome))}.`,
+      { idempotencyKey: written.idempotencyKey, items },
+    );
+  }
+
+  // Organizing (FR-01, FR-10.4).
+
+  server.registerTool(
+    "create_container",
+    {
+      title: "Create a folder or list",
+      description:
+        "Creates a folder or a list at the top level or in a folder, optionally with a description. A name must be unique among its neighbours, ignoring case.",
+      inputSchema: z.object({
+        kind: z.enum(containerKinds),
+        name: z.string().describe("At most 200 characters."),
+        parentId: uuid
+          .nullable()
+          .optional()
+          .describe("The folder to put it in; the top level if left out."),
+        description: z.string().optional().describe("Plain text, at most 2,000 characters."),
+        idempotencyKey,
+      }),
+      outputSchema: output({ containerId: uuid, name: z.string() }),
+      annotations: writes,
+    },
+    async (args) =>
+      run("create_container", args, ({ record }) => {
+        const id = record("container");
+        const target = { containerId: id, name: args.name };
+        const create: PlannedItem = {
+          name: "container.create",
+          args: { id, kind: args.kind, parentId: args.parentId ?? null, name: args.name },
+        };
+        if (args.description === undefined) return each([create], [target]);
+        return {
+          items: [
+            create,
+            {
+              name: "container.describe",
+              args: { id, description: args.description },
+              base: { description: null },
+              after: [0],
+            },
+          ],
+          targets: [target, { containerId: id, name: args.name, step: "description" }],
+        };
+      }),
+  );
+
+  const containerChange = z.object({ containerId: uuid, idempotencyKey });
+
+  server.registerTool(
+    "rename_container",
+    {
+      title: "Rename a folder or list",
+      description:
+        "Renames a folder or list. Pass base, the name you read, to be told if it changed since; otherwise the name saved now is replaced.",
+      inputSchema: containerChange.extend({
+        name: z.string(),
+        base: z.object({ name: z.string() }).optional(),
+      }),
+      outputSchema: output({ containerId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const current = await containerBase(db, { ownerId: userId, containerId: args.containerId });
+      const base = args.base ?? { name: current?.name ?? "" };
+      return run("rename_container", args, () =>
+        each(
+          [{ name: "container.rename", args: { id: args.containerId, name: args.name }, base }],
+          [{ containerId: args.containerId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_description",
+    {
+      title: "Describe a folder or list",
+      description:
+        "Sets a folder's or list's plain-text description, at most 2,000 characters, or clears it with null. Pass base, the description you read, to be told if it changed since.",
+      inputSchema: containerChange.extend({
+        description: z.string().nullable(),
+        base: z.object({ description: z.string().nullable() }).optional(),
+      }),
+      outputSchema: output({ containerId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const current = await containerBase(db, { ownerId: userId, containerId: args.containerId });
+      const base = args.base ?? { description: current?.description ?? null };
+      return run("set_description", args, () =>
+        each(
+          [
+            {
+              name: "container.describe",
+              args: { id: args.containerId, description: args.description },
+              base,
+            },
+          ],
+          [{ containerId: args.containerId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "move_items",
+    {
+      title: "Move folders and lists",
+      description:
+        "Moves folders and lists into a folder, or to the top level with parentId null, with everything inside them. Each moves on its own: one that can't, such as a folder into itself or a name already there, fails alone.",
+      inputSchema: z.object({
+        containerIds: ids(200),
+        parentId: uuid.nullable().describe("The folder to move them into; null for the top level."),
+        idempotencyKey,
+      }),
+      outputSchema: output({ containerId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const bases = await Promise.all(
+        args.containerIds.map((containerId) => containerBase(db, { ownerId: userId, containerId })),
+      );
+      return run("move_items", args, () =>
+        each(
+          args.containerIds.map((id, index) => ({
+            name: "container.move",
+            args: { id, parentId: args.parentId },
+            base: { parentId: bases[index]?.parentId ?? null },
+          })),
+          args.containerIds.map((containerId) => ({ containerId })),
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "add_to_lists",
+    {
+      title: "Add albums to lists",
+      description:
+        "Puts each album in each list, at most 200 pairs at a time. An album already in a list keeps its place there (result alreadyInList). Each pair is its own change, so one that fails doesn't stop the others.",
+      inputSchema: z.object({ albumIds: ids(200), listIds: ids(20), idempotencyKey }),
+      outputSchema: output({ albumId: uuid, listId: uuid }),
+      annotations: { ...writes, idempotentHint: true },
+    },
+    async (args) => {
+      const pairs = pairsOf(args.albumIds, args.listIds);
+      if (pairs.length > 200) return tooMany(200);
+      return run("add_to_lists", args, () =>
+        each(
+          pairs.map((pair) => ({ name: "membership.add", args: pair })),
+          pairs,
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "remove_from_lists",
+    {
+      title: "Take albums out of lists",
+      description:
+        "Takes each album out of each list, at most 200 pairs at a time. The albums stay in the collection, in Unsorted when they are in no list any more. Nothing is deleted.",
+      inputSchema: z.object({ albumIds: ids(200), listIds: ids(20), idempotencyKey }),
+      outputSchema: output({ albumId: uuid, listId: uuid }),
+      annotations: { ...writes, idempotentHint: true },
+    },
+    async (args) => {
+      const pairs = pairsOf(args.albumIds, args.listIds);
+      if (pairs.length > 200) return tooMany(200);
+      return run("remove_from_lists", args, () =>
+        each(
+          pairs.map((pair) => ({ name: "membership.remove", args: pair })),
+          pairs,
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "move_albums",
+    {
+      title: "Move albums between lists",
+      description:
+        "Moves albums from one list to another: each joins the target list, then leaves the source list once it has. An album that can't join stays where it was.",
+      inputSchema: z.object({
+        albumIds: ids(100),
+        fromListId: uuid,
+        toListId: uuid,
+        idempotencyKey,
+      }),
+      outputSchema: output({ albumId: uuid }),
+      annotations: writes,
+    },
+    async (args) =>
+      run("move_albums", args, () => {
+        const items: PlannedItem[] = [];
+        const targets: Plan["targets"] = [];
+        for (const albumId of args.albumIds) {
+          items.push(
+            { name: "membership.add", args: { listId: args.toListId, albumId } },
+            {
+              name: "membership.remove",
+              args: { listId: args.fromListId, albumId },
+              after: [items.length],
+            },
+          );
+          // The move succeeded once the album left the source list.
+          targets.push(undefined, { albumId });
+        }
+        return { items, targets };
+      }),
+  );
+
+  server.registerTool(
+    "set_order",
+    {
+      title: "Arrange a view by hand",
+      description:
+        "Places items in the user's manual order of a view, in the order given: at the top, at the bottom, or before or after another item. The items are folders and lists at the top level or in a folder, or albums in a list or in Unsorted. The order is the user's own and doesn't change what others see.",
+      inputSchema: z.object({
+        view: viewInput,
+        itemIds: ids(200).describe("The items to place, in the order they should come."),
+        place: z
+          .union([z.enum(["top", "bottom"]), z.object({ before: uuid }), z.object({ after: uuid })])
+          .describe("Where the items go: top, bottom, {before: itemId} or {after: itemId}."),
+        idempotencyKey,
+      }),
+      outputSchema: output({ view: z.string() }),
+      annotations: writes,
+    },
+    async (args) => {
+      const sequence = await viewSequence(db, {
+        personId: userId,
+        viewKey: args.view,
+        limit: maxOrderItems,
+      });
+      if (!sequence) return failed("not_found", "There is no such folder or list.");
+      // Each item after the one before it, the first at the place: one move, written together (TS-16).
+      const keys = new Map(sequence.keys);
+      let order = sequence.ids;
+      const written = new Map<string, string>();
+      let place: Place = args.place;
+      for (const itemId of args.itemIds) {
+        for (const [id, key] of planMove(order, keys, itemId, place)) {
+          keys.set(id, key);
+          written.set(id, key);
+        }
+        order = order.filter((id) => id !== itemId);
+        const at = order.findIndex((id) => (keys.get(id) ?? "￿") > (keys.get(itemId) ?? ""));
+        order.splice(at === -1 ? order.length : at, 0, itemId);
+        place = { after: itemId };
+      }
+      const base = Object.fromEntries(
+        [...written.keys()].map((id) => [id, sequence.keys.get(id) ?? null]),
+      );
+      return run("set_order", args, () =>
+        each(
+          [
+            {
+              name: "order.set",
+              args: { viewKey: args.view, keys: Object.fromEntries(written) },
+              base,
+            },
+          ],
+          [{ view: args.view }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_view_preferences",
+    {
+      title: "Set how a view shows",
+      description:
+        "Sets the user's choices for one view: its sort (mode and direction together), grouping by release type, and layout. Null forgets a choice, back to the account default. Folder views sort by name, created or manual; lists and Unsorted by year, name or manual.",
+      inputSchema: z.object({
+        view: viewInput,
+        sortMode: z.enum(sortModes).nullable().optional(),
+        sortDir: z.enum(sortDirections).nullable().optional(),
+        grouped: z.boolean().nullable().optional(),
+        layout: z.enum(viewLayouts).nullable().optional(),
+        idempotencyKey,
+      }),
+      outputSchema: output({ view: z.string() }),
+      annotations: writes,
+    },
+    async ({ view, idempotencyKey: key, ...choices }) => {
+      const current = await viewPrefsBase(db, { personId: userId, viewKey: view });
+      const changed = viewPrefsFields.filter((field) => choices[field] !== undefined);
+      const chosen = Object.fromEntries(changed.map((field) => [field, choices[field]]));
+      const base = Object.fromEntries(changed.map((field) => [field, current[field]]));
+      return run("set_view_preferences", { view, idempotencyKey: key, ...choices }, () =>
+        each([{ name: "view.set", args: { viewKey: view, ...chosen }, base }], [{ view }]),
+      );
+    },
+  );
+
+  // Albums (FR-02, FR-03, FR-10.4, FR-10.5).
+
+  server.registerTool(
+    "add_albums",
+    {
+      title: "Add albums",
+      description:
+        "Adds albums from links you found (Spotify, Apple Music, Qobuz or Tidal album links) or from their details, optionally into a list; otherwise they go to Unsorted. Tonaris never looks for links itself. A link may come back needs_input: need match, with candidates to choose from (send the item again with releaseGroupId), or need details, when it can't tell the album (send it again with details, with what the user knows). An album the user already has is reused, not added twice.",
+      inputSchema: z.object({
+        items: z
+          .array(
+            z.union([
+              z.object({
+                link: z.string().describe("A streaming service's link to the album."),
+                releaseGroupId: uuid.optional().describe("The candidate chosen after need match."),
+                details: albumValues
+                  .required({ title: true, artistCredit: true })
+                  .optional()
+                  .describe("The album's details after need details."),
+              }),
+              albumValues
+                .required({ title: true, artistCredit: true })
+                .describe(
+                  "An album entered by hand: title, artist and the original year, or for a live album the recording year, are required.",
+                ),
+            ]),
+          )
+          .min(1)
+          .max(50),
+        listId: uuid
+          .nullable()
+          .optional()
+          .describe("The list to put them in; Unsorted if left out."),
+        idempotencyKey,
+      }),
+      outputSchema: output({ item: z.number(), albumId: uuid }),
+      annotations: { ...writes, openWorldHint: true },
+    },
+    async (args) =>
+      run("add_albums", args, ({ record }) => {
+        const items: PlannedItem[] = [];
+        const targets: Plan["targets"] = [];
+        const listId = args.listId ?? null;
+        for (const [index, item] of args.items.entries()) {
+          const albumId = record(`album:${index}`);
+          if ("link" in item) {
+            items.push({
+              name: "album.capture",
+              args: {
+                albumId,
+                link: item.link,
+                listId,
+                ...(item.releaseGroupId ? { releaseGroupId: item.releaseGroupId } : {}),
+                ...(item.details ? { details: { ...emptyAlbum, ...item.details } } : {}),
+              },
+            });
+            targets.push({ item: index, albumId });
+            continue;
+          }
+          items.push({ name: "album.create", args: { id: albumId, ...emptyAlbum, ...item } });
+          if (listId === null) {
+            targets.push({ item: index, albumId });
+            continue;
+          }
+          items.push({
+            name: "membership.add",
+            args: { listId, albumId },
+            after: [items.length - 1],
+          });
+          targets.push(undefined, { item: index, albumId });
+        }
+        return { items, targets };
+      }),
+  );
+
+  server.registerTool(
+    "update_album",
+    {
+      title: "Edit an album",
+      description:
+        "Changes an album's information: title, artist, release type, live, and years. Pass base, the values you read for the fields you change, to be told if they changed since (a conflict, with the current values); otherwise the values saved now are replaced.",
+      inputSchema: z.object({
+        albumId: uuid,
+        values: albumValues,
+        base: albumValues.optional(),
+        idempotencyKey,
+      }),
+      outputSchema: output({ albumId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const current = await albumBase(db, { ownerId: userId, albumId: args.albumId });
+      const changed = albumFields.filter((field) => args.values[field] !== undefined);
+      const base: Partial<AlbumFields> = {};
+      for (const field of changed) {
+        const given = args.base?.[field];
+        Object.assign(base, { [field]: given === undefined ? (current?.[field] ?? null) : given });
+      }
+      return run("update_album", args, () =>
+        each(
+          [{ name: "album.update", args: { id: args.albumId, ...args.values }, base }],
+          [{ albumId: args.albumId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_artwork",
+    {
+      title: "Set an album's artwork",
+      description: "Sets an album's artwork to an https image link, or clears it with null.",
+      inputSchema: z.object({
+        albumId: uuid,
+        artworkUrl: z.string().nullable(),
+        base: z.object({ artworkUrl: z.string().nullable() }).optional(),
+        idempotencyKey,
+      }),
+      outputSchema: output({ albumId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const current = await albumBase(db, { ownerId: userId, albumId: args.albumId });
+      const base = args.base ?? { artworkUrl: current?.artworkUrl ?? null };
+      return run("set_artwork", args, () =>
+        each(
+          [
+            {
+              name: "album.setArtwork",
+              args: { id: args.albumId, artworkUrl: args.artworkUrl },
+              base,
+            },
+          ],
+          [{ albumId: args.albumId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_link",
+    {
+      title: "Set an album's streaming link",
+      description:
+        "Adds or replaces an album's link for one streaming service, from a link you found. It must be that service's link to an album.",
+      inputSchema: z.object({
+        albumId: uuid,
+        service: z.enum(streamingServices),
+        url: z.string(),
+        idempotencyKey,
+      }),
+      outputSchema: output({ albumId: uuid, service: z.string() }),
+      annotations: { ...writes, openWorldHint: true },
+    },
+    async (args) => {
+      const url = await linkBase(db, { albumId: args.albumId, service: args.service });
+      return run("set_link", args, () =>
+        each(
+          [
+            {
+              name: "link.set",
+              args: { albumId: args.albumId, service: args.service, url: args.url },
+              base: { url },
+            },
+          ],
+          [{ albumId: args.albumId, service: args.service }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "remove_link",
+    {
+      title: "Remove an album's streaming link",
+      description: "Removes an album's link for one streaming service. The album stays.",
+      inputSchema: z.object({
+        albumId: uuid,
+        service: z.enum(streamingServices),
+        idempotencyKey,
+      }),
+      outputSchema: output({ albumId: uuid, service: z.string() }),
+      annotations: writes,
+    },
+    async (args) => {
+      const url = await linkBase(db, { albumId: args.albumId, service: args.service });
+      return run("remove_link", args, () =>
+        each(
+          [
+            {
+              name: "link.remove",
+              args: { albumId: args.albumId, service: args.service },
+              base: { url: url ?? "" },
+            },
+          ],
+          [{ albumId: args.albumId, service: args.service }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_album_fields",
+    {
+      title: "Set albums' custom fields",
+      description:
+        "Changes custom fields on albums, at most 100 changes: apply a field (empty), set its value (applying it first if needed), clear its value (it stays applied), or remove it with its value. A value is text, a number or a date as text (YYYY-MM-DD), true or false, or a choice field's option ID (an array of IDs for multiple choice); list_fields gives the IDs.",
+      inputSchema: z.object({
+        changes: z
+          .array(
+            z.object({
+              albumId: uuid,
+              fieldId: uuid,
+              action: z.enum(["apply", "set", "clear", "remove"]),
+              value: z
+                .union([z.string(), z.boolean(), z.array(uuid)])
+                .optional()
+                .describe("For set."),
+            }),
+          )
+          .min(1)
+          .max(100),
+        idempotencyKey,
+      }),
+      outputSchema: output({ change: z.number(), albumId: uuid, fieldId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const current = await Promise.all(
+        args.changes.map((change) =>
+          change.action === "set" || change.action === "clear"
+            ? fieldValueBase(db, { albumId: change.albumId, fieldId: change.fieldId })
+            : Promise.resolve(undefined),
+        ),
+      );
+      return run("set_album_fields", args, () => {
+        const items: PlannedItem[] = [];
+        const targets: Plan["targets"] = [];
+        for (const [index, { albumId, fieldId, action, value }] of args.changes.entries()) {
+          const target = { change: index, albumId, fieldId };
+          const pair = { albumId, fieldId };
+          if (action === "apply" || action === "remove") {
+            items.push({
+              name: action === "apply" ? "fieldValue.apply" : "fieldValue.remove",
+              args: pair,
+            });
+            targets.push(target);
+            continue;
+          }
+          const base = { value: current[index] ?? null };
+          if (action === "clear") {
+            items.push({ name: "fieldValue.set", args: { ...pair, value: null }, base });
+            targets.push(target);
+            continue;
+          }
+          // Applying an applied field changes nothing, so setting always applies first.
+          items.push(
+            { name: "fieldValue.apply", args: pair },
+            {
+              name: "fieldValue.set",
+              args: { ...pair, value: value ?? null },
+              base,
+              after: [items.length],
+            },
+          );
+          targets.push(undefined, target);
+        }
+        return { items, targets };
+      });
+    },
+  );
+
+  // Custom fields (FR-03, FR-10.4).
+
+  server.registerTool(
+    "create_field",
+    {
+      title: "Create a custom field",
+      description:
+        "Defines a custom field for the user's albums: text, number, date, yes/no, single choice or multiple choice, with a choice field's first options. Names are unique, ignoring case.",
+      inputSchema: z.object({
+        name: z.string(),
+        type: z.enum(fieldTypes),
+        options: z
+          .array(z.string())
+          .max(100)
+          .optional()
+          .describe("A choice field's options, in order."),
+        idempotencyKey,
+      }),
+      outputSchema: output({
+        fieldId: uuid,
+        options: z.array(z.object({ id: uuid, label: z.string() })),
+      }),
+      annotations: writes,
+    },
+    async (args) =>
+      run("create_field", args, ({ record }) => {
+        const id = record("field");
+        const options = (args.options ?? []).map((label, index) => ({
+          id: record(`option:${index}`),
+          label,
+        }));
+        return each(
+          [{ name: "field.create", args: { id, name: args.name, type: args.type, options } }],
+          [{ fieldId: id, options }],
+        );
+      }),
+  );
+
+  server.registerTool(
+    "rename_field",
+    {
+      title: "Rename a custom field",
+      description: "Renames a custom field everywhere it is used.",
+      inputSchema: z.object({
+        fieldId: uuid,
+        name: z.string(),
+        base: z.object({ name: z.string() }).optional(),
+        idempotencyKey,
+      }),
+      outputSchema: output({ fieldId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const field = await ownField(args.fieldId);
+      const base = args.base ?? { name: field?.name ?? "" };
+      return run("rename_field", args, () =>
+        each(
+          [{ name: "field.rename", args: { id: args.fieldId, name: args.name }, base }],
+          [{ fieldId: args.fieldId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "change_field_type",
+    {
+      title: "Change a custom field's type",
+      description:
+        "Changes the type of a custom field no album uses, in Trash or not (field_in_use otherwise). Options stay between single and multiple choice, and are discarded for any other type.",
+      inputSchema: z.object({ fieldId: uuid, type: z.enum(fieldTypes), idempotencyKey }),
+      outputSchema: output({ fieldId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const field = await ownField(args.fieldId);
+      return run("change_field_type", args, () =>
+        each(
+          [
+            {
+              name: "field.changeType",
+              args: { id: args.fieldId, type: args.type },
+              base: { type: field?.type ?? args.type },
+            },
+          ],
+          [{ fieldId: args.fieldId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "add_options",
+    {
+      title: "Add options to a choice field",
+      description: "Adds options at the end of a single- or multiple-choice field, in order.",
+      inputSchema: z.object({
+        fieldId: uuid,
+        labels: z.array(z.string()).min(1).max(100),
+        idempotencyKey,
+      }),
+      outputSchema: output({ optionId: uuid, label: z.string() }),
+      annotations: writes,
+    },
+    async (args) =>
+      run("add_options", args, ({ record }) => {
+        const options = args.labels.map((label, index) => ({
+          optionId: record(`option:${index}`),
+          label,
+        }));
+        return each(
+          options.map(({ optionId, label }) => ({
+            name: "field.addOption",
+            args: { fieldId: args.fieldId, id: optionId, label },
+          })),
+          options,
+        );
+      }),
+  );
+
+  server.registerTool(
+    "rename_option",
+    {
+      title: "Rename an option",
+      description: "Relabels a choice field's option; albums that chose it keep it.",
+      inputSchema: z.object({
+        fieldId: uuid,
+        optionId: uuid,
+        label: z.string(),
+        base: z.object({ label: z.string() }).optional(),
+        idempotencyKey,
+      }),
+      outputSchema: output({ optionId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const field = await ownField(args.fieldId);
+      const option = field?.options.find((candidate) => candidate.id === args.optionId);
+      const base = args.base ?? { label: option?.label ?? "" };
+      return run("rename_option", args, () =>
+        each(
+          [
+            {
+              name: "field.renameOption",
+              args: { fieldId: args.fieldId, optionId: args.optionId, label: args.label },
+              base,
+            },
+          ],
+          [{ optionId: args.optionId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "remove_options",
+    {
+      title: "Remove unused options",
+      description:
+        "Removes options no album chooses, in Trash or not. Removing an option an album chooses would clear it from those albums, so it needs the user's approval; such an option fails with field_in_use and is kept.",
+      inputSchema: z.object({ fieldId: uuid, optionIds: ids(100), idempotencyKey }),
+      outputSchema: output({ optionId: uuid }),
+      annotations: writes,
+    },
+    async (args) =>
+      run("remove_options", args, () =>
+        each(
+          args.optionIds.map((optionId) => ({
+            name: "field.removeOption",
+            args: { fieldId: args.fieldId, optionId },
+          })),
+          args.optionIds.map((optionId) => ({ optionId })),
+        ),
+      ),
+  );
+
+  // Shared references (FR-07.13, FR-10.4).
+
+  server.registerTool(
+    "save_shared_reference",
+    {
+      title: "Keep a shared link in Shared with me",
+      description:
+        "Saves the folder or list a Tonaris share link opens to the user's Shared with me, from the link the user gives (https://…/s/…). It reads nothing more than the link allows.",
+      inputSchema: z.object({ url: z.string().max(2_048), idempotencyKey }),
+      outputSchema: output({ url: z.string() }),
+      annotations: { ...writes, idempotentHint: true },
+    },
+    async (args) => {
+      const token = shareTokenOf(args.url);
+      if (!token) {
+        return failed(
+          "validation_failed",
+          "This isn't a Tonaris share link. Ask the user for the link they were given.",
+        );
+      }
+      return run("save_shared_reference", args, () =>
+        each([{ name: "share.saveLink", args: { token } }], [{ url: args.url }]),
+      );
+    },
+  );
+
+  server.registerTool(
+    "remove_shared_reference",
+    {
+      title: "Drop from Shared with me",
+      description:
+        "Drops a folder or list from the user's Shared with me. It doesn't decline or leave an invitation, which only the user can do in the app.",
+      inputSchema: z.object({ containerId: uuid, idempotencyKey }),
+      outputSchema: output({ containerId: uuid }),
+      annotations: { ...writes, idempotentHint: true },
+    },
+    async (args) =>
+      run("remove_shared_reference", args, () =>
+        each(
+          [{ name: "share.removeReference", args: { containerId: args.containerId } }],
+          [{ containerId: args.containerId }],
+        ),
+      ),
+  );
+
+  /** The person's own field with this ID, for a change's base. */
+  async function ownField(fieldId: string) {
+    const field = await findFieldIn(db, fieldId);
+    return field?.ownerId === userId ? field : undefined;
+  }
+}
+
+const tooMany = (max: number) =>
+  failed("validation_failed", `That is more than ${max} changes in one call. Split it.`);
+
+/** An album's values a hand-entered album leaves out: unknown (FR-03.1). */
+const emptyAlbum = {
+  releaseType: null,
+  isLive: null,
+  originalYear: null,
+  recordingYearStart: null,
+  recordingYearEnd: null,
+};

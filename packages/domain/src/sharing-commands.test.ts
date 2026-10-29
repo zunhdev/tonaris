@@ -330,15 +330,15 @@ describe("Shared with me (FR-07.13)", () => {
     });
     expect(references.size).toBe(1);
     expect(shareLinks.size).toBe(2);
-    // Your own, or through MCP: no.
+    // Your own: no. A Read-only agent of Anna's: no; a Manage collection one may (FR-07.13, AC-24).
     expect(codeOf(await run(save(fresh)))).toBe("validation_failed");
-    const agentOfAnna: Principal = {
-      kind: "mcp",
-      userId: annaId,
-      grantId: uuidv7(),
-      mode: "manage",
-    };
-    expect(codeOf(await run(save(fresh), agentOfAnna))).toBe("app_only");
+    const agentOfAnna = { kind: "mcp", userId: annaId, grantId: uuidv7() } as const;
+    expect(codeOf(await run(save(fresh), { ...agentOfAnna, mode: "read_only" }))).toBe(
+      "permission_denied",
+    );
+    expect(await run(save(fresh), { ...agentOfAnna, mode: "manage" })).toMatchObject({
+      status: "applied",
+    });
   });
 
   test("removing logs the delete; accepting and leaving log theirs", async () => {

@@ -138,6 +138,7 @@ export function createApp({
   const logError =
     problemOptions.logError ??
     ((error: unknown, context: string) => console.error(`Failed: ${context}`, error));
+  const sharing = { shareSecret: config.authSecret, email, webOrigin: config.webOrigin, logError };
   return (
     new Elysia({ name: "tonaris-api" })
       .use(problemDetails(problemOptions))
@@ -153,7 +154,7 @@ export function createApp({
       .use(recoveryRoutes({ db, limiter, clientIpHeader: config.clientIpHeader }))
       .use(accountDeletionProgressRoutes({ db, wakeJobs }))
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
-      .use(mcpRoutes({ auth, db, config, logError }))
+      .use(mcpRoutes({ auth, db, config, logError, hub, capture, sharing }))
       // Artwork, outside the versioned contract: images the server signed (TS-103).
       .use(artworkRoutes(artwork, imageFetch ? { fetch: imageFetch } : {}))
       .use(
@@ -162,7 +163,7 @@ export function createApp({
           hub,
           capture,
           artwork,
-          sharing: { shareSecret: config.authSecret, email, webOrigin: config.webOrigin, logError },
+          sharing,
           emailChange: { db, email, limiter, clientIpHeader: config.clientIpHeader },
           accountDeletion: { db, wakeJobs, notify: (accountId) => hub.notify(accountId) },
           supportEmail: config.supportEmail,

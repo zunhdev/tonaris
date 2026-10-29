@@ -1,7 +1,8 @@
-// Approvals for MCP's gated operations (TS-64, TS-11). Each is bound to the connection that asked, so revoking
-// the connection removes its approvals, and to the hash of the exact scope the owner saw.
+// Approvals for MCP's gated operations (TS-64, TS-11), and agents' writes by idempotency key (TS-22). Each is bound to
+// the connection that asked, so revoking the connection removes them. An approval is also bound to the hash of the
+// exact scope the owner saw.
 
-import { check, index, jsonb, text, uuid } from "drizzle-orm/pg-core";
+import { check, index, integer, jsonb, primaryKey, text, uuid } from "drizzle-orm/pg-core";
 
 import { approvalOperations, approvalStatuses, type ApprovalScope } from "@tonaris/domain";
 
@@ -38,4 +39,25 @@ export const approvals = table(
     check("approvals_operation_check", oneOf(t.operation, approvalOperations)),
     check("approvals_status_check", oneOf(t.status, approvalStatuses)),
   ],
+);
+
+/**
+ * An agent's write by its `idempotencyKey` (TS-22, TS-63): the batch whose mutation IDs the tool derives, so sending
+ * the same key again replays what ran. Keys are the connection's own; `request_hash` refuses one reused for a
+ * different change. Kept as long as mutations are (30 days).
+ */
+export const mcpOperations = table(
+  "mcp_operations",
+  {
+    grantId: uuid()
+      .notNull()
+      .references(() => oauthConsents.id, { onDelete: "cascade" }),
+    key: text().notNull(),
+    batchId: uuid().notNull(),
+    // The tool and its arguments, hashed (SHA-256, hex).
+    requestHash: text().notNull(),
+    items: integer().notNull(),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.grantId, t.key] }), index().on(t.createdAt)],
 );

@@ -3,13 +3,13 @@
 // DS-43's fixed sequence. Grouping splits the one sorted sequence, so the order within each group is the combined
 // order (FR-05.8). Manual order is the person's arrangement (TS-16): arranged items by their fractional-index keys,
 // then the rest in DS-44's fallback order, which the view supplies for albums. A move is planned here as the keys
-// it writes. Every sort is total, ties going by title or name, then ID, so the order never shifts between renders.
+// it writes, by `planMove`, which MCP shares (packages/domain). Every sort is total, ties going by title or name, then ID, so the order never shifts between renders.
 // Pure, so the rules are tested without a DOM.
 
-import { generateKeyBetween, generateNKeysBetween } from "fractional-indexing";
-
 import {
+  planMove,
   searchKey,
+  type Place,
   type Album,
   type Container,
   type FolderSortMode,
@@ -27,6 +27,8 @@ export function sortYear(album: Chronology): number | null {
   if (album.isLive === true && album.recordingYearStart !== null) return album.recordingYearStart;
   return album.originalYear;
 }
+
+export { planMove, type Place };
 
 export type Sort<Mode> = { mode: Mode; dir: SortDirection };
 
@@ -55,9 +57,6 @@ export function arranged<T>(items: readonly T[], keys: Keys, idOf: (item: T) => 
   return [...keyed.map(({ item }) => item), ...rest];
 }
 
-/** Where a move puts an item: before or after another, or at the top or bottom. */
-export type Place = "top" | "bottom" | { before: string } | { after: string };
-
 /** A keyboard move (DS-49): by one, or to the top or bottom. */
 export type Direction = "up" | "down" | "top" | "bottom";
 
@@ -85,48 +84,6 @@ export function placeIn(
   return index === last || after === undefined
     ? undefined
     : { place: { after }, position: to === "down" ? index + 2 : group.length };
-}
-
-/**
- * The keys one move writes (TS-16): the item's, and, when it goes past unarranged items, theirs first, in their
- * order. `sequence` is the view's manual order by ID. Among arranged items it is one key; a run of equal keys, as
- * two sessions placing into one gap can leave, is skipped to the next greater key so that the key is valid.
- */
-export function planMove(
-  sequence: readonly string[],
-  keys: Keys,
-  itemId: string,
-  place: Place,
-): Map<string, string> {
-  const rest = sequence.filter((id) => id !== itemId);
-  let index = rest.length;
-  if (place === "top") index = 0;
-  else if (typeof place === "object") {
-    const at = rest.indexOf("before" in place ? place.before : place.after);
-    if (at !== -1) index = "before" in place ? at : at + 1;
-  }
-  let arrangedCount = 0;
-  while (arrangedCount < rest.length && keys.has(rest[arrangedCount] ?? "")) arrangedCount += 1;
-  const keyAt = (at: number) => keys.get(rest[at] ?? "") ?? null;
-
-  const writes = new Map<string, string>();
-  if (index <= arrangedCount) {
-    const before = index > 0 ? keyAt(index - 1) : null;
-    let next = index;
-    if (before !== null) {
-      while (next < arrangedCount && (keyAt(next) ?? "") <= before) next += 1;
-    }
-    writes.set(itemId, generateKeyBetween(before, next < arrangedCount ? keyAt(next) : null));
-    return writes;
-  }
-  // Past the arranged items: the unarranged ones before the place get keys first, then the item.
-  const after = arrangedCount > 0 ? keyAt(arrangedCount - 1) : null;
-  const fresh = generateNKeysBetween(after, null, index - arrangedCount + 1);
-  for (const [offset, id] of rest.slice(arrangedCount, index).entries()) {
-    writes.set(id, fresh[offset] ?? "");
-  }
-  writes.set(itemId, fresh.at(-1) ?? "");
-  return writes;
 }
 
 /**

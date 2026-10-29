@@ -77,6 +77,7 @@ import {
   fieldOptions,
   albums,
   changeLog,
+  mcpOperations,
   containers,
   memberships,
   mutations,
@@ -1626,6 +1627,8 @@ export async function pruneSyncHistory(
   const before = new Date(now.getTime() - syncRetentionMs);
   await db.delete(changeLog).where(lt(changeLog.createdAt, before));
   await db.delete(mutations).where(lt(mutations.receivedAt, before));
+  // An agent's key replays only while its mutations are kept (TS-22).
+  await db.delete(mcpOperations).where(lt(mcpOperations.createdAt, before));
 }
 
 /**

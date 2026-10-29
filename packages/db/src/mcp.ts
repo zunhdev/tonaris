@@ -1,7 +1,7 @@
 // What MCP needs from storage (TS-60–TS-63): the connection behind a token, the connection list and revocation
 // for Settings (TS-61), and what the first tools read and write. Connections are Better Auth's consents (TS-30);
-// their scopes carry the mode (`mcpModeOf`). The writes (`addToList`, `trashAlbums`) are TON-23's minimal stand-ins
-// for the domain commands M2 and M5 bring, which also record them in the change log (TS-20).
+// their scopes carry the mode (`mcpModeOf`). `trashAlbums` is TON-23's minimal stand-in for the domain command, until
+// TON-83 runs gated deletions through `album.delete` and the change log (TS-20).
 
 import { and, asc, count, desc, eq, gt, inArray, isNull, notExists, sql } from "drizzle-orm";
 
@@ -236,63 +236,6 @@ export async function listContainer(
     )
     .orderBy(asc(containers.kind), asc(containers.nameKey));
   return { kind: container ? "folder" : "root", container, children };
-}
-
-export type ListAddition = {
-  albumId: string;
-  status: "added" | "already_in_list" | "not_found";
-};
-
-/**
- * Adds `albumIds` to the owner's active list `listId` (FR-01.6), each album once: an ordinary MCP batch with
- * an outcome per album (FR-10.4, FR-10.9). Undefined when there is no such list.
- */
-export async function addToList(
-  db: Database,
-  { ownerId, listId, albumIds }: { ownerId: string; listId: string; albumIds: readonly string[] },
-): Promise<ListAddition[] | undefined> {
-  return db.transaction(async (tx) => {
-    const [list] = await tx
-      .select({ id: containers.id })
-      .from(containers)
-      .where(
-        and(
-          eq(containers.id, listId),
-          eq(containers.ownerId, ownerId),
-          eq(containers.kind, "list"),
-          isNull(containers.trashedAt),
-        ),
-      );
-    if (!list) return undefined;
-    const found = await tx
-      .select({ id: albums.id })
-      .from(albums)
-      .where(
-        and(
-          eq(albums.ownerId, ownerId),
-          inArray(albums.id, [...albumIds]),
-          isNull(albums.trashedAt),
-        ),
-      );
-    const active = new Set(found.map((album) => album.id));
-    const added =
-      active.size === 0
-        ? []
-        : await tx
-            .insert(memberships)
-            .values([...active].map((albumId) => ({ listId, albumId, ownerId })))
-            .onConflictDoNothing()
-            .returning({ albumId: memberships.albumId });
-    const inserted = new Set(added.map((row) => row.albumId));
-    return albumIds.map((albumId) => ({
-      albumId,
-      status: inserted.has(albumId)
-        ? "added"
-        : active.has(albumId)
-          ? "already_in_list"
-          : "not_found",
-    }));
-  });
 }
 
 /**

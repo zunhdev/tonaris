@@ -4,7 +4,7 @@
 // the end without a write. The commands that bring an album into Unsorted, or take an item out of a view, keep
 // DS-51's placement here: an album entering Unsorted goes to its top, and an item that leaves a view loses its place.
 
-import { generateKeyBetween } from "fractional-indexing";
+import { generateKeyBetween, generateNKeysBetween } from "fractional-indexing";
 
 import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
 import { failure } from "./outcomes";
@@ -152,4 +152,50 @@ export async function forgetPlace(
 ): Promise<ChangeInput[]> {
   if (!(await store.deletePosition(personId, viewKey, itemId))) return [];
   return [{ entity: "position", id: positionKey(viewKey, itemId), op: "delete", data: null }];
+}
+
+/** Where a move puts an item: before or after another, or at the top or bottom. */
+export type Place = "top" | "bottom" | { before: string } | { after: string };
+
+/**
+ * The keys one move writes (TS-16): the item's, and, when it goes past unarranged items, theirs first, in their
+ * order. `sequence` is the view's manual order by ID, and `keys` the person's keys there. Among arranged items it is
+ * one key; a run of equal keys, as two sessions placing into one gap can leave, is skipped to the next greater key so
+ * that the key is valid. The web app and MCP's `set_order` both plan their moves with it.
+ */
+export function planMove(
+  sequence: readonly string[],
+  keys: ReadonlyMap<string, string>,
+  itemId: string,
+  place: Place,
+): Map<string, string> {
+  const rest = sequence.filter((id) => id !== itemId);
+  let index = rest.length;
+  if (place === "top") index = 0;
+  else if (typeof place === "object") {
+    const at = rest.indexOf("before" in place ? place.before : place.after);
+    if (at !== -1) index = "before" in place ? at : at + 1;
+  }
+  let arrangedCount = 0;
+  while (arrangedCount < rest.length && keys.has(rest[arrangedCount] ?? "")) arrangedCount += 1;
+  const keyAt = (at: number) => keys.get(rest[at] ?? "") ?? null;
+
+  const writes = new Map<string, string>();
+  if (index <= arrangedCount) {
+    const before = index > 0 ? keyAt(index - 1) : null;
+    let next = index;
+    if (before !== null) {
+      while (next < arrangedCount && (keyAt(next) ?? "") <= before) next += 1;
+    }
+    writes.set(itemId, generateKeyBetween(before, next < arrangedCount ? keyAt(next) : null));
+    return writes;
+  }
+  // Past the arranged items: the unarranged ones before the place get keys first, then the item.
+  const after = arrangedCount > 0 ? keyAt(arrangedCount - 1) : null;
+  const fresh = generateNKeysBetween(after, null, index - arrangedCount + 1);
+  for (const [offset, id] of rest.slice(arrangedCount, index).entries()) {
+    writes.set(id, fresh[offset] ?? "");
+  }
+  writes.set(itemId, fresh.at(-1) ?? "");
+  return writes;
 }

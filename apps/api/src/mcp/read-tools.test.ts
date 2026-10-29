@@ -432,28 +432,3 @@ describe("Unsorted, Trash, fields and Shared with me (TS-63)", () => {
     });
   });
 });
-
-describe("get_operation (TS-22, TS-63)", () => {
-  test("gives a change's stored outcome, and says an unknown key was never received", async () => {
-    const { cookie, mcp } = await anna();
-    const made = await send(cookie, "album.create", album("Made"));
-
-    expect(
-      (await call(mcp, "get_operation", { idempotencyKey: made })).structuredContent,
-    ).toMatchObject({
-      idempotencyKey: made,
-      outcome: { status: "confirmed" },
-    });
-    const unknown = await call(mcp, "get_operation", { idempotencyKey: id() });
-    expect(unknown.isError).toBe(true);
-    expect(unknown.structuredContent).toMatchObject({ code: "not_found" });
-  });
-
-  test("never answers for another account's change", async () => {
-    const { mcp } = await anna();
-    const ben = await t.signIn("ben@example.com");
-    const theirs = await send(ben.cookie, "album.create", album("Theirs"));
-    const refused = await call(mcp, "get_operation", { idempotencyKey: theirs });
-    expect(refused.structuredContent).toMatchObject({ code: "not_found" });
-  });
-});

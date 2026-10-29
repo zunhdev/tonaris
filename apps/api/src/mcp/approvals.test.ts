@@ -76,7 +76,7 @@ describe("write tools (FR-10.4, TS-62)", () => {
     const { mcp } = await manageSetup();
     const { tools } = await mcp.listTools();
     const byName = new Map(tools.map((tool) => [tool.name, tool]));
-    expect(byName.get("add_to_list")?.annotations).toMatchObject({ readOnlyHint: false });
+    expect(byName.get("add_to_lists")?.annotations).toMatchObject({ readOnlyHint: false });
     expect(byName.get("delete_albums")?.annotations).toMatchObject({
       readOnlyHint: false,
       destructiveHint: true,
@@ -94,36 +94,6 @@ describe("write tools (FR-10.4, TS-62)", () => {
       .catch((error: unknown) => error);
     expect(String(refused)).toContain("Tool delete_albums not found");
     expect(await trashedIds()).toEqual([]);
-  });
-
-  test("add_to_list reports each album, so one bad ID fails alone", async () => {
-    const { userId, first, second, mcp } = await manageSetup();
-    const third = await insertAlbum(userId, "Medúlla", "Björk", 2004);
-    const other = await insertList(userId, "Late night");
-    const missing = Bun.randomUUIDv7();
-
-    const added = await call(mcp, "add_to_list", { listId: other, albumIds: [first, missing] });
-    expect(added).toEqual({
-      isError: false,
-      content: {
-        items: [
-          { albumId: first, status: "added" },
-          { albumId: missing, status: "not_found" },
-        ],
-      },
-    });
-    const again = await call(mcp, "add_to_list", { listId: other, albumIds: [first, third] });
-    expect(again.content).toEqual({
-      items: [
-        { albumId: first, status: "already_in_list" },
-        { albumId: third, status: "added" },
-      ],
-    });
-    const nowhere = await call(mcp, "add_to_list", {
-      listId: Bun.randomUUIDv7(),
-      albumIds: [second],
-    });
-    expect(nowhere.isError).toBe(true);
   });
 });
 
@@ -189,7 +159,7 @@ describe("the approval round trip (TS-64, FR-10.6)", () => {
     const asked = needsApproval.parse(await requestDeletion(mcp, [first]));
     await decide(cookie, asked.approvalId, "approve");
     const other = await insertList(userId, "Late night");
-    await call(mcp, "add_to_list", { listId: other, albumIds: [first] });
+    await call(mcp, "add_to_lists", { listIds: [other], albumIds: [first] });
 
     const fresh = needsApproval.parse(await requestDeletion(mcp, [first], asked.approvalId));
     expect(fresh.approvalId).not.toBe(asked.approvalId);

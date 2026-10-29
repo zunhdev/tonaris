@@ -1,29 +1,33 @@
 // The MCP server (TS-60, TS-63): one fresh McpServer per request, acting for the connection's principal.
 // Tools are thin wrappers over queries and commands; collection text goes out as structured data, never as
 // instructions (TS-65). Both modes get the read tools (TON-81). Read-only connections aren't offered the write
-// tools (TS-62), and the gated `delete_albums` runs only with the owner's approval (TS-64). The write tools are still
-// TON-23's two; TON-82 and TON-83 replace them.
+// tools (TS-62). The ordinary write tools run the app's own commands (TON-82); the gated `delete_albums`, TON-23's,
+// runs only with the owner's approval (TS-64) until TON-83 replaces it.
 
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 
-import { addToList, type Database } from "@tonaris/db";
+import type { Database } from "@tonaris/db";
 import { authorizeWrite, type McpPrincipal } from "@tonaris/domain";
 
 import { deleteAlbums } from "./approvals";
 import { registerReadTools } from "./read-tools";
 import { result } from "./results";
+import { registerWriteTools } from "./write-tools";
+import type { Writer } from "./writes";
 
 const albumIds = z.array(z.uuid()).min(1).max(50);
 
 export type McpServerOptions = {
   db: Database;
   principal: McpPrincipal;
+  /** Runs the write tools' changes as the app's own mutations (TON-82). */
+  write: Writer;
   /** The web app, where approval pages are (DS-87). */
   webOrigin: string;
 };
 
-export function createMcpServer({ db, principal, webOrigin }: McpServerOptions) {
+export function createMcpServer({ db, principal, write, webOrigin }: McpServerOptions) {
   const server = new McpServer(
     { name: "tonaris", title: "Tonaris", version: "0.1.0" },
     {
@@ -34,40 +38,11 @@ export function createMcpServer({ db, principal, webOrigin }: McpServerOptions) 
 
   registerReadTools(server, { db, principal });
 
-  // Write tools: offered to Manage collection connections only (TS-62), and checked again in each call.
+  // Write tools: offered to Manage collection connections only (TS-62); every command checks the mode again.
   if (principal.mode !== "manage") return server;
+  registerWriteTools(server, { db, principal, write });
   const writeAllowed = () =>
     authorizeWrite(principal, { ownerId: principal.userId, scope: "collection" }).allowed;
-
-  server.registerTool(
-    "add_to_list",
-    {
-      title: "Add albums to a list",
-      description:
-        "Adds albums to one of the user's lists, each once. Each album gets its own outcome: added, already_in_list or not_found.",
-      inputSchema: z.object({
-        listId: z.uuid(),
-        albumIds: albumIds.describe("Albums to add, at most 50."),
-      }),
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
-    },
-    async ({ listId, albumIds: ids }) => {
-      if (!writeAllowed()) {
-        return result("This connection can't change the collection.", { status: "failed" }, true);
-      }
-      const items = await addToList(db, { ownerId: principal.userId, listId, albumIds: ids });
-      if (!items) {
-        return result("There is no such list.", { status: "failed", code: "not_found" }, true);
-      }
-      const added = items.filter((item) => item.status === "added").length;
-      return result(`Added ${added} of ${items.length} albums.`, { items });
-    },
-  );
 
   server.registerTool(
     "delete_albums",
