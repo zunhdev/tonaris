@@ -1465,6 +1465,21 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 - Unsorted and Trash are separate sections. Trash items show their deletion and expiry dates.
 - `README.md` explains the files, conventions, and versioning in plain English. It is also written to help an AI tool reading the archive.
 
+*As built in TON-88* (`packages/domain/src/export-markdown.ts`, `export-readme.ts`):
+- **From the export model:** both files are made from the built export, so they say nothing the JSON doesn't.
+- **The owner's arrangement** is the app's own. `sortAlbums`, `sortContainers`, `sections`, `chronology` and `presentationOf` moved from `apps/web` into `packages/domain`, and the web app re-exports them. A list's fallback order is the order its albums were added; Unsorted's is newest first.
+- **The tables:**
+  - **Custom-field columns:** only for the fields the table's albums use.
+  - **Year:** as the app shows it, with `rec.` for a live recording's years.
+  - **Type:** DS-43's group name.
+  - **Empty values:** an unused field is blank; an applied-empty one shows "—".
+  - **Grouping:** a grouped view gets a bold label per group.
+  - **Escaping:** Markdown's marks are escaped.
+- **Deep trees:** from the sixth heading level down, a heading names its ancestors from there, "F5 › F6 › Deep".
+- **Trash:** each unit gets a `###` heading with its kind, its deletion date and the date it's deleted for good.
+- **The README** names every top-level part of the JSON, which a test checks against the schema. It covers the conventions, versioning and exclusions, and ends with how an AI tool should read the archive.
+- **The workload** renders in about 25 ms, as 1.8 MB of Markdown.
+
 ---
 
 ## 11. Background jobs
