@@ -229,7 +229,7 @@ export function mutationRunner(db: Database, deps: CaptureDeps | undefined, shar
     now?: Date,
   ): Promise<ExecutedMutation> {
     const executed = await run(principal, mutation, now);
-    // A saved invitation's email goes out after the response; a replay never sends again (FR-07.5).
+    // A saved invitation's email is queued after the response; a replay never sends again (FR-07.5).
     const { outcome } = executed.result;
     if (
       (mutation.name === "share.invite" || mutation.name === "share.resendInvitation") &&

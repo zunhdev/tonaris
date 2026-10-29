@@ -1,20 +1,24 @@
-// Starts tonaris-api on the Bun adapter (TS-01, TS-04), and its periodic jobs (TS-91). `bun dev` runs it on port
-// 3001 (TS-06). On SIGTERM, as hosts send on deploy, the change streams end first, so the graceful stop doesn't wait
-// on them and clients reconnect to the new instance (TS-23). Jobs in progress finish before the database closes.
+// Starts tonaris-api on the Bun adapter (TS-01, TS-04), its job worker (TS-90) and its periodic jobs (TS-91). `bun
+// dev` runs it on port 3001 (TS-06). On SIGTERM, as hosts send on deploy, the change streams end first, so the
+// graceful stop doesn't wait on them and clients reconnect to the new instance (TS-23). Jobs in progress finish
+// before the database closes.
 
 import { createDatabase } from "@tonaris/db";
 
 import { createApp } from "./app";
 import { createAuth } from "./auth/auth";
 import { apiConfig } from "./config";
-import { smtpEmail } from "./email/smtp";
+import { emailJob, emailOutbox } from "./email/outbox";
+import { emailTransport } from "./email/transport";
+import { startJobWorker } from "./jobs";
 import { createProviders } from "./providers";
 import { apiSchedules, startSchedules } from "./schedules";
 import { databaseHub } from "./sync/hub";
 
 const config = apiConfig();
 const db = createDatabase();
-const email = smtpEmail(config);
+const worker = startJobWorker(db, [emailJob(db, emailTransport(config))]);
+const email = emailOutbox(db, worker.wake);
 const auth = createAuth({ config, db, email });
 const hub = databaseHub(db);
 const providers = createProviders(config, db, hub);
@@ -35,6 +39,7 @@ async function stop() {
   hub.close();
   await schedules.stop();
   await app.stop();
+  await worker.stop();
   await db.$client.end();
   process.exit(0);
 }

@@ -3,7 +3,7 @@
 
 import { and, eq } from "drizzle-orm";
 
-import { invitationStatus, type AdmissionRefusal } from "@tonaris/domain";
+import { invitationStatus, type AdmissionRefusal, type EmailStatus } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
 import { admissionInvitations, serviceState, users } from "./schema";
@@ -36,6 +36,18 @@ export async function revokeAdmissionInvitation(db: Database, id: string): Promi
     .where(and(eq(admissionInvitations.id, id), eq(admissionInvitations.status, "available")))
     .returning({ id: admissionInvitations.id });
   return revoked.length > 0;
+}
+
+/** Records how an invitation's email went, while it is still sending (FR-11.6, TS-72). */
+export async function recordAdmissionEmail(
+  db: Database,
+  id: string,
+  status: Exclude<EmailStatus, "sending">,
+): Promise<void> {
+  await db
+    .update(admissionInvitations)
+    .set({ emailStatus: status })
+    .where(and(eq(admissionInvitations.id, id), eq(admissionInvitations.emailStatus, "sending")));
 }
 
 export async function admissionsPaused(db: Database): Promise<boolean> {

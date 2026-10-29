@@ -18,6 +18,8 @@ import { type AuthOptions, createAuth } from "./auth/auth";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import type { CaptureDeps } from "./capture";
 import { apiConfig } from "./config";
+import { emailJob, emailOutbox } from "./email/outbox";
+import { startJobWorker } from "./jobs";
 import { databaseHub, type SyncHubOptions } from "./sync/hub";
 
 export type SentEmail = {
@@ -29,8 +31,8 @@ export type SentEmail = {
 };
 
 /**
- * An email port that keeps what it sends. `next(to)` waits for the next email to that address; an address in
- * `failing` makes sending fail, as an unreachable provider would.
+ * An email adapter that keeps what it sends, in place of the provider's. `next(to)` waits for the next email to that
+ * address; an address in `failing` makes sending fail, as an unreachable provider would.
  */
 export function memoryEmail() {
   const sent: SentEmail[] = [];
@@ -97,11 +99,17 @@ export type LocalAppOptions = {
 export function localApp(db: Database, options: LocalAppOptions = {}) {
   // Tests name the client address in X-Forwarded-For, as a proxy would.
   const config = apiConfig({ CLIENT_IP_HEADER: "x-forwarded-for", ...options.env });
+  // Email is queued and sent by a worker as in production, quickly retried so failures show at once.
   const email = memoryEmail();
+  const worker = startJobWorker(db, [emailJob(db, email)], {
+    retryDelaysMs: [10, 10],
+    logError: () => {},
+  });
+  const outbox = emailOutbox(db, worker.wake);
   const auth = createAuth({
     config,
     db,
-    email,
+    email: outbox,
     logError: () => {},
     fetchClientMetadata: options.fetchClientMetadata,
   });
@@ -110,7 +118,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     config,
     auth,
     db,
-    email,
+    email: outbox,
     hub,
     limiter: options.limiter ?? createSignInLimiter(),
     capture: options.capture,
@@ -172,6 +180,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     // The streams end first, so the graceful stop lets every other request finish.
     hub.close();
     if (app.server) await app.stop();
+    await worker.stop();
   };
   return { app, auth, config, db, email, hub, call, signIn, listen, stop };
 }

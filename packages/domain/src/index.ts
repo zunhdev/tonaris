@@ -21,7 +21,13 @@ export {
   type AdmissionRefusal,
 } from "./admission";
 export {
+  EmailDeliveryError,
+  emailDataSchemas,
+  emailLifetimeMs,
+  emailTemplateSchema,
   renderEmail,
+  type EmailOptions,
+  type EmailOutcome,
   type EmailPort,
   type EmailTemplate,
   type EmailTemplates,

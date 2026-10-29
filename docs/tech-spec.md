@@ -1236,13 +1236,18 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   - emailed through TS-72, with `email_status` tracked separately.
 - **Creator bootstrap.** The `CREATOR_EMAIL` environment variable is read at first deploy, and a one-time seed command, `bun run seed:creator`, creates the creator with `role = creator` and a verified email. It is idempotent for the same address, so the pre-deploy step can run it every time. It refuses a second creator and an address that already belongs to an account. There is no UI path to grant the creator role.
 
-**TS-72 Email delivery (Decided adapter; provider decided later).**
+**TS-72 Email delivery (Decided; provider Resend, chosen 29 October 2026 in TON-73).**
 
-- **Adapter.** `packages/domain` defines `EmailPort.send(template, to, data)`; implementations use a provider HTTP API, with SMTP as a fallback.
-- **Provider.** The creator chooses before the first real invitation is sent, taking EU data processing into account (Q-06). Candidates: Resend, Postmark, and Scaleway Transactional Email. Until then, development uses Mailpit (TS-06).
-- **Sending.** All email goes through the job queue (TS-90) with retries. Sending outcomes are recorded on the invitation or grant rows (FR-07.5, FR-11.6). Templates are plain, English, and DS-worded.
-- *As built in TON-66:* sharing invitations (`share-invitation`) are sent after the response too, from `mutationRunner`. Their outcome is recorded on the grant (TS-33) rather than only logged.
-- **Until the job queue exists**, sign-in email and admission's join codes (TS-71) are sent after the response, through the SMTP adapter (`apps/api/src/email/smtp.ts`, `SMTP_URL`), and a failure is logged. TON-73 moves it to the queue with the chosen provider. The templates render in `packages/domain/src/email.ts`, so every adapter sends the same text.
+- **Adapter.** `packages/domain` defines `EmailPort.send(template, to, data, options)`. The API's port queues the email (TS-90); the adapters send it:
+  - **Resend** (`apps/api/src/email/resend.ts`) when `RESEND_API_KEY` is set: one call to its send API through `safeFetch` (TS-103), with a 10 s timeout;
+  - **SMTP** (`apps/api/src/email/smtp.ts`, `SMTP_URL`) otherwise: Mailpit locally (TS-06), or a host's relay.
+- **Provider.** The creator chose **Resend** for its ease, tooling and free tier. EU data residency wasn't required: Tonaris is a non-commercial service for collectors worldwide. Resend sends from Ireland (`eu-west-1`) but keeps account data and logs in the US, under the EU–US Data Privacy Framework and SCCs, which the privacy notice will say. Moving to another provider is a new adapter, DNS records and settings.
+- **Sender.** `EMAIL_FROM` is `Tonaris <no-reply@mail.tonaris.app>`. The subdomain `mail.tonaris.app` is verified in Resend (SPF and DKIM, plus `_dmarc` with `p=none` on `tonaris.app`), so the main domain's reputation stays separate, as Resend recommends.
+- **Sending.** Every email goes through the job queue with retries (TS-90), sign-in codes included. The job's id is Resend's idempotency key, so a retry after a timeout never sends twice.
+  - **Retrying:** timeouts, lost connections, Resend's 5xx, its rate limit and a concurrent retry (409) are retried. Other refusals fail at once: an invalid address, an unverified sender, a bad key, a used-up quota.
+  - **Outcomes** are recorded on the grant (TS-33) or the admission invitation (TS-71), whichever the email belongs to: `sent` once the provider accepts it, `failed` when it refused or the retries ran out, and `unknown` when the last attempt timed out and Resend may have sent it (FR-07.5: unconfirmed). Bounces after acceptance aren't tracked (no webhooks).
+  - **Codes:** an email carrying a code isn't sent once the code has expired (`emailLifetimeMs`).
+- **Templates** are plain, English and DS-worded, rendered in `packages/domain/src/email.ts`, so every adapter sends the same text. *As built in TON-73:* `sign-in-code`, `sign-in-no-account`, `join-code`, `share-invitation`, `admission-invitation`, `email-change-current`, `email-change-new` and `recovery-verification`. TON-77 and TON-78 give the last three their links and flows.
 
 **TS-73 Email change and recovery (Decided; FR-11.4, FR-11.5).**
 
@@ -1335,9 +1340,15 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
   - each schedule first runs a minute after start, then on its interval;
   - shutdown waits for a run in progress before the database closes;
   - `prune-provider-cache` joined `prune-sync-history` in TON-41;
-  - the `jobs` table and its workers arrive with the first queued job.
+  - the `jobs` table and its worker arrived with the first queued job, email (TON-73).
 - Retries use exponential backoff; dead jobs are visible in the admin UI.
 - No Redis or external queue.
+- *As built in TON-73* (`apps/api/src/jobs.ts`, `packages/db/src/jobs.ts`), with email as the first kind (TS-72):
+  - **Waking:** queuing a job wakes the worker in the same process, so it starts at once. The worker also looks for due jobs every 5 s, for retries, a restart's leftovers, and jobs another instance queued.
+  - **Claims:** two jobs run at a time. A claim holds a job for 2 minutes, so a worker that died lets it go. Due times come from the API's clock, which claims compare with.
+  - **Retries:** after 5 s, 30 s and 2 min, unless the handler says retrying can't help. Then the job is buried: its handler records the failure, and only what it says to keep stays in the payload.
+  - **Secrets:** an email job's payload can hold a code or an admission token, which the database otherwise keeps only hashed. A sent email's job is deleted, and a buried one keeps only its template and address.
+  - **Pruning:** dead jobs go after 30 days (`prune-dead-jobs`, daily). The admin UI for them is still to come.
 
 **TS-91 Jobs.**
 
@@ -1449,7 +1460,7 @@ There is no resizing in v1.
 
 **TS-105 Secrets.**
 
-- Secrets live in the host's secret store, not in the repo. `.env.example` lists them, together with the other settings and their local defaults. The API refuses to start in production without `BETTER_AUTH_SECRET`, `API_ORIGIN`, `WEB_ORIGIN`, `SMTP_URL`, and `EMAIL_FROM`.
+- Secrets live in the host's secret store, not in the repo. `.env.example` lists them, together with the other settings and their local defaults. The API refuses to start in production without `BETTER_AUTH_SECRET`, `API_ORIGIN`, `WEB_ORIGIN`, `EMAIL_FROM`, and `RESEND_API_KEY` or `SMTP_URL` (TS-72).
 - Key material:
   - `BETTER_AUTH_SECRET`
   - the image-proxy HMAC key
@@ -1764,7 +1775,7 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 | 2 | Album-matching evidence | **Decided 21 October 2026** (TON-25): TS-44 as validated, plus the rule for changed release group ids | G2 |
 | 3 | Performance targets | **Approved 21 October 2026** where measured (TS-120). Quick search, MCP search, guest LCP and export stay provisional until measured. | Q-01 |
 | 4 | Backup objectives and deletion wording | Creator-owned: retention, RPO/RTO, and the drill schedule. The TS-114 wording must match the retention. | Q-04 |
-| 5 | Email provider | The creator picks one before the first real invitation (TS-72) | Q-06 |
+| 5 | Email provider | **Decided 29 October 2026** (TON-73): Resend, sending from `mail.tonaris.app` (TS-72) | Q-06 |
 | 6 | ChatGPT web plan for write actions | **Resolved 21 October 2026:** ChatGPT Plus adds custom MCP servers (TON-22) and runs write actions (TON-23) on the web (TS-123) | G3 |
 | 7 | Elysia 2 go/no-go | End of M2 (TS-04) | — |
 

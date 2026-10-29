@@ -146,7 +146,7 @@ export function admissionRoutes({
         const code = await auth.api.createVerificationOTP({
           body: { email: address, type: "sign-in" },
         });
-        // Sent after the response, as sign-in codes are (TS-72).
+        // Queued after the response, as sign-in codes are (TS-72, TS-90).
         void email
           .send("join-code", address, { code, link: joinLink(config.webOrigin, body.token, code) })
           .catch((error: unknown) => logError(error, "join code email"));

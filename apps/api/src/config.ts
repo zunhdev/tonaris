@@ -17,7 +17,10 @@ export type ApiConfig = {
    */
   cookieDomain: string | undefined;
   authSecret: string;
+  /** Resend's API key (TS-72): email goes through Resend when it is set, and through `smtpUrl` otherwise. */
+  resendApiKey: string | undefined;
   smtpUrl: string;
+  /** The sender, such as `Tonaris <no-reply@mail.tonaris.app>`: an address on a domain the provider verified. */
   emailFrom: string;
   /** The header the host's proxy puts the client address in; unset means the socket address (TS-104). */
   clientIpHeader: string | undefined;
@@ -45,14 +48,14 @@ const requiredInProduction = [
   "API_ORIGIN",
   "WEB_ORIGIN",
   "BETTER_AUTH_SECRET",
-  "SMTP_URL",
   "EMAIL_FROM",
 ] as const satisfies (keyof typeof localDefaults)[];
-type Required = (typeof requiredInProduction)[number];
+type Required = (typeof requiredInProduction)[number] | "SMTP_URL";
 
 export function apiConfig(env: Env = process.env): ApiConfig {
   const production = env.NODE_ENV === "production";
-  const missing = requiredInProduction.filter((name) => !env[name]);
+  const missing: string[] = requiredInProduction.filter((name) => !env[name]);
+  if (!env.RESEND_API_KEY && !env.SMTP_URL) missing.push("RESEND_API_KEY (or SMTP_URL)");
   if (production && missing.length > 0) {
     throw new Error(`Set ${missing.join(", ")} in production (see .env.example).`);
   }
@@ -74,6 +77,7 @@ export function apiConfig(env: Env = process.env): ApiConfig {
     webOrigin,
     cookieDomain,
     authSecret: value("BETTER_AUTH_SECRET"),
+    resendApiKey: env.RESEND_API_KEY || undefined,
     smtpUrl: value("SMTP_URL"),
     emailFrom: value("EMAIL_FROM"),
     clientIpHeader: env.CLIENT_IP_HEADER?.toLowerCase() || undefined,

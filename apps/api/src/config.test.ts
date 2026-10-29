@@ -27,10 +27,17 @@ describe("apiConfig", () => {
 
   test("requires every origin and secret in production (TS-105)", () => {
     expect(() => apiConfig({ NODE_ENV: "production" })).toThrow(
-      "Set API_ORIGIN, WEB_ORIGIN, BETTER_AUTH_SECRET, SMTP_URL, EMAIL_FROM in production",
+      "Set API_ORIGIN, WEB_ORIGIN, BETTER_AUTH_SECRET, EMAIL_FROM, RESEND_API_KEY (or SMTP_URL) in production",
     );
     const { BETTER_AUTH_SECRET: _, ...withoutSecret } = production;
     expect(() => apiConfig(withoutSecret)).toThrow("Set BETTER_AUTH_SECRET in production");
+  });
+
+  test("sends email through Resend when its key is set, and through SMTP otherwise (TS-72)", () => {
+    const { SMTP_URL: _, ...withoutSmtp } = production;
+    expect(() => apiConfig(withoutSmtp)).toThrow("Set RESEND_API_KEY (or SMTP_URL) in production");
+    expect(apiConfig({ ...withoutSmtp, RESEND_API_KEY: "re_test" }).resendApiKey).toBe("re_test");
+    expect(apiConfig(production).resendApiKey).toBeUndefined();
   });
 
   test("scopes the cookie to the web app's host, the parent of the API's (TS-08)", () => {
