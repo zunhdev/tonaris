@@ -1,12 +1,14 @@
 // Moving folders and lists (FR-01.4, FR-01.5, DS-49): "Move to…", which `M` opens for the focused folder or list,
-// and the move itself, shared with dropping onto the tree. A move is a collection edit: it waits while offline
+// and the move itself, shared with dropping onto the tree. Move to… previews what moving into the destination with
+// the focus or the pointer would do to sharing, before choosing (DS-69, FR-07.14). A move is a collection edit: it waits while offline
 // (DS-81), and the domain checks names and depth, reporting a refusal as any write (DS-107). The moved item arrives
 // last in its destination's arrangement (DS-51), the destination opens in the tree, and the move is announced.
 
+import { SharingImpactPreview } from "@/features/sharing/sharing-impact";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { FolderClosed, Library } from "lucide-react";
-import { useCallback, useMemo, useRef, type KeyboardEvent } from "react";
+import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
 
 import {
   Dialog,
@@ -56,6 +58,9 @@ export function MoveDialog() {
   const move = useMoveContainer();
   const list = useRef<HTMLUListElement>(null);
   const item = moving === undefined ? undefined : tree.byId.get(moving);
+  // The destination last focused or pointed at, for this item.
+  const [previewed, setPreviewed] = useState<{ id: string; to: string | null }>();
+  const preview = item !== undefined && previewed?.id === item.id ? previewed : undefined;
   const destinations = useMemo(
     () => (moving === undefined ? [] : moveDestinations(tree, moving)),
     [tree, moving],
@@ -108,6 +113,8 @@ export function MoveDialog() {
                           "flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid",
                         )}
                         style={{ paddingLeft: 8 + destination.level * 16 }}
+                        onFocus={() => setPreviewed({ id: item.id, to: destination.parentId })}
+                        onMouseEnter={() => setPreviewed({ id: item.id, to: destination.parentId })}
                         onClick={() => {
                           if (move(item.id, destination.parentId)) endMove();
                         }}
@@ -124,6 +131,9 @@ export function MoveDialog() {
                 })}
               </ul>
             )}
+            <SharingImpactPreview
+              query={preview === undefined ? undefined : { move: preview.id, to: preview.to }}
+            />
           </>
         )}
       </DialogContent>
