@@ -1444,6 +1444,21 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 
 Excluded by construction (FR-08.4): no account, sharing, reference, or credential tables are read, and no image bytes are included. The schema file and README document every field. `formatVersion` follows semver: minor versions only add fields.
 
+*As built in TON-87* (`packages/domain/src/export.ts`, `packages/db/src/export.ts`):
+- **Builder and reader.** `buildExport(source, exportable)` is pure. `exportSource(db, accountId)` fills its source in one read-only REPEATABLE READ transaction, from the owner's collection tables only. `exportable` is the provider policy (TS-15). A refused value becomes `{ "withheld": "provider-policy" }`, the one marker MCP uses too.
+- **The app's own names** replace the sketch above.
+  - Albums keep `recordingYearStart` and `recordingYearEnd`. The defaults are the account's `listSortMode`, `listSortDir`, `folderSortMode`, `folderSortDir`, `grouped` and `layout`.
+  - A view keeps `sortMode`, `sortDir`, `grouped` and `layout`, null where it follows the default, and `order`: the manual order's item IDs.
+- **Albums** also carry:
+  - `identifiers.musicbrainzRelease` and `identifiers.musicbrainzReleaseGroup`;
+  - `status` and `trashUnitId`;
+  - `provenance` for the values whose source is recorded.
+- **Values by type:** text as a string; a number as a decimal string; a date as `YYYY-MM-DD`; yes/no as a boolean; a choice as `{ optionId, label }`, or a list of them. The conventions block adds `numbers`.
+- **Tree:** every folder and list, Trash included, with `status` and `trashUnitId`. A list's `albumIds` are its saved entries, Trash included, in the order they were added. `rootOrder` became `personal.views.root.order`.
+- **Trash units** give `containerIds` and `albumIds`, in place of `memberIds`, and `formerMemberships`: the entries recovery brings back.
+- **The JSON Schema** is `z.toJSONSchema` of the Zod schema, so they can't drift.
+- **The workload:** 5,005 albums export in about 150 ms (read 135 ms, build under 10 ms), as 3.9 MB of JSON. The output parses with the schema.
+
 **TS-82 Markdown rendering (Decided).**
 
 - `collection.md` renders the folder tree as headings, then lists as tables in the owner's arrangement: *#, Title, Artist, Year, Type, Links, custom fields*.

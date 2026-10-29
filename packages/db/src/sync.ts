@@ -118,7 +118,7 @@ export const membershipColumns = {
   addedAt: memberships.addedAt,
 };
 
-const viewPrefsColumns = {
+export const viewPrefsColumns = {
   viewKey: viewPrefs.viewKey,
   sortMode: viewPrefs.sortMode,
   sortDir: viewPrefs.sortDir,
@@ -126,7 +126,7 @@ const viewPrefsColumns = {
   layout: viewPrefs.layout,
 };
 
-const defaultsColumns = {
+export const defaultsColumns = {
   listSortMode: accountSettings.listSortMode,
   listSortDir: accountSettings.listSortDir,
   folderSortMode: accountSettings.folderSortMode,
@@ -135,7 +135,7 @@ const defaultsColumns = {
   layout: accountSettings.layout,
 };
 
-const positionColumns = {
+export const positionColumns = {
   viewKey: positions.viewKey,
   itemId: positions.itemId,
   key: positions.key,
@@ -342,7 +342,7 @@ export async function optionUsersIn(
 }
 
 /** The fields the account's albums apply, with their values, Trash included (FR-03.7). */
-function valuesOfAccount(tx: Transaction, accountId: string): Promise<FieldValue[]> {
+export function valuesOfAccount(tx: Transaction, accountId: string): Promise<FieldValue[]> {
   return valuesWhere(tx, eq(albums.ownerId, accountId));
 }
 
