@@ -146,7 +146,7 @@ All data flows through Elysia. **No Start server functions for data:**
 - one API surface serves the web app, MCP, and future native apps;
 - this sidesteps the server-function XSS class entirely.
 
-SSR loaders call the API over the host's private network (`API_INTERNAL_URL`) with Eden treaty over HTTP. Nothing runs in-process. Guest pages pass the share token. The signed-in approval landing forwards the session cookie, which is scoped to the parent domain (TS-08).
+SSR loaders call the API over the host's private network (`API_INTERNAL_URL`) with Eden treaty over HTTP. Nothing runs in-process. Guest pages pass the share token. The signed-in approval landing forwards the session cookie, which is scoped to the parent domain (TS-08). *As built in TON-70:* `/s/$token` is the first route with a server-side loader. It reads through `serverApiUrl` in `apps/web/src/config.ts`: `API_INTERNAL_URL` when set, else `API_URL`, and `apiUrl` in the browser.
 
 **TS-04 API service policy (Decided; conditions apply).**
 
@@ -501,6 +501,10 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 - **Too old.** If the cursor predates retention, the server sends `event: reset` with `{reason: "cursor_expired"}` and ends the stream; a cursor ahead of the log gets `cursor_unknown`. The client re-bootstraps.
 - **Viewer invalidation.** When a change touches a shared subtree, the server publishes `event: shared-invalidate {rootId, ownerSeq}` to the viewer subscriptions for that root. Affected roots are found from the changed entity's lists and their ancestors (TS-31). The viewer client debounces for 250 ms, then refetches that root's snapshot. This is simple and correct at this scale; per-root deltas are a later optimization.
 - **Guests** subscribe at `GET /v1/s/:token/stream`, receiving the same invalidations for their single root.
+  - *As built in TON-70:*
+    - **What triggers an event:** a guest stream watches its link's owner in the hub (`hub.watch`). Every confirmed write of theirs triggers `shared-invalidate {rootId}`: `publish` for writes with changes, `notify` for those without, such as sharing and the display name. Narrowing to the affected root (TS-31) is left for later.
+    - **The page** re-reads `GET /v1/s/{token}` 250 ms after the last event of a burst. A read that fails turns the page into the unavailable sentence.
+    - **The stream** is read with `fetch`, reconnecting with doubling pauses up to 30 s.
 - **Keepalive.** A comment line goes out every 20 s, and when nothing has been sent yet a first one starts the response at once.
   - Bun closes connections after 10 s without traffic (`idleTimeout`), so each stream switches the timeout off for its own request, with `server.timeout(request, 0)`. Every other request keeps the default.
   - Hosts commonly drop connections on deploy (Render does); clients reconnect.
@@ -693,6 +697,9 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - Guest pages send `Referrer-Policy: no-referrer`, and outbound links carry `rel="noopener noreferrer"`, so tokens never leak to streaming services.
 - Tokens appear in URLs only on `/s/` (web) and `/v1/s/` (API) paths and are redacted from logs.
 - *As built in TON-64:* `findShareLink(db, token)` hashes the presented token and finds a link not revoked.
+- *As built in TON-70:*
+  - **Logs:** the API's error log replaces a token in `/v1/s/{token}` paths with `[token]` (`withoutShareToken` in `problem.ts`).
+  - **Malformed tokens:** a token that isn't 43 base64url characters is rejected as invalid input before any lookup.
 - *Changed in TON-65 (decided with the creator, 29 October 2026):* **tokens are derived, not random.**
   - `shareToken(secret, linkId)` is base64url(HMAC-SHA256(`BETTER_AUTH_SECRET`, `tonaris:share-link:` + linkId)): 256 bits, 43 characters. The database still stores only its SHA-256.
   - The owner's dialog can show the link every time, while a database leak alone reveals no link.
@@ -1559,7 +1566,7 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 | MCP `search` server time | ≤ 300 ms | Provisional |
 | Switching sort or grouping, or opening a list (any size, virtualized) | ≤ 100 ms (≤ 200 ms for a 5,000-album list) | Approved |
 | Workspace cold start to interactive, desktop (assets cached) | ≤ 2.5 s p75 | Approved |
-| Guest share page LCP, mobile reference | ≤ 2.5 s p75 | Provisional |
+| Guest share page LCP, mobile reference | ≤ 2.5 s p75 | Provisional. Measured in TON-70: 0.58 s, one run, Fast 4G with 4× CPU on a 200-album list, local servers |
 | Export of 5,000 albums | ≤ 3 s | Provisional |
 
 **TS-121 Test strategy (Decided).**

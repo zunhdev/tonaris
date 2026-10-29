@@ -16,6 +16,7 @@ import {
   findMutationResult,
   mutationRunning,
   type Database,
+  type ExecutedMutation,
 } from "@tonaris/db";
 import {
   batchResultSchema,
@@ -104,6 +105,14 @@ export function syncRoutes(
   },
 ) {
   const run = mutationRunner(db, capture, sharing);
+  /**
+   * Hands a write's changes to the account's streams. A confirmed write with none, such as sharing or the display
+   * name, still tells the account's guest pages to read again (TS-23, TON-70).
+   */
+  const announce = (accountId: string, { result, changes, replayed }: ExecutedMutation) => {
+    if (changes.length > 0) hub.publish(accountId, changes);
+    else if (!replayed && result.outcome.status === "confirmed") hub.notify(accountId);
+  };
   return new Elysia()
     .use(session)
     .post(
@@ -128,9 +137,9 @@ export function syncRoutes(
       async ({ body, principal, account, request, server }) => {
         keepOpen(request, server, [body]);
         try {
-          const { result, changes } = await run(principal, body);
-          hub.publish(account.id, changes);
-          return result;
+          const executed = await run(principal, body);
+          announce(account.id, executed);
+          return executed.result;
         } catch (error) {
           if (error instanceof MutationInProgressError) throw inProgress();
           throw error;
@@ -160,8 +169,11 @@ export function syncRoutes(
         keepOpen(request, server, body.items);
         try {
           return await executeBatch(db, principal, body, {
-            onExecuted: (changes) => hub.publish(account.id, changes),
-            execute: (mutation) => run(principal, mutation),
+            execute: async (mutation) => {
+              const executed = await run(principal, mutation);
+              announce(account.id, executed);
+              return executed;
+            },
           });
         } catch (error) {
           if (error instanceof MutationInProgressError) throw inProgress();

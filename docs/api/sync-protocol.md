@@ -193,6 +193,9 @@ The server ends a stream in four cases:
     - **`share.revoke`** `{grantId}`: the owner revokes a pending or accepted invitation.
 
     Neither comes back through Trash recovery, and other paths stay.
+  - **Guests** (TON-70), with no session:
+    - `GET /v1/s/{token}` gives a link's content: the root, its active folders and lists, their albums with signed artwork, links, and the fields they use. Any link that doesn't work is `404`.
+    - `GET /v1/s/{token}/stream` sends `shared-invalidate {rootId}` (the `SharedInvalidate` component) after each of the owner's saves.
   - **The recipient's reads:** `GET /v1/invitations` lists pending invitations; `GET /v1/invitations/{id}` answers `{state}`: `pending` or `accepted` (with `invitation`), `wrong_account`, or `unavailable`.
   - **Display name:** inviting or turning a link on needs one (`display_name_required`). So does keeping one while any invitation is pending or accepted, or any link is on.
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).

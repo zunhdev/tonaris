@@ -123,6 +123,8 @@ export const accounts = {
   invitingOwner: at("inviting-owner"),
   invitedAnna: at("invited-anna"),
   invitedBen: at("invited-ben"),
+  // Guest pages (guest.e2e.ts).
+  guestOwner: at("guest-owner"),
 } as const;
 
 /** An address with no account. */

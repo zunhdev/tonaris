@@ -274,7 +274,11 @@ describe("links (TS-32)", () => {
     const owner = await newPrincipal();
     const doom = await made(owner, "list", "Doom");
     const { id, token } = await link(doom.id);
-    expect(await findShareLink(t.db, token)).toEqual({ id, containerId: doom.id });
+    expect(await findShareLink(t.db, token)).toEqual({
+      id,
+      containerId: doom.id,
+      ownerId: owner.userId,
+    });
     const [stored] = await t.db.select().from(shareLinks).where(eq(shareLinks.id, id));
     expect(Buffer.from(stored!.tokenHash).toString("utf8")).not.toContain(token);
     await t.db.update(shareLinks).set({ revokedAt: new Date() }).where(eq(shareLinks.id, id));
@@ -425,7 +429,10 @@ describe("AC-20 and AC-30 through the commands", () => {
         [doom.id, new Set([metal.id])],
       ]),
     );
-    expect(await findShareLink(t.db, kept.token)).toEqual({ id: kept.id, containerId: metal.id });
+    expect(await findShareLink(t.db, kept.token)).toMatchObject({
+      id: kept.id,
+      containerId: metal.id,
+    });
     expect((await readableContainers(t.db, person(ben))).size).toBe(0);
 
     // A link turned off while in Trash stays off after recovery.

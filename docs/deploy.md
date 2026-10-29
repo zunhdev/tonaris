@@ -50,6 +50,7 @@ Set these as environment secrets; `.env.example` lists every setting. In product
 | api | `CLIENT_IP_HEADER` | The header the host's proxy puts the client address in, e.g. `X-Forwarded-For`. Without it, the per-IP sign-in limit sees only the proxy's address (TS-104). |
 | api | `CREATOR_EMAIL` | The creator's address, read by the creator bootstrap |
 | web | `API_URL` | `https://api.tonaris.<tld>`, read at start-up and given to browsers |
+| web | `API_INTERNAL_URL` | Optional: the API over the host's private network, for the server's own reads, such as guest pages (TS-03). Without it, the server uses `API_URL`. |
 | both | `PORT` | Optional: 3001 for the API, 3000 for the web app |
 
 The images set `NODE_ENV=production`. When running Bun directly, set it yourself.

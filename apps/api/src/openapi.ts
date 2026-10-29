@@ -8,7 +8,13 @@ import { toOpenAPISchema } from "@elysia/openapi";
 import type { AnyElysia } from "elysia";
 import { z } from "zod";
 
-import { batchItemSchema, changeSchema, problemSchema, streamResetSchema } from "@tonaris/domain";
+import {
+  batchItemSchema,
+  changeSchema,
+  problemSchema,
+  sharedInvalidateSchema,
+  streamResetSchema,
+} from "@tonaris/domain";
 
 const openapiVersion = "3.1.2";
 export const committedDocumentPath = path.join(import.meta.dir, "../openapi/v1.json");
@@ -102,6 +108,7 @@ export function openApiDocument(app: AnyElysia) {
         Problem: jsonSchema(problemSchema),
         Change: jsonSchema(changeSchema),
         StreamReset: jsonSchema(streamResetSchema),
+        SharedInvalidate: jsonSchema(sharedInvalidateSchema),
         BatchItem: jsonSchema(batchItemSchema),
       },
     },

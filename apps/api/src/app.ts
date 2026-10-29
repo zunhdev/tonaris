@@ -23,6 +23,7 @@ import { problemDetails, type ProblemDetailsOptions } from "./problem";
 import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
 import { fieldRoutes } from "./routes/v1/fields";
+import { guestRoutes } from "./routes/v1/guests";
 import { invitationRoutes } from "./routes/v1/invitations";
 import { meRoutes } from "./routes/v1/me";
 import { searchRoutes } from "./routes/v1/search";
@@ -69,6 +70,7 @@ function v1(
       }),
     )
     .use(invitationRoutes(session, { db: sync.db }))
+    .use(guestRoutes(sync))
     .use(syncRoutes(session, sync));
 }
 
