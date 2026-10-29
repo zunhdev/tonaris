@@ -1758,6 +1758,11 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 - **Measured on 21 October 2026 ([TON-21](spikes/2026-10-21-q01-measurements.md)).** Every target with something to measure is met with room to spare, on both reference profiles. The creator approved them on 21 October 2026 (TON-25), with the viewer target on its estimate.
   - Approved: feedback, confirmation, both propagations, list and sort switches, cold start. M7 measures viewer propagation for real.
   - Provisional, with nothing to measure yet: quick search, MCP search, guest pages and export.
+- **Verified on 29 October 2026 ([TON-92](performance-verification.md)).** Every target is met on both reference profiles, and the creator approved the four provisional ones as they stood.
+  - **The approved targets** were re-measured with the TON-21 suite (`bun run --cwd apps/web test:perf`).
+  - **The provisional ones** were measured on the real app, with `bun run --cwd apps/web test:verify` (`perf/app.verify.ts`): the palette, the guest page and the export.
+  - **MCP search** was timed at its database call on the workload.
+  - **Edit confirmation** rose about 80 ms since TON-21: 188 ms desktop and 392 ms mobile, against 400 ms. The server answers in 4 ms. The rise is the browser keeping each write until it's answered (TS-22's durable outbox), which TON-21's prototype didn't do. On mobile, Fast 4G's 165 ms latency is most of the rest.
 - **The API compresses its JSON responses** with gzip, but not the event stream (TS-23). The reference bootstrap is 2.33 MB uncompressed and 0.49 MB gzipped, which is most of a cold start.
   - Built in TON-29 (`apps/api/src/compression.ts`): JSON and problem responses of 1 KB or more, for clients that accept gzip, with `Vary: Accept-Encoding`.
   - In the API rather than at the host's edge, so it holds on any host (TS-110).
@@ -1781,13 +1786,13 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 | Optimistic UI feedback after a local edit | ≤ 50 ms | Approved |
 | Server confirmation of a single mutation (received through the stream) | ≤ 400 ms | Approved |
 | Propagation to another session of the same account | ≤ 1 s | Approved |
-| Propagation to a viewer or guest (invalidate and refetch) | ≤ 2.5 s | Approved on an estimate; measured in M7 |
-| Quick-search results update per keystroke | ≤ 50 ms | Provisional |
-| MCP `search` server time | ≤ 300 ms | Provisional |
+| Propagation to a viewer or guest (invalidate and refetch) | ≤ 2.5 s | Approved; measured in TON-92: refetch 117 ms desktop, 616 ms mobile |
+| Quick-search results update per keystroke | ≤ 50 ms | Approved 29 October 2026; measured in TON-92: 8 ms desktop, 10 ms mobile |
+| MCP `search` server time | ≤ 300 ms | Approved 29 October 2026; measured in TON-92: 14 ms |
 | Switching sort or grouping, or opening a list (any size, virtualized) | ≤ 100 ms (≤ 200 ms for a 5,000-album list) | Approved |
 | Workspace cold start to interactive, desktop (assets cached) | ≤ 2.5 s p75 | Approved |
-| Guest share page LCP, mobile reference | ≤ 2.5 s p75 | Provisional. Measured in TON-70: 0.58 s, one run, Fast 4G with 4× CPU on a 200-album list, local servers |
-| Export of 5,000 albums | ≤ 3 s | Provisional |
+| Guest share page LCP, mobile reference | ≤ 2.5 s p75 | Approved 29 October 2026; measured in TON-92: 0.74 s on a share holding 2,066 list entries (TON-70: 0.58 s on 200) |
+| Export of 5,000 albums | ≤ 3 s | Approved 29 October 2026; measured in TON-92: 0.21 s at most |
 
 **TS-121 Test strategy (Decided).**
 
