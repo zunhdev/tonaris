@@ -9,7 +9,7 @@ import { api } from "@/api";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { useConnection } from "@/features/sync/sync-provider";
-import { Check, Copy, Folder } from "lucide-react";
+import { Check, Copy, Ellipsis, Folder } from "lucide-react";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 
 import { uuidv7, type Mutation, type MutationResult, type ShareSettings } from "@tonaris/domain";
@@ -21,6 +21,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@tonaris/ui/components/dropdown-menu";
 import { Input } from "@tonaris/ui/components/input";
 import { Switch } from "@tonaris/ui/components/switch";
 
@@ -164,6 +170,12 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
                         invitation.emailStatus === "unknown") && (
                         <ResendButton grantId={invitation.id} disabled={offline} onSent={load} />
                       )}
+                    <RowMenu
+                      who={invitation.displayName ?? invitation.email}
+                      grantId={invitation.id}
+                      disabled={offline}
+                      onRevoked={load}
+                    />
                   </li>
                 ))}
               </ul>
@@ -210,6 +222,47 @@ function deliveryOf(status: ShareSettings["invitations"][number]["emailStatus"])
   if (status === "failed") return " · email failed";
   if (status === "unknown") return " · email not confirmed";
   return "";
+}
+
+/** A person's menu (DS-65): Remove access, which revokes their invitation, pending or accepted (FR-07.15). */
+function RowMenu({
+  who,
+  grantId,
+  disabled,
+  onRevoked,
+}: {
+  who: string;
+  grantId: string;
+  disabled: boolean;
+  onRevoked: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`More for ${who}`}
+            disabled={disabled}
+          />
+        }
+      >
+        <Ellipsis strokeWidth={1.5} aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" inDialog className="w-44">
+        <DropdownMenuItem
+          onClick={() => {
+            void send({ name: "share.revoke", args: { grantId } })
+              .catch(() => undefined)
+              .finally(onRevoked);
+          }}
+        >
+          Remove access
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 /** Sends a pending invitation's email again (FR-07.5). */

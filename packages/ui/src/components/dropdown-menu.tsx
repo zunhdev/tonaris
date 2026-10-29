@@ -24,14 +24,21 @@ function DropdownMenuContent({
   alignOffset = 0,
   side = "bottom",
   sideOffset = 4,
+  inDialog = false,
   className,
   ...props
 }: MenuPrimitive.Popup.Props &
-  Pick<MenuPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset">) {
+  Pick<MenuPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset"> & {
+    /**
+     * Opened from inside a dialog: on the dialog's layer (DS-18, 60), where its portal, added after the dialog's,
+     * stacks above it. On the dropdown layer (40) it would sit under the dialog, out of reach.
+     */
+    inDialog?: boolean;
+  }) {
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
-        className="isolate z-40 outline-none"
+        className={cn("isolate outline-none", inDialog ? "z-60" : "z-40")}
         align={align}
         alignOffset={alignOffset}
         side={side}

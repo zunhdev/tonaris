@@ -22,6 +22,7 @@ import { positionSchema } from "./positions";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
 import {
   grantArgsSchema,
+  leaveArgsSchema,
   setDisplayNameArgsSchema,
   shareInviteArgsSchema,
   shareSetLinkArgsSchema,
@@ -378,6 +379,20 @@ export const shareDeclineSchema = z.object({
   args: grantArgsSchema,
 });
 
+/** `share.leave`: the viewer leaves a share they accepted by invitation (FR-07.7). App-only (X-03). */
+export const shareLeaveSchema = z.object({
+  mutationId,
+  name: z.literal("share.leave"),
+  args: leaveArgsSchema,
+});
+
+/** `share.revoke`: the owner revokes an invitation (FR-07.15). App-only (X-03). */
+export const shareRevokeSchema = z.object({
+  mutationId,
+  name: z.literal("share.revoke"),
+  args: grantArgsSchema,
+});
+
 /** `account.setDisplayName`: sets or clears the display name (FR-11.3, TS-34). App-only (X-03). */
 export const accountSetDisplayNameSchema = z.object({
   mutationId,
@@ -422,6 +437,8 @@ export const mutationSchema = z
     shareResendInvitationSchema,
     shareAcceptSchema,
     shareDeclineSchema,
+    shareLeaveSchema,
+    shareRevokeSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

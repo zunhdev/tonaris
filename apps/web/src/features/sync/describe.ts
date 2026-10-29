@@ -221,6 +221,12 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
     const verb = mutation.name === "share.accept" ? "Accept" : "Decline";
     return { summary: `${verb} an invitation`, what: "the invitation", subject: "The invitation" };
   }
+  if (mutation.name === "share.leave") {
+    return { summary: "Leave a share", what: "leaving the share", subject: "Leaving the share" };
+  }
+  if (mutation.name === "share.revoke") {
+    return { summary: "Remove someone's access", what: "the removal", subject: "The removal" };
+  }
   if (mutation.name === "account.setDisplayName") {
     return {
       summary: "Change your display name",

@@ -65,7 +65,9 @@ import {
   acceptInvitation,
   declineInvitation,
   inviteToShare,
+  leaveShare,
   resendInvitation,
+  revokeGrant,
   setDisplayName,
   setShareLink,
   type EmailStatus,
@@ -278,6 +280,8 @@ export type CollectionStore = {
   setGrantEmailStatus(id: string, status: EmailStatus): Promise<void>;
   /** Saves the container to the viewer's references, keeping one they have and its link (TS-33, FR-07.6). */
   saveReference(viewerId: string, containerId: string): Promise<void>;
+  /** Drops the viewer's reference to the container if it came from a grant alone, with no link (TS-33). */
+  dropGrantReference(viewerId: string, containerId: string): Promise<void>;
   /** The container's link that isn't revoked, if any: one at most (FR-07.16). */
   findLiveLink(containerId: string): Promise<{ id: string } | undefined>;
   insertLink(link: { id: string; containerId: string; tokenHash: Uint8Array }): Promise<void>;
@@ -327,6 +331,8 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "share.resendInvitation") return resendInvitation(mutation.args, context);
   if (mutation.name === "share.accept") return acceptInvitation(mutation.args, context);
   if (mutation.name === "share.decline") return declineInvitation(mutation.args, context);
+  if (mutation.name === "share.leave") return leaveShare(mutation.args, context);
+  if (mutation.name === "share.revoke") return revokeGrant(mutation.args, context);
   if (mutation.name === "album.update") return updateAlbum(mutation.args, mutation.base, context);
   if (mutation.name === "album.setArtwork") {
     return setArtwork(mutation.args, mutation.base, context);
