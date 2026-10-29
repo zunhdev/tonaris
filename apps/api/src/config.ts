@@ -32,6 +32,10 @@ export type ApiConfig = {
    * Locally it defaults to `.ledger/` beside the API.
    */
   ledgerUrl: string;
+  /** Sentry's project key for the API (TS-115); unset, no error leaves the process but in its logs. */
+  sentryDsn: string | undefined;
+  /** Sentry's name for where it runs: `production`, or `development` locally. */
+  environment: "production" | "development";
   /** The header the host's proxy puts the client address in; unset means the socket address (TS-104). */
   clientIpHeader: string | undefined;
   /**
@@ -98,6 +102,8 @@ export function apiConfig(env: Env = process.env): ApiConfig {
     emailFrom: value("EMAIL_FROM"),
     supportEmail: value("SUPPORT_EMAIL"),
     ledgerUrl: env.LEDGER_URL || pathToFileURL(path.resolve(".ledger")).href,
+    sentryDsn: env.SENTRY_DSN || undefined,
+    environment: production ? "production" : "development",
     clientIpHeader: env.CLIENT_IP_HEADER?.toLowerCase() || undefined,
     spotify:
       env.SPOTIFY_BRIDGE?.toLowerCase() !== "off" &&

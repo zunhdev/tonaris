@@ -92,6 +92,8 @@ describe("OpenAPI", () => {
       "/v1/admin/admissions/paused",
       "/v1/admin/members",
       "/v1/admin/members/{id}/recovery",
+      "/v1/admin/operations/test-error",
+      "/v1/admin/operations",
       "/v1/shared",
       "/v1/shared/{id}",
       "/v1/shared/{id}/stream",

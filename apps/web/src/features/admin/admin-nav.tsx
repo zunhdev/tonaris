@@ -1,11 +1,12 @@
-// The Admin tabs (DS-100): Admissions and Members, with the current one marked for assistive technology too, as the
-// Settings subnav does.
+// The Admin tabs (DS-100): Admissions, Members and Operations (TS-115), with the current one marked for assistive
+// technology too, as the Settings subnav does.
 
 import { Link } from "@tanstack/react-router";
 
 const pages = [
   { to: "/admin/admissions", label: "Admissions" },
   { to: "/admin/members", label: "Members" },
+  { to: "/admin/operations", label: "Operations" },
 ] as const;
 
 export function AdminNav() {

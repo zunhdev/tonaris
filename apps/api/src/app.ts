@@ -34,6 +34,7 @@ import { guestRoutes } from "./routes/v1/guests";
 import { invitationRoutes } from "./routes/v1/invitations";
 import { meRoutes } from "./routes/v1/me";
 import { memberAdminRoutes } from "./routes/v1/members";
+import { operationsRoutes } from "./routes/v1/operations";
 import { searchRoutes } from "./routes/v1/search";
 import { sharedRoutes } from "./routes/v1/shared";
 import { sharingRoutes } from "./routes/v1/sharing";
@@ -108,6 +109,7 @@ function v1(
         webOrigin: sync.sharing.webOrigin,
       }),
     )
+    .use(operationsRoutes(session, { db: sync.db }))
     .use(sharedRoutes(session, sync))
     .use(guestRoutes(sync))
     .use(syncRoutes(session, sync));

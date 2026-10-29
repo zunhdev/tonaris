@@ -28,6 +28,7 @@ import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
 import { Route as WorkspaceAAlbumIdRouteImport } from './routes/_workspace/a.$albumId'
 import { Route as WorkspaceAdminAdmissionsRouteImport } from './routes/_workspace/admin.admissions'
 import { Route as WorkspaceAdminMembersRouteImport } from './routes/_workspace/admin.members'
+import { Route as WorkspaceAdminOperationsRouteImport } from './routes/_workspace/admin.operations'
 import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$folderId'
 import { Route as WorkspaceInvitationsIndexRouteImport } from './routes/_workspace/invitations.index'
 import { Route as WorkspaceInvitationsIdRouteImport } from './routes/_workspace/invitations.$id'
@@ -136,6 +137,12 @@ const WorkspaceAdminMembersRoute = WorkspaceAdminMembersRouteImport.update({
   path: '/admin/members',
   getParentRoute: () => WorkspaceRoute,
 } as any)
+const WorkspaceAdminOperationsRoute =
+  WorkspaceAdminOperationsRouteImport.update({
+    id: '/admin/operations',
+    path: '/admin/operations',
+    getParentRoute: () => WorkspaceRoute,
+  } as any)
 const WorkspaceFFolderIdRoute = WorkspaceFFolderIdRouteImport.update({
   id: '/f/$folderId',
   path: '/f/$folderId',
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
   '/admin/members': typeof WorkspaceAdminMembersRoute
+  '/admin/operations': typeof WorkspaceAdminOperationsRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
@@ -254,6 +262,7 @@ export interface FileRoutesByTo {
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
   '/admin/members': typeof WorkspaceAdminMembersRoute
+  '/admin/operations': typeof WorkspaceAdminOperationsRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
@@ -288,6 +297,7 @@ export interface FileRoutesById {
   '/_workspace/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/_workspace/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
   '/_workspace/admin/members': typeof WorkspaceAdminMembersRoute
+  '/_workspace/admin/operations': typeof WorkspaceAdminOperationsRoute
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/a/$albumId'
     | '/admin/admissions'
     | '/admin/members'
+    | '/admin/operations'
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/a/$albumId'
     | '/admin/admissions'
     | '/admin/members'
+    | '/admin/operations'
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
@@ -386,6 +398,7 @@ export interface FileRouteTypes {
     | '/_workspace/a/$albumId'
     | '/_workspace/admin/admissions'
     | '/_workspace/admin/members'
+    | '/_workspace/admin/operations'
     | '/_workspace/f/$folderId'
     | '/_workspace/invitations/$id'
     | '/_workspace/l/$listId'
@@ -548,6 +561,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceAdminMembersRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/admin/operations': {
+      id: '/_workspace/admin/operations'
+      path: '/admin/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof WorkspaceAdminOperationsRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/f/$folderId': {
       id: '/_workspace/f/$folderId'
       path: '/f/$folderId'
@@ -643,6 +663,7 @@ interface WorkspaceRouteChildren {
   WorkspaceAAlbumIdRoute: typeof WorkspaceAAlbumIdRoute
   WorkspaceAdminAdmissionsRoute: typeof WorkspaceAdminAdmissionsRoute
   WorkspaceAdminMembersRoute: typeof WorkspaceAdminMembersRoute
+  WorkspaceAdminOperationsRoute: typeof WorkspaceAdminOperationsRoute
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceInvitationsIdRoute: typeof WorkspaceInvitationsIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
@@ -665,6 +686,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceAAlbumIdRoute: WorkspaceAAlbumIdRoute,
   WorkspaceAdminAdmissionsRoute: WorkspaceAdminAdmissionsRoute,
   WorkspaceAdminMembersRoute: WorkspaceAdminMembersRoute,
+  WorkspaceAdminOperationsRoute: WorkspaceAdminOperationsRoute,
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceInvitationsIdRoute: WorkspaceInvitationsIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,

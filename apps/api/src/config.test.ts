@@ -46,6 +46,15 @@ describe("apiConfig", () => {
     expect(apiConfig(production).ledgerUrl).toBe("s3://tonaris-ledger/events");
   });
 
+  test("reports errors to Sentry only when SENTRY_DSN is set (TS-115)", () => {
+    expect(apiConfig({})).toMatchObject({ sentryDsn: undefined, environment: "development" });
+    const dsn = "https://key@o1.ingest.de.sentry.io/2";
+    expect(apiConfig({ ...production, SENTRY_DSN: dsn })).toMatchObject({
+      sentryDsn: dsn,
+      environment: "production",
+    });
+  });
+
   test("sends email through Resend when its key is set, and through SMTP otherwise (TS-72)", () => {
     const { SMTP_URL: _, ...withoutSmtp } = production;
     expect(() => apiConfig(withoutSmtp)).toThrow("Set RESEND_API_KEY (or SMTP_URL) in production");

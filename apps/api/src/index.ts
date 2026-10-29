@@ -13,20 +13,29 @@ import { emailJob, emailOutbox } from "./email/outbox";
 import { emailTransport } from "./email/transport";
 import { startJobWorker } from "./jobs";
 import { ledgerJob } from "./ledger";
+import { log, reportError, startErrorReports } from "./observability";
 import { createProviders } from "./providers";
 import { apiSchedules, startSchedules } from "./schedules";
 import { databaseHub } from "./sync/hub";
 
 const config = apiConfig();
+// Errors go to the logs, and to Sentry when it is configured, redacted (TS-115).
+startErrorReports(config.sentryDsn, config.environment);
 const db = createDatabase();
-const hub = databaseHub(db);
-const worker = startJobWorker(db, [
-  emailJob(db, emailTransport(config)),
-  accountDeletionJob(db, (accountId) => hub.notify(accountId)),
-  ledgerJob(ledgerStore(config.ledgerUrl)),
-]);
+const hub = databaseHub(db, {
+  logError: (error) => reportError(error, "Checking stream sessions"),
+});
+const worker = startJobWorker(
+  db,
+  [
+    emailJob(db, emailTransport(config)),
+    accountDeletionJob(db, (accountId) => hub.notify(accountId)),
+    ledgerJob(ledgerStore(config.ledgerUrl)),
+  ],
+  { logError: reportError },
+);
 const email = emailOutbox(db, worker.wake);
-const auth = createAuth({ config, db, email });
+const auth = createAuth({ config, db, email, logError: reportError });
 const providers = createProviders(config, db, hub);
 const app = createApp({
   config,
@@ -36,6 +45,7 @@ const app = createApp({
   hub,
   wakeJobs: worker.wake,
   capture: providers.capture,
+  logError: reportError,
 }).listen({ port: config.port, maxRequestBodySize });
 const schedules = startSchedules(
   db,
@@ -43,9 +53,10 @@ const schedules = startSchedules(
     db,
     publish: (accountId, changes) => hub.publish(accountId, changes),
   }),
+  { logError: (error, schedule) => reportError(error, `Schedule ${schedule}`) },
 );
 
-console.log(`tonaris-api listening on ${app.server?.url.href}`);
+log("info", "tonaris-api listening", { url: app.server?.url.href });
 
 async function stop() {
   hub.close();
