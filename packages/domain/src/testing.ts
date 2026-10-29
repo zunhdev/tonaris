@@ -13,7 +13,7 @@ import type { StoredField } from "./fields";
 import { streamingServices } from "./links";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
-import type { EmailStatus } from "./sharing";
+import { readableContainers, type EmailStatus, type SharingState } from "./sharing";
 import type { StoredTrashUnit } from "./trash";
 import type { ViewDefaults, ViewPrefs } from "./views";
 
@@ -575,8 +575,12 @@ export function memoryStore({
     },
     viewItems: (personId, viewKey, kind) => {
       if (kind === "containers") {
+        // The root is the person's; a folder's children are its owner's, who may be someone sharing it.
+        const ownerId = viewKey === "root" ? personId : containerRows.get(viewKey)?.ownerId;
         const parentId = viewKey === "root" ? null : viewKey;
-        return Promise.resolve(new Set(activeChildren(personId, parentId).map((row) => row.id)));
+        return Promise.resolve(
+          new Set(activeChildren(ownerId ?? personId, parentId).map((row) => row.id)),
+        );
       }
       const active = [...albumRows.values()].filter((album) => !album.trashed);
       if (viewKey === "unsorted") {
@@ -598,6 +602,21 @@ export function memoryStore({
       );
     },
     inActiveList: (albumId) => Promise.resolve(inActiveList(albumId)),
+    canReadShared: (personId, containerId) => {
+      const state: SharingState = {
+        containers: [...containerRows.values()],
+        grants: [...grantRows.values()],
+        links: [...shareLinkRows.values()].map((link) => ({
+          id: link.id,
+          containerId: link.containerId,
+          revoked: link.revokedAt !== null,
+        })),
+        references: [...referenceRows.values()],
+      };
+      return Promise.resolve(
+        readableContainers(state, { kind: "person", userId: personId }).has(containerId),
+      );
+    },
 
     findAccountByEmail: (key) => {
       const account = [...accountRows.values()].find((each) => each.email === key);

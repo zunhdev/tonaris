@@ -1,10 +1,8 @@
-// Reads through sharing (FR-07.8–FR-07.13; TS-31 to TS-33): a link found by its token's hash, what a viewer may
-// read, and a shared container as its viewers see it. Access is `readableContainers` in packages/domain, walked here
-// with recursive CTEs over active containers only, cut off past the depth limit as the other hierarchy walks are;
-// property tests hold the two equal. Also the owner's view of a container's sharing, for the dialog (DS-65); the
+// Reads through sharing (FR-07.8–FR-07.13; TS-31 to TS-33): a link found by its token's hash, and a shared container
+// as its viewers see it, with access from access.ts. Also the owner's view of a container's sharing, for the dialog (DS-65); the
 // sharing commands are the domain's, run through `executeMutation`.
 
-import { and, asc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import {
   isChoiceType,
@@ -18,6 +16,7 @@ import {
   type ShareViewer,
 } from "@tonaris/domain";
 
+import { canReadContainer, readableContainers } from "./access";
 import type { Database, Transaction } from "./client";
 import { sendingStale } from "./invitations";
 import {
@@ -52,59 +51,6 @@ export async function findShareLink(
     .innerJoin(containers, eq(containers.id, shareLinks.containerId))
     .where(and(eq(shareLinks.tokenHash, hash), isNull(shareLinks.revokedAt)));
   return link;
-}
-
-/** The containers `viewer` reads through directly (`sourcesOf` in packages/domain), as SQL. */
-function sourcesOf(viewer: ShareViewer): SQL {
-  if (viewer.kind === "link") {
-    return sql`
-      select ${shareLinks.containerId} as id from ${shareLinks}
-      where ${shareLinks.id} = ${viewer.linkId} and ${shareLinks.revokedAt} is null`;
-  }
-  return sql`
-    select ${shareGrants.containerId} as id from ${shareGrants}
-    where ${shareGrants.granteeId} = ${viewer.userId} and ${shareGrants.status} = 'accepted'
-    union
-    select ${shareLinks.containerId} from ${savedReferences}
-    join ${shareLinks} on ${shareLinks.id} = ${savedReferences.linkId}
-    where ${savedReferences.viewerId} = ${viewer.userId} and ${shareLinks.revokedAt} is null`;
-}
-
-/** Every container `viewer` may read, each with the sources it is read through: down from each active source. */
-export async function readableContainers(
-  db: Database | Transaction,
-  viewer: ShareViewer,
-): Promise<Map<string, Set<string>>> {
-  const rows = await db.execute<{ id: string; source: string }>(sql`
-    with recursive sources (id) as (${sourcesOf(viewer)}),
-    tree (id, source, level) as (
-      select c.id, c.id, 1 from ${containers} c join sources s on s.id = c.id where c.trashed_at is null
-      union all
-      select c.id, t.source, t.level + 1 from ${containers} c join tree t on c.parent_id = t.id
-      where c.trashed_at is null and t.level <= ${maxContainerDepth}
-    )
-    select distinct id, source from tree`);
-  const readable = new Map<string, Set<string>>();
-  for (const { id, source } of rows) readable.set(id, (readable.get(id) ?? new Set()).add(source));
-  return readable;
-}
-
-/** Whether `viewer` may read the container `id`: up from it while every container is active, is one a source? */
-export async function canReadContainer(
-  db: Database | Transaction,
-  viewer: ShareViewer,
-  id: string,
-): Promise<boolean> {
-  const [row] = await db.execute<{ readable: boolean }>(sql`
-    with recursive sources (id) as (${sourcesOf(viewer)}),
-    up (id, parent_id, level) as (
-      select id, parent_id, 1 from ${containers} where id = ${id} and trashed_at is null
-      union all
-      select c.id, c.parent_id, up.level + 1 from ${containers} c join up on c.id = up.parent_id
-      where c.trashed_at is null and up.level <= ${maxContainerDepth}
-    )
-    select exists (select 1 from up join sources on sources.id = up.id) as readable`);
-  return row?.readable === true;
 }
 
 /** The container `id` and its active descendants, if it is active. */
@@ -388,4 +334,18 @@ export async function linkReferenceState(
       ),
     );
   return { saved: reference !== undefined, own: link.ownerId === viewerId };
+}
+
+/** Whose folder or list `id` is, if `viewer` may read it through sharing: the account whose saves it follows. */
+export async function sharedOwner(
+  db: Database,
+  viewer: ShareViewer,
+  id: string,
+): Promise<string | undefined> {
+  if (!(await canReadContainer(db, viewer, id))) return undefined;
+  const [row] = await db
+    .select({ ownerId: containers.ownerId })
+    .from(containers)
+    .where(eq(containers.id, id));
+  return row?.ownerId;
 }

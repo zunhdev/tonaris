@@ -1071,6 +1071,17 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 The block never says "private" while another access path remains.
 
 **DS-70 Viewer chrome (signed-in).** Same shell. The header shows a "View only · Shared by {name}" pill, has no mode toggle or edit affordances, and offers view options. Desktop viewers can rearrange (DS-49) in their own arrangement. *(FR-05.2, FR-07.17)*
+- *As built in TON-69:*
+  - **Where:** `/shared/{id}`, opened from Shared with me, with `?c=` for a folder or list inside the share. The header's breadcrumb is "Shared with me"; breadcrumbs inside the share sit above the content.
+  - **The content** draws as on guest pages (DS-72): a folder's folders and lists, a list's albums as rows or a grid with Open choosers.
+  - **View options** are the workspace's, saved for the viewer and synced. Account defaults apply until they choose.
+  - **Rearranging:**
+    - In manual order each album row starts with a **Move** button (desktop), which ⌥↑ and ⌥↓ move, ⇧ for the ends. The focus stays with it.
+    - A folder's rows move from their links.
+    - Outside manual order, the owner's "Rearranging works in manual order" offer applies.
+  - **Live:** the page reads again after each of the owner's saves.
+  - **When access ends:** the page reads "Not available" and "No longer available. Its owner stopped sharing it with you, or moved it to Trash.", with a link to Shared with me.
+  - **Shared with me's** available entries link here.
 
 ---
 

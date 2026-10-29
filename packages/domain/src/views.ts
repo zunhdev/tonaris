@@ -143,9 +143,11 @@ export async function viewKindOf(
   if (viewKey === "root") return "containers";
   if (viewKey === "unsorted") return "albums";
   const container = await store.findContainer(viewKey);
-  if (!container || container.ownerId !== personId) {
-    return failure("not_found", "This folder or list isn't available.");
-  }
+  // The person's own, or shared content they may read: either way the view's records are theirs (FR-07.17).
+  const readable =
+    container !== undefined &&
+    (container.ownerId === personId || (await store.canReadShared(personId, viewKey)));
+  if (!readable) return failure("not_found", "This folder or list isn't available.");
   return container.kind === "folder" ? "containers" : "albums";
 }
 

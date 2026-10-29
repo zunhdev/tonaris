@@ -1,13 +1,15 @@
-// A guest page follows its owner's saves (FR-07.11, TS-23): the link's stream sends `shared-invalidate` after each,
-// and the page reads the share again, 250 ms after the last of a burst. Read with `fetch`, as the owner's client
-// reads its stream, reconnecting with growing pauses after a drop. Stops once the link no longer works.
+// A shared page follows its owner's saves (FR-07.11, TS-23): the stream (a link's, or a signed-in viewer's) sends
+// `shared-invalidate` after each, and the page reads the share again, 250 ms after the last of a burst. Read with
+// `fetch`, as the owner's client reads its stream, with the session's cookie when there is one, reconnecting with
+// growing pauses after a drop. Stops once the share is no longer available.
 
 import { apiUrl } from "@/config";
 import { useEffect } from "react";
 
 const debounceMs = 250;
 
-export function useShareStream(token: string, live: boolean, reread: () => void): void {
+/** Follows the stream at `path`, under the API, e.g. `/v1/s/{token}/stream`. */
+export function useShareStream(path: string, live: boolean, reread: () => void): void {
   useEffect(() => {
     if (!live) return () => {};
     const controller = new AbortController();
@@ -21,10 +23,11 @@ export function useShareStream(token: string, live: boolean, reread: () => void)
       while (!controller.signal.aborted) {
         try {
           // oxlint-disable-next-line no-await-in-loop
-          const response = await fetch(`${apiUrl}/v1/s/${token}/stream`, {
+          const response = await fetch(`${apiUrl}${path}`, {
+            credentials: "include",
             signal: controller.signal,
           });
-          // The link stopped working: the page reads again and shows why.
+          // The share stopped being available: the page reads again and shows why.
           if (response.status === 404) {
             reread();
             return;
@@ -54,5 +57,5 @@ export function useShareStream(token: string, live: boolean, reread: () => void)
       controller.abort();
       clearTimeout(timer);
     };
-  }, [token, live, reread]);
+  }, [path, live, reread]);
 }

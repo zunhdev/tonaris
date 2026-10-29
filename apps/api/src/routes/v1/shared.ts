@@ -1,27 +1,45 @@
-// Shared with me (FR-07.13; DS-67, DS-68): the signed-in person's references with their owners, how each is shared,
-// and whether it can be opened now; and, on a link's page, whether its collection is kept already. Saving and
+// Shared with me (FR-07.13, FR-07.17; DS-67, DS-68, DS-70): the signed-in person's references with their owners, how
+// each is shared, and whether it can be opened now; on a link's page, whether its collection is kept already; and a
+// shared folder or list as its signed-in viewers see it, with a stream that says when to read it again. Saving and
 // removing go through `share.saveLink` and `share.removeReference`; leaving through `share.leave`.
 
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { linkReferenceState, sharedWithMe, type Database } from "@tonaris/db";
+import {
+  linkReferenceState,
+  sharedOwner,
+  sharedSnapshot,
+  sharedWithMe,
+  type Database,
+} from "@tonaris/db";
 import {
   linkReferenceStateSchema,
   problemSchema,
+  sharedSnapshotSchema,
   sharedWithMeSchema,
   unavailableLink,
 } from "@tonaris/domain";
 
+import type { ArtworkSigner } from "../../artwork";
 import type { SessionGuard } from "../../auth/plugin";
 import { ProblemError } from "../../problem";
+import { eventChannel, eventStream } from "../../sse";
+import type { SyncHub } from "../../sync/hub";
+import { signed, type InvalidateEvent } from "./guests";
 
 const token = z
   .string()
   .regex(/^[A-Za-z0-9_-]{43}$/)
   .meta({ description: "The link's token." });
 
-export function sharedRoutes(session: SessionGuard, { db }: { db: Database }) {
+const unavailable = () =>
+  new ProblemError(404, "not_found", "This folder or list isn't available to you anymore.");
+
+export function sharedRoutes(
+  session: SessionGuard,
+  { db, hub, artwork }: { db: Database; hub: SyncHub; artwork: ArtworkSigner },
+) {
   return new Elysia()
     .use(session)
     .get(
@@ -38,6 +56,70 @@ export function sharedRoutes(session: SessionGuard, { db }: { db: Database }) {
         },
       },
       async ({ account }) => ({ entries: await sharedWithMe(db, account.id) }),
+    )
+    .get(
+      "/shared/:id",
+      {
+        signedIn: true,
+        params: z.object({ id: z.uuid() }),
+        response: {
+          200: sharedSnapshotSchema,
+          401: problemSchema,
+          404: problemSchema,
+          422: problemSchema,
+        },
+        detail: {
+          summary: "Get a folder or list shared with the person",
+          description:
+            "A folder or list the person may read through an accepted invitation or a link they keep (FR-07.11, FR-07.17), as its viewers see it: its active folders and lists, their albums with links, and only the fields those albums use. Anything else, their own content included, is `404`.",
+          tags: ["sharing"],
+          operationId: "getShared",
+        },
+      },
+      async ({ params, account }) => {
+        const snapshot = await sharedSnapshot(
+          db,
+          { kind: "person", userId: account.id },
+          params.id,
+        );
+        if (!snapshot) throw unavailable();
+        return signed(snapshot, artwork);
+      },
+    )
+    .get(
+      "/shared/:id/stream",
+      {
+        signedIn: true,
+        params: z.object({ id: z.uuid() }),
+        detail: {
+          summary: "Stream a shared folder's or list's invalidations",
+          description:
+            "Server-sent `shared-invalidate` events (TS-23) whenever its owner saves a change, so the viewer's page reads it again; a read that fails means access ended. Comment lines keep the connection alive.",
+          tags: ["sharing"],
+          operationId: "streamShared",
+          responses: {
+            200: {
+              description: "`shared-invalidate` events",
+              content: {
+                "text/event-stream": {
+                  schema: { $ref: "#/components/schemas/SharedInvalidate" },
+                },
+              },
+            },
+            404: { description: "The folder or list isn't available to the person." },
+          },
+        },
+      },
+      async function* ({ params, account, request, server }) {
+        const ownerId = await sharedOwner(db, { kind: "person", userId: account.id }, params.id);
+        if (ownerId === undefined) throw unavailable();
+        // The page follows its owner's writes.
+        const channel = eventChannel<InvalidateEvent>(() => stop());
+        const stop = hub.watch(ownerId, () =>
+          channel.push({ event: "shared-invalidate", data: { rootId: params.id } }),
+        );
+        yield* eventStream(channel, { request, server, signal: hub.signal });
+      },
     )
     .get(
       "/s/:token/reference",

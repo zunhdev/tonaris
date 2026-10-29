@@ -63,6 +63,7 @@ import {
   type ViewPrefs,
 } from "@tonaris/domain";
 
+import { canReadContainer } from "./access";
 import { albumsOfReleaseGroupIn, applyPlan, findCaptureTarget } from "./album-writes";
 import type { Database, Transaction } from "./client";
 import { recordUserValues, userEntries, writeProvenance } from "./provenance";
@@ -962,6 +963,9 @@ function collectionStore(tx: Transaction): CollectionStore {
         .limit(1);
       return row?.key;
     },
+    canReadShared(personId, containerId) {
+      return canReadContainer(tx, { kind: "person", userId: personId }, containerId);
+    },
     async viewItems(personId, viewKey, kind) {
       let rows: { id: string }[];
       if (kind === "containers") {
@@ -970,8 +974,10 @@ function collectionStore(tx: Transaction): CollectionStore {
           .from(containers)
           .where(
             and(
-              eq(containers.ownerId, personId),
-              viewKey === "root" ? isNull(containers.parentId) : eq(containers.parentId, viewKey),
+              // The root is the person's; a folder's children are its owner's, who may be someone sharing it.
+              viewKey === "root"
+                ? and(eq(containers.ownerId, personId), isNull(containers.parentId))
+                : eq(containers.parentId, viewKey),
               isNull(containers.trashedAt),
             ),
           );

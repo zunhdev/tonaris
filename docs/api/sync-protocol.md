@@ -198,6 +198,7 @@ The server ends a stream in four cases:
     - **`share.removeReference`** `{containerId}` drops one, accessible or not, and revokes no grant.
     - **The changes:** these, `share.accept` and `share.leave` log `reference` changes (`data: {containerId}` or null). The bootstrap carries `references`.
     - **The reads:** `GET /v1/shared` lists the entries, each with its owner, `via` (invitation, link), `available`, and the name only while available. `GET /v1/s/{token}/reference` tells a signed-in visitor `{saved, own}`.
+  - **Signed-in viewers** (TON-69): `GET /v1/shared/{id}` gives a folder or list the person reads through sharing, in the guest page's shape; anything else, their own included, is `404`. `GET /v1/shared/{id}/stream` sends `shared-invalidate` after each of the owner's saves, revoking access included, so the page reads again.
   - **Guests** (TON-70), with no session:
     - `GET /v1/s/{token}` gives a link's content: the root, its active folders and lists, their albums with signed artwork, links, and the fields they use. Any link that doesn't work is `404`.
     - `GET /v1/s/{token}/stream` sends `shared-invalidate {rootId}` (the `SharedInvalidate` component) after each of the owner's saves.
@@ -240,11 +241,13 @@ The server ends a stream in four cases:
     - The sort's mode and direction go together.
     - Folders and the root take `name`, `created` or `manual` and no grouping or layout; lists and Unsorted take `year`, `name` or `manual`.
     - Clearing every field deletes the view's record: the change's `data` is `null`.
+    - **Shared content** (TON-69, FR-07.17): the view may also be a folder or list the person reads through sharing. The record is still the person's own, in their change log, and the owner's view is never read or changed. Anything else is `not_found`.
   - **`defaults.set`** changes some of the account defaults. Its `base` holds their prior values, DS-44's until saved.
 - **Manual order** (TS-16) is a fractional-index key per arranged item, in each of the person's views. Keys compare bytewise. Items without a key follow the arranged ones in the view's fallback order (DS-44).
   - **`order.set`** places items in one view as one move. `args.keys` maps each item's ID to its new key, or `null` to clear its place; `base` maps each to its key before, `null` for none.
     - Each item must be in the view now.
     - A stale base is a conflict per item, whose `field` is the item's ID. Moves of different items both apply.
+    - As with `view.set`, the view may be shared content the person reads: the keys are theirs alone (TON-69).
   - **The server places new items** (DS-51). Expect `position` changes from other mutations:
     - an album entering Unsorted (leaving its last list, or new once Unsorted is arranged) gets a key at its top;
     - an album joining a list loses its Unsorted key;

@@ -24,6 +24,7 @@ import {
   type SharingState,
 } from "@tonaris/domain";
 
+import { canReadContainer, readableContainers } from "./access";
 import {
   albumServiceLinks,
   containers,
@@ -33,7 +34,7 @@ import {
   trashUnits,
   users,
 } from "./schema";
-import { canReadContainer, findShareLink, readableContainers, sharedSnapshot } from "./sharing";
+import { findShareLink, sharedSnapshot } from "./sharing";
 import { executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 

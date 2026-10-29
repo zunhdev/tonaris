@@ -71,7 +71,7 @@ function v1(
       }),
     )
     .use(invitationRoutes(session, { db: sync.db }))
-    .use(sharedRoutes(session, { db: sync.db }))
+    .use(sharedRoutes(session, sync))
     .use(guestRoutes(sync))
     .use(syncRoutes(session, sync));
 }
