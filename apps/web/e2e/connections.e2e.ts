@@ -6,7 +6,7 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-import { accounts } from "./support/accounts";
+import { accounts, creatorState } from "./support/accounts";
 import { signInEmail } from "./support/mailpit";
 import {
   authorizeUrl,
@@ -112,4 +112,25 @@ test("cancelling consent sends the client access_denied", async ({ page, playwri
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByText("Cancelled")).toBeVisible();
   expect(received()?.get("error")).toBe("access_denied");
+});
+
+test.describe("signed in as the creator", () => {
+  test.use({ storageState: creatorState });
+
+  test("Settings shows how to connect each client, with the server URL and the two modes", async ({
+    page,
+  }) => {
+    await page.goto("/settings/connections");
+    await expect(page.getByRole("heading", { name: "Connect an AI client" })).toBeVisible();
+    await expect(page.getByLabel("MCP server URL")).toHaveText(/\/mcp$/);
+    const steps = page.getByRole("list").filter({ hasText: "Add custom connector" });
+    await expect(steps.getByRole("listitem")).toHaveCount(4);
+    await expect(page.getByRole("term")).toHaveText(["Read-only", "Manage collection"]);
+
+    await page.getByRole("radio", { name: "ChatGPT" }).click();
+    await expect(page.getByText("Add custom MCP server")).toBeVisible();
+    await page.getByRole("radio", { name: "Codex" }).click();
+    await expect(page.getByText(/codex mcp add tonaris --url .*\/mcp/)).toBeVisible();
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  });
 });
