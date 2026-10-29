@@ -1210,6 +1210,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 **TS-71 Invite-only gate and admission (Decided; spike done in [TON-24](spikes/2026-10-21-admission-gate.md); FR-11.2, FR-11.6).**
 
 - **Account creation** goes through Tonaris endpoints beside Better Auth's sign-in:
+  - `POST /auth/admission/invitation {token}` answers the invitation's address for the landing (DS-91), or its refusal, and sends nothing (TON-75);
   - `POST /auth/admission/code {token}` sends a sign-in code to the invitation's address;
   - `POST /auth/admission/join {token, otp}` creates the account and signs in.
 - **The code is checked first,** outside any transaction, with Better Auth's `checkVerificationOTP`. A wrong guess counts toward the 5 attempts (TS-70) and a right code isn't consumed. A transaction that rolled back would erase the count.

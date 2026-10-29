@@ -9,6 +9,7 @@ import {
   requestSignInCode,
   signInWithCode,
 } from "@/features/account/auth-client";
+import { CodeField, useResendCountdown } from "@/features/account/code-field";
 import { forgetSignIn, pendingSignIn, rememberSignIn } from "@/features/account/pending-sign-in";
 import { safeRedirect } from "@/features/account/redirect";
 import { forgetAccount } from "@/features/account/session";
@@ -18,8 +19,6 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { signInCode } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
-import { Input } from "@tonaris/ui/components/input";
-import { Label } from "@tonaris/ui/components/label";
 
 type Search = { email: string; redirect?: string };
 
@@ -33,8 +32,6 @@ export const Route = createFileRoute("/sign-in/verify")({
   },
   component: VerifyStep,
 });
-
-const resendAfterSeconds = 30;
 
 /** A link's code that no longer works: the page offers a new code instead of the code field. */
 const spentLink = new Set<AuthFailure["reason"]>(["wrong_code", "expired", "too_many_attempts"]);
@@ -58,19 +55,8 @@ function VerifyStep() {
   // The link's code once handled, so neither a second effect run nor a repeated event submits it twice.
   const handledLinkCode = useRef<string>(undefined);
 
-  // The resend countdown starts when the code was requested here, or on arrival from a link. It is computed
-  // only in the browser, so the server and the first client render agree.
-  const [sentAt, setSentAt] = useState<number>();
-  const [now, setNow] = useState<number>();
-  useEffect(() => {
-    setSentAt(pendingSignIn(email)?.at ?? Date.now());
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [email]);
-  const resendIn =
-    sentAt === undefined
-      ? resendAfterSeconds
-      : Math.max(0, Math.ceil((sentAt + resendAfterSeconds * 1000 - (now ?? sentAt)) / 1000));
+  // The resend countdown starts when the code was requested here, or on arrival from a link.
+  const { resendIn, restart } = useResendCountdown(email);
 
   /** Where to land: the page the person started from, else the collection. */
   const destination = () => safeRedirect(requested ?? pendingSignIn(email)?.redirect);
@@ -109,7 +95,7 @@ function VerifyStep() {
       return;
     }
     rememberSignIn(email, destination());
-    setSentAt(Date.now());
+    restart();
     setCode("");
     setStep({ kind: "code" });
     setNotice(`We sent a new code to ${email}.`);
@@ -141,9 +127,7 @@ function VerifyStep() {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function onCodeChange(value: string) {
-    // Pasted codes may carry spaces or a dash; only the digits count.
-    const digits = value.replaceAll(/\D/g, "").slice(0, signInCode.length);
+  function onCodeChange(digits: string) {
     setCode(digits);
     if (digits.length === signInCode.length && !busy) void submit(digits, false);
   }
@@ -214,28 +198,13 @@ function VerifyStep() {
         Check {email}
       </h1>
       <form className="flex flex-col gap-3" onSubmit={onSubmit}>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="code">Code</Label>
-          <Input
-            ref={codeInput}
-            id="code"
-            name="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            // The page's only task, so the field takes focus on arrival.
-            // oxlint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            className="font-medium tracking-[0.3em]"
-            value={code}
-            onChange={(event) => onCodeChange(event.target.value)}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? "code-hint code-error" : "code-hint"}
-          />
-          <p id="code-hint" className="text-fg-secondary">
-            Or open the link in the email to sign in on that device.
-          </p>
-        </div>
-        {errorLine}
+        <CodeField
+          value={code}
+          onChange={onCodeChange}
+          hint="Or open the link in the email to sign in on that device."
+          error={error}
+          inputRef={codeInput}
+        />
         <Button type="submit" variant="primary" size="lg" disabled={busy}>
           Sign in
         </Button>

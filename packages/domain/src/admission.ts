@@ -37,7 +37,7 @@ export const admissionRefusalDetails: Record<AdmissionRefusal, string> = {
     "Tonaris isn't accepting new members right now. Your invitation will work again when it reopens.",
 };
 
-/** Asks for a code to the invitation's address. The token is the one in the invitation link (DS-91). */
+/** Looks up an invitation, or asks for a code to its address. The token is the one in the invitation link (DS-91). */
 export const joinCodeRequestSchema = z.object({ token: z.string().min(1).max(200) });
 
 /** Creates the account with the emailed code, and signs in. */

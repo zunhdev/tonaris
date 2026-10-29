@@ -52,3 +52,20 @@ export async function signInEmail(address: string, count = 1) {
   if (!code || !link) throw new Error(`No sign-in code in the email to ${address}:\n${text}`);
   return { code, link };
 }
+
+/** The invitation link in the newest of `count` emails to `address` (DS-91). */
+export async function invitationEmail(address: string, count = 1) {
+  const { text } = await latestEmail(address, count);
+  const link = /^(http\S+\/join\/[^\s#]+)\r?$/m.exec(text)?.[1];
+  if (!link) throw new Error(`No invitation link in the email to ${address}:\n${text}`);
+  return { link };
+}
+
+/** The join code and its link in the newest of `count` emails to `address` (DS-91). */
+export async function joinEmail(address: string, count: number) {
+  const { text } = await latestEmail(address, count);
+  const code = /^(\d{6})\r?$/m.exec(text)?.[1];
+  const link = /^(http\S+\/join\/\S+#code=\d+)\r?$/m.exec(text)?.[1];
+  if (!code || !link) throw new Error(`No join code in the email to ${address}:\n${text}`);
+  return { code, link };
+}

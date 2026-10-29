@@ -1466,6 +1466,15 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 **The code email** ("Your code to join Tonaris") links to `/join/:admissionToken#code=…`, which submits the code like the sign-in link does (DS-90).
 
+*As built in TON-75:*
+- **The landing:** "You're invited to Tonaris", then "This invitation is for {email}. Continue, and we'll email a code to that address." and **Continue**. Nothing is sent until Continue.
+- **The code step:** "Check {email}", with the sign-in page's code field and "Or open the link in the email to join on that device." It has **Join** and "Resend code" after 30 seconds, and no "Use a different email", since the invitation is bound to the address. Code errors read as on sign-in (DS-90).
+- **The code link:** in the browser that asked, it shows "Creating your account…" and joins. Elsewhere it first asks "Join on this device?" with "This link creates your Tonaris account for {email}." and **Join** and **Cancel**. A spent link shows "This link has expired or was already used" with **Send a new code**.
+- **The name step:** "Add a display name" and "People you share with see this name instead of your email. You can add this later." It has a "Display name" field, **Save**, and **Skip for now**. Saving a blank name says "Enter a name, or skip this for now.". Someone who already has a name skips the step.
+- **Then** the collection's first run (DS-105).
+- **An unusable invitation:** its sentence is the page's heading, alone. A refusal that arrives later, such as a pause before the code is entered, replaces the step the same way.
+- **Rendering:** the page is rendered in the browser. Its URL carries the token, so it sends no Referer, as guest pages don't.
+
 **DS-92 Settings layout.**
 - **Subnav:** Profile · Account · Preferences · Custom fields · Connections · Data.
 - **Admin:** appears only for the creator.
@@ -1566,7 +1575,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **An empty folder** reads "This folder is empty." · New list.
 - **A list's** Add album waits for capture and manual entry (M3, TON-38).
 
-The root's first-run state also offers a secondary action, "Connect an AI assistant", which links to Settings → Connections.
+The root's first-run state also offers a secondary action, "Connect an AI assistant", which links to Settings → Connections. *As built in TON-75:* a ghost link beside New list.
 
 **DS-106 Loading.** *(Q-01)*
 - **First load:** a shell skeleton (sidebar, header, rows) until the collection snapshot is ready.

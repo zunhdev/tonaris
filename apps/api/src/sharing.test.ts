@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { findShareLink } from "@tonaris/db";
+import { admissionInvitations, findShareLink, users } from "@tonaris/db";
 import {
   mutationResultSchema,
   shareSettingsSchema,
@@ -96,6 +96,11 @@ describe("sharing (DS-65)", () => {
         args: { grantId: uuidv7(), containerId: doom, email: "nobody@example.com" },
       }),
     ).toMatchObject({ status: "failed", code: "recipient_not_found" });
+    // Sharing never admits (FR-07.4, FR-11.2, AC-01): no account, and no admission invitation.
+    expect((await t.db.select().from(users)).map((user) => user.email)).not.toContain(
+      "nobody@example.com",
+    );
+    expect(await t.db.select().from(admissionInvitations)).toEqual([]);
 
     const { body } = await settings(doom);
     expect(body).toEqual({

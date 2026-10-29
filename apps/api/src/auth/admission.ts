@@ -140,9 +140,10 @@ export type AdmissionRoutesOptions = {
 };
 
 /**
- * `POST /auth/admission/code` emails a code to the invitation's address, and `POST /auth/admission/join` creates
- * the account with it and signs in. They sit beside Better Auth's sign-in endpoints and answer like them: the
- * session cookie on success, and Better Auth's error for a wrong, expired or used-up code (DS-90).
+ * `POST /auth/admission/invitation` answers the invitation's address for the landing (DS-91), sending nothing;
+ * `POST /auth/admission/code` emails a code to that address, and `POST /auth/admission/join` creates the account
+ * with it and signs in. They sit beside Better Auth's sign-in endpoints and answer like them: the session cookie
+ * on success, and Better Auth's error for a wrong, expired or used-up code (DS-90).
  */
 export function admissionRoutes({
   auth,
@@ -153,6 +154,21 @@ export function admissionRoutes({
   logError,
 }: AdmissionRoutesOptions) {
   return new Elysia()
+    .post(
+      "/auth/admission/invitation",
+      {
+        body: joinCodeRequestSchema,
+        response: { 200: z.object({ email: z.string() }) },
+        detail: { hide: true },
+      },
+      async ({ body }) => {
+        // No sign-in limit: nothing is sent, and a token is 32 random bytes.
+        const invitation = await findAdmissionInvitation(db, admissionTokenHash(body.token));
+        const refusal = await refusalOf(db, invitation);
+        if (refusal || !invitation) throw refused(refusal ?? "invalid");
+        return { email: invitation.emailKey };
+      },
+    )
     .post(
       "/auth/admission/code",
       {

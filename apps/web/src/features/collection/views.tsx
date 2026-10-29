@@ -15,7 +15,7 @@ import { Plus, Share2, Trash2 } from "lucide-react";
 import { useEffect, useMemo, type ReactNode } from "react";
 
 import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
-import { Button } from "@tonaris/ui/components/button";
+import { Button, buttonVariants } from "@tonaris/ui/components/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
 
 import { AlbumCards } from "./album-cards";
@@ -292,7 +292,15 @@ export function RootView() {
       ) : (
         <Empty
           text="Start your collection — paste an album link or create a list."
-          action={<NewListButton parentId={null} />}
+          action={
+            <div className="flex flex-wrap items-center gap-2">
+              <NewListButton parentId={null} />
+              {/* The first run's second way in (DS-105): an AI client adds albums through MCP. */}
+              <Link to="/settings/connections" className={buttonVariants({ variant: "ghost" })}>
+                Connect an AI assistant
+              </Link>
+            </div>
+          }
         />
       )}
     </>
