@@ -42,6 +42,12 @@ import { csrfGuard, securityHeaders } from "./security";
 import { databaseHub, type SyncHub } from "./sync/hub";
 import { syncRoutes } from "./sync/routes";
 
+/**
+ * The largest request body the API reads (TON-95), passed to `listen`. The largest legitimate request, a 200-item
+ * batch of 2,000-character text values (TS-18), is about 1.7 MB in UTF-8; Bun's default would read 128 MB.
+ */
+export const maxRequestBodySize = 4 * 1024 * 1024;
+
 export const healthSchema = z
   .object({ status: z.literal("ok") })
   .meta({ description: "The API is up." });

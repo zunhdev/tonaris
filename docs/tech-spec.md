@@ -411,6 +411,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 | Custom fields | 50 |
 | Options per choice field | 100 |
 | Names (containers, fields, options) | 200 characters |
+| Album titles and artist credits (decided 29 October 2026, TON-95) | 1,000 characters |
 | Descriptions and text values | 2,000 characters |
 | Saved shared references | 100 |
 | Batch size, every client (decided 22 October 2026) | 200 items |
@@ -1539,6 +1540,25 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Server | SSRF through links and artwork | Allowlisted parsing, guarded fetcher (TS-103) |
 | Users' browsers | XSS through metadata or descriptions | React escaping, no `dangerouslySetInnerHTML` for user text, strict CSP (TS-101) |
 
+*Reviewed in TON-95 (29 October 2026).* Each row's controls were checked against the code and its tests:
+- **Private collections:** queries are scoped by principal (`packages/db/src/access.ts`, the sharing and MCP mode tests). The export reads the owner's tables only (TON-87).
+- **Share links:** tokens are hashed, and guest pages send no referrer (`security.e2e.ts`).
+- **Accounts:** code attempts and requests are limited (TS-104), email changes verify both addresses, and recovery is audited (TON-77, TON-78).
+- **MCP:** tokens are audience-bound, modes and approvals are checked on the server, and data is framed (TON-80 to TON-85).
+- **Server:** `safeFetch` has SSRF fixtures, the image proxy fetches only what the server signed, and link parsing is allowlisted (TS-40).
+- **Users' browsers:** nothing uses `dangerouslySetInnerHTML`. The CSP is enforced with a nonce (`security.e2e.ts`). XSS fixtures render as text (`adversarial.e2e.ts`), and the export's Markdown escapes them.
+- **Added in this review, service availability:** the TS-18 limits, the rate limits (sign-in, MCP, captures, exports) and a request-size cap.
+
+Findings and their fixes. None high or critical remains open:
+- **Medium, fixed:** the API read request bodies up to Bun's 128 MB default. `listen` now caps them at 4 MiB (`maxRequestBodySize`), and a larger body gets `413`. The largest legitimate request is about 1.7 MB.
+- **Medium, fixed:** album titles and artist credits had no length limit. They now have 1,000 characters (TS-18), checked by `albumProblem`. The request schemas are unchanged.
+- **Low, fixed:** the sign-in redirect accepted `/<tab>/host`, which browsers read as `//host`. `pushState` refuses cross-origin targets, so it never redirected, but `safeRedirect` now parses the URL and requires the app's origin.
+- **Dependencies (`bun audit`):**
+  - two high advisories, `systeminformation` and `body-parser`, reached only the shadcn CLI, a development tool;
+  - four moderate ones: `fflate` in the API and the export validator, `seroval` in the web app's router, and `fast-uri` in the validator.
+
+  All were fixed by in-range updates. One low advisory remains, `deepmerge` in the shadcn CLI, with no fixed version.
+
 **TS-101 Headers (built in TON-10).**
 
 - `Content-Security-Policy` on the web app, on every response and in development too:
@@ -1635,6 +1655,17 @@ There is no resizing in v1.
 - SSRF URLs (IP literals, DNS rebinding, redirects to private ranges), so far against `safeFetch` itself (`packages/providers/src/safe-fetch.test.ts`, TON-40);
 - oversized inputs;
 - Unicode confusables in names.
+
+*As built in TON-95:*
+- **One fixture file,** `packages/domain/fixtures/adversarial.json`, holds the XSS strings, the injection texts and the lookalike names and addresses. The API's and the web app's tests share it.
+- **`apps/api/src/adversarial.test.ts`** covers the app's API, the export and MCP:
+  - XSS saved and returned verbatim, and escaped in `collection.md`;
+  - injected descriptions returned to an agent as data, with nothing changed;
+  - titles, credits, names and descriptions over their limits refused, and a body over 4 MiB refused with `413`;
+  - lookalike list names kept apart, and an invitation to a lookalike address reaching no one (`recipient_not_found`).
+- **`apps/web/e2e/adversarial.e2e.ts`** renders the XSS fixtures in a list, the album's details, search and a guest page. None runs, and none opens a dialog.
+- **SSRF** keeps its fixtures against `safeFetch` and the image proxy.
+- **CI:** these run with `bun test` and Playwright, locally while CI's Tests job is off (TS-124).
 
 ---
 

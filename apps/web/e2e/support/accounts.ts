@@ -152,6 +152,7 @@ export const accounts = {
   deleter: at("deleter"),
   exporter: at("exporter"),
   exportBeforeDeleting: at("export-first"),
+  hostile: at("hostile"),
   deleteCancel: at("delete-cancel"),
 } as const;
 

@@ -3,7 +3,7 @@
 // mutation, and links, provenance, memberships and Trash have their own records.
 
 import type { CollectionStore } from "./commands";
-import { maxAlbums, maxLinkLength } from "./limits";
+import { maxAlbumTextLength, maxAlbums, maxLinkLength } from "./limits";
 import { failure, type Failure } from "./outcomes";
 import { z } from "./zod";
 
@@ -49,7 +49,8 @@ export type Album = z.infer<typeof albumSchema>;
 
 /**
  * Why `album` can't be saved, if it can't (FR-02.6): the title, the artist and the applicable year are
- * required — the original year, or for a live album its recording year — and a recording period runs forwards.
+ * required — the original year, or for a live album its recording year — the title and artist fit TS-18's limit, and
+ * a recording period runs forwards.
  */
 export function albumProblem(
   album: AlbumFields & { artworkUrl?: string | null },
@@ -66,6 +67,19 @@ export function albumProblem(
       "required_missing",
       "An album needs a title, an artist and a year.",
       missing.map((path) => ({ path, message: "Required" })),
+    );
+  }
+  const tooLong = (["title", "artistCredit"] as const).filter(
+    // Code points rather than graphemes: the limit bounds stored text (TS-18).
+    // oxlint-disable-next-line no-misused-spread
+    (field) => [...album[field]].length > maxAlbumTextLength,
+  );
+  if (tooLong.length > 0) {
+    const most = maxAlbumTextLength.toLocaleString("en");
+    return failure(
+      "validation_failed",
+      `Titles and artist credits can be at most ${most} characters.`,
+      tooLong.map((path) => ({ path, message: `At most ${most} characters` })),
     );
   }
   if (

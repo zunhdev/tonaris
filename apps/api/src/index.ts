@@ -6,7 +6,7 @@
 import { createDatabase } from "@tonaris/db";
 
 import { accountDeletionJob } from "./account-deletion";
-import { createApp } from "./app";
+import { createApp, maxRequestBodySize } from "./app";
 import { createAuth } from "./auth/auth";
 import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
@@ -34,7 +34,7 @@ const app = createApp({
   hub,
   wakeJobs: worker.wake,
   capture: providers.capture,
-}).listen(config.port);
+}).listen({ port: config.port, maxRequestBodySize });
 const schedules = startSchedules(
   db,
   apiSchedules(providers.spotify, {
