@@ -85,11 +85,16 @@ export {
 } from "./albums";
 export {
   albumDeletionScope,
-  albumDeletionScopeSchema,
+  approvalScopeSchema,
+  fieldDeletionApprovalScope,
+  itemsDeletionScope,
+  matchScope,
+  optionsRemovalScope,
   approvalConsequences,
   approvalDecisionSchema,
   approvalOperations,
   approvalSchema,
+  pendingApprovalsSchema,
   approvalState,
   approvalStates,
   approvalStatuses,
@@ -100,12 +105,14 @@ export {
   trashRetentionDays,
   type AlbumDeletionScope,
   type AlbumDeletionTarget,
+  type DeletionTargets,
   type Approval,
   type ApprovalDecision,
   type ApprovalOperation,
   type ApprovalScope,
   type ApprovalState,
   type ApprovalStatus,
+  type PendingApprovals,
 } from "./approvals";
 export {
   captureAlbum,

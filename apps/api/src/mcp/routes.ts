@@ -148,7 +148,7 @@ export function mcpRoutes({ auth, db, config, logError, hub, capture, sharing }:
     return challengeResponse(response);
   };
 
-  const write = mcpWriter({
+  const writer = mcpWriter({
     db,
     run: mutationRunner(db, capture, sharing),
     // As the sync routes announce: a confirmed write without changes, such as sharing, still tells guest pages.
@@ -162,7 +162,7 @@ export function mcpRoutes({ auth, db, config, logError, hub, capture, sharing }:
       createMcpServer({
         db,
         principal: principalOf(authInfo?.extra),
-        write,
+        writer,
         webOrigin: config.webOrigin,
       }),
     { onerror: (error) => logError(error, "MCP request") },

@@ -1,14 +1,22 @@
 // The approval page's API (DS-87, TS-64): an MCP connection's gated request, for its owner only, and the
-// owner's decision. App-only like the rest of /v1: MCP tokens never reach it (TS-62).
+// owner's decision; and the requests waiting for a decision, for Settings and the app's badge (DS-86). App-only like the
+// rest of /v1: MCP tokens never reach it (TS-62).
 
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { type ApprovalRow, type Database, decideApproval, findApproval } from "@tonaris/db";
+import {
+  type ApprovalRow,
+  type Database,
+  decideApproval,
+  findApproval,
+  pendingApprovals,
+} from "@tonaris/db";
 import {
   approvalConsequences,
   approvalDecisionSchema,
   approvalSchema,
+  pendingApprovalsSchema,
   approvalState,
   approvalSummary,
   problemSchema,
@@ -46,6 +54,28 @@ const params = z.object({ id: z.uuid() });
 export function approvalRoutes(session: SessionGuard, { db }: { db: Database }) {
   return new Elysia()
     .use(session)
+    .get(
+      "/approvals",
+      {
+        signedIn: true,
+        response: { 200: pendingApprovalsSchema, 401: problemSchema },
+        detail: {
+          summary: "List approval requests waiting for a decision",
+          description:
+            "The gated operations AI clients asked for that the owner hasn't decided yet and that haven't expired, oldest first (DS-86).",
+          tags: ["approvals"],
+          operationId: "listPendingApprovals",
+        },
+      },
+      async ({ account }) => ({
+        approvals: (await pendingApprovals(db, account.id)).map((approval) => ({
+          id: approval.id,
+          clientName: approval.clientName,
+          summary: approvalSummary(approval.scope),
+          expiresAt: approval.expiresAt.toISOString(),
+        })),
+      }),
+    )
     .get(
       "/approvals/:id",
       {

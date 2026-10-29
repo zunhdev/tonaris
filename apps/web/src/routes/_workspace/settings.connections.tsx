@@ -1,12 +1,13 @@
-// Settings → Connections (DS-86, FR-10.3): the AI clients connected through MCP, each with its mode, when it
-// connected and last called, and a Revoke action, and the server URL to connect a new one. Pending approvals
-// (TON-83) and per-client setup steps (TON-86) join it later in M9.
+// Settings → Connections (DS-86, FR-10.3): the AI clients' requests waiting for approval, the clients connected through
+// MCP, each with its mode, when it connected and last called, and a Revoke action, and the server URL to connect a new
+// one. Per-client setup steps (TON-86) join it later in M9.
 
 import { api } from "@/api";
 import { apiUrl } from "@/config";
+import { usePendingApprovals } from "@/features/connections/pending-approvals";
 import { SettingsNav } from "@/features/settings/settings-nav";
 import { PageHeader } from "@/features/shell/page-header";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
 import type { Connection } from "@tonaris/domain";
@@ -41,6 +42,46 @@ function connectionDetails(connection: Connection): string {
   ].join(" · ");
 }
 
+/** "Expires in 12 min", to the minute. */
+function expiresIn(expiresAt: string, now: number): string {
+  const minutes = Math.max(1, Math.ceil((new Date(expiresAt).getTime() - now) / 60_000));
+  return `Expires in ${minutes} min`;
+}
+
+/** The requests waiting for the person's approval, each linking to its page (DS-86, DS-87). */
+function WaitingForApproval() {
+  const pending = usePendingApprovals();
+  // The time the list was shown; the store reads the requests again every 30 seconds.
+  const [now] = useState(() => Date.now());
+  if (pending.length === 0) return null;
+  return (
+    <section aria-labelledby="waiting" className="flex flex-col gap-2">
+      <h2 id="waiting" className="text-title text-fg-primary">
+        Waiting for your approval ({pending.length})
+      </h2>
+      <ul className="flex flex-col divide-y divide-subtle rounded-lg border border-subtle">
+        {pending.map((approval) => (
+          <li key={approval.id} className="flex items-center gap-3 px-3 py-2.5">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-fg-primary">{approval.summary}</span>
+              <span className="text-small text-fg-secondary">
+                {approval.clientName ?? "An AI client"} · {expiresIn(approval.expiresAt, now)}
+              </span>
+            </div>
+            <Link
+              to="/approvals/$id"
+              params={{ id: approval.id }}
+              className="text-accent-solid underline-offset-4 hover:underline"
+            >
+              Review
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Connections() {
   const connections = Route.useLoaderData();
   const router = useRouter();
@@ -65,6 +106,7 @@ function Connections() {
       <PageHeader title="Connections" />
       <SettingsNav />
       <div className="flex max-w-2xl flex-col gap-6 p-6">
+        <WaitingForApproval />
         <section aria-labelledby="server-url" className="flex flex-col gap-1.5">
           <h2 id="server-url" className="text-title text-fg-primary">
             MCP server URL

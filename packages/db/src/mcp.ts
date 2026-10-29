@@ -1,24 +1,21 @@
 // What MCP needs from storage (TS-60–TS-63): the connection behind a token, the connection list and revocation
 // for Settings (TS-61), and what the first tools read and write. Connections are Better Auth's consents (TS-30);
-// their scopes carry the mode (`mcpModeOf`). `trashAlbums` is TON-23's minimal stand-in for the domain command, until
-// TON-83 runs gated deletions through `album.delete` and the change log (TS-20).
+// their scopes carry the mode (`mcpModeOf`). What a gated deletion or match would touch is read here for its approval;
+// the operations themselves are the app's commands (TON-83).
 
-import { and, asc, count, desc, eq, gt, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
 
 import {
-  albumDeletionScope,
-  scopeHash,
-  trashRetentionDays,
-  uuidv7,
-  type AlbumDeletionScope,
+  deletionImpact,
   type AlbumDeletionTarget,
   type ContainerKind,
+  type DeletionTargets,
 } from "@tonaris/domain";
 
-import type { Database } from "./client";
+import { albumsOfReleaseGroupIn } from "./album-writes";
+import type { Database, Transaction } from "./client";
 import {
   albums,
-  approvals,
   containers,
   memberships,
   oauthAccessTokens,
@@ -27,6 +24,7 @@ import {
   oauthRefreshTokens,
   trashUnits,
 } from "./schema";
+import { impactState } from "./sharing-impact";
 
 type Executor = Database | Parameters<Parameters<Database["transaction"]>[0]>[0];
 
@@ -282,81 +280,132 @@ export async function albumDeletionTargets(
   }));
 }
 
-export type TrashResult =
-  | { status: "trashed"; albumIds: string[] }
-  /** The albums' scope no longer matches the approved one: ask again with `scope`. */
-  | { status: "scope_changed"; scope: AlbumDeletionScope }
-  /** The approval isn't approved, unused and unexpired for this connection any more. */
-  | { status: "not_approved" };
-
 /**
- * Moves albums to Trash under an approval (FR-14.1, TS-64), in one transaction: the scope is computed again with
- * the albums locked, the approval is used only if that scope still hashes as approved, and each album becomes a
- * Trash unit of its own, expiring in 30 days.
+ * What deleting `albumIds` and `containerIds` to Trash would do (FR-10.6, FR-07.14), for the approval: the owner's
+ * active albums among them with the lists each leaves; the active folders and lists, each with what goes with it; the
+ * albums left in no list, which go to Unsorted; and who no longer sees it. A container inside another one deleted goes
+ * with it, so it is left out. `missing` names the IDs that are nothing active of the owner's.
  */
-export function trashAlbums(
-  db: Database,
+export async function deletionTargets(
+  tx: Transaction,
   {
     ownerId,
-    grantId,
-    approvalId,
     albumIds,
-    now = new Date(),
-  }: {
-    ownerId: string;
-    grantId: string;
-    approvalId: string;
-    albumIds: readonly string[];
-    now?: Date;
-  },
-): Promise<TrashResult> {
-  return db.transaction(async (tx) => {
-    const targets = await albumDeletionTargets(tx, { ownerId, albumIds, lock: true });
-    const scope = albumDeletionScope(targets);
-    const used = await tx
-      .update(approvals)
-      .set({ status: "used", usedAt: now })
-      .where(
-        and(
-          eq(approvals.id, approvalId),
-          eq(approvals.grantId, grantId),
-          eq(approvals.status, "approved"),
-          isNull(approvals.usedAt),
-          gt(approvals.expiresAt, now),
-          eq(approvals.scopeHash, await scopeHash(scope)),
-        ),
-      )
-      .returning({ id: approvals.id });
-    if (used.length === 0) {
-      // Nothing was used. Only an approval that is otherwise usable failed on its scope.
-      const [approval] = await tx
-        .select()
-        .from(approvals)
-        .where(and(eq(approvals.id, approvalId), eq(approvals.grantId, grantId)));
-      const usable =
-        approval?.status === "approved" && approval.expiresAt.getTime() > now.getTime();
-      return usable && targets.length > 0
-        ? { status: "scope_changed", scope }
-        : { status: "not_approved" };
+    containerIds,
+  }: { ownerId: string; albumIds: readonly string[]; containerIds: readonly string[] },
+): Promise<DeletionTargets & { missing: string[]; containerIds: string[] }> {
+  const albumTargets =
+    albumIds.length > 0 ? await albumDeletionTargets(tx, { ownerId, albumIds }) : [];
+  const places = await tx
+    .select({
+      id: containers.id,
+      kind: containers.kind,
+      name: containers.name,
+      parentId: containers.parentId,
+    })
+    .from(containers)
+    .where(and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt)));
+  const byId = new Map(places.map((place) => [place.id, place]));
+  const children = Map.groupBy(places, (place) => place.parentId);
+  const asked = new Set(containerIds.filter((id) => byId.has(id)));
+  const within = (id: string) => {
+    for (
+      let at = byId.get(id)?.parentId ?? null;
+      at !== null;
+      at = byId.get(at)?.parentId ?? null
+    ) {
+      if (asked.has(at)) return true;
     }
-    const expiresAt = new Date(now.getTime() + trashRetentionDays * 86_400_000);
-    const units = targets.map((album) => ({
-      id: uuidv7(),
-      ownerId,
-      kind: "album" as const,
-      rootId: album.id,
-      deletedAt: now,
-      expiresAt,
-    }));
-    await tx.insert(trashUnits).values(units);
-    await Promise.all(
-      units.map((unit) =>
-        tx
-          .update(albums)
-          .set({ trashedAt: now, trashUnitId: unit.id })
-          .where(eq(albums.id, unit.rootId)),
+    return false;
+  };
+  const roots = [...asked].filter((id) => !within(id));
+  const subtree = (id: string) => {
+    const ids = [id];
+    for (let at = 0; at < ids.length; at += 1) {
+      ids.push(...(children.get(ids[at] ?? "") ?? []).map((child) => child.id));
+    }
+    return ids;
+  };
+  const deleted = new Set(roots.flatMap(subtree));
+  const containerTargets = roots.map((id) => {
+    const below = subtree(id).slice(1);
+    const place = byId.get(id);
+    return {
+      id,
+      kind: place?.kind ?? "list",
+      name: place?.name ?? "",
+      folders: below.filter((each) => byId.get(each)?.kind === "folder").length,
+      lists: below.filter((each) => byId.get(each)?.kind === "list").length,
+    };
+  });
+
+  // Albums in the deleted lists that are in no other active list go to Unsorted, unless they are deleted too.
+  const deletedLists = [...deleted].filter((id) => byId.get(id)?.kind === "list");
+  let unsorted = 0;
+  if (deletedLists.length > 0) {
+    const inDeleted = tx
+      .select({ albumId: memberships.albumId })
+      .from(memberships)
+      .where(inArray(memberships.listId, deletedLists));
+    const entries = await tx
+      .select({ albumId: memberships.albumId, listId: memberships.listId })
+      .from(memberships)
+      .innerJoin(albums, eq(albums.id, memberships.albumId))
+      .where(and(inArray(memberships.albumId, inDeleted), isNull(albums.trashedAt)));
+    const goingToo = new Set(albumTargets.map((album) => album.id));
+    for (const [albumId, lists] of Map.groupBy(entries, (entry) => entry.albumId)) {
+      if (goingToo.has(albumId)) continue;
+      if (lists.every((entry) => deleted.has(entry.listId) || !byId.has(entry.listId)))
+        unsorted += 1;
+    }
+  }
+
+  const { state } = await impactState(tx, ownerId);
+  const sharing = deletionImpact(state, {
+    containerIds: roots,
+    albumListIds: albumTargets.flatMap((album) => album.lists.map((list) => list.id)),
+  });
+  const found = new Set([...albumTargets.map((album) => album.id), ...asked]);
+  return {
+    albums: albumTargets,
+    containers: containerTargets,
+    unsorted,
+    sharing,
+    containerIds: roots,
+    missing: [...albumIds, ...containerIds].filter((id) => !found.has(id)),
+  };
+}
+
+/** The owner's saved album of `releaseGroupId`, if any, with its active lists: what a confirmed match joins (FR-02.9). */
+export async function savedAlbumOfReleaseGroup(
+  tx: Transaction,
+  { ownerId, releaseGroupId }: { ownerId: string; releaseGroupId: string },
+): Promise<AlbumDeletionTarget | undefined> {
+  const [saved] = await albumsOfReleaseGroupIn(tx, ownerId, releaseGroupId);
+  if (!saved) return undefined;
+  const lists = await tx
+    .select({ id: containers.id, name: containers.name })
+    .from(memberships)
+    .innerJoin(containers, eq(containers.id, memberships.listId))
+    .where(and(eq(memberships.albumId, saved.id), isNull(containers.trashedAt)));
+  return { id: saved.id, title: saved.title, artist: saved.artistCredit, lists };
+}
+
+/** The owner's active list `id`'s name, if it is one. */
+export async function activeListName(
+  tx: Transaction,
+  { ownerId, listId }: { ownerId: string; listId: string },
+): Promise<string | undefined> {
+  const [list] = await tx
+    .select({ name: containers.name })
+    .from(containers)
+    .where(
+      and(
+        eq(containers.id, listId),
+        eq(containers.ownerId, ownerId),
+        eq(containers.kind, "list"),
+        isNull(containers.trashedAt),
       ),
     );
-    return { status: "trashed", albumIds: targets.map((album) => album.id) };
-  });
+  return list?.name;
 }

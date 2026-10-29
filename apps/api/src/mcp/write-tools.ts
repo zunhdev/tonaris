@@ -38,7 +38,7 @@ import {
 } from "@tonaris/domain";
 
 import { failed, result } from "./results";
-import type { PlanIds, PlannedItem, Writer } from "./writes";
+import type { McpWriter, PlanIds, PlannedItem } from "./writes";
 
 const writes = {
   readOnlyHint: false,
@@ -75,7 +75,7 @@ const albumValues = z.object({
 });
 
 /** What an agent reads of one item's outcome (TS-27): a skipped item names the item, by index, it waited for. */
-function agentOutcome(outcome: Outcome, items: readonly MutationResult[]) {
+export function agentOutcome(outcome: Outcome, items: readonly MutationResult[]) {
   if (outcome.status === "confirmed") {
     return outcome.result == null
       ? { status: outcome.status }
@@ -116,7 +116,7 @@ const output = (target: z.ZodRawShape) =>
     items: z.array(z.object({ ...target, outcome: outcomeOutput })),
   });
 
-function countsOf(outcomes: readonly { status: string }[]): string {
+export function countsOf(outcomes: readonly { status: string }[]): string {
   const counts = new Map<string, number>();
   for (const { status } of outcomes) counts.set(status, (counts.get(status) ?? 0) + 1);
   return [...counts].map(([status, n]) => `${n} ${status.replace("_", " ")}`).join(", ");
@@ -142,13 +142,14 @@ function shareTokenOf(url: string): string | undefined {
   return token;
 }
 
-export type WriteToolsContext = { db: Database; principal: McpPrincipal; write: Writer };
+export type WriteToolsContext = { db: Database; principal: McpPrincipal; writer: McpWriter };
 
 export function registerWriteTools(
   server: McpServer,
-  { db, principal, write }: WriteToolsContext,
+  { db, principal, writer }: WriteToolsContext,
 ): void {
   const { userId } = principal;
+  const write = writer.write;
 
   /** Runs the plan under the tool's key, and answers with each target and its outcome. */
   async function run(
@@ -489,14 +490,13 @@ export function registerWriteTools(
     {
       title: "Add albums",
       description:
-        "Adds albums from links you found (Spotify, Apple Music, Qobuz or Tidal album links) or from their details, optionally into a list; otherwise they go to Unsorted. Tonaris never looks for links itself. A link may come back needs_input: need match, with candidates to choose from (send the item again with releaseGroupId), or need details, when it can't tell the album (send it again with details, with what the user knows). An album the user already has is reused, not added twice.",
+        "Adds albums from links you found (Spotify, Apple Music, Qobuz or Tidal album links) or from their details, optionally into a list; otherwise they go to Unsorted. Tonaris never looks for links itself. A link may come back needs_input: need details, when Tonaris can't tell the album (send the item again with details, with what the user knows), or need match, when it fits more than one album: the user confirms which one, through confirm_match. An album the user already has is reused, not added twice.",
       inputSchema: z.object({
         items: z
           .array(
             z.union([
               z.object({
                 link: z.string().describe("A streaming service's link to the album."),
-                releaseGroupId: uuid.optional().describe("The candidate chosen after need match."),
                 details: albumValues
                   .required({ title: true, artistCredit: true })
                   .optional()
@@ -534,7 +534,6 @@ export function registerWriteTools(
                 albumId,
                 link: item.link,
                 listId,
-                ...(item.releaseGroupId ? { releaseGroupId: item.releaseGroupId } : {}),
                 ...(item.details ? { details: { ...emptyAlbum, ...item.details } } : {}),
               },
             });
@@ -906,28 +905,6 @@ export function registerWriteTools(
         ),
       );
     },
-  );
-
-  server.registerTool(
-    "remove_options",
-    {
-      title: "Remove unused options",
-      description:
-        "Removes options no album chooses, in Trash or not. Removing an option an album chooses would clear it from those albums, so it needs the user's approval; such an option fails with field_in_use and is kept.",
-      inputSchema: z.object({ fieldId: uuid, optionIds: ids(100), idempotencyKey }),
-      outputSchema: output({ optionId: uuid }),
-      annotations: writes,
-    },
-    async (args) =>
-      run("remove_options", args, () =>
-        each(
-          args.optionIds.map((optionId) => ({
-            name: "field.removeOption",
-            args: { fieldId: args.fieldId, optionId },
-          })),
-          args.optionIds.map((optionId) => ({ optionId })),
-        ),
-      ),
   );
 
   // Shared references (FR-07.13, FR-10.4).

@@ -70,6 +70,7 @@ import { recordUserValues, userEntries, writeProvenance } from "./provenance";
 import {
   accountSettings,
   accountSync,
+  approvals,
   albumFieldMulti,
   albumFieldValues,
   albumServiceLinks,
@@ -1224,12 +1225,15 @@ export type ExecutedMutation = {
  *    so the log has no gaps and a rejection or replay uses no `seq`.
  * 4. Record the outcome under `mutationId`, whatever it is, so every retry gets the same answer (FR-13.5).
  *
+ * Given a transaction, it runs as a savepoint inside it, so a gated MCP batch commits with the approval it uses, or
+ * not at all (TS-64).
+ *
  * A mutation `claimMutation()` claimed, such as a capture whose providers ran outside the lock, passes `claimed`, and
  * its claim's row takes the outcome. `capture` is what the API found for an `album.capture`, and `link` how it read a
  * `link.set`'s URL.
  */
 export async function executeMutation(
-  db: Database,
+  db: Database | Transaction,
   principal: Principal,
   mutation: Mutation,
   now: Date = new Date(),
@@ -1461,7 +1465,7 @@ export async function mutationRunning(
  * `execute` replaces `executeMutation` per item, as the API's does to run captures with their providers.
  */
 export function executeBatch(
-  db: Database,
+  db: Database | Transaction,
   principal: Principal,
   batch: Batch,
   {
@@ -1627,6 +1631,8 @@ export async function pruneSyncHistory(
   const before = new Date(now.getTime() - syncRetentionMs);
   await db.delete(changeLog).where(lt(changeLog.createdAt, before));
   await db.delete(mutations).where(lt(mutations.receivedAt, before));
+  // Approvals answer within 30 minutes, and their rows go a retention period after (TS-64).
+  await db.delete(approvals).where(lt(approvals.expiresAt, before));
   // An agent's key replays only while its mutations are kept (TS-22).
   await db.delete(mcpOperations).where(lt(mcpOperations.createdAt, before));
 }

@@ -1053,6 +1053,90 @@
         }
       }
     },
+    "/v1/approvals": {
+      "get": {
+        "summary": "List approval requests waiting for a decision",
+        "description": "The gated operations AI clients asked for that the owner hasn't decided yet and that haven't expired, oldest first (DS-86).",
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "listPendingApprovals",
+        "responses": {
+          "200": {
+            "description": "Approval requests waiting for a decision, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "approvals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "clientName": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "summary": {
+                            "type": "string"
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "clientName",
+                          "summary",
+                          "expiresAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "approvals"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Approval requests waiting for a decision, oldest first."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/approvals/{id}": {
       "get": {
         "summary": "Get an approval request",
@@ -1118,7 +1202,13 @@
                       "properties": {
                         "operation": {
                           "type": "string",
-                          "const": "delete_albums"
+                          "enum": [
+                            "delete_albums",
+                            "delete_items",
+                            "delete_field",
+                            "remove_options",
+                            "confirm_match"
+                          ]
                         },
                         "albums": {
                           "type": "array",
@@ -1165,12 +1255,284 @@
                               "lists"
                             ],
                             "additionalProperties": false
-                          }
+                          },
+                          "description": "Albums it moves to Trash, each with the active lists it leaves; for a match, the saved album the link joins."
                         },
                         "recoverableDays": {
                           "type": "integer",
                           "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How long Trash keeps what it deletes; 0 when it can't be undone."
+                        },
+                        "containers": {
+                          "description": "Folders and lists it moves to Trash with everything inside.",
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "folder",
+                                  "list"
+                                ]
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "folders": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Folders inside it, which go with it."
+                              },
+                              "lists": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Lists inside it, which go with it."
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "kind",
+                              "name",
+                              "folders",
+                              "lists"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "unsorted": {
+                          "description": "Albums in the deleted lists that are in no other list, so go to Unsorted.",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "sharing": {
+                          "description": "Who sees it now and no longer will (FR-07.14).",
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "person"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                    "description": "The person's account."
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "Their display name, else the address as typed."
+                                  },
+                                  "pending": {
+                                    "type": "boolean",
+                                    "description": "Invited, and not yet accepted."
+                                  },
+                                  "via": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "The folder or list it's shared through."
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "name",
+                                  "pending",
+                                  "via"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "link"
+                                  },
+                                  "via": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "The folder or list it's shared through."
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "via"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ],
+                            "description": "Someone who sees content: an invited person, or anyone with a link."
+                          }
+                        },
+                        "field": {
+                          "description": "The field deleted, or whose options are removed.",
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "number",
+                                "date",
+                                "yes_no",
+                                "single_choice",
+                                "multiple_choice"
+                              ]
+                            },
+                            "albums": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Albums outside Trash affected."
+                            },
+                            "inTrash": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Albums in Trash affected."
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name",
+                            "type",
+                            "albums",
+                            "inTrash"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "options": {
+                          "description": "The options removed.",
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "albums": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Albums outside Trash choosing it."
+                              },
+                              "inTrash": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Albums in Trash choosing it."
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "albums",
+                              "inTrash"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "checks": {
+                          "description": "The in-app confirmations' scope hashes (TS-14), so a field or option gaining or losing an album needs a new approval.",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "match": {
+                          "description": "The link, the album it is confirmed as, and where it goes.",
+                          "type": "object",
+                          "properties": {
+                            "link": {
+                              "type": "string"
+                            },
+                            "releaseGroupId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "title": {
+                              "type": "string",
+                              "description": "The MusicBrainz album the agent chose."
+                            },
+                            "listId": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "listName": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "link",
+                            "releaseGroupId",
+                            "title",
+                            "listId",
+                            "listName"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -1179,7 +1541,7 @@
                         "recoverableDays"
                       ],
                       "additionalProperties": false,
-                      "description": "Albums moved to Trash, with the lists they leave (FR-14.1)."
+                      "description": "What a gated operation does (FR-10.6, TS-64)."
                     },
                     "expiresAt": {
                       "type": "string",
@@ -1392,7 +1754,13 @@
                       "properties": {
                         "operation": {
                           "type": "string",
-                          "const": "delete_albums"
+                          "enum": [
+                            "delete_albums",
+                            "delete_items",
+                            "delete_field",
+                            "remove_options",
+                            "confirm_match"
+                          ]
                         },
                         "albums": {
                           "type": "array",
@@ -1439,12 +1807,284 @@
                               "lists"
                             ],
                             "additionalProperties": false
-                          }
+                          },
+                          "description": "Albums it moves to Trash, each with the active lists it leaves; for a match, the saved album the link joins."
                         },
                         "recoverableDays": {
                           "type": "integer",
                           "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "How long Trash keeps what it deletes; 0 when it can't be undone."
+                        },
+                        "containers": {
+                          "description": "Folders and lists it moves to Trash with everything inside.",
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "folder",
+                                  "list"
+                                ]
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "folders": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Folders inside it, which go with it."
+                              },
+                              "lists": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Lists inside it, which go with it."
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "kind",
+                              "name",
+                              "folders",
+                              "lists"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "unsorted": {
+                          "description": "Albums in the deleted lists that are in no other list, so go to Unsorted.",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "sharing": {
+                          "description": "Who sees it now and no longer will (FR-07.14).",
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "person"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                    "description": "The person's account."
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "Their display name, else the address as typed."
+                                  },
+                                  "pending": {
+                                    "type": "boolean",
+                                    "description": "Invited, and not yet accepted."
+                                  },
+                                  "via": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "The folder or list it's shared through."
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "name",
+                                  "pending",
+                                  "via"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "link"
+                                  },
+                                  "via": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "The folder or list it's shared through."
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "via"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ],
+                            "description": "Someone who sees content: an invited person, or anyone with a link."
+                          }
+                        },
+                        "field": {
+                          "description": "The field deleted, or whose options are removed.",
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "number",
+                                "date",
+                                "yes_no",
+                                "single_choice",
+                                "multiple_choice"
+                              ]
+                            },
+                            "albums": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Albums outside Trash affected."
+                            },
+                            "inTrash": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991,
+                              "description": "Albums in Trash affected."
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name",
+                            "type",
+                            "albums",
+                            "inTrash"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "options": {
+                          "description": "The options removed.",
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "albums": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Albums outside Trash choosing it."
+                              },
+                              "inTrash": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Albums in Trash choosing it."
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "albums",
+                              "inTrash"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "checks": {
+                          "description": "The in-app confirmations' scope hashes (TS-14), so a field or option gaining or losing an album needs a new approval.",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "match": {
+                          "description": "The link, the album it is confirmed as, and where it goes.",
+                          "type": "object",
+                          "properties": {
+                            "link": {
+                              "type": "string"
+                            },
+                            "releaseGroupId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "title": {
+                              "type": "string",
+                              "description": "The MusicBrainz album the agent chose."
+                            },
+                            "listId": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "listName": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "link",
+                            "releaseGroupId",
+                            "title",
+                            "listId",
+                            "listName"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -1453,7 +2093,7 @@
                         "recoverableDays"
                       ],
                       "additionalProperties": false,
-                      "description": "Albums moved to Trash, with the lists they leave (FR-14.1)."
+                      "description": "What a gated operation does (FR-10.6, TS-64)."
                     },
                     "expiresAt": {
                       "type": "string",

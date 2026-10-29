@@ -1,0 +1,3 @@
+-- Gated MCP operations (TS-64, TON-83): an approval remembers the batch that used it, and covers every gated operation.
+ALTER TABLE "approvals" ADD COLUMN "batch_id" uuid;--> statement-breakpoint
+ALTER TABLE "approvals" DROP CONSTRAINT "approvals_operation_check", ADD CONSTRAINT "approvals_operation_check" CHECK ("operation" in ('delete_albums', 'delete_items', 'delete_field', 'remove_options', 'confirm_match'));

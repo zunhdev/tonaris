@@ -6,12 +6,21 @@
 // list shows its save state, is busy while saving, and is highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 // Folders and lists can be dragged onto a folder, or onto Collection, to move them (DS-49, drag.tsx).
 
+import { usePendingApprovals } from "@/features/connections/pending-approvals";
 import { usePendingInvitations } from "@/features/sharing/pending-invitations";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronRight, Inbox, MailOpen, Trash2, Users, type LucideIcon } from "lucide-react";
+import {
+  ChevronRight,
+  Inbox,
+  MailOpen,
+  ShieldCheck,
+  Trash2,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import type { ContainerKind } from "@tonaris/domain";
@@ -31,10 +40,14 @@ type Row = TreeRow | { type: "new"; level: number; kind: ContainerKind; parentId
 const keyOf = (row: Row) =>
   row.type === "container" ? row.container.id : row.type === "place" ? row.place : "new";
 
-const placePaths: Record<Place, "/unsorted" | "/shared" | "/invitations" | "/trash"> = {
+const placePaths: Record<
+  Place,
+  "/unsorted" | "/shared" | "/invitations" | "/settings/connections" | "/trash"
+> = {
   unsorted: "/unsorted",
   shared: "/shared",
   invitations: "/invitations",
+  approvals: "/settings/connections",
   trash: "/trash",
 };
 
@@ -42,6 +55,7 @@ const placeIcons: Record<Place, LucideIcon> = {
   unsorted: Inbox,
   shared: Users,
   invitations: MailOpen,
+  approvals: ShieldCheck,
   trash: Trash2,
 };
 
@@ -93,9 +107,17 @@ export function CollectionTree() {
   }, [viewId, data.tree, expand]);
 
   const invitations = usePendingInvitations();
+  const approvals = usePendingApprovals().length;
   const rows = useMemo(
-    () => withEditor(visibleRows(data.tree, ui.expanded, { invitations: invitations > 0 }), editor),
-    [data.tree, ui.expanded, editor, invitations],
+    () =>
+      withEditor(
+        visibleRows(data.tree, ui.expanded, {
+          invitations: invitations > 0,
+          approvals: approvals > 0,
+        }),
+        editor,
+      ),
+    [data.tree, ui.expanded, editor, invitations, approvals],
   );
 
   const [focusedKey, setFocusedKey] = useState<string>();
@@ -269,6 +291,9 @@ export function CollectionTree() {
               {row.place === "unsorted" && <Count n={data.unsorted} />}
               {row.place === "invitations" && (
                 <Count n={invitations} one="pending invitation" many="pending invitations" />
+              )}
+              {row.place === "approvals" && (
+                <Count n={approvals} one="request to approve" many="requests to approve" />
               )}
             </Link>
           );

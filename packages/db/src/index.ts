@@ -51,11 +51,25 @@ export {
   type AdmissionInvitationRow,
   type AdmissionIssue,
 } from "./admission";
-export { createApproval, decideApproval, findApproval, type ApprovalRow } from "./approvals";
+export {
+  createApproval,
+  decideApproval,
+  findApproval,
+  pendingApprovals,
+  useApproval,
+  type ApprovalRow,
+  type ApprovalUse,
+} from "./approvals";
 export { capturesSince, maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";
 export { createDatabase, type Database, type Transaction } from "./client";
-export { readFieldDeletion, readFieldUsage, readOptionRemoval } from "./field-options";
-export { findFieldIn, purgeExpiredTrash } from "./sync";
+export {
+  fieldDeletionIn,
+  optionRemovalsIn,
+  readFieldDeletion,
+  readFieldUsage,
+  readOptionRemoval,
+} from "./field-options";
+export { findFieldIn, lockAccount, purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
 export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
 export {
@@ -67,13 +81,14 @@ export {
   listContainer,
   recordConnectionUse,
   revokeConnection,
-  trashAlbums,
+  deletionTargets,
+  savedAlbumOfReleaseGroup,
+  activeListName,
   type AlbumMatch,
   type CollectionOverview,
   type ConnectionRow,
   type ContainerListing,
   type ContainerRef,
-  type TrashResult,
 } from "./mcp";
 export {
   albumDetail,
