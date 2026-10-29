@@ -19,6 +19,7 @@ import {
   registerClient,
 } from "./support/mcp";
 import { requestCode, signIn } from "./support/sign-in";
+import { live } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -66,7 +67,8 @@ test("the owner approves on a phone, and the agent's next call deletes the album
   await page.goto("/sign-in");
   await requestCode(page, accounts.approver, "");
   await page.getByLabel("Code", { exact: true }).fill((await signInEmail(accounts.approver)).code);
-  await expect(page).not.toHaveURL(/\/sign-in/);
+  // Signed in and the workspace loaded: a load still under way would interrupt the next one (WebKit, TON-94).
+  await live(page);
   await page.goto(
     authorizeUrl(clientId, challenge, "collection:read collection:manage offline_access"),
   );
@@ -156,7 +158,8 @@ test("declining a list's deletion tells the agent, and nothing is deleted", asyn
   await page.goto("/sign-in");
   await requestCode(page, accounts.stranger, "");
   await page.getByLabel("Code", { exact: true }).fill((await signInEmail(accounts.stranger)).code);
-  await expect(page).not.toHaveURL(/\/sign-in/);
+  // Signed in and the workspace loaded: a load still under way would interrupt the next one (WebKit, TON-94).
+  await live(page);
   await page.goto(
     authorizeUrl(clientId, challenge, "collection:read collection:manage offline_access"),
   );

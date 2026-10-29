@@ -43,8 +43,12 @@ test("Inter Variable loads from the app's own origin", async ({ page, baseURL })
 
 test("text falls back to system fonts for scripts Inter lacks", async ({ page }) => {
   await page.goto("/sign-in");
-  const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-  expect(family.startsWith('"Inter Variable"')).toBe(true);
+  // WebKit reports the family without the quotes Chromium keeps.
+  const family = (await page.evaluate(() => getComputedStyle(document.body).fontFamily)).replaceAll(
+    '"',
+    "",
+  );
+  expect(family.startsWith("Inter Variable")).toBe(true);
   expect(family).toContain("system-ui");
   expect(family).toContain("sans-serif");
 });

@@ -1826,6 +1826,21 @@ The "30 days" must match the backup retention the creator sets (Q-04).
 
 Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per milestone (Q-02).
 
+*As built in TON-94, so far:*
+- **Engines:** `apps/web/playwright.config.ts` has projects for Chromium, Firefox and WebKit, all running the desktop suite. Edge is Chromium.
+  - `bun run test:e2e` stays on Chromium, which is what `bun run check` runs.
+  - `test:e2e:firefox` and `test:e2e:webkit` run the others, and `test:e2e:matrix` runs all three.
+  - CI's nightly run waits for the Tests job's return (TS-124).
+- **WebKit:** Playwright's WebKit keeps no `Secure` cookie on `http://localhost`. So `test:e2e:webkit` sets `E2E_INSECURE_COOKIES=1`, and the e2e API then sets plain cookies. That's the only API that can: `createAuth`'s `secureCookies` option. The one test checking the cookie's name skips there.
+- **What WebKit found,** all in the tests:
+  - a sign-in still loading when the next page was opened;
+  - the font family without quotes;
+  - no clipboard permissions outside Chromium.
+
+  With those fixed, every test passes. Four pass alone but can fail under the full suite's load (TON-102).
+- **Firefox** can't start inside the agent's sandbox. The creator runs `test:e2e:firefox`.
+- **Phones:** DS-110's mobile shell wasn't built, and no issue had covered it. The creator chose to build it in M11. Its tests run on iPhone (WebKit) and Pixel (Chromium) profiles.
+
 **TS-123 MCP client verification (Decided; G3, AC-36).** Each required client (Claude web custom connector, ChatGPT web custom MCP server, and Codex desktop) runs one script:
 
 - connect, with CIMD or DCR;
