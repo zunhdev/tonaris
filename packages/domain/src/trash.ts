@@ -259,7 +259,7 @@ export async function deleteContainer(
  * `trash.recover` (FR-01.14 to FR-01.16, TS-26): returns a unit's folders and lists to `parentId`, or to its root's
  * original parent, named `name` or as before. Without an active parent to return to, it asks for a destination; with
  * the name taken there, for another name. Nothing changes until it can. The recovered lists' entries are effective
- * again for active albums, which leave Unsorted.
+ * again for active albums, which leave Unsorted. A unit past its expiry is refused as `expired` (FR-01.17).
  */
 export async function recoverUnit(
   args: z.infer<typeof trashRecoverArgsSchema>,
@@ -269,6 +269,13 @@ export async function recoverUnit(
   const unit = await store.findTrashUnit(args.unitId);
   if (!unit || unit.ownerId !== actingUserId(context.principal)) {
     return failure("not_found", "This is no longer in Trash.");
+  }
+  // Expiry is enforced at 30 days, even before the hourly purge removes it (FR-01.17, FR-10.7).
+  if (unit.expiresAt.getTime() <= (context.now ?? new Date()).getTime()) {
+    return failure(
+      "expired",
+      "This was in Trash for 30 days and is being removed for good, so it can't be recovered.",
+    );
   }
   if (unit.kind === "album") return recoverAlbumUnit(unit, context);
   const { ownerId } = unit;

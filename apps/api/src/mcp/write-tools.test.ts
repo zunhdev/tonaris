@@ -91,6 +91,7 @@ describe("the tools a Manage connection gets (TS-62, TS-63, X-03)", () => {
         "list_unsorted",
         "move_albums",
         "move_items",
+        "recover_from_trash",
         "remove_from_lists",
         "remove_link",
         "remove_options",
@@ -116,7 +117,7 @@ describe("the tools a Manage connection gets (TS-62, TS-63, X-03)", () => {
       ),
     ).toEqual([]);
     const writing = tools.filter((tool) => tool.annotations?.readOnlyHint === false);
-    expect(writing.length).toBe(26);
+    expect(writing.length).toBe(27);
   });
 
   test("a Read-only connection can't call a write tool, even by name", async () => {
