@@ -725,7 +725,7 @@ Other users' collections are untouched, and their references to the deleted cont
 
 **FR-12.5 Matching.** Matching is case- and accent-insensitive and partial: "metal" matches "Metallica", and "bjork" matches "Björk". Results display the original spelling. There is no typo tolerance.
 
-**FR-12.6 Performance.** Search stays responsive at 5,000 owned albums plus representative shared content. **Pending approval:** a numeric target (Q-01).
+**FR-12.6 Performance.** Search stays responsive at 5,000 owned albums plus representative shared content: quick search updates within 50 ms p95 per keystroke (Q-01, approved 29 October 2026).
 
 ### FR-13 — Errors, outcomes, and recovery
 
@@ -819,20 +819,20 @@ Restoring or re-adding an album reuses its slot, even at capacity.
 
 Targets cover interaction feedback, browsing, sorting, search, synchronization, and export. The workload is 5,000 owned albums plus representative shared content, nesting, memberships, and fields. The measurement conditions (devices, browsers, network) are defined in the tech spec (TS-120).
 
-**Approved where measured (21 October 2026).** The creator adopted the targets below as working targets on 17 October 2026. On 21 October 2026, after the M1 prototype measurements ([report](spikes/2026-10-21-q01-measurements.md)), they approved those that could be measured, and the viewer target on an estimate. The rest stay provisional until they are measured. An unconfirmed target cannot pass acceptance.
+**Approved where measured (21 October 2026).** The creator adopted the targets below as working targets on 17 October 2026. On 21 October 2026, after the M1 prototype measurements ([report](spikes/2026-10-21-q01-measurements.md)), they approved those that could be measured, and the viewer target on an estimate. The rest stay provisional until they are measured. An unconfirmed target cannot pass acceptance. On 29 October 2026, after the measurements on the real app ([report](performance-verification.md), TON-92), the creator approved the four that were still provisional, as they stood.
 
 | Metric | Target | Status |
 | --- | --- | --- |
 | Optimistic UI feedback after a local edit | ≤ 50 ms p95 | Approved |
 | Server confirmation of a single mutation | ≤ 400 ms p95 | Approved |
 | Propagation to another session of the same account | ≤ 1 s p95 | Approved |
-| Propagation to a viewer or guest | ≤ 2.5 s p95 | Approved on an estimate; measured when sharing is built |
-| Quick-search update per keystroke | ≤ 50 ms p95 | Provisional |
-| MCP search, server time | ≤ 300 ms p95 | Provisional |
+| Propagation to a viewer or guest | ≤ 2.5 s p95 | Approved; measured 29 October 2026 |
+| Quick-search update per keystroke | ≤ 50 ms p95 | Approved 29 October 2026 |
+| MCP search, server time | ≤ 300 ms p95 | Approved 29 October 2026 |
 | Switching sort or grouping, or opening a list | ≤ 100 ms p95 (≤ 200 ms for a 5,000-album list) | Approved |
 | Workspace cold start to interactive, desktop | ≤ 2.5 s p75 | Approved |
-| Guest share page largest contentful paint, mobile | ≤ 2.5 s p75 | Provisional |
-| Export of 5,000 albums | ≤ 3 s p95 | Provisional |
+| Guest share page largest contentful paint, mobile | ≤ 2.5 s p75 | Approved 29 October 2026 |
+| Export of 5,000 albums | ≤ 3 s p95 | Approved 29 October 2026 |
 
 **Q-02 Accessibility.** Core workflows on each supported device are usable with a keyboard and a screen reader. They include owned and shared browsing, search, service choice, account access, desktop editing and administration, guest views, confirmations, errors, and pending or saved states.
 
@@ -1014,7 +1014,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 ## 10. Readiness and maintenance
 
 - This baseline supports design, technical feasibility work, and delivery planning. It does not establish that all provider integrations are permitted. Investigate G1–G3 early.
-- Before first-version acceptance, record the remaining **Pending approval** items: the provisional performance targets (search, MCP search, guest pages, export), backup objectives, and historical-backup deletion treatment. Budget and hosting are creator-owned and are not tracked here.
+- Before first-version acceptance, record the remaining **Pending approval** items: backup objectives and historical-backup deletion treatment. The performance targets were all approved on 29 October 2026 (Q-01). Budget and hosting are creator-owned and are not tracked here.
 - The design spec, tech spec, Linear issues, and OpenSpec changes reference rule IDs. OpenSpec capability specs grow change by change from these rules; this document is not bulk-converted.
 - When evidence or a decision changes a promise, update this document first, add a change-log entry, and keep IDs stable.
 
@@ -1069,6 +1069,9 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - **G2 is closed.** Identity is the release group, and similarity never matches. Merged release groups are followed, and a deleted one leaves the album unidentified.
   - **Q-01.** The measured targets are approved, with viewer propagation on an estimate; the rest stay provisional (FR-09.5).
   - **Updated** section 2.5, FR-02's status, FR-09.5, FR-10.5, D2, D3 and D6.
+- **Decisions (29 October 2026), M11** ([performance report](performance-verification.md)):
+  - **Q-01.** The four provisional targets are approved as they stood, after measurements on the real app: quick search, MCP search, guest pages and export (TON-92). Updated Q-01, FR-12.6 and section 10.
+  - **Limits.** Album titles and artist credits have a limit of 1,000 characters, set in TS-18 with the others (TON-95).
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);
