@@ -61,7 +61,7 @@ function Profile() {
 
   return (
     <>
-      <PageHeader title="Profile" />
+      <PageHeader title="Profile" back={{ to: "/c", label: "Collection" }} />
       <SettingsNav />
       <div className="flex max-w-2xl flex-col gap-6 p-6">
         <form onSubmit={submit} className="flex flex-col gap-1.5">

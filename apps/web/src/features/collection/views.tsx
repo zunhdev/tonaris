@@ -11,7 +11,7 @@ import { CaptureRows } from "@/features/capture/capture-rows";
 import { PageHeader } from "@/features/shell/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Share2, Trash2 } from "lucide-react";
+import { Inbox, Plus, Share2, Trash2, Users } from "lucide-react";
 import { useEffect, useMemo, type ReactNode } from "react";
 
 import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
@@ -178,12 +178,15 @@ function AlbumsBody({
 function ViewHeader({
   title,
   breadcrumbs,
+  back,
   viewKey,
   kind,
   container,
 }: {
   title: string;
   breadcrumbs?: ReactNode[];
+  /** Where a phone's Back goes (DS-110). */
+  back?: { to: string; label: string };
   viewKey: string;
   kind: "albums" | "containers";
   /** The folder or list on view, which Editing mode can delete (DS-50). */
@@ -198,6 +201,7 @@ function ViewHeader({
     <PageHeader
       title={title}
       breadcrumbs={breadcrumbs}
+      back={back}
       editing={editing}
       actions={
         <>
@@ -280,8 +284,35 @@ function NewListButton({ parentId }: { parentId: string | null }) {
   );
 }
 
+/** The collection's back, for a phone's Back (DS-110). */
+const toCollection = { to: "/c", label: "Collection" };
+
+/**
+ * A phone's root screen ends with Unsorted and Shared with me, which the sidebar holds on a wider screen (DS-110).
+ * Trash stays on the desktop.
+ */
+function PhoneRootLinks() {
+  const { unsortedAlbums } = useCollectionData();
+  const row =
+    "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus";
+  return (
+    <nav aria-label="More" className="shrink-0 border-t border-subtle px-4 py-2">
+      <Link to="/unsorted" className={row}>
+        <Inbox strokeWidth={1.5} aria-hidden className="size-4 text-fg-secondary" />
+        <span className="flex-1">Unsorted</span>
+        <span className="text-fg-tertiary tabular-nums">{unsortedAlbums.length}</span>
+      </Link>
+      <Link to="/shared" className={row}>
+        <Users strokeWidth={1.5} aria-hidden className="size-4 text-fg-secondary" />
+        <span className="flex-1">Shared with me</span>
+      </Link>
+    </nav>
+  );
+}
+
 export function RootView() {
   const { tree, ready } = useCollectionData();
+  const narrow = useNarrowScreen();
   useDocumentTitle("Collection");
   const count = tree.roots.length;
   return (
@@ -303,6 +334,7 @@ export function RootView() {
           }
         />
       )}
+      {narrow && ready && <PhoneRootLinks />}
     </>
   );
 }
@@ -341,11 +373,14 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
     );
   }
 
+  const ancestors = ancestorsOf(tree, id);
+  const parent = ancestors.at(-1);
+  const back = parent ? { to: `/f/${parent.id}`, label: parent.name } : toCollection;
   const breadcrumbs = [
     <Link key="root" to="/c" className="hover:text-fg-primary">
       Collection
     </Link>,
-    ...ancestorsOf(tree, id).map((folder) => (
+    ...ancestors.map((folder) => (
       <Link
         key={folder.id}
         to="/f/$folderId"
@@ -396,6 +431,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
       <ViewHeader
         title={container.name}
         breadcrumbs={breadcrumbs}
+        back={back}
         viewKey={id}
         kind={container.kind === "folder" ? "containers" : "albums"}
         container={container}
@@ -412,7 +448,7 @@ export function UnsortedView() {
   useDocumentTitle("Unsorted");
   return (
     <>
-      <ViewHeader title="Unsorted" viewKey="unsorted" kind="albums" />
+      <ViewHeader title="Unsorted" back={toCollection} viewKey="unsorted" kind="albums" />
       <CaptureRows listId={null} />
       {!ready ? null : albums.length > 0 ? (
         <AlbumsBody albums={albums} label="Unsorted" viewKey="unsorted" />
@@ -447,7 +483,12 @@ export function AlbumView({ id }: { id: string }) {
   }
   return (
     <>
-      <PageHeader title={album.title} editing={editing} actions={<ModeSwitch />} />
+      <PageHeader
+        title={album.title}
+        back={toCollection}
+        editing={editing}
+        actions={<ModeSwitch />}
+      />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="max-w-xl">
           <AlbumDetails album={album} />

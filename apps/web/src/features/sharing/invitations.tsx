@@ -123,7 +123,7 @@ export function InvitationsView() {
   }, [read]);
   return (
     <>
-      <PageHeader title="Invitations" />
+      <PageHeader title="Invitations" back={{ to: "/c", label: "Collection" }} />
       <div className="flex flex-col gap-4 p-6">
         {accepted !== undefined && (
           <output className="block text-fg-secondary">
@@ -180,7 +180,7 @@ export function InvitationView({ id }: { id: string }) {
   }, [id]);
   return (
     <>
-      <PageHeader title="Invitation" />
+      <PageHeader title="Invitation" back={{ to: "/c", label: "Collection" }} />
       <div className="flex max-w-2xl flex-col gap-4 p-6">
         {state?.state === "wrong_account" && (
           <p className="text-fg-primary">

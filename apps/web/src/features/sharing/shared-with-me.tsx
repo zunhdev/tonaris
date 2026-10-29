@@ -63,7 +63,7 @@ export function SharedWithMeView() {
   }
   return (
     <>
-      <PageHeader title="Shared with me" />
+      <PageHeader title="Shared with me" back={{ to: "/c", label: "Collection" }} />
       <div className="flex max-w-3xl flex-col gap-6 p-6">
         {entries?.length === 0 && (
           <p className="text-fg-secondary">

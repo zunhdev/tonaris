@@ -15,6 +15,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 
 import type { FolderSortMode, ListSortMode, SortDirection, ViewLayout } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@tonaris/ui/components/dialog";
 import {
   Popover,
   PopoverContent,
@@ -23,7 +24,7 @@ import {
 } from "@tonaris/ui/components/popover";
 import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
 
-import { useCollectionUi } from "./collection-ui";
+import { useCollectionUi, useNarrowScreen } from "./collection-ui";
 import type { ViewKind } from "./presentation";
 import { usePresentation, type ViewPresentation } from "./use-presentation";
 
@@ -108,10 +109,42 @@ export function Choice({
 export function ViewOptions({ viewKey, kind }: { viewKey: string; kind: ViewKind }) {
   const [open, setOpen] = useState(false);
   const { setViewOptionsOpener } = useCollectionUi();
+  const narrow = useNarrowScreen();
   useEffect(() => {
     setViewOptionsOpener(() => setOpen(true));
     return () => setViewOptionsOpener(undefined);
   }, [setViewOptionsOpener]);
+  const choices =
+    kind === "albums" ? (
+      <AlbumViewChoices viewKey={viewKey} />
+    ) : (
+      <FolderViewChoices viewKey={viewKey} />
+    );
+
+  // A phone's are a bottom sheet (DS-110).
+  if (narrow) {
+    return (
+      <>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="View options"
+          className="size-11"
+          onClick={() => setOpen(true)}
+        >
+          <SlidersHorizontal aria-hidden strokeWidth={1.5} />
+        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="top-auto bottom-0 left-0 w-full max-w-none translate-x-0 translate-y-0 rounded-b-none pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <DialogHeader>
+              <DialogTitle>View options</DialogTitle>
+            </DialogHeader>
+            {choices}
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -121,11 +154,7 @@ export function ViewOptions({ viewKey, kind }: { viewKey: string; kind: ViewKind
       </PopoverTrigger>
       <PopoverContent align="end" className="flex w-80 flex-col gap-3">
         <PopoverTitle className="sr-only">View options</PopoverTitle>
-        {kind === "albums" ? (
-          <AlbumViewChoices viewKey={viewKey} />
-        ) : (
-          <FolderViewChoices viewKey={viewKey} />
-        )}
+        {choices}
       </PopoverContent>
     </Popover>
   );

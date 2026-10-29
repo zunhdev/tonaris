@@ -40,6 +40,9 @@ export default defineConfig({
       use: { ...devices["Desktop Safari"], storageState: creatorState },
       dependencies: ["setup"],
     },
+    // Phones (DS-110, TON-103): the mobile browsing workflows on TS-122's two mobile browsers.
+    { name: "pixel", testMatch: "**/mobile.e2e.ts", use: { ...devices["Pixel 7"] } },
+    { name: "iphone", testMatch: "**/mobile.e2e.ts", use: { ...devices["iPhone 15"] } },
   ],
   webServer: [
     {

@@ -6,6 +6,7 @@
 // the owner's saves (its stream), and "No longer available" once access ends. The content draws as on guest pages.
 
 import { api } from "@/api";
+import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { sections, sortAlbums, sortContainers, type Direction } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
@@ -105,7 +106,17 @@ function SharedContent({
     ),
     [rootId],
   );
+  const narrow = useNarrowScreen();
   const title = current?.name ?? "Shared with me";
+  /** A phone's Back (DS-110): to the folder above in the share, or to Shared with me from its top. */
+  const backFrom = (parentId: string | null) => {
+    const parent = parentId === null ? undefined : tree.byId.get(parentId);
+    if (!parent || current?.id === rootId) return { to: "/shared", label: "Shared with me" };
+    return {
+      to: parent.id === rootId ? `/shared/${rootId}` : `/shared/${rootId}?c=${parent.id}`,
+      label: parent.name,
+    };
+  };
   useEffect(() => {
     document.title = `${title} · Tonaris`;
   }, [title]);
@@ -121,16 +132,21 @@ function SharedContent({
             Shared with me
           </Link>,
         ]}
+        back={backFrom(current.parentId)}
         actions={
           <>
-            <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-subtle px-2.5 text-small text-fg-secondary">
-              View only · Shared by {owner}
-            </span>
+            {!narrow && (
+              <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-subtle px-2.5 text-small text-fg-secondary">
+                View only · Shared by {owner}
+              </span>
+            )}
             <ViewOptions key={current.id} viewKey={current.id} kind={kind} />
           </>
         }
       />
       <div className="flex flex-col gap-5 px-6 py-5">
+        {/* A phone's top bar has no room for it (DS-110). */}
+        {narrow && <p className="text-small text-fg-secondary">View only · Shared by {owner}</p>}
         <ShareBreadcrumbs path={ancestorsOf(tree, current.id)} linkTo={linkTo} />
         {current.description && (
           <p className="max-w-2xl whitespace-pre-line text-fg-secondary">{current.description}</p>

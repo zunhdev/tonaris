@@ -34,7 +34,7 @@ import { isTextField } from "../shell/shortcuts";
 import { albumEdit, cellText, type AlbumCell } from "./album-edit";
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
-import { useCollectionUi, useMode } from "./collection-ui";
+import { useCollectionUi, useMode, useNarrowScreen } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
@@ -44,6 +44,8 @@ import { cellAt, useGridFocus, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
+/** A phone's rows (DS-110): 56 px, with 44 px artwork and the artist under the title. */
+const phoneRowHeight = 56;
 
 /** The cells that edit inline, by column: title, artist and year (DS-45). */
 const editableCells: readonly AlbumCell[] = ["title", "artistCredit", "year"];
@@ -112,10 +114,13 @@ export function AlbumRows({
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
   const width = useWidth(scroller);
+  const compact = useNarrowScreen();
+  const height = compact ? phoneRowHeight : rowHeight;
   const grouped = sections[0]?.group !== undefined;
-  const showType = !grouped && (width === 0 || width >= typeFrom);
-  const showServices = width === 0 || width >= servicesFrom;
-  const columns = 4 + (showType ? 1 : 0) + (showServices ? 1 : 0);
+  const showType = !compact && !grouped && (width === 0 || width >= typeFrom);
+  const showServices = !compact && (width === 0 || width >= servicesFrom);
+  // A phone's title cell holds the artist too.
+  const columns = (compact ? 3 : 4) + (showType ? 1 : 0) + (showServices ? 1 : 0);
   const { linksByAlbum } = useCollectionData();
   const items = useMemo(() => itemsOf(sections, collapsed), [sections, collapsed]);
   const headers = useMemo(
@@ -154,7 +159,7 @@ export function AlbumRows({
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => scroller.current,
-    estimateSize: (index) => (items[index]?.type === "header" ? headerHeight : rowHeight),
+    estimateSize: (index) => (items[index]?.type === "header" ? headerHeight : height),
     getItemKey: (index) => {
       const item = items[index];
       return item?.type === "header" ? `group:${item.group}` : (item?.album.id ?? index);
@@ -163,9 +168,9 @@ export function AlbumRows({
     rangeExtractor: extractRange,
   });
   // Headers and rows differ in height, so offsets change whenever the items do.
-  useEffect(() => virtualizer.measure(), [virtualizer, items]);
+  useEffect(() => virtualizer.measure(), [virtualizer, items, height]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
-  const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? 360) / rowHeight) - 1);
+  const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? 360) / height) - 1);
   const rearrange = useMemo<GridRearrange>(
     () => ({
       itemAt: ({ row }) => {
@@ -268,14 +273,18 @@ export function AlbumRows({
     onKeyDown(event);
   }
 
-  const template = [
-    "minmax(0,3fr)",
-    "minmax(0,2fr)",
-    "7rem",
-    ...(showType ? ["6.5rem"] : []),
-    ...(showServices ? ["minmax(0,1.5fr)"] : []),
-    "3.25rem",
-  ].join(" ");
+  const template = (
+    compact
+      ? ["minmax(0,1fr)", "4.5rem", "3.25rem"]
+      : [
+          "minmax(0,3fr)",
+          "minmax(0,2fr)",
+          "7rem",
+          ...(showType ? ["6.5rem"] : []),
+          ...(showServices ? ["minmax(0,1.5fr)"] : []),
+          "3.25rem",
+        ]
+  ).join(" ");
 
   return (
     <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-2">
@@ -300,8 +309,8 @@ export function AlbumRows({
       >
         <div role="rowgroup" className="sr-only">
           <div role="row" aria-rowindex={1}>
-            <span role="columnheader">Title</span>
-            <span role="columnheader">Artist</span>
+            <span role="columnheader">{compact ? "Album" : "Title"}</span>
+            {!compact && <span role="columnheader">Artist</span>}
             <span role="columnheader">Year</span>
             {showType && <span role="columnheader">Type</span>}
             {showServices && <span role="columnheader">Services</span>}
@@ -346,6 +355,8 @@ export function AlbumRows({
                 index={virtual.index}
                 top={virtual.start}
                 template={template}
+                compact={compact}
+                height={height}
                 showType={showType}
                 services={showServices ? servicesOf(linksByAlbum.get(item.album.id)) : undefined}
                 hasLinks={(linksByAlbum.get(item.album.id)?.length ?? 0) > 0}
@@ -379,6 +390,8 @@ function AlbumRow({
   index,
   top,
   template,
+  compact,
+  height,
   showType,
   services,
   hasLinks,
@@ -396,6 +409,9 @@ function AlbumRow({
   top: number;
   /** The grid's `grid-template-columns`. */
   template: string;
+  /** A phone's row: the artist under the title, in the title's cell (DS-110). */
+  compact: boolean;
+  height: number;
   showType: boolean;
   /** The services the album has links for, in words, when that column shows. */
   services: string | undefined;
@@ -430,29 +446,47 @@ function AlbumRow({
     },
     [dragRef],
   );
+  // The columns after the title's move one left on a phone, whose title cell holds the artist.
+  const after = compact ? 0 : 1;
   const cells = [
-    <div key="title" role="gridcell" className={cn(cell, "gap-2.5 pr-3")} {...cellProps(index, 0)}>
+    <div
+      key="title"
+      role="gridcell"
+      className={cn(cell, compact ? "gap-3 pr-2" : "gap-2.5 pr-3")}
+      {...cellProps(index, 0)}
+    >
       <Artwork
         title={album.title}
         src={artworkSrc(album)}
-        className="size-7"
+        className={compact ? "size-11" : "size-7"}
         letterClassName="text-small"
       />
-      {editor("title") ?? <span className="truncate text-fg-primary">{album.title}</span>}
+      {compact ? (
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate text-fg-primary">{album.title}</span>
+          <span className="truncate text-small text-fg-secondary">{album.artistCredit}</span>
+        </span>
+      ) : (
+        (editor("title") ?? <span className="truncate text-fg-primary">{album.title}</span>)
+      )}
     </div>,
-    <div
-      key="artist"
-      role="gridcell"
-      className={cn(cell, "pr-3 text-fg-secondary")}
-      {...cellProps(index, 1)}
-    >
-      {editor("artistCredit") ?? <span className="truncate">{album.artistCredit}</span>}
-    </div>,
+    ...(compact
+      ? []
+      : [
+          <div
+            key="artist"
+            role="gridcell"
+            className={cn(cell, "pr-3 text-fg-secondary")}
+            {...cellProps(index, 1)}
+          >
+            {editor("artistCredit") ?? <span className="truncate">{album.artistCredit}</span>}
+          </div>,
+        ]),
     <div
       key="year"
       role="gridcell"
       className={cn(cell, "pr-3 text-fg-secondary")}
-      {...cellProps(index, 2)}
+      {...cellProps(index, 1 + after)}
     >
       {editor("year") ?? <ChronologyYear album={album} />}
     </div>,
@@ -462,7 +496,7 @@ function AlbumRow({
             key="type"
             role="gridcell"
             className={cn(cell, "pr-3 text-fg-tertiary")}
-            {...cellProps(index, 3)}
+            {...cellProps(index, 2 + after)}
           >
             <span className="truncate">{typeName(album)}</span>
           </div>,
@@ -475,7 +509,7 @@ function AlbumRow({
             key="services"
             role="gridcell"
             className={cn(cell, "pr-3 text-fg-tertiary")}
-            {...cellProps(index, showType ? 4 : 3)}
+            {...cellProps(index, 2 + after + (showType ? 1 : 0))}
           >
             <span className="truncate">{services}</span>
           </div>,
@@ -484,7 +518,7 @@ function AlbumRow({
       key="status"
       role="gridcell"
       className={cn(cell, "justify-end gap-1")}
-      {...cellProps(index, 3 + (showType ? 1 : 0) + (services === undefined ? 0 : 1))}
+      {...cellProps(index, 2 + after + (showType ? 1 : 0) + (services === undefined ? 0 : 1))}
     >
       <SaveStateMarker status={status} />
       {hasLinks && <OpenButton albumId={album.id} title={album.title} />}
@@ -497,10 +531,10 @@ function AlbumRow({
       aria-rowindex={index + 2}
       aria-busy={status === "pending" || status === "unconfirmed" ? true : undefined}
       className={cn(
-        "group/row absolute inset-x-0 top-0 grid h-9 items-stretch rounded-md px-2 hover:bg-hover",
+        "group/row absolute inset-x-0 top-0 grid items-stretch rounded-md px-2 hover:bg-hover",
         drag.dragging && "opacity-40",
       )}
-      style={{ transform: `translateY(${top}px)`, gridTemplateColumns: template }}
+      style={{ height, transform: `translateY(${top}px)`, gridTemplateColumns: template }}
     >
       {manual && <DragHandle {...drag.handle} />}
       {drag.side && <DropLine side={drag.side} />}

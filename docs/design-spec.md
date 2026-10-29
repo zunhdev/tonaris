@@ -1161,7 +1161,7 @@ The block never says "private" while another access path remains.
 - **Opening it:** ⌘K or Ctrl+K, also from a text field, or the sidebar's Search item. ⌘K again or Esc closes it. Searching isn't an edit, so it works offline and in Viewing mode.
 - **The palette:**
   - It sits 12% from the top, 640px wide, on the palette layer (DS-18).
-  - Below 768px it fills the screen, inside the safe area. There is no mobile shell yet (DS-110), so the sheet opens with ⌘K or the sidebar's item.
+  - Below 768px it fills the screen, inside the safe area, opened from the top bar's Search (DS-110, TON-103).
   - Its field reads "Search, or type > for commands…" (TON-63).
   - With no match it says "No results for '{query}'."
 - **Groups:** Folders, Lists, Albums, each with a heading, up to 8 results, then a "Show all {n}" option that expands the group in place.
@@ -1708,6 +1708,22 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 - **View options** open in a bottom sheet: sort, direction, grouping, layout. There is no rearranging; manual order is displayed as saved.
 - **Approval pages** (DS-87) and sign-in are fully supported.
 - Safe-area insets are respected, inputs use 16px text, and the touch target minimum is 44px.
+
+*As built in TON-103* (below 768 px):
+- **The top bar** is each view's header: Back, "Back to {view above}", then the name, the view's own controls, **Search** and an Account button.
+  - Back goes to a folder's or list's parent, or to Collection. In a share it goes to the folder above, then to Shared with me.
+  - The account menu holds Settings and Sign out, without Admin or Keyboard shortcuts.
+- **The root screen** lists the collection's folders and lists, then, pinned below them, **Unsorted** with its count and **Shared with me**.
+- **Rows:**
+  - album rows are 56 px, with 44 px artwork, the title over the artist, the year, and the status with Open;
+  - folder and list rows are 48 px, with their count;
+  - nothing scrolls sideways.
+- **An album** opens in a sheet from the bottom, 92% of the screen tall, with Close focused. It's read-only, since phones are always in Viewing mode. Its links read "Open in {service}".
+- **View options** open in a bottom sheet with the same choices, from an icon button named "View options".
+- **Desktop only:**
+  - "Trash is on the desktop app.", "Setting up custom fields is on the desktop app." and "Admin is on the desktop app.";
+  - Settings' row leaves out Custom fields, and scrolls sideways if it must.
+- **A shared view's** "View only · Shared by {owner}" moves under the top bar.
 
 ---
 

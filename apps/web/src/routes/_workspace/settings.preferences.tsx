@@ -42,7 +42,7 @@ function Preferences() {
 
   return (
     <>
-      <PageHeader title="Preferences" />
+      <PageHeader title="Preferences" back={{ to: "/c", label: "Collection" }} />
       <SettingsNav />
       <div className="flex max-w-2xl flex-col gap-8 overflow-y-auto p-6">
         <section aria-labelledby="list-defaults" className="flex max-w-sm flex-col gap-3">

@@ -4,6 +4,8 @@
 
 import { api, refusalOf } from "@/api";
 import { AdminNav } from "@/features/admin/admin-nav";
+import { useNarrowScreen } from "@/features/collection/collection-ui";
+import { DesktopOnly } from "@/features/shell/desktop-only";
 import { PageHeader } from "@/features/shell/page-header";
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useId, useState } from "react";
@@ -47,6 +49,7 @@ const deliveryNames: Record<NonNullable<AdmissionInvitation["emailStatus"]>, str
 const date = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
 function AdmissionsPage() {
+  const narrow = useNarrowScreen();
   const admissions = Route.useLoaderData();
   const router = useRouter();
   const sending = admissions.invitations.some((invitation) => invitation.emailStatus === "sending");
@@ -61,13 +64,17 @@ function AdmissionsPage() {
   const reload = () => void router.invalidate();
   return (
     <>
-      <PageHeader title="Admissions" />
+      <PageHeader title="Admissions" back={{ to: "/c", label: "Collection" }} />
       <AdminNav />
-      <div className="flex max-w-5xl flex-col gap-6 p-6">
-        <Accepting paused={admissions.paused} onChanged={reload} />
-        <InviteForm onInvited={reload} />
-        <Invitations invitations={admissions.invitations} onChanged={reload} />
-      </div>
+      {narrow ? (
+        <DesktopOnly what="Admin" />
+      ) : (
+        <div className="flex max-w-5xl flex-col gap-6 p-6">
+          <Accepting paused={admissions.paused} onChanged={reload} />
+          <InviteForm onInvited={reload} />
+          <Invitations invitations={admissions.invitations} onChanged={reload} />
+        </div>
+      )}
     </>
   );
 }
