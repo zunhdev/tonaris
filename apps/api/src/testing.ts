@@ -22,6 +22,7 @@ import type { CaptureDeps } from "./capture";
 import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
 import { startJobWorker } from "./jobs";
+import type { McpLimiter } from "./mcp/limits";
 import { databaseHub, type SyncHubOptions } from "./sync/hub";
 
 export type SentEmail = {
@@ -102,6 +103,8 @@ export type LocalAppOptions = {
   capture?: CaptureDeps;
   /** How the image proxy fetches, stubbed; `safeFetch` otherwise (TS-103). */
   imageFetch?: ImageFetch;
+  /** MCP's per-connection limits, such as on a test's clock (TS-66). */
+  mcpLimiter?: McpLimiter;
 };
 
 /**
@@ -137,6 +140,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     wakeJobs: worker.wake,
     capture: options.capture,
     imageFetch: options.imageFetch,
+    mcpLimiter: options.mcpLimiter,
     logError: () => {},
   });
 

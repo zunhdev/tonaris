@@ -70,7 +70,8 @@ function guideOf(client: Client, url: string): { before: ReactNode; steps: React
         <>Install the plugin. {signIn}</>,
         <>
           In a chat, type <Code>@</Code> and pick Tonaris. ChatGPT may ask you to confirm a change
-          before it makes it.
+          before it makes it. If you reconnect in another mode, choose <Ui>Refresh</Ui> on the
+          plugin&apos;s page, so ChatGPT sees what Tonaris now allows.
         </>,
       ],
     };
