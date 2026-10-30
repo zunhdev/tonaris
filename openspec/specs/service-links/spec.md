@@ -77,7 +77,7 @@ An album's links SHALL reach every session of its owner: in the data a session l
 - **THEN** their other open sessions no longer show it
 
 ### Requirement: Opening an album is an explicit choice of service
-Opening an album SHALL offer only the services it has links for, and the person SHALL choose one every time (FR-06.5): no service is preselected or remembered, and a single link is still a choice. The choice SHALL be offered from an album's row and from the keyboard, for the inspector's or the focused album.
+Opening an album SHALL offer only the services it has links for, and the person SHALL choose one every time (FR-06.5): no service is preselected or remembered, and a single link is still a choice. The choice SHALL be offered from an album's row and from the keyboard, for the inspector's or the focused album. An album's card and row SHALL also name each service it has a link for, each a link to that service, which opens it without opening the album's details.
 
 #### Scenario: Two links
 - **WHEN** an owner opens the chooser for an album with Spotify and Tidal links
@@ -90,6 +90,10 @@ Opening an album SHALL offer only the services it has links for, and the person 
 #### Scenario: No links
 - **WHEN** an owner asks to open an album without links
 - **THEN** no chooser opens, and they are told the album has no links
+
+#### Scenario: A link on a card or a row
+- **WHEN** an owner clicks "Tidal" under an album's card, or in its row
+- **THEN** Tidal opens where their link setting says, and the album's details don't open
 
 ### Requirement: Links open the web page or the app, as the person's setting says
 Each signed-in person SHALL choose whether service links open the service's web page or its app (FR-06.6). The setting SHALL be saved to the account and reach their other sessions (FR-11.8), and SHALL start as the web page. Every link they open SHALL follow it: in the chooser, the album's details and shared content. Guests' links SHALL open the web pages. A link SHALL never open another service or another release.

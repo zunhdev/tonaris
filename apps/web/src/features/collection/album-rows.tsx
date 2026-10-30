@@ -3,7 +3,8 @@
 // is hidden while the view is grouped by it. Grouped, each group starts with its header, the one in view sticking
 // at the top (DS-43). A click, or Enter in Viewing mode, opens the album in the inspector (DS-46). In Editing mode,
 // the title, artist and year cells edit inline (DS-45): Enter or a double-click opens one, and F2 the title,
-// switching to Editing first. The services the album has links for follow the type, and collapse first; the status
+// switching to Editing first. The services the album has links for follow the type, each opening that service
+// (TON-105), and collapse first; the status
 // cell has the Open button on hover or focus, which opens the "Open in…" chooser (DS-21, DS-25). The checkbox joins
 // these columns later. Each row is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 
@@ -12,6 +13,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { useOpenIn } from "@/features/open/open-in";
+import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
@@ -27,7 +29,7 @@ import {
   type KeyboardEvent,
 } from "react";
 
-import { serviceNames, streamingServices, type Album, type ServiceLink } from "@tonaris/domain";
+import type { Album, ServiceLink } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { isTextField } from "../shell/shortcuts";
@@ -358,8 +360,8 @@ export function AlbumRows({
                 compact={compact}
                 height={height}
                 showType={showType}
-                services={showServices ? servicesOf(linksByAlbum.get(item.album.id)) : undefined}
-                hasLinks={(linksByAlbum.get(item.album.id)?.length ?? 0) > 0}
+                showServices={showServices}
+                links={linksByAlbum.get(item.album.id)}
                 cellProps={cellProps}
                 edit={cellEdit?.albumId === item.album.id ? cellEdit : undefined}
                 onDraft={(draft) => {
@@ -393,8 +395,8 @@ function AlbumRow({
   compact,
   height,
   showType,
-  services,
-  hasLinks,
+  showServices,
+  links,
   cellProps,
   edit,
   onDraft,
@@ -413,10 +415,10 @@ function AlbumRow({
   compact: boolean;
   height: number;
   showType: boolean;
-  /** The services the album has links for, in words, when that column shows. */
-  services: string | undefined;
-  /** Whether it has links to open, so the row offers Open (DS-25). */
-  hasLinks: boolean;
+  /** Whether the services column shows. */
+  showServices: boolean;
+  /** The album's links: the services column, and Open when it has any (DS-25). */
+  links: readonly ServiceLink[] | undefined;
   cellProps: ReturnType<typeof useGridFocus>["cellProps"];
   /** This row's cell being edited, if one is. */
   edit: CellEdit | undefined;
@@ -502,26 +504,28 @@ function AlbumRow({
           </div>,
         ]
       : []),
-    ...(services === undefined
-      ? []
-      : [
+    ...(showServices
+      ? [
           <div
             key="services"
             role="gridcell"
             className={cn(cell, "pr-3 text-fg-tertiary")}
             {...cellProps(index, 2 + after + (showType ? 1 : 0))}
           >
-            <span className="truncate">{services}</span>
+            <span className="truncate">
+              <ServiceNames title={album.title} links={links} separator=", " />
+            </span>
           </div>,
-        ]),
+        ]
+      : []),
     <div
       key="status"
       role="gridcell"
       className={cn(cell, "justify-end gap-1")}
-      {...cellProps(index, 2 + after + (showType ? 1 : 0) + (services === undefined ? 0 : 1))}
+      {...cellProps(index, 2 + after + (showType ? 1 : 0) + (showServices ? 1 : 0))}
     >
       <SaveStateMarker status={status} />
-      {hasLinks && <OpenButton albumId={album.id} title={album.title} />}
+      {(links?.length ?? 0) > 0 && <OpenButton albumId={album.id} title={album.title} />}
     </div>,
   ];
   return (
@@ -634,14 +638,6 @@ function CellEditor({
       )}
     </span>
   );
-}
-
-/** "Spotify, Tidal": the services an album has links for, in their order (DS-21). */
-function servicesOf(links: readonly ServiceLink[] | undefined): string {
-  return streamingServices
-    .filter((service) => links?.some((link) => link.service === service))
-    .map((service) => serviceNames[service])
-    .join(", ");
 }
 
 /**

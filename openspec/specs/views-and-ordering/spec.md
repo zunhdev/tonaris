@@ -17,7 +17,7 @@ A list SHALL show the albums it holds, and Unsorted the albums in no list, one r
 - **THEN** the album is shown there, and not in any list's view
 
 ### Requirement: Lists and Unsorted can show their albums as a grid
-Lists and Unsorted SHALL offer a grid of album cards as well as rows (DS-22, DS-40). Each card shows the artwork, title, artist and year, and its save state. The layout SHALL be chosen in View options and remembered with the view's other choices (FR-11.8). Folders and the root SHALL always show rows.
+Lists and Unsorted SHALL offer a grid of album cards as well as rows (DS-22, DS-40). Each card shows the artwork, title, artist and year, the services the album has links for, and its save state. The layout SHALL be chosen in View options and remembered with the view's other choices (FR-11.8). Folders and the root SHALL always show rows.
 
 #### Scenario: Switching to the grid
 - **WHEN** an owner chooses Grid in a list's View options and reloads the page
@@ -26,6 +26,10 @@ Lists and Unsorted SHALL offer a grid of album cards as well as rows (DS-22, DS-
 #### Scenario: A layout kept on the device
 - **WHEN** an owner had chosen Grid for a list on this device before layouts were saved to the account, and opens the workspace
 - **THEN** the list shows cards, and the choice is saved to the account
+
+#### Scenario: A card's links
+- **WHEN** an album in a list's grid has Spotify and Apple Music links
+- **THEN** its card reads "Spotify · Apple Music" under the year
 
 ### Requirement: Folders and the root show their folders and lists
 A folder and the root SHALL show the folders and lists they hold as rows, in the view's sort order (DS-41, FR-05.1). Each row shows the folder or list icon, its name, and its count: albums for a list, folders and lists for a folder. Sorted by creation date, the rows SHALL also show the date each was created. Opening a row SHALL open that folder or list.
