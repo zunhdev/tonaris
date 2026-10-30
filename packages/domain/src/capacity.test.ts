@@ -1,6 +1,6 @@
 // The album limit (FR-15.1 to FR-15.3, TS-18; AC-32): 5,000 albums counting Trash, a new record refused with the
-// reason while everything else keeps working, restoring and re-adding reusing their slot, and a batch reporting each
-// refused item.
+// reason while an edit still works, and restoring reusing its slot. A batch at the limit, refusing each new album
+// while its list and link adds go through, is `executeBatch`'s test in packages/db (sync.test.ts).
 
 import { describe, expect, test } from "bun:test";
 
