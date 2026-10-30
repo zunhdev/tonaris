@@ -133,6 +133,8 @@ Merging to `main` is the deploy:
    - The pre-deploy step, `bin/predeploy.js`, runs `bin/migrate.js`, then `bin/seed-creator.js` (TS-17, TS-71). Pending migrations apply in one transaction, so a failure leaves the schema as it was, and the old version keeps running.
    - The new instance starts, passes `/healthz`, and takes over.
 3. **The web app** builds at the same time. Its pre-deploy step, `wait-for-api.ts`, waits until the API's `/v1/health` names the same commit, then the web app takes over. If the API doesn't get there within 20 minutes, the web deploy fails and the running version stays.
+   - Every five seconds it asks over the private network, and then at `https://api.tonaris.app` if the private address doesn't name the commit yet. Either one naming it is enough.
+   - Each question opens a new connection (TON-113). On 30 October 2026, one wait kept hearing the API instance that was running when it started. It heard the old commit, then nothing once that instance stopped, while the new API had been live for minutes. A manual redeploy of the web app got through at once.
 
 To redeploy by hand, open the service → **Manual Deploy** → **Deploy latest commit**. Deploy the API first.
 
