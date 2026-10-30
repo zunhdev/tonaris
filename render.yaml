@@ -14,7 +14,8 @@ services:
     dockerContext: .
     autoDeployTrigger: checksPass
     # Migrations first (TS-17), then the creator bootstrap, which changes nothing once the creator exists (TS-71).
-    preDeployCommand: sh -c "bun bin/migrate.js && bun bin/seed-creator.js"
+    # One command with no shell syntax: Render runs it without a shell and keeps quotes (apps/api/src/predeploy.ts).
+    preDeployCommand: bun bin/predeploy.js
     healthCheckPath: /healthz
     domains:
       - api.tonaris.app

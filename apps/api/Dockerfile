@@ -4,6 +4,7 @@
 #   service (default)                docker run tonaris-api
 #   pre-deploy migration (TS-17)     docker run tonaris-api bun bin/migrate.js
 #   creator bootstrap (TS-71)        docker run -e CREATOR_EMAIL=… tonaris-api bun bin/seed-creator.js
+#   Render's pre-deploy step         docker run -e CREATOR_EMAIL=… tonaris-api bun bin/predeploy.js (both, in order)
 #   after a restore (TS-113)         bun bin/reconcile.js --into … --restored-to …, in the host's shell
 # Settings come from the environment (.env.example); production refuses to start without its secrets.
 

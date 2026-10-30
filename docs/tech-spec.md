@@ -189,7 +189,7 @@ apps/api/                  Elysia 2 service (deployable: tonaris-api)
   src/jobs/                job runner and schedules (TS-90)
   src/img/                 image proxy (TS-103)
   openapi/v1.json          generated, committed contract (TS-09)
-  build.ts, Dockerfile     production bundle (bin/server.js, bin/migrate.js, bin/seed-creator.js) and image (TS-110)
+  build.ts, Dockerfile     production bundle (bin/server.js, bin/migrate.js, bin/seed-creator.js, bin/predeploy.js) and image (TS-110)
 packages/domain/           framework-free business logic + Zod schemas + normalize()
 packages/db/               Drizzle schema, migrations, repositories
 packages/ui/               design system: src/styles/tokens.css (DS-10 token layers), shadcn components on Base UI
@@ -1696,13 +1696,13 @@ The creator chooses the host, region, and budget; the current preference is Rend
 - Environments are production plus local development; there is no staging for now.
 - The Dockerfiles are the portability path to any container host (Q-08).
 - **Built in TON-12** (deploy steps: `docs/deploy.md`):
-  - `apps/api/Dockerfile`: `apps/api/build.ts` bundles the server, the pre-deploy migration and the creator seed into single files, `bin/server.js`, `bin/migrate.js` and `bin/seed-creator.js`, next to `migrations/`. A script guard (`import.meta.main`) is allowed only in an entry file, and the build fails if a bundled library module has one.
+  - `apps/api/Dockerfile`: `apps/api/build.ts` bundles the server, the migration, the creator seed and the pre-deploy step that runs both into single files, `bin/server.js`, `bin/migrate.js`, `bin/seed-creator.js` and `bin/predeploy.js`, next to `migrations/`. A script guard (`import.meta.main`) is allowed only in an entry file, and the build fails if a bundled library module has one.
   - `apps/web/Dockerfile`: the server build bundles its dependencies, and `apps/web/server.ts` (`Bun.serve`) serves the built client files and passes everything else to Start.
   - Neither image contains `node_modules`. Both run on `oven/bun:1.4.3-slim` as the `bun` user, with a health check on `/healthz`.
   - The web app reads the API origin, `API_URL`, at start-up and renders it into each page for the browser, so one image serves any host.
   - Locally the same commands run natively; Docker runs only in CI and production (TS-06).
 - **Built in TON-108** (Render; setup in `docs/deploy.md`):
-  - **`render.yaml`**, a Render Blueprint, declares the two services (Docker, Frankfurt) and `tonaris-db`. Deploys wait for CI's checks. The API's pre-deploy step runs `bin/migrate.js`, then `bin/seed-creator.js`.
+  - **`render.yaml`**, a Render Blueprint, declares the two services (Docker, Frankfurt) and `tonaris-db`. Deploys wait for CI's checks. The API's pre-deploy step, `bun bin/predeploy.js`, runs `bin/migrate.js`, then `bin/seed-creator.js`; Render runs the command without a shell, so it has no quotes or `&&`.
   - **The API before the web app on one push:** `/v1/health` names the commit the API was built from (`GIT_COMMIT`, or Render's `RENDER_GIT_COMMIT`), an additive field. The web app's pre-deploy step, `apps/web/wait-for-api.ts`, waits until the API names its own commit, for up to 20 minutes, over the private network.
   - **`API_INTERNAL_URL`** also takes a bare `host:port`, as Render's Blueprint gives it, meaning plain HTTP on the private network.
   - **The API image** has the `~/.ssh` directory Render's Shell needs, where `bin/reconcile.js` runs (TS-113).
