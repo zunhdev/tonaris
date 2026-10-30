@@ -14,7 +14,8 @@ test("the sign-in page and the sidebar show the mark and the name, and the icons
   request,
 }) => {
   await page.goto("/sign-in");
-  const wordmark = page.getByRole("main").locator("p", { hasText: "Tonaris" });
+  // The sign-in page has a wordmark for the desktop and one for phones (TON-116); one shows.
+  const wordmark = page.getByRole("main").locator("p:visible", { hasText: "Tonaris" });
   await expect(wordmark.locator('svg[data-slot="logo"]')).toBeVisible();
 
   const icons = await page

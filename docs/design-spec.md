@@ -1505,6 +1505,17 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   - on another device: "This link signs in to Tonaris as {email}." under "Sign in on this device?".
 - **The code field** accepts a pasted code with spaces or a dash, and six digits submit by themselves.
 
+*As built in TON-116:* **what Tonaris is, beside the card,** on both sign-in steps.
+- **Layout:** from 768 px, the wordmark and the promo on the left, the card on the right. On a phone, the wordmark and the card come first, then the promo. The card comes first in the page's order either way, so its heading is read first.
+- **The promo:** "Your albums, organized your way" (`text.display`), then "Paste a link from Spotify, Apple Music, Qobuz or Tidal, and Tonaris fills in the album from MusicBrainz. Keep it in folders and lists, share it, and take it with you."
+- **Four features,** each a Lucide icon in `accent.solid`, a title and a line:
+  - "Your AI agents, through MCP": Claude, ChatGPT and Codex search and organize the collection, and destructive actions wait for approval;
+  - "Folders within folders, and lists": nesting up to 32 levels (TS-18), and an album in any number of lists;
+  - "Share a folder or a list": view-only, by invitation or link, stoppable at any time;
+  - "Your data stays yours": export everything, Trash included, as JSON and Markdown.
+- **Last:** "Tonaris is invitation-only for now." in `fg.tertiary`.
+- **Only the sign-in steps** have it. Other pages in the same frame, such as approvals and account deletion, don't.
+
 **DS-91 Admission landing** (`/join/:admissionToken`). *(FR-11.2, FR-11.6, FR-11.3)*
 1. "You're invited to Tonaris", showing the bound email.
 2. **Continue** sends a code to that email and leads to the verify screen.
