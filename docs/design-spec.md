@@ -95,7 +95,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `text.base` | 13 / 20 | 400–500 | Default UI text, rows, menus |
 | `text.input` | 14 / 20 | 400 | Form inputs; 16 on mobile to prevent iOS zoom |
 | `text.title` | 15 / 22 | 600 | Section titles, dialog titles |
-| `text.page` | 20 / 28 | 600 | Page headers (list/folder name) |
+| `text.page` | 20 / 28 | 600 | Full-page messages, such as "Not available" (the desktop header's name moved to `text.base` in TON-107) |
 | `text.display` | 28 / 34 | 600 | Guest page title, empty-state headline |
 
 **DS-14 Contrast targets.** Contrast is checked by an automated token test (`packages/ui/src/styles/tokens.test.ts`). It reads `tokens.css`, converts OKLCH to sRGB, blends translucent tokens over their background, and fails naming each pair below its minimum. It checks `fg.primary`, `fg.secondary` and `fg.tertiary` at 4.5:1; `border.strong`, `focus` and every `status.*` at 3:1; and `fg.on-accent` on `accent.fill` at 4.5:1, all against the four surfaces below.
@@ -429,6 +429,8 @@ Typed confirmation is reserved for account deletion (DS-97).
 - **The inspector** takes a third column, 380 px wide, when the window is at least 1100 px. Below that, it is a panel over the view's right edge, with the floating shadow. It is a landmark named "Album".
 
 *(FR-01.3, FR-12.2)*
+
+*As built in TON-107* (decided with the creator, 30 October 2026): **the header's name is the breadcrumbs' size.** It is 13 px (`text.base`) in medium weight and `fg.primary`, after the `fg.secondary` crumbs, as in Linear: "Collection › Metal › Thrash › **Metallica**". Before, it was 20 px `text.page`. This holds in every desktop header: folders, lists, Unsorted, Trash, Shared with me, Settings and Admin. The phone's top bar keeps `text.title` (DS-110).
 
 **DS-31 Sidebar contents, top to bottom.** *(FR-01.9, FR-01.12, FR-07.6, FR-07.13, FR-11.6, FR-12.2)*
 
