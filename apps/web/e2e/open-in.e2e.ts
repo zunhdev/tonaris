@@ -1,8 +1,8 @@
 // Opening a service (AC-18; FR-06.5, FR-06.6; DS-21, DS-25, DS-94, TS-43): the "Open in…" chooser lists only an
 // album's services, in order, every time, each opening its page in a new tab; `O` opens it from the keyboard, or says
-// an album has no links; on a phone-sized touch screen it is a bottom sheet; and with the account's links set to open
-// in the apps, the chooser and the inspector open the services' apps (TON-104). Each test signs in with its own
-// account.
+// an album has no links; on a phone-sized touch screen it is a bottom sheet; with the account's links set to open in
+// the apps, the chooser and the inspector open the services' apps (TON-104); and a list's cards and rows name the
+// album's services, each a link to it (TON-105). Each test signs in with its own account.
 
 import { expect, test, type Page } from "@playwright/test";
 
@@ -10,7 +10,7 @@ import { streamingServices, type Album, type StreamingService } from "@tonaris/d
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, created, live, saved, toasts } from "./support/workspace";
+import { added, album, created, live, saved, toasts, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -139,6 +139,54 @@ test("with links set to open in the apps, the chooser and the inspector open the
   await expect(choices).toHaveText(["Open in Spotify", "Open in Tidal"]);
   await expect(choices.first()).toHaveAttribute("href", "spotify:album:1KQ1Pf4ikoK1jBbOtOHvOv");
   await expect(choices.nth(1)).toHaveAttribute("href", "tidal://album/77654321");
+});
+
+test("a list's cards and rows name the album's services, each opening it and not the album", async ({
+  page,
+}) => {
+  await signIn(page, accounts.openList);
+  await live(page);
+  const bleach = album("Bleach", { artistCredit: "Nirvana", originalYear: 1989 });
+  await linked(page, "Grunge", bleach, { tidal, spotify });
+  await page.route("https://tidal.com/**", (route) => route.fulfill({ body: "Tidal" }));
+  const inspector = page.getByRole("complementary", { name: "Album" });
+
+  // Rows: the services column, its names links.
+  const row = rowOf(page, "Grunge", "Bleach");
+  await expect(row).toContainText("Spotify, Tidal");
+  const rowTidal = row.getByRole("link", { name: "Open 'Bleach' in Tidal" });
+  await expect(rowTidal).toHaveAttribute("href", tidal);
+  await expect(rowTidal).toHaveAttribute("tabindex", "-1");
+  const [fromRow] = await Promise.all([page.waitForEvent("popup"), rowTidal.click()]);
+  await expect(fromRow).toHaveURL(tidal);
+  await fromRow.close();
+  await expect(inspector).toHaveCount(0);
+
+  // Cards: a line under the year.
+  await page.getByRole("button", { name: "View", exact: true }).click();
+  const options = page.getByRole("dialog", { name: "View options" });
+  await options
+    .getByRole("radiogroup", { name: "Layout" })
+    .getByRole("radio", { name: "Grid" })
+    .click();
+  await page.keyboard.press("Escape");
+  await expect(options).toHaveCount(0);
+  const card = page
+    .getByRole("grid", { name: "Grunge" })
+    .getByRole("gridcell", { name: /^Bleach/ });
+  await expect(card).toContainText("Spotify · Tidal");
+  await expect(card.getByRole("link", { name: "Open 'Bleach' in Spotify" })).toHaveAttribute(
+    "href",
+    spotify,
+  );
+  const [fromCard] = await Promise.all([
+    page.waitForEvent("popup"),
+    card.getByRole("link", { name: "Open 'Bleach' in Tidal" }).click(),
+  ]);
+  await expect(fromCard).toHaveURL(tidal);
+  await fromCard.close();
+  await expect(inspector).toHaveCount(0);
+  expect(await violations(page, '[role="grid"]')).toEqual([]);
 });
 
 test.describe("on a phone", () => {

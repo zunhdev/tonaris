@@ -1,5 +1,6 @@
 // Album cards (DS-22): a list's or Unsorted's albums as a virtualized ARIA grid of square artwork tiles, at least
-// 160 px wide in responsive columns, over the title, artist and year, with the save state as a corner badge. Each
+// 160 px wide in responsive columns, over the title, artist and year and the services the album has links for, each
+// opening that service (TON-105), with the save state as a corner badge. Each
 // virtual row is a row of cards; the grid states every row and column (DS-115). Grouped, each group starts with its
 // header on a row of its own, the one in view sticking at the top (DS-43). A click or Enter opens a card's album in the
 // inspector (DS-46).
@@ -8,6 +9,7 @@
 // that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
+import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -18,6 +20,7 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
+import { useCollectionData } from "./data";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
 import { useAlbumOpening } from "./inspector-state";
 import type { ReleaseGroup, Section } from "./order";
@@ -27,8 +30,8 @@ import type { ViewMoves } from "./use-rearrange";
 const minCard = 160;
 const gap = 16;
 const padding = 24;
-/** The title, artist and year under the artwork. */
-const textHeight = 68;
+/** The title, artist, year and services under the artwork. */
+const textHeight = 88;
 
 type Item =
   | { type: "header"; group: ReleaseGroup; count: number }
@@ -218,6 +221,7 @@ function AlbumCard({
   const ref = useRef<HTMLDivElement>(null);
   useLiveHighlight(album.id, ref);
   const status = useSaveState(album.id);
+  const { linksByAlbum } = useCollectionData();
   return (
     <div
       ref={ref}
@@ -245,6 +249,9 @@ function AlbumCard({
       <span className={cn("truncate text-small text-fg-secondary")}>{album.artistCredit}</span>
       <span className="flex text-small text-fg-tertiary">
         <ChronologyYear album={album} />
+      </span>
+      <span className="truncate text-small text-fg-tertiary">
+        <ServiceNames title={album.title} links={linksByAlbum.get(album.id)} separator=" · " />
       </span>
     </div>
   );

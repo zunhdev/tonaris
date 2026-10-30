@@ -198,6 +198,10 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 
 *As built in TON-47:*
 - **Services:** after the type, "Spotify, Tidal" in `fg.tertiary`, truncated, in the services' order. The column shows from 760 px of view width and the type from 640 px, so the services collapse first.
+
+*As built in TON-105* (decided with the creator, 30 October 2026): **each service name is a link** to that service, opening where the account's link setting says (DS-94). Its name is "Open '{title}' in Spotify", and it underlines on hover.
+- **Pointer only,** like the Open button: it takes no focus, so the grid's focus and the inspector stay put. A click opens the service, not the inspector.
+- **From the keyboard,** `O` opens the chooser.
 - **Open:** an icon button in the status cell, beside the save marker, for albums with links. It shows on the row's hover or focus, and always on touch screens. It is pointer-only; `O` is its keyboard path. Its name is "Open '{title}' in…".
 
 *As built in TON-35:*
@@ -234,6 +238,8 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **Each card is a grid cell,** named by its title, artist and year. The save-state badge sits on the artwork's top-right corner.
 
 *As built in TON-35:* the year follows DS-24, as in rows. Grouped, each group's header is a row of its own above its cards (DS-43).
+
+*As built in TON-105* (decided with the creator, 30 October 2026): **a line under the year** names the services the album has links for, "Spotify · Apple Music", in `text.small` `fg.tertiary`, truncated. Each name is a link, as in DS-21's services column. Every card keeps the line, empty without links, so the grid's rows stay one height (88 px of text under the tile).
 
 **DS-23 Artwork.**
 - A fixed-aspect box with lazy loading, `decoding="async"`, a `sizes`/`srcset` where the source allows it, and a 150ms fade-in.
@@ -283,7 +289,7 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 - **After App:** if the page keeps the focus for 2 s, the list gives way to "If the Spotify app didn't open, it may not be installed on this computer.", with **Open Spotify on the web** and **Back**. The popover closes as soon as the app takes the focus.
 - **The bottom sheet,** on narrow screens, has full-width "Open in Spotify" links to the canonical URLs, which the services' apps take when installed. It has no App choice.
 - **It opens from** a row's Open button, and `O` (DS-78), anchored to what has the focus. An album without links has no Open button, and `O` says "'{title}' has no links to open."
-- **Cards** have no Open button yet; `O` works on them.
+- **Cards** have no Open button yet; `O` works on them. *TON-105:* cards and rows name their services as links (DS-21, DS-22).
 
 *As built in TON-104* (decided with the creator, 30 October 2026): **the account's link setting** (FR-06.6, DS-94).
 - **Each "Open in Spotify"** opens where the setting says: the canonical page in a new tab, with no referrer, or the service's app. That holds in the popover and in the bottom sheet.
