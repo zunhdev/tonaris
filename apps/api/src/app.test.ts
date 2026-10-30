@@ -27,6 +27,15 @@ describe("/v1/health", () => {
     expect(error).toBeNull();
     // `data` is typed `{ status: "ok" } | null`; a wrong field here fails `tsc`.
     expect(data?.status).toBe("ok");
+    expect(data?.commit).toBeUndefined();
+  });
+
+  test("names the commit the host built it from, which the web app's deploy waits for", async () => {
+    const built = apiConfig({ RENDER_GIT_COMMIT: "a49ac3a" });
+    const response = await createApp({ config: built, auth, db, email }).handle(
+      new Request("http://localhost/v1/health"),
+    );
+    expect(await response.json()).toEqual({ status: "ok", commit: "a49ac3a" });
   });
 });
 

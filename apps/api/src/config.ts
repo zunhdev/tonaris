@@ -43,6 +43,11 @@ export type ApiConfig = {
    * or either credential missing. Spotify links are then identified by MusicBrainz's URL lookup alone.
    */
   spotify: { clientId: string; clientSecret: string } | undefined;
+  /**
+   * The commit this build is, when the host says (`GIT_COMMIT`, or Render's `RENDER_GIT_COMMIT`): `/v1/health`
+   * names it, and the web app's deploy waits until the API runs its own commit (TS-01).
+   */
+  commit: string | undefined;
 };
 
 type Env = Record<string, string | undefined>;
@@ -111,6 +116,7 @@ export function apiConfig(env: Env = process.env): ApiConfig {
       env.SPOTIFY_CLIENT_SECRET
         ? { clientId: env.SPOTIFY_CLIENT_ID, clientSecret: env.SPOTIFY_CLIENT_SECRET }
         : undefined,
+    commit: env.GIT_COMMIT || env.RENDER_GIT_COMMIT || undefined,
   };
 }
 

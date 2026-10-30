@@ -63,7 +63,7 @@ Q-04's objectives on 30 October 2026.
 | AC-41 | Export data | Pass | `api/export.test.ts`. `db/export.test.ts`. `domain/export.test.ts`. `tooling/src/export-validator/validate.test.ts`. |
 | AC-42 | Browsers and accessibility | **Waits for the creator** | `accessibility-walkthrough.md`: Chromium and WebKit pass every area. **Left:** the Firefox run, the five screen-reader passes, real iOS and Android devices, and Edge itself, which runs as Playwright's Chromium. |
 | AC-43 | Performance and costs | **Waits for the creator** | `performance-verification.md`: every target met on both profiles, approved 29 October 2026. **Left:** the quota review and cost check before admission expands, which are the creator's, as hosting and budget are. |
-| AC-44 | Recover the hosted service | **Waits for the creator** | `runbooks/restore.md`: the drill passed on 30 October 2026, on the development database. `db/ledger.test.ts`. `account-deletion.e2e.ts`: the backup disclosure. **Left:** daily backups on the hosted service, and a drill from a hosted backup. |
+| AC-44 | Recover the hosted service | **Waits for the creator** | `runbooks/restore.md`: the drill passed on 30 October 2026, on the development database. `db/ledger.test.ts`. `account-deletion.e2e.ts`: the backup disclosure. `db/reconcile.test.ts`. Backups are Render Postgres's point-in-time recovery since TON-108. **Left:** the hosted service, and a drill from a Render restore. |
 | AC-45 | Reject hostile input | Pass | `adversarial.test.ts`. `adversarial.e2e.ts`. `providers/safe-fetch.test.ts`. `security.test.ts`. `security.e2e.ts`. `mcp/limits.test.ts`. |
 | AC-46 | Language and scope | Pass (reviewed) | The scope review below. Multilingual text is saved and shown in `capture.e2e.ts` ("Idéal"), searched in `search-index.test.ts` ("BJÖRK"), and identified in `providers/identify.test.ts` ("Икра"). |
 
@@ -92,7 +92,7 @@ Each of section 2.6's exclusions, checked against the code on 30 October 2026:
 | Collaborative editing | Yes | Shared views are view-only (`shared-viewing.e2e.ts`). |
 | Built-in recommendations | Yes | The MCP tool list has no recommendation tool (`mcp/write-tools.test.ts`). |
 | Automatic listening history | Yes | No predefined listening fields, and no import. Opening a link changes no field. |
-| Importing or restoring exports | Yes | No import route. `restore.ts` is the operator's backup restore, not a user import. |
+| Importing or restoring exports | Yes | No import route. `bin/reconcile.js` belongs to the operator's backup restore (`runbooks/restore.md`), not a user import. |
 | Viewer exports | Yes | The export leaves out other owners' content (`db/export.test.ts`). |
 | Full edit history | Yes | Current values only. `audit_log` holds account events, not edits. |
 | Custom-field constraints | Yes | Basic type checks only (`domain/field-values.test.ts`). |
@@ -113,4 +113,4 @@ Each of section 2.6's exclusions, checked against the code on 30 October 2026:
    - browse on a real iPhone and Android phone;
    - open the app once in Edge.
 3. **AC-43:** review the providers' quotas and the running cost before admission expands.
-4. **AC-44:** schedule `backup.ts` on the hosted service, then run a restore drill from a hosted backup (`runbooks/restore.md`).
+4. **AC-44:** deploy to Render (`deploy.md`), then run a restore drill from a Render restore (`runbooks/restore.md`).

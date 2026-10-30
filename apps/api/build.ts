@@ -1,8 +1,9 @@
-// Bundles the API for production (TS-110): the server, the pre-deploy migration and the creator seed, each one
-// file that needs no node_modules, plus the migrations they apply. `bun run build` writes:
+// Bundles the API for production (TS-110): the server, the pre-deploy migration, the creator seed and the restore
+// reconciliation, each one file that needs no node_modules, plus the migrations they apply. `bun run build` writes:
 //   dist/bin/server.js        `bun bin/server.js`, the service
 //   dist/bin/migrate.js       `bun bin/migrate.js`, the pre-deploy step (TS-17)
 //   dist/bin/seed-creator.js  `bun bin/seed-creator.js`, the creator bootstrap (TS-71)
+//   dist/bin/reconcile.js     `bun bin/reconcile.js`, after Render restores the database (TS-113)
 //   dist/migrations/          beside bin/, where the migration library looks for it
 // The API image copies dist/ as it is (apps/api/Dockerfile).
 
@@ -16,6 +17,7 @@ const entries = {
   server: "apps/api/src/index.ts",
   migrate: "packages/db/src/migrate.ts",
   "seed-creator": "apps/api/src/auth/seed-creator.ts",
+  reconcile: "apps/api/src/reconcile.ts",
 };
 
 /**

@@ -22,10 +22,15 @@ export const apiUrl: string = readApiUrl();
 
 /**
  * Where the server's loaders reach the API (TS-03): `API_INTERNAL_URL`, over the host's private network, when set;
- * otherwise `API_URL`. In the browser, `apiUrl`.
+ * otherwise `API_URL`. In the browser, `apiUrl`. A bare `host:port`, as Render's Blueprint gives it, is plain HTTP.
  */
 export const serverApiUrl: string =
-  typeof document === "undefined" ? process.env.API_INTERNAL_URL || apiUrl : apiUrl;
+  typeof document === "undefined" ? internalUrl(process.env.API_INTERNAL_URL) || apiUrl : apiUrl;
+
+function internalUrl(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return /^[a-z][a-z\d+.-]*:\/\//i.test(value) ? value : `http://${value}`;
+}
 
 /** The `<meta>` carrying the web app's Sentry key (TS-115), when the server has `SENTRY_DSN`. */
 export const sentryDsnMeta = "tonaris:sentry-dsn";

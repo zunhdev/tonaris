@@ -848,12 +848,12 @@ The assistive-technology, browser, and device matrix is defined in the tech spec
 
 **Q-04 Service disaster recovery.** Tonaris keeps automated, access-restricted operator backups of the state needed to recover the service. Restoration is documented and tested before acceptance, then re-verified on a recurring schedule. Trash and synchronization are not substitutes for backups.
 
-- **Decided by the creator on 30 October 2026 (TON-97):**
-  - **Backups:** one a day, kept for 30 days.
-  - **Recovery point:** at most 24 hours of changes can be lost.
+- **Decided by the creator on 30 October 2026 (TON-97), and revised the same day when hosting moved to Render (TON-108):**
+  - **Backups:** continuous, by the database's host: Render Postgres's point-in-time recovery, to any moment of the last 3 days on Render's Hobby plan, or 7 on Pro.
+  - **Recovery point:** at most a few minutes of changes can be lost.
   - **Recovery time:** the service is back within 24 hours.
   - **Drills:** a restore drill every 3 months after acceptance.
-  - **Protection:** each backup is encrypted to an offline-held key, and stored off-site with restricted access (TS-112).
+  - **Protection:** the backups stay with Render, reachable only through the creator's Render account, on storage Render encrypts at rest. The revocation ledger that reconciles a restore is stored apart from them, outside Render and write-once (TS-112, TS-113).
 - Restoring an older backup never revives deleted accounts, revoked MCP authorizations, revoked sharing, or expired recovery rights. Later deletions, revocations, and expiries are reconciled before access resumes.
 - **Account deletion and historical backups (decided 30 October 2026, TON-97):** deleted data leaves the backups as they age out, within 30 days, and a restore re-applies every later deletion first (TS-113). The account-deletion screen and the privacy notice say so: "Deleted data is removed from the live service immediately and disappears from encrypted backups within 30 days. If we ever restore a backup, your deletion is re-applied before the service reopens." Immediate erasure from every backup copy is never claimed.
 - Operator recovery is never a user account-recovery path (FR-11.5).
@@ -1084,6 +1084,11 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - **Drills:** a restore drill every 3 months.
   - **Disclosure:** TS-114's wording, as written.
   - **Updated** Q-04 and section 10.
+- **Decisions (30 October 2026), hosting and Q-04** (TON-108):
+  - **Hosting:** Render, Frankfurt, for both services and Postgres, behind Cloudflare.
+  - **Backups:** Render Postgres's point-in-time recovery replaces the daily encrypted off-site dump. It keeps 3 days on Render's Hobby plan and 7 on Pro, and loses at most a few minutes of changes. The recovery time and drills are unchanged.
+  - **Disclosure:** TS-114's wording still holds, since backups now leave within 7 days at most.
+  - **Updated** Q-04.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);

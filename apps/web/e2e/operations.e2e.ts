@@ -1,5 +1,5 @@
-// Admin → Operations in a real browser (TS-115; TON-91): the creator sees that no backup is recorded yet and that
-// no job gave up, and can send a test error, which, without a Sentry key here, the API only logs.
+// Admin → Operations in a real browser (TS-115; TON-91): the creator sees where the backups are (Render's, TS-112)
+// and that no job gave up, and can send a test error, which, without a Sentry key here, the API only logs.
 
 import { expect, test } from "@playwright/test";
 
@@ -13,7 +13,7 @@ test("the creator sees the backups and failed jobs, and can send a test error", 
   await expect(
     page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: "Operations" }),
   ).toHaveAttribute("aria-current", "page");
-  await expect(page.getByText("No backup is recorded yet.", { exact: false })).toBeVisible();
+  await expect(page.getByText(/^Render backs up the database continuously/)).toBeVisible();
   await expect(page.getByText("None. Every job finished or is still being retried.")).toBeVisible();
 
   await page.getByRole("button", { name: "Send a test error" }).click();

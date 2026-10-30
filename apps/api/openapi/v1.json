@@ -25,6 +25,10 @@
                     "status": {
                       "type": "string",
                       "const": "ok"
+                    },
+                    "commit": {
+                      "description": "The commit the running API was built from, when the host says: the web app's deploy waits for it (TS-01).",
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -5555,7 +5559,7 @@
     "/v1/admin/operations": {
       "get": {
         "summary": "Show the service's health",
-        "description": "The jobs that gave up after their retries, and when the last operator backup finished. Creator only (TS-115).",
+        "description": "The jobs that gave up after their retries. Creator only (TS-115).",
         "tags": [
           "admission"
         ],
@@ -5610,39 +5614,10 @@
                         "additionalProperties": false
                       },
                       "description": "The 50 latest jobs that gave up after their retries, newest first."
-                    },
-                    "lastBackup": {
-                      "description": "The last successful operator backup (TS-112); null before the first.",
-                      "type": [
-                        "object",
-                        "null"
-                      ],
-                      "properties": {
-                        "finishedAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                        },
-                        "objectKey": {
-                          "type": "string"
-                        },
-                        "bytes": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "maximum": 9007199254740991
-                        }
-                      },
-                      "required": [
-                        "finishedAt",
-                        "objectKey",
-                        "bytes"
-                      ],
-                      "additionalProperties": false
                     }
                   },
                   "required": [
-                    "failedJobs",
-                    "lastBackup"
+                    "failedJobs"
                   ],
                   "additionalProperties": false,
                   "description": "The service's health, for the creator (TS-115)."

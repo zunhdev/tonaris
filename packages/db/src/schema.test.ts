@@ -103,7 +103,6 @@ describe("migrations", () => {
       "albums",
       "approvals",
       "audit_log",
-      "backup_runs",
       "change_log",
       "containers",
       "email_changes",

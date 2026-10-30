@@ -3,6 +3,7 @@
 # the server build bundles its dependencies (vite.config.ts). Build from the repository root:
 #   docker build -f apps/web/Dockerfile -t tonaris-web .
 #   docker run -e API_URL=https://api.tonaris.example tonaris-web
+#   pre-deploy: wait for the API (TS-01)    docker run -e API_URL=… tonaris-web bun wait-for-api.ts
 # API_URL is read at start-up, so one image serves any host.
 
 FROM oven/bun:1.4.3 AS build
@@ -29,7 +30,7 @@ FROM oven/bun:1.4.3-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
 COPY --from=build --chown=bun:bun /repo/apps/web/dist ./dist
-COPY --from=build --chown=bun:bun /repo/apps/web/server.ts ./
+COPY --from=build --chown=bun:bun /repo/apps/web/server.ts /repo/apps/web/wait-for-api.ts ./
 USER bun
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \

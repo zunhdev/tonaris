@@ -27,7 +27,7 @@ The proposed stack is a sound fit for a fast, single-developer, Linear-style app
 - **Maturity.** Several pieces are pre-1.0 or freshly rewritten.
 - **Real-time and API shape.** Start has no WebSocket or public-API story. The API therefore runs as its own Elysia service, which also serves future native clients (TS-01), and pushes changes over SSE (TS-23).
 - **Missing pieces.** Nothing in it covers auth, client sync, MCP, email, or jobs.
-- **Hosting.** Creator-owned. This spec states only what the code needs from a host (TS-110).
+- **Hosting.** Creator-owned: Render, Frankfurt, behind Cloudflare, chosen on 30 October 2026 (TON-108). This spec states what the code needs from any host (TS-110); `render.yaml` and `docs/deploy.md` cover Render.
 
 The table records the verdicts.
 
@@ -41,8 +41,8 @@ The table records the verdicts.
 | **Elysia v2** | **Keep: 2.0 RC, pinned** | 2.0.0-rc.0, released 19 October 2026 with `@elysia/eden`, `@elysia/openapi` and `@elysia/cors` ([Elysia 2.0](https://elysiajs.com/blog/elysia-20)). The [TON-19 spike](spikes/2026-10-20-elysia-2-viability.md) found every TS-04 exit criterion met. Pin the exact pre-release. Run it as its own service, `tonaris-api`, on Elysia's Bun adapter (`app.listen`), because the same API serves the web app, MCP, and later native iOS and Android clients (TS-01). Routes stay thin over a framework-free domain package. Exit criteria are in TS-04. |
 | **Drizzle** | **Keep: 1.0 RC, pinned** | Starting on 1.0-rc avoids a later v1 migration (Relational Queries v2, new migrations folder) ([upgrade](https://orm.drizzle.team/docs/upgrade-v1)). The Better Auth adapter supports `>=1.0.0-rc.1`. |
 | **Native Postgres driver** | **Replace for now: postgres.js** (confirmed by creator) | Open bugs rule out Bun.SQL today: Bun.SQL double-encodes JSON/JSONB on PG18 ([#28819](https://github.com/oven-sh/bun/issues/28819)), and Drizzle's bun-sql driver has JSONB serialization ([#6132](https://github.com/drizzle-team/drizzle-orm/issues/6132)) and timestamp-millisecond ([#5062](https://github.com/drizzle-team/drizzle-orm/issues/5062)) bugs. Use `drizzle-orm/postgres-js`, a mature TCP-native driver with `LISTEN/NOTIFY`. Switching back to `drizzle-orm/bun-sql` is a one-line change in `packages/db` once those issues close and round-trip tests pass. |
-| **Postgres** | **Keep: Postgres 18** | Managed or Dockerised is the creator's call (advisory note in TS-111). PG18 brings `casefold()`, `uuidv7()`, `NULLS NOT DISTINCT` (PG15+), and async I/O. |
-| **Hosting "like Render"** | **Creator-owned** | The creator chooses the host, region, and budget (current preference: Render, Frankfurt). This spec lists only the platform requirements (TS-110). |
+| **Postgres** | **Keep: Postgres 18** | Managed: Render Postgres, the creator's call on 30 October 2026 (TS-111). PG18 brings `casefold()`, `uuidv7()`, `NULLS NOT DISTINCT` (PG15+), and async I/O. |
+| **Hosting** | **Creator-owned: Render** | The creator chooses the host, region, and budget: Render, Frankfurt, behind Cloudflare (30 October 2026, TON-108). This spec lists the platform requirements (TS-110). |
 | **shadcn/ui** | **Keep: on Base UI** | Base UI has been the shadcn default since July 2026, and Radix is still available ([changelog](https://ui.shadcn.com/docs/changelog/2026-07-base-ui-default)). The design system owns the copied components; see the design spec. |
 | *(missing)* **Auth** | **Add Better Auth ≥ 1.7.10; 1.7.12 since TON-22** | It covers email OTP, the admin role, and an OAuth 2.1 authorization server for MCP (`@better-auth/mcp` with `@better-auth/cimd`, plus DCR as a fallback). The floor is 1.7.7 because of the critical advisory GHSA-965c-763c-88jm ([advisories](https://github.com/better-auth/better-auth/security/advisories)). The [TON-22 spike](spikes/2026-10-21-g3-mcp-oauth.md) connected Claude web, ChatGPT web and Codex through it. TS-61, TS-70. |
 | *(missing)* **Client sync / optimistic store** | **Add TanStack DB, pinned; 0.15.1 until the 1.0 RC is published** | Uses custom sync collections over our own SSE protocol ([mutations guide](https://tanstack.com/db/latest/docs/guides/mutations)). This is what makes the app feel like Linear; the framework choice matters far less. On 20 October 2026 no 1.0 RC was on npm ([PR #2171](https://github.com/TanStack/db/pull/2171) is still open), so the [TON-20 prototype](spikes/2026-10-20-sync-prototype.md) pinned 0.15.1 and wrote its handlers the RC's way. TS-24. |
@@ -1530,7 +1530,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Account data deletion | on demand (`account-deletion`, TON-79); finished deletions' progress pruned daily (`prune-account-deletions`) | FR-11.11 |
 | Expire approvals, idempotency records, change_log (> 30 d) | daily; the sync history since TON-29 (`prune-sync-history`), agents' keys (`mcp_operations`) since TON-82, approvals since TON-83 | TS-22, TS-64 |
 | Expire admission invitations | daily (`expire-admission-invitations`, TON-74); use checks expiry already | FR-11.6 |
-| Off-site backup | nightly, through the host's scheduler (TS-110) | TS-112 |
+| Backups | continuous: Render Postgres's point-in-time recovery, not a job (TON-108) | TS-112 |
 
 ---
 
@@ -1613,7 +1613,7 @@ The API service's `https://api.tonaris.<tld>/img/{hmac}/{b64url(url)}?w=…` ser
 
 - keeps guest and viewer IPs hidden from third-party hosts (owner-supplied artwork URLs could otherwise be used for tracking);
 - satisfies the strict CSP;
-- is cacheable (`Cache-Control: public, max-age=604800, immutable`), with optional Cloudflare caching in front.
+- is cacheable (`Cache-Control: public, max-age=604800, immutable`). In production a Cloudflare cache rule keeps it at the edge (`docs/deploy.md`), so each image leaves the host once.
 
 There is no resizing in v1.
 
@@ -1635,7 +1635,7 @@ There is no resizing in v1.
 - Rate limits use in-memory token buckets in the single instance, moving to Postgres if the service scales out.
 - Sign-in uses a Tonaris limiter in front of the auth endpoints (`apps/api/src/auth/sign-in-limits.ts`), with sliding windows. Better Auth's own limiter is off: it can't key by email, and without a trusted client address it falls back to one bucket shared by everyone.
 - A refused sign-in answers `429` `rate_limited` with `Retry-After`; it sends nothing and stores nothing. The auth endpoints sit outside `/v1`, so they don't carry the `RateLimit` headers that TS-09 asks of `/v1` responses.
-- The client address is the socket address. Behind the host's proxy, `CLIENT_IP_HEADER` names the header to read instead; for `X-Forwarded-For` that is its last entry.
+- The client address is the socket address. Behind the host's proxy, `CLIENT_IP_HEADER` names the header to read instead; for `X-Forwarded-For` that is its last entry. In production it is `CF-Connecting-IP`: every request arrives through Cloudflare, and Render's own subdomains are off (TON-108).
 
 | Endpoint | Limit |
 | --- | --- |
@@ -1690,7 +1690,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
 | Streaming | Long-lived streaming HTTP responses for SSE (TS-23), with no proxy buffering |
 | HTTPS | TLS on both hostnames (TS-08) |
 | Lifecycle | A pre-deploy step for `db:migrate` (TS-17); the API deploys before the web app (TS-01); health checks on `/healthz` |
-| Scheduling | A way to run the nightly backup script (TS-112) |
+| Backups | The database host's point-in-time recovery (TS-112), and a shell beside the API to reconcile a restore (TS-113) |
 | Secrets | Environment secrets (TS-105) |
 
 - Environments are production plus local development; there is no staging for now.
@@ -1701,28 +1701,31 @@ The creator chooses the host, region, and budget; the current preference is Rend
   - Neither image contains `node_modules`. Both run on `oven/bun:1.4.3-slim` as the `bun` user, with a health check on `/healthz`.
   - The web app reads the API origin, `API_URL`, at start-up and renders it into each page for the browser, so one image serves any host.
   - Locally the same commands run natively; Docker runs only in CI and production (TS-06).
+- **Built in TON-108** (Render; setup in `docs/deploy.md`):
+  - **`render.yaml`**, a Render Blueprint, declares the two services (Docker, Frankfurt) and `tonaris-db`. Deploys wait for CI's checks. The API's pre-deploy step runs `bin/migrate.js`, then `bin/seed-creator.js`.
+  - **The API before the web app on one push:** `/v1/health` names the commit the API was built from (`GIT_COMMIT`, or Render's `RENDER_GIT_COMMIT`), an additive field. The web app's pre-deploy step, `apps/web/wait-for-api.ts`, waits until the API names its own commit, for up to 20 minutes, over the private network.
+  - **`API_INTERNAL_URL`** also takes a bare `host:port`, as Render's Blueprint gives it, meaning plain HTTP on the private network.
+  - **The API image** has the `~/.ssh` directory Render's Shell needs, where `bin/reconcile.js` runs (TS-113).
+  - **Cloudflare** is in front of both hostnames: DNS, TLS, and a cache rule for the image proxy's `/img/` (TS-103).
 
-**TS-111 Managed or Dockerised Postgres (Advisory: the creator decides; Q-04).**
+**TS-111 Managed or Dockerised Postgres (Decided 30 October 2026, the creator: managed, Render Postgres; Q-04, TON-108).**
 
-- **Managed Postgres** gives point-in-time recovery, automated backups, and patching, which makes Q-04 much easier for a solo operator.
-- **Dockerised Postgres** means owning WAL archiving, upgrades, and restore tooling.
-- Either way, the app uses only vanilla features (`pg_trgm`, standard types, CTEs), so `pg_dump` and restore work anywhere.
+- **Managed Postgres** gives point-in-time recovery, automated backups, and patching, which makes Q-04 much easier for a solo operator. Render Postgres 18 in Frankfurt (`tonaris-db` in `render.yaml`) is reachable only from the two services, over Render's private network.
+- **Dockerised Postgres** would have meant owning WAL archiving, upgrades, and restore tooling.
+- The app uses only vanilla features (`pg_trgm`, standard types, CTEs), so `pg_dump` and restore work anywhere, should it move.
 - Local development uses a native Postgres 18 (TS-06). CI runs Postgres 18 as a service container on the runner (TS-124).
 
-**TS-112 Backup tooling (Decided tooling; objectives are creator-owned, Q-04).**
+**TS-112 Backups (Decided; objectives are creator-owned, Q-04).**
 
-- `tooling/backup` is a portable script. It runs `pg_dump -Fc` (PG18 client), encrypts the dump with `age` to an offline-held public key, and uploads it to S3-compatible off-site storage. It runs on any host's scheduler or a developer machine.
-- `tooling/restore` and the runbook `docs/runbooks/restore.md` restore a dump into a fresh database and run the TS-113 reconciliation.
-- These are the creator's decisions (Q-04), made on 30 October 2026 (TON-97):
-  - **retention:** 30 days, one backup a day;
-  - **recovery point:** 24 hours;
+- **Render Postgres's point-in-time recovery is the backup** (the creator, 30 October 2026, TON-108). Render backs the database up continuously, and restores it to a chosen moment as a new database. Tonaris schedules and records nothing.
+- The runbook `docs/runbooks/restore.md` restores and runs the TS-113 reconciliation on the result.
+- These are the creator's decisions (Q-04):
+  - **retention:** Render's window, 3 days on its Hobby plan and 7 on Pro;
+  - **recovery point:** a few minutes;
   - **recovery time:** 24 hours;
-  - **the host's point-in-time recovery:** not relied on, since the daily encrypted backup meets the recovery point;
+  - **protection:** the backups stay with Render, reachable only through the creator's account; the ledger is kept apart, outside Render (TS-113);
   - **the drill schedule:** every 3 months.
-- *As built in TON-96* (`tooling/src/backup/`, runbook `docs/runbooks/restore.md`): the scripts live in `tooling/src/backup/` beside the rest of the repository's tools.
-  - **`backup.ts`** pipes `pg_dump -Fc` into `age --encrypt` and stores `tonaris-YYYYMMDDTHHMMSSZ.dump.age` at `BACKUP_URL`: a `file:` directory, or `s3://bucket/prefix` through Bun's S3 client. It removes backups past 30 days and records each success in `backup_runs`, for TS-115's admin view.
-  - **`restore.ts`** decrypts a backup and restores it with `pg_restore` into an empty database. It then runs TS-113's reconciliation and reports.
-  - **The first drill** (30 October 2026, local, the 5,000-album workload): a backup in 0.2 s and a restore in 0.4 s, with nothing revived.
+- *History:* TON-96 first built a portable nightly backup, with `pg_dump -Fc` encrypted by `age` to an offline-held key, stored off-site, kept 30 days, and recorded in `backup_runs`. Its first drill (30 October 2026, local, the 5,000-album workload) backed up in 0.2 s and restored in 0.4 s, with nothing revived. TON-108 removed it for Render's recovery, along with `backup_runs` and the admin view's backup age.
 
 **TS-113 Restore reconciliation (Decided; Q-04).**
 
@@ -1735,7 +1738,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
   - Trash purge
   - admission-invitation revocation
 - **Restore runbook:**
-  1. restore into maintenance mode, which blocks all access, including guests and MCP;
+  1. restore into a new database with both services in maintenance mode, which blocks all access, including guests and MCP;
   2. replay ledger events newer than the restore point;
   3. run the Trash-expiry sweep;
   4. rotate the session and HMAC secrets;
@@ -1756,8 +1759,10 @@ The creator chooses the host, region, and budget; the current preference is Rend
     - `file:` writes monthly JSON-lines files.
     - `s3://bucket/prefix` writes one object per event, since objects can't be appended to.
     - Events carry IDs only.
-  - **Replay:** `replayLedger` applies events in order and idempotently. The restore replays from 10 minutes before the backup was taken, as replaying an event again is harmless.
-  - **Maintenance mode** is restoring into a new database that nothing serves until the switch-over (runbook step 1).
+  - **Replay:** `replayLedger` applies events in order and idempotently. The restore replays from 10 minutes before the restore point, as replaying an event again is harmless.
+  - **Maintenance mode** is restoring into a new database that nothing serves until the switch-over (runbook step 1). On Render, both services' maintenance mode also keeps visitors out meanwhile.
+  - *Since TON-108:* `reconcileRestored` (`packages/db/src/reconcile.ts`) does steps 2–4 on a database Render restored. The API image carries it as `bin/reconcile.js`, run from the API's Render Shell, where `LEDGER_URL` and the R2 key already are. It refuses the live `DATABASE_URL`.
+  - *On R2 (TON-108):* the ledger's bucket locks `events/` for 30 days, so not even the API's key can delete or overwrite an event. A retried append whose first write landed is refused by the lock; it counts as done once the object is there.
   - **Step 4, the secrets:** the restore ends every session and MCP token in the restored database, rather than rotating `BETTER_AUTH_SECRET`. That secret also derives every share link's address (`shareToken`), so rotating it would break every shared link. Ending the sessions and tokens does what rotation was for: nothing signed in before the restore still is. The secret is rotated only if it may have leaked.
 
 **TS-114 Historical-backup deletion disclosure (Decided 30 October 2026, Q-04; TON-97).** The creator approved this wording, as written, for the account-deletion screen and the privacy notice:
@@ -1772,7 +1777,7 @@ The "30 days" matches the backup retention the creator set (Q-04).
 - Sentry in its EU region for frontend and backend errors and traces, with PII scrubbing that excludes titles, descriptions, and emails.
 - JSON structured logs to stdout, collected by the host. Tokens are redacted.
 - An external uptime check on both services' `/healthz` and on a synthetic `/s/` page.
-- The admin view shows job-queue failures and the age of the last successful backup.
+- The admin view shows job-queue failures. Backups are Render's (TS-112), so their status is on Render's dashboard.
 
 *As built in TON-91* (runbook: `docs/runbooks/monitoring.md`):
 - **Redaction:** `redact` and `redactText` (`packages/domain/src/telemetry.ts`) are shared by the API and the web app.
@@ -1785,7 +1790,7 @@ The "30 days" matches the backup retention the creator set (Q-04).
   - **The web app** uses `@sentry/browser` 11, with its DSN in a `<meta>` and the project's exact ingest host in `connect-src`. It loads Sentry only when there is a DSN, as a 31 KB gzipped chunk of the three functions it uses, and reports what route boundaries catch (`defaultOnCatch`).
   - **Collected:** Sentry 11 collects users, cookies, headers, bodies and query strings unless told not to, so `dataCollection` turns each off. `beforeSend` and `beforeBreadcrumb` redact what's left.
   - **Breadcrumbs:** the browser keeps no console or DOM breadcrumbs.
-- **Admin → Operations:** `GET /v1/admin/operations` (creator only) gives the 50 latest jobs that gave up, their errors redacted, and the last `backup_runs` row. The page shows the backup's age, in red after 26 hours.
+- **Admin → Operations:** `GET /v1/admin/operations` (creator only) gives the 50 latest jobs that gave up, their errors redacted. TON-108 removed its `lastBackup` with the nightly backup, as a one-time exception in `oasdiff-ignore.txt`; the page now says where Render keeps the backups.
   - **Send a test error** calls `POST /v1/admin/operations/test-error`, which fails on purpose with a fake address and token, and also reports a browser error. Sentry must show both redacted: the done-when's check.
 - **Uptime checks** are the host's or a monitor's, set up by the creator, on `/healthz` of both services and a "Status check" share link.
 

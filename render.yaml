@@ -1,0 +1,102 @@
+# Tonaris on Render (TS-110, TS-111; setup and checks: docs/deploy.md): the API, the web app and Postgres 18, in
+# Frankfurt, behind Cloudflare. This Blueprint creates them and keeps them in step with this file. Pushes to main
+# deploy once CI's checks pass. The API migrates and seeds the creator before it starts; the web app waits until the
+# API runs the same commit (TS-01). Values marked `sync: false` are asked for once, when the Blueprint is created.
+# Schema: https://render.com/schema/render.yaml.json
+
+services:
+  - type: web
+    name: tonaris-api
+    runtime: docker
+    region: frankfurt
+    plan: 0.5c-512mb
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    autoDeployTrigger: checksPass
+    # Migrations first (TS-17), then the creator bootstrap, which changes nothing once the creator exists (TS-71).
+    preDeployCommand: sh -c "bun bin/migrate.js && bun bin/seed-creator.js"
+    healthCheckPath: /healthz
+    domains:
+      - api.tonaris.app
+    envVars:
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tonaris-db
+          property: connectionString
+      - key: API_ORIGIN
+        value: https://api.tonaris.app
+      - key: WEB_ORIGIN
+        value: https://tonaris.app
+      # Generated once and kept: changing it signs everyone out and breaks every share link (TS-32).
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: Tonaris <no-reply@mail.tonaris.app>
+      - key: SUPPORT_EMAIL
+        sync: false
+      - key: CREATOR_EMAIL
+        sync: false
+      # Every request arrives through Cloudflare, which sets it; Render's own subdomain is turned off (TS-104).
+      - key: CLIENT_IP_HEADER
+        value: CF-Connecting-IP
+      # The revocation ledger on Cloudflare R2 (TS-113).
+      - key: LEDGER_URL
+        value: s3://tonaris-ledger/events
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: SENTRY_DSN
+        sync: false
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+
+  - type: web
+    name: tonaris-web
+    runtime: docker
+    region: frankfurt
+    plan: 0.5c-512mb
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: .
+    autoDeployTrigger: checksPass
+    # Until the API runs this commit (TS-01).
+    preDeployCommand: bun wait-for-api.ts
+    healthCheckPath: /healthz
+    domains:
+      - tonaris.app
+    envVars:
+      - key: PORT
+        value: "3000"
+      - key: API_URL
+        value: https://api.tonaris.app
+      # The API over Render's private network, for the server's own reads (TS-03).
+      - key: API_INTERNAL_URL
+        fromService:
+          type: web
+          name: tonaris-api
+          property: hostport
+      - key: SENTRY_DSN
+        sync: false
+
+databases:
+  - name: tonaris-db
+    databaseName: tonaris
+    user: tonaris
+    region: frankfurt
+    plan: 0.1c-256mb
+    postgresMajorVersion: "18"
+    diskSizeGB: 1
+    storageAutoscalingEnabled: true
+    # No connections from outside Render: only the services reach it, over the private network. A restore is
+    # reconciled from the API's Shell (docs/runbooks/restore.md).
+    ipAllowList: []

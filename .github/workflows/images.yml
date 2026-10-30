@@ -16,6 +16,7 @@ on:
       - apps/*/Dockerfile
       - apps/api/build.ts
       - apps/web/server.ts
+      - apps/web/wait-for-api.ts
       - apps/web/vite.config.ts
       - package.json
       - bun.lock
@@ -31,6 +32,7 @@ on:
       - apps/*/Dockerfile
       - apps/api/build.ts
       - apps/web/server.ts
+      - apps/web/wait-for-api.ts
       - apps/web/vite.config.ts
       - package.json
       - bun.lock
@@ -97,9 +99,12 @@ jobs:
             docker run --rm --network host --env-file "$RUNNER_TEMP/api.env" \
               -e CREATOR_EMAIL=creator@tonaris.example tonaris-api bun bin/seed-creator.js
           done
-      - name: Start the API, then the web app
+      - name: Start the API, then the web app once the API runs this commit (its pre-deploy step)
         run: |
-          docker run -d --name api --network host --env-file "$RUNNER_TEMP/api.env" tonaris-api
+          docker run -d --name api --network host --env-file "$RUNNER_TEMP/api.env" -e GIT_COMMIT="$GITHUB_SHA" \
+            tonaris-api
+          docker run --rm --network host -e API_URL=https://api.tonaris.example -e API_INTERNAL_URL=localhost:3001 \
+            -e GIT_COMMIT="$GITHUB_SHA" tonaris-web bun wait-for-api.ts
           docker run -d --name web --network host -e API_URL=https://api.tonaris.example tonaris-web
       - name: Both report healthy
         run: |
@@ -130,6 +135,15 @@ jobs:
           page=$(curl -fsS -D "$RUNNER_TEMP/web-headers" http://localhost:3000/sign-in)
           grep -q '<meta name="tonaris:api-url" content="https://api.tonaris.example"' <<< "$page"
           grep -qi "content-security-policy: .*connect-src 'self' https://api.tonaris.example" "$RUNNER_TEMP/web-headers"
+      - name: Reconcile a restored database (TS-113), and the API's shell has its ~/.ssh
+        run: |
+          docker run --rm --network host postgres:18.4 createdb -h localhost -U postgres tonaris_restored
+          restored=postgres://postgres@localhost:5432/tonaris_restored
+          docker run --rm --network host --env-file "$RUNNER_TEMP/api.env" -e DATABASE_URL="$restored" \
+            tonaris-api bun bin/migrate.js
+          docker run --rm --network host --env-file "$RUNNER_TEMP/api.env" tonaris-api \
+            bun bin/reconcile.js --into "$restored" --restored-to "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          docker run --rm tonaris-api sh -c 'test "$(stat -c %a:%U ~/.ssh)" = 700:bun'
       - name: Container logs
         if: always()
         run: |
