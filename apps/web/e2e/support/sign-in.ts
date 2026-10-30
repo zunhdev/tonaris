@@ -13,10 +13,15 @@ export async function requestCode(page: Page, email: string, from = "/sign-in"):
   await expect(page.getByRole("heading", { name: `Check ${email}` })).toBeVisible();
 }
 
-/** Signs in with the emailed code and waits until the page leaves sign-in. */
+/**
+ * Signs in with the emailed code and waits until the workspace it lands in is live. The address bar changes first;
+ * the router's last step comes after, and a `goto` made before then is interrupted by it, which a busy WebKit can
+ * take a while to make (TON-94, TON-102).
+ */
 export async function signIn(page: Page, email: string, from = "/sign-in"): Promise<void> {
   await requestCode(page, email, from);
   const { code } = await signInEmail(email);
   await page.getByLabel("Code", { exact: true }).fill(code);
   await expect(page).not.toHaveURL(/\/sign-in/);
+  await page.waitForFunction(() => window.tonarisSync?.engine.status === "live");
 }

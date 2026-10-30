@@ -75,6 +75,21 @@ async function emailStatus(id: string): Promise<string | null | undefined> {
   }
 }
 
+/**
+ * The jobs left once the finished ones are removed, or after 2 s. The email's status is recorded before the worker
+ * removes its job, so the row can outlast it for a moment (TON-102).
+ */
+async function jobsLeft() {
+  const deadline = Date.now() + 2_000;
+  for (;;) {
+    // oxlint-disable-next-line no-await-in-loop
+    const rows = await t.db.select().from(jobs);
+    if (rows.length === 0 || Date.now() > deadline) return rows;
+    // oxlint-disable-next-line no-await-in-loop
+    await Bun.sleep(5);
+  }
+}
+
 /** The queue's one job, once it is dead. */
 async function deadJob() {
   const deadline = Date.now() + 2_000;
@@ -107,7 +122,7 @@ describe("the email job (TS-72)", () => {
         options: { idempotencyKey: expect.any(String) },
       },
     ]);
-    expect(await t.db.select().from(jobs)).toEqual([]);
+    expect(await jobsLeft()).toEqual([]);
   });
 
   test("a retry after a timeout uses the same key, so the provider sends it once", async () => {

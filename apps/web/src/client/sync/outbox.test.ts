@@ -143,11 +143,39 @@ describe("adoption (TS-22, TS-23)", () => {
     await Bun.sleep(1);
 
     const { send, sends } = stubSend();
-    const outbox = createOutbox({ send, persistence, tab: browser.tab("anna") });
+    const outbox = createOutbox({
+      send,
+      persistence,
+      tab: browser.tab("anna"),
+      adoptRetriesMs: [1, 1],
+    });
     await outbox.adopt();
-    await Bun.sleep(5);
+    await Bun.sleep(10);
     expect(sends).toEqual([]);
     expect(await persistence.entries()).toHaveLength(1);
+  });
+
+  test("a reloaded tab still letting go of its lock is adopted on a later look (TON-102)", async () => {
+    const browser = memoryBrowser();
+    const persistence = memoryPersistence();
+    const old = browser.tab("anna");
+    const a = item("A");
+    await persistence.putEntry({ id: uuidv7(), tab: old.id, createdAt: 1, items: [a] });
+
+    const { send, sends } = stubSend();
+    const outbox = createOutbox({
+      send,
+      persistence,
+      tab: browser.tab("anna"),
+      adoptRetriesMs: [5, 5, 5],
+    });
+    // The new page looks before the old one's lock is gone.
+    await outbox.adopt();
+    expect(sends).toEqual([]);
+    old.close();
+    await Bun.sleep(30);
+    expect(sends.map((entry) => entry.items[0]?.key)).toEqual([a.key]);
+    expect(await persistence.entries()).toEqual([]);
   });
 });
 

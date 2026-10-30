@@ -126,6 +126,34 @@ describe("startJobWorker", () => {
     expect(recorder.runs).toHaveLength(1);
   });
 
+  test("a long job doesn't hold up the rest: another lane takes what is queued meanwhile (TON-102)", async () => {
+    let finish: (() => void) | undefined;
+    const started: string[] = [];
+    const firstSlow: JobHandler = {
+      kind: "test",
+      run: (job) => {
+        started.push(job.id);
+        // The first job runs until released; the rest finish at once.
+        if (started.length > 1) return Promise.resolve();
+        return new Promise((resolve) => {
+          finish = resolve;
+        });
+      },
+      buried: async () => ({}),
+    };
+    worker = startJobWorker(t.db, [firstSlow], { pollMs: 60_000, concurrency: 2 });
+    const slow = await queue();
+    worker.wake();
+    await until(() => started.length === 1);
+    // The other lane has found nothing more and stopped; a job queued now must not wait for the slow one.
+    await Bun.sleep(20);
+    const quick = await queue();
+    worker.wake();
+    await until(() => started.length === 2);
+    expect(started).toEqual([slow, quick]);
+    finish?.();
+  });
+
   test("stopping waits for the job in progress, and takes no more", async () => {
     let finish: (() => void) | undefined;
     const started: string[] = [];

@@ -4,7 +4,7 @@
 // run it headed (`--headed`), since headless Chromium paces frames irregularly even when idle. Each test signs in
 // with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Locator, test, type Page } from "@playwright/test";
 
 import { uuidv7, type Container } from "@tonaris/domain";
 
@@ -202,6 +202,17 @@ function report(layout: string, frames: number[]): void {
   );
 }
 
+/**
+ * Clicks `view`'s first drawn cell until a cell of it holds focus. A layout switch can draw the view again just
+ * after the click, taking the focused cell with it, and a key pressed then reaches nothing (TON-102).
+ */
+async function focusIn(view: Locator): Promise<void> {
+  await expect(async () => {
+    await view.getByRole("gridcell").first().click();
+    await expect(view.locator(":focus")).toHaveCount(1, { timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+}
+
 test("5,000 albums stay virtualized in both layouts", async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -217,7 +228,7 @@ test("5,000 albums stay virtualized in both layouts", async ({ page }) => {
   const unsorted = grid(page, "Unsorted");
   await expect(unsorted).toHaveAttribute("aria-rowcount", "5001");
   expect(await rows(page, "Unsorted").count()).toBeLessThan(60);
-  await rows(page, "Unsorted").first().getByRole("gridcell").first().click();
+  await focusIn(unsorted);
   await page.keyboard.press("ControlOrMeta+End");
   // The jump scrolls past 5,000 rows, which a busy machine can take beyond the default 5 s to draw; this test is
   // about virtualization, and TS-120's measurements time the views (TON-102).
@@ -237,7 +248,7 @@ test("5,000 albums stay virtualized in both layouts", async ({ page }) => {
   const columns = Number(await cards.getAttribute("aria-colcount"));
   await expect(cards).toHaveAttribute("aria-rowcount", String(Math.ceil(5_000 / columns)));
   expect(await cards.getByRole("gridcell").count()).toBeLessThan(120);
-  await cards.getByRole("gridcell").first().click();
+  await focusIn(cards);
   await page.keyboard.press("ControlOrMeta+End");
   await expect(page.locator(":focus")).toHaveAccessibleName(/^Album 5000/, { timeout: 15_000 });
   if (process.env.MEASURE_SCROLL) {
