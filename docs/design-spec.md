@@ -262,6 +262,9 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **The inspector names it "Cover of {title}";** rows and cards keep it decorative.
 - **A failed load removes the image and keeps the tile.** Replaced artwork loads afresh.
 
+*As built in TON-110:*
+- **The tile's letter skips leading punctuation and spaces:** "...And Justice for All" shows "A", and "(What's the Story) Morning Glory?" shows "W". Symbols and emoji still count, so "÷" shows "÷". A title made only of punctuation shows its first mark.
+
 **DS-24 Chronology display.** *(FR-05.5, FR-05.6, FR-02.8)*
 
 | Case | Display |
