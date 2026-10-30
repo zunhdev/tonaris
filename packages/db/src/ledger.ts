@@ -3,8 +3,10 @@
 // until it lands. Where it is written is `LEDGER_URL`:
 // - `file:///dir/` (development and drills): monthly JSON-lines files, `ledger-YYYY-MM.jsonl`, appended to;
 // - `s3://bucket/prefix` (production): one object per event, `prefix/{eventId}.json`, in a bucket of its own with
-//   write-once retention where the storage supports it. Credentials come from the `S3_*` environment (Bun).
-// A retried append can write an event twice; reading drops the repeat, and the replay is idempotent anyway.
+//   write-once retention where the storage supports it (an R2 bucket lock, docs/deploy.md). Credentials come from
+//   the `S3_*` environment (Bun).
+// A retried append can write an event twice. A locked bucket refuses the second write, which counts as done once the
+// object is there; elsewhere, reading drops the repeat, and the replay is idempotent anyway.
 
 import { appendFile, mkdir, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -85,7 +87,13 @@ function s3Ledger(client: Bun.S3Client, prefix: string): LedgerStore {
   const keyOf = (id: string) => (prefix ? `${prefix}/${id}.json` : `${id}.json`);
   return {
     async append(event) {
-      await client.write(keyOf(event.id), JSON.stringify(event), { type: "application/json" });
+      const key = keyOf(event.id);
+      try {
+        await client.write(key, JSON.stringify(event), { type: "application/json" });
+      } catch (error) {
+        // A bucket lock refuses to overwrite: an earlier attempt landed, though its answer may not have.
+        if (!(await client.file(key).exists())) throw error;
+      }
     },
     async events() {
       const keys: string[] = [];

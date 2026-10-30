@@ -5,3 +5,7 @@ GET /v1/approvals/{id} the `operation` response property const value `delete_alb
 GET /v1/approvals/{id} the 'operation' response property const value 'delete_albums' was removed for the status '200'
 POST /v1/approvals/{id}/decision the `operation` response property const value `delete_albums` was removed for the status `200`
 POST /v1/approvals/{id}/decision the 'operation' response property const value 'delete_albums' was removed for the status '200'
+# TON-108, 30 October 2026: backups became Render Postgres's own (TS-112), so nothing records the last operator
+# backup. Its only reader was the web app's Admin → Operations page.
+GET /v1/admin/operations removed the required property `lastBackup` from the response with the `200` status
+GET /v1/admin/operations removed the required property 'lastBackup' from the response with the '200' status

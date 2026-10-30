@@ -1,5 +1,5 @@
-// Admin → Operations (TS-115): the jobs that gave up and the age of the last operator backup, and a test error to
-// check the reports with, for the creator only.
+// Admin → Operations (TS-115): the jobs that gave up, and a test error to check the reports with, for the creator
+// only. Backups are Render's (TS-112), so their status is on Render's dashboard, not here.
 
 import { Elysia } from "elysia";
 import { z } from "zod";
@@ -23,16 +23,6 @@ const operationsSchema = z
         }),
       )
       .meta({ description: "The 50 latest jobs that gave up after their retries, newest first." }),
-    lastBackup: z
-      .object({
-        finishedAt: z.iso.datetime(),
-        objectKey: z.string(),
-        bytes: z.int().nonnegative(),
-      })
-      .nullable()
-      .meta({
-        description: "The last successful operator backup (TS-112); null before the first.",
-      }),
   })
   .meta({ description: "The service's health, for the creator (TS-115)." });
 
@@ -69,8 +59,7 @@ export function operationsRoutes(session: SessionGuard, { db }: { db: Database }
         response: { 200: operationsSchema, 401: problemSchema, 403: problemSchema },
         detail: {
           summary: "Show the service's health",
-          description:
-            "The jobs that gave up after their retries, and when the last operator backup finished. Creator only (TS-115).",
+          description: "The jobs that gave up after their retries. Creator only (TS-115).",
           tags: ["admission"],
           operationId: "getOperations",
         },
@@ -79,14 +68,13 @@ export function operationsRoutes(session: SessionGuard, { db }: { db: Database }
         requireCreator(principal);
         const status = await operationsStatus(db);
         return {
-          failedJobs: status.failedJobs.map((job) => ({
-            ...job,
-            deadAt: job.deadAt.toISOString(),
+          failedJobs: status.failedJobs.map(({ id, kind, attempts, lastError, deadAt }) => ({
+            id,
+            kind,
+            attempts,
+            lastError,
+            deadAt: deadAt.toISOString(),
           })),
-          lastBackup: status.lastBackup && {
-            ...status.lastBackup,
-            finishedAt: status.lastBackup.finishedAt.toISOString(),
-          },
         };
       },
     );

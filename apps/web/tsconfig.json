@@ -9,5 +9,5 @@
       "@tonaris/ui/*": ["../../packages/ui/src/*"]
     }
   },
-  "include": ["src", "e2e", "perf", "*.config.ts", "server.ts"]
+  "include": ["src", "e2e", "perf", "*.config.ts", "server.ts", "wait-for-api.ts"]
 }

@@ -50,7 +50,13 @@ import { syncRoutes } from "./sync/routes";
 export const maxRequestBodySize = 4 * 1024 * 1024;
 
 export const healthSchema = z
-  .object({ status: z.literal("ok") })
+  .object({
+    status: z.literal("ok"),
+    commit: z.string().optional().meta({
+      description:
+        "The commit the running API was built from, when the host says: the web app's deploy waits for it (TS-01).",
+    }),
+  })
   .meta({ description: "The API is up." });
 
 /** The versioned contract (TS-09): additive changes only within /v1. */
@@ -65,6 +71,7 @@ function v1(
     emailChange: EmailChangeDeps;
     accountDeletion: AccountDeletionDeps;
     supportEmail: string;
+    commit: string | undefined;
   },
 ) {
   return new Elysia({ prefix: "/v1" })
@@ -75,7 +82,7 @@ function v1(
         response: healthSchema,
         detail: { summary: "Check that the API is up", tags: ["system"], operationId: "getHealth" },
       },
-      () => ({ status: "ok" as const }),
+      () => ({ status: "ok" as const, ...(sync.commit ? { commit: sync.commit } : {}) }),
     )
     .use(supportRoutes(sync))
     .use(meRoutes(session))
@@ -192,6 +199,7 @@ export function createApp({
           emailChange: { db, email, limiter, clientIpHeader: config.clientIpHeader },
           accountDeletion: { db, wakeJobs, notify: (accountId) => hub.notify(accountId) },
           supportEmail: config.supportEmail,
+          commit: config.commit,
         }),
       )
   );

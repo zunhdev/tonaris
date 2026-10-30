@@ -4,6 +4,7 @@
 #   service (default)                docker run tonaris-api
 #   pre-deploy migration (TS-17)     docker run tonaris-api bun bin/migrate.js
 #   creator bootstrap (TS-71)        docker run -e CREATOR_EMAIL=… tonaris-api bun bin/seed-creator.js
+#   after a restore (TS-113)         bun bin/reconcile.js --into … --restored-to …, in the host's shell
 # Settings come from the environment (.env.example); production refuses to start without its secrets.
 
 FROM oven/bun:1.4.3 AS build
@@ -29,6 +30,8 @@ FROM oven/bun:1.4.3-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3001
 COPY --from=build --chown=bun:bun /repo/apps/api/dist ./
+# Render's Shell, where bin/reconcile.js runs after a restore, needs the running user's ~/.ssh (docs/deploy.md).
+RUN install -d -m 0700 -o bun -g bun /home/bun/.ssh
 USER bun
 EXPOSE 3001
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \

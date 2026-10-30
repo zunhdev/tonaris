@@ -1,8 +1,8 @@
-// Admin → Operations (TS-115): the creator sees the jobs that gave up, redacted, and the last backup; a member can't.
+// Admin → Operations (TS-115): the creator sees the jobs that gave up, redacted; a member can't.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { backupRuns, jobs } from "@tonaris/db";
+import { jobs } from "@tonaris/db";
 import { uuidv7 } from "@tonaris/domain";
 
 import { createTestApp, insertUser } from "./testing";
@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 describe("GET /v1/admin/operations", () => {
-  test("the creator sees the failed jobs, redacted, and the last backup", async () => {
+  test("the creator sees the failed jobs, redacted", async () => {
     await insertUser(t.db, "creator@example.com", { role: "creator" });
     const { cookie } = await t.signIn("creator@example.com");
     const deadAt = new Date("2026-10-30T03:00:00Z");
@@ -29,13 +29,6 @@ describe("GET /v1/admin/operations", () => {
       attempts: 4,
       lastError: "Resend refused ben@example.com",
       deadAt,
-    });
-    const finishedAt = new Date("2026-10-30T04:00:00Z");
-    await t.db.insert(backupRuns).values({
-      id: uuidv7(),
-      finishedAt,
-      objectKey: "tonaris-20261030T040000Z.dump.age",
-      bytes: 2_573_141,
     });
 
     const response = await t.call("/v1/admin/operations", { headers: { cookie } });
@@ -49,11 +42,6 @@ describe("GET /v1/admin/operations", () => {
           deadAt: deadAt.toISOString(),
         },
       ],
-      lastBackup: {
-        finishedAt: finishedAt.toISOString(),
-        objectKey: "tonaris-20261030T040000Z.dump.age",
-        bytes: 2_573_141,
-      },
     });
   });
 

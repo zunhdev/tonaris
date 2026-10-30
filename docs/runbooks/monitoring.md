@@ -38,5 +38,5 @@ In the uptime monitor, every 5 minutes, alerting by email:
 ## The admin view
 
 **Admin → Operations** shows:
-- when the last backup finished, in red after 26 hours, since a backup runs daily;
+- where the backups are: Render's, on the database's **Recovery** page (TS-112, `restore.md`);
 - the jobs that gave up after their retries, with their errors, redacted.

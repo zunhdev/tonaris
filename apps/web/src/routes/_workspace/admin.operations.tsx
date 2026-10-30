@@ -1,6 +1,6 @@
-// Admin → Operations (TS-115): the age of the last operator backup (TS-112), with a warning once it's older than the
-// daily schedule allows (Q-04: at most 24 hours lost), the jobs that gave up after their retries, and a test error that
-// checks the error reports end to end: the API's and the browser's, each with a fake address that must arrive redacted.
+// Admin → Operations (TS-115): where the backups are (Render's, TS-112), the jobs that gave up after their retries,
+// and a test error that checks the error reports end to end: the API's and the browser's, each with a fake address
+// that must arrive redacted.
 
 import { api } from "@/api";
 import { AdminNav } from "@/features/admin/admin-nav";
@@ -21,28 +21,16 @@ export const Route = createFileRoute("/_workspace/admin/operations")({
   loader: async () => {
     const { data, status } = await api.v1.admin.operations.get();
     if (!data) throw new Error(`Couldn't load the service's health (HTTP ${status}).`);
-    // When it was read, which the ages are measured from.
-    return { ...data, readAt: Date.now() };
+    return data;
   },
   component: OperationsPage,
 });
 
 const when = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
-const hour = 60 * 60_000;
-
-/** How long before `now` `iso` was, in hours or days. */
-function ago(iso: string, now: number): string {
-  const hours = Math.floor((now - Date.parse(iso)) / hour);
-  if (hours < 1) return "less than an hour ago";
-  if (hours < 48) return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
-  return `${Math.floor(hours / 24)} days ago`;
-}
 
 function OperationsPage() {
   const narrow = useNarrowScreen();
-  const { failedJobs, lastBackup, readAt } = Route.useLoaderData();
-  // A daily backup is late after a day and a few hours' slack (Q-04).
-  const late = lastBackup === null || readAt - Date.parse(lastBackup.finishedAt) > 26 * hour;
+  const { failedJobs } = Route.useLoaderData();
   return (
     <>
       <PageHeader title="Operations" back={{ to: "/c", label: "Collection" }} />
@@ -55,18 +43,11 @@ function OperationsPage() {
             <h2 id="backups" className="text-title text-fg-primary">
               Backups
             </h2>
-            {lastBackup ? (
-              <p className={late ? "text-status-danger" : "text-fg-secondary"}>
-                The last backup finished {ago(lastBackup.finishedAt, readAt)}, on{" "}
-                {when.format(new Date(lastBackup.finishedAt))}: {lastBackup.objectKey},{" "}
-                {(lastBackup.bytes / 1_048_576).toFixed(1)} MB.
-                {late && " It's late: a backup runs every day."}
-              </p>
-            ) : (
-              <p className="text-status-danger">
-                No backup is recorded yet. Schedule the daily backup (docs/runbooks/restore.md).
-              </p>
-            )}
+            <p className="text-fg-secondary">
+              Render backs up the database continuously and can restore it to any moment of the last
+              3 days, or 7 on its Pro plan. Its dashboard shows them, under the database's Recovery
+              page. To restore one, follow docs/runbooks/restore.md.
+            </p>
           </section>
           <TestError />
           <section aria-labelledby="failed-jobs" className="flex flex-col gap-2">
