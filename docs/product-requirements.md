@@ -82,6 +82,8 @@ The substantial first-version scope is accepted. Work is delivered in increments
   - signing in and out.
 
   Guests can view valid shared links. Collection-content edits are desktop-only in the browser (X-04). Mobile coverage of account and sharing administration is not required.
+
+  The web app can be installed on a phone's home screen, from Chrome on Android or Safari's Add to Home Screen on iOS, and then opens full screen like an app. It still needs a connection to open (decided 30 October 2026, TON-115).
 - **Supported browsers.** Desktop: Chrome, Edge, Firefox, and Safari. Mobile: Safari on iOS and Chrome on Android. Exact versions and the OS test matrix are in the tech spec.
 - **Later platforms.** Native iOS and Android apps are planned for a later phase, and desktop apps for a more distant one. They are not specified here. Native apps will use the same service API as the web app (tech spec).
 
@@ -1089,6 +1091,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - **Backups:** Render Postgres's point-in-time recovery replaces the daily encrypted off-site dump. It keeps 3 days on Render's Hobby plan and 7 on Pro, and loses at most a few minutes of changes. The recovery time and drills are unchanged.
   - **Disclosure:** TS-114's wording still holds, since backups now leave within 7 days at most.
   - **Updated** Q-04.
+- **Decision (30 October 2026), installing on phones** (TON-115), from the creator's manual testing: the web app is installable through a web app manifest, and opens full screen from the home screen. It doesn't open offline. **Updated** section 2.2.
 - **Decision (30 October 2026), Find artwork** (TON-112), from the creator's manual testing: owners can choose a cover the Cover Art Archive has for an album's title and artist, so an album MusicBrainz didn't match can still get artwork. Other services' covers stay out, as their terms require. **Updated** FR-03.4.
 - **Decision (30 October 2026), an agent's details** (TON-111), from the creator's manual testing: details an agent sends for a link no step identified are matched like a store page's hints, so the album gets its MusicBrainz values and artwork. The app's manual entry still adds an album without a lookup (FR-02.4). **Updated** FR-10.5.
 - **Clarifications** (no intended behavior change; flagged in the audit):

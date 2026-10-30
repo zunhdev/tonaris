@@ -1760,6 +1760,11 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
   - Settings' row leaves out Custom fields, and scrolls sideways if it must.
 - **A shared view's** "View only · Shared by {owner}" moves under the top bar.
 
+*As built in TON-115:* **installable.** `/manifest.webmanifest` names the app "Tonaris", starts at `/c`, displays `standalone`, and gives `bg.app`'s color as its background and theme, with TON-114's icons: 192 and 512 px, and a maskable 512 px.
+- **Android Chrome** offers "Install app" in its menu, and the installed app opens without browser chrome.
+- **iOS** uses the square `apple-touch-icon` for Add to Home Screen, and `apple-mobile-web-app-capable` opens it full screen, with a black status bar above the top bar.
+- **No offline launch:** there is no service worker, so opening the app needs a connection, as section 2.3 says. Signed out, it opens on sign-in.
+
 ---
 
 ## 16. Accessibility and perceived performance

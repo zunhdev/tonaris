@@ -15,6 +15,12 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Tonaris" },
+      // Installed on a phone's home screen (TON-115): the dark theme behind the system bars, and full screen on iOS.
+      { name: "theme-color", content: "#0b0c0f" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Tonaris" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black" },
       // The API origin the server was configured with, for the browser (src/config.ts).
       { name: apiUrlMeta, content: apiUrl },
       // Sentry's key, when errors are reported (src/observability.ts, TS-115).
@@ -27,6 +33,8 @@ export const Route = createRootRoute({
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      // What makes it installable (TON-115): name, icons, start page and standalone display.
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootDocument,
