@@ -9,9 +9,10 @@
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
 import { PageHeader } from "@/features/shell/page-header";
+import { useShell } from "@/features/shell/shell-context";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Inbox, Plus, Share2, Trash2, Users } from "lucide-react";
+import { Inbox, Pencil, Plus, Share2, Trash2, Users } from "lucide-react";
 import { useEffect, useMemo, type ReactNode } from "react";
 
 import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
@@ -195,6 +196,7 @@ function ViewHeader({
   const { editing } = useMode();
   const deleteContainer = useDeleteContainer();
   const { startShare } = useCollectionUi();
+  const { runCommand } = useShell();
   const narrow = useNarrowScreen();
   const offline = useConnection() === "offline";
   return (
@@ -215,6 +217,17 @@ function ViewHeader({
             >
               <Share2 strokeWidth={1.5} aria-hidden />
               Share
+            </Button>
+          )}
+          {/* Rename opens the name's editor in the sidebar, as F2 does (TON-117); it waits while offline. */}
+          {editing && container && (
+            <Button
+              variant="ghost"
+              disabled={offline}
+              onClick={() => runCommand("rename", { container: container.id })}
+            >
+              <Pencil strokeWidth={1.5} aria-hidden />
+              Rename
             </Button>
           )}
           {editing && container && (

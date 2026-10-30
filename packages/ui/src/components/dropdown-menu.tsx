@@ -24,11 +24,15 @@ function DropdownMenuContent({
   alignOffset = 0,
   side = "bottom",
   sideOffset = 4,
+  anchor,
   inDialog = false,
   className,
   ...props
 }: MenuPrimitive.Popup.Props &
-  Pick<MenuPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset"> & {
+  Pick<
+    MenuPrimitive.Positioner.Props,
+    "align" | "alignOffset" | "side" | "sideOffset" | "anchor"
+  > & {
     /**
      * Opened from inside a dialog: on the dialog's layer (DS-18, 60), where its portal, added after the dialog's,
      * stacks above it. On the dropdown layer (40) it would sit under the dialog, out of reach.
@@ -43,6 +47,8 @@ function DropdownMenuContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
+        // An element to place it by when it has no trigger, as a menu opened from a row does (TON-117).
+        {...(anchor === undefined ? {} : { anchor })}
       >
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"

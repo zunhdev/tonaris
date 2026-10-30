@@ -14,6 +14,7 @@ import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   ChevronRight,
+  Ellipsis,
   Inbox,
   MailOpen,
   ShieldCheck,
@@ -27,6 +28,7 @@ import type { ContainerKind } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionUi, useEditor, useStartEditor, useViewContainerId } from "./collection-ui";
+import { ContainerMenu, type ContainerMenuTarget } from "./container-menu";
 import { useCollectionData } from "./data";
 import { useDestination, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
@@ -125,6 +127,8 @@ export function CollectionTree() {
   /** A row to focus once it is rendered, such as a new folder's after its editor closes. */
   const pending = useRef<string>(undefined);
   const typed = useRef({ text: "", at: 0 });
+  /** The folder or list whose menu is open (TON-117). */
+  const [menu, setMenu] = useState<ContainerMenuTarget>();
 
   const keys = rows.map(keyOf);
   const tabbable =
@@ -205,6 +209,13 @@ export function CollectionTree() {
         if (row.type !== "container" || offline) return;
         handled();
         startEditor({ mode: "rename", id: row.container.id, name: row.container.name });
+        return;
+      case "ContextMenu":
+      case "F10":
+        // The row's menu, as its ⋯ opens it (TON-117): the Menu key, or Shift+F10.
+        if (row.type !== "container" || (event.key === "F10" && !event.shiftKey)) return;
+        handled();
+        setMenu({ id: row.container.id, name: row.container.name, row: event.target });
         return;
       default:
     }
@@ -319,9 +330,14 @@ export function CollectionTree() {
             tabbable={tabbable === key}
             count={row.container.kind === "list" ? (data.counts.get(key) ?? 0) : undefined}
             onToggle={() => ui.setExpanded(key, !row.expanded)}
+            menuOpen={menu?.id === key}
+            onMenu={(element) =>
+              setMenu({ id: row.container.id, name: row.container.name, row: element })
+            }
           />
         );
       })}
+      <ContainerMenu target={menu} onClose={() => setMenu(undefined)} />
     </div>
   );
 }
@@ -351,6 +367,8 @@ function ContainerRow({
   tabbable,
   count,
   onToggle,
+  menuOpen,
+  onMenu,
 }: {
   row: Extract<TreeRow, { type: "container" }>;
   register: (element: HTMLElement | null) => void;
@@ -358,6 +376,10 @@ function ContainerRow({
   tabbable: boolean;
   count: number | undefined;
   onToggle: () => void;
+  /** Whether this row's menu is open, which keeps its ⋯ shown. */
+  menuOpen: boolean;
+  /** Opens the row's menu by `row` (TON-117). */
+  onMenu: (row: HTMLElement) => void;
 }) {
   const { container, expanded } = row;
   const ref = useRef<HTMLAnchorElement | null>(null);
@@ -383,7 +405,12 @@ function ContainerRow({
     "aria-selected": selected,
     "aria-busy": status === "pending" || status === "unconfirmed" ? true : undefined,
     tabIndex: tabbable ? 0 : -1,
-    className: cn(rowClass, destination.over && "bg-accent-soft", drag.dragging && "opacity-40"),
+    className: cn(
+      rowClass,
+      "group/row",
+      destination.over && "bg-accent-soft",
+      drag.dragging && "opacity-40",
+    ),
     style: indent(row.level),
   };
   const content = (
@@ -409,7 +436,30 @@ function ContainerRow({
       )}
       <ContainerIcon kind={container.kind} />
       <span className="min-w-0 flex-1 truncate">{container.name}</span>
-      {count !== undefined && <Count n={count} />}
+      {count !== undefined && (
+        // The ⋯ takes the count's place while it shows.
+        <span className={cn("contents", menuOpen ? "*:hidden" : "group-hover/row:*:hidden")}>
+          <Count n={count} />
+        </span>
+      )}
+      {/* Pointer only, like the chevron: the Menu key and Shift+F10 open the same menu (TON-117). */}
+      <span
+        aria-hidden
+        data-slot="row-menu"
+        className={cn(
+          "size-5 shrink-0 items-center justify-center rounded-sm text-fg-tertiary hover:bg-selected hover:text-fg-primary",
+          menuOpen ? "flex" : "hidden group-hover/row:flex",
+        )}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const element = event.currentTarget.closest<HTMLElement>('[role="treeitem"]');
+          if (element) onMenu(element);
+        }}
+      >
+        <Ellipsis strokeWidth={1.5} className="size-3.5" />
+      </span>
       <SaveStateMarker status={status} />
     </>
   );

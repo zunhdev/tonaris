@@ -107,8 +107,19 @@ export function Shell({ account, children }: { account: Account; children: React
       toggleSidebar,
       openShortcuts,
       openSearch,
+      runCommand: runner.run,
+      commandBlocked: runner.blocked,
     }),
-    [account, layout.hidden, beside, toggleSidebar, openShortcuts, openSearch],
+    [
+      account,
+      layout.hidden,
+      beside,
+      toggleSidebar,
+      openShortcuts,
+      openSearch,
+      runner.run,
+      runner.blocked,
+    ],
   );
 
   return (

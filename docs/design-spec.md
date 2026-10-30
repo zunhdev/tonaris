@@ -367,6 +367,14 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
   - **Enter** saves, **Escape** cancels, and leaving the field saves a name or cancels a blank one;
   - **A refused name** (blank, over 200 characters, or taken among its siblings) keeps the editor open with the domain's reason, and nothing is sent.
 
+*As built in TON-117* (the creator chose this, 30 October 2026): **each folder and list has a ⋯ menu.**
+- **The ⋯** shows at the row's right on hover, in place of a list's count, and stays while its menu is open. Like the chevron, it is for the pointer: the row stays one link in the tree.
+- **From the keyboard,** Shift+F10 or the Menu key opens the same menu on the focused row. The keyboard reference lists Shift+F10 under "Moving around". Escape closes it and gives the focus back to the row.
+- **The menu,** "Actions for {name}", holds Rename (F2), Move to… (M), Share… (⇧S), then Delete… (⌫) in danger text. Each item shows its key and runs that key's command on the row: the name's editor, the move dialog, the sharing dialog, or deletion as DS-50 has it. Edits switch to Editing mode first (DS-45).
+- **Offline,** the menu starts with "You're offline", and its items are disabled (DS-81).
+- **The view's header,** in Editing mode, has **Rename** beside Delete. It opens the sidebar's editor for the folder or list on view, showing the sidebar if it was hidden. Offline, it is disabled.
+- Collection, Unsorted, Shared with me, Trash and the other places have no menu.
+
 *(FR-01.1, FR-01.3, Q-02)*
 
 **DS-28 Standard confirmation dialog.** Built on AlertDialog. It is used for every *confirmed* operation (X-07). *(X-07, FR-07.14)*
