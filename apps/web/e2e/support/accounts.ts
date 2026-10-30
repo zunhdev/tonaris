@@ -96,6 +96,10 @@ export const accounts = {
   artworkFoundForm: at("artwork-found-form"),
   // The temporary identity (identity.e2e.ts).
   identity: at("identity"),
+  // The sidebar's row menu (container-menu.e2e.ts), one per test.
+  rowMenu: at("row-menu"),
+  rowMenuKeys: at("row-menu-keys"),
+  headerRename: at("header-rename"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),

@@ -220,6 +220,7 @@ const navigation: Partial<Record<Section, readonly ReferenceEntry[]>> = {
     { keys: ["↑", "↓"], action: "Move in the sidebar or a view" },
     { keys: ["J", "K"], action: "Next or previous row in a view" },
     { keys: ["←", "→"], action: "Collapse or expand a folder; move across a row" },
+    { keys: ["⇧", "F10"], action: "Open a folder's or list's menu in the sidebar" },
     { keys: ["⌘", "Home"], action: "First item in a view" },
     { keys: ["⌘", "End"], action: "Last item in a view" },
     { keys: ["Enter"], action: "Open; open an album in the inspector" },
