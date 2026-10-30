@@ -25,9 +25,20 @@ export type GridRearrange = {
   move: (id: string, to: Direction) => boolean;
 };
 
-/** The element's content width, kept current with a ResizeObserver. */
-export function useWidth(ref: RefObject<HTMLElement | null>): number {
+/**
+ * The element's content width, kept current with a ResizeObserver. A change of `remeasure` measures it again before
+ * the next paint, for a layout change the observer would report a frame late.
+ */
+export function useWidth(ref: RefObject<HTMLElement | null>, remeasure?: unknown): number {
   const [width, setWidth] = useState(0);
+  useLayoutEffect(
+    () => {
+      if (ref.current) setWidth(ref.current.clientWidth);
+    },
+    // `remeasure` isn't read: its change is the reason to measure.
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
+    [ref, remeasure],
+  );
   useEffect(() => {
     const element = ref.current;
     if (!element) return undefined;

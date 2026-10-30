@@ -133,6 +133,39 @@ test("a list's albums show as rows in chronological order, or as cards kept per 
   );
 });
 
+test("cards keep their size when the inspector opens beside them, showing fewer a row", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1500, height: 900 });
+  await signIn(page, accounts.viewsInspector);
+  await live(page);
+  const doom = await created(page, "Doom");
+  const albums = Array.from({ length: 8 }, (_, index) =>
+    album(`Doom ${index + 1}`, { originalYear: 1980 + index }),
+  );
+  await added(page, albums, doom.id);
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  await chooseLayout(page, "Grid");
+
+  const cards = grid(page, "Doom");
+  const first = cards.getByRole("gridcell", { name: /^Doom 1/ });
+  const width = async () => (await first.boundingBox())?.width;
+  const columns = await cards.getAttribute("aria-colcount");
+  const size = await width();
+  expect(size).toBeGreaterThan(160);
+
+  await first.click();
+  await expect(page.getByRole("complementary", { name: "Album" })).toBeVisible();
+  await expect(cards).not.toHaveAttribute("aria-colcount", columns ?? "");
+  expect(await width()).toBe(size);
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("complementary", { name: "Album" })).toHaveCount(0);
+  await expect(cards).toHaveAttribute("aria-colcount", columns ?? "");
+  expect(await width()).toBe(size);
+});
+
 test("a folder shows its folders and lists as rows, opened by keyboard", async ({ page }) => {
   await signIn(page, accounts.viewsFolder);
   await live(page);
