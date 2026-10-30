@@ -241,6 +241,8 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 
 *As built in TON-105* (decided with the creator, 30 October 2026): **a line under the year** names the services the album has links for, "Spotify · Apple Music", in `text.small` `fg.tertiary`, truncated. Each name is a link, as in DS-21's services column. Every card keeps the line, empty without links, so the grid's rows stay one height (88 px of text under the tile).
 
+*As built in TON-106* (decided with the creator, 30 October 2026): **the window sets a card's size, not the inspector.** Cards fill the row and resize with the window. The inspector beside the grid leaves fewer cards a row at the same size, with a gap of less than a card at the right. Before, the cards were resized to fill the narrower row.
+
 **DS-23 Artwork.**
 - A fixed-aspect box with lazy loading, `decoding="async"`, a `sizes`/`srcset` where the source allows it, and a 150ms fade-in.
 - **Fallback tile:** a neutral surface with the first letter of the title and a hue derived from a hash of the title, desaturated to stay calm. The same tile is used when artwork is missing, still loading, or fails to load. A failed load is never shown as an error. *(FR-03.4)*

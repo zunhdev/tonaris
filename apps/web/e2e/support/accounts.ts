@@ -47,6 +47,7 @@ export const accounts = {
   viewsList: at("views-list"),
   viewsFolder: at("views-folder"),
   viewsLarge: at("views-large"),
+  viewsInspector: at("views-inspector"),
   // Sorting, grouping, View options and defaults (view-options.e2e.ts), one per test.
   orderViews: at("order-views"),
   syncViews: at("sync-views"),

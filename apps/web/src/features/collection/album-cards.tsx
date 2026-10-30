@@ -1,5 +1,5 @@
 // Album cards (DS-22): a list's or Unsorted's albums as a virtualized ARIA grid of square artwork tiles, at least
-// 160 px wide in responsive columns, over the title, artist and year and the services the album has links for, each
+// 160 px wide in responsive columns, sized by the window rather than the inspector (TON-106), over the title, artist and year and the services the album has links for, each
 // opening that service (TON-105), with the save state as a corner badge. Each
 // virtual row is a row of cards; the grid states every row and column (DS-115). Grouped, each group starts with its
 // header on a row of its own, the one in view sticking at the top (DS-43). A click or Enter opens a card's album in the
@@ -10,6 +10,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { ServiceNames } from "@/features/open/service-names";
+import { inspectorWidth, useShell } from "@/features/shell/shell-context";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -72,9 +73,14 @@ export function AlbumCards({
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
-  const inner = Math.max(0, useWidth(scroller) - 2 * padding);
-  const columns = Math.max(1, Math.floor((inner + gap) / (minCard + gap)));
-  const card = Math.floor((inner - gap * (columns - 1)) / columns);
+  // The inspector beside the view leaves fewer cards a row, not other cards: their size is worked out as if it took
+  // no room, so opening and closing it keeps them as they are (TON-106).
+  const beside = useShell().inspectorBeside ? inspectorWidth : 0;
+  const inner = Math.max(0, useWidth(scroller, beside) - 2 * padding);
+  const whole = inner + beside;
+  const wholeColumns = Math.max(1, Math.floor((whole + gap) / (minCard + gap)));
+  const card = Math.min(inner, Math.floor((whole - gap * (wholeColumns - 1)) / wholeColumns));
+  const columns = Math.max(1, Math.floor((inner + gap) / (card + gap)));
   const rowSize = card + textHeight + gap;
   const items = useMemo(
     () => itemsOf(sections, collapsed, columns),

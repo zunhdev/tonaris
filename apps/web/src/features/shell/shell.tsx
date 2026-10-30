@@ -32,7 +32,7 @@ import type { Account } from "@tonaris/domain";
 
 import { sidebarLayout } from "./device";
 import { pageTitleId } from "./page-header";
-import { ShellContext, type ShellControl } from "./shell-context";
+import { inspectorWidth, ShellContext, type ShellControl } from "./shell-context";
 import { ShortcutReference } from "./shortcut-reference";
 import { Sidebar } from "./sidebar";
 import { useCommandRunner, useShortcuts, type CommandTarget } from "./use-shortcuts";
@@ -100,8 +100,15 @@ export function Shell({ account, children }: { account: Account; children: React
   useShortcuts({ runner, openSearch });
 
   const control = useMemo<ShellControl>(
-    () => ({ account, sidebarHidden: layout.hidden, toggleSidebar, openShortcuts, openSearch }),
-    [account, layout.hidden, toggleSidebar, openShortcuts, openSearch],
+    () => ({
+      account,
+      sidebarHidden: layout.hidden,
+      inspectorBeside: beside,
+      toggleSidebar,
+      openShortcuts,
+      openSearch,
+    }),
+    [account, layout.hidden, beside, toggleSidebar, openShortcuts, openSearch],
   );
 
   return (
@@ -113,7 +120,7 @@ export function Shell({ account, children }: { account: Account; children: React
             gridTemplateColumns: [
               sidebar ? `${layout.width}px` : undefined,
               "minmax(0,1fr)",
-              beside ? "380px" : undefined,
+              beside ? `${inspectorWidth}px` : undefined,
             ]
               .filter(Boolean)
               .join(" "),
