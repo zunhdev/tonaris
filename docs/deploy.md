@@ -130,7 +130,7 @@ Merging to `main` is the deploy:
 1. CI's checks run on `main`. Render waits for them (`autoDeployTrigger: checksPass`) and deploys nothing if one fails.
 2. **The API**:
    - Render builds its image.
-   - The pre-deploy step runs `bin/migrate.js` and `bin/seed-creator.js` (TS-17, TS-71). Pending migrations apply in one transaction, so a failure leaves the schema as it was, and the old version keeps running.
+   - The pre-deploy step, `bin/predeploy.js`, runs `bin/migrate.js`, then `bin/seed-creator.js` (TS-17, TS-71). Pending migrations apply in one transaction, so a failure leaves the schema as it was, and the old version keeps running.
    - The new instance starts, passes `/healthz`, and takes over.
 3. **The web app** builds at the same time. Its pre-deploy step, `wait-for-api.ts`, waits until the API's `/v1/health` names the same commit, then the web app takes over. If the API doesn't get there within 20 minutes, the web deploy fails and the running version stays.
 
@@ -202,8 +202,7 @@ Both use `oven/bun:1.4.3-slim`, run as the unprivileged `bun` user, and declare 
 ```sh
 bun install --frozen-lockfile
 bun run build                          # apps/api/dist and apps/web/dist
-bun apps/api/dist/bin/migrate.js       # pre-deploy
-bun apps/api/dist/bin/seed-creator.js  # pre-deploy
+bun apps/api/dist/bin/predeploy.js     # pre-deploy: migrate.js, then seed-creator.js
 bun apps/api/dist/bin/server.js        # tonaris-api
 bun apps/web/server.ts                 # tonaris-web
 ```

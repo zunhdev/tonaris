@@ -92,12 +92,11 @@ jobs:
           SUPPORT_EMAIL=help@tonaris.example
           LEDGER_URL=file:///tmp/ledger/
           EOF
-      - name: Pre-deploy steps (migrate, then seed the creator twice)
+      - name: Pre-deploy step, as render.yaml runs it, twice (migrate, then seed the creator)
         run: |
-          docker run --rm --network host --env-file "$RUNNER_TEMP/api.env" tonaris-api bun bin/migrate.js
           for run in 1 2; do
             docker run --rm --network host --env-file "$RUNNER_TEMP/api.env" \
-              -e CREATOR_EMAIL=creator@tonaris.example tonaris-api bun bin/seed-creator.js
+              -e CREATOR_EMAIL=creator@tonaris.example tonaris-api bun bin/predeploy.js
           done
       - name: Start the API, then the web app once the API runs this commit (its pre-deploy step)
         run: |
