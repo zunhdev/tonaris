@@ -23,6 +23,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@tonaris/ui/components/dropdown-menu";
+import { Wordmark } from "@tonaris/ui/components/logo";
 import { ScrollArea } from "@tonaris/ui/components/scroll-area";
 import { Separator } from "@tonaris/ui/components/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
@@ -47,7 +48,7 @@ export function Sidebar({
       className="relative flex min-h-0 flex-col border-r border-subtle bg-app"
     >
       <div className="flex h-12 shrink-0 items-center justify-between pr-2 pl-4">
-        <span className="text-title text-fg-primary">Tonaris</span>
+        <Wordmark />
         <Tooltip>
           <TooltipTrigger
             render={<Button variant="ghost" size="icon" aria-label="Hide sidebar" />}

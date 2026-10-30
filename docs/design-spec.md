@@ -95,6 +95,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `text.base` | 13 / 20 | 400–500 | Default UI text, rows, menus |
 | `text.input` | 14 / 20 | 400 | Form inputs; 16 on mobile to prevent iOS zoom |
 | `text.title` | 15 / 22 | 600 | Section titles, dialog titles |
+| `text.brand` | 17 / 24 | 600, −0.01em | The wordmark's name in the sidebar and on guest pages (TON-114) |
 | `text.page` | 20 / 28 | 600 | Full-page messages, such as "Not available" (the desktop header's name moved to `text.base` in TON-107) |
 | `text.display` | 28 / 34 | 600 | Guest page title, empty-state headline |
 
@@ -143,6 +144,10 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - **Services are named in plain text**: "Spotify", "Apple Music", "Qobuz", "Tidal". No logos, badges or brand colors (decided 19 October 2026, [G1 terms review](spikes/2026-10-19-g1-terms-review.md); Tidal added 20 October 2026, [Tidal spike](spikes/2026-10-20-g1-tidal.md)): Spotify forbids pairing its brand with others', Apple allows only its own badge artwork, Qobuz's logo needs its consent, and Tidal's marks belong to its developer program, which Tonaris doesn't use. No provider-sourced content needs attribution (G1).
 - Release types are written as text, not icons.
 - **Branding:** a text wordmark, "Tonaris" in Inter semibold. The favicon and app icon are a "T" mark on the accent color.
+  - *As built in TON-114* (temporary, until the creator's permanent logo): **the mark is a record sliding out of its sleeve,** flat and in one color, in `packages/ui`'s `Logo`.
+    - **The wordmark** is the mark beside "Tonaris": `text.brand` with a 20 px mark in the sidebar and on guest pages, and `text.page` with a 28 px mark above the sign-in card.
+    - **The favicon** (`apps/web/public/favicon.svg`) is the mark in `fg.primary`'s color on a rounded `accent.fill` square. PNGs at 32 px, 180 px (iOS, square), 192 px and 512 px, and a 512 px maskable icon with the mark in the safe zone, come from `apps/web/scripts/render-icons.mjs`.
+    - **Replacing it** means new shapes in `logo.tsx`, `favicon.svg` and `icon-maskable.svg`, then running the script.
 
 ---
 
@@ -1807,7 +1812,7 @@ No design questions are open. The creator settled these on 17 October 2026, and 
 | 5 | Approval pages on mobile (DS-87) | Yes, fully usable |
 | 6 | Lost-email recovery (DS-93, DS-100) | A help page with a contact address; the creator performs the recovery from Admin |
 | 7 | Link-preview artwork (DS-72) | Text-only until G1 clears artwork use |
-| 8 | Wordmark and app icon (DS-19) | A simple text wordmark |
+| 8 | Wordmark and app icon (DS-19) | A simple text wordmark; a temporary mark beside it since TON-114 |
 | 9 | Typed confirmation for account deletion (DS-97) | The user types their sign-in email |
 | 10 | Input borders below 3:1 (DS-12, DS-14), 18 Oct 2026 | Raise `border.strong` to 0.52, reaching 3:1 on every surface |
 | 11 | Primary button labels below 4.5:1 on the accent (DS-12, DS-14), 18 Oct 2026 | New `accent.fill` (0.54 0.17 275) behind near-white `fg.on-accent` labels; `accent.solid` stays for focus and selection |

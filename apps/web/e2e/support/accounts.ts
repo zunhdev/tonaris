@@ -94,6 +94,8 @@ export const accounts = {
   artworkEdited: at("artwork-edited"),
   artworkFound: at("artwork-found"),
   artworkFoundForm: at("artwork-found-form"),
+  // The temporary identity (identity.e2e.ts).
+  identity: at("identity"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),
