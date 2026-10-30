@@ -3,7 +3,7 @@
 // stubs. Store pages and Spotify are never recorded: their stubs carry MusicBrainz's facts (CC0) for the album,
 // never a store's or Spotify's values (TS-41).
 
-import { createIdentifier, type Identification } from "../../src/identify";
+import { createIdentifier, type AgentDetails, type Identification } from "../../src/identify";
 import { ItunesLookup } from "../../src/itunes";
 import { MusicBrainz } from "../../src/musicbrainz";
 import { memoryCache } from "../../src/provider-cache";
@@ -26,6 +26,9 @@ export type IdentifyCase = {
   /** Answers by URL, before any recording: Spotify, store pages, short links, and stand-ins for MusicBrainz. */
   stubs?: Record<string, Stub>;
 };
+
+/** An agent's details for a link no step identified (TON-111), matched by step 4's rule. */
+export type DetailsCase = { name: string; details: AgentDetails };
 
 /** Recorded answers by request URL. */
 export type Recording = Record<string, { status: number; body: unknown }>;
@@ -144,7 +147,7 @@ export function harness(testCase: IdentifyCase, source: Source) {
   };
 
   const options = { cache, fetch, ...time };
-  const { identify } = createIdentifier({
+  const { identify, matchDetails } = createIdentifier({
     musicBrainz: new MusicBrainz(options),
     itunes: new ItunesLookup(options),
     pages: new StorePages(options),
@@ -161,5 +164,10 @@ export function harness(testCase: IdentifyCase, source: Source) {
         agent: testCase.agent ?? false,
         linked: async (service, entityId) => testCase.linked?.[`${service}:${entityId}`],
       }),
+    matchDetails,
   };
 }
+
+/** The identifier for a details case, which has no link of its own. */
+export const detailsHarness = (source: Source) =>
+  harness({ name: "an agent's details", input: "", spotify: false }, source);
