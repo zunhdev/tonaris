@@ -78,7 +78,9 @@ test("a write the server saved, whose answer was lost, is sent again after a rel
 
   await page.reload();
   await live(page);
-  await expect.poll(() => stateOf(page, mutationId)).toBe("confirmed");
+  // The old page's lock can go a while after it: adoption looks again shortly, and the leader every 10 s
+  // (TON-102).
+  await expect.poll(() => stateOf(page, mutationId), { timeout: 25_000 }).toBe("confirmed");
   expect(await page.evaluate(() => window.tonarisSync?.albums.size)).toBe(1);
   expect((await saved(page)).albums.map((each) => each.id)).toEqual([args.id]);
 });

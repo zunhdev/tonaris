@@ -53,8 +53,9 @@ export function startJobWorker(
   const kinds = [...byKind.keys()];
   const timers = new Set<ReturnType<typeof setTimeout>>();
   let stopped = false;
-  let running: Promise<void> | undefined;
-  let wokenWhileRunning = false;
+  /** The lanes running now, each taking due jobs one after another until none is left. */
+  const lanes = new Set<Promise<void>>();
+  let wokenWhileFull = false;
 
   /** Claims and runs one due job; answers whether there was one. */
   const runOne = async (): Promise<boolean> => {
@@ -87,23 +88,27 @@ export function startJobWorker(
     if (!stopped && (await runOne())) await lane();
   };
 
+  // A lane that has finished is started again as soon as there is work, even while another still runs a long job,
+  // so one slow job never holds up the rest (TON-102).
   const wake = () => {
     if (stopped) return;
-    // A job queued while the lanes are finishing might not be seen by them: look again once they're done.
-    if (running) {
-      wokenWhileRunning = true;
+    // Every lane busy: one of them may already have looked, so look again once one is done.
+    if (lanes.size >= concurrency) {
+      wokenWhileFull = true;
       return;
     }
-    running = Promise.all(Array.from({ length: concurrency }, lane))
-      .then(() => undefined)
-      .catch((error: unknown) => logError(error, "job worker"))
-      .finally(() => {
-        running = undefined;
-        if (wokenWhileRunning) {
-          wokenWhileRunning = false;
-          wake();
-        }
-      });
+    while (lanes.size < concurrency) {
+      const running: Promise<void> = lane()
+        .catch((error: unknown) => logError(error, "job worker"))
+        .finally(() => {
+          lanes.delete(running);
+          if (wokenWhileFull) {
+            wokenWhileFull = false;
+            wake();
+          }
+        });
+      lanes.add(running);
+    }
   };
 
   /** Wakes the worker after `ms`, when a retry is due. */
@@ -127,7 +132,7 @@ export function startJobWorker(
       clearInterval(poll);
       for (const timer of timers) clearTimeout(timer);
       timers.clear();
-      await running;
+      await Promise.all(lanes);
     },
   };
 }

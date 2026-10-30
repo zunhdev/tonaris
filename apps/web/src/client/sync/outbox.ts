@@ -31,6 +31,12 @@ export type OutboxOptions = {
   tab?: Pick<TabCoordinator, "id" | "adopt">;
   /** Delays between sends of an unanswered entry: full jitter up to an exponential cap. */
   backoff?: { minMs: number; maxMs: number };
+  /**
+   * When to look again for tabs whose locks were still held. A reloaded tab's lock goes a moment after the page does,
+   * which a busy browser can make later than the new page's first look; without these, its writes would wait for the
+   * leader's next look, up to 10 s later (`adoptEveryMs`, TON-102).
+   */
+  adoptRetriesMs?: readonly number[];
   onState?: (mutation: Mutation, state: QueuedState) => void;
   /** An entry adopted from a gone tab, with its outcomes once answered. */
   onAdopted?: (entry: OutboxEntry, outcomes: Promise<Outcome[]>) => void;
@@ -48,6 +54,7 @@ export function createOutbox({
   persistence,
   tab,
   backoff = { minMs: 500, maxMs: 30_000 },
+  adoptRetriesMs = [250, 1_000, 4_000],
   onState = () => {},
   onAdopted = () => {},
   logError = (error) => console.error("The outbox couldn't use the browser's storage", error),
@@ -123,6 +130,49 @@ export function createOutbox({
     });
   }
 
+  /** Adopts the gone tabs' entries; `retry` counts the looks again so far. */
+  async function adopt(retry: number): Promise<void> {
+    if (!persistence || !tab || stopped) return;
+    try {
+      const inLane = (entry: OutboxEntry) => entry.lane === lane;
+      const gone = new Set(
+        (await persistence.entries())
+          .filter(inLane)
+          .map((entry) => entry.tab)
+          .filter((id) => id !== owner),
+      );
+      const adopted: OutboxEntry[] = [];
+      let held = false;
+      for (const id of gone) {
+        // oxlint-disable-next-line no-await-in-loop
+        const ran = await tab.adopt(id, async () => {
+          const theirs = (await persistence.entries()).filter(
+            (entry) => entry.tab === id && inLane(entry),
+          );
+          for (const entry of theirs) {
+            const mine = { ...entry, tab: owner };
+            // oxlint-disable-next-line no-await-in-loop
+            await persistence.putEntry(mine);
+            adopted.push(mine);
+          }
+        });
+        if (!ran) held = true;
+      }
+      // After the entry in flight, if any: it can't be called back.
+      const at = sending ? 1 : 0;
+      for (const [offset, entry] of adopted
+        .toSorted((a, b) => a.createdAt - b.createdAt)
+        .entries()) {
+        for (const { mutation } of entry.items) onState(mutation, "unconfirmed");
+        onAdopted(entry, queueEntry(entry, Promise.resolve(), at + offset));
+      }
+      const delay = adoptRetriesMs[retry];
+      if (held && delay !== undefined) setTimeout(() => void adopt(retry + 1), delay);
+    } catch (error) {
+      logError(error);
+    }
+  }
+
   return {
     /**
      * Queues one transaction's writes; resolves with each one's outcome, in order. More than a batch holds goes as
@@ -149,45 +199,10 @@ export function createOutbox({
 
     /**
      * Takes over the entries of this account's gone tabs, oldest first, and sends them before anything not yet
-     * sent. Each gone tab is adopted under its lock, so no entry is adopted twice.
+     * sent. Each gone tab is adopted under its lock, so no entry is adopted twice. A tab whose lock is still held is
+     * looked at again after `adoptRetriesMs`: it may be a reload's old page, not yet let go.
      */
-    async adopt(): Promise<void> {
-      if (!persistence || !tab || stopped) return;
-      try {
-        const inLane = (entry: OutboxEntry) => entry.lane === lane;
-        const gone = new Set(
-          (await persistence.entries())
-            .filter(inLane)
-            .map((entry) => entry.tab)
-            .filter((id) => id !== owner),
-        );
-        const adopted: OutboxEntry[] = [];
-        for (const id of gone) {
-          // oxlint-disable-next-line no-await-in-loop
-          await tab.adopt(id, async () => {
-            const theirs = (await persistence.entries()).filter(
-              (entry) => entry.tab === id && inLane(entry),
-            );
-            for (const entry of theirs) {
-              const mine = { ...entry, tab: owner };
-              // oxlint-disable-next-line no-await-in-loop
-              await persistence.putEntry(mine);
-              adopted.push(mine);
-            }
-          });
-        }
-        // After the entry in flight, if any: it can't be called back.
-        const at = sending ? 1 : 0;
-        for (const [offset, entry] of adopted
-          .toSorted((a, b) => a.createdAt - b.createdAt)
-          .entries()) {
-          for (const { mutation } of entry.items) onState(mutation, "unconfirmed");
-          onAdopted(entry, queueEntry(entry, Promise.resolve(), at + offset));
-        }
-      } catch (error) {
-        logError(error);
-      }
-    },
+    adopt: () => adopt(0),
 
     /** Sends an unanswered entry again now, as when the stream reconnects. */
     wake(): void {
