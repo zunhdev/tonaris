@@ -11,6 +11,7 @@ import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, type ReactNode } from "react";
 
 import { unavailableLink, type Container, type SharedSnapshot } from "@tonaris/domain";
+import { Wordmark } from "@tonaris/ui/components/logo";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 
 import { useGuestView, type GuestView } from "./guest-view";
@@ -41,7 +42,7 @@ function GuestFrame({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-app pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <header className="px-6 pt-5">
-        <span className="text-title text-fg-primary">Tonaris</span>
+        <Wordmark />
       </header>
       {children}
       <footer className="border-t border-subtle px-6 py-4 text-small">

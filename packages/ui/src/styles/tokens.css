@@ -127,6 +127,11 @@
   --text-title: 0.9375rem;
   --text-title--line-height: 1.375rem;
   --text-title--font-weight: 600;
+  /* The name beside the mark in the sidebar and on guest pages (TON-114). */
+  --text-brand: 1.0625rem;
+  --text-brand--line-height: 1.5rem;
+  --text-brand--font-weight: 600;
+  --text-brand--letter-spacing: -0.01em;
   --text-page: 1.25rem;
   --text-page--line-height: 1.75rem;
   --text-page--font-weight: 600;

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Tonaris's temporary mark (TON-114): a record sliding out of its sleeve, light on the accent. The same shapes
+       as packages/ui's Logo; scripts/render-icons.mjs turns this file into the PNG icons. -->
+  <rect width="32" height="32" rx="7" fill="#5560cf"/>
+  <g fill="#edeef1">
+    <rect x="4.5" y="6.25" width="14" height="19.5" rx="2.25"/>
+    <path d="M20.25 6.7805A9.25 9.25 0 0 1 20.25 25.2195L20.25 18.1213A2.25 2.25 0 0 0 20.25 13.8787Z"/>
+  </g>
+</svg>
