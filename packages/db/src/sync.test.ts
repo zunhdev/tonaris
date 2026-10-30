@@ -7,6 +7,7 @@ import { eq, sql } from "drizzle-orm";
 
 import {
   appViewDefaults,
+  maxAlbums,
   maxContainerDepth,
   maxContainers,
   maxMemberships,
@@ -1000,6 +1001,77 @@ describe("executeBatch (TS-25, FR-13.4)", () => {
       { status: "confirmed", seq: 3, result: null },
     ]);
     expect(await listNames(anna.userId)).toEqual(["First", "Taken", "Third"]);
+  });
+
+  test("at the album limit, each new album is refused with the reason, and list and link adds go through (AC-32)", async () => {
+    const anna = await newPrincipal();
+    const doom = await savedList(anna, "Doom");
+    const kept = await savedAlbum(anna, "Dopesmoker");
+    // The rest of the 5,000, written straight in, a thousand rows at a time.
+    const rest = Array.from({ length: maxAlbums - 1 }, (_, index) => ({
+      id: uuidv7(),
+      ownerId: anna.userId,
+      title: `Album ${index}`,
+      artistCredit: "Sleep",
+      originalYear: 1999,
+      searchTitleKey: `album ${index}`,
+      searchArtistKey: "sleep",
+    }));
+    for (let start = 0; start < rest.length; start += 1_000) {
+      // oxlint-disable-next-line no-await-in-loop -- one chunk after another
+      await t.db.insert(albums).values(rest.slice(start, start + 1_000));
+    }
+
+    const spotify = {
+      service: "spotify" as const,
+      url: "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv",
+      entityId: "1KQ1Pf4ikoK1jBbOtOHvOv",
+    };
+    const result = await executeBatch(
+      t.db,
+      anna,
+      batchOf(
+        create(album({ title: "One more" })),
+        addEntry(doom.id, kept.id),
+        create(album({ title: "And another" })),
+        {
+          mutationId: uuidv7(),
+          name: "link.set",
+          args: { albumId: kept.id, service: "spotify", url: spotify.url },
+          base: { url: null },
+        },
+      ),
+      {
+        // The API reads a link before it runs (TS-40).
+        execute: (mutation) =>
+          executeMutation(
+            t.db,
+            anna,
+            mutation,
+            undefined,
+            mutation.name === "link.set" ? { link: { status: "parsed", link: spotify } } : {},
+          ),
+      },
+    );
+    const refused = expect.objectContaining({
+      status: "failed",
+      code: "capacity_exceeded",
+      problem: expect.objectContaining({
+        detail:
+          "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more.",
+      }),
+    });
+    expect(result.items.map(({ outcome }) => outcome)).toEqual([
+      refused,
+      expect.objectContaining({ status: "confirmed" }),
+      refused,
+      expect.objectContaining({ status: "confirmed" }),
+    ]);
+    const [{ count } = { count: 0 }] = await t.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(albums)
+      .where(eq(albums.ownerId, anna.userId));
+    expect(count).toBe(maxAlbums);
   });
 
   test("skips the dependent of a failed item without using a seq, and records neither", async () => {

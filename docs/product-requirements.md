@@ -877,6 +877,8 @@ The assistive-technology, browser, and device matrix is defined in the tech spec
 
 These are representative observable checks, not a test plan. Passing them does not waive any other rule; detailed test cases derive from the FR rules.
 
+The first version's results, with the evidence for each check and what waits for the creator, are in [the acceptance walkthrough](acceptance-walkthrough.md) (30 October 2026, TON-98).
+
 | ID | Scenario | Expected outcome | Rules |
 | --- | --- | --- | --- |
 | AC-01 | Register and return | Register with a valid creator invitation and verified email while admissions are open, with no country restriction or account cap. Sharing grants no admission. Existing users keep access while admissions are paused. Returning sign-in reaches the same account. | FR-11.1–FR-11.2, FR-07.4 |
