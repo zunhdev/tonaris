@@ -309,6 +309,17 @@ describe("view options (DS-49, DS-94)", () => {
     expect(
       write({ name: "defaults.set", args: { grouped: true }, base: { grouped: false } }).summary,
     ).toBe("Default view options");
+    expect(
+      write({
+        name: "defaults.setLinkTarget",
+        args: { linkTarget: "app" },
+        base: { linkTarget: "web" },
+      }),
+    ).toEqual({
+      summary: "Where links open",
+      what: "where your links open",
+      subject: "Where your links open",
+    });
   });
 
   test("their fields and values read as the View options do", () => {
@@ -318,6 +329,9 @@ describe("view options (DS-49, DS-94)", () => {
     expect(fieldValue("sortDir", "desc", names)).toBe("Descending");
     expect(fieldValue("sortMode", null, names)).toBe("Account default");
     expect(fieldValue("grouped", true, names)).toBe("Release type");
+    expect(fieldLabel("linkTarget")).toBe("Open links in");
+    expect(fieldValue("linkTarget", "app", names)).toBe("App");
+    expect(fieldValue("linkTarget", "web", names)).toBe("Web page");
     expect(fieldValue("grouped", false, names)).toBe("None");
     expect(fieldValue("layout", "grid", names)).toBe("Grid");
     expect(fieldValue("listSortMode", "manual", names)).toBe("Manual");

@@ -985,6 +985,12 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
   - **Desktop:** "Open in Spotify" opens the canonical page in a new tab; "App" beside it opens `appLink()`. No browser tells a page whether an app opened. So if the page keeps the focus 2 s after "App", the chooser says the app may not be installed and offers the same service's web page.
   - **Mobile** (the narrow-screen query): the canonical `https` URL, with no App choice.
   - **Not verified:** launching each app from Chrome, Safari and Firefox. That is a manual check for end-product testing (the spike's last section).
+- *As built in TON-104* (30 October 2026): **a setting decides,** as the creator chose in end-product testing. It replaces "app first, then web" (FR-06.6).
+  - **The setting** is `linkTarget`, `web` or `app`. It is a column of `account_settings` (default `web`), and travels with the account defaults: in the bootstrap's `defaults` and on the stream's `defaults` change. It is set by a new mutation, `defaults.setLinkTarget`, with the prior value as its base (TS-21). `defaults.set`'s request is unchanged (TS-09).
+  - **Every signed-in link follows it** (`ServiceAnchor`, `apps/web/src/features/open/service-anchor.tsx`): the chooser's choices, the phone sheet, the inspector's Links and Shared with me. `web` opens the canonical page in a new tab with no referrer, and `app` opens `appLink()`. A URL `appLink()` can't read opens its page.
+  - **Guests** have no setting, so they get the pages.
+  - **Removed:** TON-47's second App choice and its 2 s focus watch.
+  - **Tidal re-checked:** TIDAL.app 2.47 registers `tidal:` in its `CFBundleURLSchemes`, read again on 30 October 2026.
 
 **TS-44 Album matching (Decided 19 October 2026: identity is the album; evidence validated by the [G2 spike](spikes/2026-10-19-g2-album-matching.md) the same day; G2 closed 21 October 2026 in TON-25; FR-02.3, FR-02.9, FR-02.10, FR-02.12, FR-14.3).**
 

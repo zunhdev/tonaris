@@ -1,7 +1,8 @@
-// Opening a service (AC-18; FR-06.5, FR-06.6; DS-21, DS-25, TS-43): the "Open in…" chooser lists only an album's
-// services, in order, every time; on desktop each opens its page in a new tab, with its app beside it and a hedged
-// message when the app doesn't take the focus; `O` opens it from the keyboard, or says an album has no links; and on
-// a phone-sized touch screen it is a bottom sheet of the canonical links. Each test signs in with its own account.
+// Opening a service (AC-18; FR-06.5, FR-06.6; DS-21, DS-25, DS-94, TS-43): the "Open in…" chooser lists only an
+// album's services, in order, every time, each opening its page in a new tab; `O` opens it from the keyboard, or says
+// an album has no links; on a phone-sized touch screen it is a bottom sheet; and with the account's links set to open
+// in the apps, the chooser and the inspector open the services' apps (TON-104). Each test signs in with its own
+// account.
 
 import { expect, test, type Page } from "@playwright/test";
 
@@ -9,7 +10,7 @@ import { streamingServices, type Album, type StreamingService } from "@tonaris/d
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, created, live, toasts } from "./support/workspace";
+import { added, album, created, live, saved, toasts } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -37,12 +38,13 @@ async function linked(
   }, rows);
   await page.goto(`/l/${list.id}`);
   await live(page);
+  return list;
 }
 
 const rowOf = (page: Page, gridName: string, text: string) =>
   page.getByRole("grid", { name: gridName }).getByRole("row").filter({ hasText: text });
 
-test("on desktop, the chooser lists only the album's services, each opening its page or its app", async ({
+test("on desktop, the chooser lists only the album's services, each opening its page", async ({
   page,
 }) => {
   await signIn(page, accounts.openDesktop);
@@ -55,35 +57,14 @@ test("on desktop, the chooser lists only the album's services, each opening its 
   await row.hover();
   await row.getByRole("button", { name: "Open 'Bleach' in…" }).click();
   const chooser = page.getByRole("dialog", { name: "Open in…" });
-  // The services' own choices, not their apps'.
-  const choices = chooser.getByRole("link", { name: /^Open in (?!the )/ });
+  const choices = chooser.getByRole("link");
   await expect(choices).toHaveText(["Open in Spotify", "Open in Tidal"]);
   await expect(choices.first()).toBeFocused();
   await expect(choices.first()).toHaveAttribute("href", spotify);
   await expect(choices.first()).toHaveAttribute("target", "_blank");
-  await expect(chooser.getByRole("link", { name: "Open in the Spotify app" })).toHaveAttribute(
-    "href",
-    "spotify:album:1KQ1Pf4ikoK1jBbOtOHvOv",
-  );
-  await expect(chooser.getByRole("link", { name: "Open in the Tidal app" })).toHaveAttribute(
-    "href",
-    "tidal://album/77654321",
-  );
+  await expect(choices.nth(1)).toHaveAttribute("href", tidal);
   // The inspector didn't open: Open is the row's own action.
   await expect(page.getByRole("complementary", { name: "Album" })).toHaveCount(0);
-
-  // No app takes the focus here, so after 2 s the chooser says so, and offers the same service's page only.
-  await page.bringToFront();
-  await chooser.getByRole("link", { name: "Open in the Tidal app" }).click();
-  await expect(chooser).toContainText(
-    "If the Tidal app didn't open, it may not be installed on this computer.",
-    { timeout: 5_000 },
-  );
-  await expect(chooser.getByRole("link")).toHaveCount(1);
-  await expect(chooser.getByRole("link", { name: "Open Tidal on the web" })).toHaveAttribute(
-    "href",
-    tidal,
-  );
 });
 
 test("O opens the chooser for the focused album, a single link still asks, and an album without links says so", async ({
@@ -99,13 +80,8 @@ test("O opens the chooser for the focused album, a single link still asks, and a
   await rowOf(page, "Grunge", "Nevermind").getByRole("gridcell").nth(1).focus();
   await page.keyboard.press("o");
   const chooser = page.getByRole("dialog", { name: "Open in…" });
-  await expect(chooser.getByRole("link", { name: /^Open in (?!the )/ })).toHaveText([
-    "Open in Apple Music",
-  ]);
-  await expect(chooser.getByRole("link", { name: "Open in the Apple Music app" })).toHaveAttribute(
-    "href",
-    "music://music.apple.com/us/album/1440783617",
-  );
+  await expect(chooser.getByRole("link")).toHaveText(["Open in Apple Music"]);
+  await expect(chooser.getByRole("link")).toHaveAttribute("href", apple);
   await page.keyboard.press("Escape");
   await expect(chooser).toHaveCount(0);
 
@@ -122,6 +98,47 @@ test("O opens the chooser for the focused album, a single link still asks, and a
   await expect(toasts(page).filter({ hasText: "'Bleach' has no links to open." })).toBeVisible();
   await expect(chooser).toHaveCount(0);
   await expect(list).toHaveCount(0);
+});
+
+test("with links set to open in the apps, the chooser and the inspector open the services' apps", async ({
+  page,
+}) => {
+  await signIn(page, accounts.openApp);
+  await live(page);
+  const bleach = album("Bleach", { artistCredit: "Nirvana", originalYear: 1989 });
+  const list = await linked(page, "Grunge", bleach, { tidal, spotify });
+
+  await page.goto("/settings/preferences");
+  await live(page);
+  const app = page
+    .getByRole("radiogroup", { name: "Open links in" })
+    .getByRole("radio", { name: "App" });
+  await expect(
+    page
+      .getByRole("radiogroup", { name: "Open links in" })
+      .getByRole("radio", { name: "Web page" }),
+  ).toBeChecked();
+  await app.click();
+  await expect(app).toBeChecked();
+  await saved(page);
+
+  // The setting is the account's: it holds after a reload.
+  await page.goto(`/l/${list.id}?album=${bleach.id}`);
+  await live(page);
+  const inspectorLink = page
+    .getByRole("complementary", { name: "Album" })
+    .getByRole("region", { name: "Links" })
+    .getByRole("link", { name: /^Open in Tidal/ });
+  await expect(inspectorLink).toHaveAttribute("href", "tidal://album/77654321");
+  await expect(inspectorLink).not.toHaveAttribute("target", /./);
+
+  const row = rowOf(page, "Grunge", "Bleach");
+  await row.hover();
+  await row.getByRole("button", { name: "Open 'Bleach' in…" }).click();
+  const choices = page.getByRole("dialog", { name: "Open in…" }).getByRole("link");
+  await expect(choices).toHaveText(["Open in Spotify", "Open in Tidal"]);
+  await expect(choices.first()).toHaveAttribute("href", "spotify:album:1KQ1Pf4ikoK1jBbOtOHvOv");
+  await expect(choices.nth(1)).toHaveAttribute("href", "tidal://album/77654321");
 });
 
 test.describe("on a phone", () => {

@@ -15,7 +15,7 @@ import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
 import { readableContainers, type EmailStatus, type SharingState } from "./sharing";
 import type { StoredTrashUnit } from "./trash";
-import type { ViewDefaults, ViewPrefs } from "./views";
+import type { AccountDefaults, ViewDefaults, ViewPrefs } from "./views";
 
 /** The entries of `values` that are set: an update leaves undefined fields as they are. */
 const defined = (values: object) =>
@@ -69,7 +69,7 @@ export function memoryStore({
   containers?: (Omit<StoredContainer, "description"> & { description?: string | null })[];
   memberships?: StoredMembership[];
   views?: (ViewPrefs & { personId: string })[];
-  defaults?: (ViewDefaults & { personId: string })[];
+  defaults?: (ViewDefaults & Partial<Pick<AccountDefaults, "linkTarget">> & { personId: string })[];
   positions?: (Position & { personId: string })[];
   /** Accounts, by email key, for invitations and display names. */
   accounts?: { id: string; email: string; displayName?: string | null }[];
@@ -125,8 +125,8 @@ export function memoryStore({
   const viewRows = new Map<string, ViewPrefs>(
     views.map(({ personId, ...prefs }) => [viewRowKey(personId, prefs.viewKey), prefs]),
   );
-  const defaultRows = new Map<string, ViewDefaults>(
-    defaults.map(({ personId, ...values }) => [personId, values]),
+  const defaultRows = new Map<string, AccountDefaults>(
+    defaults.map(({ personId, ...values }) => [personId, { linkTarget: "web", ...values }]),
   );
   const positionRows = new Map<string, Position & { personId: string }>(
     positions.map((row) => [positionRowKey(row.personId, row.viewKey, row.itemId), { ...row }]),

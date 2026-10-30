@@ -86,7 +86,14 @@ import {
   type Tombstone,
   type TrashUnit,
 } from "./trash";
-import { setDefaults, setView, type ViewDefaults, type ViewItems, type ViewPrefs } from "./views";
+import {
+  setDefaults,
+  setLinkTarget,
+  setView,
+  type AccountDefaults,
+  type ViewItems,
+  type ViewPrefs,
+} from "./views";
 
 /** An album as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
 export type StoredAlbum = Album & { ownerId: string; trashed: boolean };
@@ -233,9 +240,9 @@ export type CollectionStore = {
   saveViewPrefs(personId: string, prefs: ViewPrefs): Promise<void>;
   deleteViewPrefs(personId: string, viewKey: string): Promise<void>;
   /** The account defaults the person saved, if they saved any. */
-  findDefaults(personId: string): Promise<ViewDefaults | undefined>;
+  findDefaults(personId: string): Promise<AccountDefaults | undefined>;
   /** Inserts or replaces the person's account defaults. */
-  saveDefaults(personId: string, defaults: ViewDefaults): Promise<void>;
+  saveDefaults(personId: string, defaults: AccountDefaults): Promise<void>;
 
   /** The person's keys for these items in the view, by item ID (TS-16). */
   findPositions(
@@ -318,7 +325,7 @@ export type ChangeInput =
   | { entity: "field"; id: string; op: ChangeOp; data: CustomField | null }
   | { entity: "fieldValue"; id: string; op: ChangeOp; data: FieldValue | null }
   | { entity: "view"; id: string; op: ChangeOp; data: ViewPrefs | null }
-  | { entity: "defaults"; id: string; op: ChangeOp; data: ViewDefaults }
+  | { entity: "defaults"; id: string; op: ChangeOp; data: AccountDefaults }
   | { entity: "position"; id: string; op: ChangeOp; data: Position | null }
   | { entity: "trashUnit"; id: string; op: ChangeOp; data: TrashUnit | null }
   | { entity: "reference"; id: string; op: ChangeOp; data: Reference | null };
@@ -398,6 +405,9 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "link.remove") return removeLink(mutation.args, mutation.base, context);
   if (mutation.name === "view.set") return setView(mutation.args, mutation.base, context);
   if (mutation.name === "order.set") return setOrder(mutation.args, mutation.base, context);
+  if (mutation.name === "defaults.setLinkTarget") {
+    return setLinkTarget(mutation.args, mutation.base, context);
+  }
   return setDefaults(mutation.args, mutation.base, context);
 }
 

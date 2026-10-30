@@ -1,5 +1,5 @@
-// The preference commands against an in-memory store (FR-05.2, FR-11.7, FR-09.4): remembered view choices and
-// account defaults, with field-level compare-and-set like content (TS-21). The database layer runs the same commands
+// The preference commands against an in-memory store (FR-05.2, FR-11.7, FR-09.4): remembered view choices, account
+// defaults and the link setting (FR-06.6), with field-level compare-and-set like content (TS-21). The database layer runs the same commands
 // inside the owner's write lock (TS-20).
 
 import { describe, expect, test } from "bun:test";
@@ -10,7 +10,15 @@ import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
 import { bootstrapSchema, changeSchema, mutationSchema, type Mutation } from "./sync";
 import { memoryStore, viewRowKey } from "./testing";
-import { appViewDefaults, type ViewDefaults, type ViewPrefs, type ViewPrefsFields } from "./views";
+import {
+  appAccountDefaults,
+  appViewDefaults,
+  type AccountDefaults,
+  type LinkTarget,
+  type ViewDefaults,
+  type ViewPrefs,
+  type ViewPrefsFields,
+} from "./views";
 
 const owner = uuidv7();
 const anna: Principal = { kind: "user", userId: owner, role: "user", client: "web" };
@@ -46,6 +54,14 @@ const setView = (
 
 const setDefaults = (args: Partial<ViewDefaults>, base: Partial<ViewDefaults>): Mutation =>
   mutationSchema.parse({ mutationId: uuidv7(), name: "defaults.set", args, base });
+
+const setLinkTarget = (linkTarget: LinkTarget, base: LinkTarget): Mutation =>
+  mutationSchema.parse({
+    mutationId: uuidv7(),
+    name: "defaults.setLinkTarget",
+    args: { linkTarget },
+    base: { linkTarget: base },
+  });
 
 /** The changes, checked against the stream's schema as the database layer will log them. */
 function changesOf(result: CommandResult) {
@@ -295,7 +311,7 @@ describe("defaults.set", () => {
         store: memory.store,
       },
     );
-    const next: ViewDefaults = { ...appViewDefaults, listSortMode: "name" };
+    const next: AccountDefaults = { ...appAccountDefaults, listSortMode: "name" };
     expect(changesOf(result)).toEqual([
       { entity: "defaults", id: owner, op: "update", data: next },
     ]);
@@ -337,6 +353,57 @@ describe("defaults.set", () => {
   });
 });
 
+describe("defaults.setLinkTarget", () => {
+  test("saves the setting with DS-44's defaults, and logs the complete defaults", async () => {
+    const memory = memoryStore();
+    const result = await runCommand(setLinkTarget("app", "web"), {
+      principal: anna,
+      store: memory.store,
+    });
+    const next: AccountDefaults = { ...appAccountDefaults, linkTarget: "app" };
+    expect(changesOf(result)).toEqual([
+      { entity: "defaults", id: owner, op: "update", data: next },
+    ]);
+    expect(memory.defaults.get(owner)).toEqual(next);
+  });
+
+  test("keeps the saved defaults, and defaults.set keeps the setting", async () => {
+    const memory = memoryStore({
+      defaults: [{ personId: owner, ...appViewDefaults, layout: "grid" }],
+    });
+    const context = { principal: anna, store: memory.store };
+    await runCommand(setLinkTarget("app", "web"), context);
+    await runCommand(setDefaults({ grouped: true }, { grouped: false }), context);
+    expect(memory.defaults.get(owner)).toEqual({
+      ...appViewDefaults,
+      layout: "grid",
+      grouped: true,
+      linkTarget: "app",
+    });
+  });
+
+  test("a stale setting is a conflict, and the same one changes nothing", async () => {
+    const memory = memoryStore({
+      defaults: [{ personId: owner, ...appViewDefaults, linkTarget: "app" }],
+    });
+    const context = { principal: anna, store: memory.store };
+    expect(await runCommand(setLinkTarget("web", "web"), context)).toEqual({
+      status: "conflict",
+      conflicts: [{ field: "linkTarget", current: "app", attempted: "web", base: "web" }],
+    });
+    expect(changesOf(await runCommand(setLinkTarget("app", "app"), context))).toEqual([]);
+    expect(memory.defaults.get(owner)?.linkTarget).toBe("app");
+  });
+
+  test("a read-only agent can't change it", async () => {
+    const { store } = memoryStore();
+    expect(
+      failed(await runCommand(setLinkTarget("app", "web"), { principal: readOnlyAgent, store }))
+        ?.code,
+    ).toBe("permission_denied");
+  });
+});
+
 const envelope = (viewKey: string) => ({
   mutationId: uuidv7(),
   name: "view.set",
@@ -362,10 +429,10 @@ describe("the protocol", () => {
     const views: ViewPrefs[] = [
       { viewKey: "root", sortMode: "name", sortDir: "asc", grouped: null, layout: null },
     ];
-    expect(bootstrapSchema.parse({ ...snapshot, views, defaults: appViewDefaults })).toEqual({
+    expect(bootstrapSchema.parse({ ...snapshot, views, defaults: appAccountDefaults })).toEqual({
       ...snapshot,
       views,
-      defaults: appViewDefaults,
+      defaults: appAccountDefaults,
     });
   });
 

@@ -24,6 +24,7 @@ import {
   type Membership,
   type Mutation,
   type ServiceLink,
+  type AccountDefaults,
   type ViewDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
@@ -110,7 +111,7 @@ function plan() {
     viewDeletes: [] as string[],
     /** Each move made again: one transaction each, as each was one move. */
     orders: [] as { viewKey: string; keys: Map<string, string | null> }[],
-    defaultsUpdate: {} as Partial<ViewDefaults>,
+    defaultsUpdate: {} as Partial<AccountDefaults>,
     /** Folders and lists to move to Trash again, and units to recover again (TON-55). */
     trashDeletes: [] as string[],
     albumDeletes: [] as string[],
@@ -400,6 +401,13 @@ function remake(
     }
     if (Object.keys(changes).length === 0) return "unchanged";
     Object.assign(planned.defaultsUpdate, changes);
+    return planned.needs("defaults.update");
+  }
+  if (mutation.name === "defaults.setLinkTarget") {
+    const current = defaults.get(defaultsKey);
+    if (!current) return "gone";
+    if (current.linkTarget === mutation.args.linkTarget) return "unchanged";
+    planned.defaultsUpdate.linkTarget = mutation.args.linkTarget;
     return planned.needs("defaults.update");
   }
   if (mutation.name === "order.set") {

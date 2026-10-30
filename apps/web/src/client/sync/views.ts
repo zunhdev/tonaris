@@ -1,7 +1,8 @@
 // A person's view choices and account defaults (TS-24, FR-11.7, FR-11.8): TanStack DB collections filled from the
 // bootstrap and the stream, so a choice made on one device reaches the others live. Writes are optimistic, as for
 // content: each becomes a `view.set` or `defaults.set` whose `base` holds the values before it, null for a choice
-// not made (TS-21, FR-09.4). A view's choices are tracked under their own save-state key, so a list's row never
+// not made (TS-21, FR-09.4). The link setting rides on the defaults' row, and is sent as its own
+// `defaults.setLinkTarget` (FR-06.6, TON-104). A view's choices are tracked under their own save-state key, so a list's row never
 // shows the state of its view options.
 
 import {
@@ -9,6 +10,7 @@ import {
   unsetView,
   viewDefaultsFields,
   viewPrefsFields,
+  type AccountDefaults,
   type Mutation,
   type ViewDefaults,
   type ViewPrefs,
@@ -97,11 +99,15 @@ export function createViewCollection({ engine, writer }: { engine: SyncEngine; w
   );
 }
 
-/** The `defaults.set` that takes the defaults from `before` to `next`, or none if they are the same. */
-export function defaultsWrite(
-  before: ViewDefaults,
-  next: Partial<ViewDefaults>,
-): { key: string; mutation: Mutation } | undefined {
+/**
+ * The writes that take the defaults from `before` to `next`: a `defaults.set` for the view options, and a
+ * `defaults.setLinkTarget` for the link setting; none if they are the same.
+ */
+export function defaultsWrites(
+  before: AccountDefaults,
+  next: Partial<AccountDefaults>,
+): { key: string; mutation: Mutation }[] {
+  const writes: { key: string; mutation: Mutation }[] = [];
   const args: Partial<ViewDefaults> = {};
   const base: Partial<ViewDefaults> = {};
   for (const field of viewDefaultsFields) {
@@ -109,8 +115,24 @@ export function defaultsWrite(
     Object.assign(args, { [field]: next[field] });
     Object.assign(base, { [field]: before[field] });
   }
-  if (Object.keys(args).length === 0) return undefined;
-  return { key: defaultsKey, mutation: { mutationId: uuidv7(), name: "defaults.set", args, base } };
+  if (Object.keys(args).length > 0) {
+    writes.push({
+      key: defaultsKey,
+      mutation: { mutationId: uuidv7(), name: "defaults.set", args, base },
+    });
+  }
+  if (next.linkTarget !== undefined && next.linkTarget !== before.linkTarget) {
+    writes.push({
+      key: defaultsKey,
+      mutation: {
+        mutationId: uuidv7(),
+        name: "defaults.setLinkTarget",
+        args: { linkTarget: next.linkTarget },
+        base: { linkTarget: before.linkTarget },
+      },
+    });
+  }
+  return writes;
 }
 
 export function createDefaultsCollection({
@@ -120,7 +142,7 @@ export function createDefaultsCollection({
   engine: SyncEngine;
   writer: Writer;
 }) {
-  return snapshotCollection<ViewDefaults>(
+  return snapshotCollection<AccountDefaults>(
     engine,
     "defaults",
     (s) => [s.defaults],
@@ -130,8 +152,8 @@ export function createDefaultsCollection({
       onUpdate: ({ transaction }) =>
         writer.persist(
           transaction,
-          transaction.mutations.flatMap(
-            (pending) => defaultsWrite(pending.original, pending.changes) ?? [],
+          transaction.mutations.flatMap((pending) =>
+            defaultsWrites(pending.original, pending.changes),
           ),
         ),
     },

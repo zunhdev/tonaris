@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import { changeLog, pruneSyncHistory } from "@tonaris/db";
 import {
-  appViewDefaults,
+  appAccountDefaults,
   batchResultSchema,
   bootstrapSchema,
   mutationResultSchema,
@@ -157,7 +157,7 @@ describe("bootstrap, write and stream (TS-24, FR-09.1)", () => {
       fieldValues: [],
       views: [],
       positions: [],
-      defaults: appViewDefaults,
+      defaults: appAccountDefaults,
       trashUnits: [],
       references: [],
     });

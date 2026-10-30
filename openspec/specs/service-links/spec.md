@@ -91,20 +91,21 @@ Opening an album SHALL offer only the services it has links for, and the person 
 - **WHEN** an owner asks to open an album without links
 - **THEN** no chooser opens, and they are told the album has no links
 
-### Requirement: A service opens in its app where possible, else on its web page
-Choosing a service SHALL open the same release on that service (FR-06.6). On mobile, it SHALL open the canonical link, which the service's app takes when it is installed. On desktop, it SHALL open the service's web page, and SHALL offer the service's desktop app as a second choice. It SHALL never open another service or another release.
+### Requirement: Links open the web page or the app, as the person's setting says
+Each signed-in person SHALL choose whether service links open the service's web page or its app (FR-06.6). The setting SHALL be saved to the account and reach their other sessions (FR-11.8), and SHALL start as the web page. Every link they open SHALL follow it: in the chooser, the album's details and shared content. Guests' links SHALL open the web pages. A link SHALL never open another service or another release.
 
-#### Scenario: Desktop
-- **WHEN** an owner on desktop chooses "Open in Spotify" for an album
-- **THEN** the album's canonical Spotify page opens in a new tab, and "App" beside it opens `spotify:album:{id}`
+#### Scenario: Web pages, until the person chooses
+- **WHEN** an owner who never changed the setting chooses "Open in Spotify" for an album
+- **THEN** the album's canonical Spotify page opens in a new tab
 
-#### Scenario: Mobile
-- **WHEN** an owner on a phone chooses Tidal for an album
-- **THEN** the album's canonical Tidal link opens
+#### Scenario: The apps
+- **WHEN** an owner sets "Open links in" to App, then opens an album's Tidal link from the chooser or its details
+- **THEN** `tidal://album/{id}` opens, on this device and after a reload
 
-### Requirement: A destination that may not have opened is explained
-When the desktop app may not have opened, the chooser SHALL say so and offer the same service's web page, without switching service (FR-06.6, FR-13.1).
+#### Scenario: A guest
+- **WHEN** a guest opens a shared album's Spotify link
+- **THEN** its canonical Spotify page opens, with no referrer
 
-#### Scenario: The app didn't take over
-- **WHEN** an owner chooses a service's app and the page still has the focus 2 s later
-- **THEN** the chooser says the app may not be installed, and offers that service's web page only
+#### Scenario: A stale setting
+- **WHEN** a session changes the setting with a base that isn't the saved setting
+- **THEN** the write is a conflict, and the saved setting stays

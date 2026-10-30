@@ -86,6 +86,7 @@ export const accounts = {
   openDesktop: at("open-desktop"),
   openKeys: at("open-keys"),
   openMobile: at("open-mobile"),
+  openApp: at("open-app"),
   // Artwork (artwork.e2e.ts), one per test.
   artworkShown: at("artwork-shown"),
   artworkEdited: at("artwork-edited"),

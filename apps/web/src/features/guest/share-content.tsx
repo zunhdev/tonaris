@@ -1,22 +1,24 @@
 // A shared folder's or list's content (DS-70, DS-72; FR-07.11, FR-06.5), as guests and signed-in viewers see it:
 // breadcrumbs inside the share, a folder's folders and lists, and a list's albums as rows or a grid, each with an Open
-// chooser of its services, whose links leave with no referrer (TS-32). The page around it says where a folder or list
+// chooser of its services (DS-25), whose web links leave with no referrer (TS-32). The page around it says where a folder or list
 // opens and how the view is sorted. A signed-in viewer's folders and lists, and in manual order their album rows' Move
 // buttons, also move with ⌥↑ and ⌥↓, ⇧ for the ends (DS-49), in the viewer's own arrangement.
 
 import { Artwork, artworkSrc } from "@/features/collection/artwork";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology, groupNames, type Direction, type Section } from "@/features/collection/order";
+import { ServiceChoices } from "@/features/open/service-choices";
 import { ChevronRight, ExternalLink, GripVertical } from "lucide-react";
 import {
   useLayoutEffect,
   useRef,
+  useState,
   type AnchorHTMLAttributes,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
 
-import { serviceNames, type Album, type Container, type SharedSnapshot } from "@tonaris/domain";
+import type { Album, Container, SharedSnapshot } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@tonaris/ui/components/popover";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -251,29 +253,20 @@ function AlbumItem({
   );
 }
 
-/** The service chooser (DS-25, FR-06.5): each link opens in a new tab, with no referrer, so a token stays put. */
+/** The service chooser (DS-25, FR-06.5): the album's services, each opening its app on desktop or its page. */
 function OpenIn({ album, links }: { album: Album; links: SharedSnapshot["links"] }) {
+  const [open, setOpen] = useState(false);
   if (links.length === 0) return <span className="w-14 shrink-0" />;
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={<Button variant="ghost" size="sm" aria-label={`Open ${album.title} in…`} />}
       >
         <ExternalLink strokeWidth={1.5} aria-hidden />
         Open
       </PopoverTrigger>
-      <PopoverContent align="end" className="flex w-48 flex-col gap-0.5 p-1">
-        {links.map((link) => (
-          <a
-            key={link.service}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-8 items-center rounded-md px-2 text-fg-primary hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
-          >
-            {serviceNames[link.service]}
-          </a>
-        ))}
+      <PopoverContent align="end" className="flex w-72 flex-col gap-2">
+        <ServiceChoices title={album.title} links={links} onClose={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
   );
