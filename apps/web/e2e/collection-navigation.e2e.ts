@@ -95,10 +95,12 @@ test("folders and lists are created, renamed and walked by keyboard alone", asyn
   await expect(page).toHaveURL(`/l/${doomId}`);
   await expect(heading(page)).toHaveText("Funeral doom");
   await expect(page).toHaveTitle("Funeral doom · Tonaris");
-  await expect(page.getByRole("navigation", { name: "Breadcrumbs" }).getByRole("link")).toHaveText([
-    "Collection",
-    "Metal",
-  ]);
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumbs" }).getByRole("link");
+  await expect(crumbs).toHaveText(["Collection", "Metal"]);
+  // The name is the breadcrumbs' size, set apart by weight (TON-107).
+  await expect(heading(page)).toHaveCSS("font-size", "13px");
+  await expect(heading(page)).toHaveCSS("font-weight", "500");
+  await expect(crumbs.first()).toHaveCSS("font-size", "13px");
   await expect(doom).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("No albums yet.", { exact: false })).toBeVisible();
 

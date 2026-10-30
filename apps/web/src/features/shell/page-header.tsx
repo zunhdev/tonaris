@@ -1,6 +1,7 @@
 // The main view's header (DS-30): the path to the view as breadcrumbs, then its name, which also names the main
-// landmark (FR-01.3, DS-29). With the sidebar hidden, a button brings it back (DS-30). On a phone it is the top bar
-// of a drill-down (DS-110): Back to the view above, the name, the view's own controls, Search and Account.
+// landmark (FR-01.3, DS-29). The name is the breadcrumbs' size, set apart by weight and colour (TON-107). With the
+// sidebar hidden, a button brings it back (DS-30). On a phone it is the top bar of a drill-down (DS-110): Back to the
+// view above, the name, the view's own controls, Search and Account.
 
 import { AccountMenu } from "@/features/account/account-menu";
 import { useNarrowScreen } from "@/features/collection/collection-ui";
@@ -112,7 +113,7 @@ export function PageHeader({
         </nav>
       )}
       {icon}
-      <h1 id={pageTitleId} className="min-w-0 truncate text-page text-fg-primary">
+      <h1 id={pageTitleId} className="min-w-0 truncate font-medium text-fg-primary">
         {title}
       </h1>
       {actions && <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>}
