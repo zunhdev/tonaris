@@ -1709,7 +1709,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
   - Locally the same commands run natively; Docker runs only in CI and production (TS-06).
 - **Built in TON-108** (Render; setup in `docs/deploy.md`):
   - **`render.yaml`**, a Render Blueprint, declares the two services (Docker, Frankfurt) and `tonaris-db`. Deploys wait for CI's checks. The API's pre-deploy step, `bun bin/predeploy.js`, runs `bin/migrate.js`, then `bin/seed-creator.js`; Render runs the command without a shell, so it has no quotes or `&&`.
-  - **The API before the web app on one push:** `/v1/health` names the commit the API was built from (`GIT_COMMIT`, or Render's `RENDER_GIT_COMMIT`), an additive field. The web app's pre-deploy step, `apps/web/wait-for-api.ts`, waits until the API names its own commit, for up to 20 minutes, over the private network.
+  - **The API before the web app on one push:** `/v1/health` names the commit the API was built from (`GIT_COMMIT`, or Render's `RENDER_GIT_COMMIT`), an additive field. The web app's pre-deploy step, `apps/web/wait-for-api.ts`, waits until the API names its own commit, for up to 20 minutes, over the private network, then at the public `API_URL` when the private address doesn't name it. Each question opens a new connection, so it never stays with an instance that has been replaced (TON-113).
   - **`API_INTERNAL_URL`** also takes a bare `host:port`, as Render's Blueprint gives it, meaning plain HTTP on the private network.
   - **The API image** has the `~/.ssh` directory Render's Shell needs, where `bin/reconcile.js` runs (TS-113).
   - **Cloudflare** is in front of both hostnames: DNS, TLS, and a cache rule for the image proxy's `/img/` (TS-103).
