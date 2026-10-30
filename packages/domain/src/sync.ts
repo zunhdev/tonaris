@@ -37,7 +37,14 @@ import {
   trashRecoverArgsSchema,
   trashUnitSchema,
 } from "./trash";
-import { viewDefaultsSchema, viewKeySchema, viewPrefsFieldsSchema, viewPrefsSchema } from "./views";
+import {
+  accountDefaultsSchema,
+  linkTargets,
+  viewDefaultsSchema,
+  viewKeySchema,
+  viewPrefsFieldsSchema,
+  viewPrefsSchema,
+} from "./views";
 import { z } from "./zod";
 
 /**
@@ -322,6 +329,17 @@ export const defaultsSetSchema = z.object({
 });
 
 /**
+ * `defaults.setLinkTarget`: sets where the person's service links open, `web` or `app` (FR-06.6, TON-104); `base`
+ * holds the prior setting (TS-21).
+ */
+export const defaultsSetLinkTargetSchema = z.object({
+  mutationId,
+  name: z.literal("defaults.setLinkTarget"),
+  args: z.object({ linkTarget: z.enum(linkTargets) }),
+  base: z.object({ linkTarget: z.enum(linkTargets) }),
+});
+
+/**
  * `order.set`: places items in one of the person's views, as one move (TS-16, FR-05.2). `keys` maps each item's ID to
  * its new fractional-index key, or null to clear its place; `base` maps each to its key before, null for none
  * (TS-21). Every item must be in the view.
@@ -458,6 +476,7 @@ export const mutationSchema = z
     shareRevokeSchema,
     shareSaveLinkSchema,
     shareRemoveReferenceSchema,
+    defaultsSetLinkTargetSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;
@@ -587,7 +606,7 @@ export const changeSchema = z
       entity: z.literal("defaults"),
       id: z.uuid().meta({ description: "The account's ID." }),
       op: z.enum(changeOps),
-      data: viewDefaultsSchema,
+      data: accountDefaultsSchema,
       mutationId: z.uuid().nullable(),
     }),
   ])
@@ -615,8 +634,9 @@ export const bootstrapSchema = z
     positions: z
       .array(positionSchema)
       .meta({ description: "The person's manual order: one key per arranged item (TS-16)." }),
-    defaults: viewDefaultsSchema.meta({
-      description: "The person's account defaults, DS-44's until they save their own.",
+    defaults: accountDefaultsSchema.meta({
+      description:
+        "The person's account defaults, DS-44's until they save their own, and where their links open.",
     }),
     trashUnits: z
       .array(trashUnitSchema)

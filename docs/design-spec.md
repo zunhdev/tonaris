@@ -285,6 +285,11 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 - **It opens from** a row's Open button, and `O` (DS-78), anchored to what has the focus. An album without links has no Open button, and `O` says "'{title}' has no links to open."
 - **Cards** have no Open button yet; `O` works on them.
 
+*As built in TON-104* (decided with the creator, 30 October 2026): **the account's link setting** (FR-06.6, DS-94).
+- **Each "Open in Spotify"** opens where the setting says: the canonical page in a new tab, with no referrer, or the service's app. That holds in the popover and in the bottom sheet.
+- **One link per service:** the App choice beside it and the 2 s "may not be installed" message are gone.
+- **Shared and guest pages:** their Open popover has the same choices. Guests have no setting, so theirs open the pages.
+
 **DS-26 Field editors (custom fields).** One editor per type, used in the inspector and the manual-entry form. *(FR-03.6, FR-03.7, FR-03.10)*
 
 | Type | Editor | Empty state |
@@ -636,6 +641,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Each row** shows its save state (DS-80). The stream replaces the link as typed with its canonical URL.
 - **Offline,** the rows are read-only, as the album's fields are (DS-81).
 - **Capture's kept link** ("Another Spotify link was found for this album · Replace · Dismiss") comes with the capture interface (TON-45).
+
+*As built in TON-104:* **a Links row opens where the account's link setting says** (DS-94): the service's page in a new tab, or its app. Its tooltip is the canonical URL either way.
 
 *As built in TON-50:* **Custom fields.**
 - **Applied fields** are rows, by name, each with its value. With none in Viewing mode: "No custom fields."
@@ -1550,6 +1557,8 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
   - **Folders and Collection:** sort and direction. Folders have a direction too, since Name and Created sort both ways.
 - **Each choice is saved at once** to the account, and reaches the person's other sessions.
 - **The note:** "Folders, lists and views where you've chosen options in View options keep them when you change these defaults. Choose "Use account defaults" there to follow these again."
+
+*As built in TON-104* (decided with the creator, 30 October 2026): **Links.** A last section, "Links", holds "Open links in" with **Web page** and **App**, and a note: "App opens Spotify, Apple Music, Qobuz and Tidal links in their apps, on every device you use. A link to a service whose app isn't installed won't open." It is saved to the account at once and synced, like the defaults. It starts as Web page. *(FR-06.6)*
 
 **DS-96 Data export** (Settings → Data). *(FR-08.1–FR-08.6)*
 - **Explanation:** "A ZIP with a JSON file (complete, for programs and AI tools), a Markdown file (readable outline of your collection) and a README."

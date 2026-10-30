@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { eq, sql } from "drizzle-orm";
 
 import {
-  appViewDefaults,
+  appAccountDefaults,
   maxAlbums,
   maxContainerDepth,
   maxContainers,
@@ -288,7 +288,7 @@ describe("bootstrapSnapshot (TS-24)", () => {
       fieldValues: [],
       views: [],
       positions: [],
-      defaults: appViewDefaults,
+      defaults: appAccountDefaults,
       trashUnits: [],
       references: [],
     });
@@ -847,7 +847,7 @@ describe("view choices and defaults (FR-05.2, FR-11.7, FR-11.8)", () => {
 
   test("defaults are logged complete, and the bootstrap has them complete before and after", async () => {
     const anna = await newPrincipal();
-    expect((await bootstrapSnapshot(t.db, anna.userId)).defaults).toEqual(appViewDefaults);
+    expect((await bootstrapSnapshot(t.db, anna.userId)).defaults).toEqual(appAccountDefaults);
     const mutation: Mutation = {
       mutationId: uuidv7(),
       name: "defaults.set",
@@ -855,7 +855,7 @@ describe("view choices and defaults (FR-05.2, FR-11.7, FR-11.8)", () => {
       base: { listSortMode: "year", grouped: false },
     };
     const saved = await executeMutation(t.db, anna, mutation);
-    const defaults = { ...appViewDefaults, listSortMode: "name" as const, grouped: true };
+    const defaults = { ...appAccountDefaults, listSortMode: "name" as const, grouped: true };
     expect(saved.changes).toEqual([
       {
         seq: 1,
@@ -877,6 +877,26 @@ describe("view choices and defaults (FR-05.2, FR-11.7, FR-11.8)", () => {
       ...defaults,
       layout: "grid",
     });
+  });
+
+  test("the link setting is saved with the defaults, and each write keeps the other's", async () => {
+    const anna = await newPrincipal();
+    const linked = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "defaults.setLinkTarget",
+      args: { linkTarget: "app" },
+      base: { linkTarget: "web" },
+    });
+    expect(linked.changes[0]?.data).toEqual({ ...appAccountDefaults, linkTarget: "app" });
+    const grouped = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "defaults.set",
+      args: { grouped: true },
+      base: { grouped: false },
+    });
+    const defaults = { ...appAccountDefaults, grouped: true, linkTarget: "app" as const };
+    expect(grouped.changes[0]?.data).toEqual(defaults);
+    expect((await bootstrapSnapshot(t.db, anna.userId)).defaults).toEqual(defaults);
   });
 });
 

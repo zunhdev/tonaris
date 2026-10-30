@@ -9021,6 +9021,57 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setLinkTarget"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "linkTarget": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "app"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "linkTarget"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "linkTarget": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "app"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "linkTarget"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -11223,6 +11274,57 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setLinkTarget"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "linkTarget": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "app"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "linkTarget"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "linkTarget": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "app"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "linkTarget"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -13424,6 +13526,57 @@
                       "mutationId",
                       "name",
                       "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setLinkTarget"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "linkTarget": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "app"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "linkTarget"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "linkTarget": {
+                            "type": "string",
+                            "enum": [
+                              "web",
+                              "app"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "linkTarget"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
                     ]
                   }
                 ],
@@ -15094,6 +15247,14 @@
                             "rows",
                             "grid"
                           ]
+                        },
+                        "linkTarget": {
+                          "type": "string",
+                          "enum": [
+                            "web",
+                            "app"
+                          ],
+                          "description": "Where service links open: `web`, the canonical page, or `app`, the service's app (FR-06.6)."
                         }
                       },
                       "required": [
@@ -15102,10 +15263,11 @@
                         "folderSortMode",
                         "folderSortDir",
                         "grouped",
-                        "layout"
+                        "layout",
+                        "linkTarget"
                       ],
                       "additionalProperties": false,
-                      "description": "The person's account defaults, DS-44's until they save their own."
+                      "description": "The person's account defaults, DS-44's until they save their own, and where their links open."
                     },
                     "trashUnits": {
                       "type": "array",
@@ -16641,6 +16803,14 @@
                       "rows",
                       "grid"
                     ]
+                  },
+                  "linkTarget": {
+                    "type": "string",
+                    "enum": [
+                      "web",
+                      "app"
+                    ],
+                    "description": "Where service links open: `web`, the canonical page, or `app`, the service's app (FR-06.6)."
                   }
                 },
                 "required": [
@@ -16649,10 +16819,11 @@
                   "folderSortMode",
                   "folderSortDir",
                   "grouped",
-                  "layout"
+                  "layout",
+                  "linkTarget"
                 ],
                 "additionalProperties": false,
-                "description": "A person's account defaults for presentation (FR-11.7)."
+                "description": "A person's account defaults for presentation (FR-11.7), and where their service links open (FR-06.6)."
               },
               "mutationId": {
                 "anyOf": [
@@ -19106,6 +19277,60 @@
                   "mutationId",
                   "name",
                   "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "defaults.setLinkTarget"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "linkTarget": {
+                        "type": "string",
+                        "enum": [
+                          "web",
+                          "app"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "linkTarget"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "linkTarget": {
+                        "type": "string",
+                        "enum": [
+                          "web",
+                          "app"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "linkTarget"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
                 ],
                 "additionalProperties": false
               }

@@ -1,11 +1,12 @@
 // The inspector's Links section (DS-46; FR-06.2, FR-06.3): the album's link for each service it has one for, each
-// opening that service's page in a new tab until "Open in…" arrives (TON-47). In Editing mode every service has a row:
+// opening that service, in its app on desktop (FR-06.6, TON-104). In Editing mode every service has a row:
 // a linked one offers Replace and Remove, the others Add. Replace and Add open a field that saves on Enter or when
 // left and discards on Escape, checked first as the server will read it (TS-40), so a refused link stays with its
 // reason and nothing is sent. Remove applies at once, with Undo (DS-50). Each link shows its save state (DS-80). A
 // link capture kept instead of a pasted one shows the pasted one, for an explicit Replace (FR-06.4, TON-45).
 
 import { useCapture, type KeptLink } from "@/features/capture/capture-context";
+import { ServiceAnchor } from "@/features/open/service-anchor";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -162,17 +163,15 @@ function LinkRow({
     <li className="flex min-w-0 items-center gap-2">
       <span className="w-24 shrink-0 text-fg-secondary">{name}</span>
       {link ? (
-        <a
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
+        <ServiceAnchor
+          link={link}
           title={link.url}
           className="flex min-w-0 flex-1 items-center gap-1 text-fg-primary underline-offset-4 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
         >
           <span className="sr-only">Open in {name}: </span>
           <span className="truncate">{shownUrl(link.url)}</span>
           <ExternalLink aria-hidden strokeWidth={1.5} className="size-3.5 shrink-0" />
-        </a>
+        </ServiceAnchor>
       ) : (
         <span className="flex-1 text-fg-tertiary">—</span>
       )}

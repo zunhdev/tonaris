@@ -37,7 +37,7 @@ Q-04's objectives on 30 October 2026.
 | AC-15 | Sorting and grouping | Pass | `collection/order.test.ts`. `view-options.e2e.ts`. `providers/classify.test.ts`. |
 | AC-16 | Personal presentation | Pass | `view-options.e2e.ts`: remembered and synced. `shared-viewing.test.ts`. `guest.e2e.ts`: the visit's own view. |
 | AC-17 | Unsorted and root presentation | Pass | `view-options.e2e.ts`. `manual-order.e2e.ts`: rearranging changes no list or parent. |
-| AC-18 | Open the selected service | **Waits for the creator** | `open-in.e2e.ts` covers the chooser, the links and the phone sheet. **Left:** launching each desktop app from Chrome, Safari and Firefox with the apps installed, and app links on real phones (`spikes/2026-10-28-desktop-app-links.md`). |
+| AC-18 | Open the selected service | **Waits for the creator** | `open-in.e2e.ts` covers the chooser, the links, the phone sheet and the link setting (revised 30 October 2026, TON-104: web page or app, by setting). **Left:** launching each desktop app from Chrome, Safari and Firefox with the apps installed, and app links on real phones (`spikes/2026-10-28-desktop-app-links.md`). |
 | AC-19 | Same-service link conflicts | Pass | `domain/capture.test.ts`. `api/capture.test.ts`. `capture.e2e.ts`. `providers/links.test.ts`: variants. |
 | AC-20 | Sharing inheritance | Pass | `db/sharing.test.ts`. `domain/sharing.test.ts`. |
 | AC-21 | Sharing disclosure | Pass | `sharing-dialog.e2e.ts`. `sharing-impact.e2e.ts`. `mcp/trash-tools.test.ts`. |
@@ -106,7 +106,7 @@ Each of section 2.6's exclusions, checked against the code on 30 October 2026:
 
 ## Left for the creator
 
-1. **AC-18:** with the apps installed, open an album's service app from Chrome, Safari and Firefox on the desktop, and from a phone.
+1. **AC-18:** with the apps installed and Settings → Preferences → "Open links in" set to App, open an album's service app from Chrome, Safari and Firefox on the desktop, and from a phone.
 2. **AC-42:**
    - run `bun run --cwd apps/web test:e2e:firefox`;
    - run the screen-reader checklist in `accessibility-walkthrough.md`;

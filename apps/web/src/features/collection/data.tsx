@@ -9,14 +9,14 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
 
 import {
-  appViewDefaults,
+  appAccountDefaults,
   unsetView,
   type Album,
   type CustomField,
   type FieldValue,
   type Membership,
   type ServiceLink,
-  type ViewDefaults,
+  type AccountDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
 
@@ -47,7 +47,7 @@ export type CollectionData = {
   /** The person's remembered choices, by view key (FR-11.7). */
   views: ReadonlyMap<string, ViewPrefs>;
   /** Their account defaults; DS-44's until the first snapshot or until they save their own. */
-  defaults: ViewDefaults;
+  defaults: AccountDefaults;
   /** Their manual order: each view's keys, by view key (TS-16). */
   keys: ReadonlyMap<string, Keys>;
   /** Whether the first snapshot has loaded, so a missing folder is really missing. */
@@ -67,7 +67,7 @@ const empty: CollectionData = {
   fieldsById: new Map(),
   valuesByAlbum: new Map(),
   views: new Map(),
-  defaults: appViewDefaults,
+  defaults: appAccountDefaults,
   keys: new Map(),
   ready: false,
 };
@@ -132,7 +132,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       else valuesByAlbum.set(row.albumId, [row]);
     }
     const views = new Map((viewData ?? []).map((view) => [view.viewKey, view]));
-    const defaults = defaultData?.[0] ?? appViewDefaults;
+    const defaults = defaultData?.[0] ?? appAccountDefaults;
     const keys = new Map<string, Map<string, string>>();
     for (const { viewKey, itemId, key } of positionData ?? []) {
       const inView = keys.get(viewKey);

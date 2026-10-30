@@ -319,8 +319,11 @@ export {
   type StreamReset,
 } from "./sync";
 export {
+  accountDefaultsSchema,
+  appAccountDefaults,
   appViewDefaults,
   folderSortModes,
+  linkTargets,
   listSortModes,
   sortDirections,
   sortModes,
@@ -333,7 +336,9 @@ export {
   viewPrefsFieldsSchema,
   viewPrefsSchema,
   type ViewItems,
+  type AccountDefaults,
   type FolderSortMode,
+  type LinkTarget,
   type ListSortMode,
   type SortDirection,
   type SortMode,

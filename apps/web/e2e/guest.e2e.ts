@@ -97,7 +97,7 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
     .filter({ hasText: "Nightfall" })
     .getByRole("button", { name: "Open Nightfall in…" })
     .click();
-  const spotify = guest.getByRole("link", { name: "Spotify" });
+  const spotify = guest.getByRole("link", { name: "Open in Spotify" });
   await expect(spotify).toHaveAttribute("rel", "noopener noreferrer");
   await expect(spotify).toHaveAttribute("target", "_blank");
   await guest.keyboard.press("Escape");

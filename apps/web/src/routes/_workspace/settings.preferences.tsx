@@ -1,7 +1,8 @@
 // Settings → Preferences (DS-94, FR-11.7, FR-11.8): the account defaults every view follows where its person made no
 // choice of its own: the sort, direction, grouping and layout of lists and Unsorted, and the sort and direction of
 // folders and the collection. Each choice is saved to the account at once, and reaches the person's other sessions.
-// Views with choices of their own keep them.
+// Views with choices of their own keep them. Links: whether service links open the services' web pages or their apps
+// (FR-06.6, TON-104).
 
 import { defaultsKey } from "@/client/sync/views";
 import { useCollectionData } from "@/features/collection/data";
@@ -18,8 +19,13 @@ import { PageHeader } from "@/features/shell/page-header";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { createFileRoute } from "@tanstack/react-router";
 
-import type { ViewDefaults } from "@tonaris/domain";
-import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
+import type { AccountDefaults, LinkTarget } from "@tonaris/domain";
+import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
+
+const linkTargetOptions: readonly SegmentedOption<LinkTarget>[] = [
+  { value: "web", label: "Web page" },
+  { value: "app", label: "App" },
+];
 
 export const Route = createFileRoute("/_workspace/settings/preferences")({
   head: () => ({ meta: [{ title: "Preferences · Tonaris" }] }),
@@ -30,7 +36,7 @@ function Preferences() {
   const client = useSyncClient();
   const { defaults, ready } = useCollectionData();
 
-  function set(values: Partial<ViewDefaults>) {
+  function set(values: Partial<AccountDefaults>) {
     if (!client?.defaults.has(defaultsKey)) return;
     // The save-state layer reports a write that fails.
     client.defaults
@@ -127,6 +133,27 @@ function Preferences() {
           Folders, lists and views where you've chosen options in View options keep them when you
           change these defaults. Choose "Use account defaults" there to follow these again.
         </p>
+
+        <section aria-labelledby="link-target" className="flex max-w-sm flex-col gap-3">
+          <h2 id="link-target" className="text-title text-fg-primary">
+            Links
+          </h2>
+          <Choice label="Open links in">
+            {(id) => (
+              <SegmentedControl
+                aria-labelledby={id}
+                options={linkTargetOptions}
+                value={defaults.linkTarget}
+                disabled={!ready}
+                onValueChange={(linkTarget) => set({ linkTarget })}
+              />
+            )}
+          </Choice>
+          <p className="text-small text-fg-secondary">
+            App opens Spotify, Apple Music, Qobuz and Tidal links in their apps, on every device you
+            use. A link to a service whose app isn't installed won't open.
+          </p>
+        </section>
       </div>
     </>
   );

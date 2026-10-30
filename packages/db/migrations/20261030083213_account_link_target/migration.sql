@@ -1,0 +1,2 @@
+ALTER TABLE "account_settings" ADD COLUMN "link_target" text DEFAULT 'web' NOT NULL;--> statement-breakpoint
+ALTER TABLE "account_settings" ADD CONSTRAINT "account_settings_link_target_check" CHECK ("link_target" in ('web', 'app'));

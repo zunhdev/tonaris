@@ -1,5 +1,6 @@
 // Personal presentation (TS-11, FR-05.2, FR-11.7, FR-11.8): each person's remembered choices for a view, their
-// account defaults, and the commands that change them (TON-35). A view is the root, Unsorted, or a folder or list.
+// account defaults, and the commands that change them (TON-35). The account defaults also say whether service links
+// open the services' web pages or their apps (FR-06.6, TON-104). A view is the root, Unsorted, or a folder or list.
 // Choices belong to the person, never to the content, and follow the same conflict policy as content (FR-09.4):
 // each write names the values it replaces.
 
@@ -17,12 +18,15 @@ export const sortModes = ["year", "name", "created", "manual"] as const;
 export const sortDirections = ["asc", "desc"] as const;
 /** Rows or a grid of cards, for lists and Unsorted (DS-40). */
 export const viewLayouts = ["rows", "grid"] as const;
+/** Where service links open: the canonical `https` page, or the service's app through its scheme (FR-06.6). */
+export const linkTargets = ["web", "app"] as const;
 
 export type ListSortMode = (typeof listSortModes)[number];
 export type FolderSortMode = (typeof folderSortModes)[number];
 export type SortMode = (typeof sortModes)[number];
 export type SortDirection = (typeof sortDirections)[number];
 export type ViewLayout = (typeof viewLayouts)[number];
+export type LinkTarget = (typeof linkTargets)[number];
 
 /** `root`, `unsorted`, or a folder's or list's ID. */
 export const viewKeySchema = z
@@ -69,6 +73,23 @@ export const appViewDefaults: ViewDefaults = {
   grouped: false,
   layout: "rows",
 };
+
+/** The account defaults with the person's link setting, as their sessions see them (FR-06.6, TON-104). */
+export const accountDefaultsSchema = viewDefaultsSchema
+  .extend({
+    linkTarget: z.enum(linkTargets).meta({
+      description:
+        "Where service links open: `web`, the canonical page, or `app`, the service's app (FR-06.6).",
+    }),
+  })
+  .meta({
+    description:
+      "A person's account defaults for presentation (FR-11.7), and where their service links open (FR-06.6).",
+  });
+export type AccountDefaults = z.infer<typeof accountDefaultsSchema>;
+
+/** Until a person chooses, links open the services' web pages, which work on every device. */
+export const appAccountDefaults: AccountDefaults = { ...appViewDefaults, linkTarget: "web" };
 
 /** A view with no remembered choice. */
 export function unsetView(viewKey: string): ViewPrefs {
@@ -251,7 +272,7 @@ export async function setDefaults(
   const unbased = baseProblem(viewDefaultsFields, changed, base);
   if (unbased) return unbased;
 
-  const current = (await store.findDefaults(personId)) ?? appViewDefaults;
+  const current = (await store.findDefaults(personId)) ?? appAccountDefaults;
   const conflicts = staleFields(changed, current, values, base);
   if (conflicts.length > 0) return { status: "conflict", conflicts };
 
@@ -260,6 +281,31 @@ export async function setDefaults(
   if (viewDefaultsFields.every((field) => next[field] === current[field])) {
     return { status: "applied", changes: [] };
   }
+  await store.saveDefaults(personId, next);
+  return {
+    status: "applied",
+    changes: [{ entity: "defaults", id: personId, op: "update", data: next }],
+  };
+}
+
+/**
+ * Sets where a person's service links open (FR-06.6, TON-104): their web pages or the services' apps, on every
+ * device. Until saved, they open the web pages.
+ */
+export async function setLinkTarget(
+  values: { linkTarget: LinkTarget },
+  base: { linkTarget: LinkTarget },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const personId = personOf(context);
+  if (typeof personId !== "string") return personId;
+  const { store } = context;
+
+  const current = (await store.findDefaults(personId)) ?? appAccountDefaults;
+  const conflicts = staleFields(["linkTarget"], current, values, base);
+  if (conflicts.length > 0) return { status: "conflict", conflicts };
+  if (values.linkTarget === current.linkTarget) return { status: "applied", changes: [] };
+  const next = { ...current, linkTarget: values.linkTarget };
   await store.saveDefaults(personId, next);
   return {
     status: "applied",

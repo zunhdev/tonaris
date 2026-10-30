@@ -22,7 +22,7 @@ import {
 
 import {
   actingUserId,
-  appViewDefaults,
+  appAccountDefaults,
   changeSchema,
   outcomeSchema,
   runBatch,
@@ -59,7 +59,7 @@ import {
   type Principal,
   type ServiceLink,
   type StoredField,
-  type ViewDefaults,
+  type AccountDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
 
@@ -134,6 +134,12 @@ export const defaultsColumns = {
   folderSortDir: accountSettings.folderSortDir,
   grouped: accountSettings.grouped,
   layout: accountSettings.layout,
+};
+
+/** The account defaults with the link setting, as the person's sessions see them; the export leaves it out. */
+export const accountDefaultsColumns = {
+  ...defaultsColumns,
+  linkTarget: accountSettings.linkTarget,
 };
 
 export const positionColumns = {
@@ -920,7 +926,7 @@ function collectionStore(tx: Transaction): CollectionStore {
     },
     async findDefaults(personId) {
       const [row] = await tx
-        .select(defaultsColumns)
+        .select(accountDefaultsColumns)
         .from(accountSettings)
         .where(eq(accountSettings.accountId, personId));
       return row;
@@ -1608,8 +1614,8 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         .from(positions)
         .where(eq(positions.personId, accountId))
         .orderBy(asc(positions.viewKey), asc(positions.itemId));
-      const [defaults]: ViewDefaults[] = await tx
-        .select(defaultsColumns)
+      const [defaults]: AccountDefaults[] = await tx
+        .select(accountDefaultsColumns)
         .from(accountSettings)
         .where(eq(accountSettings.accountId, accountId));
       const references = await tx
@@ -1627,7 +1633,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
         fieldValues,
         views,
         positions: arranged,
-        defaults: defaults ?? appViewDefaults,
+        defaults: defaults ?? appAccountDefaults,
         trashUnits: trash,
         references,
       };

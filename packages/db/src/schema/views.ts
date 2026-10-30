@@ -6,6 +6,7 @@ import { boolean, check, primaryKey, text, uuid } from "drizzle-orm/pg-core";
 
 import {
   folderSortModes,
+  linkTargets,
   listSortModes,
   sortDirections,
   sortModes,
@@ -42,8 +43,9 @@ export const viewPrefs = table(
 );
 
 /**
- * A person's account defaults (FR-11.7, DS-94), complete once saved. No row means DS-44's first-time defaults
- * (`appViewDefaults` in packages/domain).
+ * A person's account defaults (FR-11.7, DS-94), complete once saved, and where their service links open (FR-06.6,
+ * TON-104). No row means DS-44's first-time defaults and web links (`appAccountDefaults` in packages/domain); a row
+ * first saved for the link setting holds DS-44's defaults.
  */
 export const accountSettings = table(
   "account_settings",
@@ -57,10 +59,12 @@ export const accountSettings = table(
     folderSortDir: text({ enum: sortDirections }).notNull(),
     grouped: boolean().notNull(),
     layout: text({ enum: viewLayouts }).notNull(),
+    linkTarget: text({ enum: linkTargets }).notNull().default("web"),
     ...timestamps,
   },
   (t) => [
     check("account_settings_list_sort_mode_check", oneOf(t.listSortMode, listSortModes)),
+    check("account_settings_link_target_check", oneOf(t.linkTarget, linkTargets)),
     check("account_settings_list_sort_dir_check", oneOf(t.listSortDir, sortDirections)),
     check("account_settings_folder_sort_mode_check", oneOf(t.folderSortMode, folderSortModes)),
     check("account_settings_folder_sort_dir_check", oneOf(t.folderSortDir, sortDirections)),

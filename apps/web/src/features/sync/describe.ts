@@ -313,6 +313,13 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: "Your default view options",
     };
   }
+  if (mutation.name === "defaults.setLinkTarget") {
+    return {
+      summary: "Where links open",
+      what: "where your links open",
+      subject: "Where your links open",
+    };
+  }
   if (mutation.name === "link.set" || mutation.name === "link.remove") {
     const title = quoted(names.album(mutation.args.albumId), "an album");
     const link = `the ${serviceNames[mutation.args.service]} link`;
@@ -428,6 +435,7 @@ const fieldLabels: Record<string, string> = {
   listSortDir: "Direction for lists",
   folderSortMode: "Sort for folders",
   folderSortDir: "Direction for folders",
+  linkTarget: "Open links in",
 };
 
 /** A conflicting field's name in the review (DS-80): an item's place is named by the item. */
@@ -488,6 +496,7 @@ export function fieldValue(
     if (field === "grouped") return value === true ? "Release type" : "None";
     return typeof value === "string" ? (presentationValues[value] ?? value) : "—";
   }
+  if (field === "linkTarget") return value === "app" ? "App" : "Web page";
   if (field === "parentId") {
     if (value === null) return "Collection";
     return (typeof value === "string" && names.container(value)?.name) || "A folder no longer here";
