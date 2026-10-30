@@ -325,7 +325,7 @@ This is enforced for manual entry, capture, MCP, and edits.
 
 **FR-03.3 Enrichment fills gaps only.** Automatic enrichment, whether on capture, on retry, or from a newly matched link from another service, fills missing values only. It preserves populated values, imported or manual, including when another service supplies a conflicting classification. Users can explicitly replace any value.
 
-**FR-03.4 Artwork.** Users enter or replace the artwork URL in the manual form and when editing. Enrichment keeps an existing URL. Missing or unavailable artwork never blocks using an album.
+**FR-03.4 Artwork.** Users enter or replace the artwork URL in the manual form and when editing, or choose one of the Cover Art Archive's covers for the album's title and artist (decided 30 October 2026, TON-112). Enrichment keeps an existing URL. Missing or unavailable artwork never blocks using an album.
 
 **FR-03.5 Descriptions.** Folders and lists have an optional plain-text description. The owner or a Manage collection agent edits it as an ordinary change. Descriptions survive moves and Trash, are visible to authorized viewers, are excluded from search (FR-12.4), and are included in exports (FR-08.3).
 
@@ -1089,6 +1089,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - **Backups:** Render Postgres's point-in-time recovery replaces the daily encrypted off-site dump. It keeps 3 days on Render's Hobby plan and 7 on Pro, and loses at most a few minutes of changes. The recovery time and drills are unchanged.
   - **Disclosure:** TS-114's wording still holds, since backups now leave within 7 days at most.
   - **Updated** Q-04.
+- **Decision (30 October 2026), Find artwork** (TON-112), from the creator's manual testing: owners can choose a cover the Cover Art Archive has for an album's title and artist, so an album MusicBrainz didn't match can still get artwork. Other services' covers stay out, as their terms require. **Updated** FR-03.4.
 - **Decision (30 October 2026), an agent's details** (TON-111), from the creator's manual testing: details an agent sends for a link no step identified are matched like a store page's hints, so the album gets its MusicBrainz values and artwork. The app's manual entry still adds an album without a lookup (FR-02.4). **Updated** FR-10.5.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);

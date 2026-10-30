@@ -810,6 +810,11 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - Stored fields: the release group's title (the canonical album title) and artist credit, its `first-release-date` (original year), its primary and secondary types (TS-45), the MBIDs, and recording dates where present (TS-46).
   - Initial classification follows MusicBrainz, the canonical source (FR-02.8 as clarified on 17 October 2026).
   - Artwork comes from the Cover Art Archive: the release group's front (`/release-group/{mbid}/front-500`), which stands for the album whichever edition was linked. It is shown through the image proxy (TS-103).
+  - **Find artwork** (TON-112, FR-03.4): `GET /v1/artwork/covers?title=&artist=` answers a signed-in owner with up to 8 covers to choose from.
+    - `findCovers` asks MusicBrainz's release-group search for the cleaned title and the first artist, as step 4 does, then the title alone if that finds nothing. That is one or two requests through the shared queue, not kept.
+    - The archive is asked for each album's front in parallel (kept 7 days), and albums without one are left out.
+    - Each cover carries `artworkSignature`, so the app shows it through the proxy. Choosing one is an ordinary `album.setArtwork` with its `front-500` address, sourced `user`.
+    - MusicBrainz unavailable, or the archive for every album found, answers `503 provider_unavailable`.
 - **The user-supplied canonical URL** is stored as the service link; it is user input.
 
 *Resolver chain.* It runs in the capture job and stops at the first confident result.

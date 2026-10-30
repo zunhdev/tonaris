@@ -27,6 +27,7 @@ import { accountDeletionRoutes, type AccountDeletionDeps } from "./routes/v1/acc
 import { admissionAdminRoutes } from "./routes/v1/admissions";
 import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
+import { coverRoutes, type CoverFinder } from "./routes/v1/covers";
 import { emailChangeRoutes, type EmailChangeDeps } from "./routes/v1/email-change";
 import { exportRoutes } from "./routes/v1/export";
 import { fieldRoutes } from "./routes/v1/fields";
@@ -66,6 +67,7 @@ function v1(
     db: Database;
     hub: SyncHub;
     capture?: CaptureDeps | undefined;
+    covers?: CoverFinder | undefined;
     artwork: ArtworkSigner;
     sharing: SharingDeps;
     emailChange: EmailChangeDeps;
@@ -92,6 +94,7 @@ function v1(
     .use(approvalRoutes(session, { db: sync.db }))
     .use(fieldRoutes(session, { db: sync.db }))
     .use(searchRoutes(session, { db: sync.db }))
+    .use(coverRoutes(session, sync))
     .use(exportRoutes(session, { db: sync.db }))
     .use(
       sharingRoutes(session, {
@@ -138,6 +141,8 @@ export type AppOptions = ProblemDetailsOptions & {
   capture?: CaptureDeps | undefined;
   /** How the image proxy fetches artwork: `safeFetch` unless a test stands in (TS-103). */
   imageFetch?: ImageFetch | undefined;
+  /** Find artwork's search (TON-112); without it, the search answers `provider_unavailable`. */
+  covers?: CoverFinder | undefined;
   /** MCP's per-connection limits; the default holds the TS-66 limits for this process. */
   mcpLimiter?: McpLimiter | undefined;
 };
@@ -152,6 +157,7 @@ export function createApp({
   wakeJobs = () => {},
   capture,
   imageFetch,
+  covers,
   mcpLimiter,
   ...problemOptions
 }: AppOptions) {
@@ -194,6 +200,7 @@ export function createApp({
           db,
           hub,
           capture,
+          covers,
           artwork,
           sharing,
           emailChange: { db, email, limiter, clientIpHeader: config.clientIpHeader },

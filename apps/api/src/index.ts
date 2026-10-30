@@ -45,6 +45,7 @@ const app = createApp({
   hub,
   wakeJobs: worker.wake,
   capture: providers.capture,
+  covers: providers.covers,
   logError: reportError,
 }).listen({ port: config.port, maxRequestBodySize });
 const schedules = startSchedules(

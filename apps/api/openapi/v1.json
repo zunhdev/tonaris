@@ -3250,6 +3250,155 @@
         }
       }
     },
+    "/v1/artwork/covers": {
+      "get": {
+        "summary": "Find covers for an album",
+        "description": "Albums MusicBrainz has for the title and artist, by the first artist and then by the title alone, each with its Cover Art Archive front, for the owner to choose from (FR-03.4). Albums without a front are left out. Choosing one is an ordinary artwork edit with its `artworkUrl`. 503 when MusicBrainz, or the archive for every album found, can't be asked.",
+        "tags": [
+          "artwork"
+        ],
+        "operationId": "findCovers",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "description": "The album's title."
+            }
+          },
+          {
+            "name": "artist",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "description": "The album's artist credit."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Covers on the Cover Art Archive, in MusicBrainz's order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "covers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "releaseGroupId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "description": "The album's MusicBrainz release group."
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "artistCredit": {
+                            "type": "string"
+                          },
+                          "year": {
+                            "description": "Its first release's year, when known.",
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "type": {
+                            "description": "MusicBrainz's primary type, such as Album or EP, when it has one.",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "artworkUrl": {
+                            "type": "string",
+                            "description": "The archive's stable `front-500` address: the URL to save as the artwork."
+                          },
+                          "artworkSignature": {
+                            "type": "string",
+                            "description": "Shows the cover through the image proxy, as album records' do (TS-103)."
+                          }
+                        },
+                        "required": [
+                          "releaseGroupId",
+                          "title",
+                          "artistCredit",
+                          "year",
+                          "type",
+                          "artworkUrl",
+                          "artworkSignature"
+                        ],
+                        "additionalProperties": false,
+                        "description": "An album's cover to choose."
+                      }
+                    }
+                  },
+                  "required": [
+                    "covers"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Covers on the Cover Art Archive, in MusicBrainz's order."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/export": {
       "get": {
         "summary": "Download your data",

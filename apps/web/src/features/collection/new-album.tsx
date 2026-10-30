@@ -45,6 +45,7 @@ import {
   type FormField,
 } from "./album-form";
 import { useCollectionUi, type NewAlbumDraft } from "./collection-ui";
+import { FindArtwork } from "./find-artwork";
 import { FormFields } from "./form-fields";
 import { useListOptions } from "./list-options";
 
@@ -300,16 +301,24 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
             )}
 
             {draft.capture?.mode !== "details" && (
-              <TextField
-                name="artworkUrl"
-                label="Artwork URL"
-                type="url"
-                placeholder="https://…"
-                value={form.artworkUrl}
-                problem={shownProblems.artworkUrl}
-                onChange={(artworkUrl) => set({ artworkUrl })}
-                onBlur={() => touch("artworkUrl")}
-              />
+              <div className="flex flex-col gap-1.5">
+                <TextField
+                  name="artworkUrl"
+                  label="Artwork URL"
+                  type="url"
+                  placeholder="https://…"
+                  value={form.artworkUrl}
+                  problem={shownProblems.artworkUrl}
+                  onChange={(artworkUrl) => set({ artworkUrl })}
+                  onBlur={() => touch("artworkUrl")}
+                />
+                <FindArtwork
+                  inDialog
+                  title={form.title}
+                  artist={form.artistCredit}
+                  onChoose={(artworkUrl) => set({ artworkUrl })}
+                />
+              </div>
             )}
             {draft.capture?.mode === "details" ? (
               <p className="text-small text-fg-secondary">

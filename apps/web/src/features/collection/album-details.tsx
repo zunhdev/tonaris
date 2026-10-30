@@ -34,6 +34,7 @@ import { cellNames } from "./album-rows";
 import { Artwork, artworkSrc } from "./artwork";
 import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
+import { FindArtwork } from "./find-artwork";
 import { ancestorsOf } from "./tree";
 
 const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation" | "unknown">[] = [
@@ -351,8 +352,8 @@ function FieldEditor({
 
 /**
  * The artwork's URL, in Editing mode (FR-03.4): Enter or leaving the field saves it as one `album.update`, empty clears
- * it, and Escape discards. A URL that isn't an https link stays with its reason. The artwork shows through the image
- * proxy once the server has signed it (TS-103).
+ * it, and Escape discards. A URL that isn't an https link stays with its reason. Find artwork saves a chosen cover
+ * the same way (TON-112). The artwork shows through the image proxy once the server has signed it (TS-103).
  */
 function ArtworkUrlEditor({ album }: { album: Album }) {
   const client = useSyncClient();
@@ -445,6 +446,21 @@ function ArtworkUrlEditor({ album }: { album: Album }) {
           {refusal}
         </p>
       )}
+      <FindArtwork
+        title={album.title}
+        artist={album.artistCredit}
+        onChoose={(artworkUrl) => {
+          // A chosen cover is an artwork edit like a typed one, replacing whatever was typed.
+          setDraft(undefined);
+          setRefusal(undefined);
+          if (artworkUrl === latest.current.artworkUrl || !client) return;
+          sent(
+            client.albums.update(latest.current.id, (record) => {
+              record.artworkUrl = artworkUrl;
+            }),
+          );
+        }}
+      />
     </div>
   );
 }

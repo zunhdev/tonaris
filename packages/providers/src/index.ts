@@ -3,6 +3,7 @@
 
 export { isPublicAddress } from "./addresses";
 export { classify, describeAlbum, recordingYears, type Classification } from "./album-facts";
+export { findCovers, maxCovers, type Cover } from "./covers";
 export { cleanTitle, matchHints, type Candidate, type HintMatch, type Hints } from "./hints";
 export {
   createIdentifier,

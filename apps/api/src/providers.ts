@@ -1,6 +1,7 @@
 // The metadata sources the API asks (TS-41, TS-103), made once per process: MusicBrainz's 1 request a second and
 // iTunes Lookup's 20 a minute hold for every capture only while there is one client of each. `album.capture` asks
-// through `capture` (TON-44), and the capture job's retries will enrich saved albums with `enrich` (TS-42).
+// through `capture` (TON-44), the capture job's retries will enrich saved albums with `enrich` (TS-42), and Find
+// artwork searches with `covers` (TON-112).
 
 import {
   albumReleaseGroup,
@@ -13,6 +14,7 @@ import { failure, type Failure } from "@tonaris/domain";
 import {
   createIdentifier,
   describeAlbum,
+  findCovers,
   ItunesLookup,
   MusicBrainz,
   Spotify,
@@ -76,6 +78,7 @@ export function createProviders(
     spotify,
     identifier,
     capture,
+    covers: (query: { title: string; artist: string }) => findCovers(musicBrainz, query),
     enrich: createEnricher({ db, musicBrainz, hub }),
   };
 }

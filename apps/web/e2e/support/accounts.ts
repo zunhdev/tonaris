@@ -92,6 +92,8 @@ export const accounts = {
   // Artwork (artwork.e2e.ts), one per test.
   artworkShown: at("artwork-shown"),
   artworkEdited: at("artwork-edited"),
+  artworkFound: at("artwork-found"),
+  artworkFoundForm: at("artwork-found-form"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),

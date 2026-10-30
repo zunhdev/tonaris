@@ -89,6 +89,7 @@ describe("OpenAPI", () => {
       "/v1/fields/{fieldId}/deletion",
       "/v1/fields/{fieldId}/options/{optionId}/removal",
       "/v1/search",
+      "/v1/artwork/covers",
       "/v1/export",
       "/v1/sharing/impact",
       "/v1/containers/{id}/sharing",

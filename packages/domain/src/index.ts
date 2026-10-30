@@ -73,6 +73,8 @@ export {
   albumProblem,
   hasAlbumSlot,
   artworkPath,
+  coverSchema,
+  coversSchema,
   artworkUrlRefusal,
   isArtworkUrl,
   albumSchema,
@@ -80,6 +82,7 @@ export {
   type AlbumCreateArgs,
   releaseTypes,
   type Album,
+  type Cover,
   type AlbumField,
   type AlbumFields,
 } from "./albums";
