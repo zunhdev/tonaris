@@ -124,6 +124,35 @@ export function isArtworkUrl(url: string): boolean {
   );
 }
 
+/** A cover Find artwork offers (TON-112): an album on MusicBrainz with its Cover Art Archive front, signed to show. */
+export const coverSchema = z
+  .object({
+    releaseGroupId: z.uuid().meta({ description: "The album's MusicBrainz release group." }),
+    title: z.string(),
+    artistCredit: z.string(),
+    year: z
+      .number()
+      .int()
+      .nullable()
+      .meta({ description: "Its first release's year, when known." }),
+    type: z
+      .string()
+      .nullable()
+      .meta({ description: "MusicBrainz's primary type, such as Album or EP, when it has one." }),
+    artworkUrl: z.string().meta({
+      description: "The archive's stable `front-500` address: the URL to save as the artwork.",
+    }),
+    artworkSignature: z.string().meta({
+      description: "Shows the cover through the image proxy, as album records' do (TS-103).",
+    }),
+  })
+  .meta({ description: "An album's cover to choose." });
+export type Cover = z.infer<typeof coverSchema>;
+
+export const coversSchema = z
+  .object({ covers: z.array(coverSchema) })
+  .meta({ description: "Covers on the Cover Art Archive, in MusicBrainz's order." });
+
 /**
  * Where an album's artwork is shown from (TS-103): the API's image proxy, `/img/{signature}/{base64url(url)}`, with the
  * signature the server sent with the album. Clients add the API's origin.

@@ -24,6 +24,7 @@ import { emailJob, emailOutbox } from "./email/outbox";
 import { startJobWorker } from "./jobs";
 import { ledgerJob, memoryLedger } from "./ledger";
 import type { McpLimiter } from "./mcp/limits";
+import type { CoverFinder } from "./routes/v1/covers";
 import { databaseHub, type SyncHubOptions } from "./sync/hub";
 
 export type SentEmail = {
@@ -104,6 +105,8 @@ export type LocalAppOptions = {
   capture?: CaptureDeps;
   /** How the image proxy fetches, stubbed; `safeFetch` otherwise (TS-103). */
   imageFetch?: ImageFetch;
+  /** Find artwork's search, stubbed; without it, the search answers `provider_unavailable`. */
+  covers?: CoverFinder;
   /** MCP's per-connection limits, such as on a test's clock (TS-66). */
   mcpLimiter?: McpLimiter;
 };
@@ -146,6 +149,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     wakeJobs: worker.wake,
     capture: options.capture,
     imageFetch: options.imageFetch,
+    covers: options.covers,
     mcpLimiter: options.mcpLimiter,
     logError: () => {},
   });

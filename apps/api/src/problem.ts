@@ -16,6 +16,7 @@ export type HttpProblemCode = Extract<
   | "expired"
   | "in_progress"
   | "rate_limited"
+  | "provider_unavailable"
   | "internal_error"
 >;
 

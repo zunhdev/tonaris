@@ -20,6 +20,7 @@ import {
 
 import type { ImageFetch } from "./artwork";
 import type { CaptureDeps } from "./capture";
+import type { CoverFinder } from "./routes/v1/covers";
 
 const ids = {
   bleach: "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
@@ -208,6 +209,35 @@ export function fixtureCapture(): CaptureDeps {
     },
   };
 }
+
+/**
+ * Find artwork's search (TON-112) for the browser tests: two covers for Metallica's "Kill 'Em All", MusicBrainz down
+ * for an artist named "Down", and nothing for anything else. The covers are on the fixture image host.
+ */
+export const fixtureCovers: CoverFinder = async ({ title, artist }) => {
+  if (artist === "Down") {
+    throw new ProviderUnavailableError("musicbrainz", "MusicBrainz is down in this fixture");
+  }
+  if (artist !== "Metallica" || !/^kill .em all$/i.test(title)) return [];
+  return [
+    {
+      releaseGroupId: "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+      title: "Kill ’Em All",
+      artistCredit: "Metallica",
+      year: 1983,
+      type: "Album",
+      artworkUrl: "https://images.example/kill-em-all.png",
+    },
+    {
+      releaseGroupId: "1d6b7a4e-6a4b-3f1c-9a63-4b2f8b3a3f21",
+      title: "Kill ’Em All for One",
+      artistCredit: "Metallica",
+      year: 1983,
+      type: "EP",
+      artworkUrl: "https://images.example/kill-em-all-for-one.png",
+    },
+  ];
+};
 
 /** A 1×1 PNG: what the fixture image host answers. */
 const pixel = Uint8Array.from(

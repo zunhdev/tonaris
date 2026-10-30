@@ -10,7 +10,7 @@ import { createApp, maxRequestBodySize } from "./app";
 import { createAuth } from "./auth/auth";
 import { seedCreator } from "./auth/seed-creator";
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
-import { fixtureCapture, fixtureImageFetch } from "./capture-fixtures";
+import { fixtureCapture, fixtureCovers, fixtureImageFetch } from "./capture-fixtures";
 import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
 import { smtpEmail } from "./email/smtp";
@@ -63,6 +63,7 @@ const app = createApp({
   wakeJobs: worker.wake,
   capture: fixtureCapture(),
   imageFetch: fixtureImageFetch,
+  covers: fixtureCovers,
 }).listen({ port, maxRequestBodySize });
 console.log(`e2e API on ${app.server?.url.href}, schema ${database.schema}`);
 

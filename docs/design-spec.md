@@ -641,6 +641,11 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - **"+ Add to list", or L,** opens "Add '{title}' to a list": the owner's lists the album isn't in, with their folder paths, moved through with Tab or ↑ and ↓. Choosing one announces "Added {title} to {list}".
 - **Info** shows "Added {date}", from the album's ID. The source service arrives with capture (M3).
 - **Artwork** is the letter tile until capture brings artwork URLs (decided with the creator on 23 October 2026). *As built in TON-48:* the album's artwork through the image proxy, named "Cover of {title}". In Editing mode, an "Artwork URL" field under it ("https://…") saves on Enter or when left; empty clears it, and one that isn't an https link stays with "Give the artwork as an https link, such as https://example.com/cover.jpg."
+  - *As built in TON-112:* **"Find artwork"**, a small button under the field, opens a popover titled "Artwork from the Cover Art Archive", with "For “{title}” by {artist}".
+    - It shows "Searching…", then up to 8 covers in three columns, each through the image proxy over its letter tile, with the album's title and "{year} · {type}" under it.
+    - Choosing one closes the popover and saves its address as the artwork, as a typed URL is saved.
+    - "No covers found." when none has a front. A failure shows its reason, such as "Couldn't reach MusicBrainz. Try again.", with Try again.
+    - Offline, the editor isn't shown, so neither is the button.
 - **Delete from collection…** arrives with Trash (M5).
 
 *As built in TON-46:* **Links** (FR-06.2, FR-06.3).
@@ -699,6 +704,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 *As built in TON-50:* **"Custom fields"** replaces its line, with the inspector's editors and × per field, and an "Add field…" select of the unused fields and "Create field…". A select rather than a menu stays inside the dialog. Saving applies the fields after the album. A form completing a capture has none.
 
 *As built in TON-48:* **"Artwork URL"** replaces its line, with the placeholder "https://…". It is optional, checked when left and on submit, with the inspector's reason.
+
+*As built in TON-112:* **"Find artwork"** sits under the Artwork URL, as in the inspector (DS-46), searching for the form's title and artist. Until both are filled, it is disabled with "Enter the title and artist first". Its popover is on the dialog's layer (DS-18). Choosing a cover fills the field. A form completing a capture has no Artwork URL, so no Find artwork.
 
 *As built in TON-46:* **links** replace their line: "Spotify link", "Apple Music link", "Qobuz link" and "Tidal link", each optional, with the placeholder "Album or track link".
 - **Checked when left and on submit,** like the other fields, with the inspector's reasons, and named in the summary.

@@ -19,17 +19,21 @@ function PopoverContent({
   side = "bottom",
   sideOffset = 4,
   anchor,
+  inDialog = false,
   className,
   ...props
 }: PopoverPrimitive.Popup.Props &
   Pick<
     PopoverPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "anchor"
-  >) {
+  > & {
+    /** Opened from inside a dialog: on the dialog's layer (DS-18, 60), above it, as `DropdownMenuContent` does. */
+    inDialog?: boolean;
+  }) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
-        className="isolate z-40 outline-none"
+        className={cn("isolate outline-none", inDialog ? "z-60" : "z-40")}
         align={align}
         alignOffset={alignOffset}
         side={side}

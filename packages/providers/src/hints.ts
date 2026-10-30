@@ -144,7 +144,8 @@ const groupSearchSchema = z.object({
 });
 
 /** A Lucene phrase: only quotes and backslashes need escaping inside one. */
-const phrase = (text: string) => `"${text.replaceAll(/["\\]/g, (character) => `\\${character}`)}"`;
+export const phrase = (text: string) =>
+  `"${text.replaceAll(/["\\]/g, (character) => `\\${character}`)}"`;
 
 /**
  * The releases the hints find: by title and first artist, or by title alone when the artist as the store spells
