@@ -1152,6 +1152,332 @@
       ]
     }
   },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3Abd14f98a-8c45-4a0d-b148-17cbc96740aa+OR+rgid%3A67553e23-8dad-3792-b6f2-8fedd5650ff3&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 2,
+      "release-groups": [
+        {
+          "id": "bd14f98a-8c45-4a0d-b148-17cbc96740aa",
+          "count": 2,
+          "title": "…And Justice for All",
+          "first-release-date": "1988",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "c706a8e8-fef5-4c86-8532-a58d877207e9",
+              "title": "…And Justice for All",
+              "status": "Promotion"
+            },
+            {
+              "id": "4dede30f-58cf-4d43-a857-b342ad7be945",
+              "title": "…And Justice for All",
+              "status": "Promotion"
+            }
+          ]
+        },
+        {
+          "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+          "count": 54,
+          "title": "…And Justice for All",
+          "first-release-date": "1988-08-25",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "89a04dce-cb23-4db3-808b-c0008f4155f4",
+              "title": "...And Justice For All",
+              "status": "Official"
+            },
+            {
+              "id": "83289b36-da46-43f2-8e98-89229ac752e2",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "1d71898d-b4f5-4d5c-9571-b8c6f9b8b7fc",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "aec3d3dc-aae7-4b9f-ba23-da501cf24a1b",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "8bb4b4c9-6775-4d1d-90ff-0695df25802b",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "7f9a9573-3848-4324-ad42-18ffde99d527",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "50bfdaeb-19d9-3df4-b1e0-2bf9fa7fce37",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "9201c172-a875-4b2e-b825-2db111258034",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "bebfe3a4-e069-4f22-b584-4de6359de44f",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "8abe9a26-6888-477c-8815-02755555fe0f",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "c2b7460b-c574-4368-ab29-535771cfc0c9",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "c06bf631-baa9-4ddc-a1e7-1206cf4ecaff",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "32d5e219-22ac-4cc5-91d0-2682977e0283",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "d1544af7-3635-4617-84b3-342a34d073f6",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "c60f7444-6aa4-49d5-9927-91f1e0e7dccb",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "c3ef733e-7dd1-48b3-a60d-1e01df3c6f4e",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "30f4abf9-13ca-427a-8374-1bd74a1e492b",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "b0e6f2b4-810a-3693-9fbf-13e9f8471b38",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "769fd085-b0bf-4692-9adf-7b51103bdf75",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "0907c082-a0b2-4c7f-8a3d-a003aa30f764",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "d065577b-7032-4901-a20d-66d4a76eb8ed",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "b0b0e0a7-dcc4-4280-92f3-1890642a758b",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "da53e497-8c61-4d4a-a29b-a5b53d86ccb7",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "d83aa9b6-ba30-4bdf-b3b5-8cd01359f7da",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "dfb5e3c1-d8d3-4c89-81b1-255484e562c2",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "479dd068-b020-4c28-9be9-ba32f37e1188",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "cb2704e5-b7a3-343e-918f-aa9cd3489170",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "94651f3a-0b6f-46f4-81e5-e4c07cca3f01",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "3ef952d9-4de5-474b-9d3e-f4941b4fec2d",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "fce9462d-8444-334d-84d4-2bbf1edfe9b5",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "e10884cc-d791-3a78-a801-03afc8a89ba6",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "4e2b6e3c-1568-3ecd-ac6e-a77889cffdf3",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "4780ba11-c04e-4e2b-bfab-2cc05327aa4b",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "3749e7a5-e787-42b5-b0db-dd4161dc8e9d",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "2874b00f-ee1e-4835-8e3b-1dbe2bab4e66",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "1ed14115-8388-43ab-8205-337243d5a4bf",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "2d45313f-8109-45ac-b953-93c834836705",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "45b7c728-0c80-43a8-88f7-61e808506020",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "ba485072-128b-4135-a60a-4074fb967667",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "5186c568-d636-4537-b95e-2eb9624bb485",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "316d354c-be06-4ce8-b9fa-368abd93747b",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "05e19084-6d97-44bb-a156-eafb3115daac",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "c82797fd-d84d-42e0-950d-bf5ffb0f19b9",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "1174e18f-cbeb-4b5a-a37f-5e808e2b8c64",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "61292767-bfa5-4a4d-99c8-ea3d7ac4a889",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "d6123cc0-b035-443f-8176-1fafdda66129",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "43e6cd7d-a3a0-442f-bb72-5d70a3d222f7",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "bd13261d-7027-4feb-9342-896e670d630a",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "5409b82e-7e0f-455d-b876-799f142d507b",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "9d514949-edfb-4efa-9c18-0c372b234b5e",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "f5f166b8-4440-4199-abe9-ae496ccdc5cf",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "2d9bd8a7-a20a-4e84-8f6d-21e4155f9e17",
+              "title": "…And Justice for All",
+              "status": "Official"
+            },
+            {
+              "id": "7b928e94-390b-4bb3-b939-176e21ae37b9",
+              "title": "…And Justice for Jason",
+              "status": "Bootleg"
+            },
+            {
+              "id": "5ee63238-f2a5-4748-be55-a868d63dd62c",
+              "title": "…And Justice for Jason",
+              "status": "Bootleg"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "https://musicbrainz.org/ws/2/release-group?query=rgid%3Acd526339-785e-4ccd-abc1-8d374bd6d68d+OR+rgid%3A8268d959-db46-4015-9dc4-4c95a2a2761f+OR+rgid%3Aa56f1250-ecc4-4077-9146-771dbd6f4745+OR+rgid%3A0e61ea15-fd97-4ce9-8c7d-f97830381512+OR+rgid%3Ad8e13584-70ea-4071-9a8b-157b89e92b2b+OR+rgid%3A6c958576-04b0-459a-b1dc-582e7fc11763+OR+rgid%3Ad393ee5b-b0f1-4072-a1cb-d3257b3c24da+OR+rgid%3A43f15aac-cd83-4dce-97c3-b2fc5937d44d&limit=100&fmt=json": {
     "status": 200,
     "body": {
@@ -1377,6 +1703,368 @@
       ]
     }
   },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3Af44f4f73-a714-31a1-a4b8-bfcaaf311f50&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 1,
+      "release-groups": [
+        {
+          "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+          "count": 67,
+          "title": "Kill ’Em All",
+          "first-release-date": "1983-07-25",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "bdc93db9-c035-4fe2-9530-5d9754521050",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "d6810f0b-cd4a-419c-87eb-9c584e2aabb7",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "bfcfc13b-440f-4eb1-9d83-d7c99acd4175",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "9175f6d2-d25f-4606-ae19-49a208883b20",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "02bb2f49-67d2-456c-808b-48085352039d",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "967493e8-e21c-46eb-beb1-204e0c0540cf",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "3bcd7c09-8ca9-4d55-9491-86729584742d",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "a89e1d92-5381-4dab-ba51-733137d0e431",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "e3a12638-4922-4add-888f-c2ab63197f13",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "440c832b-1793-4241-acfc-72edc1cc3ba4",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "1b04ca59-174f-495c-a1ae-67e0182ae8c7",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "404ed8a5-4a23-4cbf-80ef-81250c11c90e",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "c06ed440-f25d-3127-aadb-ebe9c685b3d8",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "029c0627-01b8-4203-8dd4-e721e3af425a",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "7d61605b-c8a7-47c3-a57e-09834160fdb2",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "b74f7377-499d-34cc-9e79-9a8ed894bb48",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "82be42d3-37e4-4519-8768-f9993097a24c",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "fceb4a46-1110-449e-8188-91bb54b2a920",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "d2b4a354-7b21-38b7-bf89-0eb74cc713f8",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "f8639766-33ed-4f4a-a36a-8f5d3cfc85da",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "ea62e2ca-3e31-4092-86dc-0d2f39e8a715",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "67d8f808-608a-3c65-9a8a-a44f4c8d986a",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "0ed0d790-1eba-3473-9fe0-a064920693da",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "c0e8c048-3b30-4c2a-8b2d-2b6c7f404739",
+              "title": "Kill 'Em All",
+              "status": "Official"
+            },
+            {
+              "id": "faa40613-c47f-3d47-99c2-f203edc3e56e",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "e56faa28-f048-4840-9589-e43bb5f28736",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "6f0e92eb-ed84-4ed0-a176-9ed4fd84d4f5",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "15f5c2cb-41ea-3630-a0f6-2f86785cf608",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "87e318c3-6d69-4629-8312-e3e03af4495f",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "654642a6-b593-4462-8fce-6e981f1b549b",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "8bdd58f5-eddd-463b-a8f0-013454293008",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "834a7aa9-c7f5-3571-a812-46c6d134a98d",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "d68f2e94-40ad-3a89-bed7-a19ac6dd83e4",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "737712b9-6ba6-4059-9c0c-ab916a63ba44",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "de867181-0543-3925-a03b-d18f78dd7ceb",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "9c0f7398-380c-38a7-88e9-75cfaea22ab2",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "973db210-6451-4cd4-aecb-940c836c29ea",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "abcc9a0c-169f-4c60-8322-4b3922fd3a5e",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "f65a601a-2559-419e-92b4-f7a317af45d9",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "58e51f11-84bc-418d-82af-14ea2fe7a4c7",
+              "title": "Kill 'Em All",
+              "status": "Official"
+            },
+            {
+              "id": "a7e853d2-c290-4abd-8042-c621c8a93849",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "9ffe7443-7b06-4afb-bdbe-aca0aa5b7f30",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "98bbe5e3-974b-4644-a6e9-cbfe984aa32a",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "b5a845bd-b466-4a46-8de5-9ebbdad056c1",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "dc3428d7-d2ad-42ff-a76e-4ef1b5f9959c",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "449ea23f-420a-481f-a33e-8ccccace5363",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "70d52d85-bc3d-48e6-a06b-800f022b55fe",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "d14f5b71-1fb7-46ad-9ff6-aaafaeac0353",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "be01aa03-10d4-4df4-986c-f0fdd7c67659",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "4fb1be7d-8606-4623-81a6-6b5cc81c7782",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "8685b7c4-205d-44ab-8c96-f369f7ef0bfb",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "0d099294-ec29-4d0b-821d-202a32c85a14",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "7be54725-0be8-4a21-aac8-e9f7f33c535d",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "c87c604e-6045-429c-9606-f3185a509d66",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "61ddbe15-8a94-3476-8d2e-b83fe5b93cc7",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "f1685aa3-3e20-3f40-b0b6-b435afe9e9d6",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "4e1a14a8-5560-3254-bdfd-bf1fdbd9fd5b",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "c80bcc3f-0e2d-3f7f-9f31-d90eb1365322",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "53aebdb8-e494-3d12-a1a6-4ec3038b304f",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "696c8ca4-e719-3817-8849-89412a8f7bb4",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "70473d55-7868-498c-a3fb-21d84d8e9c05",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "af440c5b-8d13-4d95-a23b-ebdb0f446eee",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "a8d74abb-99d8-469c-8ada-2d733cd513ed",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "c7057bda-bf92-417b-9766-dc01ed9679a4",
+              "title": "Kill ’Em All = 血染めの鉄鎚",
+              "status": "Official"
+            },
+            {
+              "id": "d2891587-1be3-3b43-b80e-d6afd960ad08",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "2b4002f3-1c21-4ff2-bebf-f4c98f1773c1",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            },
+            {
+              "id": "93d18f98-694e-32f9-b720-77d4f9188382",
+              "title": "Kill ’Em All",
+              "status": "Official"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "https://musicbrainz.org/ws/2/release?query=barcode%3A884977423006+OR+barcode%3A0884977423006+OR+barcode%3A00884977423006&limit=100&fmt=json": {
     "status": 200,
     "body": {
@@ -1411,6 +2099,1254 @@
           },
           "date": "2013-05-17",
           "barcode": "886443927087"
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22...And+Justice+for+All%22+AND+artist%3A%22Metallica%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 54,
+      "releases": [
+        {
+          "id": "4dede30f-58cf-4d43-a857-b342ad7be945",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Promotion",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bd14f98a-8c45-4a0d-b148-17cbc96740aa",
+            "title": "…And Justice for All",
+            "primary-type": "Single"
+          },
+          "date": "1988"
+        },
+        {
+          "id": "c706a8e8-fef5-4c86-8532-a58d877207e9",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Promotion",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bd14f98a-8c45-4a0d-b148-17cbc96740aa",
+            "title": "…And Justice for All",
+            "primary-type": "Single"
+          },
+          "date": "1988",
+          "barcode": ""
+        },
+        {
+          "id": "b0b0e0a7-dcc4-4280-92f3-1890642a758b",
+          "count": 2,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988-09-06",
+          "barcode": "075596081214"
+        },
+        {
+          "id": "89a04dce-cb23-4db3-808b-c0008f4155f4",
+          "count": 1,
+          "title": "...And Justice For All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "075596081221"
+        },
+        {
+          "id": "83289b36-da46-43f2-8e98-89229ac752e2",
+          "count": 2,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "042283606210"
+        },
+        {
+          "id": "e10884cc-d791-3a78-a801-03afc8a89ba6",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2006-08-09",
+          "barcode": "4988005440044"
+        },
+        {
+          "id": "3749e7a5-e787-42b5-b0db-dd4161dc8e9d",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2016",
+          "barcode": ""
+        },
+        {
+          "id": "2d9bd8a7-a20a-4e84-8f6d-21e4155f9e17",
+          "count": 8,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "858978005820"
+        },
+        {
+          "id": "dfb5e3c1-d8d3-4c89-81b1-255484e562c2",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "9399083606225"
+        },
+        {
+          "id": "f5f166b8-4440-4199-abe9-ae496ccdc5cf",
+          "count": 8,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "barcode": "602567690269"
+        },
+        {
+          "id": "8bb4b4c9-6775-4d1d-90ff-0695df25802b",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1993",
+          "barcode": ""
+        },
+        {
+          "id": "8abe9a26-6888-477c-8815-02755555fe0f",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "602567690153"
+        },
+        {
+          "id": "c60f7444-6aa4-49d5-9927-91f1e0e7dccb",
+          "count": 2,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1994",
+          "barcode": "9399083606225"
+        },
+        {
+          "id": "c82797fd-d84d-42e0-950d-bf5ffb0f19b9",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "858978005929"
+        },
+        {
+          "id": "43e6cd7d-a3a0-442f-bb72-5d70a3d222f7",
+          "count": 3,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "858978005806"
+        },
+        {
+          "id": "cb2704e5-b7a3-343e-918f-aa9cd3489170",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "075596081221"
+        },
+        {
+          "id": "1ed14115-8388-43ab-8205-337243d5a4bf",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2011-11-02",
+          "barcode": "4988005690678"
+        },
+        {
+          "id": "316d354c-be06-4ce8-b9fa-368abd93747b",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "858978005783"
+        },
+        {
+          "id": "aec3d3dc-aae7-4b9f-ba23-da501cf24a1b",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "602567690245"
+        },
+        {
+          "id": "94651f3a-0b6f-46f4-81e5-e4c07cca3f01",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "042283606227"
+        },
+        {
+          "id": "30f4abf9-13ca-427a-8374-1bd74a1e492b",
+          "count": 8,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "858978005820"
+        },
+        {
+          "id": "7f9a9573-3848-4324-ad42-18ffde99d527",
+          "count": 21,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "858978005813"
+        },
+        {
+          "id": "32d5e219-22ac-4cc5-91d0-2682977e0283",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "042283606227"
+        },
+        {
+          "id": "bebfe3a4-e069-4f22-b584-4de6359de44f",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2006-07-25",
+          "barcode": "00602517839434"
+        },
+        {
+          "id": "4e2b6e3c-1568-3ecd-ac6e-a77889cffdf3",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2003-11-06",
+          "barcode": "4547366012958"
+        },
+        {
+          "id": "da53e497-8c61-4d4a-a29b-a5b53d86ccb7",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988-08-25",
+          "barcode": "042283606227"
+        },
+        {
+          "id": "3ef952d9-4de5-474b-9d3e-f4941b4fec2d",
+          "count": 2,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "042283606210"
+        },
+        {
+          "id": "d6123cc0-b035-443f-8176-1fafdda66129",
+          "count": 3,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "602567690191"
+        },
+        {
+          "id": "05e19084-6d97-44bb-a156-eafb3115daac",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": ""
+        },
+        {
+          "id": "769fd085-b0bf-4692-9adf-7b51103bdf75",
+          "count": 2,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988-09-14",
+          "barcode": "4988009541419"
+        },
+        {
+          "id": "9201c172-a875-4b2e-b825-2db111258034",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": ""
+        },
+        {
+          "id": "479dd068-b020-4c28-9be9-ba32f37e1188",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "042283606227"
+        },
+        {
+          "id": "c2b7460b-c574-4368-ab29-535771cfc0c9",
+          "count": 2,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-02-02",
+          "barcode": "602547243157"
+        },
+        {
+          "id": "d1544af7-3635-4617-84b3-342a34d073f6",
+          "count": 2,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1994",
+          "barcode": "9399083606225"
+        },
+        {
+          "id": "c06bf631-baa9-4ddc-a1e7-1206cf4ecaff",
+          "count": 2,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988-09-08",
+          "barcode": "075596081214"
+        },
+        {
+          "id": "b0e6f2b4-810a-3693-9fbf-13e9f8471b38",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988-09-15",
+          "barcode": "075596081221"
+        },
+        {
+          "id": "4780ba11-c04e-4e2b-bfab-2cc05327aa4b",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "075596081245"
+        },
+        {
+          "id": "9d514949-edfb-4efa-9c18-0c372b234b5e",
+          "count": 21,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "602567598770"
+        },
+        {
+          "id": "1174e18f-cbeb-4b5a-a37f-5e808e2b8c64",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "042283606227"
+        },
+        {
+          "id": "fce9462d-8444-334d-84d4-2bbf1edfe9b5",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988-10",
+          "barcode": "042283606227"
+        },
+        {
+          "id": "50bfdaeb-19d9-3df4-b1e0-2bf9fa7fce37",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1995",
+          "barcode": "075596081221"
+        },
+        {
+          "id": "d83aa9b6-ba30-4bdf-b3b5-8cd01359f7da",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "075596081221"
+        },
+        {
+          "id": "0907c082-a0b2-4c7f-8a3d-a003aa30f764",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988-09-14",
+          "barcode": "4988009615653"
+        },
+        {
+          "id": "5409b82e-7e0f-455d-b876-799f142d507b",
+          "count": 8,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "602567690276"
+        },
+        {
+          "id": "5186c568-d636-4537-b95e-2eb9624bb485",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-11-02",
+          "barcode": "4988031307175"
+        },
+        {
+          "id": "2874b00f-ee1e-4835-8e3b-1dbe2bab4e66",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2013-09-10",
+          "barcode": "856115004507"
+        },
+        {
+          "id": "2d45313f-8109-45ac-b953-93c834836705",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2010-09-22",
+          "barcode": "4988005628657"
+        },
+        {
+          "id": "ba485072-128b-4135-a60a-4074fb967667",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2008-09-12",
+          "barcode": "4988005530493"
+        },
+        {
+          "id": "d065577b-7032-4901-a20d-66d4a76eb8ed",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "1988-09-08",
+          "barcode": "042283606227"
+        },
+        {
+          "id": "45b7c728-0c80-43a8-88f7-61e808506020",
+          "count": 4,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2008-10-08",
+          "barcode": "093624986898"
+        },
+        {
+          "id": "61292767-bfa5-4a4d-99c8-ea3d7ac4a889",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "042283606227"
+        },
+        {
+          "id": "bd13261d-7027-4feb-9342-896e670d630a",
+          "count": 3,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": ""
+        },
+        {
+          "id": "c3ef733e-7dd1-48b3-a60d-1e01df3c6f4e",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2020-03-27",
+          "barcode": "850007452131"
+        },
+        {
+          "id": "1d71898d-b4f5-4d5c-9571-b8c6f9b8b7fc",
+          "count": 1,
+          "title": "…And Justice for All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+            "title": "…And Justice for All",
+            "primary-type": "Album"
+          },
+          "date": "2018-10-02",
+          "barcode": "0602508628887"
         }
       ]
     }
@@ -1803,6 +3739,1528 @@
             "title": "Idéal",
             "primary-type": "Album"
           }
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Kill+%27Em+All%22+AND+artist%3A%22Metallica%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 66,
+      "releases": [
+        {
+          "id": "d2891587-1be3-3b43-b80e-d6afd960ad08",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "016861990220"
+        },
+        {
+          "id": "737712b9-6ba6-4059-9c0c-ab916a63ba44",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2006-07-25"
+        },
+        {
+          "id": "696c8ca4-e719-3817-8849-89412a8f7bb4",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "042283814219"
+        },
+        {
+          "id": "faa40613-c47f-3d47-99c2-f203edc3e56e",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1992-02-21",
+          "barcode": "4988009577722"
+        },
+        {
+          "id": "0ed0d790-1eba-3473-9fe0-a064920693da",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1988-01-19",
+          "barcode": "075596076623"
+        },
+        {
+          "id": "93d18f98-694e-32f9-b720-77d4f9188382",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1983",
+          "barcode": ""
+        },
+        {
+          "id": "d2b4a354-7b21-38b7-bf89-0eb74cc713f8",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "5016583100728"
+        },
+        {
+          "id": "de867181-0543-3925-a03b-d18f78dd7ceb",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2010-09-22",
+          "barcode": "4988005628626"
+        },
+        {
+          "id": "d14f5b71-1fb7-46ad-9ff6-aaafaeac0353",
+          "count": 6,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": ""
+        },
+        {
+          "id": "b5a845bd-b466-4a46-8de5-9ebbdad056c1",
+          "count": 5,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "858978005172"
+        },
+        {
+          "id": "c0e8c048-3b30-4c2a-8b2d-2b6c7f404739",
+          "count": 1,
+          "title": "Kill 'Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "7509967211762"
+        },
+        {
+          "id": "0d099294-ec29-4d0b-821d-202a32c85a14",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-03-08",
+          "barcode": ""
+        },
+        {
+          "id": "ea62e2ca-3e31-4092-86dc-0d2f39e8a715",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2006-08-09",
+          "barcode": "4988005440013"
+        },
+        {
+          "id": "404ed8a5-4a23-4cbf-80ef-81250c11c90e",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "602547914026"
+        },
+        {
+          "id": "9175f6d2-d25f-4606-ae19-49a208883b20",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "075596076623"
+        },
+        {
+          "id": "c80bcc3f-0e2d-3f7f-9f31-d90eb1365322",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "042283814240"
+        },
+        {
+          "id": "c06ed440-f25d-3127-aadb-ebe9c685b3d8",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": ""
+        },
+        {
+          "id": "9c0f7398-380c-38a7-88e9-75cfaea22ab2",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1993",
+          "barcode": "042283814240"
+        },
+        {
+          "id": "834a7aa9-c7f5-3571-a812-46c6d134a98d",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1983"
+        },
+        {
+          "id": "67d8f808-608a-3c65-9a8a-a44f4c8d986a",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2003-11-06",
+          "barcode": "4547366012927"
+        },
+        {
+          "id": "654642a6-b593-4462-8fce-6e981f1b549b",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1987",
+          "barcode": ""
+        },
+        {
+          "id": "dc3428d7-d2ad-42ff-a76e-4ef1b5f9959c",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "858978005134"
+        },
+        {
+          "id": "f65a601a-2559-419e-92b4-f7a317af45d9",
+          "count": 2,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1987",
+          "barcode": "5016583100735"
+        },
+        {
+          "id": "15f5c2cb-41ea-3630-a0f6-2f86785cf608",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1988-01-19",
+          "barcode": "075596076623"
+        },
+        {
+          "id": "f1685aa3-3e20-3f40-b0b6-b435afe9e9d6",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1993",
+          "barcode": "042283814226"
+        },
+        {
+          "id": "61ddbe15-8a94-3476-8d2e-b83fe5b93cc7",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2008-04-15",
+          "barcode": "093624990932"
+        },
+        {
+          "id": "c87c604e-6045-429c-9606-f3185a509d66",
+          "count": 2,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2008-06-02",
+          "barcode": "600753085271"
+        },
+        {
+          "id": "70d52d85-bc3d-48e6-a06b-800f022b55fe",
+          "count": 10,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "858978005042"
+        },
+        {
+          "id": "7be54725-0be8-4a21-aac8-e9f7f33c535d",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2013",
+          "barcode": "856115004477"
+        },
+        {
+          "id": "bfcfc13b-440f-4eb1-9d83-d7c99acd4175",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1987",
+          "barcode": ""
+        },
+        {
+          "id": "82be42d3-37e4-4519-8768-f9993097a24c",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "042283814226"
+        },
+        {
+          "id": "87e318c3-6d69-4629-8312-e3e03af4495f",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "042283814226"
+        },
+        {
+          "id": "7d61605b-c8a7-47c3-a57e-09834160fdb2",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "042283814226"
+        },
+        {
+          "id": "fceb4a46-1110-449e-8188-91bb54b2a920",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "5016583100728"
+        },
+        {
+          "id": "e56faa28-f048-4840-9589-e43bb5f28736",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1992",
+          "barcode": "075596076623"
+        },
+        {
+          "id": "4e1a14a8-5560-3254-bdfd-bf1fdbd9fd5b",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1993",
+          "barcode": "042283814219"
+        },
+        {
+          "id": "abcc9a0c-169f-4c60-8322-4b3922fd3a5e",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "042283814226"
+        },
+        {
+          "id": "a8d74abb-99d8-469c-8ada-2d733cd513ed",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1988-11-21",
+          "barcode": "4988009629056"
+        },
+        {
+          "id": "b74f7377-499d-34cc-9e79-9a8ed894bb48",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1995-06-20",
+          "barcode": "075596076623"
+        },
+        {
+          "id": "be01aa03-10d4-4df4-986c-f0fdd7c67659",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "602547914071"
+        },
+        {
+          "id": "98bbe5e3-974b-4644-a6e9-cbfe984aa32a",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016",
+          "barcode": "602547885289"
+        },
+        {
+          "id": "2b4002f3-1c21-4ff2-bebf-f4c98f1773c1",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1983",
+          "barcode": "075596076647"
+        },
+        {
+          "id": "70473d55-7868-498c-a3fb-21d84d8e9c05",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": ""
+        },
+        {
+          "id": "8685b7c4-205d-44ab-8c96-f369f7ef0bfb",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "602547885272"
+        },
+        {
+          "id": "6f0e92eb-ed84-4ed0-a176-9ed4fd84d4f5",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "075596076623"
+        },
+        {
+          "id": "f8639766-33ed-4f4a-a36a-8f5d3cfc85da",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2008-09-12",
+          "barcode": "4988005530462"
+        },
+        {
+          "id": "af440c5b-8d13-4d95-a23b-ebdb0f446eee",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "075596076623"
+        },
+        {
+          "id": "02bb2f49-67d2-456c-808b-48085352039d",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016",
+          "barcode": "602547885272"
+        },
+        {
+          "id": "a7e853d2-c290-4abd-8042-c621c8a93849",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "858978005035"
+        },
+        {
+          "id": "029c0627-01b8-4203-8dd4-e721e3af425a",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2018-04-13",
+          "barcode": "4988031272596"
+        },
+        {
+          "id": "1b04ca59-174f-495c-a1ae-67e0182ae8c7",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "barcode": "850007452162"
+        },
+        {
+          "id": "e3a12638-4922-4add-888f-c2ab63197f13",
+          "count": 6,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "00602547910790"
+        },
+        {
+          "id": "440c832b-1793-4241-acfc-72edc1cc3ba4",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "075596076647"
+        },
+        {
+          "id": "8bdd58f5-eddd-463b-a8f0-013454293008",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1987",
+          "barcode": ""
+        },
+        {
+          "id": "967493e8-e21c-46eb-beb1-204e0c0540cf",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1988",
+          "barcode": "075596076616"
+        },
+        {
+          "id": "3bcd7c09-8ca9-4d55-9491-86729584742d",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1983",
+          "barcode": ""
+        },
+        {
+          "id": "bdc93db9-c035-4fe2-9530-5d9754521050",
+          "count": 2,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "858978005035"
+        },
+        {
+          "id": "d6810f0b-cd4a-419c-87eb-9c584e2aabb7",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "",
+          "barcode": "858978005134"
+        },
+        {
+          "id": "9ffe7443-7b06-4afb-bdbe-aca0aa5b7f30",
+          "count": 5,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016",
+          "barcode": ""
+        },
+        {
+          "id": "449ea23f-420a-481f-a33e-8ccccace5363",
+          "count": 10,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "2016-04-15",
+          "barcode": "858978005042"
+        },
+        {
+          "id": "a89e1d92-5381-4dab-ba51-733137d0e431",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1983-07-25",
+          "barcode": ""
+        },
+        {
+          "id": "973db210-6451-4cd4-aecb-940c836c29ea",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "042283814226"
+        },
+        {
+          "id": "58e51f11-84bc-418d-82af-14ea2fe7a4c7",
+          "count": 1,
+          "title": "Kill 'Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1993",
+          "barcode": "075596076623"
+        },
+        {
+          "id": "53aebdb8-e494-3d12-a1a6-4ec3038b304f",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1989",
+          "barcode": "042283814226"
+        },
+        {
+          "id": "d68f2e94-40ad-3a89-bed7-a19ac6dd83e4",
+          "count": 1,
+          "title": "Kill ’Em All",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1986"
+        },
+        {
+          "id": "c7057bda-bf92-417b-9766-dc01ed9679a4",
+          "count": 2,
+          "title": "Kill ’Em All = 血染めの鉄鎚",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Metallica",
+              "artist": {
+                "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+                "name": "Metallica",
+                "sort-name": "Metallica"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+            "title": "Kill ’Em All",
+            "primary-type": "Album"
+          },
+          "date": "1984",
+          "barcode": ""
         }
       ]
     }

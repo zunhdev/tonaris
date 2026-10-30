@@ -3,7 +3,13 @@
 // end to end without the network. The image proxy's artwork comes from a stub host too (TON-48). Not part of the
 // deployable service.
 
-import { failure, serviceNames, type AlbumFacts, type AlbumFields } from "@tonaris/domain";
+import {
+  failure,
+  serviceNames,
+  type AlbumFacts,
+  type AlbumFields,
+  type FoundFacts,
+} from "@tonaris/domain";
 import {
   parseLink,
   ProviderUnavailableError,
@@ -25,6 +31,7 @@ const ids = {
   undated: "2c3d4e5f-6071-4829-93a4-b5c6d7e8f901",
   flaky: "4d5e6f70-8192-4a3b-8c4d-f5a6b7c8d9e0",
   down: "5e6f7081-92a3-4b4c-9d5e-a6b7c8d9e0f1",
+  killEmAll: "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
 };
 
 /** The links the tests paste, as people would. */
@@ -97,7 +104,7 @@ const identifications: Record<string, (link: ParsedLink) => Identification> = {
   }),
 };
 
-function found(releaseGroupId: string, values: Partial<AlbumFields>): AlbumFacts {
+function found(releaseGroupId: string, values: Partial<AlbumFields>): FoundFacts {
   return {
     status: "found",
     askedId: releaseGroupId,
@@ -131,6 +138,25 @@ const facts: Record<string, AlbumFacts> = {
   ),
   [ids.undated]: found(ids.undated, album("Untitled", "Someone", null)),
   [ids.flaky]: found(ids.flaky, album("Paranoid", "Black Sabbath", 1970)),
+  [ids.killEmAll]: {
+    status: "found",
+    askedId: ids.killEmAll,
+    releaseGroupId: ids.killEmAll,
+    values: {
+      ...found(ids.killEmAll, album("Kill ’Em All", "Metallica", 1983)).values,
+      artworkUrl: {
+        value: `https://coverartarchive.org/release-group/${ids.killEmAll}/front-500`,
+        source: "coverartarchive",
+        ref: ids.killEmAll,
+      },
+    },
+  },
+};
+
+/** The albums step 4's rule finds for an agent's details (TON-111), by title, artist and year. */
+const detailMatches: Record<string, string> = {
+  "Kill 'Em All|Metallica|1983": ids.killEmAll,
+  "Holy Diver|Dio|1983": ids.holyDiver,
 };
 
 /** How long the slow link's album takes to describe, so a test sees its placeholder. */
@@ -138,7 +164,8 @@ export const slowLinkMs = 2_000;
 
 /**
  * The stubbed capture. The flaky link's MusicBrainz is down the first time it is asked, and answers after; the down
- * link's never answers. Any other link is unidentified.
+ * link's never answers. Any other link is unidentified. An agent's details match the table above, and MusicBrainz is
+ * down for an artist named "Down".
  */
 export function fixtureCapture(): CaptureDeps {
   let flakyAsked = 0;
@@ -172,6 +199,12 @@ export function fixtureCapture(): CaptureDeps {
         throw new ProviderUnavailableError("musicbrainz", "MusicBrainz was busy the first time");
       }
       return facts[releaseGroupId] ?? { status: "deleted", askedId: releaseGroupId };
+    },
+    matchDetails: async ({ title, artistCredit, originalYear }) => {
+      if (artistCredit === "Down") {
+        throw new ProviderUnavailableError("musicbrainz", "MusicBrainz is down in this fixture");
+      }
+      return detailMatches[`${title}|${artistCredit}|${originalYear}`];
     },
   };
 }

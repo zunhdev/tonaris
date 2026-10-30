@@ -617,7 +617,7 @@ An approval never elevates a Read-only connection or enables an app-only operati
 
 Batch size alone never triggers confirmation.
 
-**FR-10.5 Agents supply links.** Client agents find links with their own capabilities and submit them. MCP applies the FR-02 rules and never discovers links (FR-06.7). To identify a Qobuz or Tidal link an agent adds, Tonaris doesn't read the store's page (G1). A link it can't identify comes back asking the agent for the required information (FR-02.6), with the link kept.
+**FR-10.5 Agents supply links.** Client agents find links with their own capabilities and submit them. MCP applies the FR-02 rules and never discovers links (FR-06.7). To identify a Qobuz or Tidal link an agent adds, Tonaris doesn't read the store's page (G1). A link it can't identify comes back asking the agent for the required information (FR-02.6), with the link kept. The details the agent then sends are matched as a store page's would be: when exactly one album fits their title, artist and original year, the album is saved as that album, keeping the agent's values and filling the rest, artwork included (FR-03.3). Otherwise it is saved as entered (decided 30 October 2026, TON-111).
 
 **FR-10.6 Approval-gated operations.** These require explicit user approval before execution:
 
@@ -1089,6 +1089,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
   - **Backups:** Render Postgres's point-in-time recovery replaces the daily encrypted off-site dump. It keeps 3 days on Render's Hobby plan and 7 on Pro, and loses at most a few minutes of changes. The recovery time and drills are unchanged.
   - **Disclosure:** TS-114's wording still holds, since backups now leave within 7 days at most.
   - **Updated** Q-04.
+- **Decision (30 October 2026), an agent's details** (TON-111), from the creator's manual testing: details an agent sends for a link no step identified are matched like a store page's hints, so the album gets its MusicBrainz values and artwork. The app's manual entry still adds an album without a lookup (FR-02.4). **Updated** FR-10.5.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);

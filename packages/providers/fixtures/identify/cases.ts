@@ -4,7 +4,7 @@
 // made up (ids of zeros and ones): no Spotify value or store page content is committed (TS-41).
 
 import { barcodeForms, urlForms } from "../../src/link-forms";
-import type { IdentifyCase, Stub } from "./harness";
+import type { DetailsCase, IdentifyCase, Stub } from "./harness";
 
 /** A Qobuz album page, as minimal as extraction needs, with the album's facts from MusicBrainz. */
 function qobuzPage(title: string, artist: string, date: string): Stub {
@@ -285,3 +285,23 @@ export const cases = {
     stubs: { [urlLookup(urlForms("tidal", "888888888"))]: { status: 503 } },
   },
 } satisfies Record<string, IdentifyCase>;
+
+/** An agent's details after its link went unidentified (TON-111), as Claude typed them for the creator's albums. */
+export const detailsCases = {
+  killEmAll: {
+    name: "Kill 'Em All, typed with a straight apostrophe",
+    details: { title: "Kill 'Em All", artistCredit: "Metallica", originalYear: 1983 },
+  },
+  andJustice: {
+    name: "...And Justice for All, typed with three dots",
+    details: { title: "...And Justice for All", artistCredit: "Metallica", originalYear: 1988 },
+  },
+  killEmAllWrongYear: {
+    name: "Kill 'Em All with a year no release has",
+    details: { title: "Kill 'Em All", artistCredit: "Metallica", originalYear: 1999 },
+  },
+  lastInLine: {
+    name: "Dio's The Last in Line, which two albums fit",
+    details: { title: "The Last in Line", artistCredit: "Dio", originalYear: 1984 },
+  },
+} satisfies Record<string, DetailsCase>;

@@ -345,6 +345,67 @@ describe("albums (FR-10.4, FR-10.5)", () => {
     expect(statuses(answered)).toEqual(["confirmed"]);
   });
 
+  test("an agent's details for a link MusicBrainz didn't know are matched: its values kept, the gaps and artwork filled (TON-111)", async () => {
+    const { mcp } = await manager();
+    const tidal = "https://tidal.com/album/111111111";
+    const asked = await write(mcp, "add_albums", { items: [{ link: tidal }] });
+    expect(asked.items[0]?.outcome).toMatchObject({ need: "details" });
+
+    const answered = await write(mcp, "add_albums", {
+      items: [
+        {
+          link: tidal,
+          details: { title: "Kill 'Em All", artistCredit: "Metallica", originalYear: 1983 },
+        },
+      ],
+    });
+    expect(statuses(answered)).toEqual(["confirmed"]);
+    const albumId = z.string().parse(answered.items[0]?.albumId);
+    expect(await read(mcp, "get_album", { albumId })).toMatchObject({
+      title: "Kill 'Em All",
+      releaseType: "album",
+      isLive: false,
+      artworkUrl:
+        "https://coverartarchive.org/release-group/f44f4f73-a714-31a1-a4b8-bfcaaf311f50/front-500",
+      links: [{ service: "tidal", url: tidal }],
+    });
+  });
+
+  test("matched details of an album already saved reuse it, and add the link", async () => {
+    const { mcp } = await manager();
+    const first = await write(mcp, "add_albums", {
+      items: [{ link: fixtureLinks.holyDiverTidal }],
+    });
+    const saved = z.string().parse(first.items[0]?.albumId);
+    const apple = "https://music.apple.com/us/album/1000000077";
+    const again = await write(mcp, "add_albums", {
+      items: [
+        { link: apple, details: { title: "Holy Diver", artistCredit: "Dio", originalYear: 1983 } },
+      ],
+    });
+    expect(again.items[0]?.outcome).toMatchObject({
+      status: "confirmed",
+      result: { albumId: saved, match: "reused" },
+    });
+    const album = await read(mcp, "get_album", { albumId: saved });
+    expect(album).toMatchObject({
+      links: expect.arrayContaining([{ service: "apple-music", url: apple }]),
+    });
+  });
+
+  test("details MusicBrainz can't be asked about fail the capture, saving nothing", async () => {
+    const { mcp } = await manager();
+    const answered = await write(mcp, "add_albums", {
+      items: [
+        {
+          link: "https://tidal.com/album/222222222",
+          details: { title: "Anything", artistCredit: "Down", originalYear: 2000 },
+        },
+      ],
+    });
+    expect(answered.items[0]?.outcome).toMatchObject({ code: "provider_unavailable" });
+  });
+
   test("edits an album's values, with a stale base a conflict", async () => {
     const { userId, mcp } = await manager();
     const albumId = await insertAlbum(userId, "Nightfal", "Candlemass", 1987);

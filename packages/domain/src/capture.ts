@@ -102,6 +102,8 @@ export type CaptureSource = { link: CapturedLink } &
         facts: FoundFacts;
         merged: { albumId: string; facts: FoundFacts }[];
         details?: AlbumFields;
+        /** The details are an agent's own, which step 4's rule matched (TON-111), not a form MusicBrainz prefilled. */
+        matched?: true;
       }
     /** No MusicBrainz album: the person's details, and what manual entry was prefilled with. */
     | { kind: "entered"; details: AlbumFields; prefill?: CapturePrefill }
@@ -379,7 +381,16 @@ async function create(
     const { artworkUrl: front = null, ...planned } = plan.values;
     const artwork = plan.provenance.filter((entry) => entry.field === "artworkUrl");
     artworkUrl = front;
-    if (source.details) {
+    if (source.details && source.matched) {
+      // The agent's values are kept, and MusicBrainz fills only those they leave unknown (FR-03.3).
+      const gaps = planEnrichment({ ...blankAlbum, ...source.details }, source.facts, now);
+      const { artworkUrl: _, ...filled } = gaps.values;
+      values = { ...source.details, ...filled };
+      origin = {
+        releaseGroupId: source.facts.releaseGroupId,
+        provenance: [...detailsProvenance(source.details, undefined, now), ...gaps.provenance],
+      };
+    } else if (source.details) {
       values = source.details;
       origin = {
         releaseGroupId: source.facts.releaseGroupId,

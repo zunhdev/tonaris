@@ -155,6 +155,7 @@ function stubs() {
   let gate: Promise<void> = Promise.resolve();
   let down = false;
   const asked: string[] = [];
+  const matchAsked: string[] = [];
   const deps: CaptureDeps = {
     identify: async (input, context) => {
       const link = parsed(input);
@@ -171,10 +172,16 @@ function stubs() {
       if (down) throw new ProviderUnavailableError("musicbrainz", "MusicBrainz was busy");
       return facts[releaseGroupId] ?? { status: "deleted", askedId: releaseGroupId };
     },
+    // Any agent's details would match Bleach (TON-111).
+    matchDetails: async ({ title }) => {
+      matchAsked.push(title);
+      return ids.bleach;
+    },
   };
   return {
     deps,
     asked,
+    matchAsked,
     /** Resolves once MusicBrainz is first asked. */
     reached: reached.promise,
     /** Holds MusicBrainz's answers until the returned function is called. */
@@ -478,6 +485,26 @@ describe("an automated addition missing its year asks for it (FR-02.6, AC-08)", 
     const [row] = await t.db
       .$client`select mb_release_group_id from albums where id = ${saved.albumId}`;
     expect(row?.mb_release_group_id).toBe(ids.undated);
+  });
+});
+
+describe("details given in the app aren't looked up (FR-02.4, TON-111)", () => {
+  test("they're saved as entered, with no release group, where an agent's would match", async () => {
+    const details: AlbumFields = {
+      title: "Bleach",
+      artistCredit: "Nirvana",
+      releaseType: null,
+      isLive: null,
+      originalYear: 1989,
+      recordingYearStart: null,
+      recordingYearEnd: null,
+    };
+    const mutation = capture(links.unknownApple, null, { details });
+    expect(result((await send(mutation)).outcome).match).toBe("created");
+    expect(stub.matchAsked).toEqual([]);
+    const [row] = await t.db.$client<{ mb_release_group_id: string | null }[]>`
+      select mb_release_group_id from albums where id = ${mutation.args.albumId}`;
+    expect(row?.mb_release_group_id).toBeNull();
   });
 });
 

@@ -488,6 +488,50 @@ describe("album.capture: required information (FR-02.6, AC-08)", () => {
   });
 });
 
+describe("album.capture: an agent's matched details (TON-111, FR-03.3)", () => {
+  const typed: AlbumFields = {
+    title: "Bleach.",
+    artistCredit: "Nirvana",
+    releaseType: null,
+    isLive: null,
+    originalYear: 1989,
+    recordingYearStart: null,
+    recordingYearEnd: null,
+  };
+
+  test("the agent's values are kept, and MusicBrainz fills the rest, artwork included", async () => {
+    const t = setup();
+    const mutation = capture(null, { details: typed });
+    applied(await t.run(mutation, identified(bleachFacts, { details: typed, matched: true })));
+    const { albumId } = mutation.args;
+    expect(t.albums.get(albumId)).toMatchObject({
+      title: "Bleach.",
+      releaseType: "album",
+      isLive: false,
+      artworkUrl: bleachFacts.values.artworkUrl?.value,
+    });
+    expect(t.identities.get(albumId)?.releaseGroupId).toBe(bleachId);
+    const sources = Object.fromEntries(
+      [...(t.provenance.get(albumId)?.values() ?? [])].map((entry) => [entry.field, entry.source]),
+    );
+    expect(sources).toEqual({
+      title: "user",
+      artistCredit: "user",
+      originalYear: "user",
+      releaseType: "musicbrainz",
+      isLive: "musicbrainz",
+      artworkUrl: "coverartarchive",
+    });
+  });
+
+  test("unmatched, the same details from a prefilled form stay as they are", async () => {
+    const t = setup();
+    const mutation = capture(null, { details: typed });
+    applied(await t.run(mutation, identified(bleachFacts, { details: typed })));
+    expect(t.albums.get(mutation.args.albumId)).toMatchObject({ releaseType: null, isLive: null });
+  });
+});
+
 describe("album.capture: links (FR-06.4)", () => {
   test("a second service's link is added", async () => {
     const bleach = saved("Bleach");

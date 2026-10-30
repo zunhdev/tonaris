@@ -5,7 +5,8 @@
 //   2. MusicBrainz's URL lookup, every form of the album's link in one request;
 //   3. the barcode bridge: a Spotify UPC, or a 13-digit Qobuz id;
 //   4. hints for a strict MusicBrainz match: iTunes Lookup, or Qobuz's and Tidal's album pages;
-//   5. manual entry, with the link kept and, for Apple, its hints.
+//   5. manual entry, with the link kept and, for Apple, its hints. An agent's details for it get step 4's rule
+//      (`matchDetails`, TON-111).
 // A confident answer is one MusicBrainz album, the release group (FR-02.12). Spotify values stay in this module's
 // local variables (TS-41); store-page hints go to step 4 only; agent captures read no store page (FR-10.5).
 
@@ -48,6 +49,9 @@ export type Identification =
   | { status: "unidentified"; link: ParsedLink; reason: string; prefill?: Prefill }
   /** Unsupported input, or a provider that can't be asked now. */
   | { status: "failed"; failure: Failure };
+
+/** What an agent says an album is, after its link went unidentified: matched only with an original year. */
+export type AgentDetails = { title: string; artistCredit: string; originalYear: number };
 
 export type IdentifyContext = {
   /** True when an agent captures through MCP: no store page is read (FR-10.5). */
@@ -267,6 +271,19 @@ export function createIdentifier(deps: IdentifierDeps) {
     tidal: tidalChain,
   };
 
+  /**
+   * Step 4's rule on the details an agent sent for a link no step identified (TON-111). They stand in for the store
+   * page an agent's capture doesn't read (FR-10.5). The album, when exactly one passes.
+   */
+  async function matchDetails(details: AgentDetails): Promise<string | undefined> {
+    const found = await byHints({
+      title: details.title,
+      artist: details.artistCredit,
+      date: String(details.originalYear),
+    });
+    return found?.kind === "one" ? found.album.releaseGroupId : undefined;
+  }
+
   /** What album `input`, as pasted, names (TS-41). */
   async function identify(input: string, context: IdentifyContext): Promise<Identification> {
     try {
@@ -288,7 +305,7 @@ export function createIdentifier(deps: IdentifierDeps) {
     }
   }
 
-  return { identify };
+  return { identify, matchDetails };
 }
 
 export type Identifier = ReturnType<typeof createIdentifier>;

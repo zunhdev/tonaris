@@ -53,6 +53,8 @@ import { deliverInvitation } from "./invitations";
 export type CaptureDeps = {
   identify: Identifier["identify"];
   describe: (releaseGroupId: string) => Promise<AlbumFacts>;
+  /** Step 4's rule on an agent's details for an unidentified link (TON-111); without it, they're saved as entered. */
+  matchDetails?: Identifier["matchDetails"];
   readLink?: (input: string) => Promise<Exclude<LinkParse, { status: "short" }>>;
 };
 
@@ -130,7 +132,7 @@ export async function prepareCapture(
     const link = { service: parsed.service, url: parsed.url, entityId: linkEntityId(parsed) };
     const details = args.details ? { details: args.details } : {};
 
-    const identified = async (releaseGroupId: string): Promise<Prepared> => {
+    const identified = async (releaseGroupId: string, matched = false): Promise<Prepared> => {
       const facts = await deps.describe(releaseGroupId);
       if (facts.status === "deleted") {
         return args.details
@@ -146,7 +148,16 @@ export async function prepareCapture(
             };
       }
       const merged = await mergeMatches(db, deps, ownerId, facts);
-      return { source: { kind: "identified", link, facts, merged, ...details } };
+      return {
+        source: {
+          kind: "identified",
+          link,
+          facts,
+          merged,
+          ...details,
+          ...(matched ? { matched: true as const } : {}),
+        },
+      };
     };
 
     if (identification.status === "linked") {
@@ -179,6 +190,14 @@ export async function prepareCapture(
       };
     }
     if (args.details) {
+      // An agent's details stand in for the store page its capture doesn't read (TON-111, FR-10.5). A person's
+      // manual entry adds the album without a lookup (FR-02.4).
+      const { originalYear } = args.details;
+      const matched =
+        principal.kind === "mcp" && deps.matchDetails && originalYear !== null
+          ? await deps.matchDetails({ ...args.details, originalYear })
+          : undefined;
+      if (matched) return await identified(matched, true);
       const prefill = identification.prefill ? { prefill: identification.prefill } : {};
       return { source: { kind: "entered", link, details: args.details, ...prefill } };
     }

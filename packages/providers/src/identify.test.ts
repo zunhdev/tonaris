@@ -1,12 +1,13 @@
 // TS-41's chain on recorded MusicBrainz and iTunes Lookup answers (fixtures/identify): each step's cases from the
-// G1 spikes and the creator's links, track links, agent captures, the Spotify rules, and TS-27's outcomes.
+// G1 spikes and the creator's links, track links, agent captures and their details, the Spotify rules, and TS-27's
+// outcomes.
 
 import { describe, expect, test } from "bun:test";
 
 import { outcomeSchema } from "@tonaris/domain";
 
-import { cases } from "../fixtures/identify/cases";
-import { harness, type IdentifyCase } from "../fixtures/identify/harness";
+import { cases, detailsCases } from "../fixtures/identify/cases";
+import { detailsHarness, harness, type IdentifyCase } from "../fixtures/identify/harness";
 import recorded from "../fixtures/identify/recorded.json";
 import { identificationOutcome, unidentifiedReasons, type Identification } from "./identify";
 
@@ -33,6 +34,8 @@ const album = {
   redTaylorsVersion: "67727253-f1c0-4243-9270-f9f1401c3b8c",
   bleach: "f1afec0b-26dd-3db5-9aa1-c91229a74a24",
   brightFuture: "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
+  killEmAll: "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+  andJustice: "67553e23-8dad-3792-b6f2-8fedd5650ff3",
 };
 
 describe("the chain's order (FR-02.1, TS-41)", () => {
@@ -220,6 +223,25 @@ describe("agent captures (FR-10.5)", () => {
       step: 4,
       releaseGroupId: album.brightFuture,
     });
+  });
+});
+
+/** Step 4's rule on a details case's values, replayed. */
+const match = (key: keyof typeof detailsCases) =>
+  detailsHarness({ recorded }).matchDetails(detailsCases[key].details);
+
+describe("an agent's details after a miss (TON-111)", () => {
+  test("Claude's spellings find Metallica's albums: a straight apostrophe, three dots", async () => {
+    expect(await match("killEmAll")).toBe(album.killEmAll);
+    expect(await match("andJustice")).toBe(album.andJustice);
+  });
+
+  test("a year no release has matches nothing", async () => {
+    expect(await match("killEmAllWrongYear")).toBeUndefined();
+  });
+
+  test("two albums passing match neither", async () => {
+    expect(await match("lastInLine")).toBeUndefined();
   });
 });
 

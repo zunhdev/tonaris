@@ -68,6 +68,7 @@ export function createProviders(
   });
   const capture: CaptureDeps = {
     identify: identifier.identify,
+    matchDetails: identifier.matchDetails,
     describe: (releaseGroupId) => describeAlbum(musicBrainz, releaseGroupId),
   };
   return {

@@ -8,6 +8,7 @@ export {
   createIdentifier,
   identificationOutcome,
   unidentifiedReasons,
+  type AgentDetails,
   type AlbumCandidate,
   type Identification,
   type IdentifierDeps,
