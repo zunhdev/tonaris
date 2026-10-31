@@ -4,10 +4,14 @@
 // selected; closing a folder that holds it selects the folder (TON-121). ↑/↓, Home/End, ←/→ and type-ahead move
 // focus; letters that are shortcuts act as shortcuts instead (decided 22 October 2026). F2 renames, and new folders and lists are named inline (editing.ts). Each folder or
 // list shows its save state, is busy while saving, and is highlighted when changed elsewhere (DS-80, DS-82, DS-83).
-// Folders and lists can be dragged onto a folder, or onto Collection, to move them (DS-49, drag.tsx).
+// Folders and lists can be dragged onto a folder, or onto Collection, to move them (DS-49, drag.tsx). Shared with
+// me opens to the folders and lists shared with the person, each opening to what's inside it in the person's own sort,
+// live while open; they open the shared view (TON-130).
 
 import { usePendingApprovals } from "@/features/connections/pending-approvals";
+import { useShareStream } from "@/features/guest/use-share-stream";
 import { usePendingInvitations } from "@/features/sharing/pending-invitations";
+import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection } from "@/features/sync/sync-provider";
@@ -24,7 +28,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
-import type { ContainerKind } from "@tonaris/domain";
+import { sortContainers, type ContainerKind } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionUi, useEditor, useStartEditor, useViewContainerId } from "./collection-ui";
@@ -34,13 +38,66 @@ import { useDestination, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
 import { ContainerIcon } from "./icons";
 import { NameEditor } from "./name-editor";
-import { ancestorsOf, places, typeAhead, visibleRows, type Place, type TreeRow } from "./tree";
+import { presentationOf } from "./presentation";
+import {
+  ancestorsOf,
+  buildSharedTree,
+  places,
+  sharedClosedKey,
+  typeAhead,
+  visibleRows,
+  type Place,
+  type SharedTree,
+  type TreeRow,
+} from "./tree";
 
 /** A row of the tree: a folder or list, a place, or the editor naming a new folder or list. */
 type Row = TreeRow | { type: "new"; level: number; kind: ContainerKind; parentId: string | null };
 
 const keyOf = (row: Row) =>
-  row.type === "container" ? row.container.id : row.type === "place" ? row.place : "new";
+  row.type === "container"
+    ? row.container.id
+    : row.type === "shared"
+      ? row.item.id
+      : row.type === "place"
+        ? row.place
+        : "new";
+
+/** What a row opens and closes by, and whether it's open; undefined for a row that doesn't open. */
+function opening(row: Row): { key: string; open: boolean } | undefined {
+  if (row.type === "container") {
+    return row.container.kind === "folder"
+      ? { key: row.container.id, open: row.expanded }
+      : undefined;
+  }
+  if (row.type === "shared") {
+    return row.item.kind === "folder" && row.item.available
+      ? { key: row.item.id, open: row.expanded }
+      : undefined;
+  }
+  if (row.type === "place" && row.expanded !== undefined) {
+    return { key: row.place, open: row.expanded };
+  }
+  return undefined;
+}
+
+/** The row ← goes to: a folder's, or Shared with me for a shared folder or list at its top. */
+function parentKey(row: Row): string | undefined {
+  if (row.type === "container") return row.container.parentId ?? undefined;
+  if (row.type === "shared") return row.item.parentId ?? "shared";
+  return undefined;
+}
+
+/** The shared items from the top of their share down to `id`, by ID. */
+function sharedPath(tree: SharedTree, id: string): string[] {
+  const path: string[] = [];
+  let item = tree.byId.get(id);
+  while (item && path.length <= tree.byId.size) {
+    path.unshift(item.id);
+    item = item.parentId === null ? undefined : tree.byId.get(item.parentId);
+  }
+  return path;
+}
 
 const placePaths: Record<
   Place,
@@ -99,10 +156,29 @@ export function CollectionTree() {
   const startEditor = useStartEditor();
   const offline = useConnection() === "offline";
   const pathname = useLocation({ select: (location) => location.pathname });
+  const inShare = useLocation({ select: (location) => (location.search as { c?: unknown }).c });
   const viewId = useViewContainerId();
-  const selected = viewId ?? placeAt(pathname);
-  const { expand } = ui;
+  // A shared view's folder or list: `/shared/{root}`, with `?c=` inside the share.
+  const sharedRoot = /^\/shared\/([^/]+)$/.exec(pathname)?.[1];
+  const sharedView =
+    sharedRoot === undefined ? undefined : typeof inShare === "string" ? inShare : sharedRoot;
+  const selected = viewId ?? sharedView ?? placeAt(pathname);
+  const { expand, setExpanded } = ui;
   const navigate = useNavigate();
+
+  const { entries, reread: rereadShared } = useSharedEntries();
+  const sharedTree = useMemo(
+    () =>
+      buildSharedTree(entries ?? [], (siblings, parentId) => {
+        const { sortMode: mode, sortDir: dir } = presentationOf(
+          "containers",
+          data.views.get(parentId),
+          data.defaults,
+        );
+        return sortContainers(siblings, { mode, dir }, data.keys.get(parentId));
+      }),
+    [entries, data.views, data.defaults, data.keys],
+  );
 
   // The current view's folders open, so its item can be seen (DS-27): once for each view, and again when it moves,
   // never on a later expand or collapse, so a folder holding it can still be closed (TON-121).
@@ -117,11 +193,41 @@ export function CollectionTree() {
     expand(viewPath.split("/").slice(0, -1));
   }, [viewPath, expand]);
 
-  /** Opens or closes a folder. Closing one that holds the current view selects it, by opening its view (TON-121). */
-  function toggle(folderId: string, open: boolean) {
-    ui.setExpanded(folderId, open);
-    if (!open && viewPath?.split("/").slice(0, -1).includes(folderId)) {
-      void navigate({ to: "/f/$folderId", params: { folderId } });
+  // A shared view's item can be seen too: Shared with me and the shared folders above it open (TON-130).
+  const sharedViewPath =
+    sharedView === undefined || !sharedTree.byId.has(sharedView)
+      ? undefined
+      : sharedPath(sharedTree, sharedView).join("/");
+  const shownSharedPath = useRef<string>(undefined);
+  useEffect(() => {
+    if (sharedViewPath === undefined || sharedViewPath === shownSharedPath.current) return;
+    shownSharedPath.current = sharedViewPath;
+    setExpanded(sharedClosedKey, false);
+    expand(sharedViewPath.split("/").slice(0, -1));
+  }, [sharedViewPath, expand, setExpanded]);
+
+  /**
+   * Opens or closes a folder, a shared one or Shared with me. Closing one that holds the current view selects it, by
+   * opening its view (TON-121).
+   */
+  function toggle(key: string, open: boolean) {
+    if (key === "shared") {
+      setExpanded(sharedClosedKey, !open);
+      if (!open && sharedView !== undefined) void navigate({ to: "/shared" });
+      return;
+    }
+    ui.setExpanded(key, open);
+    if (open) return;
+    if (viewPath?.split("/").slice(0, -1).includes(key)) {
+      void navigate({ to: "/f/$folderId", params: { folderId: key } });
+    }
+    const item = sharedTree.byId.get(key);
+    if (item && sharedViewPath?.split("/").slice(0, -1).includes(key)) {
+      void navigate({
+        to: "/shared/$containerId",
+        params: { containerId: item.rootId },
+        search: item.id === item.rootId ? {} : { c: item.id },
+      });
     }
   }
 
@@ -133,10 +239,11 @@ export function CollectionTree() {
         visibleRows(data.tree, ui.expanded, {
           invitations: invitations > 0,
           approvals: approvals > 0,
+          shared: sharedTree,
         }),
         editor,
       ),
-    [data.tree, ui.expanded, editor, invitations, approvals],
+    [data.tree, ui.expanded, editor, invitations, approvals, sharedTree],
   );
 
   const [focusedKey, setFocusedKey] = useState<string>();
@@ -187,7 +294,7 @@ export function CollectionTree() {
     const index = keys.indexOf(event.target.dataset.key ?? "");
     const row = rows[index];
     if (!row) return;
-    const folder = row.type === "container" && row.container.kind === "folder" ? row : undefined;
+    const folder = opening(row);
     const handled = () => {
       event.preventDefault();
       // Any other key starts the typed name afresh.
@@ -212,16 +319,16 @@ export function CollectionTree() {
         return;
       case "ArrowRight":
         handled();
-        if (folder && !folder.expanded) toggle(folder.container.id, true);
-        else if (folder && (rows[index + 1]?.level ?? 0) > folder.level) focusIndex(index + 1);
+        if (folder && !folder.open) toggle(folder.key, true);
+        else if (folder && (rows[index + 1]?.level ?? 0) > row.level) focusIndex(index + 1);
         return;
-      case "ArrowLeft":
+      case "ArrowLeft": {
         handled();
-        if (folder?.expanded) toggle(folder.container.id, false);
-        else if (row.type === "container" && row.container.parentId !== null) {
-          focusKey(row.container.parentId);
-        }
+        const parent = parentKey(row);
+        if (folder?.open) toggle(folder.key, false);
+        else if (parent !== undefined) focusKey(parent);
         return;
+      }
       case "F2":
         if (row.type !== "container" || offline) return;
         handled();
@@ -296,6 +403,18 @@ export function CollectionTree() {
             />
           );
         }
+        if (row.type === "shared") {
+          return (
+            <SharedRow
+              key={key}
+              row={row}
+              register={register(key)}
+              selected={selected === key}
+              tabbable={tabbable === key}
+              onToggle={() => toggle(key, !row.expanded)}
+            />
+          );
+        }
         if (row.type === "place") {
           const Icon = placeIcons[row.place];
           return (
@@ -308,12 +427,17 @@ export function CollectionTree() {
               aria-level={row.level}
               aria-posinset={row.posInSet}
               aria-setsize={row.setSize}
+              aria-expanded={row.expanded}
               aria-selected={selected === key}
               tabIndex={tabbable === key ? 0 : -1}
               className={cn(rowClass, row.place === "unsorted" && "mt-2")}
               style={indent(row.level)}
             >
-              <span className="w-3.5 shrink-0" />
+              {row.expanded === undefined ? (
+                <span className="w-3.5 shrink-0" />
+              ) : (
+                <Chevron open={row.expanded} onToggle={() => toggle(key, !row.expanded)} />
+              )}
               <Icon strokeWidth={1.5} aria-hidden className="size-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{row.name}</span>
               {row.place === "unsorted" && <Count n={data.unsorted} />}
@@ -355,7 +479,94 @@ export function CollectionTree() {
         );
       })}
       <ContainerMenu target={menu} onClose={() => setMenu(undefined)} />
+      {rows.map((row) =>
+        row.type === "shared" && row.item.parentId === null && row.expanded ? (
+          <ShareFollower key={row.item.id} rootId={row.item.id} reread={rereadShared} />
+        ) : null,
+      )}
     </div>
+  );
+}
+
+/** Follows an open shared folder's stream, so the tree shows its owner's saves (TON-130). */
+function ShareFollower({ rootId, reread }: { rootId: string; reread: () => void }) {
+  useShareStream(`/v1/shared/${rootId}/stream`, true, reread);
+  return null;
+}
+
+/** A folder's chevron, for the pointer only: ← and → do the same from the keyboard. */
+function Chevron({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  return (
+    <span
+      aria-hidden
+      data-slot="row-chevron"
+      className="flex size-3.5 shrink-0 items-center justify-center rounded-sm hover:bg-hover"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onToggle();
+      }}
+    >
+      <ChevronRight
+        strokeWidth={1.5}
+        className={cn("size-3.5 transition-transform", open && "rotate-90")}
+      />
+    </span>
+  );
+}
+
+/**
+ * A folder or list shared with the person (TON-130): at the top of Shared with me with its owner's name after it, or
+ * inside a shared folder. It opens the shared view. One that can't be opened is dimmed, without its name (DS-67).
+ */
+function SharedRow({
+  row,
+  register,
+  selected,
+  tabbable,
+  onToggle,
+}: {
+  row: Extract<TreeRow, { type: "shared" }>;
+  register: (element: HTMLElement | null) => void;
+  selected: boolean;
+  tabbable: boolean;
+  onToggle: () => void;
+}) {
+  const { item, expanded } = row;
+  const isFolder = item.kind === "folder" && item.available;
+  const name = item.name ?? "No longer available";
+  return (
+    <Link
+      ref={register}
+      to="/shared/$containerId"
+      params={{ containerId: item.rootId }}
+      search={item.id === item.rootId ? {} : { c: item.id }}
+      role="treeitem"
+      data-key={item.id}
+      aria-level={row.level}
+      aria-posinset={row.posInSet}
+      aria-setsize={row.setSize}
+      aria-expanded={isFolder ? expanded : undefined}
+      aria-selected={selected}
+      tabIndex={tabbable ? 0 : -1}
+      className={cn(rowClass, !item.available && "opacity-60")}
+      style={indent(row.level)}
+    >
+      {isFolder ? (
+        <Chevron open={expanded} onToggle={onToggle} />
+      ) : (
+        <span className="w-3.5 shrink-0" />
+      )}
+      {item.kind ? (
+        <ContainerIcon kind={item.kind} />
+      ) : (
+        <Users strokeWidth={1.5} aria-hidden className="size-4 shrink-0" />
+      )}
+      <span className="min-w-0 truncate">{name}</span>
+      {item.parentId === null && (
+        <span className="max-w-[45%] shrink-0 truncate text-fg-tertiary">· {item.owner}</span>
+      )}
+    </Link>
   );
 }
 
@@ -433,22 +644,7 @@ function ContainerRow({
   const content = (
     <>
       {isFolder ? (
-        // Pointer only: ← and → do the same from the keyboard.
-        <span
-          aria-hidden
-          data-slot="row-chevron"
-          className="flex size-3.5 shrink-0 items-center justify-center rounded-sm hover:bg-hover"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onToggle();
-          }}
-        >
-          <ChevronRight
-            strokeWidth={1.5}
-            className={cn("size-3.5 transition-transform", expanded && "rotate-90")}
-          />
-        </span>
+        <Chevron open={expanded} onToggle={onToggle} />
       ) : (
         <span className="w-3.5 shrink-0" />
       )}

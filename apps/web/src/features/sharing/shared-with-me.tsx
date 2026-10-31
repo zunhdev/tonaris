@@ -1,58 +1,21 @@
 // Shared with me (DS-67, FR-07.13): the folders and lists the person keeps, grouped by owner display name, each marked
 // as shared by invitation or saved from a link. One that no longer works is dimmed, "No longer available", with
 // Remove. An invitation-based one offers Leave share…, confirming that the owner would have to invite again; a
-// link-saved one, Remove from Shared with me. Read from `GET /v1/shared` when shown, when the window regains focus,
-// and whenever the person's references change, here or on another device (their collection, TON-68). An available
-// one opens in the app, view-only (shared-view.tsx).
+// link-saved one, Remove from Shared with me. The entries are the workspace's (shared-entries.tsx), read again after
+// a change here. An available one opens in the app, view-only (shared-view.tsx).
 
-import { api } from "@/api";
 import { PageHeader } from "@/features/shell/page-header";
-import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
-import { useLiveQuery } from "@tanstack/react-db";
+import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { Link2, Users } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { SharedEntry } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { failureOf, sendNow } from "./send";
-
-/** The person's references, read again when they change or the window regains focus. */
-function useSharedEntries(): { entries: SharedEntry[] | undefined; reread: () => void } {
-  const client = useSyncClient();
-  const references = useLiveQuery(() => client?.references, [client]);
-  // Which collections are kept, as text: a change here or on another device reads the list again.
-  const kept = (references.data ?? [])
-    .map((reference) => reference.containerId)
-    .toSorted()
-    .join(",");
-  // The entries, with the read they came from: what was kept and how many times it was asked for again.
-  const [loaded, setLoaded] = useState<{ read: string; entries: SharedEntry[] }>();
-  const [revision, setRevision] = useState(0);
-  const reread = useCallback(() => setRevision((count) => count + 1), []);
-  useEffect(() => {
-    let current = true;
-    const read = `${kept}#${revision}`;
-    api.v1.shared.get().then(
-      ({ data }) => {
-        if (current && data) setLoaded({ read, entries: data.entries });
-        return data;
-      },
-      () => undefined,
-    );
-    return () => {
-      current = false;
-    };
-  }, [kept, revision]);
-  useEffect(() => {
-    globalThis.addEventListener("focus", reread);
-    return () => globalThis.removeEventListener("focus", reread);
-  }, [reread]);
-  const entries = loaded?.entries;
-  return { entries, reread };
-}
+import { useSharedEntries } from "./shared-entries";
 
 export function SharedWithMeView() {
   const { entries, reread } = useSharedEntries();

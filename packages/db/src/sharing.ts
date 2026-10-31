@@ -8,6 +8,7 @@ import {
   isChoiceType,
   maxContainerDepth,
   shareTokenHash,
+  type ContainerFields,
   type CustomField,
   type ServiceLink,
   type SharedEntry,
@@ -254,9 +255,34 @@ export async function shareSettings(
   };
 }
 
+/** The active folders and lists inside each of `roots`, by root, for the sidebar's tree (TON-130). */
+async function foldersInside(
+  db: Database,
+  roots: readonly string[],
+): Promise<Map<string, ContainerFields[]>> {
+  const inside = new Map<string, ContainerFields[]>();
+  if (roots.length === 0) return inside;
+  const rows = await db.execute<ContainerFields & { root: string }>(sql`
+    with recursive tree (root, id, level) as (
+      select id, id, 1 from ${containers} where ${inArray(containers.id, [...roots])} and trashed_at is null
+      union all
+      select t.root, c.id, t.level + 1 from ${containers} c join tree t on c.parent_id = t.id
+      where c.trashed_at is null and t.level <= ${maxContainerDepth}
+    )
+    select t.root, c.id, c.kind, c.parent_id as "parentId", c.name
+    from tree t join ${containers} c on c.id = t.id
+    where t.id <> t.root
+    order by c.id`);
+  for (const { root, ...container } of rows) {
+    inside.set(root, [...(inside.get(root) ?? []), container]);
+  }
+  return inside;
+}
+
 /**
  * The person's Shared with me (FR-07.13, DS-67): each reference with its owner, how it is shared with them, and
- * whether it can be opened now. A name shows only while it can: a revoked or suspended collection reveals nothing new.
+ * whether it can be opened now, with the folders and lists inside it for the sidebar (TON-130). A name shows only
+ * while it can: a revoked or suspended collection reveals nothing new.
  */
 export async function sharedWithMe(db: Database, viewerId: string): Promise<SharedEntry[]> {
   const rows = await db
@@ -293,6 +319,10 @@ export async function sharedWithMe(db: Database, viewerId: string): Promise<Shar
   ]);
   const invited = new Set(grants.map((grant) => grant.containerId));
   const live = new Set(links.map((link) => link.id));
+  const inside = await foldersInside(
+    db,
+    ids.filter((id) => readable.has(id)),
+  );
   return rows
     .map((row): SharedEntry => {
       const available = readable.has(row.containerId);
@@ -306,6 +336,7 @@ export async function sharedWithMe(db: Database, viewerId: string): Promise<Shar
           link: row.linkId !== null && live.has(row.linkId),
         },
         available,
+        containers: available ? (inside.get(row.containerId) ?? []) : [],
       };
     })
     .toSorted(

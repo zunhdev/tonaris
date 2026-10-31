@@ -10,6 +10,7 @@ import { CaptureProvider } from "@/features/capture/capture-context";
 import { CollectionUiProvider } from "@/features/collection/collection-ui";
 import { CollectionDataProvider } from "@/features/collection/data";
 import { OpenInProvider } from "@/features/open/open-in";
+import { SharedEntriesProvider } from "@/features/sharing/shared-entries";
 import { lastView, openedItems, recentItems } from "@/features/shell/device";
 import { Shell } from "@/features/shell/shell";
 import { SaveStateLayer } from "@/features/sync/save-state-layer";
@@ -54,9 +55,11 @@ function WorkspaceLayout() {
             <CaptureProvider>
               <OpenInProvider>
                 <RecoveryProvider>
-                  <Shell account={account}>
-                    <Outlet />
-                  </Shell>
+                  <SharedEntriesProvider>
+                    <Shell account={account}>
+                      <Outlet />
+                    </Shell>
+                  </SharedEntriesProvider>
                 </RecoveryProvider>
               </OpenInProvider>
             </CaptureProvider>

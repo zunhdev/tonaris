@@ -2,10 +2,11 @@
 // Shared with me and Trash. Each level comes in the order its folder's view is sorted, and the top level in the
 // root's (decided 23 October 2026); without one, in creation order, which their client-made UUIDv7 IDs sort by
 // (DS-44's fallback for manual order). The rows a person can see follow which folders are expanded, and
-// carry what the ARIA tree pattern needs in its flat form: level, position in the set, and set size. Pure, so the
-// tree's rules are tested without a DOM.
+// carry what the ARIA tree pattern needs in its flat form: level, position in the set, and set size. Shared with me
+// holds the folders and lists shared with the person, each with what's inside it (TON-130). Pure, so the tree's rules
+// are tested without a DOM.
 
-import { searchKey, type Container } from "@tonaris/domain";
+import { searchKey, type Container, type ContainerKind, type SharedEntry } from "@tonaris/domain";
 
 export type Tree = {
   /** The root's folders and lists, in order. */
@@ -49,20 +50,107 @@ export const places = [
 
 export type Place = (typeof places)[number]["place"];
 
+/** A folder or list shared with the person, at the top of Shared with me or inside one there (TON-130). */
+export type SharedItem = {
+  id: string;
+  /** The shared folder or list it is in, or its own ID at the top. */
+  rootId: string;
+  /** The folder above it in the share, or null at the top. */
+  parentId: string | null;
+  /** Null while it can't be opened, as its name. */
+  kind: ContainerKind | null;
+  name: string | null;
+  /** Its owner's display name, shown after a top one. */
+  owner: string | undefined;
+  available: boolean;
+};
+
+/** A folder or list inside a share, which can always be opened. */
+export type SharedChild = SharedItem & { kind: ContainerKind; name: string };
+
+export type SharedTree = {
+  roots: SharedItem[];
+  children: Map<string, SharedChild[]>;
+  byId: Map<string, SharedItem>;
+};
+
+/**
+ * Shared with me as a tree: the shared folders and lists by name, those that can't be opened last, each holding what
+ * is inside it, in `order` like the person's own (decided 23 October 2026).
+ */
+export function buildSharedTree(
+  entries: readonly SharedEntry[],
+  order: (siblings: SharedChild[], parentId: string) => SharedChild[] = (siblings) => siblings,
+): SharedTree {
+  const byId = new Map<string, SharedItem>();
+  const children = new Map<string, SharedChild[]>();
+  const roots = entries
+    .map((entry): SharedItem => ({
+      id: entry.containerId,
+      rootId: entry.containerId,
+      parentId: null,
+      kind: entry.kind,
+      name: entry.name,
+      owner: entry.owner.displayName ?? "A Tonaris member",
+      available: entry.available,
+    }))
+    .toSorted(
+      (a, b) =>
+        Number(b.available) - Number(a.available) ||
+        searchKey(a.name ?? "").localeCompare(searchKey(b.name ?? "")) ||
+        (a.owner ?? "").localeCompare(b.owner ?? ""),
+    );
+  for (const root of roots) byId.set(root.id, root);
+  for (const entry of entries) {
+    for (const { id, kind, parentId, name } of entry.containers) {
+      // A folder shared on its own and inside another share shows in both; the first one found holds it.
+      if (byId.has(id) || parentId === null) continue;
+      const item: SharedChild = {
+        id,
+        rootId: entry.containerId,
+        parentId,
+        kind,
+        name,
+        owner: undefined,
+        available: true,
+      };
+      byId.set(id, item);
+      children.set(parentId, [...(children.get(parentId) ?? []), item]);
+    }
+  }
+  for (const [parentId, siblings] of children) children.set(parentId, order(siblings, parentId));
+  return { roots, children, byId };
+}
+
+/** Shared with me's open or closed state, kept with the expanded folders: it starts open (TON-130). */
+export const sharedClosedKey = "shared:closed";
+
 type Position = { level: number; posInSet: number; setSize: number };
 
 export type TreeRow =
   | (Position & { type: "container"; container: Container; expanded: boolean })
-  | (Position & { type: "place"; place: Place; name: string });
+  | (Position & {
+      type: "place";
+      place: Place;
+      name: string;
+      /** Only Shared with me opens, while something is shared (TON-130). */
+      expanded?: boolean;
+    })
+  | (Position & { type: "shared"; item: SharedItem; expanded: boolean });
 
 /**
  * The rows a person can see: the folders and lists, inside the expanded folders, then the places, Invitations and
- * Approvals only while some are pending (DS-31, DS-86).
+ * Approvals only while some are pending (DS-31, DS-86). Shared with me, while open, holds what's shared, inside the
+ * expanded shared folders (TON-130).
  */
 export function visibleRows(
   tree: Tree,
   expanded: ReadonlySet<string>,
-  { invitations = false, approvals = false }: { invitations?: boolean; approvals?: boolean } = {},
+  {
+    invitations = false,
+    approvals = false,
+    shared,
+  }: { invitations?: boolean; approvals?: boolean; shared?: SharedTree } = {},
 ): TreeRow[] {
   const rows: TreeRow[] = [];
   const shown = places.filter(
@@ -86,16 +174,34 @@ export function visibleRows(
       }
     }
   };
+  const walkShared = (siblings: readonly SharedItem[], level: number) => {
+    for (const [index, item] of siblings.entries()) {
+      const open = item.kind === "folder" && item.available && expanded.has(item.id);
+      rows.push({
+        type: "shared",
+        item,
+        expanded: open,
+        level,
+        posInSet: index + 1,
+        setSize: siblings.length,
+      });
+      if (open) walkShared(shared?.children.get(item.id) ?? [], level + 1);
+    }
+  };
   walk(tree.roots, 1, topLevel);
   for (const [index, { place, name }] of shown.entries()) {
+    const opens = place === "shared" && (shared?.roots.length ?? 0) > 0;
+    const open = opens && !expanded.has(sharedClosedKey);
     rows.push({
       type: "place",
       place,
       name,
+      ...(opens ? { expanded: open } : {}),
       level: 1,
       posInSet: tree.roots.length + index + 1,
       setSize: topLevel,
     });
+    if (open) walkShared(shared?.roots ?? [], 2);
   }
   return rows;
 }
@@ -114,7 +220,12 @@ export function ancestorsOf(tree: Tree, id: string): Container[] {
   return path;
 }
 
-const nameOf = (row: TreeRow) => (row.type === "container" ? row.container.name : row.name);
+const nameOf = (row: TreeRow) =>
+  row.type === "container"
+    ? row.container.name
+    : row.type === "shared"
+      ? (row.item.name ?? "")
+      : row.name;
 
 /**
  * The next row after `from` whose name starts with `typed`, ignoring case and accents (DS-27, FR-12.5), wrapping

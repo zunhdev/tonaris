@@ -7,7 +7,7 @@
 import { emailKey } from "./accounts";
 import { albumSchema } from "./albums";
 import type { CommandContext, CommandResult } from "./commands";
-import { containerSchema } from "./containers";
+import { containerFieldsSchema, containerSchema } from "./containers";
 import { fieldValueSchema } from "./field-values";
 import { customFieldSchema } from "./fields";
 import { maxNameLength } from "./limits";
@@ -617,6 +617,10 @@ export const sharedEntrySchema = z
       link: z.boolean().meta({ description: "It was saved through a link that still works." }),
     }),
     available: z.boolean().meta({ description: "Whether it can be opened now (FR-07.13)." }),
+    containers: z.array(containerFieldsSchema).meta({
+      description:
+        "The active folders and lists inside it while it can be opened, each under its parent: it, or a folder inside it (TON-130). Empty for a list, or once it can't be opened.",
+    }),
   })
   .meta({ description: "A folder or list in Shared with me (FR-07.13)." });
 export type SharedEntry = z.infer<typeof sharedEntrySchema>;

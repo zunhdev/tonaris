@@ -2,13 +2,15 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { uuidv7, type Container } from "@tonaris/domain";
+import { uuidv7, type Container, type SharedEntry } from "@tonaris/domain";
 
 import {
   ancestorsOf,
+  buildSharedTree,
   buildTree,
   canMoveInto,
   moveDestinations,
+  sharedClosedKey,
   typeAhead,
   visibleRows,
   type TreeRow,
@@ -26,8 +28,14 @@ const list = (name: string, parentId: string | null = null): Container => ({
   kind: "list",
 });
 
+const nameOf = (row: TreeRow | undefined) =>
+  row?.type === "container"
+    ? row.container.name
+    : row?.type === "shared"
+      ? (row.item.name ?? "(unavailable)")
+      : row?.name;
 const label = (row: TreeRow) =>
-  `${"  ".repeat(row.level - 1)}${row.type === "container" ? row.container.name : row.name} ${row.posInSet}/${row.setSize}`;
+  `${"  ".repeat(row.level - 1)}${nameOf(row)} ${row.posInSet}/${row.setSize}`;
 
 // Made in this order, so their IDs sort this way.
 const metal = folder("Metal");
@@ -36,7 +44,7 @@ const funeral = folder("Funeral", metal.id);
 const deep = list("Deep", funeral.id);
 const later = list("Later");
 
-const byName = (siblings: Container[]) =>
+const byName = <T extends { name: string }>(siblings: T[]) =>
   siblings.toSorted((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
 describe("the sidebar tree (DS-27)", () => {
@@ -85,10 +93,8 @@ describe("the sidebar tree (DS-27)", () => {
   test("type-ahead finds the next name starting with the typed letters, ignoring case and accents", () => {
     const tree = buildTree([folder("Doom"), list("Dub"), list("Öxabäck"), list("drone")]);
     const rows = visibleRows(tree, new Set());
-    const names = (index: number | undefined) => {
-      const row = index === undefined ? undefined : rows[index];
-      return row?.type === "container" ? row.container.name : row?.name;
-    };
+    const names = (index: number | undefined) =>
+      nameOf(index === undefined ? undefined : rows[index]);
     // A repeated letter cycles through the rows starting with it, wrapping around.
     expect(names(typeAhead(rows, 0, "d"))).toBe("Dub");
     expect(names(typeAhead(rows, 1, "dd"))).toBe("drone");
@@ -99,6 +105,90 @@ describe("the sidebar tree (DS-27)", () => {
     expect(names(typeAhead(rows, 0, "oxa"))).toBe("Öxabäck");
     expect(names(typeAhead(rows, 0, "un"))).toBe("Unsorted");
     expect(typeAhead(rows, 0, "zz")).toBeUndefined();
+  });
+});
+
+describe("Shared with me in the tree (TON-130)", () => {
+  const ownerId = uuidv7();
+  const entry = (
+    name: string | null,
+    kind: "folder" | "list" | null,
+    containers: Container[] = [],
+    owner = "Denis",
+  ): SharedEntry => ({
+    containerId: containers[0]?.parentId ?? uuidv7(),
+    owner: { id: ownerId, displayName: owner },
+    name,
+    kind,
+    via: { invitation: true, link: false },
+    available: name !== null,
+    containers: containers.map(({ id, kind: each, parentId, name: named }) => ({
+      id,
+      kind: each,
+      parentId,
+      name: named,
+    })),
+  });
+  const shared = folder("Shared metal");
+  const crust = folder("Crust", shared.id);
+  const grind = list("Grind", crust.id);
+  const black = list("Black", shared.id);
+  const entries = [
+    entry(null, null),
+    { ...entry("Shared metal", "folder", [crust, grind, black]), containerId: shared.id },
+    entry("Ambient", "list", [], "Anna"),
+  ];
+
+  test("it starts open, with what's shared by name, those that can't be opened last", () => {
+    const sharedTree = buildSharedTree(entries);
+    expect(sharedTree.roots.map((item) => [item.name, item.owner])).toEqual([
+      ["Ambient", "Anna"],
+      ["Shared metal", "Denis"],
+      [null, "Denis"],
+    ]);
+    const rows = visibleRows(buildTree([later]), new Set(), { shared: sharedTree });
+    expect(rows.map(label)).toEqual([
+      "Later 1/4",
+      "Unsorted 2/4",
+      "Shared with me 3/4",
+      "  Ambient 1/3",
+      "  Shared metal 2/3",
+      "  (unavailable) 3/3",
+      "Trash 4/4",
+    ]);
+    expect(rows.find((row) => row.type === "place" && row.place === "shared")).toMatchObject({
+      expanded: true,
+    });
+  });
+
+  test("a shared folder opens to its folders and lists, in the order given, and Shared with me closes", () => {
+    const sharedTree = buildSharedTree(entries, byName);
+    expect(sharedTree.byId.get(grind.id)).toMatchObject({ rootId: shared.id, parentId: crust.id });
+    const open = new Set([shared.id, crust.id]);
+    expect(visibleRows(buildTree([]), open, { shared: sharedTree }).map(label)).toEqual([
+      "Unsorted 1/3",
+      "Shared with me 2/3",
+      "  Ambient 1/3",
+      "  Shared metal 2/3",
+      "    Black 1/2",
+      "    Crust 2/2",
+      "      Grind 1/1",
+      "  (unavailable) 3/3",
+      "Trash 3/3",
+    ]);
+    open.add(sharedClosedKey);
+    expect(visibleRows(buildTree([]), open, { shared: sharedTree }).map(label)).toEqual([
+      "Unsorted 1/3",
+      "Shared with me 2/3",
+      "Trash 3/3",
+    ]);
+  });
+
+  test("with nothing shared, Shared with me doesn't open", () => {
+    const rows = visibleRows(buildTree([]), new Set(), { shared: buildSharedTree([]) });
+    expect(rows.find((row) => row.type === "place" && row.place === "shared")).not.toHaveProperty(
+      "expanded",
+    );
   });
 });
 
