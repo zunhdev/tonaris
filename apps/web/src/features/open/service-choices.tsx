@@ -1,6 +1,6 @@
 // The "Open in…" choices (DS-25; FR-06.5, FR-06.6, TS-43): the services an album has links for, in their order, by
-// name, for the workspace's chooser and the shared pages' Open popover. Each opens where the person's link setting
-// says, the service's page or its app (TON-104), and closes the popover.
+// name, for the workspace's chooser. Each opens where the person's link setting says, the service's page or its app
+// (TON-104), and closes the popover.
 
 import { ExternalLink } from "lucide-react";
 import { useEffect, useRef } from "react";

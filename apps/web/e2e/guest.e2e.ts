@@ -1,5 +1,5 @@
 // A shared link's page in a real browser, as a guest (DS-72; FR-06.5, FR-07.11, FR-11.9; AC-26): rendered on the
-// server, a folder opening into its list, the Open chooser's links leaving with no referrer, view options kept for the
+// server, a folder opening into its list, the service links leaving with no referrer, view options kept for the
 // visit only, the owner's saves arriving live, preview tags, and the unavailable sentence once the link is off.
 
 import { expect, test, type Page } from "@playwright/test";
@@ -108,15 +108,21 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   }
   await expect(albums.first().locator("span").first()).toHaveAttribute("style", /background/);
 
-  // Open leaves with no referrer.
-  await albums
+  // Its services are links, as in the album list, which take focus and leave with no referrer (TON-127).
+  const spotify = albums
     .filter({ hasText: "Nightfall" })
-    .getByRole("button", { name: "Open Nightfall in…" })
-    .click();
-  const spotify = guest.getByRole("link", { name: "Open in Spotify" });
+    .getByRole("link", { name: "Open 'Nightfall' in Spotify" });
+  await expect(spotify).toHaveText("Spotify");
+  await expect(spotify.locator("svg")).toBeVisible();
+  await expect(spotify).toHaveAttribute(
+    "href",
+    "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv",
+  );
   await expect(spotify).toHaveAttribute("rel", "noopener noreferrer");
   await expect(spotify).toHaveAttribute("target", "_blank");
-  await guest.keyboard.press("Escape");
+  await expect(spotify).not.toHaveAttribute("tabindex", "-1");
+  await expect(albums.filter({ hasText: "Epicus" }).getByRole("link")).toHaveCount(0);
+  await expect(guest.getByRole("button", { name: /in…$/ })).toHaveCount(0);
 
   // View options last the visit: kept on reload, never saved.
   await expect(guest.getByRole("main")).toContainText(
@@ -130,6 +136,11 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   await guest.getByRole("radio", { name: "Grid" }).click();
   const boxes = await Promise.all((await albums.all()).map((card) => card.boundingBox()));
   for (const box of boxes) expect(box && box.height > box.width, JSON.stringify(box)).toBe(true);
+  await expect(
+    albums
+      .filter({ hasText: "Nightfall" })
+      .getByRole("link", { name: "Open 'Nightfall' in Spotify" }),
+  ).toBeVisible();
   await guest.getByRole("radio", { name: "Rows" }).click();
   expect(refused).toEqual([]);
   await guest.reload();
@@ -141,6 +152,21 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   await expect(
     fresh.getByRole("list", { name: "Albums in Doom" }).getByRole("listitem").first(),
   ).toContainText("Epicus Doomicus Metallicus");
+
+  // On a phone, a row with links shows them on a third line, under the artist; one without stays 56px (TON-127).
+  const phone = await (
+    await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+      viewport: { width: 390, height: 844 },
+    })
+  ).newPage();
+  await phone.goto(`${path}?c=${doom.id}`);
+  const phoneRows = phone.getByRole("list", { name: "Albums in Doom" }).getByRole("listitem");
+  const linked = phoneRows.filter({ hasText: "Nightfall" });
+  await expect(linked.getByRole("link", { name: "Open 'Nightfall' in Spotify" })).toBeVisible();
+  expect((await linked.boundingBox())?.height).toBeGreaterThan(56);
+  expect((await phoneRows.filter({ hasText: "Epicus" }).boundingBox())?.height).toBe(56);
+  expect(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
   // The owner's saves arrive live (FR-07.11).
   await added(page, [album("Ancient Dreams", { originalYear: 1988 })], doom.id);

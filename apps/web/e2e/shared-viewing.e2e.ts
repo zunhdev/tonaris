@@ -13,10 +13,15 @@ import { added, album, insert, live, saved, violations, webOrigin } from "./supp
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-async function send(page: Page, name: string, args: Record<string, unknown>) {
+async function send(
+  page: Page,
+  name: string,
+  args: Record<string, unknown>,
+  base?: Record<string, unknown>,
+) {
   const response = await page.request.post(`${apiUrl}/v1/mutations`, {
     headers: { origin: webOrigin },
-    data: { mutationId: uuidv7(), name, args },
+    data: { mutationId: uuidv7(), name, args, ...(base ? { base } : {}) },
   });
   const body = await response.json();
   expect(body.outcome?.status, JSON.stringify(body)).toBe("confirmed");
@@ -62,6 +67,13 @@ test("a viewer sees it view-only, in their own order, live, until access ends", 
     album("Ancient Dreams", { originalYear: 1988 }),
   ];
   await added(page, [nightfall, epicus, dreams], doom.id);
+  const spotify = "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv";
+  await send(
+    page,
+    "link.set",
+    { albumId: nightfall.id, service: "spotify", url: spotify },
+    { url: null },
+  );
   await send(page, "account.setDisplayName", { displayName: "Denis" });
   const grantId = uuidv7();
   await send(page, "share.invite", {
@@ -85,6 +97,12 @@ test("a viewer sees it view-only, in their own order, live, until access ends", 
   // The account default: by year.
   await expect(albums.first()).toContainText("Epicus Doomicus Metallicus");
   expect(await violations(viewer, "main")).toEqual([]);
+  // Its services are links, as in the album list, opening where the viewer's setting says (TON-127).
+  await expect(
+    albums
+      .filter({ hasText: "Nightfall" })
+      .getByRole("link", { name: "Open 'Nightfall' in Spotify" }),
+  ).toHaveAttribute("href", spotify);
 
   // Sorted by name, kept after a reload.
   await sortBy(viewer, "Name");
