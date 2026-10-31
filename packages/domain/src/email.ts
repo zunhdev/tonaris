@@ -21,6 +21,8 @@ export type EmailTemplates = {
   "email-change-new": { code: string };
   /** Creator-assisted recovery (TS-73): the code and link that verify the new address. */
   "recovery-verification": { code: string; link: string };
+  /** A passkey was added to the account (DS-93): its name, and Settings → Account, where it can be removed. */
+  "passkey-added": { name: string; link: string };
   /** A sharing invitation (FR-07.5): who shares what, and the invitation's page, which needs sign-in. */
   "share-invitation": {
     ownerName: string;
@@ -97,6 +99,7 @@ export const emailDataSchemas: { [T in EmailTemplate]: z.ZodType<EmailTemplates[
   "email-change-current": z.object({ code: z.string(), newEmail: z.string() }),
   "email-change-new": z.object({ code: z.string() }),
   "recovery-verification": codeAndLink,
+  "passkey-added": z.object({ name: z.string(), link: z.string() }),
 };
 
 /** A template's name. */
@@ -204,6 +207,15 @@ const renderers: { [T in EmailTemplate]: (data: EmailTemplates[T]) => RenderedEm
       link,
       "",
       "Once confirmed, you sign in with this address, and your old address stops working. If you didn't ask for this, you can ignore this email.",
+    ].join("\n"),
+  }),
+  "passkey-added": ({ name, link }) => ({
+    subject: "A passkey was added to your Tonaris account",
+    text: [
+      `A passkey named "${name}" was added to your Tonaris account. It signs in without an emailed code.`,
+      "",
+      "If you added it, there's nothing to do. If you didn't, remove it in Settings → Account:",
+      link,
     ].join("\n"),
   }),
 };

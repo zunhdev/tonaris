@@ -83,6 +83,8 @@ describe("OpenAPI", () => {
       "/v1/account/deletion",
       "/v1/connections",
       "/v1/connections/{id}",
+      "/v1/account/passkeys",
+      "/v1/account/passkeys/{id}",
       "/v1/approvals",
       "/v1/approvals/{id}",
       "/v1/approvals/{id}/decision",

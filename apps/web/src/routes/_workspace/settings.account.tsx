@@ -1,11 +1,12 @@
 // Settings → Account (DS-93, FR-11.4): the sign-in email, and changing it in three steps: the new address, the
 // code sent to the current address, then the code sent to the new one. The swap keeps the account and signs its
-// other sessions out (TS-73). Cancelling at any step changes nothing, and a change in progress resumes here. The
-// Danger zone, at the bottom, deletes the account (DS-97).
+// other sessions out (TS-73). Cancelling at any step changes nothing, and a change in progress resumes here. Then
+// the passkeys (TON-143), and the Danger zone, at the bottom, which deletes the account (DS-97).
 
 import { api, refusalOf } from "@/api";
 import { CodeField, useResendCountdown } from "@/features/account/code-field";
 import { DangerZone } from "@/features/account/delete-account";
+import { Passkeys } from "@/features/account/passkeys";
 import { forgetAccount } from "@/features/account/session";
 import { SettingsNav } from "@/features/settings/settings-nav";
 import { PageHeader } from "@/features/shell/page-header";
@@ -20,9 +21,13 @@ import { Label } from "@tonaris/ui/components/label";
 export const Route = createFileRoute("/_workspace/settings/account")({
   head: () => ({ meta: [{ title: "Account · Tonaris" }] }),
   loader: async () => {
-    const { data, status } = await api.v1.account["email-change"].get();
-    if (!data) throw new Error(`Couldn't load the email change (HTTP ${status}).`);
-    return data.change;
+    const [change, passkeys] = await Promise.all([
+      api.v1.account["email-change"].get(),
+      api.v1.account.passkeys.get(),
+    ]);
+    if (!change.data) throw new Error(`Couldn't load the email change (HTTP ${change.status}).`);
+    if (!passkeys.data) throw new Error(`Couldn't load the passkeys (HTTP ${passkeys.status}).`);
+    return { change: change.data.change, passkeys: passkeys.data };
   },
   component: AccountPage,
 });
@@ -37,7 +42,7 @@ type Step =
 
 function AccountPage() {
   const { account } = Route.useRouteContext();
-  const inProgress = Route.useLoaderData();
+  const { change: inProgress, passkeys } = Route.useLoaderData();
   const id = useId();
   const [step, setStep] = useState<Step>(
     inProgress ? { kind: "code", ...inProgress } : { kind: "idle" },
@@ -75,6 +80,7 @@ function AccountPage() {
             />
           )}
         </section>
+        <Passkeys account={account} passkeys={passkeys} />
         <DangerZone account={account} />
       </div>
     </>

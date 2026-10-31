@@ -1,8 +1,8 @@
-// Better Auth's tables (TS-11, TS-70): people, their web sessions, linked sign-in methods and pending codes.
+// Better Auth's tables (TS-11, TS-70): people, their web sessions, linked sign-in methods, passkeys and pending codes.
 // Better Auth reads and writes them through its Drizzle adapter; ids are UUIDv7 like every other entity (TS-10).
 
 import { sql } from "drizzle-orm";
-import { boolean, check, index, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 import { userRoles } from "@tonaris/domain";
 
@@ -89,4 +89,30 @@ export const verifications = table(
     ...timestamps,
   },
   (t) => [index().on(t.identifier)],
+);
+
+/**
+ * Passkeys (TS-70, TON-143): Better Auth's passkey plugin adds and verifies them; `/v1/account/passkeys` lists,
+ * renames and removes them. Only the public key is kept: the person's check stays on their device.
+ */
+export const passkeys = table(
+  "passkey",
+  {
+    id: uuid().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text(),
+    publicKey: text().notNull(),
+    credentialID: text("credential_id").notNull().unique(),
+    // The signature counter, which a cloned authenticator would repeat; synced passkeys keep it at 0.
+    counter: integer().notNull(),
+    deviceType: text().notNull(),
+    backedUp: boolean().notNull(),
+    transports: text(),
+    // The authenticator model, which names the password manager when it is known.
+    aaguid: text(),
+    ...timestamps,
+  },
+  (t) => [index().on(t.userId)],
 );

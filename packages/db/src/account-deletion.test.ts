@@ -26,6 +26,7 @@ import {
   containers,
   oauthClients,
   oauthConsents,
+  passkeys,
   savedReferences,
   sessions,
   shareGrants,
@@ -33,7 +34,7 @@ import {
   users,
 } from "./schema";
 import { executeMutation } from "./sync";
-import { createTestDatabase, type TestDatabase } from "./testing";
+import { createTestDatabase, insertPasskey, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
 let anna: string;
@@ -142,7 +143,7 @@ async function rowsOf(userId: string): Promise<string[]> {
 }
 
 describe("beginAccountDeletion", () => {
-  test("frees the address, ends sessions and AI connections, stops sharing, records it, and queues the job", async () => {
+  test("frees the address, ends sessions, passkeys and AI connections, stops sharing, records it, and queues the job", async () => {
     const { list } = await collection(anna);
     const bens = await collection(ben);
     const linkId = uuidv7();
@@ -170,6 +171,8 @@ describe("beginAccountDeletion", () => {
     await t.db
       .insert(sessions)
       .values({ id: uuidv7(), userId: anna, token: "s", expiresAt: new Date(Date.now() + 60_000) });
+    await insertPasskey(t.db, anna);
+    const bensPasskey = await insertPasskey(t.db, ben);
     await t.db.insert(oauthClients).values({ id: uuidv7(), clientId: "c", redirectUris: [] });
     await t.db
       .insert(oauthConsents)
@@ -179,6 +182,8 @@ describe("beginAccountDeletion", () => {
     const [account] = await t.db.select().from(users).where(eq(users.id, anna));
     expect(account).toMatchObject({ email: deletedEmailKey(anna), deletingAt: expect.any(Date) });
     expect(await t.db.select().from(sessions)).toEqual([]);
+    // A passkey signs in without the email, so it goes at once too (TON-143).
+    expect((await t.db.select().from(passkeys)).map((row) => row.id)).toEqual([bensPasskey]);
     expect(await t.db.select().from(oauthConsents)).toEqual([]);
     expect((await t.db.select().from(shareLinks))[0]?.revokedAt).toBeInstanceOf(Date);
     expect(

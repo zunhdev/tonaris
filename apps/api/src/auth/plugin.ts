@@ -19,6 +19,12 @@ import type { SignInLimiter } from "./sign-in-limits";
 const exposedEndpoints = new Set([
   "POST /auth/email-otp/send-verification-otp",
   "POST /auth/sign-in/email-otp",
+  // Passkeys (TON-143): adding one, with a fresh session, and signing in with one. Listing, renaming and removing
+  // go through /v1, so the plugin's own endpoints for them stay unserved.
+  "GET /auth/passkey/generate-register-options",
+  "POST /auth/passkey/verify-registration",
+  "GET /auth/passkey/generate-authenticate-options",
+  "POST /auth/passkey/verify-authentication",
   "GET /auth/get-session",
   "POST /auth/sign-out",
   // OAuth 2.1 for MCP clients: authorization with PKCE, tokens, revocation, open registration (DCR), and the
@@ -31,6 +37,16 @@ const exposedEndpoints = new Set([
   // The consent page (DS-85): the client's public details, and the person's decision.
   "GET /auth/oauth2/public-client",
   "POST /auth/oauth2/consent",
+]);
+
+/**
+ * Sign-in steps that count per client address only (TS-104): a code's submission, and a passkey sign-in's start,
+ * which writes a challenge, and its finish (TON-143).
+ */
+const signInSteps = new Set([
+  "POST /auth/sign-in/email-otp",
+  "GET /auth/passkey/generate-authenticate-options",
+  "POST /auth/passkey/verify-authentication",
 ]);
 
 /** The issuer's path under the API origin; RFC 8414 puts its metadata at `/.well-known/…/auth`. */
@@ -122,7 +138,7 @@ export function authRoutes({ auth, limiter, clientIpHeader }: AuthRoutesOptions)
         const wait =
           endpoint === "POST /auth/email-otp/send-verification-otp"
             ? limiter.codeRequest(await requestedEmail(request), ip)
-            : endpoint === "POST /auth/sign-in/email-otp"
+            : signInSteps.has(endpoint)
               ? limiter.codeSubmission(ip)
               : undefined;
         if (wait !== undefined) throw rateLimited(wait);

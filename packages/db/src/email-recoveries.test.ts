@@ -1,6 +1,6 @@
 // The creator's recovery of a sign-in email (FR-11.5, TS-73) against the local Postgres 18: the member list,
-// one recovery per account, the codes, and confirming, which swaps the email, ends every session, disconnects AI
-// connections only when asked, and records the creator's reason.
+// one recovery per account, the codes, and confirming, which swaps the email, ends every session, removes the
+// passkeys, disconnects AI connections only when asked, and records the creator's reason.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
@@ -12,8 +12,17 @@ import {
   issueEmailRecovery,
   listMembers,
 } from "./email-recoveries";
-import { auditLog, emailRecoveries, oauthClients, oauthConsents, sessions, users } from "./schema";
-import { createTestDatabase, type TestDatabase } from "./testing";
+import {
+  auditLog,
+  emailRecoveries,
+  jobs,
+  oauthClients,
+  oauthConsents,
+  passkeys,
+  sessions,
+  users,
+} from "./schema";
+import { createTestDatabase, insertPasskey, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
 let creator: string;
@@ -127,7 +136,7 @@ describe("issuing", () => {
 });
 
 describe("confirming", () => {
-  test("swaps, ends every session, keeps AI connections, and records the reason", async () => {
+  test("swaps, ends every session, removes passkeys, keeps AI connections, and records the reason", async () => {
     await t.db.insert(sessions).values({
       id: Bun.randomUUIDv7(),
       userId: anna,
@@ -135,6 +144,8 @@ describe("confirming", () => {
       expiresAt: later(hour),
     });
     await connect(anna);
+    await insertPasskey(t.db, anna);
+    const creatorsPasskey = await insertPasskey(t.db, creator);
     await issue();
 
     expect(await confirm()).toEqual({
@@ -145,6 +156,11 @@ describe("confirming", () => {
     });
     expect(await emailOf(anna)).toBe("anna@new.example");
     expect(await t.db.select().from(sessions)).toEqual([]);
+    // Someone who took the old address over may have added one (TON-143); the removal is in the ledger.
+    expect((await t.db.select().from(passkeys)).map((row) => row.id)).toEqual([creatorsPasskey]);
+    expect((await t.db.select().from(jobs)).map((job) => job.payload)).toEqual([
+      expect.objectContaining({ type: "passkey.removed", userId: anna, passkeyId: null }),
+    ]);
     expect(await t.db.select().from(oauthConsents)).toHaveLength(1);
     expect(await t.db.select().from(auditLog)).toEqual([
       expect.objectContaining({

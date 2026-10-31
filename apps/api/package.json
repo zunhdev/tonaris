@@ -21,6 +21,7 @@
     "@better-auth/core": "1.7.12",
     "@better-auth/mcp": "1.7.12",
     "@better-auth/oauth-provider": "1.7.12",
+    "@better-auth/passkey": "1.7.12",
     "@elysia/cors": "2.0.0-rc.0",
     "@elysia/openapi": "2.0.0-rc.0",
     "@modelcontextprotocol/server": "2.3.1",

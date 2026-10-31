@@ -195,6 +195,8 @@ export const accounts = {
   walker: at("a11y-walker"),
   arrival: at("a11y-arrival"),
   guide: at("a11y-guide"),
+  // Passkeys (passkeys.e2e.ts, TON-143).
+  passkeyHolder: at("passkey-holder"),
 } as const;
 
 /** An address with no account. */

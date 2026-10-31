@@ -1,7 +1,7 @@
 // The revocation ledger against the local Postgres 18 (TS-113, Q-04): each deletion-class change queues its event in
 // its own transaction; the file store keeps each event once, in order; and the replay applies events to a
-// restored database, idempotently: the account, the connection, the link, the grant, the Trash unit and the
-// admission stay gone.
+// restored database, idempotently: the account, the connection, the link, the grant, the Trash unit, the
+// admission and the passkey stay gone.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -24,6 +24,7 @@ import { createAdmissionInvitation, revokeAdmissionInvitation } from "./admissio
 import { ledgerStore } from "./ledger";
 import { replayLedger } from "./ledger-replay";
 import { revokeConnection } from "./mcp";
+import { removePasskey } from "./passkeys";
 import {
   admissionInvitations,
   albums,
@@ -31,13 +32,14 @@ import {
   jobs,
   oauthClients,
   oauthConsents,
+  passkeys,
   shareGrants,
   shareLinks,
   trashUnits,
   users,
 } from "./schema";
 import { executeMutation } from "./sync";
-import { createTestDatabase, type TestDatabase } from "./testing";
+import { createTestDatabase, insertPasskey, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
 let anna: Principal & { kind: "user" };
@@ -74,6 +76,8 @@ async function queued(): Promise<LedgerEvent[]> {
     .toSorted((a, b) => (a.id < b.id ? -1 : 1));
 }
 
+const passkey = (userId: string) => insertPasskey(t.db, userId);
+
 async function list(name: string) {
   const id = uuidv7();
   await run({
@@ -85,7 +89,7 @@ async function list(name: string) {
 }
 
 describe("recording", () => {
-  test("revoking a link, a grant, a connection and an admission, and purging Trash, each queue an event", async () => {
+  test("revoking a link, a grant, a connection and an admission, purging Trash, and removing a passkey each queue an event", async () => {
     const doom = await list("Doom");
     // Made directly: making one needs the share secret, which the API holds (its sharing tests make them).
     const linkId = uuidv7();
@@ -125,6 +129,9 @@ describe("recording", () => {
     const unitId = uuidv7();
     await run({ mutationId: uuidv7(), name: "container.delete", args: { id: doom, unitId } });
     await run({ mutationId: uuidv7(), name: "trash.purge", args: { unitIds: [unitId] } });
+    const passkeyId = await passkey(anna.userId);
+    expect(await removePasskey(t.db, { userId: ben, id: passkeyId })).toBe(false);
+    expect(await removePasskey(t.db, { userId: anna.userId, id: passkeyId })).toBe(true);
 
     expect((await queued()).map(({ id: _id, at: _at, ...event }) => event)).toEqual([
       { type: "shareLink.revoked", linkId },
@@ -132,6 +139,7 @@ describe("recording", () => {
       { type: "connection.revoked", userId: anna.userId, clientId: "c" },
       { type: "admission.revoked", invitationId },
       { type: "trash.purged", unitId, containerIds: [doom], albumIds: [] },
+      { type: "passkey.removed", userId: anna.userId, passkeyId },
     ]);
   });
 });
@@ -166,7 +174,7 @@ describe("the file store", () => {
 
 describe("the replay", () => {
   test("brings a restored database past the events, and a second replay changes nothing", async () => {
-    // The state as a backup held it: a live link and grant, a Trash unit, a connection, an invitation.
+    // The state as a backup held it: a live link and grant, a Trash unit, a connection, an invitation, passkeys.
     const doom = await list("Doom");
     const kept = await list("Kept");
     const linkId = uuidv7();
@@ -196,6 +204,9 @@ describe("the replay", () => {
       createdBy: anna.userId,
       emailStatus: "sending",
     });
+    const removedPasskey = await passkey(anna.userId);
+    const keptPasskey = await passkey(anna.userId);
+    await passkey(ben);
     const cleosAlbum = uuidv7();
     await t.db.insert(albums).values({
       id: cleosAlbum,
@@ -216,6 +227,8 @@ describe("the replay", () => {
       { id: uuidv7(), at, type: "connection.revoked", userId: anna.userId, clientId: null },
       { id: uuidv7(), at, type: "admission.revoked", invitationId },
       { id: uuidv7(), at, type: "account.deleted", userId: cleo },
+      { id: uuidv7(), at, type: "passkey.removed", userId: anna.userId, passkeyId: removedPasskey },
+      { id: uuidv7(), at, type: "passkey.removed", userId: ben, passkeyId: null },
     ];
     expect(await replayLedger(t.db, events)).toEqual({
       "account.deleted": 1,
@@ -224,6 +237,7 @@ describe("the replay", () => {
       "shareGrant.ended": 1,
       "trash.purged": 1,
       "admission.revoked": 1,
+      "passkey.removed": 2,
     });
 
     const state = async () => ({
@@ -235,6 +249,7 @@ describe("the replay", () => {
       invitation: (await t.db.select().from(admissionInvitations))[0]?.status,
       cleosAlbums: (await t.db.select().from(albums).where(eq(albums.ownerId, cleo))).length,
       cleo: (await t.db.select().from(users).where(eq(users.id, cleo))).length,
+      passkeys: (await t.db.select().from(passkeys)).map((row) => row.id),
     });
     const after = await state();
     expect(after).toMatchObject({
@@ -246,6 +261,7 @@ describe("the replay", () => {
       invitation: "revoked",
       cleosAlbums: 0,
       cleo: 0,
+      passkeys: [keptPasskey],
     });
     await replayLedger(t.db, events);
     expect(await state()).toEqual(after);

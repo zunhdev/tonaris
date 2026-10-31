@@ -16,12 +16,15 @@ export function codeDigits(value: string): string {
 }
 
 export function CodeField({
+  id = "code",
   value,
   onChange,
   hint,
   error,
   inputRef,
 }: {
+  /** The field's id, for a page with two code fields at once (Settings → Account). */
+  id?: string;
   value: string;
   /** The digits so far; the page submits six by themselves. */
   onChange: (digits: string) => void;
@@ -32,10 +35,10 @@ export function CodeField({
   return (
     <>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="code">Code</Label>
+        <Label htmlFor={id}>Code</Label>
         <Input
           ref={inputRef}
-          id="code"
+          id={id}
           name="code"
           inputMode="numeric"
           autoComplete="one-time-code"
@@ -46,14 +49,14 @@ export function CodeField({
           value={value}
           onChange={(event) => onChange(codeDigits(event.target.value))}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? "code-hint code-error" : "code-hint"}
+          aria-describedby={error ? `${id}-hint ${id}-error` : `${id}-hint`}
         />
-        <p id="code-hint" className="text-fg-secondary">
+        <p id={`${id}-hint`} className="text-fg-secondary">
           {hint}
         </p>
       </div>
       {error && (
-        <p id="code-error" role="alert" className="text-status-danger">
+        <p id={`${id}-error`} role="alert" className="text-status-danger">
           {error}
         </p>
       )}

@@ -1595,6 +1595,16 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 
 *As built in TON-131:* every page in the sign-in frame has "Terms · Privacy" under the card, in `text.small` and `fg.secondary`, linking `/terms` and `/privacy` (DS-119).
 
+*As built in TON-143:* passkeys on `/sign-in` (decided 31 October 2026: the button and autofill).
+- **The button:** **Sign in with a passkey**, a secondary `lg` button under **Continue**. It shows only where the browser has passkeys.
+- **Autofill:** the email field is `autocomplete="username webauthn"`. Where the browser can, it offers saved passkeys in the field's autofill as the page opens. Choosing one signs in, and the button cancels that request and asks at once.
+- **After signing in:** the page lands where a code would have, the AI-connection continuation included. Closing the browser's prompt says nothing.
+- **Messages:**
+  - a passkey that doesn't verify the person: "That passkey doesn't ask for your face, fingerprint or PIN, so Tonaris can't use it.";
+  - one no account has: "This passkey isn't on a Tonaris account anymore. Sign in with an email code, and remove it from your password manager.";
+  - any other failure: "That passkey didn't work. Try again.";
+  - and DS-90's limit and connection messages.
+
 **DS-91 Admission landing** (`/join/:admissionToken`). *(FR-11.2, FR-11.6, FR-11.3)*
 1. "You're invited to Tonaris", showing the bound email.
 2. **Continue** sends a code to that email and leads to the verify screen.
@@ -1660,6 +1670,19 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **The link:** "Lost access to your email?" sits under the sign-in email step and beside **Change sign-in email** on Settings → Account.
 - **`/help/recovery`** is public, in the sign-in card. It has the heading "Lost access to your email?", explains that the creator can move the account to a new address, and says to write to the `SUPPORT_EMAIL` address (a mailto link) from the address the person uses now. It closes with "Back to sign in".
 - **The recovery email's link** opens `/recover/:token`, "Confirm your new sign-in email". The code is filled from the link, under the hint "Confirming moves your Tonaris account to the address this email came to, and signs it out everywhere." After **Confirm** comes "Done — use {email} to sign in." with **Sign in**. Refusals show under the field, such as "This recovery link isn't valid. Ask the creator for a new one."
+
+*As built in TON-143* (Settings → Account's passkeys, between the sign-in email and the Danger zone):
+- **"Passkeys"** with the hint "Sign in with your face, fingerprint or screen lock instead of an emailed code. Email codes keep working."
+- **The list:** a bordered list, newest first. Each row shows the name, then "Added {date}" in `text.small`, with **Rename** (ghost) and **Remove** (danger).
+  - Without passkeys, it says "No passkeys yet."
+  - A new passkey is named after its password manager when its model says, such as "Google Password Manager", and "Passkey" otherwise; Apple's never say.
+- **Rename** turns the row into a "Passkey name" field with **Save** and **Cancel**; Escape cancels. A blank name is refused with "Give the passkey a name."
+- **Remove** acts at once, with no dialog: "Removed {name}. It no longer signs in." A passkey can be added again.
+- **Add a passkey** opens the browser's prompt; afterwards "Passkey added." shows, and the account's address gets the notice email. Where the browser has no passkeys, "This browser can't add passkeys." takes its place.
+  - A device that has one already: "This device already has a passkey for your account."
+- **Confirming it's you:** a session that began more than a day ago first gets a bordered box, "Check {email}", with the code field, hinted "To add a passkey, confirm it's you with the code we sent to your sign-in email."
+  - It has **Continue**, "Resend code" after 30 seconds, and **Cancel**.
+  - The right code signs this browser in afresh. Then "Confirmed. Now add your passkey." shows over a primary **Add a passkey**, since Safari creates a passkey only right after a tap.
 
 *As built in TON-76* (Settings → Profile):
 - **Display name** is a field with the hint "People you share with see this name instead of your email. It's optional until you share."

@@ -1,6 +1,6 @@
 // The creator's recovery of a sign-in email (FR-11.5, TS-73): one per account, waiting for the new address to
 // confirm it with the link's token and code, both kept only as hashes. Confirming swaps the email, ends every
-// session of the account, disconnects its AI connections when the creator asked, and writes the audit log, in one
+// session of the account, removes its passkeys, disconnects its AI connections when the creator asked, and writes the audit log, in one
 // transaction. The member list it starts from shows no collection data (FR-11.6).
 
 import { timingSafeEqual } from "node:crypto";
@@ -11,6 +11,7 @@ import { emailRecoveryHours, signInCode } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
 import { recordInLedger } from "./ledger";
+import { removeAllPasskeys } from "./passkeys";
 import {
   auditLog,
   emailRecoveries,
@@ -160,6 +161,8 @@ export async function confirmEmailRecovery(
         newEmailKey: recovery.newEmailKey,
       });
       if (swapped === "taken") return { outcome: "taken" };
+      // Someone who took the old address over could have added a passkey (TON-143).
+      await removeAllPasskeys(tx, recovery.userId);
       if (recovery.disconnectConnections) await disconnectAll(tx, recovery.userId);
       await tx.insert(auditLog).values({
         id: auditId,

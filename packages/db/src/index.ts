@@ -73,6 +73,13 @@ export {
 } from "./field-options";
 export { exportSource } from "./export";
 export { ledgerStore, recordInLedger, type LedgerStore } from "./ledger";
+export {
+  listPasskeys,
+  removeAllPasskeys,
+  removePasskey,
+  renamePasskey,
+  type PasskeyRow,
+} from "./passkeys";
 export { replayLedger, type ReplayReport } from "./ledger-replay";
 export { reconcileRestored, type ReconcileReport } from "./reconcile";
 export { operationsStatus, type OperationsStatus } from "./operations";

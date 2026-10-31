@@ -47,9 +47,11 @@ test("the session reaches the API, in the agreed cookie", async ({ page }) => {
   // The WebKit run's API sets plain cookies, as Playwright's WebKit keeps no Secure one on localhost (TON-94).
   if (process.env.E2E_INSECURE_COOKIES === "1") return;
   const cookies = await page.context().cookies(apiUrl);
+  // Beside the session, the 5-minute challenge the sign-in page's passkey autofill asked for (TON-143).
   expect(
     cookies.map(({ name, httpOnly, secure, sameSite }) => ({ name, httpOnly, secure, sameSite })),
   ).toEqual([
+    { name: "__Secure-tonaris.better-auth-passkey", httpOnly: true, secure: true, sameSite: "Lax" },
     { name: "__Secure-tonaris.session_token", httpOnly: true, secure: true, sameSite: "Lax" },
   ]);
 });

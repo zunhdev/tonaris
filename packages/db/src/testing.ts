@@ -7,6 +7,7 @@ import { createDatabase, type Database } from "./client";
 import { redact, testDatabaseUrl } from "./config";
 import { ensureDatabase } from "./create-database";
 import { migrateDatabase } from "./migrations";
+import { passkeys } from "./schema";
 
 export { ensureDatabase };
 
@@ -34,6 +35,22 @@ export type TestDatabase = {
   /** Closes the connections and drops the schema. */
   drop(): Promise<void>;
 };
+
+/** A passkey for `userId`, as Better Auth's passkey plugin would add one (TON-143). Returns its id. */
+export async function insertPasskey(db: Database, userId: string): Promise<string> {
+  const id = Bun.randomUUIDv7();
+  await db.insert(passkeys).values({
+    id,
+    userId,
+    name: "Passkey",
+    publicKey: "key",
+    credentialID: id,
+    counter: 0,
+    deviceType: "multiDevice",
+    backedUp: true,
+  });
+  return id;
+}
 
 /** Creates a migrated schema of its own. Call `drop()` when the test is done, for example in `afterEach`. */
 export async function createTestDatabase(): Promise<TestDatabase> {
