@@ -11,6 +11,7 @@ describe("linksIn (DS-48)", () => {
       "",
       "music.apple.com/us/album/nevermind/1440783617",
       "tidal.com/browse/album/77654321",
+      "music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
       "http://example.com/not-a-service",
     ].join("\r\n");
     expect(linksIn(pasted)).toEqual([
@@ -18,6 +19,7 @@ describe("linksIn (DS-48)", () => {
       "spotify:album:1KQ1Pf4ikoK1jBbOtOHvOv",
       "music.apple.com/us/album/nevermind/1440783617",
       "tidal.com/browse/album/77654321",
+      "music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
       // Capture explains it: it is a link, of no service.
       "http://example.com/not-a-service",
     ]);

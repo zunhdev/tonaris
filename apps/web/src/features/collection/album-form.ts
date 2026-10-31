@@ -51,6 +51,7 @@ const noLinks = (): Record<StreamingService, string> => ({
   "apple-music": "",
   qobuz: "",
   tidal: "",
+  "youtube-music": "",
 });
 
 /** An empty form, going to `listId` if given. */

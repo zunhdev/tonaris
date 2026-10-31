@@ -3,10 +3,12 @@
 // folders and lists, each opened with `?c=` inside the share; a list's albums as rows or a grid, each with an Open
 // chooser of its services, whose links leave with no referrer (TS-32). View options last the visit (guest-view.ts).
 // The page follows the owner's saves through the link's stream, reading the share again after each, and turns into
-// DS-72's unavailable sentence once the link stops working. No search; "Sign in" at the foot.
+// DS-72's unavailable sentence once the link stops working. No search; "Sign in", the terms and the privacy notice
+// at the foot (TON-131).
 
 import { sections, sortAlbums, sortContainers } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
+import { LegalLinks } from "@/features/legal/legal-page";
 import { ClientOnly, Link } from "@tanstack/react-router";
 import { useCallback, useMemo, type ReactNode } from "react";
 
@@ -45,13 +47,14 @@ function GuestFrame({ children }: { children: ReactNode }) {
         <Wordmark />
       </header>
       {children}
-      <footer className="border-t border-subtle px-6 py-4 text-small">
+      <footer className="flex gap-4 border-t border-subtle px-6 py-4 text-small">
         <a
           href="/sign-in"
           className="text-fg-secondary underline underline-offset-2 hover:text-fg-primary"
         >
           Sign in
         </a>
+        <LegalLinks />
       </footer>
     </div>
   );

@@ -44,6 +44,11 @@ export type ApiConfig = {
    */
   spotify: { clientId: string; clientSecret: string } | undefined;
   /**
+   * The YouTube Data API key for YouTube Music's hints (TS-41 step 4, TS-105), from a Google account used only for
+   * Tonaris. Unset, YouTube Music links are identified by MusicBrainz's URL lookup alone.
+   */
+  youtubeApiKey: string | undefined;
+  /**
    * The commit this build is, when the host says (`GIT_COMMIT`, or Render's `RENDER_GIT_COMMIT`): `/v1/health`
    * names it, and the web app's deploy waits until the API runs its own commit (TS-01).
    */
@@ -116,6 +121,7 @@ export function apiConfig(env: Env = process.env): ApiConfig {
       env.SPOTIFY_CLIENT_SECRET
         ? { clientId: env.SPOTIFY_CLIENT_ID, clientSecret: env.SPOTIFY_CLIENT_SECRET }
         : undefined,
+    youtubeApiKey: env.YOUTUBE_API_KEY || undefined,
     commit: env.GIT_COMMIT || env.RENDER_GIT_COMMIT || undefined,
   };
 }

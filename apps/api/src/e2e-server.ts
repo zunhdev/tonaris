@@ -1,9 +1,12 @@
 // The API for the browser tests (TS-121), started by Playwright (apps/web/playwright.config.ts). It serves a fresh,
 // migrated schema of the test database with the accounts in E2E_ACCOUNTS (the first is the creator), sends email
 // to Mailpit, answers captures from fixtures, and drops the schema when it stops. Not part of the deployable
-// service.
+// service. Every account has agreed to the current terms, except those whose address starts `unagreed-`, which
+// meet the agreement screen (TON-131).
 
+import { agreeToTerms } from "@tonaris/db";
 import { createTestDatabase } from "@tonaris/db/testing";
+import { emailKey, termsVersion } from "@tonaris/domain";
 
 import { accountDeletionJob } from "./account-deletion";
 import { createApp, maxRequestBodySize } from "./app";
@@ -26,6 +29,11 @@ if (!creator) throw new Error("Set E2E_ACCOUNTS to the comma-separated accounts 
 const database = await createTestDatabase();
 await seedCreator(database.db, creator);
 await Promise.all(others.map((email) => insertUser(database.db, email)));
+await Promise.all(
+  [creator, ...others]
+    .filter((email) => !email.startsWith("unagreed-"))
+    .map((email) => agreeToTerms(database.db, { emailKey: emailKey(email) }, termsVersion)),
+);
 
 const config = apiConfig({
   PORT: String(port),

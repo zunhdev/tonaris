@@ -4,11 +4,12 @@
 //   1. an album of the owner's with the same link, Trash included;
 //   2. MusicBrainz's URL lookup, every form of the album's link in one request;
 //   3. the barcode bridge: a Spotify UPC, or a 13-digit Qobuz id;
-//   4. hints for a strict MusicBrainz match: iTunes Lookup, or Qobuz's and Tidal's album pages;
+//   4. hints for a strict MusicBrainz match: iTunes Lookup, Qobuz's and Tidal's album pages, or YouTube's Data API;
 //   5. manual entry, with the link kept and, for Apple, its hints. An agent's details for it get step 4's rule
 //      (`matchDetails`, TON-111).
 // A confident answer is one MusicBrainz album, the release group (FR-02.12). Spotify values stay in this module's
-// local variables (TS-41); store-page hints go to step 4 only; agent captures read no store page (FR-10.5).
+// local variables (TS-41); store-page and YouTube hints go to step 4 only; agent captures read no store page
+// (FR-10.5), though YouTube's API, like iTunes Lookup, is read for them too.
 
 import { z } from "zod";
 
@@ -31,6 +32,7 @@ import { ProviderUnavailableError } from "./provider-cache";
 import { safeFetch } from "./safe-fetch";
 import type { Spotify } from "./spotify";
 import { extractQobuzHints, type StorePages } from "./store-pages";
+import type { YouTubeData } from "./youtube";
 
 /** An album offered to choose from: MusicBrainz's release group and a title to show. */
 export type AlbumCandidate = { releaseGroupId: string; title: string };
@@ -58,6 +60,11 @@ export type IdentifyContext = {
   agent: boolean;
   /** Step 1: the owner's album with this service's entity id, Trash included. */
   linked: (service: StreamingService, entityId: string) => Promise<string | undefined>;
+  /**
+   * Whether YouTube's API may be read for this owner: only once they agreed to the current terms, which say Tonaris
+   * uses YouTube API Services (TON-131). Asked only when a YouTube Music link reaches step 4.
+   */
+  mayReadYouTube: () => Promise<boolean>;
 };
 
 export type IdentifierDeps = {
@@ -66,6 +73,8 @@ export type IdentifierDeps = {
   pages: StorePages;
   /** The Spotify bridge; absent when it is off (TS-41's off switch). */
   spotify?: Spotify | undefined;
+  /** YouTube Music's hints; absent without `YOUTUBE_API_KEY`, when step 4 is skipped (TS-105). */
+  youtube?: YouTubeData | undefined;
   /** For short links; `safeFetch` unless a test stands in. */
   fetch?: Fetcher;
 };
@@ -88,6 +97,7 @@ const providerNames: Record<ProviderUnavailableError["provider"], string> = {
   spotify: "Spotify",
   qobuz: "Qobuz",
   tidal: "Tidal",
+  youtube: "YouTube",
 };
 
 const releaseGroupSchema = z.object({
@@ -124,7 +134,7 @@ function unidentified(link: ParsedLink, reason: string, prefill?: Prefill): Iden
 }
 
 export function createIdentifier(deps: IdentifierDeps) {
-  const { musicBrainz, itunes, pages, spotify } = deps;
+  const { musicBrainz, itunes, pages, spotify, youtube } = deps;
 
   /** Step 2: every form of the album's link, then the albums of the releases it is linked to. */
   async function byUrls(forms: readonly string[], cacheMisses: boolean): Promise<Found> {
@@ -261,6 +271,23 @@ export function createIdentifier(deps: IdentifierDeps) {
     return unidentified(link, unidentifiedReasons.notFound);
   }
 
+  async function youtubeChain(
+    link: ParsedLink,
+    { mayReadYouTube }: IdentifyContext,
+  ): Promise<Identification> {
+    // A track link names its album's playlist, which every YouTube Music link keeps.
+    const albumId = link.albumId ?? link.id;
+    const step2 = answer(link, 2, await byUrls(urlForms("youtube-music", albumId), true));
+    if (step2) return step2;
+    if (youtube && (await mayReadYouTube())) {
+      // Held only here, for the search: nothing YouTube gives is kept or prefilled (TON-128).
+      const hints = await youtube.albumHints(albumId);
+      const step4 = hints ? answer(link, 4, await byHints(hints)) : undefined;
+      if (step4) return step4;
+    }
+    return unidentified(link, unidentifiedReasons.notFound);
+  }
+
   const chains: Record<
     StreamingService,
     (link: ParsedLink, context: IdentifyContext) => Promise<Identification>
@@ -269,6 +296,7 @@ export function createIdentifier(deps: IdentifierDeps) {
     "apple-music": appleChain,
     qobuz: qobuzChain,
     tidal: tidalChain,
+    "youtube-music": youtubeChain,
   };
 
   /**

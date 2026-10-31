@@ -1,5 +1,5 @@
-// Account lookups outside Better Auth: the creator bootstrap (TS-71), and which sessions are still live for the
-// change streams (TS-23). Emails are email keys (TS-70).
+// Account lookups outside Better Auth: the creator bootstrap (TS-71), which sessions are still live for the change
+// streams (TS-23), and agreement to the terms (TON-131). Emails are email keys (TS-70).
 
 import { and, eq, gt, inArray } from "drizzle-orm";
 
@@ -41,4 +41,30 @@ export async function activeSessionIds(
     .from(sessions)
     .where(and(inArray(sessions.id, [...ids]), gt(sessions.expiresAt, now)));
   return new Set(rows.map((row) => row.id));
+}
+
+/** Records that the account agreed to the terms' `version` (TON-131), whichever it agreed to before. */
+export async function agreeToTerms(
+  db: Database,
+  where: { userId: string } | { emailKey: string },
+  version: string,
+  now: Date = new Date(),
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ termsVersion: version, termsAgreedAt: now })
+    .where("userId" in where ? eq(users.id, where.userId) : eq(users.email, where.emailKey));
+}
+
+/** Whether the account agreed to the terms' `version`, the current one. */
+export async function agreedToTerms(
+  db: Database,
+  userId: string,
+  version: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.id, userId), eq(users.termsVersion, version)));
+  return row !== undefined;
 }

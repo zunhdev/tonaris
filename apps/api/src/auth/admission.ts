@@ -9,6 +9,7 @@ import { z } from "zod";
 import {
   admitAccount,
   admissionsPaused,
+  agreeToTerms,
   type AdmissionInvitationRow,
   createAdmissionInvitation,
   type Database,
@@ -23,6 +24,7 @@ import {
   invitationStatus,
   joinCodeRequestSchema,
   joinSchema,
+  termsVersion,
 } from "@tonaris/domain";
 
 import type { ApiConfig } from "../config";
@@ -216,8 +218,14 @@ export function admissionRoutes({
           body: { email: address, type: "sign-in", otp: body.otp },
           asResponse: true,
         });
-        // An account has the address already: its owner signs in, as on the sign-in page (FR-11.2).
-        if (checked.ok) return signIn();
+        // An account has the address already: its owner signs in, as on the sign-in page (FR-11.2), and has agreed
+        // to the terms by continuing, as joining says (TON-131).
+        const signInAgreed = async () => {
+          const signedIn = await signIn();
+          if (signedIn.ok) await agreeToTerms(db, { emailKey: address }, termsVersion);
+          return signedIn;
+        };
+        if (checked.ok) return signInAgreed();
         const failure = betterAuthError.safeParse(await checked.clone().json());
         if (failure.data?.code !== "USER_NOT_FOUND") return checked;
 
@@ -227,6 +235,7 @@ export function admissionRoutes({
             const admission = await admitAccount(tx, {
               invitationId: invitation.id,
               userId: Bun.randomUUIDv7(),
+              termsVersion,
             });
             if (!admission.admitted) throw new Rollback(admission.refusal);
             // Consumes the code and creates the session in this transaction. It fails only if a concurrent
@@ -239,7 +248,7 @@ export function admissionRoutes({
           if (!(error instanceof Rollback)) throw error;
           if (error.outcome instanceof Response) return error.outcome;
           // An account got the address meanwhile; the code is still unused, so its owner signs in.
-          if (error.outcome === "registered") return signIn();
+          if (error.outcome === "registered") return signInAgreed();
           throw refused(error.outcome);
         }
       },

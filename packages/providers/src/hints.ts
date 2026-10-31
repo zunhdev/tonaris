@@ -5,7 +5,9 @@
 // - the hint's artist, or its first artist, is a credited, artist or sort name;
 // - the year is the release's or its album's first;
 // - the release is official, of an album or an EP, or of a single when Apple's title says " - Single".
-// The track count is ignored: it never stopped a wrong match, and bonus tracks cost right ones.
+// The track count is ignored: it never stopped a wrong match, and bonus tracks cost right ones. YouTube Music's hints
+// are the exception (TON-131): an album playlist's count must be a passing release's, so an EP of the album's name
+// isn't taken for it, as the spike's one error was (TON-128).
 
 import { z } from "zod";
 
@@ -13,8 +15,11 @@ import { searchKey } from "@tonaris/domain";
 
 import type { MusicBrainz } from "./musicbrainz";
 
-/** What a store says about an album. `date` is `YYYY-MM-DD`, or coarser. */
-export type Hints = { title: string; artist: string; date: string };
+/**
+ * What a store says about an album. `date` is `YYYY-MM-DD`, or coarser. `tracks`, which only YouTube's hints carry,
+ * must be a passing release's track count.
+ */
+export type Hints = { title: string; artist: string; date: string; tracks?: number };
 
 /** A MusicBrainz release the search found, with what the rule compares. */
 export type Candidate = {
@@ -25,6 +30,7 @@ export type Candidate = {
   artistNames: string[];
   date?: string | undefined;
   status?: string | undefined;
+  trackCount?: number | undefined;
   releaseGroupId: string;
   releaseGroupTitle: string;
   primaryType?: string | undefined;
@@ -92,6 +98,7 @@ export function passes(hints: Hints, candidate: Candidate): boolean {
   if (!names.has(looseKey(hints.artist)) && !names.has(looseKey(firstArtist(hints.artist)))) {
     return false;
   }
+  if (hints.tracks !== undefined && candidate.trackCount !== hints.tracks) return false;
   const hinted = year(hints.date);
   return year(candidate.date) === hinted || year(candidate.firstReleaseDate) === hinted;
 }
@@ -119,6 +126,7 @@ const releaseSearchSchema = z.object({
         title: z.string(),
         date: z.string().optional(),
         status: z.string().nullish(),
+        "track-count": z.number().optional(),
         "artist-credit": z
           .array(
             z.object({
@@ -193,6 +201,7 @@ export async function searchCandidates(
       ),
       date: release.date || undefined,
       status: release.status ?? undefined,
+      trackCount: release["track-count"],
       releaseGroupId: release["release-group"].id,
       releaseGroupTitle: release["release-group"].title,
       primaryType: release["release-group"]["primary-type"] ?? undefined,

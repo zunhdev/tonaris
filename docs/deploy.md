@@ -73,6 +73,7 @@ The API writes every deletion-class event here as it happens: account deletions,
    | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | api | From step 2 |
    | `SENTRY_DSN` | api, web | Each project's DSN ([monitoring](runbooks/monitoring.md)), or leave empty |
    | `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` | api | The Spotify app's, as in your local `.env`, or leave empty: Spotify links then use MusicBrainz alone |
+   | `YOUTUBE_API_KEY` | api | A YouTube Data API v3 key from the Google account used only for Tonaris ([YouTube Music](#youtube-music)), or leave empty: YouTube Music links then use MusicBrainz alone |
 
    Everything else is in `render.yaml`. `BETTER_AUTH_SECRET` is generated once and kept; changing it signs everyone out and breaks every share link.
 4. Select **Deploy Blueprint**. Render creates `tonaris-db`, then builds both services from their Dockerfiles. This takes about 5–10 minutes:
@@ -173,6 +174,20 @@ Tonaris sends email through [Resend](https://resend.com) (TS-72): sign-in and jo
 **To check it** after a deploy, sign in as the creator: the code arrives from `no-reply@mail.tonaris.app`. Resend's [Emails](https://resend.com/emails) page lists each email and whether it was delivered.
 
 **Limits:** Resend's free plan sends 3,000 emails a month, at most 100 a day. Past that, Resend refuses, and Tonaris records the email as failed. An invitation's owner can send it again from its sharing dialog.
+
+## YouTube Music
+
+YouTube Music links are identified by MusicBrainz and, with `YOUTUBE_API_KEY`, by hints from the YouTube Data API (TS-41). The key belongs to a **Google account used only for Tonaris**, never a personal one: enforcement over API use would then reach only Tonaris (TS-105). Tonaris's is `dev@tonaris.app`, a Google account made with that address instead of Gmail; Cloudflare Email Routing forwards the address to the creator's inbox.
+
+**Once, signed in to that account in its own browser profile:**
+
+1. In the [Google Cloud console](https://console.cloud.google.com), create a project, such as `tonaris`. YouTube's API needs no billing account.
+2. In **APIs & Services** → **Library**, open **YouTube Data API v3** and select **Enable**.
+3. In **APIs & Services** → **Credentials**, select **Create credentials** → **API key**. Under API restrictions, choose **YouTube Data API v3**, then create it. The key becomes `YOUTUBE_API_KEY` on the API service.
+
+**To check it** after a deploy, add a YouTube Music album link that MusicBrainz doesn't know by URL: it's identified instead of asking for details. The [API's metrics](https://console.cloud.google.com/apis/api/youtube.googleapis.com/metrics) show the reads.
+
+**Limits:** 10,000 units a day; each link takes 3, so about 3,300 links a day. Past that, or with a key that stops working, the API logs "The YouTube Data API refused a read" and YouTube Music links ask for details until the quota resets at midnight Pacific time. More quota needs YouTube's audit.
 
 ## Things to get right
 

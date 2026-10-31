@@ -33,6 +33,7 @@ const ids = {
   flaky: "4d5e6f70-8192-4a3b-8c4d-f5a6b7c8d9e0",
   down: "5e6f7081-92a3-4b4c-9d5e-a6b7c8d9e0f1",
   killEmAll: "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
+  brightFuture: "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
 };
 
 /** The links the tests paste, as people would. */
@@ -43,6 +44,8 @@ export const fixtureLinks = {
   nevermindApple: "https://music.apple.com/us/album/nevermind/1440783617",
   inUteroQobuz: "https://open.qobuz.com/album/0060253780880",
   holyDiverTidal: "https://tidal.com/album/77654321",
+  brightFutureYouTube:
+    "https://music.youtube.com/watch?v=00000000001&list=OLAK5uy_000000000000000000000000000000001",
   tidalTrack: "https://tidal.com/track/12345678",
   idealApple: "https://music.apple.com/us/album/1000000001",
   ambiguousApple: "https://music.apple.com/us/album/1000000002",
@@ -76,6 +79,7 @@ const identifications: Record<string, (link: ParsedLink) => Identification> = {
   [keyOfInput(fixtureLinks.nevermindApple)]: identified(ids.nevermind),
   [keyOfInput(fixtureLinks.inUteroQobuz)]: identified(ids.inUtero),
   [keyOfInput(fixtureLinks.holyDiverTidal)]: identified(ids.holyDiver),
+  [keyOfInput(fixtureLinks.brightFutureYouTube)]: identified(ids.brightFuture),
   [keyOfInput(fixtureLinks.undatedQobuz)]: identified(ids.undated),
   [keyOfInput(fixtureLinks.slowSpotify)]: identified(ids.masterOfReality),
   [keyOfInput(fixtureLinks.flakySpotify)]: identified(ids.flaky),
@@ -132,6 +136,7 @@ const facts: Record<string, AlbumFacts> = {
   [ids.nevermind]: found(ids.nevermind, album("Nevermind", "Nirvana", 1991)),
   [ids.inUtero]: found(ids.inUtero, album("In Utero", "Nirvana", 1993)),
   [ids.holyDiver]: found(ids.holyDiver, album("Holy Diver", "Dio", 1983)),
+  [ids.brightFuture]: found(ids.brightFuture, album("Bright Future", "Adrianne Lenker", 2024)),
   [ids.lastInLine]: found(ids.lastInLine, album("The Last in Line", "Dio", 1984)),
   [ids.masterOfReality]: found(
     ids.masterOfReality,

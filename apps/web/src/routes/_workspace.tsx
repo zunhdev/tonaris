@@ -1,14 +1,16 @@
 // The signed-in workspace (TS-03): client-only. Every route below this pathless layout inherits `ssr: false`,
 // so the server sends just the document and the browser renders the shell and loads the collection once, through
 // the sync client (src/features/sync), with what it says about saving around it.
-// It needs a session (FR-11.1): a signed-out visit goes to sign-in and comes back here afterwards. Each collection
-// view visited is remembered on the device, for `/` (DS-32), and each folder, list and album opened, for the
-// palette's Recent (DS-75).
+// It needs a session (FR-11.1): a signed-out visit goes to sign-in and comes back here afterwards. A member who hasn't
+// agreed to the current terms sees the agreement screen instead, and nothing of the collection loads until they do
+// (TON-131). Each collection view visited is remembered on the device, for `/` (DS-32), and each folder, list and
+// album opened, for the palette's Recent (DS-75).
 
 import { currentAccount } from "@/features/account/session";
 import { CaptureProvider } from "@/features/capture/capture-context";
 import { CollectionUiProvider } from "@/features/collection/collection-ui";
 import { CollectionDataProvider } from "@/features/collection/data";
+import { TermsScreen } from "@/features/legal/terms-screen";
 import { OpenInProvider } from "@/features/open/open-in";
 import { SharedEntriesProvider } from "@/features/sharing/shared-entries";
 import { lastView, openedItems, recentItems } from "@/features/shell/device";
@@ -47,6 +49,7 @@ function WorkspaceLayout() {
     () => recentItems.record(account.id, openedItems(pathname, album)),
     [account.id, pathname, album],
   );
+  if (!account.termsAgreed) return <TermsScreen account={account} />;
   return (
     <SyncProvider account={account}>
       <CollectionUiProvider accountId={account.id}>

@@ -178,7 +178,8 @@ export type Admission =
 
 /**
  * Admits the person invited by `invitationId` on the caller's transaction (TS-71), so the caller can open their
- * session in it too: creates their account and redeems the invitation, or refuses and changes nothing.
+ * session in it too: creates their account, agreed to `termsVersion` since joining says so (TON-131), and redeems the
+ * invitation, or refuses and changes nothing.
  *
  * The locks make it safe against every concurrent change. The service state is locked for share, so a pause waits
  * for admissions in flight, and an admission after a pause sees it. The invitation is locked for update, so of
@@ -186,7 +187,12 @@ export type Admission =
  */
 export async function admitAccount(
   tx: Transaction,
-  { invitationId, userId, now = new Date() }: { invitationId: string; userId: string; now?: Date },
+  {
+    invitationId,
+    userId,
+    termsVersion,
+    now = new Date(),
+  }: { invitationId: string; userId: string; termsVersion: string; now?: Date },
 ): Promise<Admission> {
   const [state] = await tx
     .select({ paused: serviceState.admissionsPaused })
@@ -211,7 +217,13 @@ export async function admitAccount(
   if (existing) return { admitted: false, refusal: "registered" };
 
   // Verified: the caller checked the code sent to this address. The display name stays unset (FR-11.3).
-  await tx.insert(users).values({ id: userId, email: invitation.emailKey, emailVerified: true });
+  await tx.insert(users).values({
+    id: userId,
+    email: invitation.emailKey,
+    emailVerified: true,
+    termsVersion,
+    termsAgreedAt: now,
+  });
   await tx
     .update(admissionInvitations)
     .set({ status: "redeemed", redeemedBy: userId, redeemedAt: now })

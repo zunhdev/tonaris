@@ -56,7 +56,7 @@ This document is the source of truth for Tonaris's purpose, scope, user-visible 
 | Capability | Requirements |
 | --- | --- |
 | Lists, nested folders, Unsorted, 30-day Trash | FR-01, FR-14 |
-| Link capture from Spotify, Apple Music, Qobuz, and Tidal with metadata enrichment; manual entry | FR-02 |
+| Link capture from Spotify, Apple Music, Qobuz, Tidal, and YouTube Music with metadata enrichment; manual entry | FR-02 |
 | Editable metadata, chronology, optional custom fields | FR-03 |
 | Viewing and editing modes; sorting, manual order, release-type grouping | FR-04, FR-05 |
 | Streaming-service links that open the external app | FR-06 |
@@ -261,7 +261,7 @@ The rule applies to creation, renaming, moves, and recovery.
 
 ### FR-02 — Capture: links and manual entry
 
-**FR-02.1 Link capture.** A user pastes a Spotify, Apple Music, Qobuz, or Tidal album link into a list or without one (FR-02.2). Common share-link variants are supported. Tonaris identifies the album behind the link (FR-02.12) and populates the available metadata automatically from permitted sources (G1): title, artist credit, artwork, source service and link, and available release information. Missing information stays unknown.
+**FR-02.1 Link capture.** A user pastes a Spotify, Apple Music, Qobuz, Tidal, or YouTube Music album link into a list or without one (FR-02.2). Common share-link variants are supported. Tonaris identifies the album behind the link (FR-02.12) and populates the available metadata automatically from permitted sources (G1): title, artist credit, artwork, source service and link, and available release information. Missing information stays unknown.
 
 **FR-02.2 Capture without a list.** Link capture, manual entry, and MCP additions may omit a destination list, and a new unlisted album appears in Unsorted. The same information, enrichment, matching, capacity, and outcome rules apply.
 
@@ -271,6 +271,7 @@ The rule applies to creation, renaming, moves, and recovery.
 **FR-02.3 Track links.** A track link resolves to the album of the release that specific link belongs to. For example, a track linked from a compilation adds that compilation, not some other album containing the song. A track from a single adds the single, which is Unclassified (FR-05.9; decided 19 October 2026). Only that album is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
 
 - Tidal and Qobuz track links name no album Tonaris may look up (G1). Such a link is explained, and manual entry opens with the link kept as the album's link for that service (decided 20 October 2026 for Tidal, 24 October 2026 for Qobuz).
+- A YouTube Music track link names its album's playlist, which is what's identified and kept as the album's link (TON-131).
 
 **FR-02.4 Manual entry.** A regular form adds an album without a lookup.
 
@@ -619,7 +620,7 @@ An approval never elevates a Read-only connection or enables an app-only operati
 
 Batch size alone never triggers confirmation.
 
-**FR-10.5 Agents supply links.** Client agents find links with their own capabilities and submit them. MCP applies the FR-02 rules and never discovers links (FR-06.7). To identify a Qobuz or Tidal link an agent adds, Tonaris doesn't read the store's page (G1). A link it can't identify comes back asking the agent for the required information (FR-02.6), with the link kept. The details the agent then sends are matched as a store page's would be: when exactly one album fits their title, artist and original year, the album is saved as that album, keeping the agent's values and filling the rest, artwork included (FR-03.3). Otherwise it is saved as entered (decided 30 October 2026, TON-111).
+**FR-10.5 Agents supply links.** Client agents find links with their own capabilities and submit them. MCP applies the FR-02 rules and never discovers links (FR-06.7). To identify a Qobuz or Tidal link an agent adds, Tonaris doesn't read the store's page (G1); a YouTube Music link's hints come from YouTube's API, as for the app (TON-131). A link it can't identify comes back asking the agent for the required information (FR-02.6), with the link kept. The details the agent then sends are matched as a store page's would be: when exactly one album fits their title, artist and original year, the album is saved as that album, keeping the agent's values and filling the rest, artwork included (FR-03.3). Otherwise it is saved as entered (decided 30 October 2026, TON-111).
 
 **FR-10.6 Approval-gated operations.** These require explicit user approval before execution:
 
@@ -709,6 +710,8 @@ Other users' collections are untouched, and their references to the deleted cont
 **FR-11.12 Provider separation.** App authentication and streaming-account connection are separate, and signing in never connects a streaming account. Spotify or Apple authorization may be added where an agreed feature needs it. It does not imply extra catalog permissions or lift provider restrictions.
 
 **FR-11.13 Settings inventory.** Required settings are display name, sign-in email, viewing defaults, MCP connections (FR-10.3), data export (FR-08), and account deletion. The creator also has admission administration (FR-11.6).
+
+**FR-11.14 Terms of use and privacy notice.** Tonaris publishes terms of use and a privacy notice, public and always reachable: from the sign-in pages, shared pages, and the account menu. They name zunh.dev as who runs Tonaris, with the support address (decided 31 October 2026). As YouTube's Developer Policies require, the terms bind people to YouTube's Terms of Service, and the notice says Tonaris uses YouTube API Services and links Google's Privacy Policy. Joining says that continuing agrees to both, and the account records the version agreed to. A member who hasn't agreed to the current version, such as one who joined before, agrees on a one-time screen before reaching their collection, or signs out. YouTube's API is read only for members who agreed (TON-131).
 
 ### FR-12 — Search
 
@@ -888,7 +891,7 @@ The first version's results, with the evidence for each check and what waits for
 | AC-03 | Organize containers | Create root and nested lists and folders, and rename them without sibling collisions across types. Descriptions are editable, visible live to viewers, kept through moves and recovery, and not searched. | FR-01.1–FR-01.3, FR-03.5, FR-12.4 |
 | AC-04 | Move folders and lists | Moves keep identity, contents, descriptions, direct shares, and preferences without copying. Cycles, invalid destinations, and collisions are rejected with nothing changed. Inherited access updates. | FR-01.4–FR-01.5, FR-07.9 |
 | AC-05 | Reuse albums across lists | One album's metadata and fields are shared across lists. Re-adding keeps one entry and position. Removing the last membership keeps the album in counted, searchable Unsorted. | FR-01.6–FR-01.9, FR-15.2 |
-| AC-06 | Capture supplied links | Valid album links from all four services resolve. Track links add their actual parent release, except Tidal's and Qobuz's, which go to manual entry with the link kept (FR-02.3). Failures preserve input, explain the problem, and offer manual entry. | FR-02.1, FR-02.3, FR-02.5 |
+| AC-06 | Capture supplied links | Valid album links from all five services resolve. Track links add their actual parent release, except Tidal's and Qobuz's, which go to manual entry with the link kept (FR-02.3). Failures preserve input, explain the problem, and offer manual entry. | FR-02.1, FR-02.3, FR-02.5 |
 | AC-07 | Save without a list | Capture, manual entry, and MCP can omit a list. New unlisted albums appear in Unsorted, reused records keep memberships, and a matched trashed record reactivates with only the requested memberships. | FR-02.2, FR-14.4 |
 | AC-08 | Complete required information | Manual entry shows all fields and requires title, artist credit, and applicable year. The same minimum applies to capture, MCP, and edits. Incomplete input is preserved, never saved invalid or invented. | FR-02.4, FR-02.6 |
 | AC-09 | Identify and match albums | A link to any edition identifies the album, with its canonical title and original year. Confident matches reuse records, and uncertain matches wait unchanged while independent items proceed. | FR-02.9–FR-02.10, FR-02.12 |
@@ -1095,6 +1098,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (30 October 2026), Find artwork** (TON-112), from the creator's manual testing: owners can choose a cover the Cover Art Archive has for an album's title and artist, so an album MusicBrainz didn't match can still get artwork. Other services' covers stay out, as their terms require. **Updated** FR-03.4.
 - **Decision (30 October 2026), an agent's details** (TON-111), from the creator's manual testing: details an agent sends for a link no step identified are matched like a store page's hints, so the album gets its MusicBrainz values and artwork. The app's manual entry still adds an album without a lookup (FR-02.4). **Updated** FR-10.5.
 - **Decision (31 October 2026), YouTube Music** (TON-128), from the creator's manual testing: YouTube Music is a fifth launch service. Its links are identified by MusicBrainz's URL lookup, then by transient hints from the YouTube Data API, never from its pages, which YouTube's terms forbid reading automatically ([YouTube Music spike](spikes/2026-10-31-g1-youtube-music.md)). The API needs a key in production, and users must agree to a privacy notice that says Tonaris uses YouTube API Services. Built in TON-131. **Updated** section 2.5.
+- **Decisions (31 October 2026), terms of use and privacy notice** (TON-131): YouTube's Developer Policies require terms that bind users to YouTube's Terms of Service and a privacy notice users agree to, and Tonaris had neither. The creator chose to build both with YouTube Music; that the notice names zunh.dev; and that joining's "By continuing, you agree…" line plus a one-time screen for earlier members is the agreement. **Added** FR-11.14; **updated** FR-02.1, FR-02.3, FR-10.5 and AC-06.
 - **Decision (31 October 2026), your streaming services** (TON-138), from the creator's manual testing: each person turns services on or off in Settings, and the album panel and New album show link fields only for those that are on. Saved links always show. **Updated** FR-06.3.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);

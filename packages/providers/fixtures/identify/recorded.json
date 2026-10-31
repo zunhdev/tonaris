@@ -1072,6 +1072,86 @@
       ]
     }
   },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3A7d4238f4-ef11-39c8-af25-2ea9116115b5+OR+rgid%3A042bf6e1-0d47-4486-9b20-1bfad4214152&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 2,
+      "release-groups": [
+        {
+          "id": "7d4238f4-ef11-39c8-af25-2ea9116115b5",
+          "count": 4,
+          "title": "Natural",
+          "first-release-date": "1996-01-01",
+          "primary-type": "Album",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "9e2510e5-33e4-4807-b450-868d0d824e1e",
+              "title": "Natural",
+              "status": "Official"
+            },
+            {
+              "id": "b5001dc5-0e50-4230-bf42-c1e20c7d6c8d",
+              "title": "Natural",
+              "status": "Official"
+            },
+            {
+              "id": "0cd679d0-c274-4685-a86c-19c7ab0b4c84",
+              "title": "Natural",
+              "status": "Official"
+            },
+            {
+              "id": "62a8583a-f2e2-45ce-a222-f5a097409fb7",
+              "title": "Natural",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+          "count": 3,
+          "title": "Natural",
+          "first-release-date": "1997",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "9086aac4-3335-424d-9a82-78fe92ade07e",
+              "title": "Natural",
+              "status": "Official"
+            },
+            {
+              "id": "38136db3-db25-4eac-a7b9-3658ceb6d10d",
+              "title": "Natural"
+            },
+            {
+              "id": "f3fd9874-8835-4ac1-85b0-b984d2c576cb",
+              "title": "Natural",
+              "status": "Official"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "https://musicbrainz.org/ws/2/release-group?query=rgid%3A95959c5f-6011-4c20-b932-0a70b529e045&limit=100&fmt=json": {
     "status": 200,
     "body": {
@@ -3596,7 +3676,8 @@
             "primary-type": "Album"
           },
           "date": "2024-03-22",
-          "barcode": "191400064928"
+          "barcode": "191400064928",
+          "track-count": 12
         },
         {
           "id": "b4a95cda-b344-4d06-8f3b-63baafcd20ed",
@@ -3619,7 +3700,8 @@
             "primary-type": "Album"
           },
           "date": "2024-03-22",
-          "barcode": "191400064966"
+          "barcode": "191400064966",
+          "track-count": 12
         },
         {
           "id": "ab35a6ae-4d6f-42b3-a7df-3dbb6c6c4d72",
@@ -3642,7 +3724,8 @@
             "primary-type": "Album"
           },
           "date": "2024-03-22",
-          "barcode": "191400064959"
+          "barcode": "191400064959",
+          "track-count": 12
         },
         {
           "id": "0d5f067b-ca62-4a7c-950a-0af030c53df3",
@@ -3664,7 +3747,8 @@
             "title": "Bright Future",
             "primary-type": "Album"
           },
-          "date": "2024-03-22"
+          "date": "2024-03-22",
+          "track-count": 13
         },
         {
           "id": "69076af2-7eff-4800-bc7a-e410c6aa4474",
@@ -3686,7 +3770,8 @@
             "title": "Bright Future",
             "primary-type": "Album"
           },
-          "barcode": "0191400064911"
+          "barcode": "0191400064911",
+          "track-count": 12
         }
       ]
     }
@@ -5261,6 +5346,181 @@
           },
           "date": "1984",
           "barcode": ""
+        }
+      ]
+    }
+  },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Natural%22+AND+artist%3A%22Peter+Andre%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 7,
+      "releases": [
+        {
+          "id": "b5001dc5-0e50-4230-bf42-c1e20c7d6c8d",
+          "count": 1,
+          "title": "Natural",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "7d4238f4-ef11-39c8-af25-2ea9116115b5",
+            "title": "Natural",
+            "primary-type": "Album"
+          },
+          "date": "1996",
+          "barcode": "9399600200523",
+          "track-count": 12
+        },
+        {
+          "id": "62a8583a-f2e2-45ce-a222-f5a097409fb7",
+          "count": 1,
+          "title": "Natural",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "7d4238f4-ef11-39c8-af25-2ea9116115b5",
+            "title": "Natural",
+            "primary-type": "Album"
+          },
+          "date": "1996",
+          "barcode": "743214250723",
+          "track-count": 13
+        },
+        {
+          "id": "f3fd9874-8835-4ac1-85b0-b984d2c576cb",
+          "count": 1,
+          "title": "Natural",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+            "title": "Natural",
+            "primary-type": "EP"
+          },
+          "date": "1997",
+          "barcode": "9399600157704",
+          "track-count": 4
+        },
+        {
+          "id": "9e2510e5-33e4-4807-b450-868d0d824e1e",
+          "count": 1,
+          "title": "Natural",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "7d4238f4-ef11-39c8-af25-2ea9116115b5",
+            "title": "Natural",
+            "primary-type": "Album"
+          },
+          "date": "1996-01-01",
+          "barcode": "",
+          "track-count": 10
+        },
+        {
+          "id": "0cd679d0-c274-4685-a86c-19c7ab0b4c84",
+          "count": 1,
+          "title": "Natural",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "7d4238f4-ef11-39c8-af25-2ea9116115b5",
+            "title": "Natural",
+            "primary-type": "Album"
+          },
+          "date": "1996",
+          "barcode": "9399600200523",
+          "track-count": 12
+        },
+        {
+          "id": "38136db3-db25-4eac-a7b9-3658ceb6d10d",
+          "count": 1,
+          "title": "Natural",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+            "title": "Natural",
+            "primary-type": "EP"
+          },
+          "date": "1997",
+          "barcode": "743214607329",
+          "track-count": 4
+        },
+        {
+          "id": "9086aac4-3335-424d-9a82-78fe92ade07e",
+          "count": 1,
+          "title": "Natural",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Peter Andre",
+              "artist": {
+                "id": "090e9c0a-6767-49e0-8f51-84a43226a174",
+                "name": "Peter Andre",
+                "sort-name": "Andre, Peter"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+            "title": "Natural",
+            "primary-type": "EP"
+          },
+          "date": "1997",
+          "barcode": "9399600157728",
+          "track-count": 4
         }
       ]
     }
@@ -7526,6 +7786,22 @@
       }
     }
   },
+  "https://musicbrainz.org/ws/2/release/c3c6265a-a01a-4194-8e64-3933e3ad260e?inc=release-groups&fmt=json": {
+    "status": 200,
+    "body": {
+      "release-group": {
+        "title": "The End of the Beginning",
+        "primary-type": "Album",
+        "id": "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576",
+        "first-release-date": "2016-12-10"
+      },
+      "barcode": "5054960195233",
+      "id": "c3c6265a-a01a-4194-8e64-3933e3ad260e",
+      "date": "2016-12-10",
+      "title": "The End of the Beginning",
+      "status": "Official"
+    }
+  },
   "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.apple.com%2Ffi%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fus%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fgb%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fde%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Ffr%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fjp%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fca%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fau%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fnl%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fse%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fit%2Falbum%2F268443092&resource=https%3A%2F%2Fmusic.apple.com%2Fes%2Falbum%2F268443092&inc=release-rels+release-group-rels&fmt=json": {
     "status": 200,
     "body": {
@@ -7579,6 +7855,51 @@
     "body": {
       "url-count": 0,
       "urls": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000001&resource=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000001&resource=https%3A%2F%2Fyoutube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000001&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 0,
+      "urls": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000010&resource=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000010&resource=https%3A%2F%2Fyoutube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000010&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 0,
+      "urls": []
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000011&resource=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000011&resource=https%3A%2F%2Fyoutube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000011&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "urls": [],
+      "url-count": 0
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s&resource=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s&resource=https%3A%2F%2Fyoutube.com%2Fplaylist%3Flist%3DOLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 1,
+      "urls": [
+        {
+          "id": "ebeb92f5-ef94-4e4c-94b7-8c62218e5cba",
+          "relations": [
+            {
+              "release": {
+                "barcode": "5054960195233",
+                "status": null,
+                "id": "c3c6265a-a01a-4194-8e64-3933e3ad260e",
+                "date": "2016-12-10",
+                "title": "The End of the Beginning"
+              },
+              "target-type": "release"
+            }
+          ],
+          "resource": "https://www.youtube.com/playlist?list=OLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s"
+        }
+      ]
     }
   },
   "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fopen.qobuz.com%2Falbum%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Ffr-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fus-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fgb-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fde-de%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fit-it%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fes-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fnl-nl%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fbe-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fbe-nl%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fch-de%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fch-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fat-de%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Flu-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fie-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Ffi-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fse-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fdk-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fno-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fau-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fnz-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fca-en%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fca-fr%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fjp-ja%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fbr-pt%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fmx-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Far-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fcl-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fwww.qobuz.com%2Fco-es%2Falbum%2Fan-album-musicbrainz-lacks%2F0884977423006&resource=https%3A%2F%2Fplay.qobuz.com%2Falbum%2F0884977423006&inc=release-rels+release-group-rels&fmt=json": {

@@ -39,8 +39,9 @@ export function Promo() {
         </h2>
         {/* The size is spelled out: `text-input` names the `input` color token (TON-101). */}
         <p className="text-[0.875rem]/5 text-fg-secondary">
-          Paste a link from Spotify, Apple Music, Qobuz or Tidal, and Tonaris fills in the album
-          from MusicBrainz. Keep it in folders and lists, share it, and take it with you.
+          Paste a link from Spotify, Apple Music, Qobuz, Tidal or YouTube Music, and Tonaris fills
+          in the album from MusicBrainz. Keep it in folders and lists, share it, and take it with
+          you.
         </p>
       </div>
       <ul className="flex flex-col gap-4">

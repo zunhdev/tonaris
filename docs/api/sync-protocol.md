@@ -91,7 +91,7 @@ A client keeps one store per entity and applies each change by key:
 | `membership` | `<listId>:<albumId>` | `Membership` |
 | `field` | the field's ID | `CustomField`: `{id, name, type, options: [{id, label}]}` |
 | `fieldValue` | `<albumId>:<fieldId>` | `FieldValue`: `{albumId, fieldId, value}`, `value` null when applied-empty |
-| `link` | `<albumId>:<service>`, the service being `spotify`, `apple-music`, `qobuz` or `tidal` | `ServiceLink`: `{albumId, service, url}` |
+| `link` | `<albumId>:<service>`, the service being `spotify`, `apple-music`, `qobuz`, `tidal` or `youtube-music` (since TON-131) | `ServiceLink`: `{albumId, service, url}` |
 | `view` | the view key: `root`, `unsorted`, or a folder's or list's ID | `ViewPrefs` |
 | `defaults` | the account's ID | `ViewDefaults`, never `null` |
 | `position` | `<viewKey>:<itemId>` | `Position` |

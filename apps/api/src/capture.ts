@@ -6,6 +6,7 @@
 // has.
 
 import {
+  agreedToTerms,
   capturesSince,
   claimMutation,
   executeMutation,
@@ -33,6 +34,7 @@ import {
   type Principal,
   shareToken,
   shareTokenHash,
+  termsVersion,
 } from "@tonaris/domain";
 import {
   identificationOutcome,
@@ -126,6 +128,7 @@ export async function prepareCapture(
     const identification = await deps.identify(args.link, {
       agent: principal.kind === "mcp",
       linked: (service, entityId) => findLinkedAlbum(db, ownerId, service, entityId),
+      mayReadYouTube: () => agreedToTerms(db, ownerId, termsVersion),
     });
     if (identification.status === "failed") return { outcome: identification.failure };
     const { link: parsed } = identification;

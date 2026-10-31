@@ -131,6 +131,14 @@ test.describe("joining", () => {
     await guest.goto(link);
     await expect(guest.getByRole("heading", { name: "You're invited to Tonaris" })).toBeVisible();
     await expect(guest.getByText(`This invitation is for ${email}.`)).toBeVisible();
+    // Continuing agrees to the terms, which the account then records: no agreement screen follows (TON-131).
+    await expect(
+      guest.getByText("By continuing, you agree to the Terms of use and the Privacy notice."),
+    ).toBeVisible();
+    await expect(guest.getByRole("link", { name: "Privacy notice" })).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
     expect((await new AxeBuilder({ page: guest }).analyze()).violations).toEqual([]);
 
     await guest.getByRole("button", { name: "Continue" }).click();

@@ -1,6 +1,6 @@
-// The forms MusicBrainz may hold an identifier in (TS-41), measured by the G1 spikes (TON-14, TON-15, TON-100):
-// step 2 asks for every URL form of an album's link in one request, as editors paste links as they find them, and
-// step 3 asks for every barcode form of a UPC or EAN in one search.
+// The forms MusicBrainz may hold an identifier in (TS-41), measured by the G1 spikes (TON-14, TON-15, TON-100,
+// TON-128): step 2 asks for every URL form of an album's link in one request, as editors paste links as they find
+// them, and step 3 asks for every barcode form of a UPC or EAN in one search.
 
 import type { StreamingService } from "@tonaris/domain";
 
@@ -69,6 +69,12 @@ const forms: Record<StreamingService, (albumId: string, hints: FormHints) => str
     `https://tidal.com/browse/album/${albumId}`,
     `http://www.tidal.com/album/${albumId}`,
     `https://listen.tidal.com/album/${albumId}`,
+  ],
+  // MusicBrainz mostly stores www.youtube.com's form, sometimes music.youtube.com's.
+  "youtube-music": (albumId) => [
+    `https://music.youtube.com/playlist?list=${albumId}`,
+    `https://www.youtube.com/playlist?list=${albumId}`,
+    `https://youtube.com/playlist?list=${albumId}`,
   ],
 };
 

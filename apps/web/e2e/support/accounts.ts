@@ -91,6 +91,8 @@ export const accounts = {
   openKeys: at("open-keys"),
   openMobile: at("open-mobile"),
   openApp: at("open-app"),
+  // A member from before the terms existed (terms.e2e.ts): the e2e API leaves `unagreed-` accounts unagreed.
+  unagreed: at("unagreed-member"),
   openList: at("open-list"),
   // Artwork (artwork.e2e.ts), one per test.
   artworkShown: at("artwork-shown"),

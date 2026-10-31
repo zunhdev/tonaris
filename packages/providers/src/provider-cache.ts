@@ -42,7 +42,14 @@ export function memoryCache(): ProviderCache & {
 export class ProviderUnavailableError extends Error {
   override name = "ProviderUnavailableError";
   constructor(
-    readonly provider: "musicbrainz" | "coverartarchive" | "itunes" | "spotify" | "qobuz" | "tidal",
+    readonly provider:
+      | "musicbrainz"
+      | "coverartarchive"
+      | "itunes"
+      | "spotify"
+      | "qobuz"
+      | "tidal"
+      | "youtube",
     message: string,
     options?: ErrorOptions,
   ) {

@@ -1,7 +1,8 @@
 // `/join/:token` (DS-91): an admission invitation's landing. It shows the address the invitation is bound to;
 // Continue emails a code there, and the code, typed or through the email's link, creates the account and signs
-// in. Then an optional display name, and the collection's first run. An invitation that can't be used gets its
-// one sentence and nothing else. Client-rendered: the lookup and the link's code need the browser (TS-71). The
+// in. Then an optional display name, and the collection's first run. Continuing agrees to the terms and the privacy
+// notice, as the page says, and the API records it (TON-131). An invitation that can't be used gets its one sentence
+// and nothing else. Client-rendered: the lookup and the link's code need the browser (TS-71). The
 // URL carries the token, so the page sends no Referer (security/headers.ts).
 
 import {
@@ -16,7 +17,7 @@ import { forgetSignIn, pendingSignIn, rememberSignIn } from "@/features/account/
 import { currentAccount, forgetAccount } from "@/features/account/session";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
 import { failureOf, sendNow } from "@/features/sharing/send";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { maxNameLength, signInCode } from "@tonaris/domain";
@@ -200,6 +201,7 @@ function Join({ email }: { email: string }) {
             Cancel
           </Button>
         </div>
+        <Agreement />
       </>
     );
   }
@@ -231,6 +233,7 @@ function Join({ email }: { email: string }) {
         <Button variant="primary" size="lg" disabled={busy} onClick={() => void sendCode(false)}>
           Continue
         </Button>
+        <Agreement />
       </>
     );
   }
@@ -262,6 +265,27 @@ function Join({ email }: { email: string }) {
         {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
       </Button>
     </>
+  );
+}
+
+/** What continuing means (TON-131): the API records the agreement when the code creates the account. */
+function Agreement() {
+  return (
+    <p className="text-small text-fg-secondary">
+      By continuing, you agree to the{" "}
+      <Link to="/terms" target="_blank" className="text-accent-solid underline underline-offset-4">
+        Terms of use
+      </Link>{" "}
+      and the{" "}
+      <Link
+        to="/privacy"
+        target="_blank"
+        className="text-accent-solid underline underline-offset-4"
+      >
+        Privacy notice
+      </Link>
+      .
+    </p>
   );
 }
 

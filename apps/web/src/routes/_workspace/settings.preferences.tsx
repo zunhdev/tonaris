@@ -167,7 +167,8 @@ function Preferences() {
           </Choice>
           <p className="text-small text-fg-secondary">
             App opens Spotify, Apple Music, Qobuz and Tidal links in their apps, on every device you
-            use. A link to a service whose app isn't installed won't open.
+            use. A link to a service whose app isn't installed won't open. YouTube Music has no
+            desktop app, so its links open the page.
           </p>
         </section>
 

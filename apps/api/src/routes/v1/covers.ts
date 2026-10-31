@@ -37,6 +37,7 @@ const unavailable: Record<ProviderUnavailableError["provider"], string> = {
   spotify: "Couldn't find artwork right now. Try again.",
   qobuz: "Couldn't find artwork right now. Try again.",
   tidal: "Couldn't find artwork right now. Try again.",
+  youtube: "Couldn't find artwork right now. Try again.",
 };
 
 export function coverRoutes(

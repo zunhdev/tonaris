@@ -45,6 +45,14 @@ describe("urlForms (TS-41 step 2)", () => {
       "https://listen.tidal.com/album/348182611",
     ]);
   });
+
+  test("YouTube Music: music.youtube.com's playlist, then www. and bare youtube.com's", () => {
+    expect(urlForms("youtube-music", "OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM")).toEqual([
+      "https://music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      "https://www.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      "https://youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+    ]);
+  });
 });
 
 describe("barcodeForms (TS-41 step 3)", () => {

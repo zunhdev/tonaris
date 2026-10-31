@@ -10,6 +10,7 @@ import { memoryCache } from "../../src/provider-cache";
 import type { SafeFetchInit } from "../../src/safe-fetch";
 import { Spotify } from "../../src/spotify";
 import { StorePages } from "../../src/store-pages";
+import { YouTubeData } from "../../src/youtube";
 
 /** An answer for a host that isn't recorded. A string body is sent as text, anything else as JSON. */
 export type Stub = { status: number; headers?: Record<string, string>; body?: unknown };
@@ -23,6 +24,8 @@ export type IdentifyCase = {
   linked?: Record<string, string>;
   /** Whether the Spotify bridge is on. */
   spotify: boolean;
+  /** Whether the owner agreed to the terms, so YouTube's API may be read for them; yes unless said. */
+  youtube?: boolean;
   /** Answers by URL, before any recording: Spotify, store pages, short links, and stand-ins for MusicBrainz. */
   stubs?: Record<string, Stub>;
 };
@@ -73,6 +76,7 @@ const musicBrainzFields = new Set([
   "barcode",
   "primary-type",
   "first-release-date",
+  "track-count",
   "artist-credit",
   "name",
   "joinphrase",
@@ -114,6 +118,7 @@ export type Source =
 /** The case's identifier, its cache and the requests it made, on a simulated clock unless recording. */
 export function harness(testCase: IdentifyCase, source: Source) {
   const requests: string[] = [];
+  const refused: { read: string; status: number; reason: string | undefined }[] = [];
   const cache = memoryCache();
   let clock = Date.UTC(2026, 9, 24, 12);
   const time =
@@ -154,15 +159,22 @@ export function harness(testCase: IdentifyCase, source: Source) {
     spotify: testCase.spotify
       ? new Spotify({ clientId: "test", clientSecret: "test", ...options })
       : undefined,
+    youtube: new YouTubeData({
+      apiKey: "test",
+      ...options,
+      onRefused: (read, status, reason) => refused.push({ read, status, reason }),
+    }),
     fetch,
   });
   return {
     cache,
     requests,
+    refused,
     identify: (): Promise<Identification> =>
       identify(testCase.input, {
         agent: testCase.agent ?? false,
         linked: async (service, entityId) => testCase.linked?.[`${service}:${entityId}`],
+        mayReadYouTube: async () => testCase.youtube ?? true,
       }),
     matchDetails,
   };

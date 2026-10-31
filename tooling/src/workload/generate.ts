@@ -432,7 +432,9 @@ function buildAlbums(b: Builder, count: number): Album[] {
 type Service = Insert<typeof albumServiceLinks>["service"];
 
 const base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-const services: readonly Service[] = ["spotify", "apple-music", "qobuz", "tidal"];
+// The services the measured workload was drawn with (TON-21); YouTube Music came later, and isn't drawn, so the same
+// seed still makes the same workload.
+const services = ["spotify", "apple-music", "qobuz", "tidal"] as const satisfies readonly Service[];
 
 /** The link the album was captured from, sometimes a second service's too (FR-06.2). */
 function addServiceLinks(b: Builder, rng: Random, album: Album, title: string): void {
@@ -453,7 +455,7 @@ function addServiceLinks(b: Builder, rng: Random, album: Album, title: string): 
 
 /** An album ID and URL in each service's own format (TS-40). */
 const serviceLink: Record<
-  Service,
+  (typeof services)[number],
   (rng: Random, title: string) => { entityId: string; url: string }
 > = {
   spotify: (rng) => {

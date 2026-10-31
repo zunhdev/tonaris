@@ -56,6 +56,15 @@ export {
   type StorePagesOptions,
 } from "./store-pages";
 export {
+  albumTitle,
+  descriptionDate,
+  topicArtist,
+  YouTubeData,
+  youtubeIntervalMs,
+  type YouTubeDataOptions,
+  type YouTubeHints,
+} from "./youtube";
+export {
   maxLinkLength,
   maxShortLinkHops,
   parseLink,

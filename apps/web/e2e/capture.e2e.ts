@@ -28,6 +28,9 @@ const links = {
   nevermindApple: "https://music.apple.com/us/album/nevermind/1440783617",
   inUteroQobuz: "https://open.qobuz.com/album/0060253780880",
   holyDiverTidal: "https://tidal.com/browse/album/77654321",
+  // A track in the album, as YouTube Music's player gives it: the album's playlist is the link kept.
+  brightFutureYouTube:
+    "https://music.youtube.com/watch?v=00000000001&list=OLAK5uy_000000000000000000000000000000001&si=x",
   tidalTrack: "https://tidal.com/track/12345678",
   idealApple: "https://music.apple.com/us/album/1000000001",
   ambiguousApple: "https://music.apple.com/us/album/1000000002",
@@ -111,13 +114,21 @@ test("album links of each service resolve into the list, pasted or added from th
   await expect(dialog.getByRole("combobox", { name: "List" })).toHaveValue(grunge.id);
   await dialog
     .getByRole("textbox", { name: "Links" })
-    .fill([links.nevermindApple, links.inUteroQobuz, links.holyDiverTidal].join("\n"));
+    .fill(
+      [
+        links.nevermindApple,
+        links.inUteroQobuz,
+        links.holyDiverTidal,
+        links.brightFutureYouTube,
+      ].join("\n"),
+    );
   await page.keyboard.press("Meta+Enter");
   await expect(dialog).toHaveCount(0);
   for (const [title, year] of [
     ["Nevermind", "1991"],
     ["In Utero", "1993"],
     ["Holy Diver", "1983"],
+    ["Bright Future", "2024"],
   ]) {
     // oxlint-disable-next-line no-await-in-loop
     await expect(rowOf(page, "Grunge", title ?? "")).toContainText(year ?? "");
@@ -228,7 +239,7 @@ test("a failure keeps its link across a reload and is entered manually with it; 
   await dialog.getByRole("textbox", { name: "Links" }).fill("Not a link at all");
   await dialog.getByRole("button", { name: "Add" }).click();
   await expect(captureRow(page, "Not a link at all")).toContainText(
-    "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.",
+    "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link.",
   );
   await captureRow(page, "Not a link at all").getByRole("button", { name: "Dismiss" }).click();
   await expect(capturing(page)).toHaveCount(0);

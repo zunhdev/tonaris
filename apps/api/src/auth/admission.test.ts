@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import {
   admissionInvitations,
+  agreedToTerms,
   type Database,
   revokeAdmissionInvitation,
   sessions,
@@ -16,7 +17,7 @@ import {
   users,
   verifications,
 } from "@tonaris/db";
-import { accountSchema, admissionRefusalDetails } from "@tonaris/domain";
+import { accountSchema, admissionRefusalDetails, termsVersion } from "@tonaris/domain";
 
 import { createTestApp, inSequence, insertUser, inviteForTest, type SentEmail } from "../testing";
 
@@ -155,6 +156,7 @@ describe("joining with an invitation (FR-11.2, DS-91)", () => {
       email: "new.member@example.com",
       displayName: null,
       role: "user",
+      termsAgreed: true,
     });
 
     expect(await invitation(id)).toMatchObject({
@@ -341,6 +343,8 @@ describe("concurrent and repeated registrations (FR-11.6, FR-13.5)", () => {
     expect(joined.status).toBe(200);
     expect((await accountOf(joined)).id).toBe(memberId);
     expect(await accountsWith("member@example.com")).toHaveLength(1);
+    // Continuing on the join page agreed to the terms, as it says (TON-131).
+    expect(await agreedToTerms(t.db, memberId, termsVersion)).toBe(true);
     // The invitation stays as it was; revoking it is the creator's call.
     expect((await invitation(id)).status).toBe("available");
   });

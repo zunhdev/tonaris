@@ -4,7 +4,7 @@
 
 import { Elysia, NotFound } from "elysia";
 
-import { emailKey, type Account, type Principal } from "@tonaris/domain";
+import { emailKey, termsVersion, type Account, type Principal } from "@tonaris/domain";
 
 import { ProblemError } from "../problem";
 import { hasBearerToken } from "../security";
@@ -168,6 +168,7 @@ export function sessionGuard(auth: Auth) {
           email: user.email,
           displayName: user.name || null,
           role: user.role === "creator" ? "creator" : "user",
+          termsAgreed: user.termsVersion === termsVersion,
         };
         const principal: Principal = {
           kind: "user",

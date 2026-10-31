@@ -133,6 +133,8 @@ export function createAuth({
       fields: { name: "displayName" },
       additionalFields: {
         role: { type: [...userRoles], required: true, defaultValue: "user", input: false },
+        // The terms' version the person agreed to (TON-131), set only by joining and `POST /v1/me/terms`.
+        termsVersion: { type: "string", required: false, input: false },
       },
     },
     // Rolling sessions: each day of use moves the expiry to 30 days from then (TS-70).

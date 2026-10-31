@@ -6,7 +6,7 @@
 export const maxPastedLinks = 200;
 
 const schemeless =
-  /^(open\.spotify\.com|spotify\.link|spotify\.app\.link|(geo\.)?music\.apple\.com|(www\.|open\.|play\.)?qobuz\.com|(www\.|listen\.)?tidal\.com)\//i;
+  /^(open\.spotify\.com|spotify\.link|spotify\.app\.link|(geo\.)?music\.apple\.com|(www\.|open\.|play\.)?qobuz\.com|(www\.|listen\.)?tidal\.com|(music\.|www\.|m\.)?youtube\.com)\//i;
 
 /** Whether `line`, trimmed, looks like a link. */
 export function isLinkLike(line: string): boolean {

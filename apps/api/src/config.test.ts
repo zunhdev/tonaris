@@ -110,4 +110,10 @@ describe("apiConfig", () => {
     expect(apiConfig(credentials).spotify).toEqual({ clientId: "id", clientSecret: "secret" });
     expect(apiConfig({ ...credentials, SPOTIFY_BRIDGE: "off" }).spotify).toBeUndefined();
   });
+
+  test("reads the YouTube Data API key, and none when it's empty (TS-105)", () => {
+    expect(apiConfig({}).youtubeApiKey).toBeUndefined();
+    expect(apiConfig({ YOUTUBE_API_KEY: "" }).youtubeApiKey).toBeUndefined();
+    expect(apiConfig({ YOUTUBE_API_KEY: "key" }).youtubeApiKey).toBe("key");
+  });
 });

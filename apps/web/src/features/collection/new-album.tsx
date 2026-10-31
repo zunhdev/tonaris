@@ -76,6 +76,7 @@ const fieldNames: Record<FormField, string> = {
   "apple-music": "Apple Music link",
   qobuz: "Qobuz link",
   tidal: "Tidal link",
+  "youtube-music": "YouTube Music link",
 };
 
 /** The time an entry is made; the server records its own (TON-27). */

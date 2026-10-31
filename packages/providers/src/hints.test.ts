@@ -80,6 +80,14 @@ describe("passes", () => {
     expect(passes(ikra, candidate({ title: "Чёрная икра" }))).toBe(false);
     expect(passes({ ...ikra, artist: "Someone Else" }, candidate({}))).toBe(false);
   });
+
+  test("a track count is checked only when the hints carry one, as YouTube's do", () => {
+    expect(passes(ikra, candidate({ trackCount: 4 }))).toBe(true);
+    const playlist = { ...ikra, tracks: 12 };
+    expect(passes(playlist, candidate({ trackCount: 12 }))).toBe(true);
+    expect(passes(playlist, candidate({ trackCount: 4, primaryType: "EP" }))).toBe(false);
+    expect(passes(playlist, candidate({}))).toBe(false);
+  });
 });
 
 describe("decide", () => {

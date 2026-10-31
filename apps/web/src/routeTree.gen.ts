@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspaceRouteImport } from './routes/_workspace'
 import { Route as AccountDeletedRouteImport } from './routes/account-deleted'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WorkspaceIndexRouteImport } from './routes/_workspace/index'
 import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
 import { Route as WorkspaceTrashRouteImport } from './routes/_workspace/trash'
@@ -51,9 +53,19 @@ const AccountDeletedRoute = AccountDeletedRouteImport.update({
   path: '/account-deleted',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
@@ -214,7 +226,9 @@ const WorkspaceSharedContainerIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof WorkspaceIndexRoute
   '/account-deleted': typeof AccountDeletedRoute
+  '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRouteWithChildren
+  '/terms': typeof TermsRoute
   '/c': typeof WorkspaceCRoute
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
@@ -246,6 +260,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/account-deleted': typeof AccountDeletedRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/c': typeof WorkspaceCRoute
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
@@ -280,7 +296,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_workspace': typeof WorkspaceRouteWithChildren
   '/account-deleted': typeof AccountDeletedRoute
+  '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRouteWithChildren
+  '/terms': typeof TermsRoute
   '/_workspace/c': typeof WorkspaceCRoute
   '/_workspace/trash': typeof WorkspaceTrashRoute
   '/_workspace/unsorted': typeof WorkspaceUnsortedRoute
@@ -316,7 +334,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account-deleted'
+    | '/privacy'
     | '/sign-in'
+    | '/terms'
     | '/c'
     | '/trash'
     | '/unsorted'
@@ -348,6 +368,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/account-deleted'
+    | '/privacy'
+    | '/terms'
     | '/c'
     | '/trash'
     | '/unsorted'
@@ -381,7 +403,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_workspace'
     | '/account-deleted'
+    | '/privacy'
     | '/sign-in'
+    | '/terms'
     | '/_workspace/c'
     | '/_workspace/trash'
     | '/_workspace/unsorted'
@@ -416,7 +440,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
   AccountDeletedRoute: typeof AccountDeletedRoute
+  PrivacyRoute: typeof PrivacyRoute
   SignInRoute: typeof SignInRouteWithChildren
+  TermsRoute: typeof TermsRoute
   ApprovalsIdRoute: typeof ApprovalsIdRoute
   HelpRecoveryRoute: typeof HelpRecoveryRoute
   JoinTokenRoute: typeof JoinTokenRoute
@@ -442,11 +468,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountDeletedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sign-in': {
       id: '/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_workspace/': {
@@ -721,7 +761,9 @@ const SignInRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   WorkspaceRoute: WorkspaceRouteWithChildren,
   AccountDeletedRoute: AccountDeletedRoute,
+  PrivacyRoute: PrivacyRoute,
   SignInRoute: SignInRouteWithChildren,
+  TermsRoute: TermsRoute,
   ApprovalsIdRoute: ApprovalsIdRoute,
   HelpRecoveryRoute: HelpRecoveryRoute,
   JoinTokenRoute: JoinTokenRoute,

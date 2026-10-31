@@ -528,7 +528,7 @@ export function registerWriteTools(
     {
       title: "Add albums",
       description:
-        "Adds albums from links you found (Spotify, Apple Music, Qobuz or Tidal album links) or from their details, optionally into a list; otherwise they go to Unsorted. Tonaris never looks for links itself. A link may come back needs_input: need details, when Tonaris can't tell the album (send the item again with details, with what the user knows), or need match, when it fits more than one album: the user confirms which one, through confirm_match. An album the user already has is reused, not added twice.",
+        "Adds albums from links you found (Spotify, Apple Music, Qobuz, Tidal or YouTube Music album links) or from their details, optionally into a list; otherwise they go to Unsorted. Tonaris never looks for links itself. A link may come back needs_input: need details, when Tonaris can't tell the album (send the item again with details, with what the user knows), or need match, when it fits more than one album: the user confirms which one, through confirm_match. An album the user already has is reused, not added twice.",
       inputSchema: z.object({
         items: z
           .array(

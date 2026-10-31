@@ -134,13 +134,18 @@
                         "creator",
                         "user"
                       ]
+                    },
+                    "termsAgreed": {
+                      "type": "boolean",
+                      "description": "Whether the person agreed to the current terms of use and privacy notice (`termsVersion`). Until they do, the apps ask before anything else, and YouTube's API isn't read for them."
                     }
                   },
                   "required": [
                     "id",
                     "email",
                     "displayName",
-                    "role"
+                    "role",
+                    "termsAgreed"
                   ],
                   "additionalProperties": false,
                   "description": "The signed-in account."
@@ -149,6 +154,154 @@
             }
           },
           "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/terms": {
+      "post": {
+        "summary": "Agree to the terms of use and privacy notice",
+        "description": "Records that the person agreed to the version of `/terms` and `/privacy` they were shown. 422 `validation_failed` when that isn't the current version: the texts changed, so the person reads them again.",
+        "tags": [
+          "accounts"
+        ],
+        "operationId": "agreeToTerms",
+        "requestBody": {
+          "description": "An agreement to the terms of use and privacy notice.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "description": "The version the person agreed to."
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "description": "An agreement to the terms of use and privacy notice."
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "description": "The version the person agreed to."
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "description": "An agreement to the terms of use and privacy notice."
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "description": "The version the person agreed to."
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "description": "An agreement to the terms of use and privacy notice."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The signed-in account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "The sign-in email, as its email key."
+                    },
+                    "displayName": {
+                      "description": "The display name (FR-11.3); null until the person sets one.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "creator",
+                        "user"
+                      ]
+                    },
+                    "termsAgreed": {
+                      "type": "boolean",
+                      "description": "Whether the person agreed to the current terms of use and privacy notice (`termsVersion`). Until they do, the apps ask before anything else, and YouTube's API isn't read for them."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "role",
+                    "termsAgreed"
+                  ],
+                  "additionalProperties": false,
+                  "description": "The signed-in account."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
               "application/problem+json": {
@@ -6209,7 +6362,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           },
                           "url": {
@@ -6756,7 +6910,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           },
                           "url": {
@@ -8419,7 +8574,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           },
                           "url": {
@@ -8484,7 +8640,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           }
                         },
@@ -9262,7 +9419,8 @@
                                 "spotify",
                                 "apple-music",
                                 "qobuz",
-                                "tidal"
+                                "tidal",
+                                "youtube-music"
                               ]
                             }
                           }
@@ -9282,7 +9440,8 @@
                                 "spotify",
                                 "apple-music",
                                 "qobuz",
-                                "tidal"
+                                "tidal",
+                                "youtube-music"
                               ]
                             }
                           }
@@ -10733,7 +10892,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           },
                           "url": {
@@ -10798,7 +10958,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           }
                         },
@@ -11576,7 +11737,8 @@
                                 "spotify",
                                 "apple-music",
                                 "qobuz",
-                                "tidal"
+                                "tidal",
+                                "youtube-music"
                               ]
                             }
                           }
@@ -11596,7 +11758,8 @@
                                 "spotify",
                                 "apple-music",
                                 "qobuz",
-                                "tidal"
+                                "tidal",
+                                "youtube-music"
                               ]
                             }
                           }
@@ -13047,7 +13210,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           },
                           "url": {
@@ -13112,7 +13276,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           }
                         },
@@ -13890,7 +14055,8 @@
                                 "spotify",
                                 "apple-music",
                                 "qobuz",
-                                "tidal"
+                                "tidal",
+                                "youtube-music"
                               ]
                             }
                           }
@@ -13910,7 +14076,8 @@
                                 "spotify",
                                 "apple-music",
                                 "qobuz",
-                                "tidal"
+                                "tidal",
+                                "youtube-music"
                               ]
                             }
                           }
@@ -15309,7 +15476,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           },
                           "url": {
@@ -15612,7 +15780,8 @@
                               "spotify",
                               "apple-music",
                               "qobuz",
-                              "tidal"
+                              "tidal",
+                              "youtube-music"
                             ]
                           },
                           "description": "The streaming services the person turned off, in the services' order: their empty link fields stay out of sight, while saved links still show (TON-138). Empty until they choose."
@@ -16321,7 +16490,7 @@
               },
               "id": {
                 "type": "string",
-                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:(spotify|apple-music|qobuz|tidal)$",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:(spotify|apple-music|qobuz|tidal|youtube-music)$",
                 "description": "The album's ID and the service, joined by a colon."
               },
               "op": {
@@ -16348,7 +16517,8 @@
                           "spotify",
                           "apple-music",
                           "qobuz",
-                          "tidal"
+                          "tidal",
+                          "youtube-music"
                         ]
                       },
                       "url": {
@@ -17182,7 +17352,8 @@
                         "spotify",
                         "apple-music",
                         "qobuz",
-                        "tidal"
+                        "tidal",
+                        "youtube-music"
                       ]
                     },
                     "description": "The streaming services the person turned off, in the services' order: their empty link fields stay out of sight, while saved links still show (TON-138). Empty until they choose."
@@ -18832,7 +19003,8 @@
                           "spotify",
                           "apple-music",
                           "qobuz",
-                          "tidal"
+                          "tidal",
+                          "youtube-music"
                         ]
                       },
                       "url": {
@@ -18900,7 +19072,8 @@
                           "spotify",
                           "apple-music",
                           "qobuz",
-                          "tidal"
+                          "tidal",
+                          "youtube-music"
                         ]
                       }
                     },
@@ -19734,7 +19907,8 @@
                             "spotify",
                             "apple-music",
                             "qobuz",
-                            "tidal"
+                            "tidal",
+                            "youtube-music"
                           ]
                         }
                       }
@@ -19755,7 +19929,8 @@
                             "spotify",
                             "apple-music",
                             "qobuz",
-                            "tidal"
+                            "tidal",
+                            "youtube-music"
                           ]
                         }
                       }
