@@ -88,6 +88,7 @@ import {
 } from "./trash";
 import {
   setDefaults,
+  setHiddenServices,
   setLinkTarget,
   setView,
   type AccountDefaults,
@@ -407,6 +408,9 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   if (mutation.name === "order.set") return setOrder(mutation.args, mutation.base, context);
   if (mutation.name === "defaults.setLinkTarget") {
     return setLinkTarget(mutation.args, mutation.base, context);
+  }
+  if (mutation.name === "defaults.setHiddenServices") {
+    return setHiddenServices(mutation.args, mutation.base, context);
   }
   return setDefaults(mutation.args, mutation.base, context);
 }

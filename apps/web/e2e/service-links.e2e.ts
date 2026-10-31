@@ -1,7 +1,8 @@
 // Service links in a real browser (FR-06.2, FR-06.3; DS-46, DS-47): the inspector shows an album's links, each
 // opening its page; in Editing mode it adds, replaces and removes them, refusing another service's link at the field,
-// with Undo for a removal; and manual entry saves an album with its links, refusing a wrong one in its summary. Each
-// test signs in with its own account.
+// with Undo for a removal; and manual entry saves an album with its links, refusing a wrong one in its summary. The
+// services turned off in Settings leave the panel's and the form's empty fields, while saved links stay (TON-138).
+// Each test signs in with its own account.
 
 import { expect, test, type Page } from "@playwright/test";
 
@@ -129,4 +130,58 @@ test("manual entry saves an album with its links, and refuses another service's 
     "href",
     bleach,
   );
+});
+
+test("the services turned off in Settings leave the panel and New album, while saved links stay", async ({
+  page,
+}) => {
+  await signIn(page, accounts.linksChosen);
+  await live(page);
+  const grunge = await created(page, "Grunge");
+  const record = album("Bleach", { artistCredit: "Nirvana", originalYear: 1989 });
+  await added(page, [record], grunge.id);
+  await page.evaluate(
+    async ({ albumId }) => {
+      await window.tonarisSync?.links.insert({
+        albumId,
+        service: "tidal",
+        url: "https://tidal.com/album/1663133",
+      }).isPersisted.promise;
+    },
+    { albumId: record.id },
+  );
+
+  // Settings → Preferences: every service starts on; Qobuz and Tidal go off.
+  await page.goto("/settings/preferences");
+  await live(page);
+  const services = page.getByRole("region", { name: "Streaming services" });
+  for (const name of ["Spotify", "Apple Music", "Qobuz", "Tidal"]) {
+    // oxlint-disable-next-line no-await-in-loop
+    await expect(services.getByRole("switch", { name })).toBeChecked();
+  }
+  await services.getByRole("switch", { name: "Qobuz" }).click();
+  await services.getByRole("switch", { name: "Tidal" }).click();
+  await expect(services.getByRole("switch", { name: "Tidal" })).not.toBeChecked();
+  await saved(page);
+
+  // After a reload, the panel in Editing offers Spotify and Apple Music, and keeps the saved Tidal link.
+  await page.goto(`/l/${grunge.id}?album=${record.id}`);
+  await live(page);
+  await page.keyboard.press("e");
+  await expect(links(page).getByRole("button", { name: "Add Spotify link" })).toBeVisible();
+  await expect(links(page).getByRole("button", { name: "Add Apple Music link" })).toBeVisible();
+  await expect(links(page).getByRole("button", { name: "Add Qobuz link" })).toHaveCount(0);
+  await expect(links(page).getByRole("link", { name: "Open in Tidal" })).toBeVisible();
+
+  // New album shows link fields only for the services that are on.
+  await page.keyboard.press("Escape");
+  await page.getByRole("main").getByRole("button", { name: "Add album" }).click();
+  await page
+    .getByRole("dialog", { name: "Add albums" })
+    .getByRole("button", { name: "Enter manually" })
+    .click();
+  const form = page.getByRole("dialog", { name: "New album" });
+  await expect(form.getByRole("textbox", { name: "Spotify link" })).toBeVisible();
+  await expect(form.getByRole("textbox", { name: "Apple Music link" })).toBeVisible();
+  await expect(form.getByRole("textbox", { name: /Qobuz|Tidal/ })).toHaveCount(0);
 });

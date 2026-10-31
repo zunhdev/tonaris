@@ -8,6 +8,7 @@ import { fieldTypeNames } from "@/features/collection/field-types";
 
 import {
   serviceNames,
+  streamingServices,
   type Container,
   type ContainerKind,
   type ErrorCode,
@@ -320,6 +321,13 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
       subject: "Where your links open",
     };
   }
+  if (mutation.name === "defaults.setHiddenServices") {
+    return {
+      summary: "Your streaming services",
+      what: "your streaming services",
+      subject: "Your streaming services",
+    };
+  }
   if (mutation.name === "link.set" || mutation.name === "link.remove") {
     const title = quoted(names.album(mutation.args.albumId), "an album");
     const link = `the ${serviceNames[mutation.args.service]} link`;
@@ -436,6 +444,7 @@ const fieldLabels: Record<string, string> = {
   folderSortMode: "Sort for folders",
   folderSortDir: "Direction for folders",
   linkTarget: "Open links in",
+  hiddenServices: "Streaming services",
 };
 
 /** A conflicting field's name in the review (DS-80): an item's place is named by the item. */
@@ -497,6 +506,13 @@ export function fieldValue(
     return typeof value === "string" ? (presentationValues[value] ?? value) : "—";
   }
   if (field === "linkTarget") return value === "app" ? "App" : "Web page";
+  // The services turned off, named; none off means all on (TON-138).
+  if (field === "hiddenServices" && Array.isArray(value)) {
+    const off = streamingServices
+      .filter((service) => value.includes(service))
+      .map((service) => serviceNames[service]);
+    return off.length === 0 ? "All on" : `Off: ${off.join(", ")}`;
+  }
   if (field === "parentId") {
     if (value === null) return "Collection";
     return (typeof value === "string" && names.container(value)?.name) || "A folder no longer here";

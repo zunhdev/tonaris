@@ -10,6 +10,7 @@ import {
   listSortModes,
   sortDirections,
   sortModes,
+  streamingServices,
   viewLayouts,
 } from "@tonaris/domain";
 
@@ -60,11 +61,20 @@ export const accountSettings = table(
     grouped: boolean().notNull(),
     layout: text({ enum: viewLayouts }).notNull(),
     linkTarget: text({ enum: linkTargets }).notNull().default("web"),
+    /** The streaming services the person turned off (TON-138); empty means all are on, new ones included. */
+    hiddenServices: text({ enum: streamingServices })
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     ...timestamps,
   },
   (t) => [
     check("account_settings_list_sort_mode_check", oneOf(t.listSortMode, listSortModes)),
     check("account_settings_link_target_check", oneOf(t.linkTarget, linkTargets)),
+    check(
+      "account_settings_hidden_services_check",
+      sql`${t.hiddenServices} <@ array[${sql.raw(streamingServices.map((each) => `'${each}'`).join(", "))}]::text[]`,
+    ),
     check("account_settings_list_sort_dir_check", oneOf(t.listSortDir, sortDirections)),
     check("account_settings_folder_sort_mode_check", oneOf(t.folderSortMode, folderSortModes)),
     check("account_settings_folder_sort_dir_check", oneOf(t.folderSortDir, sortDirections)),

@@ -1,0 +1,2 @@
+ALTER TABLE "account_settings" ADD COLUMN "hidden_services" text[] DEFAULT '{}'::text[] NOT NULL;--> statement-breakpoint
+ALTER TABLE "account_settings" ADD CONSTRAINT "account_settings_hidden_services_check" CHECK ("hidden_services" <@ array['spotify', 'apple-music', 'qobuz', 'tidal']::text[]);

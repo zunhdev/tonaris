@@ -74,6 +74,7 @@ export const accounts = {
   // Service links (service-links.e2e.ts), one per test.
   linksInspector: at("links-inspector"),
   linksEntry: at("links-entry"),
+  linksChosen: at("links-chosen"),
   // Capture (capture.e2e.ts), one per test.
   captureList: at("capture-list"),
   captureRoot: at("capture-root"),

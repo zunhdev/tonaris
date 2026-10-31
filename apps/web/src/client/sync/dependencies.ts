@@ -73,6 +73,7 @@ function referenced(mutation: Mutation): (string | null)[] {
   if (
     mutation.name === "defaults.set" ||
     mutation.name === "defaults.setLinkTarget" ||
+    mutation.name === "defaults.setHiddenServices" ||
     mutation.name === "account.setDisplayName"
   ) {
     return [];

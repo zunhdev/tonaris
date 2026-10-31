@@ -340,6 +340,17 @@ export const defaultsSetLinkTargetSchema = z.object({
 });
 
 /**
+ * `defaults.setHiddenServices`: sets the streaming services the person turned off, whose empty link fields stay out
+ * of sight (TON-138); `base` holds the prior list (TS-21).
+ */
+export const defaultsSetHiddenServicesSchema = z.object({
+  mutationId,
+  name: z.literal("defaults.setHiddenServices"),
+  args: z.object({ hiddenServices: z.array(z.enum(streamingServices)) }),
+  base: z.object({ hiddenServices: z.array(z.enum(streamingServices)) }),
+});
+
+/**
  * `order.set`: places items in one of the person's views, as one move (TS-16, FR-05.2). `keys` maps each item's ID to
  * its new fractional-index key, or null to clear its place; `base` maps each to its key before, null for none
  * (TS-21). Every item must be in the view.
@@ -477,6 +488,7 @@ export const mutationSchema = z
     shareSaveLinkSchema,
     shareRemoveReferenceSchema,
     defaultsSetLinkTargetSchema,
+    defaultsSetHiddenServicesSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

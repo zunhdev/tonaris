@@ -9237,6 +9237,67 @@
                       "args",
                       "base"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setHiddenServices"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "hiddenServices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "hiddenServices"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "hiddenServices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "hiddenServices"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -11490,6 +11551,67 @@
                       "args",
                       "base"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setHiddenServices"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "hiddenServices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "hiddenServices"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "hiddenServices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "hiddenServices"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -13734,6 +13856,67 @@
                         },
                         "required": [
                           "linkTarget"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setHiddenServices"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "hiddenServices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "hiddenServices"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "hiddenServices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "hiddenServices"
                         ]
                       }
                     },
@@ -15420,6 +15603,19 @@
                             "app"
                           ],
                           "description": "Where service links open: `web`, the canonical page, or `app`, the service's app (FR-06.6)."
+                        },
+                        "hiddenServices": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal"
+                            ]
+                          },
+                          "description": "The streaming services the person turned off, in the services' order: their empty link fields stay out of sight, while saved links still show (TON-138). Empty until they choose."
                         }
                       },
                       "required": [
@@ -15429,7 +15625,8 @@
                         "folderSortDir",
                         "grouped",
                         "layout",
-                        "linkTarget"
+                        "linkTarget",
+                        "hiddenServices"
                       ],
                       "additionalProperties": false,
                       "description": "The person's account defaults, DS-44's until they save their own, and where their links open."
@@ -16976,6 +17173,19 @@
                       "app"
                     ],
                     "description": "Where service links open: `web`, the canonical page, or `app`, the service's app (FR-06.6)."
+                  },
+                  "hiddenServices": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "spotify",
+                        "apple-music",
+                        "qobuz",
+                        "tidal"
+                      ]
+                    },
+                    "description": "The streaming services the person turned off, in the services' order: their empty link fields stay out of sight, while saved links still show (TON-138). Empty until they choose."
                   }
                 },
                 "required": [
@@ -16985,10 +17195,11 @@
                   "folderSortDir",
                   "grouped",
                   "layout",
-                  "linkTarget"
+                  "linkTarget",
+                  "hiddenServices"
                 ],
                 "additionalProperties": false,
-                "description": "A person's account defaults for presentation (FR-11.7), and where their service links open (FR-06.6)."
+                "description": "A person's account defaults for presentation (FR-11.7), where their service links open (FR-06.6), and the services they don't use (TON-138)."
               },
               "mutationId": {
                 "anyOf": [
@@ -19487,6 +19698,70 @@
                     },
                     "required": [
                       "linkTarget"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "defaults.setHiddenServices"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "hiddenServices": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "spotify",
+                            "apple-music",
+                            "qobuz",
+                            "tidal"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "hiddenServices"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "hiddenServices": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "spotify",
+                            "apple-music",
+                            "qobuz",
+                            "tidal"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "hiddenServices"
                     ],
                     "additionalProperties": false
                   }

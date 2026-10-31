@@ -410,6 +410,15 @@ function remake(
     planned.defaultsUpdate.linkTarget = mutation.args.linkTarget;
     return planned.needs("defaults.update");
   }
+  if (mutation.name === "defaults.setHiddenServices") {
+    const current = defaults.get(defaultsKey);
+    if (!current) return "gone";
+    if (current.hiddenServices.join(",") === mutation.args.hiddenServices.join(",")) {
+      return "unchanged";
+    }
+    planned.defaultsUpdate.hiddenServices = mutation.args.hiddenServices;
+    return planned.needs("defaults.update");
+  }
   if (mutation.name === "order.set") {
     const { viewKey, keys } = mutation.args;
     if (viewKey !== "root" && viewKey !== "unsorted" && !containers.has(viewKey)) return "gone";

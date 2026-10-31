@@ -430,7 +430,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-06.2 One link per service.** Albums may have service links; they are optional for manually created albums. A saved album has at most one current link per supported service.
 
-**FR-06.3 Manual link editing.** Users add, replace, or remove links as editable metadata.
+**FR-06.3 Manual link editing.** Users add, replace, or remove links as editable metadata. Each person chooses in Settings which services they use: empty link fields show only for those, while saved links always show and a link from any service can still be pasted (decided 31 October 2026, TON-138).
 
 **FR-06.4 Link conflicts during capture.** Capture and enrichment may fill an absent link.
 
@@ -1095,6 +1095,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (30 October 2026), Find artwork** (TON-112), from the creator's manual testing: owners can choose a cover the Cover Art Archive has for an album's title and artist, so an album MusicBrainz didn't match can still get artwork. Other services' covers stay out, as their terms require. **Updated** FR-03.4.
 - **Decision (30 October 2026), an agent's details** (TON-111), from the creator's manual testing: details an agent sends for a link no step identified are matched like a store page's hints, so the album gets its MusicBrainz values and artwork. The app's manual entry still adds an album without a lookup (FR-02.4). **Updated** FR-10.5.
 - **Decision (31 October 2026), YouTube Music** (TON-128), from the creator's manual testing: YouTube Music is a fifth launch service. Its links are identified by MusicBrainz's URL lookup, then by transient hints from the YouTube Data API, never from its pages, which YouTube's terms forbid reading automatically ([YouTube Music spike](spikes/2026-10-31-g1-youtube-music.md)). The API needs a key in production, and users must agree to a privacy notice that says Tonaris uses YouTube API Services. Built in TON-131. **Updated** section 2.5.
+- **Decision (31 October 2026), your streaming services** (TON-138), from the creator's manual testing: each person turns services on or off in Settings, and the album panel and New album show link fields only for those that are on. Saved links always show. **Updated** FR-06.3.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);
