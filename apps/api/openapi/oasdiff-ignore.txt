@@ -9,3 +9,12 @@ POST /v1/approvals/{id}/decision the 'operation' response property const value '
 # backup. Its only reader was the web app's Admin → Operations page.
 GET /v1/admin/operations removed the required property `lastBackup` from the response with the `200` status
 GET /v1/admin/operations removed the required property 'lastBackup' from the response with the '200' status
+# TON-131, 31 October 2026: YouTube Music became a fifth streaming service, so the service enums of link.set,
+# link.remove and defaults.setHiddenServices gained a value. Additive, but oasdiff matches inline oneOf variants by
+# content and reads each as removed.
+POST /v1/mutations removed `subschema #25, subschema #26, subschema #41` from the request body `oneOf` list (media type: application/json)
+POST /v1/mutations removed 'subschema #25, subschema #26, subschema #41' from the request body 'oneOf' list (media type: application/json)
+POST /v1/mutations removed `subschema #25, subschema #26, subschema #41` from the request body `oneOf` list (media type: application/x-www-form-urlencoded)
+POST /v1/mutations removed 'subschema #25, subschema #26, subschema #41' from the request body 'oneOf' list (media type: application/x-www-form-urlencoded)
+POST /v1/mutations removed `subschema #25, subschema #26, subschema #41` from the request body `oneOf` list (media type: multipart/form-data)
+POST /v1/mutations removed 'subschema #25, subschema #26, subschema #41' from the request body 'oneOf' list (media type: multipart/form-data)
