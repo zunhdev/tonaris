@@ -5894,6 +5894,46 @@
                           "available": {
                             "type": "boolean",
                             "description": "Whether it can be opened now (FR-07.13)."
+                          },
+                          "containers": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "folder",
+                                    "list"
+                                  ]
+                                },
+                                "parentId": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ],
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "kind",
+                                "parentId",
+                                "name"
+                              ],
+                              "additionalProperties": false,
+                              "description": "A folder or list (FR-01.1)."
+                            },
+                            "description": "The active folders and lists inside it while it can be opened, each under its parent: it, or a folder inside it (TON-130). Empty for a list, or once it can't be opened."
                           }
                         },
                         "required": [
@@ -5902,7 +5942,8 @@
                           "name",
                           "kind",
                           "via",
-                          "available"
+                          "available",
+                          "containers"
                         ],
                         "additionalProperties": false,
                         "description": "A folder or list in Shared with me (FR-07.13)."

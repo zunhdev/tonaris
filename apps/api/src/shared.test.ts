@@ -96,6 +96,7 @@ test("saving a link keeps it once, copying nothing; opening it alone adds nothin
       kind: "list",
       via: { invitation: false, link: true },
       available: true,
+      containers: [],
     },
   ]);
   expect((await state(token, anna)).body).toEqual({ saved: true, own: false });
@@ -156,4 +157,35 @@ test("an accepted invitation is listed as such", async () => {
       available: true,
     }),
   ]);
+});
+
+test("a shared folder's entry holds its active folders and lists, for the sidebar (TON-130)", async () => {
+  await send({ name: "account.setDisplayName", args: { displayName: "Denis" } }, denis);
+  const [metal, doom, thrash, gone] = [uuidv7(), uuidv7(), uuidv7(), uuidv7()];
+  for (const [id, kind, parentId, name] of [
+    [metal, "folder", null, "Metal"],
+    [doom, "folder", metal, "Doom"],
+    [thrash, "list", doom, "Thrash"],
+    [gone, "list", metal, "Gone"],
+  ] as const) {
+    // oxlint-disable-next-line no-await-in-loop
+    await send({ name: "container.create", args: { id, kind, parentId, name } }, denis);
+  }
+  await send({ name: "container.delete", args: { id: gone, unitId: uuidv7() } }, denis);
+  const grantId = uuidv7();
+  await send(
+    { name: "share.invite", args: { grantId, containerId: metal, email: "anna@example.com" } },
+    denis,
+  );
+  await send({ name: "share.accept", args: { grantId } }, anna);
+  const [entry] = await shared(anna);
+  // In Trash, Gone isn't there.
+  expect(entry?.containers.toSorted((a, b) => a.name.localeCompare(b.name))).toEqual([
+    { id: doom, kind: "folder", parentId: metal, name: "Doom" },
+    { id: thrash, kind: "list", parentId: doom, name: "Thrash" },
+  ]);
+
+  // Once it can't be opened, it holds nothing.
+  await send({ name: "share.revoke", args: { grantId } }, denis);
+  expect((await shared(anna)).flatMap((each) => each.containers)).toEqual([]);
 });

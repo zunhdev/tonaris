@@ -149,6 +149,9 @@ export const accounts = {
   // Viewing shared content (shared-viewing.e2e.ts): an owner and a viewer.
   viewingOwner: at("viewing-owner"),
   viewingViewer: at("viewing-viewer"),
+  // Shared folders and lists in the sidebar's tree (shared-tree.e2e.ts).
+  sidebarOwner: at("sidebar-owner"),
+  sidebarViewer: at("sidebar-viewer"),
   // Sharing previews on moves and recovery (sharing-impact.e2e.ts): an owner and the person they share with.
   impactOwner: at("impact-owner"),
   impactViewer: at("impact-viewer"),

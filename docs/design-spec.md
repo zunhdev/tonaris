@@ -495,6 +495,15 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 
 *As built in TON-120* (the creator chose this, 31 October 2026): **the "+" beside Collection makes new lists and folders at the top level,** whatever is focused or on view. N and ⇧N still make them where the focus or the view is (DS-78), so the menu's items no longer show those keys. A folder's or list's own ⋯ menu makes them in place (DS-27).
 
+*As built in TON-130* (from the creator's manual testing; the creator chose the layout, 31 October 2026): **Shared with me opens in the tree** to the folders and lists shared with the person.
+- **Shared with me** has a chevron while something is shared, and starts open. Its open or closed state is kept on the device, like a folder's.
+- **Each shared folder or list sits directly under it,** by name, those that can't be opened last, with the owner's display name after it in `fg.tertiary` ("Metal · Denis"). There are no owner rows.
+- **A shared folder opens** to its folders and lists, in the person's own sort for that folder (DS-70), as their own folders do. While open, it follows its owner's saves.
+- **A click opens the shared view** (DS-70), and the tree marks it. Opening a shared view opens Shared with me and the shared folders above it.
+- **The keyboard works as in the rest of the tree.** ← from a shared folder or list at the top goes to Shared with me, and closing a folder, or Shared with me, that holds the view opens its view (TON-121).
+- **One that can't be opened** is dimmed and reads "No longer available", with its owner. It opens the shared view's "Not available".
+- Shared rows have no ⋯ menu and can't be dragged.
+
 **DS-32 Route map.** These are conceptual paths; final paths are decided in the tech spec. *(Section 2.2)*
 
 | Path | Screen |
@@ -1119,6 +1128,8 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Remove from Shared with me** shows for link-only references.
 - **When it's empty:** "Nothing is shared with you yet. Invitations you accept and links you add show here."
 - **Later:** the sidebar's per-owner entries, and opening a reference, come with TON-69.
+
+*As built in TON-130:* the sidebar shows the references in its tree, under Shared with me, without owner rows (DS-31).
 
 **DS-68 Signed-in visit to a shared link.** A banner reads "Shared by {name} · **Add to Shared with me**". It changes to "In Shared with me" after adding. Adding never happens implicitly. *(FR-07.13)*
 - *As built in TON-68:*
