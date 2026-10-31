@@ -10,7 +10,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { ServiceNames } from "@/features/open/service-names";
-import { inspectorWidth, useShell } from "@/features/shell/shell-context";
+import { useShell } from "@/features/shell/shell-context";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -75,7 +75,8 @@ export function AlbumCards({
   const grid = useRef<HTMLDivElement>(null);
   // The inspector beside the view leaves fewer cards a row, not other cards: their size is worked out as if it took
   // no room, so opening and closing it keeps them as they are (TON-106).
-  const beside = useShell().inspectorBeside ? inspectorWidth : 0;
+  const { inspectorBeside, inspectorWidth } = useShell();
+  const beside = inspectorBeside ? inspectorWidth : 0;
   const inner = Math.max(0, useWidth(scroller, beside) - 2 * padding);
   const whole = inner + beside;
   const wholeColumns = Math.max(1, Math.floor((whole + gap) / (minCard + gap)));

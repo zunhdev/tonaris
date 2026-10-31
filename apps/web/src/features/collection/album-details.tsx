@@ -96,7 +96,8 @@ export function AlbumDetails({ album }: { album: Album }) {
           title={album.title}
           src={artworkSrc(album)}
           label={`Cover of ${album.title}`}
-          className="w-60 rounded-md"
+          // The panel's width, up to the 500 px of the covers Find brings (TON-124).
+          className="w-full max-w-[500px] rounded-md"
           letterClassName="text-display"
         />
         {canEdit && <ArtworkUrlEditor album={album} />}
@@ -404,63 +405,66 @@ function ArtworkUrlEditor({ album }: { album: Album }) {
   }, [open, registerEditor]);
 
   return (
-    <div className="flex w-60 flex-col gap-1">
+    <div className="flex w-full max-w-[500px] flex-col gap-1">
       <label htmlFor={id} className="text-small text-fg-secondary">
         Artwork URL
       </label>
-      <input
-        ref={input}
-        id={id}
-        type="url"
-        placeholder="https://…"
-        spellCheck={false}
-        aria-invalid={refusal !== undefined}
-        aria-describedby={refusal === undefined ? undefined : `${id}-error`}
-        value={draft ?? album.artworkUrl ?? ""}
-        onFocus={() => {
-          if (current.current === undefined) setDraft(album.artworkUrl ?? "");
-        }}
-        onChange={(event) => {
-          setDraft(event.target.value);
-          setRefusal(undefined);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit.current();
-          } else if (event.key === "Escape") {
-            event.preventDefault();
-            event.stopPropagation();
+      {/* Find sits beside the field it fills (TON-124). */}
+      <div className="flex items-center gap-1">
+        <input
+          ref={input}
+          id={id}
+          type="url"
+          placeholder="https://…"
+          spellCheck={false}
+          aria-invalid={refusal !== undefined}
+          aria-describedby={refusal === undefined ? undefined : `${id}-error`}
+          value={draft ?? album.artworkUrl ?? ""}
+          onFocus={() => {
+            if (current.current === undefined) setDraft(album.artworkUrl ?? "");
+          }}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            setRefusal(undefined);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit.current();
+            } else if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              setDraft(undefined);
+              setRefusal(undefined);
+            }
+          }}
+          onBlur={() => commit.current()}
+          className={cn(
+            "h-8 min-w-0 flex-1 rounded-md border border-subtle bg-panel px-2 text-small text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+            refusal !== undefined && "border-status-danger",
+          )}
+        />
+        <FindArtwork
+          title={album.title}
+          artist={album.artistCredit}
+          onChoose={(artworkUrl) => {
+            // A chosen cover is an artwork edit like a typed one, replacing whatever was typed.
             setDraft(undefined);
             setRefusal(undefined);
-          }
-        }}
-        onBlur={() => commit.current()}
-        className={cn(
-          "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-small text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-          refusal !== undefined && "border-status-danger",
-        )}
-      />
+            if (artworkUrl === latest.current.artworkUrl || !client) return;
+            sent(
+              client.albums.update(latest.current.id, (record) => {
+                record.artworkUrl = artworkUrl;
+              }),
+            );
+          }}
+        />
+      </div>
       {refusal !== undefined && (
         <p id={`${id}-error`} className="text-small text-status-danger">
           {refusal}
         </p>
       )}
-      <FindArtwork
-        title={album.title}
-        artist={album.artistCredit}
-        onChoose={(artworkUrl) => {
-          // A chosen cover is an artwork edit like a typed one, replacing whatever was typed.
-          setDraft(undefined);
-          setRefusal(undefined);
-          if (artworkUrl === latest.current.artworkUrl || !client) return;
-          sent(
-            client.albums.update(latest.current.id, (record) => {
-              record.artworkUrl = artworkUrl;
-            }),
-          );
-        }}
-      />
     </div>
   );
 }

@@ -105,6 +105,8 @@ export const accounts = {
   closeHolder: at("close-holder"),
   // Add album's key in its tooltips (capture.e2e.ts).
   addAlbumKey: at("add-album-key"),
+  // The inspector's width (album-inspector.e2e.ts).
+  inspectorResize: at("inspector-resize"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),
