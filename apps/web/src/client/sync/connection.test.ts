@@ -3,7 +3,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { watchConnection, type Network } from "./connection";
+import { watchConnection, type Network, type PageVisibility } from "./connection";
 import type { ConnectionStatus } from "./engine";
 
 function fakeEngine(initial: ConnectionStatus = "connecting") {
@@ -40,13 +40,32 @@ function fakeNetwork(): Network & { go(online: boolean): void } {
   };
 }
 
+function fakePage(): PageVisibility & { show(shown: boolean): void; resume(): void } {
+  let hidden = false;
+  const listeners = { visibilitychange: new Set<() => void>(), resume: new Set<() => void>() };
+  return {
+    get hidden() {
+      return hidden;
+    },
+    addEventListener: (type, listener) => listeners[type].add(listener),
+    removeEventListener: (type, listener) => listeners[type].delete(listener),
+    show(shown) {
+      hidden = !shown;
+      for (const listener of listeners.visibilitychange) listener();
+    },
+    resume() {
+      for (const listener of listeners.resume) listener();
+    },
+  };
+}
+
 const windowMs = 40;
 
-function watch(engine = fakeEngine(), network = fakeNetwork()) {
-  const watched = watchConnection({ engine, network, offlineAfterMs: windowMs });
+function watch(engine = fakeEngine(), network = fakeNetwork(), page = fakePage()) {
+  const watched = watchConnection({ engine, network, page, offlineAfterMs: windowMs });
   const seen: string[] = [watched.state];
   watched.subscribe(() => seen.push(watched.state));
-  return { engine, network, watched, seen };
+  return { engine, network, page, watched, seen };
 }
 
 describe("the connection (DS-81, TS-24)", () => {
@@ -112,6 +131,36 @@ describe("the connection (DS-81, TS-24)", () => {
     const network = fakeNetwork();
     network.go(false);
     const { watched } = watch(fakeEngine("stopped"), network);
+    expect(watched.state).toBe("offline");
+    watched.stop();
+  });
+  test("hidden time doesn't count: a stream dropped before the phone froze the page isn't offline on return (TON-137)", async () => {
+    const { engine, page, seen, watched } = watch();
+    engine.report("live");
+    engine.report("reconnecting");
+    page.show(false);
+    // Longer than the window, while hidden: as an Android app in the background.
+    await Bun.sleep(windowMs * 2);
+    expect(watched.state).toBe("reconnecting");
+
+    // Back on screen, the stream gets a full window again before it reads as offline.
+    page.show(true);
+    await Bun.sleep(windowMs / 2);
+    expect(watched.state).toBe("reconnecting");
+    engine.report("live");
+    expect(seen).toEqual(["connecting", "connected", "reconnecting", "connected"]);
+    watched.stop();
+  });
+
+  test("an unfrozen page restarts the window too, and a stream that stays down is offline after it", async () => {
+    const { engine, page, watched } = watch();
+    engine.report("live");
+    engine.report("reconnecting");
+    await Bun.sleep(windowMs * 0.75);
+    page.resume();
+    await Bun.sleep(windowMs * 0.75);
+    expect(watched.state).toBe("reconnecting");
+    await Bun.sleep(windowMs);
     expect(watched.state).toBe("offline");
     watched.stop();
   });
