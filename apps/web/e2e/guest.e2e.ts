@@ -80,6 +80,11 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   const guest = await (
     await browser.newContext({ storageState: { cookies: [], origins: [] } })
   ).newPage();
+  // The page is rendered on the server, where the CSP refuses style attributes; it must need none (TON-126).
+  const refused: string[] = [];
+  guest.on("console", (message) => {
+    if (/Content Security Policy/.test(message.text())) refused.push(message.text());
+  });
   const response = await guest.goto(path);
   expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
   await expect(guest.getByRole("heading", { level: 1 })).toHaveText("Metal");
@@ -91,6 +96,17 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   // By year first, DS-44's default.
   await expect(albums.first()).toContainText("Epicus Doomicus Metallicus");
   expect(await violations(guest, "main")).toEqual([]);
+  // The stylesheets it links are the ones the build wrote (TON-126), and the artwork tiles get their hues.
+  const hrefs = await guest
+    .locator('link[rel="stylesheet"]')
+    .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
+  const sheets = await Promise.all(hrefs.map((href) => guest.request.get(href)));
+  expect(sheets.length).toBeGreaterThan(0);
+  for (const sheet of sheets) {
+    expect(sheet.ok(), sheet.url()).toBe(true);
+    expect(sheet.headers()["content-type"]).toContain("text/css");
+  }
+  await expect(albums.first().locator("span").first()).toHaveAttribute("style", /background/);
 
   // Open leaves with no referrer.
   await albums
@@ -110,6 +126,12 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   await expect(albums.first()).toContainText("Epicus Doomicus Metallicus");
   await guest.getByRole("radio", { name: "Descending" }).click();
   await expect(albums.first()).toContainText("Nightfall");
+  // A grid's cards keep their size: artwork as wide as the card, then the words (TON-126).
+  await guest.getByRole("radio", { name: "Grid" }).click();
+  const boxes = await Promise.all((await albums.all()).map((card) => card.boundingBox()));
+  for (const box of boxes) expect(box && box.height > box.width, JSON.stringify(box)).toBe(true);
+  await guest.getByRole("radio", { name: "Rows" }).click();
+  expect(refused).toEqual([]);
   await guest.reload();
   await expect(albums.first()).toContainText("Nightfall");
   const fresh = await (

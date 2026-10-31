@@ -1,6 +1,6 @@
 /* The Tonaris stylesheet: Tailwind v4, shadcn's variants, Inter Variable and the design tokens (DS-10 to DS-19). */
 
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 /* Self-hosted: Vite bundles the woff2 file into the app's own assets (DS-13). */
@@ -10,6 +10,11 @@
 /* Dark-only in v1 (DS-11): `dark:` follows the document's data-theme. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/*
+ * Classes come from these sources only (`source(none)` above). Tailwind's automatic detection skips what .gitignore
+ * lists, and the Docker build has no .gitignore: its server build then scanned the client build's output and linked
+ * a stylesheet the client build never wrote (TON-126).
+ */
 @source "../../../../apps/web/src";
 @source "..";
 

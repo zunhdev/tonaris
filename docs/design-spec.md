@@ -274,6 +274,9 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 *As built in TON-110:*
 - **The tile's letter skips leading punctuation and spaces:** "...And Justice for All" shows "A", and "(What's the Story) Morning Glory?" shows "W". Symbols and emoji still count, so "÷" shows "÷". A title made only of punctuation shows its first mark.
 
+*As built in TON-126:*
+- **On a server-rendered page,** such as a shared link's, the tile is neutral (`bg.raised`, the letter in `fg.secondary`) until the page is live, then takes its hue.
+
 **DS-24 Chronology display.** *(FR-05.5, FR-05.6, FR-02.8)*
 
 | Case | Display |
@@ -1200,6 +1203,10 @@ The block never says "private" while another access path remains.
   - `og:title` is the name;
   - `og:description` and `description` are "Shared by {name} · {n} albums", counting the whole share;
   - plus `twitter:card` summary and `robots: noindex`; no image.
+
+*As built in TON-126:*
+- **View options appear once the page is live,** in a space kept for them. The server renders the defaults, not the visit's view, and the controls can't work before then anyway.
+- **Grid cards keep their size** in Safari when the layout changes.
 
 ---
 

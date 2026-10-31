@@ -129,7 +129,7 @@ The API (`apps/api`, Elysia 2 RC) serves every resource under `/v1` (TS-09):
 - **Components use semantic tokens only.** `bun test` fails if a component or app file names a primitive, or if a token change breaks a DS-14 contrast target.
 - **Components** are shadcn's, on Base UI: `bun run ui:add <name>` copies one into `packages/ui/src/components`, where it is restyled to DS-15 (24, 28 and 32px controls) and imported as `@tonaris/ui/components/<name>`.
 - **Fonts:** Inter Variable is bundled into the app's own assets; no font CDN.
-- **CSP:** the web app sends a strict Content-Security-Policy with a per-request nonce (`apps/web/src/start.ts`, TS-101), in development too. Inline scripts and `<style>` elements without the nonce don't run, and neither does `eval`. Use stylesheets and Tailwind classes. `packages/domain` imports Zod through `src/zod.ts`, which keeps Zod from probing for `eval` in browsers.
+- **CSP:** the web app sends a strict Content-Security-Policy with a per-request nonce (`apps/web/src/start.ts`, TS-101), in development too. Inline scripts and `<style>` elements without the nonce don't run, and neither does `eval`. Use stylesheets and Tailwind classes. Server-rendered pages, such as shared links and sign-in, can't use `style` attributes either; in the browser, React sets them through the DOM, which the CSP allows. `packages/domain` imports Zod through `src/zod.ts`, which keeps Zod from probing for `eval` in browsers.
 
 ### Database changes
 
