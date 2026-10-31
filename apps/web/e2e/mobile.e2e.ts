@@ -1,16 +1,16 @@
 // DS-110's mobile web on the phone profiles (TON-103; AC-42, Q-03): `iphone` (WebKit) and `pixel` (Chromium) run
 // this file alone. A phone browses by drilling down: a top bar with Back, the name, Search and Account; the root's
-// folders and lists, then Unsorted and Shared with me; 56 px album rows; an album in a read-only sheet with its
-// links; view options in a bottom sheet; and Trash and custom fields left to the desktop.
+// folders and lists, then Unsorted; Mine and Shared switching the root (TON-134); 56 px album rows; an album in a
+// read-only sheet with its links; view options in a bottom sheet; and Trash and custom fields left to the desktop.
 
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
-import type { Container } from "@tonaris/domain";
+import { uuidv7, type Container } from "@tonaris/domain";
 
-import { accounts } from "./support/accounts";
+import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, list, live } from "./support/workspace";
+import { added, album, insert, list, live, saved, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -73,7 +73,8 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
   expect(bar.position).toBe("sticky");
   expect(bar.background).not.toMatch(/rgba\(.*, 0\)|transparent/);
   const more = page.getByRole("navigation", { name: "More" });
-  await expect(more.getByRole("link")).toHaveText([/Unsorted\s*1/, "Shared with me"]);
+  await expect(more.getByRole("link")).toHaveText([/Unsorted\s*1/]);
+  await expect(page.getByRole("radio", { name: "Mine" })).toBeChecked();
   expect(await axe(page)).toEqual([]);
 
   await page.getByRole("link", { name: "Metal" }).click();
@@ -154,4 +155,78 @@ test("search fills the screen and opens what it finds", async ({ page }) => {
   await page.getByRole("combobox", { name: "Search" }).fill("doom");
   await palette.getByRole("option", { name: /Doom/ }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "Doom" })).toBeVisible();
+});
+
+/** Sends a mutation as the page's account. */
+async function send(page: Page, name: string, args: Record<string, unknown>) {
+  const response = await page.request.post(`${apiUrl}/v1/mutations`, {
+    headers: { origin: webOrigin },
+    data: { mutationId: uuidv7(), name, args },
+  });
+  expect((await response.json()).outcome?.status).toBe("confirmed");
+}
+
+test("Mine and Shared switch the Collection screen, and Back from a share returns to Shared", async ({
+  page,
+  browser,
+}) => {
+  // The viewer signs in first, so the sign-in email is their only one. Anna shares Road trip with them, which they
+  // accept, and invites them to Later, still pending.
+  await signIn(page, accounts.phoneViewer);
+  await live(page);
+  const anna = await (
+    await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  ).newPage();
+  await signIn(anna, accounts.phoneSharer);
+  await live(anna);
+  const [trip, later] = [list("Road trip"), list("Later")];
+  await insert(anna, trip, later);
+  await saved(anna);
+  await send(anna, "account.setDisplayName", { displayName: "Anna" });
+  const [tripGrant, laterGrant] = [uuidv7(), uuidv7()];
+  await send(anna, "share.invite", {
+    grantId: tripGrant,
+    containerId: trip.id,
+    email: accounts.phoneViewer,
+  });
+  await send(anna, "share.invite", {
+    grantId: laterGrant,
+    containerId: later.id,
+    email: accounts.phoneViewer,
+  });
+  await send(page, "share.accept", { grantId: tripGrant });
+  await page.goto("/c");
+  await live(page);
+
+  // Mine first, with Unsorted; the switch is a 44 px target.
+  const shared = page.getByRole("radio", { name: "Shared · 1" });
+  await expect(page.getByRole("radio", { name: "Mine" })).toBeChecked();
+  expect((await shared.boundingBox())?.height).toBeGreaterThanOrEqual(40);
+  await expect(page.getByRole("navigation", { name: "More" })).toBeVisible();
+
+  // Shared: the pending invitation first, then what's shared, with its owner; no Unsorted and no View options.
+  await shared.click();
+  await expect(page).toHaveURL(/\/c\?show=shared$/);
+  await expect(page.getByRole("link", { name: "1 invitation" })).toBeVisible();
+  const trips = page.getByRole("list", { name: "Shared with me" }).getByRole("link");
+  await expect(trips).toHaveText([/Road trip\s*Anna/]);
+  await expect(page.getByRole("navigation", { name: "More" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "View options" })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await axe(page)).toEqual([]);
+
+  // A share opens, and its Back returns to Shared.
+  await trips.first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Road trip" })).toBeVisible();
+  await page.getByRole("button", { name: "Back to Collection" }).click();
+  await expect(page).toHaveURL(/\/c\?show=shared$/);
+  await expect(shared).toBeChecked();
+
+  // The device remembers Shared, until Mine is chosen.
+  await page.goto("/c");
+  await live(page);
+  await expect(shared).toBeChecked();
+  await page.getByRole("radio", { name: "Mine" }).click();
+  await expect(page).toHaveURL(/\/c$/);
+  await expect(page.getByRole("navigation", { name: "More" })).toBeVisible();
 });

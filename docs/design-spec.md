@@ -1836,6 +1836,12 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
   - Settings' row leaves out Custom fields, and scrolls sideways if it must.
 - **A shared view's** "View only · Shared by {owner}" moves under the top bar.
 
+*As built in TON-134* (from the creator's manual testing; the creator chose this, 31 October 2026): **a phone's Collection screen switches between Mine and Shared.**
+- **The switch:** "Mine | Shared · {n}", full width under the top bar, 44 px tall (`SegmentedControl`'s `touch` size).
+- **Mine** lists the person's folders and lists, with Unsorted pinned below. The bottom's "Shared with me" link is gone.
+- **Shared** lists pending invitations first, as one row ("1 invitation") to the inbox. Then each shared folder or list, by name, with the owner after it in `fg.tertiary`; one that can't be opened is dimmed and reads "No longer available". With nothing shared: "Nothing is shared with you yet. Invitations you accept and links you add show here." The top bar has no View options there.
+- **Where the choice lives:** the address (`/c?show=shared`), or else the side last chosen on the device. A shared view's Back from its top returns to Collection on Shared.
+
 *Fixed in TON-135* (from the creator's manual testing, 31 October 2026): **the top bar is sticky and opaque** (`bg.app`). Installed on an iPhone with iOS 26, Home Screen apps blur their top edge, Liquid Glass's edge effect, over the status bar and about 40 pt below it, which shaded and blurred the top bar. Reports from other apps describe WebKit skipping the effect when a fixed or sticky bar of one solid colour, nearly full width, covers the top edge, and taking its colour for the status bar. The phone tests check the bar stays so; a real iPhone is the check of the fix.
 
 *As built in TON-115:* **installable.** `/manifest.webmanifest` names the app "Tonaris", starts at `/c`, displays `standalone`, and gives `bg.app`'s color as its background and theme, with TON-114's icons: 192 and 512 px, and a maskable 512 px.

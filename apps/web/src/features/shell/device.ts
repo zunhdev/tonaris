@@ -1,6 +1,6 @@
 // What the workspace remembers on this device, not synced (DS-27, DS-30, DS-32, DS-43, DS-45, DS-75): which folders
 // are expanded, the sidebar's width and whether it is hidden, the album inspector's width (TON-124), the last
-// collection view visited, Viewing or Editing mode, what was opened lately and which palette commands are run most, which invitations were announced, and, for the tab's session, which groups
+// collection view visited, Viewing or Editing mode, what was opened lately and which palette commands are run most, which invitations were announced, a phone's Mine or Shared, and, for the tab's session, which groups
 // are collapsed. Kept in localStorage and sessionStorage, which can be missing or refuse writes (private
 // modes, blocked storage): then nothing is remembered, and nothing fails.
 
@@ -27,6 +27,16 @@ const write = (key: string, value: unknown, session = false): void => {
   } catch {
     // Not remembered; the workspace works the same.
   }
+};
+
+/** Which of a phone's Collection screen shows: the person's own folders and lists, or those shared (TON-134). */
+export const phoneRootTab = {
+  read(accountId: string): "mine" | "shared" {
+    return read(`tonaris:phone-root:${accountId}`) === "shared" ? "shared" : "mine";
+  },
+  write(accountId: string, tab: "mine" | "shared"): void {
+    write(`tonaris:phone-root:${accountId}`, tab);
+  },
 };
 
 /** The pending invitations already announced on this device, so each is announced once (TON-129). */

@@ -180,6 +180,9 @@ export const accounts = {
   phone: at("phone"),
   phoneOptions: at("phone-options"),
   phoneSearch: at("phone-search"),
+  // A phone's Mine and Shared (mobile.e2e.ts, TON-134): the sharer and the person shared with.
+  phoneSharer: at("phone-sharer"),
+  phoneViewer: at("phone-viewer"),
   deleteCancel: at("delete-cancel"),
   // Keyboard-only walkthroughs (walkthrough.e2e.ts, TON-93), one per test.
   walker: at("a11y-walker"),

@@ -8,15 +8,19 @@
 
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
+import { PhoneShared } from "@/features/sharing/phone-shared";
+import { useSharedEntries } from "@/features/sharing/shared-entries";
+import { phoneRootTab } from "@/features/shell/device";
 import { PageHeader } from "@/features/shell/page-header";
 import { useShell } from "@/features/shell/shell-context";
 import { useConnection } from "@/features/sync/sync-provider";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Inbox, Pencil, Plus, Share2, Trash2, Users } from "lucide-react";
-import { useEffect, useMemo, type ReactNode } from "react";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Inbox, Pencil, Plus, Share2, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
 import { Button, buttonVariants } from "@tonaris/ui/components/button";
+import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 import {
   Tooltip,
   TooltipContent,
@@ -188,6 +192,7 @@ function ViewHeader({
   viewKey,
   kind,
   container,
+  viewOptions = true,
 }: {
   title: string;
   breadcrumbs?: ReactNode[];
@@ -195,6 +200,8 @@ function ViewHeader({
   back?: { to: string; label: string };
   viewKey: string;
   kind: "albums" | "containers";
+  /** Whether it offers View options; a phone's Shared has none (TON-134). */
+  viewOptions?: boolean;
   /** The folder or list on view, which Editing mode can delete (DS-50). */
   container?: { id: string; kind: "folder" | "list" };
 }) {
@@ -242,7 +249,7 @@ function ViewHeader({
             </Button>
           )}
           <ModeSwitch />
-          <ViewOptions key={viewKey} viewKey={viewKey} kind={kind} />
+          {viewOptions && <ViewOptions key={viewKey} viewKey={viewKey} kind={kind} />}
         </>
       }
     />
@@ -317,8 +324,8 @@ function NewListButton({ parentId }: { parentId: string | null }) {
 const toCollection = { to: "/c", label: "Collection" };
 
 /**
- * A phone's root screen ends with Unsorted and Shared with me, which the sidebar holds on a wider screen (DS-110).
- * Trash stays on the desktop.
+ * A phone's root screen ends with Unsorted, which the sidebar holds on a wider screen (DS-110); Shared with me is
+ * the switch's other side (TON-134). Trash stays on the desktop.
  */
 function PhoneRootLinks() {
   const { unsortedAlbums } = useCollectionData();
@@ -331,23 +338,71 @@ function PhoneRootLinks() {
         <span className="flex-1">Unsorted</span>
         <span className="text-fg-tertiary tabular-nums">{unsortedAlbums.length}</span>
       </Link>
-      <Link to="/shared" className={row}>
-        <Users strokeWidth={1.5} aria-hidden className="size-4 text-fg-secondary" />
-        <span className="flex-1">Shared with me</span>
-      </Link>
     </nav>
+  );
+}
+
+/**
+ * A phone's Collection screen switches between the person's own folders and lists and those shared with them
+ * (TON-134): `?show=shared`, or else the side last chosen on the device.
+ */
+function usePhoneTab(): ["mine" | "shared", (tab: "mine" | "shared") => void] {
+  const { accountId } = useCollectionUi();
+  const show = useSearch({ from: "/_workspace/c", select: (search) => search.show });
+  const navigate = useNavigate();
+  // Kept in state too: going from a remembered Shared to Mine leaves the URL as it was.
+  const [remembered, setRemembered] = useState(() => phoneRootTab.read(accountId));
+  const tab = show ?? remembered;
+  const choose = (next: "mine" | "shared") => {
+    phoneRootTab.write(accountId, next);
+    setRemembered(next);
+    void navigate({
+      to: "/c",
+      search: next === "shared" ? { show: "shared" } : {},
+      replace: true,
+    });
+  };
+  return [tab, choose];
+}
+
+function PhoneSwitch({
+  tab,
+  onChange,
+}: {
+  tab: "mine" | "shared";
+  onChange: (tab: "mine" | "shared") => void;
+}) {
+  const shared = useSharedEntries().entries?.length ?? 0;
+  return (
+    <div className="shrink-0 px-4 pt-3">
+      <SegmentedControl
+        aria-label="Show"
+        size="touch"
+        value={tab}
+        onValueChange={onChange}
+        options={[
+          { value: "mine", label: "Mine" },
+          { value: "shared", label: shared > 0 ? `Shared · ${shared}` : "Shared" },
+        ]}
+      />
+    </div>
   );
 }
 
 export function RootView() {
   const { tree, ready } = useCollectionData();
   const narrow = useNarrowScreen();
+  const [tab, setTab] = usePhoneTab();
   useDocumentTitle("Collection");
   const count = tree.roots.length;
+  const shared = narrow && tab === "shared";
   return (
     <>
-      <ViewHeader title="Collection" viewKey="root" kind="containers" />
-      {!ready ? null : count > 0 ? (
+      <ViewHeader title="Collection" viewKey="root" kind="containers" viewOptions={!shared} />
+      {narrow && ready && <PhoneSwitch tab={tab} onChange={setTab} />}
+      {shared ? (
+        <PhoneShared />
+      ) : !ready ? null : count > 0 ? (
         <ContainersBody containers={tree.roots} label="Collection" viewKey="root" />
       ) : (
         <Empty
@@ -363,7 +418,7 @@ export function RootView() {
           }
         />
       )}
-      {narrow && ready && <PhoneRootLinks />}
+      {narrow && ready && !shared && <PhoneRootLinks />}
     </>
   );
 }
