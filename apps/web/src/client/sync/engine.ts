@@ -36,6 +36,13 @@ export type SyncEngineOptions = {
   silenceMs?: number;
   /** The account's other tabs in this browser, to share one stream with; without it, this tab streams itself. */
   tabs?: TabCoordinator;
+  /** How often the leading tab repeats its status, so the others can tell it's awake (TON-137). */
+  heartbeatMs?: number;
+  /**
+   * How long a shown tab hears nothing from the leader before it takes the lead: under the 15 s after which the
+   * workspace reads as offline (`connection.ts`).
+   */
+  leaderSilenceMs?: number;
 };
 
 export type SyncEngine = ReturnType<typeof createSyncEngine>;
@@ -50,6 +57,8 @@ export function createSyncEngine({
   backoff = { minMs: 500, maxMs: 30_000 },
   silenceMs = 45_000,
   tabs,
+  heartbeatMs = 3_000,
+  leaderSilenceMs = 10_000,
 }: SyncEngineOptions) {
   const consumers = new Set<SyncConsumer>();
   const statusListeners = new Set<(status: ConnectionStatus) => void>();
@@ -62,6 +71,10 @@ export function createSyncEngine({
   let poke: (() => void) | undefined;
   /** Cuts the current backoff short, as when the browser is back online. */
   let nap: AbortController | undefined;
+  /** When a follower last heard from the leader. */
+  let heardAt = performance.now();
+  /** A follower's look at whether its leader has gone silent, taking the lead if so; undefined while leading. */
+  let checkLeader: (() => void) | undefined;
 
   /** Waits out a reconnect delay, unless `reconnect()` cuts it short. */
   const backOff = async (signal: AbortSignal) => {
@@ -121,6 +134,7 @@ export function createSyncEngine({
       if (message.type === "hello") tabs?.post({ type: "status", status });
       return;
     }
+    if (message.type !== "hello") heardAt = performance.now();
     if (message.type === "change") applyRelayed(message.change);
     else if (message.type === "reset") rebootstrap();
     // A leader that stops says so; this tab will lead next, so it keeps its own status.
@@ -181,16 +195,47 @@ export function createSyncEngine({
 
   /**
    * A follower: bootstraps, then applies what the leader relays, bootstrapping again whenever its cursor is lost,
-   * until this tab leads. Answers false if the session ended.
+   * until this tab leads. A shown tab whose leader has said nothing for `leaderSilenceMs` takes the lead from it, as
+   * from a tab the phone suspended while it leads, which would otherwise hold the lock and leave this tab offline
+   * (TON-137). Answers the signal that ends this tab's lead, or undefined if the session ended or the tab stopped.
    */
-  async function follow(signal: AbortSignal, leads: Promise<void>): Promise<boolean> {
-    const lead = { granted: false };
-    void leads.then(() => {
-      lead.granted = true;
-      poke?.();
-      return undefined;
-    });
-    while (!signal.aborted && !lead.granted) {
+  async function follow(
+    signal: AbortSignal,
+    coordinator: TabCoordinator,
+  ): Promise<AbortSignal | undefined> {
+    let granted: AbortSignal | undefined;
+    const take = (lead: Promise<AbortSignal>) => {
+      void lead.then((lost) => {
+        granted ??= lost;
+        poke?.();
+        return undefined;
+      });
+    };
+    // This tab's turn in the queue, given up if it takes the lead instead.
+    const turn = new AbortController();
+    take(coordinator.lead(AbortSignal.any([signal, turn.signal])));
+    heardAt = performance.now();
+    checkLeader = () => {
+      if (granted || turn.signal.aborted || signal.aborted || !coordinator.shown()) return;
+      if (performance.now() - heardAt < leaderSilenceMs) return;
+      turn.abort();
+      take(coordinator.lead(signal, { steal: true }));
+    };
+    const watch = setInterval(() => checkLeader?.(), Math.min(1_000, leaderSilenceMs / 4));
+    try {
+      return await followUntilLeading(signal, () => granted);
+    } finally {
+      clearInterval(watch);
+      checkLeader = undefined;
+    }
+  }
+
+  /** The follower's loop: until `granted()` gives the lead, or the session ends (undefined). */
+  async function followUntilLeading(
+    signal: AbortSignal,
+    granted: () => AbortSignal | undefined,
+  ): Promise<AbortSignal | undefined> {
+    while (!signal.aborted && !granted()) {
       if (cursor === undefined) {
         relayed = [];
         try {
@@ -200,20 +245,22 @@ export function createSyncEngine({
           const buffered = relayed;
           relayed = undefined;
           for (const change of buffered) applyRelayed(change);
+          // The leader answers with its status; until then, its silence counts from here.
+          heardAt = performance.now();
           tabs?.post({ type: "hello" });
         } catch (error) {
           relayed = undefined;
           if (signal.aborted) break;
           if (error instanceof SignedOut) {
             setStatus("signed_out");
-            return false;
+            return undefined;
           }
           // oxlint-disable-next-line no-await-in-loop
           await backOff(signal);
           continue;
         }
       }
-      if (cursor !== undefined && !lead.granted) {
+      if (cursor !== undefined && !granted()) {
         // oxlint-disable-next-line no-await-in-loop
         await new Promise<void>((resolve) => {
           poke = resolve;
@@ -222,19 +269,32 @@ export function createSyncEngine({
         poke = undefined;
       }
     }
-    return true;
+    return signal.aborted ? undefined : granted();
   }
 
-  /** A tab of several: follows until it leads, then streams for the others. */
+  /**
+   * A tab of several: follows until it leads, then streams for the others, repeating its status so they can tell it's
+   * awake. If another tab takes the lead from it, as when this tab seemed asleep, it follows again (TON-137).
+   */
   async function runTab(coordinator: TabCoordinator, signal: AbortSignal): Promise<void> {
     const unsubscribe = coordinator.subscribe(onMessage);
     try {
-      const open = await follow(signal, coordinator.lead(signal));
-      if (!open || signal.aborted) return;
-      leading = true;
-      coordinator.post({ type: "status", status });
-      for (const listener of leadListeners) listener();
-      await run(signal);
+      while (!signal.aborted) {
+        // oxlint-disable-next-line no-await-in-loop
+        const lost = await follow(signal, coordinator);
+        if (!lost || signal.aborted) return;
+        leading = true;
+        coordinator.post({ type: "status", status });
+        for (const listener of leadListeners) listener();
+        const beat = setInterval(() => coordinator.post({ type: "status", status }), heartbeatMs);
+        try {
+          // oxlint-disable-next-line no-await-in-loop
+          await run(AbortSignal.any([signal, lost]));
+        } finally {
+          clearInterval(beat);
+        }
+        leading = false;
+      }
     } finally {
       unsubscribe();
     }
@@ -288,9 +348,13 @@ export function createSyncEngine({
       leading = false;
     },
 
-    /** Tries again now rather than after the current delay, as when the browser is back online. */
+    /**
+     * Tries again now rather than after the current delay, as when the browser is back online or the page is shown
+     * again; a follower looks at once whether its leader has gone silent (TON-137).
+     */
     reconnect(): void {
       nap?.abort();
+      checkLeader?.();
     },
 
     /** Calls `listener` when this tab starts streaming for the others (TS-23). */

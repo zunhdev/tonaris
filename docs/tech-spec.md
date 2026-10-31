@@ -533,6 +533,11 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - Every tab bootstraps itself over HTTP; only the stream is scarce. A follower applies relayed changes in `seq` order, buffers those that arrive during its own bootstrap, and bootstraps again after a gap or a relayed `reset`.
   - When the leader's tab goes, another tab gets the lock and streams from its own cursor, which the stream replays from, so nothing is missed.
   - Each tab sends its own writes; it learns they are saved from the relayed changes.
+  - *Fixed in TON-137:* **a silent leader loses the lead.** On Android an installed web app shares Chrome's locks and channel, and Android suspends Chrome while the app is on screen. A Chrome tab that led then kept the lock but relayed nothing, so the app read "connecting", then offline after 15 s, and couldn't take over. Now:
+    - the leader repeats its status every 3 s;
+    - a shown follower that has heard nothing from it for 10 s, under the 15 s that read as offline, takes the lock with `navigator.locks.request(…, { steal: true })`;
+    - the old leader's lock request then rejects, and it follows again when it wakes;
+    - hidden tabs never take the lead, and showing the page again checks at once.
 - **Spike (M1).**
   - The Bun adapter is verified: idle timeout, keepalive, resume from `Last-Event-ID`, shutdown, and 1,000 streams in one process ([TON-19](spikes/2026-10-20-elysia-2-viability.md)).
   - The owner stream, its hub and the web client are prototyped for albums ([TON-20](spikes/2026-10-20-sync-prototype.md)).

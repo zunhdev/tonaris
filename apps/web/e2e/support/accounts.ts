@@ -28,6 +28,7 @@ export const accounts = {
   syncOffline: at("sync-offline"),
   syncTabs: at("sync-tabs"),
   syncHandover: at("sync-handover"),
+  syncSuspended: at("sync-suspended"),
   syncSignOut: at("sync-leave"),
   // The save-state interface (save-states.e2e.ts), one per test.
   saveSlow: at("save-slow"),
