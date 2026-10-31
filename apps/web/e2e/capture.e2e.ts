@@ -8,7 +8,15 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { activity, created, live, saved, toasts } from "./support/workspace";
+import {
+  activity,
+  created,
+  insert,
+  list as listNamed,
+  live,
+  saved,
+  toasts,
+} from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -26,6 +34,33 @@ const links = {
   slowSpotify: "https://open.spotify.com/album/0000000000000000000007",
   downSpotify: "https://open.spotify.com/album/0000000000000000000009",
 };
+
+test("each Add album button shows its key, C, in a tooltip", async ({ page }) => {
+  await signIn(page, accounts.addAlbumKey);
+  await live(page);
+  const tooltip = page.locator('[data-slot="tooltip-content"]');
+
+  const inSidebar = page
+    .getByRole("navigation", { name: "Sidebar" })
+    .getByRole("button", { name: "Add album" });
+  await expect(inSidebar).toHaveAttribute("aria-keyshortcuts", "C");
+  await inSidebar.hover();
+  await expect(tooltip).toHaveText("Add albumC");
+  await expect(tooltip.locator("kbd")).toHaveText("C");
+  await page.mouse.move(0, 0);
+  await expect(tooltip).toHaveCount(0);
+
+  // An empty list's.
+  const doom = listNamed("Doom");
+  await insert(page, doom);
+  await saved(page);
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  const inEmptyList = page.getByRole("main").getByRole("button", { name: "Add album" });
+  await expect(inEmptyList).toHaveAttribute("aria-keyshortcuts", "C");
+  await inEmptyList.hover();
+  await expect(tooltip).toHaveText("Add albumC");
+});
 
 /** Pastes `text` with nothing focused, as ⌘V would. */
 async function paste(page: Page, text: string): Promise<void> {

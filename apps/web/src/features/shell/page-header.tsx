@@ -10,7 +10,12 @@ import { ChevronLeft, PanelLeftOpen, Search } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipShortcut,
+  TooltipTrigger,
+} from "@tonaris/ui/components/tooltip";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useShell } from "./shell-context";
@@ -93,7 +98,9 @@ export function PageHeader({
           >
             <PanelLeftOpen strokeWidth={1.5} aria-hidden />
           </TooltipTrigger>
-          <TooltipContent side="bottom">Show sidebar [</TooltipContent>
+          <TooltipContent side="bottom">
+            Show sidebar<TooltipShortcut>[</TooltipShortcut>
+          </TooltipContent>
         </Tooltip>
       )}
       {breadcrumbs && breadcrumbs.length > 0 && (

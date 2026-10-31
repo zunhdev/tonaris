@@ -1,6 +1,7 @@
 // Tooltip (DS-20): Base UI's tooltip, on the tooltip layer 90 (DS-18) with the floating shadow (DS-16), opening in
 // 150ms (DS-17). Tooltips only add clarity for pointer and keyboard users; what they say is also in the trigger's
-// accessible name, so nobody depends on them (DS-115).
+// accessible name, so nobody depends on them (DS-115). A shortcut in a tooltip follows its words, dimmer, as a
+// menu's does (TON-122).
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 import { cn } from "cn";
@@ -35,4 +36,15 @@ function TooltipContent({
   );
 }
 
-export { Tooltip, TooltipContent, TooltipTrigger };
+/** The key that does what the trigger does, after the tooltip's words; the trigger carries it in `aria-keyshortcuts`. */
+function TooltipShortcut({ className, ...props }: React.ComponentProps<"kbd">) {
+  return (
+    <kbd
+      data-slot="tooltip-shortcut"
+      className={cn("ml-2 font-sans text-fg-tertiary", className)}
+      {...props}
+    />
+  );
+}
+
+export { Tooltip, TooltipContent, TooltipShortcut, TooltipTrigger };
