@@ -824,6 +824,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Capacity:** a refusal shows its reason in the row. The link to the usage meter comes with DS-98 (TON-60).
 - **Activity and reports** name a capture by its link until saved: "Add an album from open.spotify.com/album/…".
 
+*As built in TON-122* (from the creator's manual testing, 31 October 2026): **each Add album button shows C in its tooltip**: the sidebar's, an empty list's and the one under a list in Editing mode. The tooltip reads "Add album" with the key after it, dimmer, as menus show keys, and the buttons carry `aria-keyshortcuts="C"`. Offline it still reads "You're offline". The sidebar's Hide sidebar and the header's Show sidebar show `[` the same way.
+
 **DS-49 View options and rearranging.**
 - **View button** in the header, or `V`, opens a popover:
   - Sort: lists offer Year / Name / Manual; folders offer Name / Created / Manual.

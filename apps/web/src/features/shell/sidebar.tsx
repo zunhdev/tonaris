@@ -26,7 +26,12 @@ import {
 import { Wordmark } from "@tonaris/ui/components/logo";
 import { ScrollArea } from "@tonaris/ui/components/scroll-area";
 import { Separator } from "@tonaris/ui/components/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipShortcut,
+  TooltipTrigger,
+} from "@tonaris/ui/components/tooltip";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { clampWidth, sidebarWidths } from "./device";
@@ -62,7 +67,9 @@ export function Sidebar({
           >
             <PanelLeftClose strokeWidth={1.5} aria-hidden />
           </TooltipTrigger>
-          <TooltipContent side="right">Hide sidebar [</TooltipContent>
+          <TooltipContent side="right">
+            Hide sidebar<TooltipShortcut>[</TooltipShortcut>
+          </TooltipContent>
         </Tooltip>
       </div>
       <AccountMenu account={account} />
@@ -215,8 +222,8 @@ function CollectionLink() {
 }
 
 /**
- * Add album: the capture dialog, with manual entry one step further (DS-48). Adding is an edit, so it waits while
- * offline (DS-81).
+ * Add album: the capture dialog, with manual entry one step further (DS-48), with C in its tooltip (TON-122). Adding
+ * is an edit, so it waits while offline (DS-81).
  */
 function AddAlbumButton() {
   const capture = useCapture();
@@ -233,14 +240,17 @@ function AddAlbumButton() {
     );
   }
   return (
-    <Button
-      variant="ghost"
-      className="justify-start"
-      aria-keyshortcuts="C"
-      onClick={() => capture?.openDialog()}
-    >
-      <Plus strokeWidth={1.5} aria-hidden />
-      Add album
-    </Button>
+    <Tooltip>
+      <TooltipTrigger
+        render={<Button variant="ghost" className="justify-start" aria-keyshortcuts="C" />}
+        onClick={() => capture?.openDialog()}
+      >
+        <Plus strokeWidth={1.5} aria-hidden />
+        Add album
+      </TooltipTrigger>
+      <TooltipContent side="right">
+        Add album<TooltipShortcut>C</TooltipShortcut>
+      </TooltipContent>
+    </Tooltip>
   );
 }

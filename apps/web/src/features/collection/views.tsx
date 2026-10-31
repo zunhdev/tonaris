@@ -17,7 +17,12 @@ import { useEffect, useMemo, type ReactNode } from "react";
 
 import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
 import { Button, buttonVariants } from "@tonaris/ui/components/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipShortcut,
+  TooltipTrigger,
+} from "@tonaris/ui/components/tooltip";
 
 import { AlbumCards } from "./album-cards";
 import { AlbumDetails } from "./album-details";
@@ -254,7 +259,10 @@ function Empty({ text, action }: { text: string; action?: ReactNode }) {
   );
 }
 
-/** Opens the capture dialog for the list on view (DS-48), with manual entry one step further; disabled offline. */
+/**
+ * Opens the capture dialog for the list on view (DS-48), with manual entry one step further, and C in its tooltip
+ * (TON-122); disabled offline.
+ */
 function AddAlbumButton({ variant }: { variant: "primary" | "ghost" }) {
   const capture = useCapture();
   if (useConnection() === "offline") {
@@ -269,10 +277,18 @@ function AddAlbumButton({ variant }: { variant: "primary" | "ghost" }) {
     );
   }
   return (
-    <Button variant={variant} onClick={() => capture?.openDialog()}>
-      <Plus strokeWidth={1.5} aria-hidden />
-      Add album
-    </Button>
+    <Tooltip>
+      <TooltipTrigger
+        render={<Button variant={variant} aria-keyshortcuts="C" />}
+        onClick={() => capture?.openDialog()}
+      >
+        <Plus strokeWidth={1.5} aria-hidden />
+        Add album
+      </TooltipTrigger>
+      <TooltipContent>
+        Add album<TooltipShortcut>C</TooltipShortcut>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

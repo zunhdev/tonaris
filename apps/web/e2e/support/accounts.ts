@@ -103,6 +103,8 @@ export const accounts = {
   rowMenuCreate: at("row-menu-create"),
   // Closing a folder that holds the view (collection-navigation.e2e.ts).
   closeHolder: at("close-holder"),
+  // Add album's key in its tooltips (capture.e2e.ts).
+  addAlbumKey: at("add-album-key"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),
