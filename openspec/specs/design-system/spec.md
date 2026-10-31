@@ -44,7 +44,7 @@ The theme SHALL meet DS-14 (Q-02): informational text at least 4.5:1 against eve
 - **THEN** the test fails and names the pair and its ratio
 
 ### Requirement: Typography
-Text SHALL use Inter Variable, served by Tonaris itself rather than a third-party font host, with the DS-13 fallback stack so scripts Inter lacks still render. The default UI text SHALL be 13px on a 20px line (`text.base`), with tabular numerals available for years, counts and dates.
+Text SHALL use Inter Variable, served by Tonaris itself rather than a third-party font host, with the DS-13 fallback stack so scripts Inter lacks still render. The default UI text SHALL be 13px on a 20px line (`text.base`), and 15px on a 22px line on phones (TON-136), with tabular numerals available for years, counts and dates.
 
 #### Scenario: Inter loads from Tonaris
 - **WHEN** a page loads
@@ -53,6 +53,10 @@ Text SHALL use Inter Variable, served by Tonaris itself rather than a third-part
 #### Scenario: Unsupported scripts fall back
 - **WHEN** saved text contains characters Inter does not cover, such as CJK
 - **THEN** they render in a system font from the fallback stack instead of as missing glyphs
+
+#### Scenario: Larger on a phone
+- **WHEN** the workspace is narrower than 768 px
+- **THEN** rows and menus use 15px text, and the desktop keeps 13px
 
 ### Requirement: A temporary mark identifies Tonaris
 The sidebar, guest pages and the sign-in page SHALL show the mark beside the name "Tonaris", and browsers SHALL get the mark as the favicon and the iOS home-screen icon (DS-19). The mark SHALL be defined once for the app and once as an SVG for the icons, so the permanent logo can replace it.
