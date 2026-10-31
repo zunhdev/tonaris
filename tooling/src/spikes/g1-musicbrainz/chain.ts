@@ -215,12 +215,20 @@ const urlForms: Record<Service, (link: ParsedLink, albumId: string) => string[]>
     `http://www.tidal.com/album/${albumId}`,
     `https://listen.tidal.com/album/${albumId}`,
   ],
+  // MusicBrainz mostly stores https://www.youtube.com/playlist?list={id}, sometimes music.youtube.com's (TON-128).
+  "youtube-music": (_, albumId) => [
+    `https://music.youtube.com/playlist?list=${albumId}`,
+    `https://www.youtube.com/playlist?list=${albumId}`,
+    `https://youtube.com/playlist?list=${albumId}`,
+  ],
 };
 
 /** The forms MusicBrainz may store this album's URL in. Spotify, Qobuz and Tidal track links name no album. */
 export function urlCandidates(link: ParsedLink): UrlCandidates | undefined {
   if (!link.albumId) return undefined;
-  const canonical = link.canonical.replace(/\?.*$/, "");
+  // A YouTube Music album's id is its query, `?list=`; other services' queries only say which track.
+  const canonical =
+    link.service === "youtube-music" ? link.canonical : link.canonical.replace(/\?.*$/, "");
   const variants = urlForms[link.service](link, link.albumId).filter((url) => url !== canonical);
   return { canonical, variants };
 }
@@ -469,11 +477,11 @@ export async function runChain(
       return { ...withLink, outcome: "pending", reason: pending, identifiedAtMs: elapsed() };
     const service = link.service === "tidal" ? "Tidal" : "Qobuz";
     const reason =
-      link.kind === "track"
+      link.kind === "track" && !link.albumId
         ? `a ${service} track link names no album, and nothing bridges it`
         : barcodes.length > 0
           ? "neither the URL nor the barcode is in MusicBrainz"
-          : link.service === "tidal"
+          : link.service === "tidal" || link.service === "youtube-music"
             ? "the URL isn't in MusicBrainz"
             : "the URL isn't in MusicBrainz, and the id isn't a barcode";
     return { ...withLink, outcome: "unresolved", reason, identifiedAtMs: elapsed() };

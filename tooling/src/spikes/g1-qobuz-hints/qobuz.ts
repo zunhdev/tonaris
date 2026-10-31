@@ -28,7 +28,8 @@ export type QobuzHints = {
 export type StoreHints = QobuzHints;
 
 export type QobuzRequest = {
-  kind: "robots" | "slug" | "page";
+  /** YouTube Music's reads are the Data API's (TON-128): the playlist, its items and a video. */
+  kind: "robots" | "slug" | "page" | "playlist" | "items" | "video";
   /** 0 when the request timed out. */
   status: number;
   /** From when the request was allowed to start until its body arrived. */

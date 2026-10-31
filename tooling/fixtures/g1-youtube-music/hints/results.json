@@ -1,0 +1,5241 @@
+{
+  "results": [
+    {
+      "index": 0,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the playlist isn't available"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "ab88ca0b-da32-4e01-ae9b-198b0b7b8681"
+        ],
+        "source": "Wikidata Q18650966 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 1,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nOq_2WK7qFIGu96ikQGp7XDKIstZqARY0",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "3777e0ad-92b3-4d55-a49e-490cc6b230cf": "Dans le même sang"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "3777e0ad-92b3-4d55-a49e-490cc6b230cf",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "3777e0ad-92b3-4d55-a49e-490cc6b230cf",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "3777e0ad-92b3-4d55-a49e-490cc6b230cf",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "3777e0ad-92b3-4d55-a49e-490cc6b230cf",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "3777e0ad-92b3-4d55-a49e-490cc6b230cf",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "3777e0ad-92b3-4d55-a49e-490cc6b230cf",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "3777e0ad-92b3-4d55-a49e-490cc6b230cf"
+        ],
+        "source": "Wikidata Q55596589 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 2,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kUFhy8RqEHUJ8HEhlgrFICMS3PSA3MII8",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "problem": "the description gives no date"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "1fe9f852-912b-4f23-9ca9-32efe6028e10"
+        ],
+        "source": "Wikidata Q3531205 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 3,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kof2RIV9IuV_xHecMLF8ZhiiddUAsmTEo",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "problem": "the description gives no date"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "0b5d1515-3418-4b1d-95ae-19aa03d077fb"
+        ],
+        "source": "Wikidata Q104724551 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 4,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mJraLItBAsCqyEHQbDxkXHZXVJ_XBeB2g",
+      "knownByUrl": false,
+      "candidates": 7,
+      "albumTitles": {
+        "7d4238f4-ef11-39c8-af25-2ea9116115b5": "Natural",
+        "042bf6e1-0d47-4486-9b20-1bfad4214152": "Natural"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+          "releases": 3,
+          "albums": 1,
+          "correct": false
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+          "releases": 3,
+          "albums": 1,
+          "correct": false
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+          "releases": 3,
+          "albums": 1,
+          "correct": false
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+          "releases": 2,
+          "albums": 1,
+          "correct": false
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "042bf6e1-0d47-4486-9b20-1bfad4214152",
+          "releases": 2,
+          "albums": 1,
+          "correct": false
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 6,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "7d4238f4-ef11-39c8-af25-2ea9116115b5"
+        ],
+        "source": "Wikidata Q6980414 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": true
+      },
+      "years": {
+        "original": false,
+        "release": false
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 5,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mTq8oHNGyHcFFpLQFbISKaQLMU6_SBTb4",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the playlist isn't available"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "e58d0c80-af55-3bae-bde5-72ea9b3349d1"
+        ],
+        "source": "Wikidata Q6874608 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 6,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mhZtCcub5ozvO0dSYdNsl2F9FCY-q5FLc",
+      "knownByUrl": false,
+      "candidates": 6,
+      "albumTitles": {
+        "00d458e0-ddf8-4902-99d4-ce4cb7236bb1": "Funambule"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "00d458e0-ddf8-4902-99d4-ce4cb7236bb1",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "00d458e0-ddf8-4902-99d4-ce4cb7236bb1",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "00d458e0-ddf8-4902-99d4-ce4cb7236bb1",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "00d458e0-ddf8-4902-99d4-ce4cb7236bb1",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "00d458e0-ddf8-4902-99d4-ce4cb7236bb1",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "00d458e0-ddf8-4902-99d4-ce4cb7236bb1",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "00d458e0-ddf8-4902-99d4-ce4cb7236bb1"
+        ],
+        "source": "Wikidata Q15140064 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 7,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_m_0WxWJISDAOZxW6bcTuknehLwiL8m-ZY",
+      "knownByUrl": true,
+      "candidates": 4,
+      "albumTitles": {
+        "c38ff9e4-8b81-4395-b9b5-963f2375ae84": "Om du vill vara med mig",
+        "40b59f83-8839-455d-b0e0-f56ef8b9c253": "Om du vill vara med mig"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 4,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 4,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 4,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c38ff9e4-8b81-4395-b9b5-963f2375ae84",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "c38ff9e4-8b81-4395-b9b5-963f2375ae84",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c38ff9e4-8b81-4395-b9b5-963f2375ae84",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c38ff9e4-8b81-4395-b9b5-963f2375ae84"
+        ],
+        "source": "Wikidata Q15056288 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 8,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mmgfk_l8o4lLgRpaWe2DEYznStSxsU2qM",
+      "knownByUrl": false,
+      "candidates": 3,
+      "albumTitles": {
+        "fc0ed06d-f1a3-3b8f-bed0-2cb52cb98ed9": "Le Moujik et sa femme"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "fc0ed06d-f1a3-3b8f-bed0-2cb52cb98ed9",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "fc0ed06d-f1a3-3b8f-bed0-2cb52cb98ed9",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "fc0ed06d-f1a3-3b8f-bed0-2cb52cb98ed9",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "fc0ed06d-f1a3-3b8f-bed0-2cb52cb98ed9",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "fc0ed06d-f1a3-3b8f-bed0-2cb52cb98ed9"
+        ],
+        "source": "Wikidata Q20760176 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 9,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_luqOIs_QNilWfRznTdXkrLMO8AUTay3K8",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "8176c85b-12cb-4988-9a23-06a48caebd96": "La Direction"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "8176c85b-12cb-4988-9a23-06a48caebd96",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "8176c85b-12cb-4988-9a23-06a48caebd96",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "8176c85b-12cb-4988-9a23-06a48caebd96",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "8176c85b-12cb-4988-9a23-06a48caebd96",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "8176c85b-12cb-4988-9a23-06a48caebd96",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "8176c85b-12cb-4988-9a23-06a48caebd96",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "8176c85b-12cb-4988-9a23-06a48caebd96"
+        ],
+        "source": "Wikidata Q113839012 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 10,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kfIv0AyUwExGW4IXvQ-WFAaho_pfOUPMk",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "no track is on a \"- Topic\" channel"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "716eac64-60ff-3738-954c-d232b9868445"
+        ],
+        "source": "Wikidata Q3633675 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 11,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_najHmcPZPZf9-X7iCD609ZxEPtZEcVig8",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c045e294-201c-47a0-9103-18641e0a2600"
+        ],
+        "source": "Wikidata Q2881323 P436"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 12,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nQlPS9rMGV-9mR-YdSDRWPComQ5S7t1xo",
+      "knownByUrl": false,
+      "candidates": 25,
+      "albumTitles": {
+        "1746a028-cb05-39db-9249-f2e58331fd23": "Emotions",
+        "6eebfc23-d065-4922-b3f5-07f07a971ddf": "Emotions",
+        "b4118df6-2208-3dd4-917d-f90bd23a3316": "Without You",
+        "c07c87a1-4454-4f1f-8f62-36c5c2bd5ae2": "What Have I Done to Deserve These Emotions (Parralox remix V2)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 14,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 21,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 21,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "1746a028-cb05-39db-9249-f2e58331fd23",
+          "releases": 16,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "1746a028-cb05-39db-9249-f2e58331fd23",
+          "releases": 16,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "1746a028-cb05-39db-9249-f2e58331fd23",
+          "releases": 16,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "1746a028-cb05-39db-9249-f2e58331fd23"
+        ],
+        "source": "Wikidata Q388007 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 13,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nuy_agWBN8fGPG2o2QaTa4reg7TRY753A",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "no track is on a \"- Topic\" channel"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "24380693-cbd0-462e-8af0-0cf0c085e1ce"
+        ],
+        "source": "Wikidata Q106205750 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 14,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kp6SyHwjxA580_rgjPjKFQMFgFFZgjJFo",
+      "knownByUrl": false,
+      "candidates": 4,
+      "albumTitles": {
+        "4fdb15ee-1446-3359-a4df-e9d05652f94f": "Les Champs-Élysées",
+        "15f6b9b2-e9ea-4f69-8160-d14844619e53": "Les Champs Elysées",
+        "62e3ef72-2501-3865-8e2c-cd146b436f2e": "Intégrale",
+        "10322b0b-c7bb-4cf3-becf-dd65e66f033a": "Le Chemin de Papa / Les Champs-Élysées"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4fdb15ee-1446-3359-a4df-e9d05652f94f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4fdb15ee-1446-3359-a4df-e9d05652f94f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4fdb15ee-1446-3359-a4df-e9d05652f94f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "4fdb15ee-1446-3359-a4df-e9d05652f94f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "4fdb15ee-1446-3359-a4df-e9d05652f94f",
+          "d22f5d27-931b-39a0-945c-f978fefbe21d"
+        ],
+        "source": "Wikidata Q12071518 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": false
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 15,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_moX9ehXpGgVAGvk2CA4DEDSBXNCbr7JJM",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "no track is on a \"- Topic\" channel"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "41242792-66fd-46e4-acae-2cc0538ec0e2"
+        ],
+        "source": "Wikidata Q3830867 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 16,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lMzn4UmJqIbuJnNa8BuaqfTykpIWPEqEw",
+      "knownByUrl": false,
+      "candidates": 6,
+      "albumTitles": {
+        "8a77b655-e595-4636-9490-0e1f0c45b07d": "I AM: CELINE DION: Original Motion Picture Soundtrack"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "8a77b655-e595-4636-9490-0e1f0c45b07d"
+        ],
+        "source": "Wikidata Q126088281 P436"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 17,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_m-N2ZClveVBRmB5MTZCcY0VQshSeIYv9Y",
+      "knownByUrl": true,
+      "candidates": 2,
+      "albumTitles": {
+        "2e2b3c71-6c69-459c-9c1a-33b9d8611327": "Golden Hour"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "2e2b3c71-6c69-459c-9c1a-33b9d8611327",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "2e2b3c71-6c69-459c-9c1a-33b9d8611327",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "2e2b3c71-6c69-459c-9c1a-33b9d8611327",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "2e2b3c71-6c69-459c-9c1a-33b9d8611327",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "2e2b3c71-6c69-459c-9c1a-33b9d8611327",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "2e2b3c71-6c69-459c-9c1a-33b9d8611327",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "2e2b3c71-6c69-459c-9c1a-33b9d8611327"
+        ],
+        "source": "Wikidata Q94316999 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 18,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mlnTmFU-_xEZtInr5aoWiRpfXHU3Sqko0",
+      "knownByUrl": false,
+      "candidates": 5,
+      "albumTitles": {
+        "3827de54-e183-4145-89f9-0345018ba9da": "Epitaph",
+        "cb763b66-7266-4705-bb3c-947342dfbe54": "Epitaph"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 5,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 5,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 5,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "cb763b66-7266-4705-bb3c-947342dfbe54",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "cb763b66-7266-4705-bb3c-947342dfbe54",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "cb763b66-7266-4705-bb3c-947342dfbe54",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "cb763b66-7266-4705-bb3c-947342dfbe54"
+        ],
+        "source": "Wikidata Q52106134 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 19,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nWIwho9omxx7Kuf10SiUUbvGw9Z5SNVXY",
+      "knownByUrl": false,
+      "candidates": 5,
+      "albumTitles": {
+        "cd587423-2e07-4f6d-b64b-6b189ce9247b": "Bonjour"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "cd587423-2e07-4f6d-b64b-6b189ce9247b",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "cd587423-2e07-4f6d-b64b-6b189ce9247b",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "cd587423-2e07-4f6d-b64b-6b189ce9247b",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "cd587423-2e07-4f6d-b64b-6b189ce9247b",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "cd587423-2e07-4f6d-b64b-6b189ce9247b",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "cd587423-2e07-4f6d-b64b-6b189ce9247b",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "cd587423-2e07-4f6d-b64b-6b189ce9247b"
+        ],
+        "source": "Wikidata Q2910163 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 20,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kLyFOyb5rjZYyT-brW2uzJ_Iu0wP99w3M",
+      "knownByUrl": false,
+      "candidates": 3,
+      "albumTitles": {
+        "bd2f3f3e-f2b1-4b8f-a80f-ebf09bcf2cb6": "Here We Go Crazy",
+        "d2fffae5-4e22-4466-bcb8-0e5fd0363a31": "Here We Go Crazy"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "d2fffae5-4e22-4466-bcb8-0e5fd0363a31",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 3,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 3,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d2fffae5-4e22-4466-bcb8-0e5fd0363a31",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "d2fffae5-4e22-4466-bcb8-0e5fd0363a31",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "d2fffae5-4e22-4466-bcb8-0e5fd0363a31",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "d2fffae5-4e22-4466-bcb8-0e5fd0363a31"
+        ],
+        "source": "Wikidata Q136463725 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 21,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kFYZHdQcvPYQ3Pgl_V-QWKo3nlSsEXWVY",
+      "knownByUrl": false,
+      "candidates": 14,
+      "albumTitles": {
+        "32faf671-3b3e-3271-b497-a0631605b0f6": "Better Than Raw"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "32faf671-3b3e-3271-b497-a0631605b0f6",
+          "releases": 14,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "32faf671-3b3e-3271-b497-a0631605b0f6"
+        ],
+        "source": "Wikidata Q832462 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 22,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_l5hRuFmU1Ma476JCr614zn8LeZ9VWxzTM",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "a0885a1b-f473-339f-a29b-1c5cfe3a877d"
+        ],
+        "source": "Wikidata Q3365145 P436"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 23,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lWN3Uv4VpZfY7hRvGa1ycXbyBFRB_-pyg",
+      "knownByUrl": false,
+      "candidates": 22,
+      "albumTitles": {
+        "7822977a-984d-358d-823f-426139c0eaba": "The Colour and the Shape",
+        "577ea7d3-12a7-44d5-b35f-2476e6941576": "The Colour and the Shape... Of Things to Come"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "7822977a-984d-358d-823f-426139c0eaba",
+          "releases": 11,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "7822977a-984d-358d-823f-426139c0eaba",
+          "releases": 21,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "7822977a-984d-358d-823f-426139c0eaba",
+          "releases": 21,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "7822977a-984d-358d-823f-426139c0eaba",
+          "releases": 18,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "7822977a-984d-358d-823f-426139c0eaba",
+          "releases": 18,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "7822977a-984d-358d-823f-426139c0eaba",
+          "releases": 18,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "7822977a-984d-358d-823f-426139c0eaba"
+        ],
+        "source": "Wikidata Q968646 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 24,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_n1BV7pwac8PY0Q3dK3p9gjsnCN_ERji70",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "problem": "the description gives no date"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "98eb32c9-239c-377b-9cff-36680957296b"
+        ],
+        "source": "Wikidata Q3346752 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 25,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_k0RQ46mGYAoFJGXvxL10po7kz8oxucGFk",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "no track is on a \"- Topic\" channel"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "9e4a83c1-afe9-3826-be19-76836492702b"
+        ],
+        "source": "Wikidata Q1038861 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 26,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nqPSmM9xzqL8wn7CpKEKAK4BC8ts4SJ6Y",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "no track is on a \"- Topic\" channel"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "7d91468d-bc5b-4c79-9177-551bdc0bca29"
+        ],
+        "source": "Wikidata Q27992449 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 27,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_m8rowxWxqDQrU9m1RTZhOpc5L6seXlyLM",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "no track is on a \"- Topic\" channel"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "db4ede8c-116d-4203-ba4a-6d4f41369b65"
+        ],
+        "source": "Wikidata Q3359272 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 28,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nokOswsKkibvGvDUHeochV0ozAfpIhg4A",
+      "knownByUrl": true,
+      "candidates": 1,
+      "albumTitles": {
+        "f21f27dd-b692-4909-85f6-a8dbe1c991a1": "WOODKID FOR DEATH STRANDING 2: ON THE BEACH"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "f21f27dd-b692-4909-85f6-a8dbe1c991a1",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f21f27dd-b692-4909-85f6-a8dbe1c991a1",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f21f27dd-b692-4909-85f6-a8dbe1c991a1",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f21f27dd-b692-4909-85f6-a8dbe1c991a1",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "f21f27dd-b692-4909-85f6-a8dbe1c991a1",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f21f27dd-b692-4909-85f6-a8dbe1c991a1",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "f21f27dd-b692-4909-85f6-a8dbe1c991a1"
+        ],
+        "source": "Wikidata Q137169501 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 29,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nI9w1_06NA0_hC2LUqsmC0gnWX2XczAbM",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "01a5da18-0dcf-3976-9684-3569b71792de"
+        ],
+        "source": "Wikidata Q3352480 P436"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 30,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kd8jcSDXbhWryRBX8GfGHEo2AOjCfz8L8",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "no track is on a \"- Topic\" channel"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "21717c25-2fbf-4a18-8e47-b58ef9531075"
+        ],
+        "source": "Wikidata Q15634308 P436"
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 31,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lJuIHOAEKrCzcQkyLpM3RO-7qhHM-ZV-Q",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "683b30ca-3725-4665-8183-f36e9c6fe6e4"
+        ],
+        "source": "Wikidata Q19958705 P436"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 32,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lct9GI8xsYeU2LElXgTgXyk19M1b5NfzA",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "29ff71e3-517f-3c77-9caa-4275a60cf97e"
+        ],
+        "source": "Wikidata Q3163504 P436"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": false,
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 33,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_loKul4v_LlUx6PBaMjpszaXAry3wXxkcA",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "be01839a-26c3-4b73-85dd-e64296ed474c": "Antichristus ex Utero"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "be01839a-26c3-4b73-85dd-e64296ed474c",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "be01839a-26c3-4b73-85dd-e64296ed474c",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "be01839a-26c3-4b73-85dd-e64296ed474c",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "be01839a-26c3-4b73-85dd-e64296ed474c",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "be01839a-26c3-4b73-85dd-e64296ed474c",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "be01839a-26c3-4b73-85dd-e64296ed474c",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "be01839a-26c3-4b73-85dd-e64296ed474c"
+        ],
+        "source": "Wikidata Q23951667 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 34,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_k2RKZuyk3jTBsRszem5auHeYNBgmoAFuU",
+      "knownByUrl": false,
+      "candidates": 6,
+      "albumTitles": {
+        "b93867fa-1067-37f6-bb6c-d1a9d868042a": "Houlala 2, la mission"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "b93867fa-1067-37f6-bb6c-d1a9d868042a",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "b93867fa-1067-37f6-bb6c-d1a9d868042a",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "b93867fa-1067-37f6-bb6c-d1a9d868042a",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "b93867fa-1067-37f6-bb6c-d1a9d868042a",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "b93867fa-1067-37f6-bb6c-d1a9d868042a",
+          "releases": 6,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "b93867fa-1067-37f6-bb6c-d1a9d868042a"
+        ],
+        "source": "Wikidata Q2425047 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 35,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_msqXkOofHlUuPcTy1SRkV_sv9opyuKI2k",
+      "knownByUrl": false,
+      "candidates": 4,
+      "albumTitles": {
+        "c4f39ae2-e699-4cc1-8515-b2d0055949ed": "Landmark"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f39ae2-e699-4cc1-8515-b2d0055949ed",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f39ae2-e699-4cc1-8515-b2d0055949ed",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f39ae2-e699-4cc1-8515-b2d0055949ed",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f39ae2-e699-4cc1-8515-b2d0055949ed",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f39ae2-e699-4cc1-8515-b2d0055949ed",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c4f39ae2-e699-4cc1-8515-b2d0055949ed",
+          "releases": 4,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c4f39ae2-e699-4cc1-8515-b2d0055949ed"
+        ],
+        "source": "Wikidata Q48965885 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 36,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kLSZYKTqmwS0CDv8MbrP6TRLauA5sOQHQ",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "d29c3995-fce9-42ad-912f-e9fd3ee1625a": "Nique le casino",
+        "6e1a73f0-e903-48e5-8842-c394002f97f5": "Nique le Casino 2"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "d29c3995-fce9-42ad-912f-e9fd3ee1625a",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "d29c3995-fce9-42ad-912f-e9fd3ee1625a",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d29c3995-fce9-42ad-912f-e9fd3ee1625a",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d29c3995-fce9-42ad-912f-e9fd3ee1625a",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "d29c3995-fce9-42ad-912f-e9fd3ee1625a",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "d29c3995-fce9-42ad-912f-e9fd3ee1625a",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "d29c3995-fce9-42ad-912f-e9fd3ee1625a"
+        ],
+        "source": "Wikidata Q122984769 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 37,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mdi2ft0-jqXDcQmXTOuCLDBRi1t3gvjPs",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "6aa4244d-ba1b-39fe-ac91-d8acb0c6bdc9": "Rapattitude"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "6aa4244d-ba1b-39fe-ac91-d8acb0c6bdc9"
+        ],
+        "source": "Wikidata Q3419362 P436"
+      },
+      "fallbackSearch": true,
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": true
+      },
+      "years": {
+        "original": false,
+        "release": false
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 38,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lrGnUipx20lzi9Gqe7lxP6gWo_rpObk2k",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "16a7d58a-eab8-46cd-851f-7d7dc0bde8f3": "Les Temps modernes"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "16a7d58a-eab8-46cd-851f-7d7dc0bde8f3",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "16a7d58a-eab8-46cd-851f-7d7dc0bde8f3",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "16a7d58a-eab8-46cd-851f-7d7dc0bde8f3",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "16a7d58a-eab8-46cd-851f-7d7dc0bde8f3",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "16a7d58a-eab8-46cd-851f-7d7dc0bde8f3",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "16a7d58a-eab8-46cd-851f-7d7dc0bde8f3",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "16a7d58a-eab8-46cd-851f-7d7dc0bde8f3"
+        ],
+        "source": "Wikidata Q123002956 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 39,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nL66yh-FDMvIciwnwrsYvu4Wq1tjqZCik",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "fcc99f54-4925-3db6-8e46-379c85ba4b49": "Mon cabaret",
+        "daa71111-c458-4276-af1c-7920d6e6ce8c": "Mon cabaret"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 2,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "fcc99f54-4925-3db6-8e46-379c85ba4b49",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "fcc99f54-4925-3db6-8e46-379c85ba4b49",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "fcc99f54-4925-3db6-8e46-379c85ba4b49",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "fcc99f54-4925-3db6-8e46-379c85ba4b49"
+        ],
+        "source": "Wikidata Q3319851 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 40,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mnpNK4qwktr8LyXdMly6ikJIoR5AAh5_I",
+      "knownByUrl": false,
+      "candidates": 4,
+      "albumTitles": {
+        "93132be5-50a9-43b0-81c8-328283968131": "Fatti sentire"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "93132be5-50a9-43b0-81c8-328283968131",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "93132be5-50a9-43b0-81c8-328283968131",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "93132be5-50a9-43b0-81c8-328283968131",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "93132be5-50a9-43b0-81c8-328283968131",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "93132be5-50a9-43b0-81c8-328283968131",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "93132be5-50a9-43b0-81c8-328283968131",
+          "releases": 3,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "93132be5-50a9-43b0-81c8-328283968131"
+        ],
+        "source": "Wikidata Q48894161 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 41,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_niCK3dKyx6yS-r_mr8A35i8m-i7V9WopA",
+      "knownByUrl": false,
+      "candidates": 38,
+      "albumTitles": {
+        "bf37b1a0-d94f-4230-b2c7-09b17f9f8a68": "Bad Blood",
+        "8cb2b353-0d1b-4155-ac07-35b56a44f15d": "Bad Blood",
+        "ee474ca8-d5e3-405e-91d3-f52ffacce4a8": "Bad Blood / Haunt / Remixed"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "bf37b1a0-d94f-4230-b2c7-09b17f9f8a68",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "bf37b1a0-d94f-4230-b2c7-09b17f9f8a68",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "bf37b1a0-d94f-4230-b2c7-09b17f9f8a68",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "bf37b1a0-d94f-4230-b2c7-09b17f9f8a68",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "bf37b1a0-d94f-4230-b2c7-09b17f9f8a68",
+          "releases": 9,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "bf37b1a0-d94f-4230-b2c7-09b17f9f8a68",
+          "releases": 10,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "bf37b1a0-d94f-4230-b2c7-09b17f9f8a68"
+        ],
+        "source": "Wikidata Q11756808 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": false,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 42,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kjt6Twr2319rUSvh4LKM8NeYDhBxxeaM8",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "a156aacd-dcbc-3ce7-b8e9-7e540d743c18": "Mass Hysteria"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "a156aacd-dcbc-3ce7-b8e9-7e540d743c18",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "a156aacd-dcbc-3ce7-b8e9-7e540d743c18",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "a156aacd-dcbc-3ce7-b8e9-7e540d743c18",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "a156aacd-dcbc-3ce7-b8e9-7e540d743c18",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "a156aacd-dcbc-3ce7-b8e9-7e540d743c18",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "a156aacd-dcbc-3ce7-b8e9-7e540d743c18",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "a156aacd-dcbc-3ce7-b8e9-7e540d743c18"
+        ],
+        "source": "Wikidata Q3297393 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 43,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_ltkeyl7aJdKkYat7plSKPMIKb4E_gI1QM",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "bcfee151-0210-4123-a38f-20c92c502e06": "Rivages"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "bcfee151-0210-4123-a38f-20c92c502e06",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "bcfee151-0210-4123-a38f-20c92c502e06",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "bcfee151-0210-4123-a38f-20c92c502e06",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "bcfee151-0210-4123-a38f-20c92c502e06",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "bcfee151-0210-4123-a38f-20c92c502e06",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "bcfee151-0210-4123-a38f-20c92c502e06",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "bcfee151-0210-4123-a38f-20c92c502e06"
+        ],
+        "source": "Wikidata Q125909455 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 44,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_msngLyj-3XOXQ1nQCOIERFR82weC0SYOE",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "2ec817b1-d877-42a4-9037-a375d4c6c10a": "Travaux sur la N89"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "2ec817b1-d877-42a4-9037-a375d4c6c10a",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "2ec817b1-d877-42a4-9037-a375d4c6c10a",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "2ec817b1-d877-42a4-9037-a375d4c6c10a",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "2ec817b1-d877-42a4-9037-a375d4c6c10a",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "2ec817b1-d877-42a4-9037-a375d4c6c10a"
+        ],
+        "source": "Wikidata Q60834128 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 45,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nU3l-WXu957C9D7nfOCcjYbKviHjD93mw",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "b8a98204-307d-4a24-a2a7-729eda14eec8": "Life Is Strange"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "b8a98204-307d-4a24-a2a7-729eda14eec8",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "b8a98204-307d-4a24-a2a7-729eda14eec8",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "b8a98204-307d-4a24-a2a7-729eda14eec8",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "b8a98204-307d-4a24-a2a7-729eda14eec8",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "b8a98204-307d-4a24-a2a7-729eda14eec8",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "b8a98204-307d-4a24-a2a7-729eda14eec8",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "b8a98204-307d-4a24-a2a7-729eda14eec8"
+        ],
+        "source": "Wikidata Q108603501 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 46,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s",
+      "knownByUrl": true,
+      "candidates": 1,
+      "albumTitles": {
+        "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576": "The End of the Beginning"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576"
+        ],
+        "source": "Wikidata Q24464421 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": true,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 47,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_muYnaaozjR_7nUC1FlQOsRC9A7ZgeLLuk",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "c5c610a9-2ac1-49af-893b-c7a91981715f": "Change"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "c5c610a9-2ac1-49af-893b-c7a91981715f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c5c610a9-2ac1-49af-893b-c7a91981715f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c5c610a9-2ac1-49af-893b-c7a91981715f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "c5c610a9-2ac1-49af-893b-c7a91981715f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "c5c610a9-2ac1-49af-893b-c7a91981715f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "c5c610a9-2ac1-49af-893b-c7a91981715f",
+          "releases": 1,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c5c610a9-2ac1-49af-893b-c7a91981715f"
+        ],
+        "source": "Wikidata Q5071769 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": false
+      },
+      "years": {
+        "original": true,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 48,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lQf9Uo3BZliA5EJOh3xnV0CDTdnRgEO_o",
+      "knownByUrl": false,
+      "candidates": 100,
+      "albumTitles": {
+        "8e8a594f-2175-38c7-a871-abb68ec363e7": "Kind of Blue"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 2,
+          "albums": 1,
+          "correct": true
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "8e8a594f-2175-38c7-a871-abb68ec363e7",
+          "releases": 95,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "8e8a594f-2175-38c7-a871-abb68ec363e7"
+        ],
+        "source": "Wikidata Q283221 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": true,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": false,
+        "originalYear": false
+      },
+      "years": {
+        "original": false,
+        "release": true
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 49,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nt2ult4e2Up8zFJnoV04okLiB2HKcsiFw",
+      "knownByUrl": false,
+      "candidates": 5,
+      "albumTitles": {
+        "0d140e6c-64e5-304d-bfe7-53e7b63301d1": "The Mystical Beast of Rebellion"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "0d140e6c-64e5-304d-bfe7-53e7b63301d1",
+          "releases": 5,
+          "albums": 1,
+          "correct": true
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "0d140e6c-64e5-304d-bfe7-53e7b63301d1"
+        ],
+        "source": "Wikidata Q3521965 P436"
+      },
+      "rightAlbumFound": true,
+      "failed": {
+        "titleExact": false,
+        "titleClean": false,
+        "artist": false,
+        "tracks": true,
+        "releaseDate": true,
+        "originalYear": true
+      },
+      "years": {
+        "original": false,
+        "release": false
+      },
+      "sample": "wikidata-youtube-music-in-mb"
+    },
+    {
+      "index": 50,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_k6c-BerPaYc-gRV7InIWgXxPMWJu1Xszg",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 51,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lMtLWCTUlTQcexPEr-ezsB4jxH1Xyqs-A",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 52,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mxBySwd74hMk0w5tbHX5zMiYN4gTuZUcU",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 53,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lsnIgT_TpxoetRO1l3lESkKs3XXO2E2Sg",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 2,
+        "slugRequest": false,
+        "problem": "no track is on a \"- Topic\" channel"
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 54,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lIwjWv58qzpW1lp9gXu4jDE6Ip-GZONDE",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "d3218330-0911-41e5-b77c-ee0f83401a2d": "B4 Day One"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3218330-0911-41e5-b77c-ee0f83401a2d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3218330-0911-41e5-b77c-ee0f83401a2d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3218330-0911-41e5-b77c-ee0f83401a2d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3218330-0911-41e5-b77c-ee0f83401a2d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3218330-0911-41e5-b77c-ee0f83401a2d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3218330-0911-41e5-b77c-ee0f83401a2d",
+          "releases": 1,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 55,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_koH0B1F8AfpxkKg1wC8ovml9qqZWsQSf8",
+      "knownByUrl": false,
+      "candidates": 53,
+      "albumTitles": {
+        "44b41ab8-186f-4dc8-b636-eb170dee8d6b": "One",
+        "8930020c-6fe0-4924-8d1e-c58742c0b137": "Decade One (Remixes)",
+        "717f79f7-ec12-4e02-b7ed-bd7dd0555e30": "The One (Remixes)",
+        "6e564287-88ee-4e8b-9d2c-0d9b7ee6a0af": "Season One Remixes",
+        "c311efea-3e48-3403-97d7-152b45381f84": "No One",
+        "96cbafcf-0bf1-4e23-a08b-bcb38fc11d9d": "Terminal One Remixes",
+        "c980eb54-0051-468c-b49d-f8c8c05a1265": "Stage One",
+        "9f221d4b-d13e-4170-8acb-61183487c4b1": "Loved One Remixes",
+        "0cadc1ae-fbec-48f0-9e2f-539d5ff7790e": "LAYER ONE Remixes",
+        "f010e068-9355-459c-87c3-996edfe4d391": "Truly One",
+        "328d2cd6-5e13-4d87-8466-5ee5f6818f4a": "Volume One (The Remixes)",
+        "87420b99-1020-45d2-ab7e-c195956ad8e9": "Truly One (Remixes)",
+        "d775eb04-36ce-4669-9b91-3a57cba0139f": "The One (Remixes)",
+        "5d6289b0-1738-48a8-9916-457892c9d173": "The Square One Remixes",
+        "93bdadb7-ce7a-49fe-9a81-5ba559e733bd": "Be the One",
+        "32a30ec0-e0fc-4d31-98d4-44d9a00fd233": "One by One (Remixes)",
+        "1eaf4fd5-0a45-434e-9f35-605649daf0f9": "Bonzai Channel One (Remixes)",
+        "cefb6215-29e2-4a7b-9596-28338b779269": "We Are One Remixes",
+        "c252eed5-5d30-40ff-9199-f5c7dd087d43": "The Last One (remixes)",
+        "0c385588-d07c-407b-9920-4081e4218903": "Rise As One (remixes)",
+        "f2ec1de7-1774-48ab-b928-7ec36023a0ca": "Law of One Remixes",
+        "20dd2caf-4ff9-419e-b4ec-e70473ba00ab": "You da One (Remixes)",
+        "9120038b-273a-4b73-9e17-c58c7306b8ce": "All Is One (Remixes)",
+        "785b3e16-24e3-43ae-baf2-2e4d6897a695": "Together as One (Remixes)",
+        "dd3260f2-4cfb-4224-89a2-852f2a200416": "My Number One",
+        "b6b9c315-37e2-46c1-9dff-870901ba51d8": "One by One",
+        "659ce225-2e21-428b-bd98-ce5271fa3710": "Party for One",
+        "2bc212e0-683c-456d-b326-cbff1f7f3d80": "Two To One (Remixes)",
+        "cf1829be-f9a4-43f4-bdf3-0e7345a26a0a": "You're The One (Remixes)",
+        "24e4e937-41db-4adf-a25b-45797f568f18": "We Are One (Remixes)",
+        "3cd4b431-e4f5-31ef-ae39-482d460aa899": "One & One",
+        "418b6a25-7089-49fa-9f4b-895ec23b0a70": "Light From One (Remixes)",
+        "33803e8e-c851-4d81-b92a-0fce431196c7": "Plosive - One Remixes",
+        "a047f927-6a42-43be-8ef0-3b0e90cae797": "You're Not the One (Remixes)",
+        "ac316ce8-b38f-4726-b6e5-e22664b13dd3": "State of No One (Remixes)",
+        "32e2dc5b-2960-3638-ae2a-a1e5b8e88691": "You’re Still the One",
+        "f386649c-dd27-4aec-b4b8-473f78ea4a13": "From Zero to One [remixes]",
+        "bbe8ed87-b878-4cd2-ab30-c135b4d578c0": "Lonely One",
+        "24f63edc-4003-4593-9131-b000d1c88b64": "Back To Square One (Remixes)",
+        "59fc1506-2662-44c0-ac42-19c271bfd5aa": "I Could Be the One",
+        "08a1c524-6b56-4d39-915a-434d592928d6": "Modern English Folklore Volume One: Remixes",
+        "296cc61e-e464-49a3-ab67-3b59cd1cc370": "Time Waits For No-one Remixes",
+        "2b128622-f3f0-4d6c-9882-b3eab447cdc7": "We Could Be the One",
+        "07cf534e-749b-4d0c-bdbd-d82856d9ec37": "Two Is Better Than One (remixes)",
+        "be125ca3-3729-419d-a248-550ff993f820": "Deep Fear (10th Anniversary) (Part One Remixes)",
+        "71d5d3f2-8cb9-43dd-878c-418e58c24afa": "Reap (Jerome Farley, Floor One Remixes and Rise! Push! Remixes)",
+        "79e52b13-6f49-3d92-b9ae-48f7955ba6ef": "Café del Mar"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 56,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lkLoTo2SThW2J3bCmOMcNQ9ZAonUvtX3I",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "5bd235a5-8a36-358e-a8f2-d10a91b8112d": "Wake Up"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "5bd235a5-8a36-358e-a8f2-d10a91b8112d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "5bd235a5-8a36-358e-a8f2-d10a91b8112d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5bd235a5-8a36-358e-a8f2-d10a91b8112d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "5bd235a5-8a36-358e-a8f2-d10a91b8112d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "5bd235a5-8a36-358e-a8f2-d10a91b8112d",
+          "releases": 1,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "5bd235a5-8a36-358e-a8f2-d10a91b8112d",
+          "releases": 1,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 57,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_npWpIyHYRh6Qv5zHXPwpHQiBnMm5k1ZIU",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 58,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nRSshj1LFyJtsbgs87r1kC0DKzbJ5CqrM",
+      "knownByUrl": false,
+      "candidates": 6,
+      "albumTitles": {
+        "a8e02272-debd-43ac-9305-2d023cb1dfd9": "Living Hope",
+        "ca6dfdc3-f6c7-496c-8284-ca29ea7d1f1d": "Living Hope",
+        "90b3b6d0-3b4b-4daf-b02a-0b9877c48a48": "Living Hope (The House Sessions)"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "ambiguous",
+          "releases": 5,
+          "albums": 2
+        },
+        "…release or original year": {
+          "outcome": "ambiguous",
+          "releases": 5,
+          "albums": 2
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "ambiguous",
+          "releases": 5,
+          "albums": 2
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "a8e02272-debd-43ac-9305-2d023cb1dfd9",
+          "releases": 4,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "a8e02272-debd-43ac-9305-2d023cb1dfd9",
+          "releases": 4,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "a8e02272-debd-43ac-9305-2d023cb1dfd9",
+          "releases": 4,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 59,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kittzedPdqU13PRjfP6gMl1Ty2CoeSWvg",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "4d1acb2a-624b-4f83-8f5e-945bafd77a0e": "Constellations"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d1acb2a-624b-4f83-8f5e-945bafd77a0e",
+          "releases": 1,
+          "albums": 1
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d1acb2a-624b-4f83-8f5e-945bafd77a0e",
+          "releases": 1,
+          "albums": 1
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d1acb2a-624b-4f83-8f5e-945bafd77a0e",
+          "releases": 1,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d1acb2a-624b-4f83-8f5e-945bafd77a0e",
+          "releases": 1,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d1acb2a-624b-4f83-8f5e-945bafd77a0e",
+          "releases": 1,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4d1acb2a-624b-4f83-8f5e-945bafd77a0e",
+          "releases": 1,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 60,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_ki3-2qvC0BSq0mN02XWHAqZ49W8-GX4PQ",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 61,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_n1eyOqdB0LjHTPtKfV-Qu8dp6TRl91whU",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "66518299-2ae2-4ce7-a5dc-c75397b38f14": "אומץ"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "66518299-2ae2-4ce7-a5dc-c75397b38f14",
+          "releases": 1,
+          "albums": 1
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "66518299-2ae2-4ce7-a5dc-c75397b38f14",
+          "releases": 1,
+          "albums": 1
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "66518299-2ae2-4ce7-a5dc-c75397b38f14",
+          "releases": 1,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "66518299-2ae2-4ce7-a5dc-c75397b38f14",
+          "releases": 1,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "66518299-2ae2-4ce7-a5dc-c75397b38f14",
+          "releases": 1,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "66518299-2ae2-4ce7-a5dc-c75397b38f14",
+          "releases": 1,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 62,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nwmY-ZGpIY88xKeXntVZQjL4Y9sfbmbes",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 63,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_n1wz18814gAsfJyV5RqFs8DM7ihHco5zI",
+      "knownByUrl": true,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the playlist isn't available"
+      },
+      "truth": {
+        "releaseGroupIds": [
+          "c77e5622-fb15-4dbf-9be1-f2d4865c2f27"
+        ],
+        "source": "MusicBrainz URL relationship"
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 64,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mK4gRmh5BH_uGbjdT21VctBEZtCIfIhx0",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 65,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_l4F8Fbowy9QMSR_uxBP_S3rdM2tBJyey4",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 66,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_lfa3OUvmN8ZXYT6z4j8xnJVCxQdRm10to",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 67,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mZoTEL3wNRUjEMmNk8BJdMP_TEOi1V3SI",
+      "knownByUrl": false,
+      "candidates": 3,
+      "albumTitles": {
+        "555cd686-0ed1-49c2-b0a8-54fce311cbec": "Spirit"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "555cd686-0ed1-49c2-b0a8-54fce311cbec",
+          "releases": 3,
+          "albums": 1
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "555cd686-0ed1-49c2-b0a8-54fce311cbec",
+          "releases": 3,
+          "albums": 1
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "555cd686-0ed1-49c2-b0a8-54fce311cbec",
+          "releases": 3,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "555cd686-0ed1-49c2-b0a8-54fce311cbec",
+          "releases": 3,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "555cd686-0ed1-49c2-b0a8-54fce311cbec",
+          "releases": 3,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "555cd686-0ed1-49c2-b0a8-54fce311cbec",
+          "releases": 3,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 68,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_l1VxRs3gdFszv7rAvTNHKL-yh3V0EeYh4",
+      "knownByUrl": false,
+      "candidates": 24,
+      "albumTitles": {
+        "fe8bc6bf-bef9-4607-b2fb-dd27051d2b3a": "Alive (Live)",
+        "4837ecb8-6bff-375e-8050-55253f2d3836": "Buried Alive",
+        "5a201fc8-81e5-45a4-8f63-027ff609ee94": "It’s Alive (live)",
+        "fa5461f8-5f8b-4d1d-8633-bfadaeadef35": "Shabbat Alive! Live",
+        "c72431f2-363f-488f-b5a0-4008015428a1": "Coming Alive",
+        "8a0abb3f-460e-4006-8106-ba79861a68d8": "Buried Alive (live)",
+        "72996744-dbcd-41c8-8b0b-c893471b9ffc": "To Be Alive",
+        "92d912f4-32e4-4c21-badc-bae1e663ed9d": "Jazz Alive! (Live 1984)",
+        "42115fee-e7bc-462f-8446-c6d177f30bb0": "Being Alive (live 2016)",
+        "300034d7-c2b2-467d-9985-de2f616ffd32": "Buried Alive",
+        "7f2360c5-afc9-4a94-8429-1cb4f4fd69ac": "45 Alive (Keswick Live in Concert)",
+        "950daff6-0982-42b9-8336-840f1694dbaf": "Stayin’ Alive (live at Glastonbury 2016)",
+        "33dff727-c7b4-47ec-98ca-13d0809d54ef": "Come Alive: Live from the CentricWorship Retreat",
+        "c84dbf73-665f-4417-867b-de06cf033412": "LIVE NOISE ALIVE -Live at Daikanyama Unit-",
+        "3d8e89fb-b077-43f0-96e0-f8e84b3b2066": "Glad to Be Alive (Live in Nottingham)",
+        "a179185c-5c4d-3caa-a166-2f75636e9074": "Archive Alive!: Live at the Record Plant 1975",
+        "58600b89-b118-4075-adbd-62742ce415ab": "Alive: Live In Atlanta, Georgia USA 4/3/94 (Part Two)",
+        "cd81b0f7-6975-40cf-bcee-30f508960dd4": "How Did This Get Made? #93, “Staying Alive: Live!”",
+        "1e1e1b66-a359-41ed-ba7b-853d251b42e7": "ALIVE Live Tracks from The Last Tour\"our PMA 1995〜2007\"",
+        "dd34d11f-604c-4d96-9e12-1a68afadcb5a": "No One Here Get’s Out Alive (live Washington Oct. 93)",
+        "22794422-5b95-48fe-b44a-eecc37bc747f": "Burn Them Alive (Live At Le Barde Atomique - 2016)",
+        "881a95b8-1214-4988-be03-e105b3efb615": "Alive, \"Live\" and Well - Oh Lord, What Have I Done..."
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 69,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nVidKPZAaC5X1m9fO38CSEi7_6h8B5gv0",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 1,
+        "slugRequest": false,
+        "problem": "the playlist isn't available"
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 70,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nQLOjE9HYnAnz_c4PJBSr9PmJ2pcUUpug",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "64f94743-ca50-4887-82a5-1d15ccf32d34": "Девки, пиво и рок-н-ролл"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "64f94743-ca50-4887-82a5-1d15ccf32d34",
+          "releases": 1,
+          "albums": 1
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "64f94743-ca50-4887-82a5-1d15ccf32d34",
+          "releases": 1,
+          "albums": 1
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "64f94743-ca50-4887-82a5-1d15ccf32d34",
+          "releases": 1,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "64f94743-ca50-4887-82a5-1d15ccf32d34",
+          "releases": 1,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "64f94743-ca50-4887-82a5-1d15ccf32d34",
+          "releases": 1,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "64f94743-ca50-4887-82a5-1d15ccf32d34",
+          "releases": 2,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 71,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_nnaUQRRk-AyaNFXWCoK_oowbdi_RGSodg",
+      "knownByUrl": false,
+      "candidates": 1,
+      "albumTitles": {
+        "4ef4b155-0368-42a3-8773-6f7ff25b9f62": "Sputnik"
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ef4b155-0368-42a3-8773-6f7ff25b9f62",
+          "releases": 1,
+          "albums": 1
+        },
+        "…release or original year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ef4b155-0368-42a3-8773-6f7ff25b9f62",
+          "releases": 1,
+          "albums": 1
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ef4b155-0368-42a3-8773-6f7ff25b9f62",
+          "releases": 1,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ef4b155-0368-42a3-8773-6f7ff25b9f62",
+          "releases": 1,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ef4b155-0368-42a3-8773-6f7ff25b9f62",
+          "releases": 1,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "4ef4b155-0368-42a3-8773-6f7ff25b9f62",
+          "releases": 1,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 72,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mMaDalJdClrqKk_UlmDqRudkHWjgHxWUw",
+      "knownByUrl": false,
+      "candidates": 2,
+      "albumTitles": {
+        "d3e85e77-9507-4a0e-92d2-41b0b71bcd60": "H.O.T."
+      },
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3e85e77-9507-4a0e-92d2-41b0b71bcd60",
+          "releases": 2,
+          "albums": 1
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3e85e77-9507-4a0e-92d2-41b0b71bcd60",
+          "releases": 2,
+          "albums": 1
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3e85e77-9507-4a0e-92d2-41b0b71bcd60",
+          "releases": 2,
+          "albums": 1
+        },
+        "…without the year": {
+          "outcome": "accepted",
+          "releaseGroupId": "d3e85e77-9507-4a0e-92d2-41b0b71bcd60",
+          "releases": 2,
+          "albums": 1
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 73,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kI0Ahp6MhJyHdsDop-6BnlWGZBheU42s0",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {
+        "Clean titles, artist credit, release year, one album": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…release or original year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…loose titles and artist names (TON-16's rule)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…official albums and EPs only (G2's proposal)": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…with Qobuz's version note in the title": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        },
+        "…without the year": {
+          "outcome": "none",
+          "releases": 0,
+          "albums": 0
+        }
+      },
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "versioned": false
+      },
+      "fallbackSearch": true,
+      "sample": "wikidata-youtube-music-not-in-mb"
+    },
+    {
+      "index": 74,
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_mFPS5ZQI8RGKrd3QCpujuNQESpTUxf06w",
+      "knownByUrl": false,
+      "candidates": 0,
+      "albumTitles": {},
+      "decisions": {},
+      "page": {
+        "requests": 3,
+        "slugRequest": false,
+        "problem": "the description gives no date"
+      },
+      "sample": "wikidata-youtube-music-not-in-mb"
+    }
+  ],
+  "store": [
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 174.40449999999998
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 165.138666
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 215.7666670000001
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 14.749749999999949
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 169.89133299999958
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 201.59262500000023
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 76.25137499999983
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 147.9030419999999
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 200.81395799999973
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 30.699916000000485
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 141.1592499999997
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 189.14549999999963
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 17.712375000000065
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 194.72287499999948
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 144.156332999999
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 205.86916700000074
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 17.26262499999939
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 142.12441599999875
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 211.6115830000017
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 16.171041999998124
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 144.68066700000054
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 200.0667080000021
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 63.723416999997426
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 147.67112500000076
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 229.6044159999983
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 15.305207999997947
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 142.45520800000304
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 193.70570899999802
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 154.2977920000012
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 197.09279099999912
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 63.35870799999975
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 140.119791000001
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 176.31362499999886
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 16.9779170000038
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 142.72079200000007
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 164.66766700000153
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 142.32608299999993
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 223.77720899999986
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 15.741625000002387
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 182.6293749999968
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 203.99637499999517
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 137.45983400000114
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 254.564833000004
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 16.951624999994237
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 144.89504199999647
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 186.6706250000061
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 53.60699999999633
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 161.05058299998927
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 203.7530839999963
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 16.18445800000336
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 151.33491700000013
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 210.88133299999754
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 17.049958000003244
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 192.44825000000128
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 197.510832999993
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 66.49604199999885
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 151.44495800000732
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 190.87600000000384
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 24.27054099999077
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 142.72808400000213
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 363.07074999999895
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 25.01287500000035
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 162.78787499997998
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 188.30025000002934
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 46.64449999999488
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 194.57199999998556
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 183.94549999997253
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 70.86512500001118
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 164.41629100003047
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 245.36758399999235
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 143.42070900002727
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 269.6771660000086
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 153.1620840000105
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 261.8334159999504
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 160.70441700000083
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 192.0203750000219
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 24.382832999981474
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 142.92324999999255
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 264.6014580000192
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 19.622541000018828
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 141.33504200004973
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 309.7768750000396
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 140.89287500001956
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 208.8654159999569
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 60.3758749999688
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 217.311832999927
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 231.93808300001547
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 69.30866700003389
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 139.97416699992027
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 204.16245800000615
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 27.22229199996218
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 131.186624999973
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 183.9117500000866
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 29.985083000035957
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 147.45904200000223
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 205.26395900000352
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 24.742208000039682
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 138.59645899990574
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 214.16874999995343
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 23.52316699991934
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 178.3938330000965
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 337.69029199995566
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 24.06566700001713
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 210.89200000010896
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 226.90049999998882
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 28.996874999953434
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 306.0637080000015
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 206.78270800004248
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 32.40712500002701
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 174.6060830000788
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 175.78204199997708
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 30.575458999956027
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 143.5852919999743
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 262.48462499992456
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 59.6085829999065
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 147.42687500000466
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 357.1475839999039
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 62.024542000028305
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 139.35508400003891
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 314.18570899998304
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 19.909083999926224
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 185.40049999998882
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 276.28570799995214
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 18.539667000062764
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 175.04979099996854
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 176.47158300003503
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 29.841249999939464
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 176.8766670000041
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 168.1494590000948
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 47.57495799998287
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 204.28162500006147
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 247.23124999995343
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 67.62429199996404
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 142.07924999995157
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 249.74520799983293
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 29.084333000006154
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 133.83066600002348
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 197.44029100006446
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 22.11599999992177
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 150.6353329999838
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 207.46054200013168
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 18.085416999878362
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 133.40375000005588
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 338.23529099998996
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 22.078292000107467
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 136.8033750001341
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 262.53820799989626
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 75.97520900005475
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 134.50662499992177
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 193.67849999992177
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 176.5702080000192
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 177.7554170000367
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 87.41054099984467
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 160.19987499993294
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 225.8211669998709
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 25.293541999999434
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 134.55624999990687
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 192.03166699991561
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 74.45462500001304
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 185.06400000001304
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 192.03549999999814
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 20.432999999960884
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 158.4454169999808
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 190.04458300000988
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 62.13804199988954
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 133.2692910002079
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 151.2213749999646
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 34.82941700005904
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 143.05637499992736
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 427.58179099997506
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 40.72804200020619
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 142.732166999951
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 265.4111250001006
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 20.11962499981746
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 157.94083300000057
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 319.81320800003596
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 17.972917000064626
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 130.2359169998672
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 176.3774170000106
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 289.4309169999324
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 15.477665999904275
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 156.08479200000875
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 193.48070800001733
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 28.03783299983479
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 137.37970900000073
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 176.7087499999907
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 23.25499999988824
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 133.75470800022595
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 242.90520799998194
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 33.8931670000311
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 141.1594169999007
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 174.52725000004284
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 20.32404200010933
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 166.20558299985714
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 144.98325000004843
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 269.42895799991675
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 87.98533300007693
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 182.6120420000516
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 198.7173330001533
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 19.879582999972627
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 183.0349160002079
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 196.1977500000503
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 18.50695800012909
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 152.97533400007524
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 201.44120800006203
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 16.568834000034258
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 172.06233300012536
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 157.92112499987707
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 83.56058299983852
+    },
+    {
+      "kind": "playlist",
+      "status": 200,
+      "ms": 199.209916
+    },
+    {
+      "kind": "items",
+      "status": 200,
+      "ms": 177.890083
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "ms": 21.10870799999998
+    }
+  ],
+  "mbRequests": 199
+}

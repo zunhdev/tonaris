@@ -88,10 +88,35 @@ describe("parseLink (TS-40)", () => {
     });
   });
 
+  test("YouTube Music album playlists, and a track in one, on music.youtube.com or youtube.com (TON-128)", () => {
+    const list = "OLAK5uy_n78ploXx-gSUGsEZxW3FW-n1nOMuncfiE";
+    expect(parsed(`https://music.youtube.com/playlist?list=${list}&si=abc`)).toEqual({
+      service: "youtube-music",
+      kind: "album",
+      id: list,
+      albumId: list,
+      canonical: `https://music.youtube.com/playlist?list=${list}`,
+    });
+    expect(parsed(`https://www.youtube.com/playlist?list=${list}`).canonical).toBe(
+      `https://music.youtube.com/playlist?list=${list}`,
+    );
+    expect(parsed(`https://music.youtube.com/watch?v=rw0XBin_r9s&list=${list}`)).toEqual({
+      service: "youtube-music",
+      kind: "track",
+      id: "rw0XBin_r9s",
+      albumId: list,
+      trackId: "rw0XBin_r9s",
+      canonical: `https://music.youtube.com/playlist?list=${list}`,
+    });
+    // A playlist that isn't an album, a video alone and an album page that names no playlist.
+    expect(parseLink("https://music.youtube.com/playlist?list=PL123")).toMatchObject({ ok: false });
+    expect(parseLink("https://music.youtube.com/browse/MPREb_abc")).toMatchObject({ ok: false });
+  });
+
   test("everything else is unsupported, with a reason the report can show", () => {
     expect(parseLink("https://www.youtube.com/watch?v=x")).toEqual({
       ok: false,
-      reason: "www.youtube.com isn't a supported service",
+      reason: "YouTube watch links that name no album aren't supported",
     });
     expect(parseLink("https://music.apple.com/us/song/so-what/268443097")).toMatchObject({
       ok: false,

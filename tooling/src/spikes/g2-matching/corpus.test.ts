@@ -191,13 +191,13 @@ describe("selectLinks", () => {
       ],
       serviceOf,
       2,
-      { spotify: 10, "apple-music": 10, qobuz: 10, tidal: 10 },
+      { spotify: 10, "apple-music": 10, qobuz: 10, tidal: 10, "youtube-music": 10 },
     );
     expect(picked.map((p) => p.link)).toEqual(["s-deluxe", "a-orig"]);
   });
   test("caps links per album and per service", () => {
     const editions = ["x", "y", "z"].map((id) => edition(id, ["original"], [`s-${id}`, `a-${id}`]));
-    const caps = { spotify: 2, "apple-music": 10, qobuz: 10, tidal: 10 };
+    const caps = { spotify: 2, "apple-music": 10, qobuz: 10, tidal: 10, "youtube-music": 10 };
     expect(selectLinks(editions, serviceOf, 1, caps).map((p) => p.link)).toEqual(["s-x", "s-y"]);
   });
 });

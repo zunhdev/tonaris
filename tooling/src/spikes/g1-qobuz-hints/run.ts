@@ -1,5 +1,6 @@
 // Runs the TON-99 spike over a links file and its labels.json, which sample.ts writes: Qobuz's store pages, or
-// with `--service tidal` Tidal's (the G1 Tidal spike).
+// with `--service tidal` Tidal's (the G1 Tidal spike), or with `--service youtube-music` the YouTube Data API's
+// facts (TON-128), which need YOUTUBE_API_KEY.
 //
 //   bun tooling/src/spikes/g1-qobuz-hints/run.ts tooling/fixtures/g1-qobuz/links.txt [--rerun-errors] [--explain]
 //   bun tooling/src/spikes/g1-qobuz-hints/run.ts tooling/fixtures/g1-tidal/links.txt --service tidal --out <dir>
@@ -17,6 +18,7 @@ import { z } from "zod";
 
 import { MusicBrainz } from "../g1-musicbrainz/musicbrainz";
 import { Tidal } from "../g1-tidal/tidal";
+import { YouTubeMusic } from "../g1-youtube-music/youtube";
 import { type MatchResult, matchLink } from "./match";
 import { type PageRequest, Qobuz, type StoreHints, type StorePages } from "./qobuz";
 import { buildReport, type RequestKinds } from "./report";
@@ -33,15 +35,17 @@ const { values, positionals } = parseArgs({
   allowPositionals: true,
 });
 const [linksFile] = positionals;
-if (!linksFile || (values.service !== "qobuz" && values.service !== "tidal")) {
+const services = ["qobuz", "tidal", "youtube-music"] as const;
+const service = services.find((each) => each === values.service);
+if (!linksFile || !service) {
   console.error(
-    "Usage: bun tooling/src/spikes/g1-qobuz-hints/run.ts <links.txt> [--service qobuz|tidal] [--out <dir>] [--rerun-errors] [--explain]",
+    "Usage: bun tooling/src/spikes/g1-qobuz-hints/run.ts <links.txt> [--service qobuz|tidal|youtube-music] [--out <dir>] [--rerun-errors] [--explain]",
   );
   process.exit(1);
 }
 
 const stores: Record<
-  "qobuz" | "tidal",
+  (typeof services)[number],
   () => { pages: StorePages; host: string; kinds?: RequestKinds }
 > = {
   qobuz: () => ({ pages: new Qobuz(), host: "www.qobuz.com" }),
@@ -53,8 +57,17 @@ const stores: Record<
       ["robots", "robots.txt, once per run"],
     ],
   }),
+  "youtube-music": () => ({
+    pages: new YouTubeMusic(),
+    host: "www.googleapis.com",
+    kinds: [
+      ["playlist", "`playlists.list`, the album playlist"],
+      ["items", "`playlistItems.list`, its tracks"],
+      ["video", "`videos.list`, one track's description"],
+    ],
+  }),
 };
-const store = stores[values.service]();
+const store = stores[service]();
 const { pages } = store;
 
 const dir = path.dirname(path.resolve(linksFile));
@@ -103,14 +116,28 @@ const explain = values.explain
     }
   : undefined;
 
-/** Writes the run so far, so an interrupted run can go on with `--rerun-errors`. */
+/**
+ * Writes the run so far, so an interrupted run can go on with `--rerun-errors`. YouTube's API data may be kept 30
+ * days at most (TON-128), so for YouTube Music the file keeps no date the API gave; the report has them from memory.
+ */
 async function save() {
   const run: Run = {
     results,
     store: [...(previous?.store ?? []), ...pages.requests],
     mbRequests: (previous?.mbRequests ?? 0) + mb.requests.length,
   };
-  await Bun.write(path.join(out, "results.json"), `${JSON.stringify(run, null, 2)}\n`);
+  const kept: Run =
+    service === "youtube-music"
+      ? {
+          ...run,
+          results: results.map(({ page, ...result }) => {
+            if (!page) return result;
+            const { date: _date, ...rest } = page;
+            return { ...result, page: rest };
+          }),
+        }
+      : run;
+  await Bun.write(path.join(out, "results.json"), `${JSON.stringify(kept, null, 2)}\n`);
   return run;
 }
 
