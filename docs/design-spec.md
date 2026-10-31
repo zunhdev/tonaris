@@ -377,6 +377,8 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 
 *As built in TON-120* (the creator chose this, 31 October 2026): **the ⋯ menu makes new lists and folders.** It starts with New list (N) and New folder (⇧N), then a separator. A folder's makes them inside it; a list's makes them beside it, in its folder or at the top level. That is where N and ⇧N make them from that row, so the items show those keys. The name's editor opens in the tree as N opens it, switching to Editing first; offline, the items are disabled.
 
+*As built in TON-121* (a bug from the creator's manual testing, 31 October 2026): **a folder that holds the current view can be closed.** The view's folders open when the view opens, or when it moves, not again on every expand or collapse. Closing a folder that holds the view, by its chevron or ←, selects that folder: its view opens, as the selection moves up in Finder and VS Code.
+
 *(FR-01.1, FR-01.3, Q-02)*
 
 **DS-28 Standard confirmation dialog.** Built on AlertDialog. It is used for every *confirmed* operation (X-07). *(X-07, FR-07.14)*

@@ -203,6 +203,41 @@ test("the tree and the sidebar's width are remembered on the device, and / retur
   expect((await sidebar(page).boundingBox())?.width).toBe(360);
 });
 
+test("closing a folder that holds the open list selects the folder, and it stays closed", async ({
+  page,
+}) => {
+  await signIn(page, accounts.closeHolder);
+  await live(page);
+  // The list 'Doom' in the folder 'Thrash' in the folder 'Metal'.
+  const metal = { ...list("Metal"), kind: "folder" as const };
+  const thrash = { ...list("Thrash"), kind: "folder" as const, parentId: metal.id };
+  const doom = { ...list("Doom"), parentId: thrash.id };
+  await insert(page, metal, thrash, doom);
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  await expect(item(page, /^Doom\b/)).toHaveAttribute("aria-selected", "true");
+
+  // The chevron closes 'Thrash', which then is the view, selected.
+  const thrashItem = item(page, /^Thrash\b/);
+  await thrashItem.locator('[data-slot="row-chevron"]').click();
+  await expect(thrashItem).toHaveAttribute("aria-expanded", "false");
+  await expect(page).toHaveURL(`/f/${thrash.id}`);
+  await expect(thrashItem).toHaveAttribute("aria-selected", "true");
+  await expect(item(page, /^Doom\b/)).toBeHidden();
+
+  // Back to the list, its folders open again; ← on 'Metal' closes it and selects it, and it stays closed.
+  await page.goBack();
+  await expect(item(page, /^Doom\b/)).toHaveAttribute("aria-selected", "true");
+  const metalItem = item(page, /^Metal\b/);
+  await metalItem.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page).toHaveURL(`/f/${metal.id}`);
+  await expect(metalItem).toHaveAttribute("aria-expanded", "false");
+  await expect(metalItem).toHaveAttribute("aria-selected", "true");
+  await expect(metalItem).toBeFocused();
+  await expect(thrashItem).toBeHidden();
+});
+
 test("names are checked before sending, and a name the server refuses can be edited", async ({
   page,
 }) => {
