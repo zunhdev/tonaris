@@ -1,8 +1,8 @@
 // The sidebar tree (DS-27, DS-31; FR-01.3): the owner's folders and lists, then Unsorted, Shared with me and Trash,
 // as one ARIA tree in its flat form (each item's level, position and set size), with a single tab stop. Items are
 // links, so Enter and a click open the view, and a view can open in a new tab. The current view's item is
-// selected. ↑/↓, Home/End, ←/→ and type-ahead move focus; letters that are shortcuts act as shortcuts instead
-// (decided 22 October 2026). F2 renames, and new folders and lists are named inline (editing.ts). Each folder or
+// selected; closing a folder that holds it selects the folder (TON-121). ↑/↓, Home/End, ←/→ and type-ahead move
+// focus; letters that are shortcuts act as shortcuts instead (decided 22 October 2026). F2 renames, and new folders and lists are named inline (editing.ts). Each folder or
 // list shows its save state, is busy while saving, and is highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 // Folders and lists can be dragged onto a folder, or onto Collection, to move them (DS-49, drag.tsx).
 
@@ -11,7 +11,7 @@ import { usePendingInvitations } from "@/features/sharing/pending-invitations";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection } from "@/features/sync/sync-provider";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   ChevronRight,
   Ellipsis,
@@ -102,11 +102,28 @@ export function CollectionTree() {
   const viewId = useViewContainerId();
   const selected = viewId ?? placeAt(pathname);
   const { expand } = ui;
+  const navigate = useNavigate();
 
-  // The current view's folders open, so its item can be seen (DS-27).
+  // The current view's folders open, so its item can be seen (DS-27): once for each view, and again when it moves,
+  // never on a later expand or collapse, so a folder holding it can still be closed (TON-121).
+  const viewPath =
+    viewId === undefined || !data.tree.byId.has(viewId)
+      ? undefined
+      : [...ancestorsOf(data.tree, viewId).map((folder) => folder.id), viewId].join("/");
+  const shownPath = useRef<string>(undefined);
   useEffect(() => {
-    if (viewId !== undefined) expand(ancestorsOf(data.tree, viewId).map((folder) => folder.id));
-  }, [viewId, data.tree, expand]);
+    if (viewPath === undefined || viewPath === shownPath.current) return;
+    shownPath.current = viewPath;
+    expand(viewPath.split("/").slice(0, -1));
+  }, [viewPath, expand]);
+
+  /** Opens or closes a folder. Closing one that holds the current view selects it, by opening its view (TON-121). */
+  function toggle(folderId: string, open: boolean) {
+    ui.setExpanded(folderId, open);
+    if (!open && viewPath?.split("/").slice(0, -1).includes(folderId)) {
+      void navigate({ to: "/f/$folderId", params: { folderId } });
+    }
+  }
 
   const invitations = usePendingInvitations();
   const approvals = usePendingApprovals().length;
@@ -195,12 +212,12 @@ export function CollectionTree() {
         return;
       case "ArrowRight":
         handled();
-        if (folder && !folder.expanded) ui.setExpanded(folder.container.id, true);
+        if (folder && !folder.expanded) toggle(folder.container.id, true);
         else if (folder && (rows[index + 1]?.level ?? 0) > folder.level) focusIndex(index + 1);
         return;
       case "ArrowLeft":
         handled();
-        if (folder?.expanded) ui.setExpanded(folder.container.id, false);
+        if (folder?.expanded) toggle(folder.container.id, false);
         else if (row.type === "container" && row.container.parentId !== null) {
           focusKey(row.container.parentId);
         }
@@ -329,7 +346,7 @@ export function CollectionTree() {
             selected={selected === key}
             tabbable={tabbable === key}
             count={row.container.kind === "list" ? (data.counts.get(key) ?? 0) : undefined}
-            onToggle={() => ui.setExpanded(key, !row.expanded)}
+            onToggle={() => toggle(key, !row.expanded)}
             menuOpen={menu?.id === key}
             onMenu={(element) =>
               setMenu({ id: row.container.id, name: row.container.name, row: element })
@@ -419,6 +436,7 @@ function ContainerRow({
         // Pointer only: ← and → do the same from the keyboard.
         <span
           aria-hidden
+          data-slot="row-chevron"
           className="flex size-3.5 shrink-0 items-center justify-center rounded-sm hover:bg-hover"
           onClick={(event) => {
             event.preventDefault();

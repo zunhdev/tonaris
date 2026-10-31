@@ -101,6 +101,8 @@ export const accounts = {
   rowMenuKeys: at("row-menu-keys"),
   headerRename: at("header-rename"),
   rowMenuCreate: at("row-menu-create"),
+  // Closing a folder that holds the view (collection-navigation.e2e.ts).
+  closeHolder: at("close-holder"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),
