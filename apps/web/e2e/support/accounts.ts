@@ -100,6 +100,7 @@ export const accounts = {
   rowMenu: at("row-menu"),
   rowMenuKeys: at("row-menu-keys"),
   headerRename: at("header-rename"),
+  rowMenuCreate: at("row-menu-create"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),
