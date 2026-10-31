@@ -696,6 +696,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
 *As built in TON-45:* **the kept link's notice** heads the Links section while the album still has the kept link: "Another Spotify link was found for this album", the pasted link, and **Replace** and **Dismiss**. Replace sets the pasted link, switching to Editing first. The notice lives in the tab that captured, until replaced, dismissed or reloaded.
 
+*As built in TON-123* (from the creator's manual testing, 31 October 2026): **the Links section's links read as links.** Each address is in the link colour (`accent.solid`), as the app's other text links are, with an underline that is faint at rest and solid on hover, then a ↗ that says it opens outside Tonaris. Still no service logos (DS-19).
+
 **DS-47 Manual entry form.** A 560px dialog titled "New album" (desktop). Shortcut ⌘Enter saves; Esc asks before discarding entered data. *(FR-02.4, FR-02.6, FR-13.2)*
 
 - **Field order:**
