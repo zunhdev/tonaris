@@ -6,6 +6,7 @@
 import { browserFetch, createSyncClient, type SyncClient } from "@/client/sync/client";
 import {
   browserNetwork,
+  browserPage,
   watchConnection,
   type Connection,
   type ConnectionWatch,
@@ -49,18 +50,28 @@ export function SyncProvider({ account, children }: { account: Account; children
       persistence: indexedDbPersistence(account.id),
       tabs: browserTabs(account.id),
     });
-    const connection = watchConnection({ engine: created.engine, network: browserNetwork() });
+    const connection = watchConnection({
+      engine: created.engine,
+      network: browserNetwork(),
+      page: browserPage(),
+    });
     const off = created.engine.onStatus((status) => {
       if (status !== "signed_out") return;
       forgetAccount();
       void router.navigate({ to: "/sign-in" });
     });
-    // Back online, connect and resend at once rather than after the current delay.
+    // Back online, or back on screen after the phone froze the page (TON-137), connect and resend at once rather
+    // than after the current delay.
     const online = () => {
       created.engine.reconnect();
       created.outbox.wake();
     };
+    const shown = () => {
+      if (!document.hidden) online();
+    };
     window.addEventListener("online", online);
+    document.addEventListener("visibilitychange", shown);
+    document.addEventListener("resume", shown);
     created.start();
     if (testHooks) window.tonarisSync = created;
     // The client holds locks, a channel and timers, so it is made here rather than during render, which may run
@@ -69,6 +80,8 @@ export function SyncProvider({ account, children }: { account: Account; children
     setSync({ client: created, connection });
     return () => {
       window.removeEventListener("online", online);
+      document.removeEventListener("visibilitychange", shown);
+      document.removeEventListener("resume", shown);
       off();
       connection.stop();
       void created.stop();

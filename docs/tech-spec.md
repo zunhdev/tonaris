@@ -573,6 +573,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - 15 s is the window a write gets before it shows as unconfirmed. Past it, nothing can be confirmed anyway.
   - A deploy's reconnects, spread over the first half second (TS-23), never read as offline.
   - The browser's `online` event restarts the window.
+  - *Fixed in TON-137:* **only time the page is shown counts.** A phone freezes a hidden page, as Android does an installed app in the background, and its stream drops meanwhile. A window started before then fired the moment the page came back, while the stream still waited out its backoff (up to 30 s), so "Offline" flashed on almost every return to the app. Now a hidden page stops the window, and `visibilitychange` back to shown, or Chrome's `resume` after a freeze, restarts it and reconnects and resends at once, as `online` does.
 - **Viewers.** Shared roots are separate read-only collections, refilled on invalidation.
 
 **TS-25 Batches (Decided; FR-13.4; built in TON-28).** A batch is a dependency graph, sent to `POST /v1/batches` as `{batchId, items}` and answered with `{batchId, items: [{mutationId, outcome}]}` in the order sent.
