@@ -62,6 +62,16 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
   await expect(page.getByRole("tree")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Search", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Account: / })).toBeVisible();
+  // The top bar is sticky and opaque, or an iOS 26 Home Screen app blurs it (TON-135).
+  const bar = await page
+    .locator("header")
+    .first()
+    .evaluate((header) => {
+      const style = getComputedStyle(header);
+      return { position: style.position, background: style.backgroundColor };
+    });
+  expect(bar.position).toBe("sticky");
+  expect(bar.background).not.toMatch(/rgba\(.*, 0\)|transparent/);
   const more = page.getByRole("navigation", { name: "More" });
   await expect(more.getByRole("link")).toHaveText([/Unsorted\s*1/, "Shared with me"]);
   expect(await axe(page)).toEqual([]);
