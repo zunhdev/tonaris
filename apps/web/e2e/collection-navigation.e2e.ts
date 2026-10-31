@@ -1,9 +1,9 @@
-// The sidebar tree, the collection routes and the shortcuts in a real browser (FR-01.1, FR-01.3; DS-27, DS-30–DS-32,
-// DS-78): folders and lists created, renamed and walked by keyboard alone, views that say where they are, and what
-// the device remembers. Each test signs in with its own account.
+// The sidebar tree, the collection routes and the shortcuts in a real browser (FR-01.1, FR-01.3; DS-17, DS-27,
+// DS-30–DS-32, DS-78): folders and lists created, renamed and walked by keyboard alone, views that say where they are,
+// what the device remembers, and the fade a page switch brings. Each test signs in with its own account.
 
 import { AxeBuilder } from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { uuidv7, type Album } from "@tonaris/domain";
 
@@ -296,4 +296,57 @@ test("offline, folders and lists can't be created or renamed", async ({ page, co
   await page.keyboard.press("F2");
   await expect(page.getByRole("textbox")).toHaveCount(0);
   await context.setOffline(false);
+});
+
+/** Whether a page switch's fade is under way on the page below its header, and on anything else (`page-fade.ts`). */
+const fades = (page: Page) =>
+  page.evaluate(() => {
+    const below = document
+      .getAnimations()
+      .filter((each) => each.id === "page-fade")
+      .map((each) => (each.effect instanceof KeyframeEffect ? each.effect.target : null))
+      .map(
+        (target) =>
+          target?.parentElement?.tagName === "MAIN" && !target.matches("[data-page-chrome]"),
+      );
+    return { below: below.some(Boolean), elsewhere: below.some((each) => !each) };
+  });
+
+const opacity = (locator: Locator) =>
+  locator.evaluate((element) => Number(getComputedStyle(element).opacity));
+
+test("a page switch fades the new page in, but going back and reduced motion switch at once", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== "chromium",
+    "Slowing the animations takes Chromium's DevTools protocol",
+  );
+  await signIn(page, accounts.navFade);
+  await live(page);
+  await insert(page, list("Doom"), list("Sludge"));
+  await expect(item(page, /^Sludge\b/)).toBeVisible();
+  // At a thousandth of the speed, the 120 ms fade lasts two minutes: long enough to look at.
+  const devtools = await page.context().newCDPSession(page);
+  await devtools.send("Animation.enable");
+  await devtools.send("Animation.setPlaybackRate", { playbackRate: 0.001 });
+
+  // The list fades in below its header; the header and the sidebar stay as they were.
+  await item(page, /^Doom\b/).click();
+  await expect(heading(page)).toHaveText("Doom");
+  expect(await fades(page)).toEqual({ below: true, elsewhere: false });
+  expect(await opacity(page.locator("main > :not([data-page-chrome])").first())).toBeLessThan(1);
+  expect(await opacity(page.locator("main > header"))).toBe(1);
+
+  // Back shows the collection at once.
+  await page.goBack();
+  await expect(heading(page)).toHaveText("Collection");
+  expect(await fades(page)).toEqual({ below: false, elsewhere: false });
+
+  // So does any switch under reduced motion.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await item(page, /^Sludge\b/).click();
+  await expect(heading(page)).toHaveText("Sludge");
+  expect(await fades(page)).toEqual({ below: false, elsewhere: false });
 });

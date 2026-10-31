@@ -49,6 +49,7 @@ export function PageHeader({
       // Sticky and opaque at the top edge: an iOS 26 Home Screen app blurs its top edge unless a sticky or fixed bar
       // of one solid colour covers it, and then takes that colour for the status bar (TON-135).
       <header
+        data-page-chrome
         className="sticky top-0 z-10 flex min-h-12 shrink-0 items-center gap-1 border-b border-subtle bg-app px-1"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
@@ -85,6 +86,7 @@ export function PageHeader({
   }
   return (
     <header
+      data-page-chrome
       className={cn(
         "flex h-12 shrink-0 items-center gap-2 border-b px-6",
         editing ? "border-accent-solid" : "border-subtle",

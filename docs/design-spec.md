@@ -128,6 +128,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | Duration | Use |
 | --- | --- |
 | 100ms | hover, press, toggles |
+| 120ms | page switch: the new page fades in below its header (TON-140) |
 | 150ms | popovers, menus, tooltips, row insert and fade |
 | 200ms | dialogs, sheets, inspector slide |
 | 1,200ms | live-update highlight fade (DS-82) |
@@ -135,6 +136,12 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - Easing is `cubic-bezier(0.2, 0, 0, 1)` for enter and `cubic-bezier(0.4, 0, 1, 1)` for exit.
 - Reordering lists never animates more than 150ms.
 - Under `prefers-reduced-motion: reduce`, movement and scale transitions become opacity-only or instant, and the live-update highlight becomes a static 1.2s tint.
+- *As built in TON-140* (from the creator's manual testing, 31 October 2026): **a page switch fades the new page in.**
+  - What is below the header goes from transparent to opaque over 120ms, opacity only, with the enter easing. The old page goes at once: no crossfade, so nothing waits.
+  - The sidebar, the page header, the Settings and Admin tabs and the offline banner stay still (`data-page-chrome`).
+  - A change that keeps the path, such as opening an album, isn't a switch.
+  - Back, forward and reduced motion show the page at once. For back and forward, that keeps a fade from following Safari's own swipe-back.
+  - Built with Web Animations on the router's `onRendered`, before the page paints (`page-fade.ts`), not the View Transitions API.
 
 *(Q-02)*
 

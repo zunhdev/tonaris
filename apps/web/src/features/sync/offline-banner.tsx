@@ -11,6 +11,7 @@ export function OfflineBanner() {
   return (
     <div
       data-slot="offline-banner"
+      data-page-chrome
       className="flex h-8 shrink-0 items-center gap-2 border-b border-subtle bg-raised px-6 text-small text-fg-secondary"
     >
       <CloudOff strokeWidth={1.5} className="size-3.5 text-status-danger" aria-hidden />

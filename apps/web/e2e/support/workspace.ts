@@ -117,6 +117,18 @@ export const toasts = (page: Page) => page.locator('[data-slot="toast"]');
 export const announcements = (page: Page) => page.locator('[data-slot="announcer"]');
 
 /** Axe's findings in `selector`, once its opening animation is over: mid-fade, its text is still faint. */
+/** Waits out a page switch's fade (DS-17, `page-fade.ts`), so axe never measures text halfway in. */
+export async function pageFaded(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    Promise.allSettled(
+      document
+        .getAnimations()
+        .filter((each) => each.id === "page-fade")
+        .map((each) => each.finished),
+    ),
+  );
+}
+
 export async function violations(page: Page, selector: string) {
   await page.locator(selector).evaluate((element) =>
     // A cancelled animation is as done as a finished one.

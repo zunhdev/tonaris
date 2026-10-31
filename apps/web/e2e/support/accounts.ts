@@ -44,6 +44,7 @@ export const accounts = {
   navRoutes: at("nav-routes"),
   navNames: at("nav-names"),
   navOffline: at("nav-offline"),
+  navFade: at("nav-fade"),
   // The collection views (collection-views.e2e.ts), one per test.
   viewsList: at("views-list"),
   viewsFolder: at("views-folder"),
