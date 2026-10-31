@@ -233,6 +233,13 @@ Shared with me SHALL group references by owner display name, marking those from 
 - **WHEN** a person chooses Leave share… on an invitation-based reference and confirms
 - **THEN** it leaves Shared with me, and its owner would have to invite them again
 
+### Requirement: The sidebar shows what's shared with the person
+Shared with me SHALL open in the sidebar's tree to each folder or list in it (FR-07.13), with its owner's display name, and a shared folder SHALL open to its folders and lists, following the owner's saves while open (FR-07.11). Each SHALL open the shared view, which the tree marks (TON-130).
+
+#### Scenario: A shared folder in the tree
+- **WHEN** Denis has shared the folder 'Metal', holding the list 'Thrash', with a person who opens 'Metal' in the sidebar
+- **THEN** the tree shows 'Metal · Denis' under Shared with me, with 'Thrash' inside it, which opens the shared view
+
 ### Requirement: Signed-in viewers open shared content in the app
 A signed-in person SHALL open a folder or list shared with them in the app's shell, view-only (DS-70): a pill names the owner, and there are no editing controls (FR-07.17). The content SHALL stay current while open, and SHALL say it is no longer available once access ends (FR-07.11).
 
