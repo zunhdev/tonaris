@@ -184,11 +184,11 @@ Anyone with a valid link SHALL browse its folders, lists and albums without sign
 - **THEN** they read "This link isn't available. Ask the person who shared it for a new one."
 
 ### Requirement: Guests open albums in their services
-Each album on a guest page SHALL offer its service links (FR-06.5), opened without passing the page's address on.
+Each album on a guest page SHALL show its service links (FR-06.5) as the album list does: each service by name, as a link, opened without passing the page's address on (TON-127).
 
 #### Scenario: Open in Spotify
-- **WHEN** a guest opens the chooser of an album with a Spotify link
-- **THEN** it offers Spotify, which opens the album in a new tab with no referrer
+- **WHEN** a guest views a shared list holding an album with a Spotify link
+- **THEN** its row shows "Spotify" as a link, which opens the album in a new tab with no referrer
 
 ### Requirement: Guest presentation lasts the visit
 A guest SHALL be able to sort, group and switch layouts for the visit only (FR-11.9). The page SHALL say that these settings aren't saved, and SHALL never change the owner's.
