@@ -1,17 +1,22 @@
 # Spec Delta
 
-## MODIFIED Requirements
+## ADDED Requirements
 
-### Requirement: Owners create and rename folders and lists in the sidebar
-An owner SHALL create a list (N) or folder (⇧N) inside the focused folder or the current view's folder, beside the focused or viewed list, or at the root (FR-01.1, DS-78). The "+" menu beside Collection SHALL create them at the root, whatever is focused or on view (TON-120). F2 SHALL rename the focused one (FR-01.3). Both edit the name inline. A blank, overlong or sibling-taken name SHALL keep the editor open with its reason (DS-107), sending nothing (X-05). While offline both SHALL be disabled (DS-81).
-
-#### Scenario: Creating a folder and a list in it by keyboard
-- **WHEN** an owner presses ⇧N, types "Metal" and Enter, then with 'Metal' focused presses N, types "Doom" and Enter
-- **THEN** the folder 'Metal' holds the new list 'Doom', both saved
+### Requirement: Collection's "+" menu creates at the top level
+The "+" menu beside Collection SHALL offer New list and New folder, creating them at the root whatever is focused or on view (FR-01.1, TON-120). As N and ⇧N follow the focus or the view, its items SHALL show no keys.
 
 #### Scenario: The "+" menu creates at the top level
 - **WHEN** an owner viewing the list 'Doom' in the folder 'Metal' chooses New list in the "+" menu beside Collection and enters "Later"
 - **THEN** 'Later' is created at the top level, not in 'Metal'
+
+## MODIFIED Requirements
+
+### Requirement: Owners create and rename folders and lists in the sidebar
+An owner SHALL create a list (N) or folder (⇧N) inside the focused folder or the current view's folder, beside the focused or viewed list, or at the root (FR-01.1, DS-78). F2 SHALL rename the focused one (FR-01.3). Both edit the name inline. A blank, overlong or sibling-taken name SHALL keep the editor open with its reason (DS-107), sending nothing (X-05). While offline both SHALL be disabled (DS-81).
+
+#### Scenario: Creating a folder and a list in it by keyboard
+- **WHEN** an owner presses ⇧N, types "Metal" and Enter, then with 'Metal' focused presses N, types "Doom" and Enter
+- **THEN** the folder 'Metal' holds the new list 'Doom', both saved
 
 #### Scenario: Renaming by keyboard
 - **WHEN** an owner focuses the list 'Doom', presses F2, types "Funeral doom" and Enter
@@ -26,7 +31,7 @@ An owner SHALL create a list (N) or folder (⇧N) inside the focused folder or t
 - **THEN** the "+" menu is disabled with "You're offline", and N, ⇧N and F2 do nothing
 
 ### Requirement: Folders and lists have a menu in the sidebar
-Each folder and list in the sidebar SHALL offer a menu with New list, New folder, Rename, Move to…, Share… and Delete…, opened from its ⋯ with the pointer or with Shift+F10 or the Menu key (FR-01.1, FR-01.3, FR-01.4, FR-01.11). New list and New folder SHALL create inside a folder, and beside a list, in its folder or at the root (TON-120). Each item SHALL run what its shortcut runs on that folder or list, and show the shortcut. While offline, the items SHALL be disabled with the reason (DS-81).
+Each folder and list in the sidebar SHALL offer a menu with New list, New folder, Rename, Move to…, Share… and Delete…, opened from its ⋯ with the pointer or with Shift+F10 or the Menu key (FR-01.1, FR-01.3, FR-01.4, FR-01.11). New list and New folder SHALL create inside a folder, and beside a list (TON-120). Each item SHALL run what its shortcut runs on that folder or list, and show the shortcut. While offline, the items SHALL be disabled with the reason (DS-81).
 
 #### Scenario: Creating inside a folder
 - **WHEN** an owner chooses New list in the folder 'Metal''s menu and enters "Sludge"

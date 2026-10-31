@@ -4,6 +4,7 @@
 
 - [x] 1.1 The ⋯ menu starts with New list (N) and New folder (⇧N), made inside a folder and beside a list
 - [x] 1.2 The "+" beside Collection makes them at the top level, without keys
+- [x] 1.3 Split the "+" menu into its own requirement, keeping each under 500 characters
 
 ## 2. Tests and docs
 
