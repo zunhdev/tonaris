@@ -11,7 +11,11 @@ const pages = [
 
 export function AdminNav() {
   return (
-    <nav aria-label="Admin" className="flex shrink-0 gap-4 border-b border-subtle px-6">
+    <nav
+      data-page-chrome
+      aria-label="Admin"
+      className="flex shrink-0 gap-4 border-b border-subtle px-6"
+    >
       {pages.map((page) => (
         <Link
           key={page.to}

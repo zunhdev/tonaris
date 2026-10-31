@@ -1,10 +1,11 @@
 // The desktop shell (DS-30): sidebar, main view and, once an album is opened, the inspector, beside the view, or over
 // it below 1100 px; 380 px wide by default, resizable from 320 to 560 px and kept on this device (TON-124). Until then the inspector takes no space. Each pane is a named landmark (Q-02). The
 // sidebar is 240 px wide by default, resizable from 200 to 360 px and hideable with `[`, both kept on this device.
-// Offline, a banner tops the main view (DS-81). The workspace's shortcuts and their reference live here (DS-78), as
-// does the search palette (DS-75), and so do dragging, which spans the sidebar and the view, "Move to…" (DS-49), "Add to list…" (DS-46) and the manual
-// entry form (DS-47). On a phone the shell is a drill-down (DS-110): no sidebar, each view's header is its top bar,
-// and an album opens as a sheet over the view.
+// Offline, a banner tops the main view (DS-81), and a page switch fades the new page in (DS-17). The workspace's
+// shortcuts and their reference live here (DS-78), as does the search palette (DS-75), and so do dragging, which spans
+// the sidebar and the view, "Move to…" (DS-49), "Add to list…" (DS-46) and the manual entry form (DS-47). On a phone
+// the shell is a drill-down (DS-110): no sidebar, each view's header is its top bar, and an album opens as a sheet
+// over the view.
 
 import { CaptureDialog } from "@/features/capture/capture-dialog";
 import { CapturePanel } from "@/features/capture/capture-panel";
@@ -24,6 +25,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -32,6 +34,7 @@ import {
 import type { Account } from "@tonaris/domain";
 
 import { inspectorLayout, sidebarLayout } from "./device";
+import { usePageFade } from "./page-fade";
 import { pageTitleId } from "./page-header";
 import { PullToRefresh } from "./pull-to-refresh";
 import { ShellContext, type ShellControl } from "./shell-context";
@@ -71,6 +74,8 @@ export function Shell({ account, children }: { account: Account; children: React
   const narrow = useNarrowScreen();
   const beside = albumId !== undefined && wide;
   const sidebar = !layout.hidden && !narrow;
+  const main = useRef<HTMLElement>(null);
+  usePageFade(main);
 
   useEffect(() => sidebarLayout.write(layout), [layout]);
   useEffect(() => inspectorLayout.write(inspectorWidth), [inspectorWidth]);
@@ -150,7 +155,11 @@ export function Shell({ account, children }: { account: Account; children: React
               onResize={(width) => setLayout((current) => ({ ...current, width }))}
             />
           )}
-          <main aria-labelledby={pageTitleId} className="flex min-h-0 min-w-0 flex-col bg-panel">
+          <main
+            ref={main}
+            aria-labelledby={pageTitleId}
+            className="flex min-h-0 min-w-0 flex-col bg-panel"
+          >
             <OfflineBanner />
             {children}
           </main>

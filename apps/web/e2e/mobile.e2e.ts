@@ -11,7 +11,7 @@ import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, insert, list, live, saved, webOrigin } from "./support/workspace";
+import { added, album, insert, list, live, pageFaded, saved, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -40,16 +40,19 @@ async function seeded(page: Page) {
 }
 
 /**
- * axe's findings on the page. Base UI's focus guards are left out: in Safari it gives the invisible sentinels that keep
- * focus inside a dialog `role="button"`, for VoiceOver, which axe reads as unnamed buttons (TON-93 checks them).
+ * axe's findings on the page, once a page switch's fade is over. Base UI's focus guards are left out: in Safari it
+ * gives the invisible sentinels that keep focus inside a dialog `role="button"`, for VoiceOver, which axe reads as
+ * unnamed buttons (TON-93 checks them).
  */
-const axe = async (page: Page) =>
-  (
+const axe = async (page: Page) => {
+  await pageFaded(page);
+  return (
     await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
       .exclude("[data-base-ui-focus-guard]")
       .analyze()
   ).violations.map((violation) => violation.id);
+};
 
 test("a phone browses by drilling down, and opens an album in a sheet", async ({ page }) => {
   await signIn(page, accounts.phone);

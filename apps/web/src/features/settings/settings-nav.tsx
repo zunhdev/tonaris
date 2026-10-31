@@ -21,6 +21,7 @@ export function SettingsNav() {
   const narrow = useNarrowScreen();
   return (
     <nav
+      data-page-chrome
       aria-label="Settings"
       className="flex shrink-0 gap-4 overflow-x-auto border-b border-subtle px-6"
     >
