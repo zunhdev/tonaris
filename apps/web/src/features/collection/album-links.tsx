@@ -47,11 +47,12 @@ function shownUrl(url: string): string {
 }
 
 export function LinksSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
-  const { linksByAlbum } = useCollectionData();
+  const { linksByAlbum, defaults } = useCollectionData();
   const links = new Map((linksByAlbum.get(album.id) ?? []).map((link) => [link.service, link]));
-  const shown = canEdit
-    ? streamingServices
-    : streamingServices.filter((service) => links.has(service));
+  // Editing offers every service the person uses, from Settings, and any the album already links (TON-138).
+  const shown = streamingServices.filter(
+    (service) => links.has(service) || (canEdit && !defaults.hiddenServices.includes(service)),
+  );
   // Links capture kept instead of pasted ones, while the album still has them (FR-06.4).
   const kept = (useCapture()?.keptLinks ?? []).filter(
     (each) => each.albumId === album.id && links.get(each.service)?.url === each.kept,

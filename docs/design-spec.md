@@ -703,6 +703,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
 *As built in TON-104:* **a Links row opens where the account's link setting says** (DS-94): the service's page in a new tab, or its app. Its tooltip is the canonical URL either way.
 
+*As built in TON-138:* **Editing offers only the services the person uses** (DS-94): a row for each service that's on, and for any service the album already links, whose link keeps Replace and Remove. Viewing still shows only the links the album has.
+
 *As built in TON-50:* **Custom fields.**
 - **Applied fields** are rows, by name, each with its value. With none in Viewing mode: "No custom fields."
 - **Editing mode:**
@@ -1660,6 +1662,8 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **The note:** "Folders, lists and views where you've chosen options in View options keep them when you change these defaults. Choose "Use account defaults" there to follow these again."
 
 *As built in TON-104* (decided with the creator, 30 October 2026): **Links.** A last section, "Links", holds "Open links in" with **Web page** and **App**, and a note: "App opens Spotify, Apple Music, Qobuz and Tidal links in their apps, on every device you use. A link to a service whose app isn't installed won't open." It is saved to the account at once and synced, like the defaults. It starts as Web page. *(FR-06.6)*
+
+*As built in TON-138* (from the creator's manual testing; the creator chose this, 31 October 2026): **Streaming services.** A section after Links lists each service with a switch, all on at first, and a note: "The album panel and New album show link fields only for the services that are on. Links you've already saved still show, and you can paste a link from any service." It is saved to the account at once and synced. A service added later starts on, since the account keeps the services turned off. *(FR-06.3)*
 
 **DS-96 Data export** (Settings → Data). *(FR-08.1–FR-08.6)*
 - **Explanation:** "A ZIP with a JSON file (complete, for programs and AI tools), a Markdown file (readable outline of your collection) and a README."

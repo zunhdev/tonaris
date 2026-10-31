@@ -100,8 +100,9 @@ export function createViewCollection({ engine, writer }: { engine: SyncEngine; w
 }
 
 /**
- * The writes that take the defaults from `before` to `next`: a `defaults.set` for the view options, and a
- * `defaults.setLinkTarget` for the link setting; none if they are the same.
+ * The writes that take the defaults from `before` to `next`: a `defaults.set` for the view options, a
+ * `defaults.setLinkTarget` for the link setting, and a `defaults.setHiddenServices` for the services turned off
+ * (TON-138); none if they are the same.
  */
 export function defaultsWrites(
   before: AccountDefaults,
@@ -129,6 +130,20 @@ export function defaultsWrites(
         name: "defaults.setLinkTarget",
         args: { linkTarget: next.linkTarget },
         base: { linkTarget: before.linkTarget },
+      },
+    });
+  }
+  if (
+    next.hiddenServices !== undefined &&
+    next.hiddenServices.join(",") !== before.hiddenServices.join(",")
+  ) {
+    writes.push({
+      key: defaultsKey,
+      mutation: {
+        mutationId: uuidv7(),
+        name: "defaults.setHiddenServices",
+        args: { hiddenServices: next.hiddenServices },
+        base: { hiddenServices: before.hiddenServices },
       },
     });
   }

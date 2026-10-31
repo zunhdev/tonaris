@@ -1,10 +1,12 @@
 // Personal presentation (TS-11, FR-05.2, FR-11.7, FR-11.8): each person's remembered choices for a view, their
 // account defaults, and the commands that change them (TON-35). The account defaults also say whether service links
-// open the services' web pages or their apps (FR-06.6, TON-104). A view is the root, Unsorted, or a folder or list.
+// open the services' web pages or their apps (FR-06.6, TON-104), and which services the person doesn't use, whose
+// empty link fields stay out of sight (TON-138). A view is the root, Unsorted, or a folder or list.
 // Choices belong to the person, never to the content, and follow the same conflict policy as content (FR-09.4):
 // each write names the values it replaces.
 
 import type { CollectionStore, CommandContext, CommandResult } from "./commands";
+import { streamingServices, type StreamingService } from "./links";
 import { failure, type FieldConflict, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { actingUserId } from "./principals";
@@ -81,15 +83,26 @@ export const accountDefaultsSchema = viewDefaultsSchema
       description:
         "Where service links open: `web`, the canonical page, or `app`, the service's app (FR-06.6).",
     }),
+    hiddenServices: z.array(z.enum(streamingServices)).meta({
+      description:
+        "The streaming services the person turned off, in the services' order: their empty link fields stay out of sight, while saved links still show (TON-138). Empty until they choose.",
+    }),
   })
   .meta({
     description:
-      "A person's account defaults for presentation (FR-11.7), and where their service links open (FR-06.6).",
+      "A person's account defaults for presentation (FR-11.7), where their service links open (FR-06.6), and the services they don't use (TON-138).",
   });
 export type AccountDefaults = z.infer<typeof accountDefaultsSchema>;
 
-/** Until a person chooses, links open the services' web pages, which work on every device. */
-export const appAccountDefaults: AccountDefaults = { ...appViewDefaults, linkTarget: "web" };
+/**
+ * Until a person chooses, links open the services' web pages, which work on every device, and every service is on,
+ * including one added later.
+ */
+export const appAccountDefaults: AccountDefaults = {
+  ...appViewDefaults,
+  linkTarget: "web",
+  hiddenServices: [],
+};
 
 /** A view with no remembered choice. */
 export function unsetView(viewKey: string): ViewPrefs {
@@ -281,6 +294,48 @@ export async function setDefaults(
   if (viewDefaultsFields.every((field) => next[field] === current[field])) {
     return { status: "applied", changes: [] };
   }
+  await store.saveDefaults(personId, next);
+  return {
+    status: "applied",
+    changes: [{ entity: "defaults", id: personId, op: "update", data: next }],
+  };
+}
+
+/** Services in the services' order, each once. */
+const inOrder = (services: readonly StreamingService[]): StreamingService[] =>
+  streamingServices.filter((service) => services.includes(service));
+
+/**
+ * Sets the streaming services a person turned off (TON-138): the album panel and the New album form leave out their
+ * empty link fields, on every device, while saved links still show. `base` holds the prior list (TS-21).
+ */
+export async function setHiddenServices(
+  values: { hiddenServices: readonly StreamingService[] },
+  base: { hiddenServices: readonly StreamingService[] },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const personId = personOf(context);
+  if (typeof personId !== "string") return personId;
+  const { store } = context;
+
+  const current = (await store.findDefaults(personId)) ?? appAccountDefaults;
+  const before = inOrder(current.hiddenServices).join(",");
+  if (before !== inOrder(base.hiddenServices).join(",")) {
+    return {
+      status: "conflict",
+      conflicts: [
+        {
+          field: "hiddenServices",
+          current: current.hiddenServices,
+          attempted: values.hiddenServices,
+          base: base.hiddenServices,
+        },
+      ],
+    };
+  }
+  const hiddenServices = inOrder(values.hiddenServices);
+  if (hiddenServices.join(",") === before) return { status: "applied", changes: [] };
+  const next = { ...current, hiddenServices };
   await store.saveDefaults(personId, next);
   return {
     status: "applied",

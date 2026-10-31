@@ -1,5 +1,6 @@
-// The writes a change of the account defaults becomes (FR-11.7, FR-06.6): the view options as one `defaults.set`, and
-// the link setting as its own `defaults.setLinkTarget` (TON-104), each with the values it replaces as its base.
+// The writes a change of the account defaults becomes (FR-11.7, FR-06.6): the view options as one `defaults.set`, the
+// link setting as its own `defaults.setLinkTarget` (TON-104), and the services turned off as
+// `defaults.setHiddenServices` (TON-138), each with the values it replaces as its base.
 
 import { describe, expect, test } from "bun:test";
 
@@ -32,5 +33,17 @@ describe("defaultsWrites", () => {
       "defaults.setLinkTarget",
     ]);
     expect(sent({ layout: "rows", linkTarget: "web" })).toEqual([]);
+  });
+
+  test("the services turned off are their own write, sent only when the list changes (TON-138)", () => {
+    expect(sent({ hiddenServices: ["qobuz"] })).toEqual([
+      {
+        key: "defaults",
+        name: "defaults.setHiddenServices",
+        args: { hiddenServices: ["qobuz"] },
+        base: { hiddenServices: [] },
+      },
+    ]);
+    expect(sent({ hiddenServices: [] })).toEqual([]);
   });
 });

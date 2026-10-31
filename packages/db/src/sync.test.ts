@@ -898,6 +898,31 @@ describe("view choices and defaults (FR-05.2, FR-11.7, FR-11.8)", () => {
     expect(grouped.changes[0]?.data).toEqual(defaults);
     expect((await bootstrapSnapshot(t.db, anna.userId)).defaults).toEqual(defaults);
   });
+
+  test("the services turned off are saved with the defaults, and the other settings keep them (TON-138)", async () => {
+    const anna = await newPrincipal();
+    const hidden = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "defaults.setHiddenServices",
+      args: { hiddenServices: ["tidal", "qobuz"] },
+      base: { hiddenServices: [] },
+    });
+    expect(hidden.changes[0]?.data).toEqual({
+      ...appAccountDefaults,
+      hiddenServices: ["qobuz", "tidal"],
+    });
+    await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "defaults.setLinkTarget",
+      args: { linkTarget: "app" },
+      base: { linkTarget: "web" },
+    });
+    expect((await bootstrapSnapshot(t.db, anna.userId)).defaults).toEqual({
+      ...appAccountDefaults,
+      linkTarget: "app",
+      hiddenServices: ["qobuz", "tidal"],
+    });
+  });
 });
 
 const orderSet = (

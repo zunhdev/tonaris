@@ -136,10 +136,14 @@ export const defaultsColumns = {
   layout: accountSettings.layout,
 };
 
-/** The account defaults with the link setting, as the person's sessions see them; the export leaves it out. */
+/**
+ * The account defaults with the link setting and the services turned off, as the person's sessions see them; the
+ * export leaves them out.
+ */
 export const accountDefaultsColumns = {
   ...defaultsColumns,
   linkTarget: accountSettings.linkTarget,
+  hiddenServices: accountSettings.hiddenServices,
 };
 
 export const positionColumns = {

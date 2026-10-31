@@ -7,6 +7,7 @@ import { describe, expect, test } from "bun:test";
 import { runCommand, type CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
+import type { StreamingService } from "./links";
 import type { Principal } from "./principals";
 import { bootstrapSchema, changeSchema, mutationSchema, type Mutation } from "./sync";
 import { memoryStore, viewRowKey } from "./testing";
@@ -61,6 +62,14 @@ const setLinkTarget = (linkTarget: LinkTarget, base: LinkTarget): Mutation =>
     name: "defaults.setLinkTarget",
     args: { linkTarget },
     base: { linkTarget: base },
+  });
+
+const setHidden = (hiddenServices: StreamingService[], base: StreamingService[]): Mutation =>
+  mutationSchema.parse({
+    mutationId: uuidv7(),
+    name: "defaults.setHiddenServices",
+    args: { hiddenServices },
+    base: { hiddenServices: base },
   });
 
 /** The changes, checked against the stream's schema as the database layer will log them. */
@@ -379,6 +388,7 @@ describe("defaults.setLinkTarget", () => {
       layout: "grid",
       grouped: true,
       linkTarget: "app",
+      hiddenServices: [],
     });
   });
 
@@ -400,6 +410,62 @@ describe("defaults.setLinkTarget", () => {
     expect(
       failed(await runCommand(setLinkTarget("app", "web"), { principal: readOnlyAgent, store }))
         ?.code,
+    ).toBe("permission_denied");
+  });
+});
+
+describe("defaults.setHiddenServices (TON-138)", () => {
+  test("saves the services turned off, in the services' order, with DS-44's defaults and web links", async () => {
+    const memory = memoryStore();
+    const result = await runCommand(setHidden(["tidal", "qobuz", "tidal"], []), {
+      principal: anna,
+      store: memory.store,
+    });
+    const next: AccountDefaults = { ...appAccountDefaults, hiddenServices: ["qobuz", "tidal"] };
+    expect(changesOf(result)).toEqual([
+      { entity: "defaults", id: owner, op: "update", data: next },
+    ]);
+    expect(memory.defaults.get(owner)).toEqual(next);
+  });
+
+  test("keeps the other settings, and they keep it", async () => {
+    const memory = memoryStore({
+      defaults: [{ personId: owner, ...appViewDefaults, linkTarget: "app" }],
+    });
+    const context = { principal: anna, store: memory.store };
+    await runCommand(setHidden(["qobuz"], []), context);
+    await runCommand(setLinkTarget("web", "app"), context);
+    expect(memory.defaults.get(owner)).toEqual({
+      ...appAccountDefaults,
+      hiddenServices: ["qobuz"],
+    });
+  });
+
+  test("a stale list is a conflict, whatever its order, and the same list changes nothing", async () => {
+    const memory = memoryStore({
+      defaults: [{ personId: owner, ...appViewDefaults, hiddenServices: ["qobuz", "tidal"] }],
+    });
+    const context = { principal: anna, store: memory.store };
+    expect(await runCommand(setHidden([], ["qobuz"]), context)).toEqual({
+      status: "conflict",
+      conflicts: [
+        {
+          field: "hiddenServices",
+          current: ["qobuz", "tidal"],
+          attempted: [],
+          base: ["qobuz"],
+        },
+      ],
+    });
+    expect(
+      changesOf(await runCommand(setHidden(["tidal", "qobuz"], ["tidal", "qobuz"]), context)),
+    ).toEqual([]);
+  });
+
+  test("a read-only agent can't change it", async () => {
+    const { store } = memoryStore();
+    expect(
+      failed(await runCommand(setHidden(["qobuz"], []), { principal: readOnlyAgent, store }))?.code,
     ).toBe("permission_denied");
   });
 });

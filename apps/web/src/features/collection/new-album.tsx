@@ -45,6 +45,7 @@ import {
   type FormField,
 } from "./album-form";
 import { useCollectionUi, type NewAlbumDraft } from "./collection-ui";
+import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { FormFields } from "./form-fields";
 import { useListOptions } from "./list-options";
@@ -97,6 +98,11 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
   const announce = useAnnounce();
   const actions = useSaveActions();
   const [form, setForm] = useState<AlbumForm>(draft.form);
+  // Link fields for the services the person uses, from Settings, and any already filled in (TON-138).
+  const { hiddenServices } = useCollectionData().defaults;
+  const linkFields = streamingServices.filter(
+    (service) => !hiddenServices.includes(service) || form.links[service],
+  );
   const [touched, setTouched] = useState<ReadonlySet<FormField>>(new Set());
   const [submitted, setSubmitted] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -326,7 +332,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                 <span className="text-fg-primary">{shownLink(draft.capture.link)}</span>
               </p>
             ) : (
-              streamingServices.map((service) => (
+              linkFields.map((service) => (
                 <TextField
                   key={service}
                   name={service}

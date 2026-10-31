@@ -1009,6 +1009,7 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
   - **Guests** have no setting, so they get the pages.
   - **Removed:** TON-47's second App choice and its 2 s focus watch.
   - **Tidal re-checked:** TIDAL.app 2.47 registers `tidal:` in its `CFBundleURLSchemes`, read again on 30 October 2026.
+- *As built in TON-138* (31 October 2026): **the services a person uses.** `account_settings.hidden_services` (`text[]`, default empty, checked against the services) holds those turned off, so a service added later starts on. It travels with the account defaults as `hiddenServices`, in the services' order, and is set by a new mutation, `defaults.setHiddenServices`, with the prior list as its base (TS-21); every existing request variant is unchanged (TS-09). The export leaves it out. The album panel and New album hide only empty fields of services turned off. A pasted link of any service is still accepted. When a service is added (TON-131), the column's check takes it too.
 
 **TS-44 Album matching (Decided 19 October 2026: identity is the album; evidence validated by the [G2 spike](spikes/2026-10-19-g2-album-matching.md) the same day; G2 closed 21 October 2026 in TON-25; FR-02.3, FR-02.9, FR-02.10, FR-02.12, FR-14.3).**
 

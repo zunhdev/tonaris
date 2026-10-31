@@ -69,7 +69,8 @@ export function memoryStore({
   containers?: (Omit<StoredContainer, "description"> & { description?: string | null })[];
   memberships?: StoredMembership[];
   views?: (ViewPrefs & { personId: string })[];
-  defaults?: (ViewDefaults & Partial<Pick<AccountDefaults, "linkTarget">> & { personId: string })[];
+  defaults?: (ViewDefaults &
+    Partial<Pick<AccountDefaults, "linkTarget" | "hiddenServices">> & { personId: string })[];
   positions?: (Position & { personId: string })[];
   /** Accounts, by email key, for invitations and display names. */
   accounts?: { id: string; email: string; displayName?: string | null }[];
@@ -126,7 +127,10 @@ export function memoryStore({
     views.map(({ personId, ...prefs }) => [viewRowKey(personId, prefs.viewKey), prefs]),
   );
   const defaultRows = new Map<string, AccountDefaults>(
-    defaults.map(({ personId, ...values }) => [personId, { linkTarget: "web", ...values }]),
+    defaults.map(({ personId, ...values }) => [
+      personId,
+      { linkTarget: "web", hiddenServices: [], ...values },
+    ]),
   );
   const positionRows = new Map<string, Position & { personId: string }>(
     positions.map((row) => [positionRowKey(row.personId, row.viewKey, row.itemId), { ...row }]),

@@ -332,6 +332,9 @@ describe("view options (DS-49, DS-94)", () => {
     expect(fieldLabel("linkTarget")).toBe("Open links in");
     expect(fieldValue("linkTarget", "app", names)).toBe("App");
     expect(fieldValue("linkTarget", "web", names)).toBe("Web page");
+    expect(fieldLabel("hiddenServices")).toBe("Streaming services");
+    expect(fieldValue("hiddenServices", ["tidal", "qobuz"], names)).toBe("Off: Qobuz, Tidal");
+    expect(fieldValue("hiddenServices", [], names)).toBe("All on");
     expect(fieldValue("grouped", false, names)).toBe("None");
     expect(fieldValue("layout", "grid", names)).toBe("Grid");
     expect(fieldValue("listSortMode", "manual", names)).toBe("Manual");

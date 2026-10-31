@@ -2,7 +2,8 @@
 // choice of its own: the sort, direction, grouping and layout of lists and Unsorted, and the sort and direction of
 // folders and the collection. Each choice is saved to the account at once, and reaches the person's other sessions.
 // Views with choices of their own keep them. Links: whether service links open the services' web pages or their apps
-// (FR-06.6, TON-104).
+// (FR-06.6, TON-104). Streaming services: the ones the person uses, a switch each; the album panel and New album
+// show link fields only for those, while saved links still show (TON-138).
 
 import { defaultsKey } from "@/client/sync/views";
 import { useCollectionData } from "@/features/collection/data";
@@ -19,8 +20,15 @@ import { PageHeader } from "@/features/shell/page-header";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { createFileRoute } from "@tanstack/react-router";
 
-import type { AccountDefaults, LinkTarget } from "@tonaris/domain";
+import {
+  serviceNames,
+  streamingServices,
+  type AccountDefaults,
+  type LinkTarget,
+  type StreamingService,
+} from "@tonaris/domain";
 import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
+import { Switch } from "@tonaris/ui/components/switch";
 
 const linkTargetOptions: readonly SegmentedOption<LinkTarget>[] = [
   { value: "web", label: "Web page" },
@@ -44,6 +52,14 @@ function Preferences() {
         Object.assign(draft, values);
       })
       .isPersisted.promise.catch(() => {});
+  }
+
+  /** Turns a service on or off, keeping the list in the services' order. */
+  function setService(service: StreamingService, on: boolean) {
+    const hidden = new Set(defaults.hiddenServices);
+    if (on) hidden.delete(service);
+    else hidden.add(service);
+    set({ hiddenServices: streamingServices.filter((each) => hidden.has(each)) });
   }
 
   return (
@@ -152,6 +168,31 @@ function Preferences() {
           <p className="text-small text-fg-secondary">
             App opens Spotify, Apple Music, Qobuz and Tidal links in their apps, on every device you
             use. A link to a service whose app isn't installed won't open.
+          </p>
+        </section>
+
+        <section aria-labelledby="streaming-services" className="flex max-w-sm flex-col gap-3">
+          <h2 id="streaming-services" className="text-title text-fg-primary">
+            Streaming services
+          </h2>
+          <ul className="flex flex-col gap-2.5">
+            {streamingServices.map((service) => (
+              <li key={service} className="flex items-center justify-between gap-3">
+                <span id={`service-${service}`} className="text-fg-primary">
+                  {serviceNames[service]}
+                </span>
+                <Switch
+                  aria-labelledby={`service-${service}`}
+                  checked={!defaults.hiddenServices.includes(service)}
+                  disabled={!ready}
+                  onCheckedChange={(on) => setService(service, on)}
+                />
+              </li>
+            ))}
+          </ul>
+          <p className="text-small text-fg-secondary">
+            The album panel and New album show link fields only for the services that are on. Links
+            you've already saved still show, and you can paste a link from any service.
           </p>
         </section>
       </div>
