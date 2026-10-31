@@ -1,8 +1,8 @@
 // The sidebar (DS-30, DS-31): the wordmark, which goes to Collection (TON-119), and a button to hide it, the account
 // menu, Search, which opens the search palette (DS-75), and Add album, which opens the capture dialog (DS-48), the
-// collection's tree with a "+" menu for new lists and folders, and the SyncIndicator in the footer. Its right edge
-// resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a dragged folder or list, to
-// move it to the root (DS-49).
+// collection's tree with a "+" menu for new lists and folders at the top level, and the SyncIndicator in the footer.
+// Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a dragged
+// folder or list, to move it to the root (DS-49).
 
 import { AccountMenu } from "@/features/account/account-menu";
 import { useCapture } from "@/features/capture/capture-context";
@@ -21,7 +21,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@tonaris/ui/components/dropdown-menu";
 import { Wordmark } from "@tonaris/ui/components/logo";
@@ -98,7 +97,10 @@ export function Sidebar({
   );
 }
 
-/** The "+" menu: a new list or folder, where N and ⇧N would make it (DS-78); disabled offline (DS-81). */
+/**
+ * The "+" menu, Collection's: a new list or folder at the top level (TON-120). N and ⇧N make them where the focus or
+ * the view is instead, so the items show no keys. Disabled offline (DS-81).
+ */
 function NewMenu() {
   const startEditor = useStartEditor();
   const offline = useConnection() === "offline";
@@ -122,7 +124,7 @@ function NewMenu() {
 
   const choose = (kind: ContainerKind) => {
     chosen.current = true;
-    startEditor({ mode: "new", kind });
+    startEditor({ mode: "create", kind, parentId: null, name: "" });
   };
   return (
     <DropdownMenu>
@@ -140,14 +142,8 @@ function NewMenu() {
           return keep;
         }}
       >
-        <DropdownMenuItem onClick={() => choose("list")}>
-          New list
-          <DropdownMenuShortcut>N</DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => choose("folder")}>
-          New folder
-          <DropdownMenuShortcut>⇧N</DropdownMenuShortcut>
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => choose("list")}>New list</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => choose("folder")}>New folder</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

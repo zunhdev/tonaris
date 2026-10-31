@@ -1,7 +1,8 @@
 // A folder's or list's menu in the sidebar, and Rename in the header (TON-117, DS-27): with the pointer, a row's ⋯
-// opens Rename, Move to…, Share… and Delete…, each running its shortcut's command on that row; from the keyboard,
-// Shift+F10 opens the same menu, and Escape gives the focus back to the row. In Editing mode, the header's Rename
-// opens the name's editor in the sidebar. Each test signs in with its own account.
+// opens New list and New folder, made inside a folder and beside a list (TON-120), then Rename, Move to…, Share… and
+// Delete…, each running its shortcut's command on that row; from the keyboard, Shift+F10 opens the same menu, and
+// Escape gives the focus back to the row. In Editing mode, the header's Rename opens the name's editor in the
+// sidebar. The "+" beside Collection makes them at the top level. Each test signs in with its own account.
 
 import { expect, test, type Page } from "@playwright/test";
 
@@ -47,6 +48,8 @@ test("a row's ⋯ renames, moves and deletes the folder or list it's on", async 
   await expect(item(page, "Doom").locator('[data-slot="row-menu"]')).toBeHidden();
   await openMenu(page, "Doom");
   await expect(menu(page, "Doom").getByRole("menuitem")).toHaveText([
+    "New listN",
+    "New folder⇧N",
     "RenameF2",
     "Move to…M",
     "Share…⇧S",
@@ -100,7 +103,7 @@ test("Shift+F10 opens a row's menu, and Escape gives the focus back to the row",
   // The menu takes the focus once it's open; then the arrows move through its items.
   await expect(menu(page, "Metal")).toBeFocused();
   await page.keyboard.press("ArrowDown");
-  await expect(menu(page, "Metal").getByRole("menuitem", { name: /^Rename/ })).toBeFocused();
+  await expect(menu(page, "Metal").getByRole("menuitem", { name: /^New list/ })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu(page, "Metal")).toHaveCount(0);
   await expect(item(page, "Metal")).toBeFocused();
@@ -125,4 +128,56 @@ test("in Editing mode, the header's Rename opens the name's editor in the sideba
   await editor.press("Enter");
   await saved(page);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Drone doom");
+});
+
+test("a folder's menu makes a new list inside it, a list's a folder beside it, and the \"+\" at the top", async ({
+  page,
+}) => {
+  await signIn(page, accounts.rowMenuCreate);
+  await live(page);
+  // The list 'Doom' inside the folder 'Metal'.
+  const folder = { ...list("Metal"), kind: "folder" as const };
+  const doom = { ...list("Doom"), parentId: folder.id };
+  await page.evaluate(
+    async (containers) => {
+      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+    },
+    [folder, doom],
+  );
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  const editor = tree(page).getByRole("textbox");
+
+  // A folder's New list: inside it.
+  await openMenu(page, "Metal");
+  await menu(page, "Metal")
+    .getByRole("menuitem", { name: /^New list/ })
+    .click();
+  await expect(editor).toBeFocused();
+  await editor.fill("Sludge");
+  await editor.press("Enter");
+  await saved(page);
+  await expect(item(page, "Sludge")).toHaveAttribute("aria-level", "2");
+
+  // A list's New folder: beside it, in its folder.
+  await openMenu(page, "Doom");
+  await menu(page, "Doom")
+    .getByRole("menuitem", { name: /^New folder/ })
+    .click();
+  await expect(editor).toBeFocused();
+  await editor.fill("Drone");
+  await editor.press("Enter");
+  await saved(page);
+  await expect(item(page, "Drone")).toHaveAttribute("aria-level", "2");
+
+  // The "+" beside Collection: at the top level, though a list in 'Metal' is on view.
+  await page.getByRole("button", { name: "New list or folder" }).click();
+  const plus = page.getByRole("menu");
+  await expect(plus.getByRole("menuitem")).toHaveText(["New list", "New folder"]);
+  await plus.getByRole("menuitem", { name: "New list" }).click();
+  await expect(editor).toBeFocused();
+  await editor.fill("Later");
+  await editor.press("Enter");
+  await saved(page);
+  await expect(item(page, "Later")).toHaveAttribute("aria-level", "1");
 });
