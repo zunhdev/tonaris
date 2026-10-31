@@ -108,10 +108,13 @@ function SharedContent({
   );
   const narrow = useNarrowScreen();
   const title = current?.name ?? "Shared with me";
-  /** A phone's Back (DS-110): to the folder above in the share, or to Shared with me from its top. */
+  /**
+   * A phone's Back (DS-110): to the folder above in the share, or from its top to the Collection screen's Shared
+   * (TON-134).
+   */
   const backFrom = (parentId: string | null) => {
     const parent = parentId === null ? undefined : tree.byId.get(parentId);
-    if (!parent || current?.id === rootId) return { to: "/shared", label: "Shared with me" };
+    if (!parent || current?.id === rootId) return { to: "/c?show=shared", label: "Collection" };
     return {
       to: parent.id === rootId ? `/shared/${rootId}` : `/shared/${rootId}?c=${parent.id}`,
       label: parent.name,

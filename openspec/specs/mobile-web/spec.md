@@ -7,11 +7,15 @@ On a phone, the workspace is for browsing: drill-down navigation, rows that fit 
 ## Requirements
 
 ### Requirement: A phone browses the workspace by drilling down
-Below 768 px wide, the workspace SHALL show no sidebar. Each view's top bar SHALL hold Back to the view above (none at the top), the view's name, its own controls, Search and Account (DS-110). The root screen SHALL list the collection's folders and lists, then Unsorted and Shared with me.
+Below 768 px wide, the workspace SHALL show no sidebar. Each view's top bar SHALL hold Back to the view above (none at the top), the view's name, its own controls, Search and Account (DS-110). The root screen SHALL switch between the person's own folders and lists, with Unsorted below them, and the folders and lists shared with them (TON-134).
 
 #### Scenario: Down and back up
 - **WHEN** a person on a phone opens a folder, then a list inside it, then presses Back twice
 - **THEN** they return to the folder, then to Collection
+
+#### Scenario: Mine and Shared
+- **WHEN** a person on a phone switches Collection to Shared and opens a list Anna shared
+- **THEN** Back returns them to Collection, still on Shared
 
 ### Requirement: A phone's rows and album fit the screen
 On a phone, album rows SHALL be 56 px with 44 px artwork and the artist under the title, folder and list rows at least 44 px, and nothing SHALL be wider than the screen. Tapping an album SHALL open a read-only sheet with its details and its links to open each service.
