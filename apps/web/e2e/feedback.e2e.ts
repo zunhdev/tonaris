@@ -19,7 +19,7 @@ test("the account menu opens the feedback board, signing in through Tonaris", as
   await page.getByRole("menuitem", { name: "Feedback and ideas" }).click();
   const board = await opened;
   await expect(board).toHaveURL(
-    `${feedbackBoard.url}/oauth/${feedbackBoard.provider}?redirect=%2F`,
+    `${feedbackBoard.url}/oauth/${feedbackBoard.provider}?redirect=${encodeURIComponent(`${feedbackBoard.url}/`)}`,
   );
   // The workspace stays where it was.
   await expect(page).toHaveURL(/\/c$/);

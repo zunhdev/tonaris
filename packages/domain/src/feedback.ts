@@ -22,7 +22,8 @@ export function feedbackProviderKey(callbackUrl: string): string | undefined {
 
 /**
  * Where the account menu opens the board: Fider's sign-in route for Tonaris's provider, which returns to the board's
- * front page. Undefined unless both the board's address and the callback URL are set and valid.
+ * front page. Fider takes that as a full URL on the board's own origin and answers 403 for a bare path (TON-145).
+ * Undefined unless both the board's address and the callback URL are set and valid.
  */
 export function feedbackSignInUrl(
   boardUrl: string | undefined,
@@ -37,5 +38,5 @@ export function feedbackSignInUrl(
     return undefined;
   }
   if (!key || (board.protocol !== "https:" && board.protocol !== "http:")) return undefined;
-  return `${board.origin}/oauth/${key}?redirect=%2F`;
+  return `${board.origin}/oauth/${key}?redirect=${encodeURIComponent(`${board.origin}/`)}`;
 }

@@ -1189,6 +1189,7 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
   - **It may ask only for `openid email`.** These identity scopes are in `scopes`, but registered and discovered clients get MCP's (`clientRegistrationDefaultScopes`), and discovery advertises only MCP's, so no AI client can ask for them.
   - **Userinfo** (`GET /auth/oauth2/userinfo`, now served) answers only the board's tokens (`customUserInfoClaims`), with `sub`, `email` and `name`: the display name, or "Tonaris member", never the start of the email. Better Auth's `profile` scope isn't used, because it derives given and family names from a name a person may not have.
   - **Its tokens** are opaque and bound to no resource, so `/mcp` refuses them, and `/v1` refuses every bearer token. Skipping consent records no grant, so the board isn't a connection in Settings.
+  - **The account menu's link** is Fider's sign-in route for the provider, `{board}/oauth/{key}?redirect={board}/`. Fider takes `redirect` only as a full URL on the board's own origin, and answers 403 to a bare path (fixed in TON-145).
 
 **TS-62 Enforcement (Decided; FR-10.3, X-03).** The grant's `mode` is checked in the domain layer for every command. An MCP request's mode is what both its token and its grant allow, so consenting again in a narrower mode also narrows tokens issued before:
 

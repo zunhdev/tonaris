@@ -26,9 +26,10 @@ describe("feedbackProviderKey", () => {
 });
 
 describe("feedbackSignInUrl", () => {
-  test("opens the board through Tonaris's provider, back to its front page", () => {
+  test("opens the board through Tonaris's provider, back to its front page by its full address", () => {
+    // Fider refuses a bare path with 403 (TON-145).
     expect(feedbackSignInUrl("https://feedback.tonaris.app/", callback)).toBe(
-      "https://feedback.tonaris.app/oauth/_k3j9x0q2ab?redirect=%2F",
+      "https://feedback.tonaris.app/oauth/_k3j9x0q2ab?redirect=https%3A%2F%2Ffeedback.tonaris.app%2F",
     );
   });
 
