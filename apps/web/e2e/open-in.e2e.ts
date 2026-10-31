@@ -17,6 +17,7 @@ test.use({ storageState: { cookies: [], origins: [] } });
 const spotify = "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv";
 const tidal = "https://tidal.com/album/77654321";
 const apple = "https://music.apple.com/us/album/1440783617";
+const youtube = "https://music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM";
 
 /** An album in the list `name`, with links to these services. */
 async function linked(
@@ -106,7 +107,7 @@ test("with links set to open in the apps, the chooser and the inspector open the
   await signIn(page, accounts.openApp);
   await live(page);
   const bleach = album("Bleach", { artistCredit: "Nirvana", originalYear: 1989 });
-  const list = await linked(page, "Grunge", bleach, { tidal, spotify });
+  const list = await linked(page, "Grunge", bleach, { tidal, spotify, "youtube-music": youtube });
 
   await page.goto("/settings/preferences");
   await live(page);
@@ -136,9 +137,12 @@ test("with links set to open in the apps, the chooser and the inspector open the
   await row.hover();
   await row.getByRole("button", { name: "Open 'Bleach' in…" }).click();
   const choices = page.getByRole("dialog", { name: "Open in…" }).getByRole("link");
-  await expect(choices).toHaveText(["Open in Spotify", "Open in Tidal"]);
+  await expect(choices).toHaveText(["Open in Spotify", "Open in Tidal", "Open in YouTube Music"]);
   await expect(choices.first()).toHaveAttribute("href", "spotify:album:1KQ1Pf4ikoK1jBbOtOHvOv");
   await expect(choices.nth(1)).toHaveAttribute("href", "tidal://album/77654321");
+  // YouTube Music has no desktop app: its page opens, in a new tab (TON-131).
+  await expect(choices.nth(2)).toHaveAttribute("href", youtube);
+  await expect(choices.nth(2)).toHaveAttribute("target", "_blank");
 });
 
 test("a list's cards and rows name the album's services, each opening it and not the album", async ({

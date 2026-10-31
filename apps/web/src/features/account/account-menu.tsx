@@ -8,7 +8,15 @@
 import { useShell } from "@/features/shell/shell-context";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
-import { ChevronsUpDown, CircleUser, Keyboard, LogOut, Settings, ShieldCheck } from "lucide-react";
+import {
+  ChevronsUpDown,
+  CircleUser,
+  FileText,
+  Keyboard,
+  LogOut,
+  Settings,
+  ShieldCheck,
+} from "lucide-react";
 import { useRef, useState } from "react";
 
 import type { Account } from "@tonaris/domain";
@@ -112,6 +120,15 @@ export function AccountMenu({
               Keyboard shortcuts
             </DropdownMenuItem>
           )}
+          {/* Always at hand, as YouTube's policies ask (TON-131); each opens in a new tab, leaving the workspace be. */}
+          <DropdownMenuItem onClick={() => window.open("/terms", "_blank", "noopener")}>
+            <FileText strokeWidth={1.5} aria-hidden />
+            Terms of use
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => window.open("/privacy", "_blank", "noopener")}>
+            <FileText strokeWidth={1.5} aria-hidden />
+            Privacy notice
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={chooseSignOut}>
             <LogOut strokeWidth={1.5} aria-hidden />
             Sign out

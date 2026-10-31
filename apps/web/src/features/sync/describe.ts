@@ -388,7 +388,7 @@ const codeReasons: Record<ErrorCode, string> = {
   field_in_use: "This field is still used. Remove it from its albums first.",
   uncertain_match: "Tonaris isn't sure this is the same album. Choose whether it is.",
   unsupported_link:
-    "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.",
+    "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link.",
   provider_unavailable:
     "Couldn't reach the music service. Try again, or enter the details manually.",
   rate_limited: "Too many changes at once. Wait a moment, then retry.",

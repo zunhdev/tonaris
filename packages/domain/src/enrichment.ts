@@ -5,7 +5,7 @@
 
 import { albumFields, type AlbumFields } from "./albums";
 
-/** Where a saved value came from (TS-15). Values from Spotify, Qobuz or Tidal are never saved (TS-41). */
+/** Where a saved value came from (TS-15). Values from Spotify, Qobuz, Tidal or YouTube are never saved (TS-41). */
 export const provenanceSources = [
   "user",
   "musicbrainz",

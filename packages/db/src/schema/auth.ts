@@ -21,6 +21,9 @@ export const users = table(
     role: text({ enum: userRoles }).notNull().default("user"),
     // Set when deletion starts (TS-74): the email has moved to a placeholder, and a job is removing the data.
     deletingAt: instant(),
+    // The terms of use and privacy notice's version the person agreed to, and when (TON-131); null until they do.
+    termsVersion: text(),
+    termsAgreedAt: instant(),
     ...timestamps,
   },
   (t) => [

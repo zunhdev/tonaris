@@ -2,6 +2,8 @@
 
 export {
   activeSessionIds,
+  agreedToTerms,
+  agreeToTerms,
   findCreator,
   findUserByEmail,
   insertCreator,

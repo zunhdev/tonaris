@@ -48,7 +48,7 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
     event?.preventDefault();
     const lines = linesIn(text);
     if (lines.length === 0) {
-      setProblem("Paste at least one Spotify, Apple Music, Qobuz or Tidal link.");
+      setProblem("Paste at least one Spotify, Apple Music, Qobuz, Tidal or YouTube Music link.");
       linksRef.current?.focus();
       return;
     }
@@ -71,7 +71,7 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
         <DialogHeader>
           <DialogTitle>Add albums</DialogTitle>
           <DialogDescription>
-            Paste Spotify, Apple Music, Qobuz or Tidal album or track links.
+            Paste Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track links.
           </DialogDescription>
         </DialogHeader>
         <CapacityNotice />

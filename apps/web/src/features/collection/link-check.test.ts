@@ -23,7 +23,7 @@ describe("checkLink (TS-40)", () => {
 
   test("unsupported input gets capture's reason", () => {
     expect(checkLink("qobuz", "not a link")).toBe(
-      "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.",
+      "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link.",
     );
     expect(checkLink("spotify", "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M")).toBe(
       "Only Spotify album and track links can be added.",

@@ -1,6 +1,6 @@
 // One fetch for every outbound call (TS-103, Q-05): short links, MusicBrainz, the Cover Art Archive, iTunes
-// Lookup, Spotify, the Qobuz and Tidal store pages, and the image proxy. URLs reach it from pasted links,
-// provider metadata and owners' artwork, so it refuses anything but public https hosts:
+// Lookup, Spotify, the Qobuz and Tidal store pages, the YouTube Data API, and the image proxy. URLs reach it from
+// pasted links, provider metadata and owners' artwork, so it refuses anything but public https hosts:
 // - https on the default port only, with no credentials and no IP address for a host;
 // - DNS checked on every hop, every address public (`isPublicAddress`), and the connection made to the address
 //   that was checked, with the host's name for TLS and Host, so DNS can't answer differently in between;

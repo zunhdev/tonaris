@@ -14,7 +14,7 @@ import { identificationOutcome, unidentifiedReasons, type Identification } from 
 async function run(testCase: IdentifyCase) {
   const replay = harness(testCase, { recorded });
   const answer = await replay.identify();
-  return { answer, requests: replay.requests, cache: replay.cache };
+  return { answer, requests: replay.requests, cache: replay.cache, refused: replay.refused };
 }
 
 /** The hosts a run asked, in order. */
@@ -36,6 +36,8 @@ const album = {
   brightFuture: "60db66ba-34f8-4a1d-b91a-67e85cfcb269",
   killEmAll: "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",
   andJustice: "67553e23-8dad-3792-b6f2-8fedd5650ff3",
+  youtubeTrackUrl: "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576",
+  naturalEp: "042bf6e1-0d47-4486-9b20-1bfad4214152",
 };
 
 describe("the chain's order (FR-02.1, TS-41)", () => {
@@ -223,6 +225,62 @@ describe("agent captures (FR-10.5)", () => {
       step: 4,
       releaseGroupId: album.brightFuture,
     });
+  });
+});
+
+describe("YouTube Music (TON-131)", () => {
+  test("step 2: a track link's album playlist, known in www.youtube.com's form", async () => {
+    const { answer, requests } = await run(cases.youtubeTrackUrl);
+    expect(answer).toMatchObject({
+      status: "identified",
+      step: 2,
+      releaseGroupId: album.youtubeTrackUrl,
+      link: {
+        kind: "track",
+        url: "https://music.youtube.com/playlist?list=OLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s",
+      },
+    });
+    expect(hosts(requests)).not.toContain("www.googleapis.com");
+  });
+
+  test("step 4: the Data API's three reads give the hints, with the key in a header only", async () => {
+    const { answer, requests } = await run(cases.youtubeHints);
+    expect(answer).toMatchObject({
+      status: "identified",
+      step: 4,
+      releaseGroupId: album.brightFuture,
+    });
+    const reads = to("www.googleapis.com", requests);
+    expect(reads.map((read) => new URL(read.split(" ")[1] ?? "").pathname)).toEqual([
+      "/youtube/v3/playlists",
+      "/youtube/v3/playlistItems",
+      "/youtube/v3/videos",
+    ]);
+    expect(reads.join(" ")).not.toContain("key=");
+  });
+
+  test("the playlist's track count rules out the namesake EP its date fits", async () => {
+    const { answer } = await run(cases.youtubeNamesakeEp);
+    expect(answer).toMatchObject({ status: "unidentified", reason: unidentifiedReasons.notFound });
+    expect(JSON.stringify(answer)).not.toContain(album.naturalEp);
+    expect(answer.status === "unidentified" && answer.prefill).toBeFalsy();
+  });
+
+  test("an owner who hasn't agreed to the terms: no read, then manual entry", async () => {
+    const { answer, requests } = await run(cases.youtubeNotAgreed);
+    expect(answer).toMatchObject({ status: "unidentified", reason: unidentifiedReasons.notFound });
+    expect(hosts(requests)).not.toContain("www.googleapis.com");
+  });
+
+  test("agents' captures read the Data API, as Apple's lookup", async () => {
+    const { answer } = await run(cases.youtubeAgent);
+    expect(answer).toMatchObject({ status: "identified", step: 4 });
+  });
+
+  test("a refused read goes to manual entry and is reported, without the key", async () => {
+    const { answer, refused } = await run(cases.youtubeRefused);
+    expect(answer).toMatchObject({ status: "unidentified", reason: unidentifiedReasons.notFound });
+    expect(refused).toEqual([{ read: "playlists", status: 403, reason: "quotaExceeded" }]);
   });
 });
 

@@ -2,7 +2,13 @@
 // Parsing pasted links is `@tonaris/providers`' job; this is the vocabulary every layer shares.
 
 /** The services capture accepts and albums link to (FR-02.1, FR-06.2). */
-export const streamingServices = ["spotify", "apple-music", "qobuz", "tidal"] as const;
+export const streamingServices = [
+  "spotify",
+  "apple-music",
+  "qobuz",
+  "tidal",
+  "youtube-music",
+] as const;
 export type StreamingService = (typeof streamingServices)[number];
 
 /** Each service's name, as people read it: in reasons, and in "Open in…" (DS-25). */
@@ -11,6 +17,7 @@ export const serviceNames: Record<StreamingService, string> = {
   "apple-music": "Apple Music",
   qobuz: "Qobuz",
   tidal: "Tidal",
+  "youtube-music": "YouTube Music",
 };
 
 /** What a link names. A track link stands for the album it belongs to (FR-02.3). */
@@ -30,8 +37,8 @@ export function sameLink(a: LinkRef, b: LinkRef): boolean {
 
 /**
  * What `album_service_links.entity_id` holds for a link (TS-11, TS-41 step 1): the album's id when the link names
- * one (album links, and Apple Music links to a song in an album), else `track:{id}`. Album and track ids never
- * collide that way, and a link is found again whatever form it was pasted in.
+ * one (album links, Apple Music links to a song in an album, and YouTube Music tracks in an album), else
+ * `track:{id}`. Album and track ids never collide that way, and a link is found again whatever form it was pasted in.
  */
 export function linkEntityId(link: { kind: LinkKind; id: string; albumId?: string }): string {
   return link.albumId ?? (link.kind === "album" ? link.id : `track:${link.id}`);

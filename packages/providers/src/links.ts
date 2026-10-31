@@ -14,7 +14,7 @@ import {
 
 /** A recognised link: what it names, what it tells of the album, and its canonical URL (TS-40). */
 export type ParsedLink = LinkRef & {
-  /** The album's id, when the link names it: album links, and Apple Music `?i=` song links. */
+  /** The album's id, when the link names it: album links, Apple Music `?i=` song links and YouTube Music tracks. */
   albumId?: string;
   /** Apple Music's storefront, such as `fi`, when the link has one. */
   storefront?: string;
@@ -50,6 +50,10 @@ const linkHosts = new Map<string, StreamingService>([
   ["tidal.com", "tidal"],
   ["www.tidal.com", "tidal"],
   ["listen.tidal.com", "tidal"],
+  ["music.youtube.com", "youtube-music"],
+  ["www.youtube.com", "youtube-music"],
+  ["youtube.com", "youtube-music"],
+  ["m.youtube.com", "youtube-music"],
 ]);
 const shortLinkHosts = new Set(["spotify.link", "spotify.app.link"]);
 
@@ -58,9 +62,12 @@ const digits = /^\d+$/;
 const qobuzId = /^[0-9a-z]+$/i;
 const storefront = /^[a-z]{2}$/i;
 const qobuzLocale = /^[a-z]{2}-[a-z]{2}$/i;
+/** An album's auto-generated playlist; every one the spike sampled had 33 characters after the prefix. */
+const youtubeAlbum = /^OLAK5uy_[\w-]{33}$/;
+const youtubeVideo = /^[\w-]{11}$/;
 
 const notALink =
-  "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.";
+  "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link.";
 
 function unsupported(detail: string): Extract<LinkParse, { status: "failed" }> {
   return { status: "failed", failure: failure("unsupported_link", detail) };
@@ -210,8 +217,37 @@ function tidal(segments: string[]): LinkParse {
 }
 
 /**
+ * `/playlist?list={album}` and `/watch?v={video}&list={album}`, where an album is an auto-generated `OLAK5uy_…`
+ * playlist. A track stands for its album, so both keep the album's playlist as the link (TON-131). Any other YouTube
+ * address, such as a video alone or the web player's `/browse/MPREb_…`, names no album a public API can find.
+ */
+function youtubeMusic(segments: string[], query: URLSearchParams): LinkParse {
+  const [section, ...rest] = segments;
+  const list = query.get("list");
+  const video = query.get("v");
+  const known = rest.length === 0 && (section === "playlist" || section === "watch");
+  if (!known || list === null || (section === "watch" && video === null)) {
+    return unsupported(
+      "This YouTube link doesn't name an album. In YouTube Music, open the album and copy its link from Share.",
+    );
+  }
+  if (!list.startsWith("OLAK5uy_")) {
+    return unsupported(
+      "This YouTube playlist isn't an album. In YouTube Music, open the album and copy its link from Share.",
+    );
+  }
+  if (!youtubeAlbum.test(list)) return incomplete("youtube-music");
+  const url = `https://music.youtube.com/playlist?list=${list}`;
+  if (section === "playlist") {
+    return parsed({ service: "youtube-music", kind: "album", id: list, albumId: list, url });
+  }
+  if (!video || !youtubeVideo.test(video)) return incomplete("youtube-music");
+  return parsed({ service: "youtube-music", kind: "track", id: video, albumId: list, url });
+}
+
+/**
  * Parses one pasted link (TS-40). It fetches nothing: a short link comes back as `short`, for
- * `resolveShortLink()`. Input that isn't an album or track link of the four services fails with
+ * `resolveShortLink()`. Input that isn't an album or track link of the five services fails with
  * `unsupported_link` and a reason (FR-02.3).
  */
 export function parseLink(input: string): LinkParse {
@@ -247,6 +283,7 @@ export function parseLink(input: string): LinkParse {
   if (service === "apple-music") return appleMusic(segments, url.searchParams);
   if (service === "qobuz") return qobuz(host, segments);
   if (service === "tidal") return tidal(segments);
+  if (service === "youtube-music") return youtubeMusic(segments, url.searchParams);
   return unsupported(notALink);
 }
 

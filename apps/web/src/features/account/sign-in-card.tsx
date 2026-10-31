@@ -1,7 +1,9 @@
-// The sign-in pages' frame (DS-90): the wordmark, mark and name (TON-114), above one card. Each step names the page
-// with its own heading, `signInTitleId`. The sign-in steps add what Tonaris is beside the card (`promo`, TON-116):
-// on the desktop, the promo on the left and the card on the right; on a phone, the card first and the promo below.
+// The sign-in pages' frame (DS-90): the wordmark, mark and name (TON-114), above one card, with the terms and privacy
+// notice linked below it (TON-131). Each step names the page with its own heading, `signInTitleId`. The sign-in steps
+// add what Tonaris is beside the card (`promo`, TON-116): on the desktop, the promo on the left and the card on the
+// right; on a phone, the card first and the promo below.
 
+import { LegalLinks } from "@/features/legal/legal-page";
 import type { ReactNode } from "react";
 
 import { Wordmark } from "@tonaris/ui/components/logo";
@@ -24,6 +26,7 @@ export function SignInCard({ children, promo = false }: { children: ReactNode; p
           <Wordmark size="page" />
         </p>
         <div className={cardClass}>{children}</div>
+        <LegalLinks />
       </main>
     );
   }
@@ -39,6 +42,7 @@ export function SignInCard({ children, promo = false }: { children: ReactNode; p
             <Wordmark size="page" />
           </p>
           <div className={cardClass}>{children}</div>
+          <LegalLinks />
         </div>
         <div className="flex flex-col gap-8 md:order-1">
           <p className="hidden md:block">

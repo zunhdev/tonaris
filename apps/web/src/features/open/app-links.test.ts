@@ -29,6 +29,12 @@ describe("appLink (TS-43)", () => {
     );
   });
 
+  test("YouTube Music has no desktop app, so its links have none (TS-43)", () => {
+    expect(
+      appLink("https://music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM"),
+    ).toBeUndefined();
+  });
+
   test("anything unreadable has no app link", () => {
     expect(appLink("https://example.com/album/1")).toBeUndefined();
     expect(appLink("https://spotify.link/AbCdEf")).toBeUndefined();

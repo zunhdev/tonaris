@@ -150,7 +150,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 **DS-19 Iconography.**
 - **Lucide** at 16px with a 1.5 stroke; 14px inside dense rows and chips. It is consistent, tree-shakable, and matches the shadcn defaults.
-- **Services are named in plain text**: "Spotify", "Apple Music", "Qobuz", "Tidal". No logos, badges or brand colors (decided 19 October 2026, [G1 terms review](spikes/2026-10-19-g1-terms-review.md); Tidal added 20 October 2026, [Tidal spike](spikes/2026-10-20-g1-tidal.md)): Spotify forbids pairing its brand with others', Apple allows only its own badge artwork, Qobuz's logo needs its consent, and Tidal's marks belong to its developer program, which Tonaris doesn't use. No provider-sourced content needs attribution (G1).
+- **Services are named in plain text**: "Spotify", "Apple Music", "Qobuz", "Tidal", "YouTube Music". No logos, badges or brand colors (decided 19 October 2026, [G1 terms review](spikes/2026-10-19-g1-terms-review.md); Tidal added 20 October 2026, [Tidal spike](spikes/2026-10-20-g1-tidal.md); YouTube Music 31 October 2026, TON-131): Spotify forbids pairing its brand with others', Apple allows only its own badge artwork, Qobuz's logo needs its consent, and Tidal's marks belong to its developer program, which Tonaris doesn't use. No provider-sourced content needs attribution (G1).
 - Release types are written as text, not icons.
 - **Branding:** a text wordmark, "Tonaris" in Inter semibold. The favicon and app icon are a "T" mark on the accent color.
   - *As built in TON-114* (temporary, until the creator's permanent logo): **the mark is a record sliding out of its sleeve,** flat and in one color, in `packages/ui`'s `Logo`.
@@ -309,6 +309,7 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 - **No preselection** and no remembered choice. *(FR-06.5)*
 - **Single link:** the popover still appears, with one item. This keeps the explicit choice consistent.
 - **Failure:** if neither the app nor the web destination can open, an inline message replaces the item list (DS-107). *(FR-06.6)*
+- *As built in TON-131:* "Open in YouTube Music" comes after Tidal. YouTube Music has no desktop app, so its item opens the page in a new tab whatever the link setting.
 
 *As built in TON-47:*
 - **The popover** reads "Open in…", with the album's title under it. Each linked service has "Open in Spotify", which opens its page in a new tab and closes the popover, and "App" beside it ("Open in the Spotify app"), which opens the desktop app (TS-43).
@@ -740,7 +741,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   4. Original release year
   5. Recording year or range (when Live)
   6. Artwork URL (with live preview)
-  7. Spotify / Apple Music / Qobuz / Tidal links
+  7. Spotify / Apple Music / Qobuz / Tidal / YouTube Music links
   8. Custom fields (+ Add field)
   9. Destination list
 - **Year rule** in the helper text: "Required: original release year — or, for live releases, the recording year or release year."
@@ -763,7 +764,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
 *As built in TON-112:* **"Find artwork"** sits under the Artwork URL, as in the inspector (DS-46), searching for the form's title and artist. Until both are filled, it is disabled with "Enter the title and artist first". Its popover is on the dialog's layer (DS-18). Choosing a cover fills the field. A form completing a capture has no Artwork URL, so no Find artwork.
 
-*As built in TON-46:* **links** replace their line: "Spotify link", "Apple Music link", "Qobuz link" and "Tidal link", each optional, with the placeholder "Album or track link".
+*As built in TON-46:* **links** replace their line: "Spotify link", "Apple Music link", "Qobuz link" and "Tidal link", each optional, with the placeholder "Album or track link". TON-131 added "YouTube Music link".
 - **Checked when left and on submit,** like the other fields, with the inspector's reasons, and named in the summary.
 - **Saving** adds the album, then its links, then its entry in the list. The server stores each link's canonical URL.
 - **Validation:**
@@ -791,7 +792,9 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
     | Case | Reason |
     | --- | --- |
-    | Not a link of the four services | "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link." |
+    | Not a link of the five services | "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link." (TON-131 added YouTube Music) |
+    | A YouTube link that names no album (a video, a channel, the player's `/browse/` page) | "This YouTube link doesn't name an album. In YouTube Music, open the album and copy its link from Share." (TON-131) |
+    | A YouTube playlist that isn't an album | "This YouTube playlist isn't an album. In YouTube Music, open the album and copy its link from Share." (TON-131) |
     | A service's link that isn't an album or track | "Only Spotify album and track links can be added." (with the service's name) |
     | An album or track link whose id looks cut off | "This Spotify link looks incomplete. Copy it again from Spotify." |
     | A short link that leads nowhere | "This Spotify short link doesn't lead to an album or track." |
@@ -828,8 +831,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - It switches to Editing first (DS-45).
   - At most 200 links at once: "Add up to 200 links at once."
 - **The capture dialog,** "Add albums", opens from `C` and every "Add album": the sidebar's, the empty list's and the one below a list's rows.
-  - It has "Paste Spotify, Apple Music, Qobuz or Tidal album or track links.", a Links textarea ("One link per line"), and the List select from manual entry, defaulting to the list on view.
-  - **Add** or ⌘Enter captures every non-empty line; a line that isn't a link gets its reason in its row. With none: "Paste at least one Spotify, Apple Music, Qobuz or Tidal link."
+  - It has "Paste Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track links.", a Links textarea ("One link per line"), and the List select from manual entry, defaulting to the list on view.
+  - **Add** or ⌘Enter captures every non-empty line; a line that isn't a link gets its reason in its row. With none: "Paste at least one Spotify, Apple Music, Qobuz, Tidal or YouTube Music link."
   - "Enter manually" opens DS-47 for the chosen list.
 - **Placeholder rows** sit at the top of the destination view, the list or Unsorted, in "Albums being added", whatever the sort, since the album's place is known only once it is identified. The section scrolls past 40% of the view.
   - Each row has a skeleton tile and the link's host and path.
@@ -1207,7 +1210,7 @@ The block never says "private" while another access path remains.
 - **Folders:** breadcrumbs plus child rows (DS-41).
 - **Lists:** album rows or grid, each album with its service links (TON-127).
 - **View options** apply for the visit only, with a note: "Your view settings aren't saved — sign in to keep them".
-- **Footer:** "Sign in". No search UI.
+- **Footer:** "Sign in". No search UI. *As built in TON-131:* then "Terms · Privacy" (DS-119).
 - **Live updates** use the same subtle treatment (DS-82).
 - **Unavailable or revoked link:** "This link isn't available. Ask the person who shared it for a new one." It reveals nothing about whether the content exists.
 - **Link previews:** title, owner display name, and album count, with no artwork until G1 clears artwork use (decided 17 October 2026).
@@ -1581,7 +1584,7 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 
 *As built in TON-116:* **what Tonaris is, beside the card,** on both sign-in steps.
 - **Layout:** from 768 px, the wordmark and the promo on the left, the card on the right. On a phone, the wordmark and the card come first, then the promo. The card comes first in the page's order either way, so its heading is read first.
-- **The promo:** "Your albums, organized your way" (`text.display`), then "Paste a link from Spotify, Apple Music, Qobuz or Tidal, and Tonaris fills in the album from MusicBrainz. Keep it in folders and lists, share it, and take it with you."
+- **The promo:** "Your albums, organized your way" (`text.display`), then "Paste a link from Spotify, Apple Music, Qobuz, Tidal or YouTube Music, and Tonaris fills in the album from MusicBrainz. Keep it in folders and lists, share it, and take it with you."
 - **Four features,** each a Lucide icon in `accent.solid`, a title and a line:
   - "Your AI agents, through MCP": Claude, ChatGPT and Codex search and organize the collection, and destructive actions wait for approval;
   - "Folders within folders, and lists": nesting up to 32 levels (TS-18), and an album in any number of lists;
@@ -1589,6 +1592,8 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   - "Your data stays yours": export everything, Trash included, as JSON and Markdown.
 - **Last:** "Tonaris is invitation-only for now." in `fg.tertiary`.
 - **Only the sign-in steps** have it. Other pages in the same frame, such as approvals and account deletion, don't.
+
+*As built in TON-131:* every page in the sign-in frame has "Terms · Privacy" under the card, in `text.small` and `fg.secondary`, linking `/terms` and `/privacy` (DS-119).
 
 **DS-91 Admission landing** (`/join/:admissionToken`). *(FR-11.2, FR-11.6, FR-11.3)*
 1. "You're invited to Tonaris", showing the bound email.
@@ -1613,6 +1618,8 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **Then** the collection's first run (DS-105).
 - **An unusable invitation:** its sentence is the page's heading, alone. A refusal that arrives later, such as a pause before the code is entered, replaces the step the same way.
 - **Rendering:** the page is rendered in the browser. Its URL carries the token, so it sends no Referer, as guest pages don't.
+
+*As built in TON-131:* under **Continue** on the landing, and under **Join** and **Cancel** on "Join on this device?", in `text.small`: "By continuing, you agree to the Terms of use and the Privacy notice.", each name a link opening its page in a new tab. Joining records the agreement, so no agreement screen follows (DS-119).
 
 **DS-92 Settings layout.**
 - **Subnav:** Profile · Account · Preferences · Custom fields · Connections · Data.
@@ -1668,7 +1675,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **Each choice is saved at once** to the account, and reaches the person's other sessions.
 - **The note:** "Folders, lists and views where you've chosen options in View options keep them when you change these defaults. Choose "Use account defaults" there to follow these again."
 
-*As built in TON-104* (decided with the creator, 30 October 2026): **Links.** A last section, "Links", holds "Open links in" with **Web page** and **App**, and a note: "App opens Spotify, Apple Music, Qobuz and Tidal links in their apps, on every device you use. A link to a service whose app isn't installed won't open." It is saved to the account at once and synced, like the defaults. It starts as Web page. *(FR-06.6)*
+*As built in TON-104* (decided with the creator, 30 October 2026): **Links.** A last section, "Links", holds "Open links in" with **Web page** and **App**, and a note: "App opens Spotify, Apple Music, Qobuz and Tidal links in their apps, on every device you use. A link to a service whose app isn't installed won't open." TON-131 added "YouTube Music has no desktop app, so its links open the page." It is saved to the account at once and synced, like the defaults. It starts as Web page. *(FR-06.6)*
 
 *As built in TON-138* (from the creator's manual testing; the creator chose this, 31 October 2026): **Streaming services.** A section after Links lists each service with a switch, all on at first, and a note: "The album panel and New album show link fields only for the services that are on. Links you've already saved still show, and you can paste a link from any service." It is saved to the account at once and synced. A service added later starts on, since the account keeps the services turned off. *(FR-06.3)*
 
@@ -1762,6 +1769,12 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 ---
 
+**DS-119 Terms of use, privacy notice and agreement.** *(FR-11.14; as built in TON-131)*
+- **`/terms` and `/privacy`:** public, server-rendered pages: the wordmark, then the title in `text.display` ("Terms of use", "Privacy notice") with "Last updated {date}" under it, the text at up to 672 px wide in `fg.secondary` with `text.title` section headings, and a foot with the other page and "Back to Tonaris". The support address comes from `SUPPORT_EMAIL`, as on `/help/recovery`.
+- **Where they're linked:** "Terms · Privacy" under the sign-in card (DS-90) and on the guest page's foot (DS-72), "Terms of use" and "Privacy notice" in the account menu, before Sign out, each opening a new tab, and the join line (DS-91).
+- **The agreement screen,** in the sign-in frame, shown instead of the workspace while the member hasn't agreed to the current version: "Tonaris has terms and a privacy notice", then "They say what you agree to when you use Tonaris, what it keeps about you, and that it uses YouTube API Services to identify YouTube Music links. Read the Terms of use and the Privacy notice.", the names linking their pages in a new tab. **Agree and continue** opens the collection; **Sign out** signs out and removes the browser's copy. A failure shows its sentence above the buttons.
+- **The texts** are in the repository (`apps/web/src/features/legal/texts.tsx`); a change to either is a new version, which shows the screen to every member again.
+
 ## 15. States, copy, and mobile
 
 **DS-105 Empty states.** One sentence and one action. *(FR-01.9, FR-12)*
@@ -1769,7 +1782,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 | View | Copy | Action |
 | --- | --- | --- |
 | Root (first run) | "Start your collection — paste an album link or create a list." | New list |
-| List | "No albums yet. Paste a Spotify, Apple Music, Qobuz or Tidal link." | Add album |
+| List | "No albums yet. Paste a Spotify, Apple Music, Qobuz, Tidal or YouTube Music link." | Add album |
 | Unsorted | "Albums that aren't in any list show up here." | — |
 | Shared with me | "Collections people share with you appear here." | — |
 | Trash | "Nothing in Trash. Deleted items stay here for 30 days." | — |
@@ -1793,7 +1806,7 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 
 | Situation | Copy |
 | --- | --- |
-| Unsupported link | "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link." · Enter manually |
+| Unsupported link | "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link." · Enter manually |
 | Tidal track link | "Tonaris can't tell which album this Tidal track is on. Enter the album — the link is kept." · Enter manually |
 | Lookup failed | "Couldn't reach Apple Music. Your link is saved here — try again or enter details manually." |
 | Not permitted | "You can view this shared list but not change it." |
@@ -1937,7 +1950,7 @@ New questions are added here as **Open (design)** rows.
 | FR-08 Data export | DS-96, DS-97 |
 | FR-09 Synchronization | DS-80–DS-83 |
 | FR-10 MCP | DS-85–DS-87 |
-| FR-11 Accounts and settings | DS-90–DS-94, DS-97, DS-100 |
+| FR-11 Accounts and settings | DS-90–DS-94, DS-97, DS-100, DS-119 |
 | FR-12 Search | DS-75 |
 | FR-13 Errors and outcomes | DS-80, DS-84, DS-107, DS-108 |
 | FR-14 Album deletion and recovery | DS-50, DS-56 |

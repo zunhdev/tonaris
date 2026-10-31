@@ -1,0 +1,4 @@
+ALTER TABLE "user" ADD COLUMN "terms_version" text;--> statement-breakpoint
+ALTER TABLE "user" ADD COLUMN "terms_agreed_at" timestamp(3) with time zone;--> statement-breakpoint
+ALTER TABLE "account_settings" DROP CONSTRAINT "account_settings_hidden_services_check", ADD CONSTRAINT "account_settings_hidden_services_check" CHECK ("hidden_services" <@ array['spotify', 'apple-music', 'qobuz', 'tidal', 'youtube-music']::text[]);--> statement-breakpoint
+ALTER TABLE "album_service_links" DROP CONSTRAINT "album_service_links_service_check", ADD CONSTRAINT "album_service_links_service_check" CHECK ("service" in ('spotify', 'apple-music', 'qobuz', 'tidal', 'youtube-music'));

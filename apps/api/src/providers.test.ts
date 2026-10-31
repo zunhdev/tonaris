@@ -23,7 +23,9 @@ afterEach(async () => {
 });
 
 test("the Spotify bridge and its health check exist only when configured", () => {
-  const off = createProviders({ spotify: undefined }, t.db, { publish: () => {} });
+  const off = createProviders({ spotify: undefined, youtubeApiKey: undefined }, t.db, {
+    publish: () => {},
+  });
   expect(off.spotify).toBeUndefined();
   const trash = { db: t.db, publish: () => {} };
   expect(apiSchedules(off.spotify, trash).map((schedule) => schedule.name)).toEqual([
@@ -34,9 +36,13 @@ test("the Spotify bridge and its health check exist only when configured", () =>
     "prune-account-deletions",
     "trash-expiry",
   ]);
-  const on = createProviders({ spotify: { clientId: "id", clientSecret: "secret" } }, t.db, {
-    publish: () => {},
-  });
+  const on = createProviders(
+    { spotify: { clientId: "id", clientSecret: "secret" }, youtubeApiKey: "key" },
+    t.db,
+    {
+      publish: () => {},
+    },
+  );
   expect(apiSchedules(on.spotify, trash).map((schedule) => schedule.name)).toContain(
     "spotify-health",
   );

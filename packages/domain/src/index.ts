@@ -26,6 +26,8 @@ export {
   memberSchema,
   supportSchema,
   signInCode,
+  termsAgreementSchema,
+  termsVersion,
   userRoles,
   type Account,
   type AccountDeletionStatus,

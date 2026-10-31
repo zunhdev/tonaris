@@ -241,6 +241,40 @@ const groups: Group[] = [
       "https://listen.tidal.com/track/279764934",
     ],
   },
+  {
+    name: "a YouTube Music album",
+    link: {
+      service: "youtube-music",
+      kind: "album",
+      id: "OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      albumId: "OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      url: "https://music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+    },
+    variants: [
+      "https://music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM&si=Ab1Cd2Ef3Gh4",
+      "https://music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      "https://www.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      "https://youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM&feature=share",
+      "https://m.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      "http://www.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM#top",
+    ],
+  },
+  {
+    name: "a YouTube Music track in an album",
+    link: {
+      service: "youtube-music",
+      kind: "track",
+      id: "lYBUbBu4W08",
+      albumId: "OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      url: "https://music.youtube.com/playlist?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+    },
+    variants: [
+      "https://music.youtube.com/watch?v=lYBUbBu4W08&list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+      "https://music.youtube.com/watch?v=lYBUbBu4W08&list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM&si=x",
+      "https://www.youtube.com/watch?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM&v=lYBUbBu4W08&index=2",
+      "https://m.youtube.com/watch?v=lYBUbBu4W08&list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+    ],
+  },
 ];
 
 describe("parseLink: real link variants (FR-02.1, TS-40)", () => {
@@ -282,7 +316,14 @@ describe("equivalent variants (FR-06.4)", () => {
 
 describe("parseLink: the G1 samples", () => {
   const fixtures = path.join(import.meta.dir, "../../../tooling/fixtures");
-  const samples = ["g1-sample", "g1-spotify", "g1-apple", "g1-qobuz", "g1-tidal"];
+  const samples = [
+    "g1-sample",
+    "g1-spotify",
+    "g1-apple",
+    "g1-qobuz",
+    "g1-tidal",
+    "g1-youtube-music",
+  ];
 
   test("every link parses, as the service its host names", async () => {
     const hostServices: Record<string, StreamingService> = {
@@ -292,6 +333,7 @@ describe("parseLink: the G1 samples", () => {
       "open.qobuz.com": "qobuz",
       "play.qobuz.com": "qobuz",
       "tidal.com": "tidal",
+      "music.youtube.com": "youtube-music",
     };
     const links = (
       await Promise.all(
@@ -310,11 +352,12 @@ describe("parseLink: the G1 samples", () => {
 
 describe("parseLink: unsupported input (FR-02.3)", () => {
   const notALink =
-    "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.";
+    "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link.";
 
   test("other sites, plain text and other schemes", () => {
     for (const input of [
-      "https://www.youtube.com/watch?v=x",
+      "https://soundcloud.com/x",
+      "https://youtu.be/dQw4w9WgXcQ",
       "Kind of Blue",
       "",
       "   ",
@@ -354,6 +397,23 @@ describe("parseLink: unsupported input (FR-02.3)", () => {
     }
   });
 
+  test("YouTube links that name no album point to YouTube Music's Share menu", () => {
+    const noAlbum =
+      "This YouTube link doesn't name an album. In YouTube Music, open the album and copy its link from Share.";
+    const notAnAlbum =
+      "This YouTube playlist isn't an album. In YouTube Music, open the album and copy its link from Share.";
+    for (const [input, detail] of [
+      ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", noAlbum],
+      ["https://music.youtube.com/browse/MPREb_abc123", noAlbum],
+      ["https://music.youtube.com/channel/UC123", noAlbum],
+      ["https://www.youtube.com/watch?list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM", noAlbum],
+      ["https://music.youtube.com/playlist?list=PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG", notAnAlbum],
+      ["https://music.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ", notAnAlbum],
+    ] as const) {
+      expect(failed(input).problem.detail).toBe(detail);
+    }
+  });
+
   test("album and track links that look incomplete", () => {
     for (const [input, service] of [
       ["https://open.spotify.com/album/1KVGLuPtrM", "Spotify"],
@@ -368,6 +428,11 @@ describe("parseLink: unsupported input (FR-02.3)", () => {
       ["https://open.qobuz.com/album/abc_def", "Qobuz"],
       ["https://tidal.com/browse/album/", "Tidal"],
       ["https://tidal.com/browse/album/abc", "Tidal"],
+      ["https://music.youtube.com/playlist?list=OLAK5uy_short", "YouTube Music"],
+      [
+        "https://music.youtube.com/watch?v=short&list=OLAK5uy_nWC5iqagpZUFETQCWd8k-Fi_Ec3cWwClM",
+        "YouTube Music",
+      ],
     ] as const) {
       expect(failed(input).problem.detail).toBe(
         `This ${service} link looks incomplete. Copy it again from ${service}.`,

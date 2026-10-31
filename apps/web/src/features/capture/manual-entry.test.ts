@@ -94,6 +94,7 @@ describe("manual entry from a capture (DS-47, DS-48)", () => {
       "apple-music": "",
       qobuz: "",
       tidal: "",
+      "youtube-music": "",
     });
   });
 });

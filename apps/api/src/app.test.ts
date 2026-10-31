@@ -76,6 +76,7 @@ describe("OpenAPI", () => {
       "/v1/health",
       "/v1/support",
       "/v1/me",
+      "/v1/me/terms",
       "/v1/account/email-change",
       "/v1/account/email-change/verify",
       "/v1/account/email-change/resend",

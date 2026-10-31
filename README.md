@@ -4,7 +4,7 @@ A personal workspace for saving, organizing, annotating, and revisiting music al
 
 ## Project status
 
-Tonaris is in early development: the foundations (M0) and the feasibility spikes (M1) are done. The first version will be a creator-hosted, invite-only web app. Desktop supports full collection management, while mobile browsers support browsing and search. The Spotify, Apple Music, Qobuz, Tidal, and MCP integrations passed their feasibility gates (G1–G3) in October 2026.
+Tonaris is in early development: the foundations (M0) and the feasibility spikes (M1) are done. The first version will be a creator-hosted, invite-only web app. Desktop supports full collection management, while mobile browsers support browsing and search. The Spotify, Apple Music, Qobuz, Tidal, YouTube Music, and MCP integrations passed their feasibility gates (G1–G3) in October 2026.
 
 ## Documents
 

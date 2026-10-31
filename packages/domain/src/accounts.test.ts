@@ -30,6 +30,7 @@ describe("accountSchema", () => {
       email: "creator@example.com",
       displayName: null,
       role: "creator",
+      termsAgreed: false,
     } as const;
     expect(accountSchema.parse(account)).toEqual(account);
   });

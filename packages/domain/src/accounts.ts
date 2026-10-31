@@ -43,9 +43,26 @@ export const accountSchema = z
       .nullable()
       .meta({ description: "The display name (FR-11.3); null until the person sets one." }),
     role: z.enum(userRoles),
+    termsAgreed: z.boolean().meta({
+      description:
+        "Whether the person agreed to the current terms of use and privacy notice (`termsVersion`). Until they do, the apps ask before anything else, and YouTube's API isn't read for them.",
+    }),
   })
   .meta({ description: "The signed-in account." });
 export type Account = z.infer<typeof accountSchema>;
+
+/**
+ * The terms of use and privacy notice's version: the day their text last changed (TON-131). A member agrees to one
+ * version; a later one asks them again.
+ */
+export const termsVersion = "2026-10-31";
+
+/** `POST /v1/me/terms`: the version of the texts the person was shown and agreed to. */
+export const termsAgreementSchema = z
+  .object({
+    version: z.string().max(32).meta({ description: "The version the person agreed to." }),
+  })
+  .meta({ description: "An agreement to the terms of use and privacy notice." });
 
 /** How long a creator's recovery waits for the new address to confirm it (FR-11.5, TS-73). */
 export const emailRecoveryHours = 24;

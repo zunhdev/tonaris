@@ -87,7 +87,7 @@ function v1(
       () => ({ status: "ok" as const, ...(sync.commit ? { commit: sync.commit } : {}) }),
     )
     .use(supportRoutes(sync))
-    .use(meRoutes(session))
+    .use(meRoutes(session, { db: sync.db }))
     .use(emailChangeRoutes(session, sync.emailChange))
     .use(accountDeletionRoutes(session, sync.accountDeletion))
     .use(connectionRoutes(session, { db: sync.db }))

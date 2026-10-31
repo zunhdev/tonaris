@@ -99,7 +99,7 @@ describe("the album it makes", () => {
       originalYear: "1982",
       recording: "1982",
       artworkUrl: "",
-      links: { spotify: "", "apple-music": "", qobuz: "", tidal: "" },
+      links: { spotify: "", "apple-music": "", qobuz: "", tidal: "", "youtube-music": "" },
       fieldValues: [],
       listId: "list",
     });
@@ -153,7 +153,8 @@ describe("links (FR-06.3, TS-40)", () => {
     };
     expect(formProblems(typed)).toEqual({
       spotify: "This is an Apple Music link. Paste a Spotify link here.",
-      qobuz: "This doesn't look like a Spotify, Apple Music, Qobuz or Tidal album or track link.",
+      qobuz:
+        "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link.",
     });
     expect(albumOfForm(typed)).toBeUndefined();
   });

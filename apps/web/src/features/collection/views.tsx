@@ -502,7 +502,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
           </>
         ) : (
           <Empty
-            text="No albums yet. Paste a Spotify, Apple Music, Qobuz or Tidal link."
+            text="No albums yet. Paste a Spotify, Apple Music, Qobuz, Tidal or YouTube Music link."
             action={<AddAlbumButton variant="primary" />}
           />
         )}

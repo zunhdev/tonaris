@@ -879,7 +879,13 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - **Step 4, the hints:** three Data API reads with `YOUTUBE_API_KEY`: `playlists.list` gives the title, without a leading "Album - "; `playlistItems.list` the artist, from the first track's "{artist} - Topic" channel; `videos.list` of that track the date, from its distributor's "Released on:" or "℗" line. Step 4's rule then runs, and a match also needs a release whose track count is the playlist's, so an album isn't taken for its namesake EP. The spike identified 29 of 50 (58%) with steps 2 and 4, with 1 wrong, the case the track count fixes.
   - **Nothing from YouTube is stored, logged or cached**, and manual entry isn't prefilled from it. The key never appears in errors or logs.
   - **Agents' captures use the hints too,** as Apple's lookup: they come from an API whose terms have no AI clause, not from a page.
-  - **A privacy notice** that says Tonaris uses YouTube API Services, and that users agree to, must exist before the API is used in production. The app has none yet (TS-114).
+  - **A privacy notice** that says Tonaris uses YouTube API Services, and that users agree to, must exist before the API is used in production. *As built in TON-131:* it does (FR-11.14, TS-134), and the API is read only for owners who agreed to the current version.
+  - *As built in TON-131* (`YouTubeData` in `packages/providers/src/youtube.ts`):
+    - **The key** travels in the `X-Goog-Api-Key` header, so it is in no URL, log or error. Reads go through `safeFetch`, 250 ms apart, and nothing is cached.
+    - **The track count** is `playlists.list`'s `contentDetails.itemCount`, asked in the same read. `Hints.tracks` carries it, and only YouTube's hints set it; `passes()` then requires the release's `track-count` from the search to equal it.
+    - **The date** is "Released on: {date}", else the "℗ {year}" line's year alone.
+    - **Answers:** a 404, an empty answer, no "- Topic" track or no date gives no hints. A 400 or 403 (a used-up quota, a bad key) gives no hints and logs "The YouTube Data API refused a read" with the read, status and reason. A timeout, 429 or 5xx is `provider_unavailable`, "Couldn't reach YouTube".
+    - **The chain:** a track link's album playlist is the link; step 2, then step 4 when the key is set and `mayReadYouTube()` says the owner agreed. Without either, the link asks for details.
 - **As built in TON-42** (`identify()` in `packages/providers/src/identify.ts`):
   - **The answer.** It is linked, identified (a release group, with the step), ambiguous (candidates), unidentified (a reason, and Apple's hints as prefill), or failed. `identificationOutcome()` gives TS-27's outcome:
     - ambiguous → `needs_input` (`match`);
@@ -1001,7 +1007,7 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 **TS-43 Service links and opening (Decided, with a spike; FR-06.5, FR-06.6).**
 
 - **Mobile:** open the canonical `https` URL. Universal and app links open the installed app (verified for Spotify album and track paths, Apple Music on Android, and Qobuz `open.`/`play.`; unverified for Tidal), and fall back to the web otherwise.
-- **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior and whether Tidal's desktop app has a link scheme are unverified (M3 spike). YouTube Music has no desktop app, so its links open the page whatever the setting (decided 31 October 2026, TON-128).
+- **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior and whether Tidal's desktop app has a link scheme are unverified (M3 spike). YouTube Music has no desktop app, so its links open the page whatever the setting (decided 31 October 2026, TON-128). *As built in TON-131:* `appLink()` gives none for it, so "App" opens its page in a new tab.
 - The service is never switched (FR-06.6).
 - *As built in TON-47,* after the [desktop app-scheme spike](spikes/2026-10-28-desktop-app-links.md) (28 October 2026):
   - **Every desktop app registers a scheme that names a release.** `appLink()` (`apps/web/src/features/open/app-links.ts`) turns a canonical URL into one: `spotify:{kind}:{id}`; Apple Music's canonical URL with `music:` for `https:`, storefront kept; `qobuzapp://{kind}/{id}`; `tidal://{kind}/{id}`. Tidal's app hands the path to its in-app navigation, so its album and track pages open. Qobuz's route couldn't be read locally and stays as above.
@@ -1430,6 +1436,14 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Progress:** the confirmation answers a random token. Then `POST /auth/account-deletion/progress {token}` answers the status, and `…/retry` queues a failed deletion again. Both are public, since the session is gone. `prune-account-deletions` removes finished ones after 7 days.
 - **Not yet:** TS-113's ledger events, which M11-06 builds for every deletion-class event.
 
+**TS-134 Agreement to the terms (Decided 31 October 2026; FR-11.14, TON-131).**
+
+- **The version** is `termsVersion` in `packages/domain`, the date the texts last changed. The texts are `apps/web/src/features/legal/texts.tsx`; changing either means a new version.
+- **Storage:** `user.terms_version` and `user.terms_agreed_at`, null until the person agrees. Better Auth reads `termsVersion` as a field clients can't set, so the session guard's `Account` carries `termsAgreed` (its version is the current one) with no extra query, and `GET /v1/me` returns it.
+- **Recording:** joining records the current version in the transaction that creates the account (`admitAccount`), and for an address that already had an account, once its owner is signed in through the invitation, since the landing says continuing agrees. `POST /v1/me/terms {version}` records it from the agreement screen; a version that isn't the current one is 422 `validation_failed`, so a person who loaded older texts reads them again.
+- **Gates:** the web workspace shows the agreement screen instead of the collection until `termsAgreed`; nothing of the sync client starts behind it. Capture reads YouTube's API only when `agreedToTerms(owner, termsVersion)` (TS-41), which covers agents' captures through MCP too.
+- **Tests:** the browser-test API marks every seeded account as agreed, except addresses starting `unagreed-`.
+
 ---
 
 ## 10. Data export
@@ -1680,7 +1694,8 @@ There is no resizing in v1.
   - `BETTER_AUTH_SECRET`
   - the image-proxy HMAC key
   - the backup encryption public key (the private key is held offline by the creator)
-  - provider credentials: `YOUTUBE_API_KEY`, the YouTube Data API key for YouTube Music's hints (TS-41; decided 31 October 2026, built in TON-131), restricted to that API
+  - provider credentials: `YOUTUBE_API_KEY`, the YouTube Data API key for YouTube Music's hints (TS-41; decided 31 October 2026, built in TON-131), restricted to that API. Optional: unset, YouTube Music links use MusicBrainz alone.
+- **Provider accounts with account-wide risk are Tonaris's own** (decided 31 October 2026, TON-128): a key, project or developer app whose misuse could lead a provider to close the whole account belongs to an account used only for Tonaris, never the creator's personal one. `YOUTUBE_API_KEY` comes from a Google account on `dev@tonaris.app` ([deploy guide](deploy.md#youtube-music)).
 - Rotation is documented, and secrets are rotated after any restore drill that exposed them.
 
 **TS-106 Adversarial fixtures (Decided; AC-45).** CI runs these fixtures through the app, export, and MCP:
@@ -1800,6 +1815,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
 
 The "30 days" matches the backup retention the creator set (Q-04).
 - *As built in TON-97:* the account-deletion dialog shows it under the consequences (DS-97). The app has no privacy notice yet; when one is written, it carries the same words.
+- *As built in TON-131:* the privacy notice's "How long" carries it, after "Your account and collection are kept until you delete them." (DS-119).
 
 **TS-115 Observability (Decided).**
 
