@@ -150,6 +150,29 @@
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
+/*
+ * DS-13 on phones (TON-136): a step larger below 768 px, DS-110's breakpoint, so text reads comfortably on a small
+ * screen. Rows and menus go from 13 to 15 px and titles from 15 to 17; desktop keeps the sizes above. Inputs are
+ * already 16 px there (input.tsx), which also keeps iOS from zooming.
+ */
+@media (max-width: 767px) {
+  :root {
+    --text-micro: 0.75rem;
+    --text-small: 0.8125rem;
+    --text-small--line-height: 1.125rem;
+    --text-base: 0.9375rem;
+    --text-base--line-height: 1.375rem;
+    --text-title: 1.0625rem;
+    --text-title--line-height: 1.5rem;
+    --text-brand: 1.1875rem;
+    --text-brand--line-height: 1.625rem;
+    --text-page: 1.375rem;
+    --text-page--line-height: 1.875rem;
+    --text-display: 1.875rem;
+    --text-display--line-height: 2.25rem;
+  }
+}
+
 @theme inline {
   --shadow-floating: 0 8px 24px var(--shadow-color), 0 0 0 1px var(--border-subtle);
 
