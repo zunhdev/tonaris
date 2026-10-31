@@ -1,7 +1,7 @@
 // Step 0 of the TS-41 chain for the G1 spike: local, allowlisted parsing of pasted links (TS-40).
 // Spike code: the production parser is TON-39 (M3-01), which can take what this spike learns about real links.
 
-export type Service = "spotify" | "apple-music" | "qobuz" | "tidal";
+export type Service = "spotify" | "apple-music" | "qobuz" | "tidal" | "youtube-music";
 
 /** The part of `fetch` the spike uses, so tests can stand in for the network. */
 export type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
@@ -152,6 +152,39 @@ export function parseLink(input: string): ParseResult {
         id,
         ...(kind === "album" && { albumId: id }),
         canonical: `https://tidal.com/${kind}/${id}`,
+      },
+    };
+  }
+
+  if (
+    host === "music.youtube.com" ||
+    host === "www.youtube.com" ||
+    host === "youtube.com" ||
+    host === "m.youtube.com"
+  ) {
+    // An album is an auto-generated playlist, `OLAK5uy_…`: /playlist?list= names it, /watch?v=…&list= a track in
+    // it. MusicBrainz stores https://www.youtube.com/playlist?list={id}, sometimes music.youtube.com's (TON-128).
+    // A /browse/MPREb_… album page names no playlist, and no public API maps it to one.
+    const list = url.searchParams.get("list") ?? "";
+    if (!/^OLAK5uy_[\w-]+$/.test(list)) {
+      return {
+        ok: false,
+        reason: `YouTube ${parts[0] ?? "root"} links that name no album aren't supported`,
+      };
+    }
+    const trackId = parts[0] === "watch" ? (url.searchParams.get("v") ?? undefined) : undefined;
+    if (parts[0] !== "playlist" && !trackId) {
+      return { ok: false, reason: `YouTube ${parts[0] ?? "root"} links aren't supported` };
+    }
+    return {
+      ok: true,
+      link: {
+        service: "youtube-music",
+        kind: trackId ? "track" : "album",
+        id: trackId ?? list,
+        albumId: list,
+        ...(trackId && { trackId }),
+        canonical: `https://music.youtube.com/playlist?list=${list}`,
       },
     };
   }

@@ -762,6 +762,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 | Apple Music | On `music.apple.com` and `geo.music.apple.com`, each with or without the storefront and slug: `/{sf}/album/{slug}/{id}`; the same with `?i={songId}`, a track whose album id is in the path; `/{sf}/song/{slug}/{songId}`, a track that names no album (accepted 24 October 2026; TS-41 step 2 finds its album) | `https://music.apple.com/{sf}/album/{id}`, `…/album/{albumId}?i={songId}` or `…/{sf}/song/{songId}`. The storefront stays as pasted. A link without one stays without, so Apple picks the store. |
 | Qobuz | `www.qobuz.com/{locale}/album/{slug}/{id}`, also without the locale or `www.`; `open.qobuz.com/(album\|track)/{id}`; `play.qobuz.com/(album\|track)/{id}` | `https://open.qobuz.com/(album\|track)/{id}`, which hands over to the app (FR-06.6). Ids are lowercased, as they are base 36. |
 | Tidal | `tidal.com/(browse/)?(album\|track)/{id}`, `listen.tidal.com/…`, `www.tidal.com/…`; a share link's trailing `/u` and `?u` are dropped | `https://tidal.com/(album\|track)/{id}`, the form MusicBrainz stores ([Tidal spike](spikes/2026-10-20-g1-tidal.md)) |
+| YouTube Music (decided 31 October 2026, built in TON-131) | On `music.youtube.com`, `www.youtube.com`, `youtube.com` and `m.youtube.com`: `/playlist?list=OLAK5uy_…`, an album's auto-generated playlist; `/watch?v={id}&list=OLAK5uy_…`, a track in that album; `si` and other parameters dropped. Other playlists, a video alone and `/browse/MPREb_…` are unsupported | `https://music.youtube.com/playlist?list={id}`: the album's id is the query ([YouTube Music spike](spikes/2026-10-31-g1-youtube-music.md)) |
 
 **Hostile input (Q-05):**
 
@@ -804,6 +805,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
   - Without written approval, they prohibit transferring data to another service, integrating with other services' content, and any use "in connection with any artificial intelligence or machine intelligence technologies".
   - They require Tidal's logo beside its content, and forbid scraping for registered developers.
   - The consumer terms also ban use in connection with AI. [robots.txt](https://tidal.com/robots.txt) allows album pages, which carry `noai`.
+- **YouTube Music** (added 31 October 2026, [YouTube Music spike](spikes/2026-10-31-g1-youtube-music.md)). Its [Terms of Service](https://www.youtube.com/t/terms) forbid automated access to its pages. The [YouTube Data API](https://developers.google.com/youtube/terms/developer-policies) is allowed with an API key: non-authorized data may be kept 30 days at most, users must agree to a privacy policy that says the client uses YouTube API Services, and there is no AI, non-commercial or combining clause. The default quota is 10,000 units a day.
 - **Odesli.** Its public API was retired on 2026-07-31.
 
 Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export (FR-08) promises. Hence:
@@ -866,6 +868,12 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
 - **Qobuz track links** go to manual entry with the link kept, as Tidal's do (decided by the creator on 24 October 2026, TON-42). Nothing permitted names their album: Qobuz has no API for Tonaris, the terms review covers album pages only, and MusicBrainz links Qobuz albums, not tracks.
   - **Region.** A Tidal link carries no region, so the page answers for the server's. A 404 goes on to manual entry with the link kept: 9 of 75 pages answered 404 in Finland during the spike.
   - The same 5 s timeout and daily robots.txt check as Qobuz's.
+- **YouTube Music: Data API hints, no pages** (decided 31 October 2026, [YouTube Music spike](spikes/2026-10-31-g1-youtube-music.md); built in TON-131).
+  - **Step 2** asks for `https://music.youtube.com/playlist?list={id}`, `https://www.youtube.com/playlist?list={id}`, the form MusicBrainz mostly stores, and `youtube.com`'s. It found 4 of 50 albums MusicBrainz has, all right. A track link in an album goes through its album's playlist. There is no step 3.
+  - **Step 4, the hints:** three Data API reads with `YOUTUBE_API_KEY`: `playlists.list` gives the title, without a leading "Album - "; `playlistItems.list` the artist, from the first track's "{artist} - Topic" channel; `videos.list` of that track the date, from its distributor's "Released on:" or "℗" line. Step 4's rule then runs, and a match also needs a release whose track count is the playlist's, so an album isn't taken for its namesake EP. The spike identified 29 of 50 (58%) with steps 2 and 4, with 1 wrong, the case the track count fixes.
+  - **Nothing from YouTube is stored, logged or cached**, and manual entry isn't prefilled from it. The key never appears in errors or logs.
+  - **Agents' captures use the hints too,** as Apple's lookup: they come from an API whose terms have no AI clause, not from a page.
+  - **A privacy notice** that says Tonaris uses YouTube API Services, and that users agree to, must exist before the API is used in production. The app has none yet (TS-114).
 - **As built in TON-42** (`identify()` in `packages/providers/src/identify.ts`):
   - **The answer.** It is linked, identified (a release group, with the step), ambiguous (candidates), unidentified (a reason, and Apple's hints as prefill), or failed. `identificationOutcome()` gives TS-27's outcome:
     - ambiguous → `needs_input` (`match`);
@@ -987,7 +995,7 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 **TS-43 Service links and opening (Decided, with a spike; FR-06.5, FR-06.6).**
 
 - **Mobile:** open the canonical `https` URL. Universal and app links open the installed app (verified for Spotify album and track paths, Apple Music on Android, and Qobuz `open.`/`play.`; unverified for Tidal), and fall back to the web otherwise.
-- **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior and whether Tidal's desktop app has a link scheme are unverified (M3 spike).
+- **Desktop:** the primary action is the web URL. A secondary "Open in desktop app" uses `spotify:album:{id}` or `qobuzapp://album/{id}`. Apple's `music://` behavior and whether Tidal's desktop app has a link scheme are unverified (M3 spike). YouTube Music has no desktop app, so its links open the page whatever the setting (decided 31 October 2026, TON-128).
 - The service is never switched (FR-06.6).
 - *As built in TON-47,* after the [desktop app-scheme spike](spikes/2026-10-28-desktop-app-links.md) (28 October 2026):
   - **Every desktop app registers a scheme that names a release.** `appLink()` (`apps/web/src/features/open/app-links.ts`) turns a canonical URL into one: `spotify:{kind}:{id}`; Apple Music's canonical URL with `music:` for `https:`, storefront kept; `qobuzapp://{kind}/{id}`; `tidal://{kind}/{id}`. Tidal's app hands the path to its in-app navigation, so its album and track pages open. Qobuz's route couldn't be read locally and stays as above.
@@ -1665,7 +1673,7 @@ There is no resizing in v1.
   - `BETTER_AUTH_SECRET`
   - the image-proxy HMAC key
   - the backup encryption public key (the private key is held offline by the creator)
-  - provider credentials (if any)
+  - provider credentials: `YOUTUBE_API_KEY`, the YouTube Data API key for YouTube Music's hints (TS-41; decided 31 October 2026, built in TON-131), restricted to that API
 - Rotation is documented, and secrets are rotated after any restore drill that exposed them.
 
 **TS-106 Adversarial fixtures (Decided; AC-45).** CI runs these fixtures through the app, export, and MCP:
