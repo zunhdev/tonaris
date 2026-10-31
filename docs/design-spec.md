@@ -99,6 +99,8 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `text.page` | 20 / 28 | 600 | Full-page messages, such as "Not available" (the desktop header's name moved to `text.base` in TON-107) |
 | `text.display` | 28 / 34 | 600 | Guest page title, empty-state headline |
 
+*As built in TON-136* (from the creator's manual testing; the creator chose the sizes, 31 October 2026): **phones get a step larger** (below 768 px, DS-110's breakpoint): `text.micro` 12/16, `text.small` 13/18, `text.base` 15/22, `text.title` 17/24, `text.brand` 19/26, `text.page` 22/30, `text.display` 30/36. Inputs stay 16 px there. Desktop keeps the table above. The tokens are redefined in a media query (`tokens.css`), so every class that names them follows.
+
 **DS-14 Contrast targets.** Contrast is checked by an automated token test (`packages/ui/src/styles/tokens.test.ts`). It reads `tokens.css`, converts OKLCH to sRGB, blends translucent tokens over their background, and fails naming each pair below its minimum. It checks `fg.primary`, `fg.secondary` and `fg.tertiary` at 4.5:1; `border.strong`, `focus` and every `status.*` at 3:1; and `fg.on-accent` on `accent.fill` at 4.5:1, all against the four surfaces below.
 
 | Element | Minimum ratio | Against |
