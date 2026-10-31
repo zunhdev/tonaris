@@ -72,6 +72,11 @@ export {
   readOptionRemoval,
 } from "./field-options";
 export { exportSource } from "./export";
+export {
+  disableFirstPartyClient,
+  saveFirstPartyClient,
+  type FirstPartyClient,
+} from "./first-party-clients";
 export { ledgerStore, recordInLedger, type LedgerStore } from "./ledger";
 export {
   listPasskeys,

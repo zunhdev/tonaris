@@ -116,4 +116,37 @@ describe("apiConfig", () => {
     expect(apiConfig({ YOUTUBE_API_KEY: "" }).youtubeApiKey).toBeUndefined();
     expect(apiConfig({ YOUTUBE_API_KEY: "key" }).youtubeApiKey).toBe("key");
   });
+
+  test("reads the feedback board's client from both of its variables, or neither (FR-11.15)", () => {
+    const callbackUrl = "https://login.fider.io/oauth/_k3j9x0q2ab/callback";
+    const clientSecret = "c".repeat(44);
+    expect(apiConfig({}).feedback).toBeUndefined();
+    expect(
+      apiConfig({
+        ...production,
+        FEEDBACK_CALLBACK_URL: callbackUrl,
+        FEEDBACK_CLIENT_SECRET: clientSecret,
+      }).feedback,
+    ).toEqual({ callbackUrl, clientSecret });
+    expect(() => apiConfig({ FEEDBACK_CALLBACK_URL: callbackUrl })).toThrow(
+      "Set both FEEDBACK_CALLBACK_URL and FEEDBACK_CLIENT_SECRET, or neither.",
+    );
+    expect(() => apiConfig({ FEEDBACK_CLIENT_SECRET: clientSecret })).toThrow("or neither");
+    expect(() =>
+      apiConfig({
+        FEEDBACK_CALLBACK_URL: "https://feedback.example/",
+        FEEDBACK_CLIENT_SECRET: clientSecret,
+      }),
+    ).toThrow("must be the callback URL Fider shows");
+    expect(() =>
+      apiConfig({
+        ...production,
+        FEEDBACK_CALLBACK_URL: callbackUrl.replace("https:", "http:"),
+        FEEDBACK_CLIENT_SECRET: clientSecret,
+      }),
+    ).toThrow("must be the callback URL Fider shows");
+    expect(() =>
+      apiConfig({ FEEDBACK_CALLBACK_URL: callbackUrl, FEEDBACK_CLIENT_SECRET: "short" }),
+    ).toThrow("at least 32 characters");
+  });
 });

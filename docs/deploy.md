@@ -13,6 +13,7 @@ Tonaris runs on [Render](https://render.com) in Frankfurt, behind [Cloudflare](h
 | Revocation ledger | Cloudflare R2 bucket `tonaris-ledger`, write-once for 30 days (TS-113) |
 | DNS, TLS and the cover-art cache | Cloudflare's Free plan, in front of both hostnames |
 | Email | Resend, from `mail.tonaris.app` ([Email](#email)) |
+| Feedback board | Fider Cloud's free plan, at `https://feedback.tonaris.app`, signed in through Tonaris ([Feedback board](#feedback-board)) |
 | Domain | `tonaris.app`, registered at Spaceship |
 
 Render's Hobby workspace is enough to start. Pro adds 7 days of recovery and more included bandwidth.
@@ -155,6 +156,8 @@ To redeploy by hand, open the service → **Manual Deploy** → **Deploy latest 
 | api, web | `PORT` | 3001 and 3000 |
 | web | `API_URL` | `https://api.tonaris.app`, read at start-up and given to browsers |
 | web | `API_INTERNAL_URL` | The API's private-network `host:port`, for the server's own reads, such as guest pages (TS-03) |
+| api | `FEEDBACK_CALLBACK_URL`, `FEEDBACK_CLIENT_SECRET` | The board's sign-in client ([Feedback board](#feedback-board)); both or neither |
+| web | `FEEDBACK_URL`, `FEEDBACK_CALLBACK_URL` | `https://feedback.tonaris.app`, and the API's callback URL: with both, the account menu has **Feedback and ideas** |
 
 To change one later, open the service → **Environment**. A change to a value that `render.yaml` sets belongs in `render.yaml`: the next Blueprint sync overwrites a dashboard edit.
 
@@ -188,6 +191,49 @@ YouTube Music links are identified by MusicBrainz and, with `YOUTUBE_API_KEY`, b
 **To check it** after a deploy, add a YouTube Music album link that MusicBrainz doesn't know by URL: it's identified instead of asking for details. The [API's metrics](https://console.cloud.google.com/apis/api/youtube.googleapis.com/metrics) show the reads.
 
 **Limits:** 10,000 units a day; each link takes 3, so about 3,300 links a day. Past that, or with a key that stops working, the API logs "The YouTube Data API refused a read" and YouTube Music links ask for details until the quota resets at midnight Pacific time. More quota needs YouTube's audit.
+
+## Feedback board
+
+The feedback board is a [Fider Cloud](https://fider.io) site on its free plan, at `https://feedback.tonaris.app` (FR-11.15). Anyone can read it. Only Tonaris's members post, vote and comment, signed in through Tonaris: Fider is a client of Tonaris's authorization server, `feedback-board`, which the API writes at start-up from `FEEDBACK_CALLBACK_URL` and `FEEDBACK_CLIENT_SECRET`. The site's owner is `dev@tonaris.app`, never a personal account (TS-105).
+
+**Once, in the browser profile signed in to `dev@tonaris.app`:**
+
+1. **The site.** Open [login.fider.io/signup](https://login.fider.io/signup) and sign up with `dev@tonaris.app`. As the site's name, use `Tonaris`, and as its subdomain `tonaris`, or any free one. Confirm with the link Fider emails.
+2. **Its address.** In the board's **Administration** → **General** (`/admin`), set **Custom Domain** to `feedback.tonaris.app` and save. In Cloudflare, open `tonaris.app` → **DNS** → **Records** → **Add record**: a `CNAME` named `feedback`, pointing to the site's Fider address, such as `tonaris.fider.io`, **DNS only**, so Fider can issue its certificate. The board opens at `https://feedback.tonaris.app` once the record has spread.
+3. **Its welcome text,** on the same page: **Welcome Header** `Ideas and feedback for Tonaris`, and **Welcome Message**:
+
+   ```
+   Sign in with Tonaris to suggest an idea, vote and comment. Everything here is public, with your name.
+   ```
+
+4. **The secret.** In Terminal, run `openssl rand -base64 32` and keep the output for steps 5 and 6.
+5. **The provider.** In **Administration** → **Authentication** (`/admin/authentication`), under **OAuth Providers**, select **Add new** and fill in:
+
+   | Field | Value |
+   | --- | --- |
+   | Display Name | `Tonaris` |
+   | Client ID | `feedback-board` |
+   | Client Secret | the secret from step 4 |
+   | Authorize URL | `https://api.tonaris.app/auth/oauth2/authorize` |
+   | Token URL | `https://api.tonaris.app/auth/oauth2/token` |
+   | Scope | `openid email` |
+   | Profile API URL | `https://api.tonaris.app/auth/oauth2/userinfo` |
+   | JSON Path: ID, Name, Email | `sub`, `name`, `email` |
+   | Roles, Allowed Roles | empty |
+   | Trusted Source | No |
+   | Status | Disabled, for now |
+
+   Select **Save**. The provider's row now shows its **Callback URL**, such as `https://login.fider.io/oauth/_k3j9x0q2ab/callback`. Copy it.
+6. **Render.** Open each service → **Environment** → **Add Environment Variable**, then **Save and deploy**:
+   - `tonaris-api`: `FEEDBACK_CALLBACK_URL`, the callback URL, and `FEEDBACK_CLIENT_SECRET`, the secret.
+   - `tonaris-web`: `FEEDBACK_CALLBACK_URL`, the same callback URL. `FEEDBACK_URL` comes from `render.yaml`; add it as `https://feedback.tonaris.app` if the service doesn't have it yet.
+7. **Try it.** Once both have deployed, select **Test** beside the Tonaris provider in Fider. Tonaris asks you to sign in if you aren't, then Fider shows what it received: `sub`, `name` and `email`. Then select **Edit**, set **Status** to **Enabled**, and **Save**.
+8. **Only Tonaris signs in.** On the same page, set **Allow Email Authentication** to **No**. Board members then sign in only with Tonaris. The site's administrator, `dev@tonaris.app`, can still sign in by email.
+9. **Your own account,** to answer as yourself: in Tonaris, choose **Feedback and ideas** in the account menu, which signs you in to the board. Then, as `dev@tonaris.app`, open **Administration** → **Users** and make that account an administrator.
+
+**Limits:** the free plan takes 250 posts. Content moderation, the roadmap page and unlimited posts come with Fider's Pro plan.
+
+**To turn it off,** remove both `FEEDBACK_` settings from `tonaris-api` and `FEEDBACK_CALLBACK_URL` from `tonaris-web`: the menu item goes, and the API disables the board's client at its next start. The API refuses to start with only one of its two.
 
 ## Things to get right
 

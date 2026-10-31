@@ -41,6 +41,7 @@ import {
 } from "@tonaris/domain";
 
 import type { ApiConfig } from "../config";
+import { feedbackScopes, feedbackUserInfoClaims } from "./feedback";
 import { recordingTransactions } from "./transaction";
 
 const day = 24 * 60 * 60;
@@ -276,7 +277,12 @@ export function createAuth({
         resource: mcpResource(config.apiOrigin),
         loginPage: `${config.webOrigin}/sign-in`,
         consentPage: `${config.webOrigin}/oauth/consent`,
-        scopes: [...mcpRequestedScopes],
+        // The identity scopes are the feedback board's alone (TON-144): AI clients, registered or discovered, are
+        // given MCP's, and discovery keeps advertising only those.
+        scopes: [...mcpRequestedScopes, ...feedbackScopes],
+        clientRegistrationDefaultScopes: [...mcpRequestedScopes],
+        advertisedMetadata: { scopes_supported: [...mcpRequestedScopes] },
+        customUserInfoClaims: feedbackUserInfoClaims,
         // Tokens always act for a person; no machine-to-machine `client_credentials`.
         grantTypes: ["authorization_code", "refresh_token"],
         accessTokenExpiresIn: 60 * 60,

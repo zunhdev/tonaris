@@ -63,6 +63,11 @@ services:
         sync: false
       - key: YOUTUBE_API_KEY
         sync: false
+      # The feedback board's sign-in (FR-11.15, docs/deploy.md#feedback-board).
+      - key: FEEDBACK_CALLBACK_URL
+        sync: false
+      - key: FEEDBACK_CLIENT_SECRET
+        sync: false
 
   - type: web
     name: tonaris-web
@@ -89,6 +94,11 @@ services:
           name: tonaris-api
           property: hostport
       - key: SENTRY_DSN
+        sync: false
+      # The feedback board, for the account menu (FR-11.15).
+      - key: FEEDBACK_URL
+        value: https://feedback.tonaris.app
+      - key: FEEDBACK_CALLBACK_URL
         sync: false
 
 databases:

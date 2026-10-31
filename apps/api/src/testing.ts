@@ -17,6 +17,7 @@ import { createApp, maxRequestBodySize } from "./app";
 import type { ImageFetch } from "./artwork";
 import { issueAdmissionInvitation } from "./auth/admission";
 import { type AuthOptions, createAuth } from "./auth/auth";
+import { syncFeedbackClient } from "./auth/feedback";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import type { CaptureDeps } from "./capture";
 import { apiConfig } from "./config";
@@ -220,6 +221,7 @@ export async function createTestApp(options: LocalAppOptions = {}) {
   // Better Auth's OAuth provider writes its resource row as it starts; let it finish before a test can drop the
   // schema under it.
   await local.auth.$context;
+  await syncFeedbackClient(local.db, local.config.feedback);
   const drop = async () => {
     await local.stop();
     await database.drop();

@@ -514,6 +514,8 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 - **One that can't be opened** is dimmed and reads "No longer available", with its owner. It opens the shared view's "Not available".
 - Shared rows have no ⋯ menu and can't be dragged.
 
+*As built in TON-144* (FR-11.15): **the account menu has Feedback and ideas,** with a speech-bubble icon, before Terms of use, when the web app is configured with a board (`FEEDBACK_URL`, `FEEDBACK_CALLBACK_URL`). It opens the feedback board at `feedback.tonaris.app` in a new tab, through the board's sign-in for Tonaris, so the member arrives signed in. The phone's account menu has it too (DS-110).
+
 **DS-32 Route map.** These are conceptual paths; final paths are decided in the tech spec. *(Section 2.2)*
 
 | Path | Screen |
@@ -1797,6 +1799,7 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **Where they're linked:** "Terms · Privacy" under the sign-in card (DS-90) and on the guest page's foot (DS-72), "Terms of use" and "Privacy notice" in the account menu, before Sign out, each opening a new tab, and the join line (DS-91).
 - **The agreement screen,** in the sign-in frame, shown instead of the workspace while the member hasn't agreed to the current version: "Tonaris has terms and a privacy notice", then "They say what you agree to when you use Tonaris, what it keeps about you, and that it uses YouTube API Services to identify YouTube Music links. Read the Terms of use and the Privacy notice.", the names linking their pages in a new tab. **Agree and continue** opens the collection; **Sign out** signs out and removes the browser's copy. A failure shows its sentence above the buttons.
 - **The texts** are in the repository (`apps/web/src/features/legal/texts.tsx`); a change to either is a new version, which shows the screen to every member again.
+- *As built in TON-144:* the privacy notice has **The feedback board**, after the services Tonaris runs on: the board runs on Fider, receives the display name and email of someone who signs in to it with Tonaris, shows what they post with their name, and keeps it when the Tonaris account is deleted. That was the version of 2 November 2026.
 
 ## 15. States, copy, and mobile
 
@@ -1872,7 +1875,7 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 *As built in TON-103* (below 768 px):
 - **The top bar** is each view's header: Back, "Back to {view above}", then the name, the view's own controls, **Search** and an Account button.
   - Back goes to a folder's or list's parent, or to Collection. In a share it goes to the folder above, then to Shared with me.
-  - The account menu holds Settings and Sign out, without Admin or Keyboard shortcuts.
+  - The account menu holds Settings and Sign out, without Admin or Keyboard shortcuts. *Since TON-144,* it also has Feedback and ideas (DS-31).
 - **The root screen** lists the collection's folders and lists, then, pinned below them, **Unsorted** with its count and **Shared with me**.
 - **Rows:**
   - album rows are 56 px, with 44 px artwork, the title over the artist, the year, and the status with Open;
