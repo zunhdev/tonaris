@@ -13,7 +13,7 @@ import { SyncIndicator } from "@/features/sync/sync-indicator";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { PanelLeftClose, Plus, Search } from "lucide-react";
-import { useRef, type KeyboardEvent, type PointerEvent } from "react";
+import { useRef } from "react";
 
 import type { Account, ContainerKind } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
@@ -34,7 +34,8 @@ import {
 } from "@tonaris/ui/components/tooltip";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { clampWidth, sidebarWidths } from "./device";
+import { sidebarWidths } from "./device";
+import { ResizeHandle } from "./resize-handle";
 import { useShell } from "./shell-context";
 
 export function Sidebar({
@@ -99,7 +100,13 @@ export function Sidebar({
       <div className="shrink-0 border-t border-subtle p-2">
         <SyncIndicator />
       </div>
-      <ResizeHandle width={width} onResize={onResize} />
+      <ResizeHandle
+        label="Resize sidebar"
+        edge="right"
+        width={width}
+        widths={sidebarWidths}
+        onResize={onResize}
+      />
     </nav>
   );
 }
@@ -153,54 +160,6 @@ function NewMenu() {
         <DropdownMenuItem onClick={() => choose("folder")}>New folder</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-const step = 16;
-
-/** The sidebar's right edge (DS-30): a window splitter, dragged or moved with ← and →, Home and End. */
-function ResizeHandle({ width, onResize }: { width: number; onResize: (width: number) => void }) {
-  const drag = useRef<{ x: number; width: number } | undefined>(undefined);
-
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const next = {
-      ArrowLeft: width - step,
-      ArrowRight: width + step,
-      Home: sidebarWidths.min,
-      End: sidebarWidths.max,
-    }[event.key];
-    if (next === undefined) return;
-    event.preventDefault();
-    onResize(clampWidth(next));
-  }
-
-  function onPointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (!drag.current) return;
-    onResize(clampWidth(drag.current.width + event.clientX - drag.current.x));
-  }
-
-  // A focusable window splitter, which an `hr` can't be.
-  return (
-    <div
-      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
-      role="separator"
-      aria-label="Resize sidebar"
-      aria-orientation="vertical"
-      aria-valuemin={sidebarWidths.min}
-      aria-valuemax={sidebarWidths.max}
-      aria-valuenow={width}
-      tabIndex={0}
-      onKeyDown={onKeyDown}
-      onPointerDown={(event) => {
-        event.currentTarget.setPointerCapture(event.pointerId);
-        drag.current = { x: event.clientX, width };
-      }}
-      onPointerMove={onPointerMove}
-      onPointerUp={() => {
-        drag.current = undefined;
-      }}
-      className="absolute top-0 -right-1 bottom-0 w-2 cursor-col-resize outline-none hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
-    />
   );
 }
 

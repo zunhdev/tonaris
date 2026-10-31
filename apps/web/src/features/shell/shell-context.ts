@@ -6,10 +6,8 @@ import { createContext, useContext } from "react";
 
 import type { Account } from "@tonaris/domain";
 
+import { inspectorWidths } from "./device";
 import type { CommandRunner } from "./use-shortcuts";
-
-/** The inspector's width beside the view (DS-30). */
-export const inspectorWidth = 380;
 
 export type ShellControl = {
   /** The signed-in account; undefined outside the workspace. */
@@ -17,6 +15,8 @@ export type ShellControl = {
   sidebarHidden: boolean;
   /** Whether the inspector is open beside the view, taking `inspectorWidth` from it (DS-30). */
   inspectorBeside: boolean;
+  /** The inspector's width, as resized on this device (TON-124). */
+  inspectorWidth: number;
   toggleSidebar: () => void;
   openShortcuts: () => void;
   openSearch: () => void;
@@ -29,6 +29,7 @@ export type ShellControl = {
 export const ShellContext = createContext<ShellControl>({
   sidebarHidden: false,
   inspectorBeside: false,
+  inspectorWidth: inspectorWidths.initial,
   toggleSidebar: () => {},
   openShortcuts: () => {},
   openSearch: () => {},

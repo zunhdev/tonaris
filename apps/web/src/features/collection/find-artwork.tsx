@@ -1,5 +1,6 @@
 // Find artwork (TON-112, FR-03.4): a popover offering the Cover Art Archive's covers for an album's title and artist,
-// from `GET /v1/artwork/covers`. Each shows through the image proxy (TS-103) with its album's title, year and type,
+// from `GET /v1/artwork/covers`. Its button, "Find", is a ghost button beside the Artwork URL field (TON-124), named
+// "Find artwork" for assistive technology. Each shows through the image proxy (TS-103) with its album's title, year and type,
 // and choosing one hands its `front-500` address to the field it sits by. It waits while offline (DS-81), and until
 // there are a title and an artist to search for.
 
@@ -84,8 +85,10 @@ export function FindArtwork({
   if (waiting) {
     return (
       <Tooltip>
-        <TooltipTrigger render={<Button size="sm" className="self-start" aria-disabled />}>
-          Find artwork
+        <TooltipTrigger
+          render={<Button variant="ghost" size="lg" aria-label="Find artwork" aria-disabled />}
+        >
+          Find
         </TooltipTrigger>
         <TooltipContent>{waiting}</TooltipContent>
       </Tooltip>
@@ -100,8 +103,8 @@ export function FindArtwork({
         if (next) void find();
       }}
     >
-      <PopoverTrigger render={<Button size="sm" className="self-start" />}>
-        Find artwork
+      <PopoverTrigger render={<Button variant="ghost" size="lg" aria-label="Find artwork" />}>
+        Find
       </PopoverTrigger>
       <PopoverContent inDialog={inDialog} className="flex w-96 flex-col gap-3">
         <div className="flex flex-col gap-0.5">

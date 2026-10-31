@@ -29,6 +29,52 @@ const mode = (page: Page, name: "View" | "Edit") =>
   page.getByRole("radiogroup", { name: "Mode" }).getByRole("radio", { name });
 const lists = (page: Page) => inspector(page).getByRole("region", { name: "Lists" });
 
+test("the inspector's left edge resizes it, kept on the device, and the artwork grows with it up to 500 px", async ({
+  page,
+}) => {
+  await signIn(page, accounts.inspectorResize);
+  await live(page);
+  const doom = await created(page, "Doom");
+  const nightfall = album("Nightfall", { originalYear: 1987 });
+  await added(page, [nightfall], doom.id);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`/l/${doom.id}?album=${nightfall.id}`);
+  await live(page);
+  const cover = inspector(page).getByRole("img", { name: "Cover of Nightfall" });
+  const width = async (locator: ReturnType<typeof inspector>) =>
+    (await locator.boundingBox())?.width;
+
+  // 380 px at first, the artwork filling it but for the padding.
+  expect(await width(inspector(page))).toBe(380);
+  expect(await width(cover)).toBe(380 - 1 - 32);
+
+  // ← widens it, as its edge moves left; End takes it to 560 px, where the artwork stops at 500.
+  const edge = page.getByRole("separator", { name: "Resize album panel" });
+  await edge.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(edge).toHaveAttribute("aria-valuenow", "396");
+  await page.keyboard.press("End");
+  await expect(edge).toHaveAttribute("aria-valuenow", "560");
+  await expect.poll(() => width(inspector(page))).toBe(560);
+  expect(await width(cover)).toBe(500);
+
+  // Dragged back by pointer, and kept after a reload.
+  const box = await edge.boundingBox();
+  if (!box) throw new Error("The edge has no box.");
+  await page.mouse.move(box.x + box.width / 2, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 100, box.y + 200, { steps: 4 });
+  await page.mouse.up();
+  await expect(edge).toHaveAttribute("aria-valuenow", "460");
+  await page.reload();
+  await live(page);
+  await expect(page.getByRole("separator", { name: "Resize album panel" })).toHaveAttribute(
+    "aria-valuenow",
+    "460",
+  );
+  expect(await violations(page, "aside")).toEqual([]);
+});
+
 test("a click opens an album in the inspector, J moves it, and Esc closes it", async ({ page }) => {
   await signIn(page, accounts.inspectorOpen);
   await live(page);

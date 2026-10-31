@@ -1,6 +1,6 @@
 // What the workspace remembers on this device, not synced (DS-27, DS-30, DS-32, DS-43, DS-45, DS-75): which folders
-// are expanded, the sidebar's width and whether it is hidden, the last collection view visited, Viewing or Editing
-// mode, what was opened lately and which palette commands are run most, and, for the tab's session, which groups
+// are expanded, the sidebar's width and whether it is hidden, the album inspector's width (TON-124), the last
+// collection view visited, Viewing or Editing mode, what was opened lately and which palette commands are run most, and, for the tab's session, which groups
 // are collapsed. Kept in localStorage and sessionStorage, which can be missing or refuse writes (private
 // modes, blocked storage): then nothing is remembered, and nothing fails.
 
@@ -40,6 +40,9 @@ export const expandedFolders = {
   },
 };
 
+/** A resizable pane's widths, in px. */
+export type Widths = { readonly min: number; readonly max: number; readonly initial: number };
+
 export const sidebarWidths = { min: 200, max: 360, initial: 240 } as const;
 
 export type SidebarLayout = { width: number; hidden: boolean };
@@ -60,9 +63,30 @@ export const sidebarLayout = {
   },
 };
 
-export function clampWidth(width: number): number {
-  return Math.round(Math.min(sidebarWidths.max, Math.max(sidebarWidths.min, width)));
+/** A width kept within a pane's widths, the sidebar's unless others are given. */
+export function clampWidth(width: number, widths: Widths = sidebarWidths): number {
+  return Math.round(Math.min(widths.max, Math.max(widths.min, width)));
 }
+
+export const inspectorWidths = { min: 320, max: 560, initial: 380 } as const;
+
+/** The album inspector's width, kept between 320 and 560 px (DS-30, TON-124). */
+export const inspectorLayout = {
+  read(): number {
+    const value = read("tonaris:inspector");
+    const width =
+      typeof value === "object" &&
+      value !== null &&
+      "width" in value &&
+      typeof value.width === "number"
+        ? value.width
+        : inspectorWidths.initial;
+    return clampWidth(width, inspectorWidths);
+  },
+  write(width: number): void {
+    write("tonaris:inspector", { width });
+  },
+};
 
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const collectionPath = new RegExp(`^/(?:c|unsorted|trash|shared|[fl]/${uuid})$`, "i");

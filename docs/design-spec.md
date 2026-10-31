@@ -452,6 +452,8 @@ Typed confirmation is reserved for account deletion (DS-97).
 
 *As built in TON-107* (decided with the creator, 30 October 2026): **the header's name is the breadcrumbs' size.** It is 13 px (`text.base`) in medium weight and `fg.primary`, after the `fg.secondary` crumbs, as in Linear: "Collection › Metal › Thrash › **Metallica**". Before, it was 20 px `text.page`. This holds in every desktop header: folders, lists, Unsorted, Trash, Shared with me, Settings and Admin. The phone's top bar keeps `text.title` (DS-110).
 
+*As built in TON-124* (from the creator's manual testing, 31 October 2026): **the inspector is resizable,** as the sidebar is. Its left edge is a window splitter, "Resize album panel": drag it, or focus it and use ← (wider) and → (narrower), 16 px a step, and Home and End. The width runs from 320 to 560 px, 380 by default, and is kept per device. It applies beside the view and over it alike. The sidebar and the inspector share the splitter component.
+
 **DS-31 Sidebar contents, top to bottom.** *(FR-01.9, FR-01.12, FR-07.6, FR-07.13, FR-11.6, FR-12.2)*
 
 1. **Account menu:** display name or email, Settings, Admin (creator only; since TON-74), keyboard shortcuts, Sign out.
@@ -697,6 +699,10 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 *As built in TON-45:* **the kept link's notice** heads the Links section while the album still has the kept link: "Another Spotify link was found for this album", the pasted link, and **Replace** and **Dismiss**. Replace sets the pasted link, switching to Editing first. The notice lives in the tab that captured, until replaced, dismissed or reloaded.
 
 *As built in TON-123* (from the creator's manual testing, 31 October 2026): **the Links section's links read as links.** Each address is in the link colour (`accent.solid`), as the app's other text links are, with an underline that is faint at rest and solid on hover, then a ↗ that says it opens outside Tonaris. Still no service logos (DS-19).
+
+*As built in TON-124* (from the creator's manual testing, 31 October 2026):
+- **The artwork fills the panel's width,** up to 500 px, the size of the covers Find brings (the Cover Art Archive's `front-500`). It is 347 px in a 380 px panel, and stops at 500 from a 533 px panel up. It stays a square over its letter tile (DS-23).
+- **Find** replaces "Find artwork": a ghost button to the right of the Artwork URL field, on its row, as in the manual entry form (DS-47). Assistive technology still hears "Find artwork". The popover is unchanged.
 
 **DS-47 Manual entry form.** A 560px dialog titled "New album" (desktop). Shortcut ⌘Enter saves; Esc asks before discarding entered data. *(FR-02.4, FR-02.6, FR-13.2)*
 

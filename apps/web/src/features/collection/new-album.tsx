@@ -301,24 +301,24 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
             )}
 
             {draft.capture?.mode !== "details" && (
-              <div className="flex flex-col gap-1.5">
-                <TextField
-                  name="artworkUrl"
-                  label="Artwork URL"
-                  type="url"
-                  placeholder="https://…"
-                  value={form.artworkUrl}
-                  problem={shownProblems.artworkUrl}
-                  onChange={(artworkUrl) => set({ artworkUrl })}
-                  onBlur={() => touch("artworkUrl")}
-                />
-                <FindArtwork
-                  inDialog
-                  title={form.title}
-                  artist={form.artistCredit}
-                  onChoose={(artworkUrl) => set({ artworkUrl })}
-                />
-              </div>
+              <TextField
+                name="artworkUrl"
+                label="Artwork URL"
+                type="url"
+                placeholder="https://…"
+                value={form.artworkUrl}
+                problem={shownProblems.artworkUrl}
+                onChange={(artworkUrl) => set({ artworkUrl })}
+                onBlur={() => touch("artworkUrl")}
+                action={
+                  <FindArtwork
+                    inDialog
+                    title={form.title}
+                    artist={form.artistCredit}
+                    onChoose={(artworkUrl) => set({ artworkUrl })}
+                  />
+                }
+              />
             )}
             {draft.capture?.mode === "details" ? (
               <p className="text-small text-fg-secondary">
@@ -406,6 +406,7 @@ function TextField({
   onChange,
   onBlur,
   inputRef,
+  action,
   ...rest
 }: {
   name: FormField;
@@ -416,6 +417,8 @@ function TextField({
   onChange: (value: string) => void;
   onBlur: () => void;
   inputRef?: RefObject<HTMLInputElement | null>;
+  /** A button beside the field, such as Find beside the Artwork URL (TON-124). */
+  action?: ReactNode;
   inputMode?: "numeric";
   type?: "url";
   placeholder?: string;
@@ -427,22 +430,25 @@ function TextField({
         {label}
         {required && <span aria-hidden> *</span>}
       </label>
-      <input
-        ref={inputRef}
-        id={id}
-        name={name}
-        value={value}
-        required={required}
-        aria-invalid={problem !== undefined}
-        aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-        onChange={(event) => onChange(event.target.value)}
-        onBlur={onBlur}
-        className={cn(
-          "h-8 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-          problem !== undefined && "border-status-danger",
-        )}
-        {...rest}
-      />
+      <div className="flex items-center gap-1">
+        <input
+          ref={inputRef}
+          id={id}
+          name={name}
+          value={value}
+          required={required}
+          aria-invalid={problem !== undefined}
+          aria-describedby={problem === undefined ? undefined : `${id}-problem`}
+          onChange={(event) => onChange(event.target.value)}
+          onBlur={onBlur}
+          className={cn(
+            "h-8 min-w-0 flex-1 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+            problem !== undefined && "border-status-danger",
+          )}
+          {...rest}
+        />
+        {action}
+      </div>
       {problem !== undefined && (
         <p id={`${id}-problem`} className="text-small text-status-danger">
           {problem}

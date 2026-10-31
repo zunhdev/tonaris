@@ -82,7 +82,16 @@ test("Find artwork in the inspector offers covers, and saves the one chosen", as
   await live(page);
   await page.keyboard.press("e");
 
-  await inspector(page).getByRole("button", { name: "Find artwork" }).click();
+  // "Find", a ghost button to the right of the Artwork URL field, on its row (TON-124).
+  const find = inspector(page).getByRole("button", { name: "Find artwork" });
+  await expect(find).toHaveText("Find");
+  const field = await inspector(page).getByRole("textbox", { name: "Artwork URL" }).boundingBox();
+  const button = await find.boundingBox();
+  expect(button && field && button.x >= field.x + field.width).toBe(true);
+  expect(
+    button && field && Math.abs(button.y + button.height / 2 - (field.y + field.height / 2)),
+  ).toBeLessThan(2);
+  await find.click();
   const covers = page.getByRole("list", { name: "Covers" });
   await expect(covers.getByRole("button")).toHaveCount(2);
   await expect(covers.locator("img").first()).toHaveAttribute(

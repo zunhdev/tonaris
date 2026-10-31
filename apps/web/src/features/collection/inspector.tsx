@@ -1,5 +1,5 @@
-// The album inspector (DS-46, DS-30): the album named by `?album=` beside the view, 380 px wide, or over it on a
-// narrow window. On a phone it is a sheet over the view, read-only as phones are, with an Open button for each
+// The album inspector (DS-46, DS-30): the album named by `?album=` beside the view, or over it on a narrow window, as
+// wide as its left edge was dragged, 380 px at first (TON-124). On a phone it is a sheet over the view, read-only as phones are, with an Open button for each
 // service (DS-110); it takes the focus when it opens. Esc closes it, unless a field, dialog, popover or menu has the
 // keys; so does Close. An album that is gone says so (DS-83's "removed elsewhere" pattern, until Trash says more).
 
@@ -9,12 +9,22 @@ import { useEffect, useRef } from "react";
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { inspectorWidths } from "../shell/device";
+import { ResizeHandle } from "../shell/resize-handle";
 import { inLayer, isTextField } from "../shell/shortcuts";
 import { AlbumDetails } from "./album-details";
 import { useCollectionData } from "./data";
 import { useInspector } from "./inspector-state";
 
-export function AlbumInspector({ placement }: { placement: "beside" | "overlay" | "sheet" }) {
+export function AlbumInspector({
+  placement,
+  width,
+  onResize,
+}: {
+  placement: "beside" | "overlay" | "sheet";
+  width: number;
+  onResize: (width: number) => void;
+}) {
   const { albumId, close } = useInspector();
   const { albumsById, ready } = useCollectionData();
   const album = albumId === undefined ? undefined : albumsById.get(albumId);
@@ -38,11 +48,12 @@ export function AlbumInspector({ placement }: { placement: "beside" | "overlay" 
   return (
     <aside
       aria-label="Album"
+      style={placement === "overlay" ? { width } : undefined}
       className={cn(
         "flex min-h-0 min-w-0 flex-col bg-panel",
         placement !== "sheet" && "border-l border-subtle",
-        placement === "overlay" &&
-          "fixed inset-y-0 right-0 z-50 w-[380px] max-w-full shadow-floating",
+        placement === "beside" && "relative",
+        placement === "overlay" && "fixed inset-y-0 right-0 z-50 max-w-full shadow-floating",
         sheet &&
           "fixed inset-x-0 bottom-0 z-50 h-[92dvh] rounded-t-xl border-t border-subtle pb-[env(safe-area-inset-bottom)] shadow-floating",
       )}
@@ -60,6 +71,15 @@ export function AlbumInspector({ placement }: { placement: "beside" | "overlay" 
           <X aria-hidden strokeWidth={1.5} />
         </Button>
       </div>
+      {!sheet && (
+        <ResizeHandle
+          label="Resize album panel"
+          edge="left"
+          width={width}
+          widths={inspectorWidths}
+          onResize={onResize}
+        />
+      )}
       <div className="min-h-0 flex-1 overflow-y-auto">
         {album ? (
           <AlbumDetails key={album.id} album={album} />
