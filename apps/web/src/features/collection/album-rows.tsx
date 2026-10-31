@@ -513,7 +513,7 @@ function AlbumRow({
             {...cellProps(index, 2 + after + (showType ? 1 : 0))}
           >
             <span className="truncate">
-              <ServiceNames title={album.title} links={links} separator=", " />
+              <ServiceNames title={album.title} links={links} />
             </span>
           </div>,
         ]

@@ -205,6 +205,8 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **Services:** after the type, "Spotify, Tidal" in `fg.tertiary`, truncated, in the services' order. The column shows from 760 px of view width and the type from 640 px, so the services collapse first.
 
 *As built in TON-105* (decided with the creator, 30 October 2026): **each service name is a link** to that service, opening where the account's link setting says (DS-94). Its name is "Open '{title}' in Spotify", and it underlines on hover.
+
+*As built in TON-125* (from the creator's manual testing, 31 October 2026): **the service names read as links.** Each is `fg.secondary`, one step brighter than the column was, and underlined at rest in `fg.tertiary` at 50%. A ↗ follows it. On hover it takes the link colour (`accent.solid`) and a solid underline. Names are spaced 10 px apart, without the comma. They stay out of the focus order, as before.
 - **Pointer only,** like the Open button: it takes no focus, so the grid's focus and the inspector stay put. A click opens the service, not the inspector.
 - **From the keyboard,** `O` opens the chooser.
 - **Open:** an icon button in the status cell, beside the save marker, for albums with links. It shows on the row's hover or focus, and always on touch screens. It is pointer-only; `O` is its keyboard path. Its name is "Open '{title}' in…".
@@ -245,6 +247,8 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 *As built in TON-35:* the year follows DS-24, as in rows. Grouped, each group's header is a row of its own above its cards (DS-43).
 
 *As built in TON-105* (decided with the creator, 30 October 2026): **a line under the year** names the services the album has links for, "Spotify · Apple Music", in `text.small` `fg.tertiary`, truncated. Each name is a link, as in DS-21's services column. Every card keeps the line, empty without links, so the grid's rows stay one height (88 px of text under the tile).
+
+*As built in TON-125:* the card's service names take DS-21's link style, underlined with a ↗, spaced apart without the " · ".
 
 *As built in TON-106* (decided with the creator, 30 October 2026): **the window sets a card's size, not the inspector.** Cards fill the row and resize with the window. The inspector beside the grid leaves fewer cards a row at the same size, with a gap of less than a card at the right. Before, the cards were resized to fill the narrower row.
 

@@ -258,7 +258,7 @@ function AlbumCard({
         <ChronologyYear album={album} />
       </span>
       <span className="truncate text-small text-fg-tertiary">
-        <ServiceNames title={album.title} links={linksByAlbum.get(album.id)} separator=" · " />
+        <ServiceNames title={album.title} links={linksByAlbum.get(album.id)} />
       </span>
     </div>
   );

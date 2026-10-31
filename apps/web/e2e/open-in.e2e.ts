@@ -53,7 +53,7 @@ test("on desktop, the chooser lists only the album's services, each opening its 
   await linked(page, "Grunge", bleach, { tidal, spotify });
 
   const row = rowOf(page, "Grunge", "Bleach");
-  await expect(row).toContainText("Spotify, Tidal");
+  await expect(row.locator('[data-slot="service-link"]')).toHaveText(["Spotify", "Tidal"]);
   await row.hover();
   await row.getByRole("button", { name: "Open 'Bleach' in…" }).click();
   const chooser = page.getByRole("dialog", { name: "Open in…" });
@@ -151,9 +151,12 @@ test("a list's cards and rows name the album's services, each opening it and not
   await page.route("https://tidal.com/**", (route) => route.fulfill({ body: "Tidal" }));
   const inspector = page.getByRole("complementary", { name: "Album" });
 
-  // Rows: the services column, its names links.
+  // Rows: the services column, its names links, each underlined and ending in ↗ (TON-125).
   const row = rowOf(page, "Grunge", "Bleach");
-  await expect(row).toContainText("Spotify, Tidal");
+  const rowLinks = row.locator('[data-slot="service-link"]');
+  await expect(rowLinks).toHaveText(["Spotify", "Tidal"]);
+  await expect(rowLinks.locator("svg")).toHaveCount(2);
+  await expect(rowLinks.first().locator("span")).toHaveCSS("text-decoration-line", "underline");
   const rowTidal = row.getByRole("link", { name: "Open 'Bleach' in Tidal" });
   await expect(rowTidal).toHaveAttribute("href", tidal);
   await expect(rowTidal).toHaveAttribute("tabindex", "-1");
@@ -174,7 +177,7 @@ test("a list's cards and rows name the album's services, each opening it and not
   const card = page
     .getByRole("grid", { name: "Grunge" })
     .getByRole("gridcell", { name: /^Bleach/ });
-  await expect(card).toContainText("Spotify · Tidal");
+  await expect(card.locator('[data-slot="service-link"]')).toHaveText(["Spotify", "Tidal"]);
   await expect(card.getByRole("link", { name: "Open 'Bleach' in Spotify" })).toHaveAttribute(
     "href",
     spotify,
