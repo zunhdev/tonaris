@@ -17,6 +17,14 @@ test.describe("three-pane desktop shell", () => {
     await expect(page.getByRole("complementary")).toHaveCount(0);
   });
 
+  test("the sidebar's logo and name go to Collection", async ({ page }) => {
+    await page.goto("/unsorted");
+    const sidebar = page.getByRole("navigation", { name: "Sidebar" });
+    await sidebar.getByRole("link", { name: "Tonaris, go to Collection" }).click();
+    await expect(page).toHaveURL(/\/c$/);
+    await expect(page.getByRole("main", { name: "Collection" })).toBeVisible();
+  });
+
   test("panes are named landmarks", async ({ page }) => {
     await page.goto("/c");
     await expect(page.getByRole("navigation", { name: "Sidebar" })).toHaveCount(1);

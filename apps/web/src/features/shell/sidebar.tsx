@@ -1,7 +1,8 @@
-// The sidebar (DS-30, DS-31): the wordmark and a button to hide it, the account menu, Search, which opens the search
-// palette (DS-75), and Add album, which opens the capture dialog (DS-48), the collection's tree with a "+" menu for new
-// lists and folders, and the SyncIndicator in the footer. Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a
-// dragged folder or list, to move it to the root (DS-49).
+// The sidebar (DS-30, DS-31): the wordmark, which goes to Collection (TON-119), and a button to hide it, the account
+// menu, Search, which opens the search palette (DS-75), and Add album, which opens the capture dialog (DS-48), the
+// collection's tree with a "+" menu for new lists and folders, and the SyncIndicator in the footer. Its right edge
+// resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a dragged folder or list, to
+// move it to the root (DS-49).
 
 import { AccountMenu } from "@/features/account/account-menu";
 import { useCapture } from "@/features/capture/capture-context";
@@ -48,7 +49,13 @@ export function Sidebar({
       className="relative flex min-h-0 flex-col border-r border-subtle bg-app"
     >
       <div className="flex h-12 shrink-0 items-center justify-between pr-2 pl-4">
-        <Wordmark />
+        <Link
+          to="/c"
+          aria-label="Tonaris, go to Collection"
+          className="-ml-1.5 flex h-8 items-center rounded-md px-1.5 outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+        >
+          <Wordmark />
+        </Link>
         <Tooltip>
           <TooltipTrigger
             render={<Button variant="ghost" size="icon" aria-label="Hide sidebar" />}

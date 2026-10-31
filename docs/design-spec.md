@@ -478,6 +478,8 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 
 *As built in TON-66:* **Invitations** is a tree place between Shared with me and Trash, with an envelope icon and the pending count ("2 pending invitations" to screen readers). It shows only while invitations are pending. Another account's invitation can't reach this client's stream, so the count is read on load, when the window regains focus, every minute, and after an answer.
 
+*As built in TON-119* (from the creator's manual testing, 31 October 2026): **the wordmark at the top goes to Collection.** The logo and name are one link to `/c`, named "Tonaris, go to Collection", with the rows' hover and focus ring. The sign-in page's and guest pages' wordmarks stay text.
+
 **DS-32 Route map.** These are conceptual paths; final paths are decided in the tech spec. *(Section 2.2)*
 
 | Path | Screen |
