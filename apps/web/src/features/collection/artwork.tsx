@@ -5,7 +5,7 @@
 // cards, where the title is beside it; "Cover of {title}" in the inspector.
 
 import { apiUrl } from "@/config";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { artworkPath, type Album } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -35,15 +35,28 @@ export function Artwork({
   className?: string;
   letterClassName?: string;
 }) {
-  const tile = artworkTile(title);
+  const { letter, background, foreground } = artworkTile(title);
+  // Painted through the DOM, not a style attribute, which the CSP refuses in server-rendered HTML such as a shared
+  // link's page (TON-126). Until the page is live there, the tile is neutral.
+  const paint = useCallback(
+    (element: HTMLSpanElement | null) => {
+      if (!element) return;
+      element.style.background = background;
+      element.style.color = foreground;
+    },
+    [background, foreground],
+  );
   // By source, so replaced artwork loads afresh.
   const [loaded, setLoaded] = useState<string>();
   const [failed, setFailed] = useState<string>();
   return (
     <span
+      ref={paint}
       {...(label === undefined ? { "aria-hidden": true } : { role: "img", "aria-label": label })}
-      className={cn("relative block aspect-square shrink-0 overflow-hidden rounded-sm", className)}
-      style={{ background: tile.background }}
+      className={cn(
+        "relative block aspect-square shrink-0 overflow-hidden rounded-sm bg-raised text-fg-secondary",
+        className,
+      )}
     >
       <span
         aria-hidden
@@ -51,9 +64,8 @@ export function Artwork({
           "absolute inset-0 flex items-center justify-center font-medium",
           letterClassName,
         )}
-        style={{ color: tile.foreground }}
       >
-        {tile.letter}
+        {letter}
       </span>
       {src && src !== failed && (
         <img

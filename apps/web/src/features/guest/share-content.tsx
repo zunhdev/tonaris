@@ -168,6 +168,9 @@ export function AlbumSections({
         <h2 className="mb-2 text-small font-medium text-fg-tertiary">{groupNames[group]}</h2>
       )}
       <ul
+        // Rows and the grid never share list items: WebKit keeps the height a row remembered for
+        // `content-visibility`, which squashed the grid's cards (TON-126).
+        key={layout}
         aria-label={group ? groupNames[group] : `Albums in ${list.name}`}
         className={cn(
           layout === "grid"
@@ -205,7 +208,7 @@ function AlbumItem({
   const shown = `${recorded ? "rec. " : ""}${year}`;
   if (layout === "grid") {
     return (
-      <li className="flex flex-col gap-1.5 [content-visibility:auto]">
+      <li className="flex flex-col gap-1.5 [contain-intrinsic-size:auto_14rem] [content-visibility:auto]">
         <Artwork
           title={album.title}
           src={artworkSrc(album)}

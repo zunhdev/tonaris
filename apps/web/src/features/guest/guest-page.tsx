@@ -7,7 +7,7 @@
 
 import { sections, sortAlbums, sortContainers } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
-import { Link } from "@tanstack/react-router";
+import { ClientOnly, Link } from "@tanstack/react-router";
 import { useCallback, useMemo, type ReactNode } from "react";
 
 import { unavailableLink, type Container, type SharedSnapshot } from "@tonaris/domain";
@@ -138,49 +138,67 @@ function ListContents({
   return (
     <>
       <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <SegmentedControl
-            aria-label="Sort"
-            value={view.sort}
-            onValueChange={(sort) => setView({ sort })}
-            options={[
-              { value: "year", label: "Year" },
-              { value: "name", label: "Name" },
-            ]}
-          />
-          <SegmentedControl
-            aria-label="Direction"
-            value={view.dir}
-            onValueChange={(dir) => setView({ dir })}
-            options={[
-              { value: "asc", label: "Ascending" },
-              { value: "desc", label: "Descending" },
-            ]}
-          />
-          <SegmentedControl
-            aria-label="Grouping"
-            value={view.grouped ? "type" : "none"}
-            onValueChange={(grouping) => setView({ grouped: grouping === "type" })}
-            options={[
-              { value: "none", label: "Not grouped" },
-              { value: "type", label: "By type" },
-            ]}
-          />
-          <SegmentedControl
-            aria-label="Layout"
-            value={view.layout}
-            onValueChange={(layout) => setView({ layout })}
-            options={[
-              { value: "rows", label: "Rows" },
-              { value: "grid", label: "Grid" },
-            ]}
-          />
-        </div>
+        {/*
+         * Drawn once the page is live, which they need anyway: the server renders the defaults, not the visit's view,
+         * and Base UI's hidden inputs carry style attributes the CSP refuses in server-rendered HTML (TON-126).
+         */}
+        <ClientOnly fallback={<div className="h-7.5" />}>
+          <ViewOptions view={view} setView={setView} />
+        </ClientOnly>
         <p className="text-small text-fg-tertiary">
           Your view settings aren't saved — sign in to keep them.
         </p>
       </div>
       <AlbumSections list={list} parts={parts} linksOf={linksOf} layout={view.layout} />
     </>
+  );
+}
+
+function ViewOptions({
+  view,
+  setView,
+}: {
+  view: GuestView;
+  setView: (change: Partial<GuestView>) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <SegmentedControl
+        aria-label="Sort"
+        value={view.sort}
+        onValueChange={(sort) => setView({ sort })}
+        options={[
+          { value: "year", label: "Year" },
+          { value: "name", label: "Name" },
+        ]}
+      />
+      <SegmentedControl
+        aria-label="Direction"
+        value={view.dir}
+        onValueChange={(dir) => setView({ dir })}
+        options={[
+          { value: "asc", label: "Ascending" },
+          { value: "desc", label: "Descending" },
+        ]}
+      />
+      <SegmentedControl
+        aria-label="Grouping"
+        value={view.grouped ? "type" : "none"}
+        onValueChange={(grouping) => setView({ grouped: grouping === "type" })}
+        options={[
+          { value: "none", label: "Not grouped" },
+          { value: "type", label: "By type" },
+        ]}
+      />
+      <SegmentedControl
+        aria-label="Layout"
+        value={view.layout}
+        onValueChange={(layout) => setView({ layout })}
+        options={[
+          { value: "rows", label: "Rows" },
+          { value: "grid", label: "Grid" },
+        ]}
+      />
+    </div>
   );
 }

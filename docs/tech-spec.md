@@ -1580,6 +1580,10 @@ Findings and their fixes. None high or critical remains open:
   - `img-src 'self' data: https://api.tonaris.<tld>`; all artwork goes through the API's `/img`
   - `connect-src 'self' https://api.tonaris.<tld>`. The Sentry ingest host is added with TS-115, as the project's exact host: a `*.ingest.de.sentry.io` wildcard would let injected code report to anyone's Sentry project.
   - `font-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`
+- **No style attributes in server-rendered HTML** (TON-126). The CSP refuses them there, while React in the browser sets styles through the DOM, which it allows. So a server-rendered page (shared links, sign-in, invitations, recovery) styles with classes:
+  - the artwork tile sets its colours through the DOM;
+  - a guest page's view options, whose Base UI radios hide their inputs with a style attribute, render once the page is live;
+  - `guest.e2e.ts` fails on any CSP report from a guest page.
 - **No eval.** Zod probes for `new Function` before compiling its parsers. The CSP blocks that, and the browser reports each probe as a violation. So `packages/domain` imports Zod through `src/zod.ts`, which switches Zod to `jitless` in browsers, and a lint rule enforces that import. Servers keep the compiled parsers.
 - Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains` (no preload), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`, overridden to `no-referrer` on `/s/`.
 - API responses send `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `nosniff`, and the same HSTS. Problems and Better Auth's responses get them too. Image-proxy responses add a fixed image `Content-Type`.
@@ -1706,6 +1710,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
   - `apps/web/Dockerfile`: the server build bundles its dependencies, and `apps/web/server.ts` (`Bun.serve`) serves the built client files and passes everything else to Start.
   - Neither image contains `node_modules`. Both run on `oven/bun:1.4.3-slim` as the `bun` user, with a health check on `/healthz`.
   - The web app reads the API origin, `API_URL`, at start-up and renders it into each page for the browser, so one image serves any host.
+  - *Fixed in TON-126:* the build context has no `.gitignore`, so Tailwind's automatic source detection, which skips what `.gitignore` lists, scanned the client build's output during the server build. The server then linked a stylesheet the client build never wrote, and server-rendered pages were unstyled until the browser added the right one. `globals.css` now names its sources (`source(none)`), so both builds read the same files.
   - Locally the same commands run natively; Docker runs only in CI and production (TS-06).
 - **Built in TON-108** (Render; setup in `docs/deploy.md`):
   - **`render.yaml`**, a Render Blueprint, declares the two services (Docker, Frankfurt) and `tonaris-db`. Deploys wait for CI's checks. The API's pre-deploy step, `bun bin/predeploy.js`, runs `bin/migrate.js`, then `bin/seed-creator.js`; Render runs the command without a shell, so it has no quotes or `&&`.
