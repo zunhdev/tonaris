@@ -1,26 +1,24 @@
 // A shared folder's or list's content (DS-70, DS-72; FR-07.11, FR-06.5), as guests and signed-in viewers see it:
-// breadcrumbs inside the share, a folder's folders and lists, and a list's albums as rows or a grid, each with an Open
-// chooser of its services (DS-25), whose web links leave with no referrer (TS-32). The page around it says where a folder or list
-// opens and how the view is sorted. A signed-in viewer's folders and lists, and in manual order their album rows' Move
+// breadcrumbs inside the share, a folder's folders and lists, and a list's albums as rows or a grid, each with its
+// services as links, as the album list shows them (TON-127), whose web links leave with no referrer (TS-32). The page
+// around it says where a folder or list opens and how the view is sorted. A signed-in viewer's folders and lists, and in manual order their album rows' Move
 // buttons, also move with ⌥↑ and ⌥↓, ⇧ for the ends (DS-49), in the viewer's own arrangement.
 
 import { Artwork, artworkSrc } from "@/features/collection/artwork";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology, groupNames, type Direction, type Section } from "@/features/collection/order";
-import { ServiceChoices } from "@/features/open/service-choices";
-import { ChevronRight, ExternalLink, GripVertical } from "lucide-react";
+import { ServiceNames } from "@/features/open/service-names";
+import { ChevronRight, GripVertical } from "lucide-react";
 import {
   useLayoutEffect,
   useRef,
-  useState,
   type AnchorHTMLAttributes,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
 
-import type { Album, Container, SharedSnapshot } from "@tonaris/domain";
+import type { Container, SharedSnapshot } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@tonaris/ui/components/popover";
 import { cn } from "@tonaris/ui/lib/utils";
 
 export type SharedAlbum = SharedSnapshot["albums"][number];
@@ -219,12 +217,17 @@ function AlbumItem({
         <span className="truncate text-small text-fg-secondary">
           {album.artistCredit} · {shown}
         </span>
-        <OpenIn album={album} links={links} />
+        {links.length > 0 && (
+          <span className="text-small text-fg-tertiary">
+            <ServiceNames title={album.title} links={links} focusable />
+          </span>
+        )}
       </li>
     );
   }
   return (
-    <li className="flex h-14 items-center gap-3 border-b border-subtle px-2 [contain-intrinsic-size:auto_3.5rem] [content-visibility:auto] md:h-11">
+    // On a phone a row with links grows to show them on a third line (TON-127); 56px otherwise (DS-110).
+    <li className="flex min-h-14 items-center gap-3 border-b border-subtle px-2 [contain-intrinsic-size:auto_3.5rem] [content-visibility:auto] md:h-11 md:min-h-0">
       {onKeyDown && (
         <Button
           variant="ghost"
@@ -244,33 +247,22 @@ function AlbumItem({
         className="size-11 md:size-7"
         letterClassName="text-small"
       />
-      <span className="flex min-w-0 flex-1 flex-col md:flex-row md:items-center md:gap-3">
+      <span className="flex min-w-0 flex-1 flex-col py-1.5 md:flex-row md:items-center md:gap-3 md:py-0">
         <span className="truncate text-fg-primary md:flex-1">{album.title}</span>
         <span className="truncate text-small text-fg-secondary md:w-1/3 md:text-base">
           {album.artistCredit}
         </span>
+        {links.length > 0 && (
+          <span className="text-small text-fg-tertiary md:hidden">
+            <ServiceNames title={album.title} links={links} focusable />
+          </span>
+        )}
       </span>
       <span className="hidden w-16 shrink-0 text-fg-secondary tabular-nums md:block">{shown}</span>
-      <OpenIn album={album} links={links} />
+      {/* The Services column, there without links too, so the columns line up. */}
+      <span className="hidden w-64 shrink-0 truncate text-fg-tertiary md:block">
+        <ServiceNames title={album.title} links={links} focusable />
+      </span>
     </li>
-  );
-}
-
-/** The service chooser (DS-25, FR-06.5): the album's services, each opening its app on desktop or its page. */
-function OpenIn({ album, links }: { album: Album; links: SharedSnapshot["links"] }) {
-  const [open, setOpen] = useState(false);
-  if (links.length === 0) return <span className="w-14 shrink-0" />;
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={<Button variant="ghost" size="sm" aria-label={`Open ${album.title} in…`} />}
-      >
-        <ExternalLink strokeWidth={1.5} aria-hidden />
-        Open
-      </PopoverTrigger>
-      <PopoverContent align="end" className="flex w-72 flex-col gap-2">
-        <ServiceChoices title={album.title} links={links} onClose={() => setOpen(false)} />
-      </PopoverContent>
-    </Popover>
   );
 }

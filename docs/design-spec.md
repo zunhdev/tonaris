@@ -1167,6 +1167,7 @@ The block never says "private" while another access path remains.
   - **Live:** the page reads again after each of the owner's saves.
   - **When access ends:** the page reads "Not available" and "No longer available. Its owner stopped sharing it with you, or moved it to Trash.", with a link to Shared with me.
   - **Shared with me's** available entries link here.
+- *As built in TON-127:* albums show their services as links, as on guest pages (DS-72), following the viewer's link setting.
 
 ---
 
@@ -1176,7 +1177,7 @@ The block never says "private" while another access path remains.
 
 - **Minimal header:** small Tonaris wordmark, container name (`text.display`), "Shared by {display name}", and description.
 - **Folders:** breadcrumbs plus child rows (DS-41).
-- **Lists:** album rows or grid with service chooser buttons.
+- **Lists:** album rows or grid, each album with its service links (TON-127).
 - **View options** apply for the visit only, with a note: "Your view settings aren't saved — sign in to keep them".
 - **Footer:** "Sign in". No search UI.
 - **Live updates** use the same subtle treatment (DS-82).
@@ -1207,6 +1208,14 @@ The block never says "private" while another access path remains.
 *As built in TON-126:*
 - **View options appear once the page is live,** in a space kept for them. The server renders the defaults, not the visit's view, and the controls can't work before then anyway.
 - **Grid cards keep their size** in Safari when the layout changes.
+
+*As built in TON-127:*
+- **Each album shows its services as links,** as the album list does (DS-21, DS-22): by name, underlined, with a ↗, in the link colour on hover. The Open button and its popover are gone.
+- **They take focus,** since a shared page has no `O` and no grid to keep it. A guest's open the service's page in a new tab with `rel="noopener noreferrer"`; a signed-in viewer's follow their link setting (TON-104).
+- **Where:**
+  - desktop rows have a Services column of 16 rem after the year, truncating;
+  - phone rows show them on a third line, under the artist, and grow to fit; rows without links stay 56px (DS-110);
+  - cards show them under the artist and year, wrapping, with each name whole.
 
 ---
 
