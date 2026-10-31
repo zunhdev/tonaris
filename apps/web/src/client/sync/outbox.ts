@@ -28,7 +28,7 @@ export type OutboxOptions = {
   /** Where entries are kept until answered; without it, a reload loses them. */
   persistence?: SyncPersistence;
   /** This tab, which owns new entries and adopts gone tabs' (TS-23). */
-  tab?: Pick<TabCoordinator, "id" | "adopt">;
+  tab?: Pick<TabCoordinator, "id" | "adopt" | "adoptWhenGone">;
   /** Delays between sends of an unanswered entry: full jitter up to an exponential cap. */
   backoff?: { minMs: number; maxMs: number };
   /**
@@ -130,11 +130,56 @@ export function createOutbox({
     });
   }
 
+  const inLane = (entry: OutboxEntry) => entry.lane === lane;
+
+  /** Under `id`'s lock, makes that gone tab's entries this tab's, adding them to `adopted`. */
+  async function takeOver(id: string, adopted: OutboxEntry[]): Promise<void> {
+    if (!persistence) return;
+    const theirs = (await persistence.entries()).filter(
+      (entry) => entry.tab === id && inLane(entry),
+    );
+    for (const entry of theirs) {
+      const mine = { ...entry, tab: owner };
+      // oxlint-disable-next-line no-await-in-loop
+      await persistence.putEntry(mine);
+      adopted.push(mine);
+    }
+  }
+
+  /** Sends adopted entries, oldest first, after the entry in flight, if any: it can't be called back. */
+  function sendAdopted(adopted: readonly OutboxEntry[]): void {
+    const at = sending ? 1 : 0;
+    for (const [offset, entry] of adopted.toSorted((a, b) => a.createdAt - b.createdAt).entries()) {
+      for (const { mutation } of entry.items) onState(mutation, "unconfirmed");
+      onAdopted(entry, queueEntry(entry, Promise.resolve(), at + offset));
+    }
+  }
+
+  /** The tabs whose lock this tab waits on, to adopt their entries the moment they go. */
+  const awaited = new Set<string>();
+
+  /**
+   * Waits on a tab that hasn't let go yet, such as a reload's old page, and adopts its entries the moment it does,
+   * rather than at the next look (TON-137).
+   */
+  function adoptWhenGone(id: string): void {
+    if (!tab || awaited.has(id)) return;
+    awaited.add(id);
+    const adopted: OutboxEntry[] = [];
+    tab
+      .adoptWhenGone(id, () => takeOver(id, adopted))
+      .then(() => {
+        if (!stopped) sendAdopted(adopted);
+        return undefined;
+      })
+      .catch(logError)
+      .finally(() => awaited.delete(id));
+  }
+
   /** Adopts the gone tabs' entries; `retry` counts the looks again so far. */
   async function adopt(retry: number): Promise<void> {
     if (!persistence || !tab || stopped) return;
     try {
-      const inLane = (entry: OutboxEntry) => entry.lane === lane;
       const gone = new Set(
         (await persistence.entries())
           .filter(inLane)
@@ -145,27 +190,13 @@ export function createOutbox({
       let held = false;
       for (const id of gone) {
         // oxlint-disable-next-line no-await-in-loop
-        const ran = await tab.adopt(id, async () => {
-          const theirs = (await persistence.entries()).filter(
-            (entry) => entry.tab === id && inLane(entry),
-          );
-          for (const entry of theirs) {
-            const mine = { ...entry, tab: owner };
-            // oxlint-disable-next-line no-await-in-loop
-            await persistence.putEntry(mine);
-            adopted.push(mine);
-          }
-        });
-        if (!ran) held = true;
+        const ran = await tab.adopt(id, () => takeOver(id, adopted));
+        if (!ran) {
+          held = true;
+          adoptWhenGone(id);
+        }
       }
-      // After the entry in flight, if any: it can't be called back.
-      const at = sending ? 1 : 0;
-      for (const [offset, entry] of adopted
-        .toSorted((a, b) => a.createdAt - b.createdAt)
-        .entries()) {
-        for (const { mutation } of entry.items) onState(mutation, "unconfirmed");
-        onAdopted(entry, queueEntry(entry, Promise.resolve(), at + offset));
-      }
+      sendAdopted(adopted);
       const delay = adoptRetriesMs[retry];
       if (held && delay !== undefined) setTimeout(() => void adopt(retry + 1), delay);
     } catch (error) {
@@ -199,8 +230,9 @@ export function createOutbox({
 
     /**
      * Takes over the entries of this account's gone tabs, oldest first, and sends them before anything not yet
-     * sent. Each gone tab is adopted under its lock, so no entry is adopted twice. A tab whose lock is still held is
-     * looked at again after `adoptRetriesMs`: it may be a reload's old page, not yet let go.
+     * sent. Each gone tab is adopted under its lock, so no entry is adopted twice. A tab whose lock is still held, such
+     * as a reload's old page not yet let go, is waited on and adopted the moment it goes, and looked at again after
+     * `adoptRetriesMs`.
      */
     adopt: () => adopt(0),
 

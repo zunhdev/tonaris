@@ -88,6 +88,8 @@ export function createSyncClient({
   let adopting: ReturnType<typeof setInterval> | undefined;
   engine.onLead(() => {
     void adopt();
+    // A tab can lead again after another took the lead from it (TON-137): one timer, not one per lead.
+    clearInterval(adopting);
     adopting = setInterval(() => void adopt(), adoptEveryMs);
   });
   const albums = createAlbumCollection({ engine, writer });

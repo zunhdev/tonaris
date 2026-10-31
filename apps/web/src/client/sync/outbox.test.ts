@@ -155,6 +155,34 @@ describe("adoption (TS-22, TS-23)", () => {
     expect(await persistence.entries()).toHaveLength(1);
   });
 
+  test("a tab still holding its lock is adopted the moment it lets go, without another look (TON-137)", async () => {
+    const browser = memoryBrowser();
+    const persistence = memoryPersistence();
+    const old = browser.tab("anna");
+    const a = item("A");
+    await persistence.putEntry({ id: uuidv7(), tab: old.id, createdAt: 1, items: [a] });
+    await Bun.sleep(1);
+
+    const adopted: OutboxEntry[] = [];
+    const { send, sends } = stubSend();
+    const outbox = createOutbox({
+      send,
+      persistence,
+      tab: browser.tab("anna"),
+      // No later looks: only the wait on its lock can adopt it.
+      adoptRetriesMs: [],
+      onAdopted: (entry) => adopted.push(entry),
+    });
+    await outbox.adopt();
+    await Bun.sleep(10);
+    expect(sends).toEqual([]);
+
+    old.close();
+    await Bun.sleep(10);
+    expect(sends.map((entry) => entry.items[0]?.key)).toEqual([a.key]);
+    expect(adopted).toHaveLength(1);
+  });
+
   test("a reloaded tab still letting go of its lock is adopted on a later look (TON-102)", async () => {
     const browser = memoryBrowser();
     const persistence = memoryPersistence();

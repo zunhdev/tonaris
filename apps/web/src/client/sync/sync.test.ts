@@ -19,7 +19,7 @@ import {
   type Mutation,
 } from "@tonaris/domain";
 
-import type { SyncClient } from "./client";
+import type { SyncClient, SyncClientOptions } from "./client";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
 import { resubmit, resubmitAll } from "./resubmit";
 import { memoryBrowser } from "./tabs";
@@ -30,7 +30,7 @@ let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(43);
+  server = await startApiServer(46);
 }, 30_000);
 
 afterAll(async () => {
@@ -377,12 +377,14 @@ async function openTab(
   account: number,
   browser: ReturnType<typeof memoryBrowser>,
   persistence: SyncPersistence,
+  { shown = () => true, ...options }: Partial<SyncClientOptions> & { shown?: () => boolean } = {},
 ): Promise<ReturnType<typeof testClient>> {
   const { id, sessions } = server.accounts[account] ?? { id: "", sessions: [] };
   const started = testClient(server, sessions[0] ?? "", {
-    tabs: browser.tab(id),
+    tabs: browser.tab(id, { shown }),
     persistence,
     adoptEveryMs: 50,
+    ...options,
   });
   open.push(started);
   await started.albums.preload();
@@ -580,6 +582,49 @@ describe("tabs sharing one stream (TS-23)", () => {
     await until(() => second.albums.has(args.id), 3_000, "the change after the handover");
     expect(second.engine.leading).toBe(true);
     expect(second.network.streamsOpened).toBe(1);
+  });
+
+  test("a shown tab takes the lead from a leader gone silent, as a suspended Chrome tab (TON-137)", async () => {
+    const browser = memoryBrowser();
+    // A tab that leads and then says nothing, holding the lock: Chrome suspended while the installed app is shown.
+    const asleep = browser.tab(server.accounts[43]?.id ?? "");
+    const asleepLead = await asleep.lead(new AbortController().signal);
+    const shown = await openTab(43, browser, memoryPersistence(), {
+      leaderSilenceMs: 300,
+      heartbeatMs: 100,
+    });
+    await until(() => shown.engine.leading, 3_000, "the shown tab to take the lead");
+    await until(() => shown.engine.status === "live", 3_000, "its stream to be live");
+    expect(asleepLead.aborted).toBe(true);
+    expect(shown.network.streamsOpened).toBe(1);
+
+    const args = album();
+    await postAs(43, { mutationId: uuidv7(), name: "album.create", args });
+    await until(() => shown.albums.has(args.id), 3_000, "changes to arrive");
+    asleep.close();
+  });
+
+  test("a hidden tab leaves a silent leader alone, and a leader that keeps its heartbeat keeps the lead", async () => {
+    const browser = memoryBrowser();
+    const asleep = browser.tab(server.accounts[44]?.id ?? "");
+    await asleep.lead(new AbortController().signal);
+    const hidden = await openTab(44, browser, memoryPersistence(), {
+      shown: () => false,
+      leaderSilenceMs: 200,
+    });
+    await Bun.sleep(600);
+    expect(hidden.engine.leading).toBe(false);
+    asleep.close();
+
+    const awake = memoryBrowser();
+    const persistence = memoryPersistence();
+    const leader = await openTab(45, awake, persistence, { heartbeatMs: 50 });
+    await until(() => leader.engine.leading, 3_000, "the first tab to lead");
+    const follower = await openTab(45, awake, persistence, { leaderSilenceMs: 300 });
+    await Bun.sleep(900);
+    expect(leader.engine.leading).toBe(true);
+    expect(follower.engine.leading).toBe(false);
+    expect(follower.engine.status).toBe("live");
   });
 
   test("a closed tab's write whose answer was lost is sent again by the next tab, and applied once", async () => {

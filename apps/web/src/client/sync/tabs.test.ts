@@ -1,5 +1,5 @@
-// The in-memory stand-in for a browser's tabs (TS-23), which the sync tests rely on: one leader at a time, messages
-// to the other tabs only, and adoption only from a tab that is gone. The browser tests cover the real one.
+// The in-memory stand-in for a browser's tabs (TS-23), which the sync tests rely on: one leader at a time, a lead that
+// can be taken (TON-137), messages to the other tabs only, and adoption only from a tab that is gone. The browser tests cover the real one.
 
 import { describe, expect, test } from "bun:test";
 
@@ -19,6 +19,30 @@ describe("memoryBrowser", () => {
     await Bun.sleep(10);
     expect(order).toEqual(["first", "second"]);
     second.close();
+  });
+
+  test("a steal takes the lead at once and ends the holder's, which then releases nothing (TON-137)", async () => {
+    const browser = memoryBrowser();
+    const [asleep, shown, waiting] = [
+      browser.tab("anna"),
+      browser.tab("anna"),
+      browser.tab("anna"),
+    ];
+    const asleepLead = await asleep.lead(new AbortController().signal);
+    const order: string[] = [];
+    void waiting.lead(new AbortController().signal).then(() => order.push("waiting"));
+    const shownLead = await shown.lead(new AbortController().signal, { steal: true });
+    await Bun.sleep(10);
+    expect(asleepLead.aborted).toBe(true);
+    expect(shownLead.aborted).toBe(false);
+    // The tab whose lead was taken releasing nothing, the waiting tab still waits for the new holder.
+    asleep.close();
+    await Bun.sleep(10);
+    expect(order).toEqual([]);
+    shown.close();
+    await Bun.sleep(10);
+    expect(order).toEqual(["waiting"]);
+    waiting.close();
   });
 
   test("sends a message to the account's other tabs, not to the sender or other accounts", async () => {

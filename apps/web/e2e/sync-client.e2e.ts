@@ -230,6 +230,48 @@ test("when the streaming tab closes, the other takes the stream over and misses 
   expect(await second.evaluate(() => window.tonarisSync?.engine.leading)).toBe(true);
 });
 
+test("a shown tab takes the stream from a leader gone silent, and never reads as offline (TON-137)", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(45_000);
+  await signIn(page, accounts.syncSuspended);
+  await live(page);
+  expect(await page.evaluate(() => window.tonarisSync?.engine.leading)).toBe(true);
+  const second = await context.newPage();
+  await second.goto("/c");
+  await live(second);
+  expect(await second.evaluate(() => window.tonarisSync?.engine.leading)).toBe(false);
+
+  // The leader stalls for 15 s, as when Android suspends Chrome while the installed app is on screen: it keeps its
+  // lock, and says nothing more.
+  const stalled = page.evaluate(() => {
+    const until = Date.now() + 15_000;
+    while (Date.now() < until) {
+      // Busy: this page's timers, messages and stream wait.
+    }
+  });
+
+  // Within the 10 s the leader may be silent, the shown tab takes the lead, before the 15 s that read as offline.
+  await expect
+    .poll(() => second.evaluate(() => window.tonarisSync?.engine.leading), { timeout: 14_000 })
+    .toBe(true);
+  await expect(second.locator('[data-slot="offline-banner"]')).toHaveCount(0);
+  const args = album("Blue Train");
+  const response = await second.request.post(`${apiUrl}/v1/mutations`, {
+    headers: { origin: webOrigin },
+    data: { mutationId: uuidv7(), name: "album.create", args },
+  });
+  expect(response.status()).toBe(200);
+  await expect
+    .poll(() => second.evaluate((id) => window.tonarisSync?.albums.has(id), args.id))
+    .toBe(true);
+
+  // Awake again, the old leader follows.
+  await stalled;
+  await expect.poll(() => page.evaluate(() => window.tonarisSync?.engine.leading)).toBe(false);
+});
+
 test("signing out with unsent changes asks first, and then clears the browser's data", async ({
   page,
 }) => {
