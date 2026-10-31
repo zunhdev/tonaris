@@ -63,6 +63,23 @@ describe("notifier (DS-108)", () => {
     expect(closed).toEqual([id]);
   });
 
+  test("a notice stays 8 s, and its action closes it (TON-129)", () => {
+    const { added, closed, manager } = recorder();
+    let viewed = 0;
+    const id = notifier(manager).notice('Denis shared "Metal" with you', {
+      label: "View",
+      onClick: () => {
+        viewed += 1;
+      },
+    });
+    expect(added[0]).toMatchObject({ timeout: 8_000, priority: "low" });
+    const [view] = added[0]?.data?.actions ?? [];
+    expect(view?.label).toBe("View");
+    view?.onClick();
+    expect(viewed).toBe(1);
+    expect(closed).toEqual([id]);
+  });
+
   test("information can offer one action, which closes its toast", () => {
     const { added, closed, manager } = recorder();
     let switched = 0;

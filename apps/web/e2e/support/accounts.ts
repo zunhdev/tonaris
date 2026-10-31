@@ -141,6 +141,9 @@ export const accounts = {
   invitingOwner: at("inviting-owner"),
   invitedAnna: at("invited-anna"),
   invitedBen: at("invited-ben"),
+  // A new invitation announced in the open app (invitations.e2e.ts, TON-129).
+  noticingOwner: at("noticing-owner"),
+  noticedViewer: at("noticed-viewer"),
   // Guest pages (guest.e2e.ts).
   guestOwner: at("guest-owner"),
   // Shared with me (shared-with-me.e2e.ts): an owner and a viewer.

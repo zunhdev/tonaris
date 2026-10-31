@@ -28,7 +28,7 @@ export function createToastManager() {
 }
 
 /** How long each kind of toast stays, in ms (DS-108). Problems stay until closed. */
-export const toastTimeouts = { info: 4_000, undo: 8_000 } as const;
+export const toastTimeouts = { info: 4_000, undo: 8_000, notice: 8_000 } as const;
 
 export type Notifier = ReturnType<typeof notifier>;
 
@@ -60,6 +60,29 @@ export function notifier(manager: Pick<ToastManager, "add" | "close">) {
                 ],
               },
             }),
+      });
+      return id;
+    },
+    /**
+     * News from someone else, with a way to it, such as a new invitation: gone after 8 s, like Undo, so there's time
+     * to take it. Taking the action closes the toast (TON-129).
+     */
+    notice(title: string, action: ToastAction): string {
+      const id: string = manager.add({
+        title,
+        timeout: toastTimeouts.notice,
+        priority: "low",
+        data: {
+          actions: [
+            {
+              label: action.label,
+              onClick: () => {
+                action.onClick();
+                manager.close(id);
+              },
+            },
+          ],
+        },
       });
       return id;
     },
