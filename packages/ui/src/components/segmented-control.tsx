@@ -15,6 +15,7 @@ function SegmentedControl<Value extends string>({
   onValueChange,
   options,
   disabled,
+  size = "default",
   className,
   ...labelling
 }: {
@@ -22,6 +23,8 @@ function SegmentedControl<Value extends string>({
   onValueChange: (value: Value) => void;
   options: readonly SegmentedOption<Value>[];
   disabled?: boolean;
+  /** `touch` for a phone: 40 px options in the base size, so the control is a 44 px target (DS-110). */
+  size?: "default" | "touch";
   className?: string;
 } & ({ "aria-label": string } | { "aria-labelledby": string })) {
   return (
@@ -40,7 +43,10 @@ function SegmentedControl<Value extends string>({
         <Radio.Root
           key={option.value}
           value={option.value}
-          className="flex h-6 min-w-0 flex-1 cursor-default items-center justify-center gap-1.5 rounded-sm px-2 text-small font-medium whitespace-nowrap text-fg-secondary transition-colors duration-100 ease-enter outline-none select-none hover:text-fg-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid data-checked:bg-selected data-checked:text-fg-primary data-disabled:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0"
+          className={cn(
+            "flex h-6 min-w-0 flex-1 cursor-default items-center justify-center gap-1.5 rounded-sm px-2 text-small font-medium whitespace-nowrap text-fg-secondary transition-colors duration-100 ease-enter outline-none select-none hover:text-fg-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid data-checked:bg-selected data-checked:text-fg-primary data-disabled:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
+            size === "touch" && "h-10 text-base",
+          )}
         >
           {option.label}
         </Radio.Root>
