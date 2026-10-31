@@ -1,6 +1,7 @@
 // Sharing invitations in a real browser (DS-31, DS-65, DS-66; FR-07.5, FR-07.6; AC-22): the email in Mailpit linking
 // to its page, its delivery in the owner's dialog, the recipient's sidebar count, accepting from the email, declining
-// from the inbox, the page for an answered invitation and for someone else, and the owner removing access.
+// from the inbox, the page for an answered invitation and for someone else, and the owner removing access. A new one
+// is announced in the open app, once (TON-129).
 
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
@@ -9,7 +10,7 @@ import { uuidv7, type Container } from "@tonaris/domain";
 import { accounts, apiUrl } from "./support/accounts";
 import { clearInbox, latestEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
-import { insert, live, saved, violations, webOrigin } from "./support/workspace";
+import { insert, live, saved, toasts, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -139,4 +140,52 @@ test("an invitation is emailed, accepted from its link, and another declined fro
   await expect(people).toHaveCount(0);
   await anna.goto(`/invitations/${doomGrant}`);
   await expect(anna.getByRole("main")).toContainText("This invitation is no longer available.");
+});
+
+test("a new invitation is announced in the open app, once, and several together", async ({
+  page,
+  browser,
+}) => {
+  const viewer = await signedIn(browser, accounts.noticedViewer);
+  await signIn(page, accounts.noticingOwner);
+  await live(page);
+  const [doom, sludge, crust] = [list("Doom"), list("Sludge"), list("Crust")];
+  await insert(page, doom, sludge, crust);
+  await saved(page);
+  await send(page, "account.setDisplayName", { displayName: "Denis" });
+  const doomGrant = uuidv7();
+  await send(page, "share.invite", {
+    grantId: doomGrant,
+    containerId: doom.id,
+    email: accounts.noticedViewer,
+  });
+
+  // The open app notices it when the window regains focus, as it does every minute, and announces it.
+  await viewer.evaluate(() => globalThis.dispatchEvent(new Event("focus")));
+  const announced = toasts(viewer).filter({ hasText: 'Denis shared "Doom" with you' });
+  await expect(announced).toBeVisible();
+  await announced.getByRole("button", { name: "View" }).click();
+  await expect(viewer).toHaveURL(`/invitations/${doomGrant}`);
+  await expect(announced).toHaveCount(0);
+
+  // Once on the device: not again after a reload.
+  await viewer.goto("/c");
+  await live(viewer);
+  await expect(invitationsItem(viewer)).toContainText("1");
+  await expect(toasts(viewer).filter({ hasText: "with you" })).toHaveCount(0);
+
+  // Several at once come together.
+  for (const each of [sludge, crust]) {
+    // oxlint-disable-next-line no-await-in-loop
+    await send(page, "share.invite", {
+      grantId: uuidv7(),
+      containerId: each.id,
+      email: accounts.noticedViewer,
+    });
+  }
+  await viewer.evaluate(() => globalThis.dispatchEvent(new Event("focus")));
+  const several = toasts(viewer).filter({ hasText: "2 new invitations" });
+  await expect(several).toBeVisible();
+  await several.getByRole("button", { name: "View" }).click();
+  await expect(viewer).toHaveURL("/invitations");
 });

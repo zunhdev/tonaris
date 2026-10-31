@@ -1114,6 +1114,12 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Answering** is online-only: offline, the buttons are disabled.
 - **The email** reads: subject "Denis invited you to view "Doom" on Tonaris"; text "Denis invited you to view the list "Doom" on Tonaris. Open the invitation to accept or decline it:", the link, then "You'll be asked to sign in with this address. The link works only for you: forwarding it gives no one access."
 
+*As built in TON-129* (from the creator's manual testing; the creator chose this, 31 October 2026): **a new invitation is announced in the open app.**
+- **A notice** (DS-108) reads "Denis shared "Doom" with you", with **View**, which opens the invitation. Several found together read "2 new invitations", with **View** opening the inbox.
+- **When:** as the sidebar's Invitations notices them, on load, when the window regains focus, and every minute, so up to a minute late. Another account's invitation can't reach this client's stream.
+- **Once per device:** each pending invitation is announced once, those found on load included. On the Invitations pages, new ones are already in view and aren't announced.
+- The email and the sidebar's Invitations stay as they were.
+
 **DS-67 Shared with me.** The sidebar section and `/shared` index group references by owner display name.
 - **Context menu:** **Leave share…** for invitation-based references, with a small confirmation explaining that the owner must re-invite you; **Remove from Shared with me** for link references.
 - **Inaccessible references:** shown dimmed with "No longer available" and **Remove**.
@@ -1801,6 +1807,8 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
   - **undo**, gone after 8 s. Its **Undo** undoes and closes it;
   - **problem**, which stays until closed and is announced as an alert.
 - **Reachable from Activity.** Only problems persist, and what each reports (a failure, a conflict, a batch report) is always in Activity.
+
+*As built in TON-129:* a fourth kind, **notice**, for news from someone else with a way to it, such as a new invitation (DS-66). It stays 8 s, like Undo, so there's time to take its action, which closes it. It is polite, like information.
 
 *(FR-13.3)*
 
