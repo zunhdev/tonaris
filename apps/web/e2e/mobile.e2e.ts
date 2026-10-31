@@ -1,7 +1,8 @@
 // DS-110's mobile web on the phone profiles (TON-103; AC-42, Q-03): `iphone` (WebKit) and `pixel` (Chromium) run
 // this file alone. A phone browses by drilling down: a top bar with Back, the name, Search and Account; the root's
 // folders and lists, then Unsorted; Mine and Shared switching the root (TON-134); 56 px album rows; an album in a
-// read-only sheet with its links; view options in a bottom sheet; and Trash and custom fields left to the desktop.
+// read-only sheet with its links; view options in a bottom sheet; Trash and custom fields left to the desktop; and
+// pull to refresh in an iPhone Home Screen app (TON-139).
 
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
@@ -229,4 +230,50 @@ test("Mine and Shared switch the Collection screen, and Back from a share return
   await page.getByRole("radio", { name: "Mine" }).click();
   await expect(page).toHaveURL(/\/c$/);
   await expect(page.getByRole("navigation", { name: "More" })).toBeVisible();
+});
+
+test("in an iPhone Home Screen app, pulling down at the top shows a spinner, and far enough reloads", async ({
+  page,
+}) => {
+  test.skip(
+    test.info().project.name !== "pixel",
+    "the touch drag uses Chromium's DevTools protocol",
+  );
+  await signIn(page, accounts.phonePull);
+  await live(page);
+  const spinner = page.locator('[data-slot="pull-to-refresh"]');
+  const cdp = await page.context().newCDPSession(page);
+  const touch = (type: "touchStart" | "touchMove" | "touchEnd", y: number) =>
+    cdp.send("Input.dispatchTouchEvent", {
+      type,
+      touchPoints: type === "touchEnd" ? [] : [{ x: 180, y }],
+    });
+
+  // In a browser, the browser's own pull applies: Tonaris adds none.
+  await touch("touchStart", 200);
+  await touch("touchMove", 400);
+  await expect(spinner).toHaveCount(0);
+  await touch("touchEnd", 400);
+
+  // As a Home Screen app, which only iOS marks with `navigator.standalone`.
+  await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }));
+  await page.reload();
+  await live(page);
+  await page.evaluate(() => Object.assign(window, { beforePull: true }));
+
+  // A short pull brings the spinner, and letting go springs it back without reloading.
+  await touch("touchStart", 200);
+  await touch("touchMove", 260);
+  await expect(spinner).toBeVisible();
+  await touch("touchEnd", 260);
+  await expect(spinner).toHaveCount(0);
+  expect(await page.evaluate(() => "beforePull" in window)).toBe(true);
+
+  // A pull past the threshold reloads.
+  await touch("touchStart", 200);
+  await touch("touchMove", 300);
+  await touch("touchMove", 360);
+  await Promise.all([page.waitForEvent("load"), touch("touchEnd", 360)]);
+  await live(page);
+  expect(await page.evaluate(() => "beforePull" in window)).toBe(false);
 });

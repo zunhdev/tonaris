@@ -33,6 +33,7 @@ import type { Account } from "@tonaris/domain";
 
 import { inspectorLayout, sidebarLayout } from "./device";
 import { pageTitleId } from "./page-header";
+import { PullToRefresh } from "./pull-to-refresh";
 import { ShellContext, type ShellControl } from "./shell-context";
 import { ShortcutReference } from "./shortcut-reference";
 import { Sidebar } from "./sidebar";
@@ -172,6 +173,7 @@ export function Shell({ account, children }: { account: Account; children: React
       <MoveDialog />
       <ShareDialog />
       <InvitationToasts accountId={account.id} />
+      {narrow && <PullToRefresh />}
       <DeleteFolderDialog />
       <DeleteAlbumDialog />
       <AddToListDialog />
