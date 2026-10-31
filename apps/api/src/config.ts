@@ -4,6 +4,8 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { feedbackProviderKey } from "@tonaris/domain";
+
 export type ApiConfig = {
   port: number;
   /** The API's own origin, `https://api.tonaris.<tld>` (TS-08): Better Auth's base URL. */
@@ -48,6 +50,11 @@ export type ApiConfig = {
    * Tonaris. Unset, YouTube Music links are identified by MusicBrainz's URL lookup alone.
    */
   youtubeApiKey: string | undefined;
+  /**
+   * The feedback board's sign-in client (FR-11.15, TS-61): the callback URL Fider shows for Tonaris's provider, and
+   * the secret both sides share. Unset, the board's client is disabled.
+   */
+  feedback: { callbackUrl: string; clientSecret: string } | undefined;
   /**
    * The commit this build is, when the host says (`GIT_COMMIT`, or Render's `RENDER_GIT_COMMIT`): `/v1/health`
    * names it, and the web app's deploy waits until the API runs its own commit (TS-01).
@@ -122,6 +129,7 @@ export function apiConfig(env: Env = process.env): ApiConfig {
         ? { clientId: env.SPOTIFY_CLIENT_ID, clientSecret: env.SPOTIFY_CLIENT_SECRET }
         : undefined,
     youtubeApiKey: env.YOUTUBE_API_KEY || undefined,
+    feedback: feedbackClient(env, production),
     commit: env.GIT_COMMIT || env.RENDER_GIT_COMMIT || undefined,
   };
 }
@@ -141,6 +149,30 @@ function origin(name: string, url: string, production: boolean): string {
     throw new Error(`${name} must use https in production: "${url}".`);
   }
   return parsed.origin;
+}
+
+/** At least 256 bits, as `openssl rand -base64 32` gives. */
+const minFeedbackSecretLength = 32;
+
+/** The board's client, from both of its variables or neither: one alone is a mistake, so start-up fails. */
+function feedbackClient(env: Env, production: boolean): ApiConfig["feedback"] {
+  const callbackUrl = env.FEEDBACK_CALLBACK_URL || undefined;
+  const clientSecret = env.FEEDBACK_CLIENT_SECRET || undefined;
+  if (!callbackUrl && !clientSecret) return undefined;
+  if (!callbackUrl || !clientSecret) {
+    throw new Error("Set both FEEDBACK_CALLBACK_URL and FEEDBACK_CLIENT_SECRET, or neither.");
+  }
+  if (!feedbackProviderKey(callbackUrl) || (production && !callbackUrl.startsWith("https:"))) {
+    throw new Error(
+      `FEEDBACK_CALLBACK_URL must be the callback URL Fider shows for Tonaris's provider, such as https://login.fider.io/oauth/_k3j9x0q2ab/callback, not "${callbackUrl}".`,
+    );
+  }
+  if (clientSecret.length < minFeedbackSecretLength) {
+    throw new Error(
+      `FEEDBACK_CLIENT_SECRET must be at least ${minFeedbackSecretLength} characters, such as the output of \`openssl rand -base64 32\`.`,
+    );
+  }
+  return { callbackUrl, clientSecret };
 }
 
 function parentDomain(webOrigin: string): string | undefined {

@@ -5,7 +5,7 @@
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { accounts, apiUrl, creatorState } from "./e2e/support/accounts";
+import { accounts, apiUrl, creatorState, feedbackBoard } from "./e2e/support/accounts";
 
 const port = 3100;
 
@@ -64,7 +64,12 @@ export default defineConfig({
       command: `bun --bun vite build && bun --bun vite preview --port ${port} --strictPort`,
       url: `http://localhost:${port}/sign-in`,
       // The production build, with the sync client exposed to the tests (src/config.ts).
-      env: { API_URL: apiUrl, TEST_HOOKS: "1" },
+      env: {
+        API_URL: apiUrl,
+        TEST_HOOKS: "1",
+        FEEDBACK_URL: feedbackBoard.url,
+        FEEDBACK_CALLBACK_URL: feedbackBoard.callbackUrl,
+      },
       timeout: 120_000,
     },
   ],

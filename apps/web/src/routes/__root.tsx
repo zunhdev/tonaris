@@ -1,7 +1,16 @@
 // The document every route renders into. Workspace routes are client-only, but the server still sends this
 // shell, so even their first paint is dark (DS-11) and styled.
 
-import { apiUrl, apiUrlMeta, sentryDsn, sentryDsnMeta, testHooks, testHooksMeta } from "@/config";
+import {
+  apiUrl,
+  apiUrlMeta,
+  feedbackUrl,
+  feedbackUrlMeta,
+  sentryDsn,
+  sentryDsnMeta,
+  testHooks,
+  testHooksMeta,
+} from "@/config";
 import { createRootRoute, HeadContent, Link, Scripts, useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
@@ -25,6 +34,8 @@ export const Route = createRootRoute({
       { name: apiUrlMeta, content: apiUrl },
       // Sentry's key, when errors are reported (src/observability.ts, TS-115).
       ...(sentryDsn ? [{ name: sentryDsnMeta, content: sentryDsn }] : []),
+      // The feedback board's sign-in link, when there is a board (FR-11.15).
+      ...(feedbackUrl ? [{ name: feedbackUrlMeta, content: feedbackUrl }] : []),
       ...(testHooks ? [{ name: testHooksMeta, content: "on" }] : []),
     ],
     links: [

@@ -18,7 +18,7 @@ Tonaris SHALL serve one MCP server at the API's `/mcp`, through which Claude web
 - **THEN** it is served and lists the tools
 
 ### Requirement: Clients register by metadata document, with a limited fallback
-The authorization server SHALL accept clients identified by a Client ID Metadata Document (CIMD), with token authentication `none` or `private_key_jwt`, fetching each document from public addresses only (FR-10.1). It SHALL keep dynamic client registration (DCR) as the fallback, limited to 10 registrations per IP address an hour, as the creator decided on 29 October 2026. It SHALL issue tokens only through the authorization-code grant with PKCE, and refresh tokens, never client credentials.
+The authorization server SHALL accept clients identified by a Client ID Metadata Document (CIMD), with token authentication `none` or `private_key_jwt`, fetching each document from public addresses only (FR-10.1). It SHALL keep dynamic client registration (DCR) as the fallback, limited to 10 registrations per IP address an hour (decided 29 October 2026). AI clients SHALL get tokens only through the authorization-code grant with PKCE, and refresh tokens, never client credentials.
 
 #### Scenario: A CIMD client
 - **WHEN** a client whose ID is the URL of its metadata document starts an authorization

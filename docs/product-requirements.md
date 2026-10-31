@@ -718,6 +718,12 @@ Other users' collections are untouched, and their references to the deleted cont
 
 **FR-11.14 Terms of use and privacy notice.** Tonaris publishes terms of use and a privacy notice, public and always reachable: from the sign-in pages, shared pages, and the account menu. They name zunh.dev as who runs Tonaris, with the support address (decided 31 October 2026). As YouTube's Developer Policies require, the terms bind people to YouTube's Terms of Service, and the notice says Tonaris uses YouTube API Services and links Google's Privacy Policy. Joining says that continuing agrees to both, and the account records the version agreed to. A member who hasn't agreed to the current version, such as one who joined before, agrees on a one-time screen before reaching their collection, or signs out. YouTube's API is read only for members who agreed (TON-131).
 
+**FR-11.15 Feedback board.** Members send feedback and feature requests to a public board, where anyone can read, discuss and vote on requests (decided 1 November 2026, TON-132, TON-144).
+
+- The board is a Fider Cloud site at `feedback.tonaris.app`, on its free plan. The account menu opens it in a new tab, and a member arrives signed in through Tonaris, with no other account.
+- Only members post, vote and comment. The board receives a member's display name and email address, and shows the name, never the email.
+- The creator plans a request as an issue that links to its post, and marks the post Planned, Started or Completed.
+
 ### FR-12 — Search
 
 **FR-12.1 Scope.** Signed-in users search their active owned collection, including Unsorted, and eligible shared content (FR-12.3). Trash is browsed, not searched. Global search requires sign-in; search within a guest share is not required. App and MCP search use the same scope, matched fields, and matching rules.
@@ -1105,6 +1111,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (31 October 2026), YouTube Music** (TON-128), from the creator's manual testing: YouTube Music is a fifth launch service. Its links are identified by MusicBrainz's URL lookup, then by transient hints from the YouTube Data API, never from its pages, which YouTube's terms forbid reading automatically ([YouTube Music spike](spikes/2026-10-31-g1-youtube-music.md)). The API needs a key in production, and users must agree to a privacy notice that says Tonaris uses YouTube API Services. Built in TON-131. **Updated** section 2.5.
 - **Decisions (31 October 2026), terms of use and privacy notice** (TON-131): YouTube's Developer Policies require terms that bind users to YouTube's Terms of Service and a privacy notice users agree to, and Tonaris had neither. The creator chose to build both with YouTube Music; that the notice names zunh.dev; and that joining's "By continuing, you agree…" line plus a one-time screen for earlier members is the agreement. **Added** FR-11.14; **updated** FR-02.1, FR-02.3, FR-10.5 and AC-06.
 - **Decision (31 October 2026), your streaming services** (TON-138), from the creator's manual testing: each person turns services on or off in Settings, and the album panel and New album show link fields only for those that are on. Saved links always show. **Updated** FR-06.3.
+- **Decision (1 November 2026), a feedback board** (TON-132), from the creator's manual testing: members reach a public feedback board from the account menu, signed in through Tonaris. It is Fider Cloud's free plan, which receives their name and email so it can tell them about replies, and requests reach planning by hand. **Added** FR-11.15.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);

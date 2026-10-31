@@ -8,6 +8,7 @@ import { createDatabase, ledgerStore } from "@tonaris/db";
 import { accountDeletionJob } from "./account-deletion";
 import { createApp, maxRequestBodySize } from "./app";
 import { createAuth } from "./auth/auth";
+import { syncFeedbackClient } from "./auth/feedback";
 import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
 import { emailTransport } from "./email/transport";
@@ -36,6 +37,8 @@ const worker = startJobWorker(
 );
 const email = emailOutbox(db, worker.wake);
 const auth = createAuth({ config, db, email, logError: reportError });
+// The feedback board's sign-in client, as FEEDBACK_CALLBACK_URL and FEEDBACK_CLIENT_SECRET say (TON-144).
+await syncFeedbackClient(db, config.feedback);
 const providers = createProviders(config, db, hub);
 const app = createApp({
   config,

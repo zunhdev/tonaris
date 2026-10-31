@@ -20,6 +20,8 @@ test("the terms and the privacy notice are public, linked from sign-in, and say 
   const notice = page.getByRole("main", { name: "Privacy notice" });
   await expect(notice.getByText(/run by zunh\.dev/)).toBeVisible();
   await expect(notice.getByText(/uses YouTube API Services/)).toBeVisible();
+  // The feedback board's service, and what it receives (TON-144).
+  await expect(notice.getByText(/runs on Fider/)).toBeVisible();
   await expect(notice.getByRole("link", { name: "Google Privacy Policy" })).toHaveAttribute(
     "href",
     "https://policies.google.com/privacy",

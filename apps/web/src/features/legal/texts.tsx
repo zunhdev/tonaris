@@ -187,6 +187,15 @@ export function PrivacyText({ support }: { support: string | undefined }) {
           </li>
         </ul>
       </Section>
+      <Section title="The feedback board">
+        <p>
+          Tonaris's feedback board, at feedback.tonaris.app, runs on Fider, a service of Northern
+          App Labs. If you sign in to it with Tonaris, it receives your display name and email
+          address. Anyone can read what you post and comment there, with your name but never your
+          email. Deleting your Tonaris account doesn't remove them: delete them, or your account
+          there, in the board's settings.
+        </p>
+      </Section>
       <Section title="Where album details come from">
         <p>
           When you add a link, Tonaris's server asks MusicBrainz and the Cover Art Archive about the

@@ -1184,6 +1184,12 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
   | Access | 1 h | |
   | Refresh | 30 d | Rotating; reuse detection revokes the grant |
 
+- *As built in TON-144* (decided 1 November 2026, [feedback board spike](spikes/2026-11-01-feedback-board.md)): **the feedback board is a client too** (FR-11.15). Fider, at `feedback.tonaris.app`, signs people in through this server ("Sign in with Tonaris").
+  - **Its client** is `feedback-board`, written at start-up from `FEEDBACK_CALLBACK_URL` and `FEEDBACK_CLIENT_SECRET` (`syncFeedbackClient()`; `saveFirstPartyClient()` in `packages/db`). It is confidential (`client_secret_basic`), uses the authorization code only, skips consent, and doesn't require PKCE, since Fider sends no verifier. Its one redirect is Fider's callback. Without the settings, it is disabled.
+  - **It may ask only for `openid email`.** These identity scopes are in `scopes`, but registered and discovered clients get MCP's (`clientRegistrationDefaultScopes`), and discovery advertises only MCP's, so no AI client can ask for them.
+  - **Userinfo** (`GET /auth/oauth2/userinfo`, now served) answers only the board's tokens (`customUserInfoClaims`), with `sub`, `email` and `name`: the display name, or "Tonaris member", never the start of the email. Better Auth's `profile` scope isn't used, because it derives given and family names from a name a person may not have.
+  - **Its tokens** are opaque and bound to no resource, so `/mcp` refuses them, and `/v1` refuses every bearer token. Skipping consent records no grant, so the board isn't a connection in Settings.
+
 **TS-62 Enforcement (Decided; FR-10.3, X-03).** The grant's `mode` is checked in the domain layer for every command. An MCP request's mode is what both its token and its grant allow, so consenting again in a narrower mode also narrows tokens issued before:
 
 - Read-only grants can only call queries.
@@ -1461,6 +1467,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Gates:** the web workspace shows the agreement screen instead of the collection until `termsAgreed`; nothing of the sync client starts behind it. Capture reads YouTube's API only when `agreedToTerms(owner, termsVersion)` (TS-41), which covers agents' captures through MCP too.
 - **Tests:** the browser-test API marks every seeded account as agreed, except addresses starting `unagreed-`.
 - *Since TON-143:* the privacy notice describes passkeys and their 5-minute challenge cookie, which the sign-in page's autofill sets on every visit, so the version moved to `2026-11-01`, the day it ships. Members agree once more (decided 31 October 2026).
+- *Since TON-144:* the privacy notice describes the feedback board, so the version is `2026-11-02`, a day after TON-143's, which was already today's date. Members agree once more, as TS-134 asks of any change to the texts.
 
 ---
 
@@ -1713,6 +1720,7 @@ There is no resizing in v1.
   - the image-proxy HMAC key
   - the backup encryption public key (the private key is held offline by the creator)
   - provider credentials: `YOUTUBE_API_KEY`, the YouTube Data API key for YouTube Music's hints (TS-41; decided 31 October 2026, built in TON-131), restricted to that API. Optional: unset, YouTube Music links use MusicBrainz alone.
+  - `FEEDBACK_CLIENT_SECRET`, the feedback board's client secret, at least 32 characters, shared with Fider's provider form (TS-61; built in TON-144). It goes with `FEEDBACK_CALLBACK_URL`, both or neither, or the API refuses to start. The Fider site belongs to `dev@tonaris.app`.
 - **Provider accounts with account-wide risk are Tonaris's own** (decided 31 October 2026, TON-128): a key, project or developer app whose misuse could lead a provider to close the whole account belongs to an account used only for Tonaris, never the creator's personal one. `YOUTUBE_API_KEY` comes from a Google account on `dev@tonaris.app` ([deploy guide](deploy.md#youtube-music)).
 - Rotation is documented, and secrets are rotated after any restore drill that exposed them.
 

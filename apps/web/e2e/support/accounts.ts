@@ -4,6 +4,13 @@
 
 export const apiUrl = "http://localhost:3101";
 
+/** The feedback board the web app is configured with (FR-11.15): the test stands it in (feedback.e2e.ts). */
+export const feedbackBoard = {
+  url: "https://feedback.e2e.tonaris.test",
+  provider: "_e2eboard01",
+  callbackUrl: "https://login.fider.test/oauth/_e2eboard01/callback",
+};
+
 const at = (name: string) => `${name}@e2e.tonaris.test`;
 
 export const accounts = {

@@ -2,6 +2,8 @@
 // The server takes `API_URL` (default: the local API that `bun dev` starts, TS-06) and renders it into every page
 // (`apiUrlMeta`, in the root route's head); the browser reads it back from there.
 
+import { feedbackSignInUrl } from "@tonaris/domain";
+
 const localApiUrl = "http://localhost:3001";
 
 /** The `<meta>` the root route renders, so the browser learns the API origin the server was given. */
@@ -44,6 +46,24 @@ function readSentryDsn(): string | undefined {
 
 /** Where the browser reports errors (TS-115); undefined keeps them in the browser's console. */
 export const sentryDsn: string | undefined = readSentryDsn();
+
+/** The `<meta>` carrying where the account menu opens the feedback board (FR-11.15, TON-144). */
+export const feedbackUrlMeta = "tonaris:feedback-url";
+
+function readFeedbackUrl(): string | undefined {
+  if (typeof document === "undefined") {
+    return feedbackSignInUrl(process.env.FEEDBACK_URL, process.env.FEEDBACK_CALLBACK_URL);
+  }
+  return (
+    document.querySelector<HTMLMetaElement>(`meta[name="${feedbackUrlMeta}"]`)?.content || undefined
+  );
+}
+
+/**
+ * Fider's sign-in route for Tonaris's provider on the board, from `FEEDBACK_URL` (the board's address) and
+ * `FEEDBACK_CALLBACK_URL` (the API's too); undefined hides the menu item.
+ */
+export const feedbackUrl: string | undefined = readFeedbackUrl();
 
 /**
  * The `<meta>` that switches on hooks for the browser tests (TS-121): the root route renders it only when the

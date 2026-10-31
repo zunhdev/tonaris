@@ -38,6 +38,7 @@ export {
   type Member,
   type UserRole,
 } from "./accounts";
+export { feedbackProviderKey, feedbackSignInUrl } from "./feedback";
 export {
   defaultPasskeyName,
   passkeyName,

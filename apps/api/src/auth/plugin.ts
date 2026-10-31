@@ -12,8 +12,8 @@ import type { Auth } from "./auth";
 import type { SignInLimiter } from "./sign-in-limits";
 
 /**
- * The only Better Auth endpoints the API serves: what sign-in and the OAuth authorization server for MCP need
- * (TS-61), and nothing else, so no upgrade or plugin exposes more (such as `/update-user`, which would change
+ * The only Better Auth endpoints the API serves: what sign-in, the OAuth authorization server for MCP (TS-61) and
+ * the feedback board's sign-in need, and nothing else, so no upgrade or plugin exposes more (such as `/update-user`, which would change
  * the display name around /v1, or the JWT plugin's `/token`, which would sign a session).
  */
 const exposedEndpoints = new Set([
@@ -34,6 +34,8 @@ const exposedEndpoints = new Set([
   "POST /auth/oauth2/revoke",
   "POST /auth/oauth2/register",
   "GET /auth/jwks",
+  // The feedback board's sign-in reads the person's ID, name and email here (TON-144); no other client may.
+  "GET /auth/oauth2/userinfo",
   // The consent page (DS-85): the client's public details, and the person's decision.
   "GET /auth/oauth2/public-client",
   "POST /auth/oauth2/consent",
