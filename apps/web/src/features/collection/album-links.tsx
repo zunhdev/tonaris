@@ -1,9 +1,10 @@
 // The inspector's Links section (DS-46; FR-06.2, FR-06.3): the album's link for each service it has one for, each
-// opening that service, in its app on desktop (FR-06.6, TON-104). In Editing mode every service has a row:
-// a linked one offers Replace and Remove, the others Add. Replace and Add open a field that saves on Enter or when
-// left and discards on Escape, checked first as the server will read it (TS-40), so a refused link stays with its
-// reason and nothing is sent. Remove applies at once, with Undo (DS-50). Each link shows its save state (DS-80). A
-// link capture kept instead of a pasted one shows the pasted one, for an explicit Replace (FR-06.4, TON-45).
+// opening that service, in its app on desktop (FR-06.6, TON-104), styled as a link with a ↗ (TON-123). In Editing
+// mode every service has a row: a linked one offers Replace and Remove, the others Add. Replace and Add open a field
+// that saves on Enter or when left and discards on Escape, checked first as the server will read it (TS-40), so a
+// refused link stays with its reason and nothing is sent. Remove applies at once, with Undo (DS-50). Each link shows
+// its save state (DS-80). A link capture kept instead of a pasted one shows the pasted one, for an explicit Replace
+// (FR-06.4, TON-45).
 
 import { useCapture, type KeptLink } from "@/features/capture/capture-context";
 import { ServiceAnchor } from "@/features/open/service-anchor";
@@ -12,7 +13,7 @@ import { useNotify } from "@/features/sync/notify";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
-import { ExternalLink } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
 import {
@@ -166,11 +167,15 @@ function LinkRow({
         <ServiceAnchor
           link={link}
           title={link.url}
-          className="flex min-w-0 flex-1 items-center gap-1 text-fg-primary underline-offset-4 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+          className="group/link flex min-w-0 flex-1 items-center gap-0.5 text-accent-solid outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
         >
           <span className="sr-only">Open in {name}: </span>
-          <span className="truncate">{shownUrl(link.url)}</span>
-          <ExternalLink aria-hidden strokeWidth={1.5} className="size-3.5 shrink-0" />
+          {/* Tonaris's link style, with an underline that firms up on hover (TON-123). */}
+          <span className="truncate underline decoration-accent-solid/35 underline-offset-4 group-hover/link:decoration-accent-solid">
+            {shownUrl(link.url)}
+          </span>
+          {/* It opens outside Tonaris: in the service's app, or its page in a new tab (FR-06.6). */}
+          <ArrowUpRight aria-hidden strokeWidth={2} className="size-3.5 shrink-0" />
         </ServiceAnchor>
       ) : (
         <span className="flex-1 text-fg-tertiary">—</span>
