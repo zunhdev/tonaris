@@ -1,5 +1,5 @@
 // The sign-in email change's storage (FR-11.4, TS-73) against the local Postgres 18: one change per account,
-// wrong, expired and used-up codes, the two steps, and the swap with its sessions and audit log.
+// wrong, expired and used-up codes, the two steps, and the swap with its sessions and audit log. Passkeys stay.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
@@ -10,8 +10,8 @@ import {
   startEmailChange,
   submitEmailChangeCode,
 } from "./email-changes";
-import { auditLog, sessions, users } from "./schema";
-import { createTestDatabase, type TestDatabase } from "./testing";
+import { auditLog, passkeys, sessions, users } from "./schema";
+import { createTestDatabase, insertPasskey, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
 let anna: string;
@@ -100,9 +100,10 @@ describe("codes", () => {
 });
 
 describe("the two steps and the swap", () => {
-  test("the current code moves on; the new code swaps, ends only other sessions, and records it", async () => {
+  test("the current code moves on; the new code swaps, ends only other sessions, keeps passkeys, and records it", async () => {
     const here = await session();
     const elsewhere = await session();
+    const passkey = await insertPasskey(t.db, anna);
     await start();
     const advanced = await submit("111111", { sessionId: here });
     expect(advanced).toMatchObject({ outcome: "advanced", change: { stage: "new" } });
@@ -115,6 +116,8 @@ describe("the two steps and the swap", () => {
     });
     expect(await emailOf(anna)).toBe("anna@new.example");
     expect((await t.db.select().from(sessions)).map((each) => each.id)).toEqual([here]);
+    // The person proved both addresses, so their passkeys keep working (TON-143).
+    expect((await t.db.select().from(passkeys)).map((each) => each.id)).toEqual([passkey]);
     expect(await t.db.select().from(auditLog)).toEqual([
       expect.objectContaining({
         actor: anna,

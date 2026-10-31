@@ -25,6 +25,7 @@ import {
   oauthAccessTokens,
   oauthConsents,
   oauthRefreshTokens,
+  passkeys,
   positions,
   savedReferences,
   sessions,
@@ -49,8 +50,8 @@ export const deletionChunkSize = 500;
  * already being deleted; otherwise answers "started", with the job queued on the same transaction.
  */
 /**
- * Ends every way into `userId`'s account and what it shares, at once (FR-11.11): its sign-in email, sessions and AI
- * connections, its links and the grants it gave or held. Its data goes after, chunk by chunk. A restore's replay
+ * Ends every way into `userId`'s account and what it shares, at once (FR-11.11): its sign-in email, sessions,
+ * passkeys and AI connections, its links and the grants it gave or held. Its data goes after, chunk by chunk. A restore's replay
  * of the deletion does the same (TS-113).
  */
 export async function endAccountAccess(tx: Transaction, userId: string, now: Date): Promise<void> {
@@ -59,6 +60,8 @@ export async function endAccountAccess(tx: Transaction, userId: string, now: Dat
     .set({ email: deletedEmailKey(userId), deletingAt: now })
     .where(eq(users.id, userId));
   await tx.delete(sessions).where(eq(sessions.userId, userId));
+  // A passkey signs in without the email, so moving the email alone wouldn't stop it.
+  await tx.delete(passkeys).where(eq(passkeys.userId, userId));
   await tx.delete(oauthAccessTokens).where(eq(oauthAccessTokens.userId, userId));
   await tx.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.userId, userId));
   await tx.delete(oauthConsents).where(eq(oauthConsents.userId, userId));

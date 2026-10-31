@@ -36,6 +36,7 @@ import { invitationRoutes } from "./routes/v1/invitations";
 import { meRoutes } from "./routes/v1/me";
 import { memberAdminRoutes } from "./routes/v1/members";
 import { operationsRoutes } from "./routes/v1/operations";
+import { passkeyRoutes } from "./routes/v1/passkeys";
 import { searchRoutes } from "./routes/v1/search";
 import { sharedRoutes } from "./routes/v1/shared";
 import { sharingRoutes } from "./routes/v1/sharing";
@@ -91,6 +92,7 @@ function v1(
     .use(emailChangeRoutes(session, sync.emailChange))
     .use(accountDeletionRoutes(session, sync.accountDeletion))
     .use(connectionRoutes(session, { db: sync.db }))
+    .use(passkeyRoutes(session, { db: sync.db }))
     .use(approvalRoutes(session, { db: sync.db }))
     .use(fieldRoutes(session, { db: sync.db }))
     .use(searchRoutes(session, { db: sync.db }))

@@ -1,7 +1,7 @@
 # accounts Specification
 
 ## Purpose
-How people prove who they are to Tonaris and stay signed in: passwordless sign-in by an emailed code or link, the session the web app and API share, sign-out, and the signed-in account's identity (FR-11.1).
+How people prove who they are to Tonaris and stay signed in: passwordless sign-in by an emailed code or link, or a passkey, the session the web app and API share, sign-out, and the signed-in account's identity (FR-11.1).
 
 ## Requirements
 

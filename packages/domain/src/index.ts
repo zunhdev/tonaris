@@ -39,6 +39,14 @@ export {
   type UserRole,
 } from "./accounts";
 export {
+  defaultPasskeyName,
+  passkeyName,
+  passkeyRefusalDetails,
+  passkeyRenameSchema,
+  passkeySchema,
+  type Passkey,
+} from "./passkeys";
+export {
   admissionAdminRefusalDetails,
   admissionInvitationDays,
   admissionInvitationSchema,

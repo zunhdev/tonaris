@@ -55,7 +55,7 @@ export type Account = z.infer<typeof accountSchema>;
  * The terms of use and privacy notice's version: the day their text last changed (TON-131). A member agrees to one
  * version; a later one asks them again.
  */
-export const termsVersion = "2026-10-31";
+export const termsVersion = "2026-11-01";
 
 /** `POST /v1/me/terms`: the version of the texts the person was shown and agreed to. */
 export const termsAgreementSchema = z

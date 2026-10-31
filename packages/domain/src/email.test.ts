@@ -65,4 +65,12 @@ describe("email change and recovery (TS-73, DS-93)", () => {
     expect(text).toContain(link);
     expect(text).toContain("your old address stops working");
   });
+
+  test("a new passkey's notice names it and says where to remove it", () => {
+    const link = "https://tonaris.example/settings/account";
+    const { subject, text } = renderEmail("passkey-added", { name: "Work laptop", link });
+    expect(subject).toBe("A passkey was added to your Tonaris account");
+    expect(text).toContain('A passkey named "Work laptop"');
+    expect(text).toContain(link);
+  });
 });

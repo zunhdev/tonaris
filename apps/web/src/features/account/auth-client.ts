@@ -1,11 +1,26 @@
-// The sign-in calls (TS-70): request a code, sign in with it, sign out; and joining with an invitation (TS-71):
-// look it up, request a code, join. They go to the API's /auth/* endpoints with the session cookie, and each
-// outcome becomes something the page can say (DS-90, DS-91).
+// The sign-in calls (TS-70): request a code, sign in with it, sign out; a passkey's ceremonies, to sign in with one
+// and to add one (TON-143); and joining with an invitation (TS-71): look it up, request a code, join. They go to the
+// API's /auth/* endpoints with the session cookie, and each outcome becomes something the page can say (DS-90,
+// DS-91, DS-93).
 
 import { apiUrl } from "@/config";
+import {
+  type PublicKeyCredentialCreationOptionsJSON,
+  type PublicKeyCredentialRequestOptionsJSON,
+  startAuthentication,
+  startRegistration,
+  WebAuthnAbortService,
+  WebAuthnError,
+} from "@simplewebauthn/browser";
 
 export type AuthFailure =
   | { reason: "wrong_code" | "expired" | "too_many_attempts" | "invalid_email" | "unreachable" }
+  /** A passkey's ceremony: one that doesn't verify the person, one no account has, or one that failed. */
+  | { reason: "passkey_unverified" | "passkey_unknown" | "passkey_failed" | "passkey_exists" }
+  /** The person closed the browser's passkey prompt, or another ceremony replaced it: nothing to say. */
+  | { reason: "cancelled" }
+  /** Adding a passkey needs a session from the last day (TON-143). */
+  | { reason: "not_fresh" }
   | { reason: "rate_limited"; retryAfterSeconds: number }
   /** A refusal the API explains, such as an invitation that can't be used (DS-91), with its sentence. */
   | { reason: "refused"; detail: string }
@@ -15,12 +30,18 @@ export type AuthResult = { ok: true } | ({ ok: false } & AuthFailure);
 
 type PlainReason = Exclude<AuthFailure["reason"], "rate_limited" | "refused">;
 
-/** Better Auth's error codes (email OTP plugin) that the sign-in pages explain. */
+/** Better Auth's error codes (the email OTP and passkey plugins) that the sign-in pages explain. */
 const betterAuthReasons: Partial<Record<string, PlainReason>> = {
   INVALID_OTP: "wrong_code",
   OTP_EXPIRED: "expired",
   TOO_MANY_ATTEMPTS: "too_many_attempts",
   INVALID_EMAIL: "invalid_email",
+  USER_VERIFICATION_REQUIRED: "passkey_unverified",
+  PASSKEY_NOT_FOUND: "passkey_unknown",
+  AUTHENTICATION_FAILED: "passkey_failed",
+  CHALLENGE_NOT_FOUND: "passkey_failed",
+  FAILED_TO_VERIFY_REGISTRATION: "passkey_failed",
+  SESSION_NOT_FRESH: "not_fresh",
 };
 
 const messages: Record<PlainReason, string> = {
@@ -29,6 +50,14 @@ const messages: Record<PlainReason, string> = {
   too_many_attempts: "Too many wrong codes. Send a new code.",
   invalid_email: "Enter a valid email address.",
   unreachable: "Couldn't reach Tonaris. Check your connection and try again.",
+  passkey_unverified:
+    "That passkey doesn't ask for your face, fingerprint or PIN, so Tonaris can't use it.",
+  passkey_unknown:
+    "This passkey isn't on a Tonaris account anymore. Sign in with an email code, and remove it from your password manager.",
+  passkey_failed: "That passkey didn't work. Try again.",
+  passkey_exists: "This device already has a passkey for your account.",
+  cancelled: "",
+  not_fresh: "To add a passkey, confirm it's you first.",
   unknown: "Something went wrong. Try again.",
 };
 
@@ -68,7 +97,7 @@ export function authFailureMessage(failure: AuthFailure): string {
   return `Too many sign-in attempts. Try again in ${minutes} ${minutes === 1 ? "minute" : "minutes"}.`;
 }
 
-/** Posts `body` to `/auth{path}`, answering the response's JSON or the failure. */
+/** Posts `body` to `/auth{path}`, or GETs it without one, answering the response's JSON or the failure. */
 async function call(
   path: string,
   body: unknown,
@@ -76,12 +105,17 @@ async function call(
 ): Promise<{ ok: true; json: unknown } | ({ ok: false } & AuthFailure)> {
   let response: Response;
   try {
-    response = await fetcher(`${apiUrl}/auth${path}`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    response = await fetcher(
+      `${apiUrl}/auth${path}`,
+      body === undefined
+        ? { credentials: "include" }
+        : {
+            method: "POST",
+            credentials: "include",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
+          },
+    );
   } catch {
     return { ok: false, reason: "unreachable" };
   }
@@ -114,6 +148,80 @@ export function signInWithCode(
 
 export function signOut(fetcher: typeof fetch = fetch): Promise<AuthResult> {
   return post("/sign-out", {}, fetcher);
+}
+
+/**
+ * What the browser's passkey prompt ended with, when it didn't give a passkey: the person closed it, another
+ * ceremony replaced it, or this device already holds one for the account.
+ */
+function ceremonyFailure(error: unknown): AuthFailure {
+  if (error instanceof WebAuthnError) {
+    if (error.code === "ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED")
+      return { reason: "passkey_exists" };
+    if (error.code === "ERROR_CEREMONY_ABORTED") return { reason: "cancelled" };
+    if (error.cause instanceof Error && error.cause.name === "NotAllowedError") {
+      return { reason: "cancelled" };
+    }
+  }
+  if (error instanceof Error && ["NotAllowedError", "AbortError"].includes(error.name)) {
+    return { reason: "cancelled" };
+  }
+  return { reason: "passkey_failed" };
+}
+
+/** Sign-in options from the API, which SimpleWebAuthn's server side made: a challenge at least. */
+function isRequestOptions(value: unknown): value is PublicKeyCredentialRequestOptionsJSON {
+  return textOf(value, "challenge") !== undefined;
+}
+
+/** Registration options from the API: a challenge, the relying party and the account. */
+function isCreationOptions(value: unknown): value is PublicKeyCredentialCreationOptionsJSON {
+  return isRequestOptions(value) && "rp" in value && "user" in value && "pubKeyCredParams" in value;
+}
+
+/**
+ * Signs in with a passkey (TON-143); the API sets the session cookie. With `autofill`, the browser offers saved
+ * passkeys in the email field instead of asking at once, and the promise waits until one is chosen.
+ */
+export async function signInWithPasskey({
+  autofill = false,
+  fetcher = fetch,
+}: { autofill?: boolean; fetcher?: typeof fetch } = {}): Promise<AuthResult> {
+  const options = await call("/passkey/generate-authenticate-options", undefined, fetcher);
+  if (!options.ok) return options;
+  if (!isRequestOptions(options.json)) return { ok: false, reason: "unknown" };
+  let response: unknown;
+  try {
+    response = await startAuthentication({
+      optionsJSON: options.json,
+      useBrowserAutofill: autofill,
+    });
+  } catch (error) {
+    return { ok: false, ...ceremonyFailure(error) };
+  }
+  return post("/passkey/verify-authentication", { response }, fetcher);
+}
+
+/** Stops a passkey ceremony waiting in the email field's autofill, as the page leaves. */
+export function cancelPasskeyPrompt(): void {
+  WebAuthnAbortService.cancelCeremony();
+}
+
+/**
+ * Adds a passkey to the signed-in account (TON-143). It needs a session from the last day, else `not_fresh`; the
+ * API names the passkey and emails the account's address.
+ */
+export async function addPasskey(fetcher: typeof fetch = fetch): Promise<AuthResult> {
+  const options = await call("/passkey/generate-register-options", undefined, fetcher);
+  if (!options.ok) return options;
+  if (!isCreationOptions(options.json)) return { ok: false, reason: "unknown" };
+  let response: unknown;
+  try {
+    response = await startRegistration({ optionsJSON: options.json });
+  } catch (error) {
+    return { ok: false, ...ceremonyFailure(error) };
+  }
+  return post("/passkey/verify-registration", { response }, fetcher);
 }
 
 /** The address an invitation is bound to, for its landing (DS-91), or why it can't be used. Sends nothing. */

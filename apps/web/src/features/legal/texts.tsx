@@ -141,6 +141,12 @@ export function PrivacyText({ support }: { support: string | undefined }) {
             connected, such as an AI assistant, with what you approved for them.
           </li>
           <li>
+            <strong className="font-medium text-fg-primary">Passkeys,</strong> if you add any: each
+            one's public key, its name, the password manager it's in when that's known, and when you
+            added it. Your face, fingerprint or PIN is checked on your device and never reaches
+            Tonaris.
+          </li>
+          <li>
             <strong className="font-medium text-fg-primary">Records for safety:</strong> a log of
             account changes, such as a new email address or a deletion, and a list of deletions by
             ID only, so restoring a backup never brings deleted data back.
@@ -153,9 +159,10 @@ export function PrivacyText({ support }: { support: string | undefined }) {
       </Section>
       <Section title="On your device">
         <p>
-          Tonaris sets one cookie, which keeps you signed in. Your browser also keeps a copy of your
-          collection and any changes not yet saved, so Tonaris loads quickly and works offline.
-          Signing out removes them.
+          Tonaris sets one cookie, which keeps you signed in, and a second for 5 minutes when you
+          open the sign-in page or add a passkey, so a passkey can sign you in. Your browser also
+          keeps a copy of your collection and any changes not yet saved, so Tonaris loads quickly
+          and works offline. Signing out removes them.
         </p>
       </Section>
       <Section title="Services Tonaris runs on">

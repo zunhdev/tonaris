@@ -1,5 +1,6 @@
 // The sign-in limits (TS-104, approved by the creator on 18 October 2026): 5 code requests per email address,
-// and 20 code requests and submissions together per IP address, each per 15 minutes. Counters live in memory,
+// and 20 code requests and submissions together per IP address, each per 15 minutes. A passkey sign-in's start
+// and finish count as submissions (TON-143, decided 31 October 2026). Counters live in memory,
 // as the API runs as a single instance. Better Auth's own limiter can't key by email and, without a trusted
 // client address, puts everyone in one bucket, so it is off.
 // The same limiter bounds open client registration for MCP (DCR, TS-61): 10 per IP address per hour, proposed
@@ -12,7 +13,7 @@ const fifteenMinutes = 15 * 60_000;
 export const signInLimits = {
   /** Code requests per email key: also bounds the no-account emails anyone can trigger (DS-90). */
   perEmail: { max: 5, windowMs: fifteenMinutes },
-  /** Code requests and code submissions per client address. */
+  /** Code requests, code submissions and passkey sign-in steps per client address. */
   perIp: { max: 20, windowMs: fifteenMinutes },
 } satisfies Record<string, Limit>;
 
@@ -56,7 +57,7 @@ export class SlidingWindow {
 export type SignInLimiter = {
   /** Counts a code request, or returns the seconds to wait when a limit is reached; a refusal counts nothing. */
   codeRequest(emailKey: string | undefined, ip: string | undefined): number | undefined;
-  /** Counts a code submission, or returns the seconds to wait. */
+  /** Counts a code submission, or a passkey sign-in's start or finish, or returns the seconds to wait. */
   codeSubmission(ip: string | undefined): number | undefined;
   /** Counts a dynamic client registration, or returns the seconds to wait. */
   clientRegistration(ip: string | undefined): number | undefined;

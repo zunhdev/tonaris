@@ -647,6 +647,9 @@ Before asking, the agent presents the targets and consequences: shared-view effe
 
 **FR-11.1 Passwordless sign-in.** Users sign in by proving access to their email through a one-time link or code; the choice is a design decision. They can sign out. Returning users reach the same account with their collection, sharing access, and preferences intact. Password and provider sign-in are not in the first version.
 
+- Members can also add passkeys in settings and sign in with one (decided 31 October 2026, TON-143). A passkey must verify the person, with a face, fingerprint or PIN.
+- Adding a passkey needs a recent sign-in and emails the account's address. Email codes keep working either way.
+
 **FR-11.2 Invite-only account creation.** Creating an account requires a valid admission invitation from the creator. It is unavailable while admissions are paused. Email verification alone never admits. Existing users sign in normally.
 
 **FR-11.3 Display name.** Users set and edit a display name in settings. It is optional for account creation, private use, and viewing shared content. It is a non-unique label, not an identity or credential, and it is never derived from the email.
@@ -663,11 +666,13 @@ Before asking, the agent presents the targets and consequences: shared-view effe
 - The old address stops signing in.
 - A cancelled or failed verification changes nothing.
 - A change can never take over or merge another account.
+- The account's passkeys keep working (decided 31 October 2026, TON-143).
 
 **FR-11.5 Creator-assisted recovery.** A user who has lost access to their email can ask the creator for help.
 
 - The sign-in address changes to a newly verified email only after account ownership is established. Verifying the new address, or making the request, is not enough on its own.
 - The same account and its data are kept, and the old address stops working.
+- The account's passkeys are removed with its sessions, since whoever took the old address over may have added one (decided 31 October 2026, TON-143).
 - The request is refused if ownership cannot be verified or the change would take over or merge another account.
 - Deleted accounts are never recreated.
 
@@ -700,7 +705,7 @@ The warning offers an export first (FR-08.7). Cancelling changes nothing.
 
 **FR-11.11 Permanent deletion policy.** Deletion is irreversible after confirmation, with no grace period. Tonaris promptly:
 
-- ends sessions;
+- ends sessions and removes passkeys;
 - revokes MCP authorizations;
 - makes owned shared content unavailable;
 - permanently removes the account and all owned data, overriding Trash windows (nothing goes to Trash).
@@ -709,7 +714,7 @@ Other users' collections are untouched, and their references to the deleted cont
 
 **FR-11.12 Provider separation.** App authentication and streaming-account connection are separate, and signing in never connects a streaming account. Spotify or Apple authorization may be added where an agreed feature needs it. It does not imply extra catalog permissions or lift provider restrictions.
 
-**FR-11.13 Settings inventory.** Required settings are display name, sign-in email, viewing defaults, MCP connections (FR-10.3), data export (FR-08), and account deletion. The creator also has admission administration (FR-11.6).
+**FR-11.13 Settings inventory.** Required settings are display name, sign-in email, passkeys (FR-11.1), viewing defaults, MCP connections (FR-10.3), data export (FR-08), and account deletion. The creator also has admission administration (FR-11.6).
 
 **FR-11.14 Terms of use and privacy notice.** Tonaris publishes terms of use and a privacy notice, public and always reachable: from the sign-in pages, shared pages, and the account menu. They name zunh.dev as who runs Tonaris, with the support address (decided 31 October 2026). As YouTube's Developer Policies require, the terms bind people to YouTube's Terms of Service, and the notice says Tonaris uses YouTube API Services and links Google's Privacy Policy. Joining says that continuing agrees to both, and the account records the version agreed to. A member who hasn't agreed to the current version, such as one who joined before, agrees on a one-time screen before reaching their collection, or signs out. YouTube's API is read only for members who agreed (TON-131).
 

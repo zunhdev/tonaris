@@ -44,7 +44,7 @@ The table records the verdicts.
 | **Postgres** | **Keep: Postgres 18** | Managed: Render Postgres, the creator's call on 30 October 2026 (TS-111). PG18 brings `casefold()`, `uuidv7()`, `NULLS NOT DISTINCT` (PG15+), and async I/O. |
 | **Hosting** | **Creator-owned: Render** | The creator chooses the host, region, and budget: Render, Frankfurt, behind Cloudflare (30 October 2026, TON-108). This spec lists the platform requirements (TS-110). |
 | **shadcn/ui** | **Keep: on Base UI** | Base UI has been the shadcn default since July 2026, and Radix is still available ([changelog](https://ui.shadcn.com/docs/changelog/2026-07-base-ui-default)). The design system owns the copied components; see the design spec. |
-| *(missing)* **Auth** | **Add Better Auth ≥ 1.7.10; 1.7.12 since TON-22** | It covers email OTP, the admin role, and an OAuth 2.1 authorization server for MCP (`@better-auth/mcp` with `@better-auth/cimd`, plus DCR as a fallback). The floor is 1.7.7 because of the critical advisory GHSA-965c-763c-88jm ([advisories](https://github.com/better-auth/better-auth/security/advisories)). The [TON-22 spike](spikes/2026-10-21-g3-mcp-oauth.md) connected Claude web, ChatGPT web and Codex through it. TS-61, TS-70. |
+| *(missing)* **Auth** | **Add Better Auth ≥ 1.7.10; 1.7.12 since TON-22** | It covers email OTP, passkeys (`@better-auth/passkey`, since TON-143), the admin role, and an OAuth 2.1 authorization server for MCP (`@better-auth/mcp` with `@better-auth/cimd`, plus DCR as a fallback). The floor is 1.7.7 because of the critical advisory GHSA-965c-763c-88jm ([advisories](https://github.com/better-auth/better-auth/security/advisories)). The [TON-22 spike](spikes/2026-10-21-g3-mcp-oauth.md) connected Claude web, ChatGPT web and Codex through it. TS-61, TS-70. |
 | *(missing)* **Client sync / optimistic store** | **Add TanStack DB, pinned; 0.15.1 until the 1.0 RC is published** | Uses custom sync collections over our own SSE protocol ([mutations guide](https://tanstack.com/db/latest/docs/guides/mutations)). This is what makes the app feel like Linear; the framework choice matters far less. On 20 October 2026 no 1.0 RC was on npm ([PR #2171](https://github.com/TanStack/db/pull/2171) is still open), so the [TON-20 prototype](spikes/2026-10-20-sync-prototype.md) pinned 0.15.1 and wrote its handlers the RC's way. TS-24. |
 | *(missing)* **Validation** | **Add Zod 4** | One set of schemas shared by the domain, Elysia (Standard Schema), the forms, and the MCP SDK v2 (which needs zod ^4.2). |
 | *(missing)* **MCP** | **Add `@modelcontextprotocol/server` v2, pinned (2.3.1)** | `createMcpHandler(...).fetch` runs natively on Bun and speaks the 2026-07-28 protocol. The stateless legacy fallback stays **on** for 2025-era clients ([changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)): Codex still speaks 2025 ([TON-22](spikes/2026-10-21-g3-mcp-oauth.md)). TS-60. |
@@ -281,7 +281,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `account_deletions` | `id`, `user_id` (no foreign key), `token_hash bytea` (unique), `status` (`deleting`\|`deleted`\|`failed`), `finished_at` | An account deletion's progress, followed by the token its browser holds; pruned 7 days after it finishes (TON-79) | FR-11.11 |
 | `email_recoveries` | `user_id` (PK, cascades), `new_email_key`, `token_hash bytea` (unique), `code_hash bytea`, `attempts`, `expires_at`, `reason`, `disconnect_connections`, `requested_by` | One creator's recovery per account, waiting 24 hours for the new address to confirm it; a deleted account takes it along (TON-78) | FR-11.5 |
 | `email_changes` | `user_id` (PK, cascades), `new_email_key`, `stage` (`current`\|`new`), `code_hash bytea`, `attempts`, `expires_at` | One sign-in email change per account; starting again replaces it, and the swap deletes it (TON-77) | FR-11.4 |
-| Better Auth tables | `user`, `session`, `account`, `verification`; later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `user.deleting_at` is set while the account is being deleted (TS-74). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
+| Better Auth tables | `user`, `session`, `account`, `verification`, `passkey` (TON-143); later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `user.deleting_at` is set while the account is being deleted (TS-74). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
 
 **TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/src/normalize.ts` exports two functions, and the same code runs on the server, the client, and in migrations:
 
@@ -1313,10 +1313,25 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **The email.** It contains the code **and** a link to `/sign-in/verify?email=…#code=…` that submits the same code. This gives "link or code" with one mechanism. The code is in the fragment, so it never reaches a server log or a `Referer`. The magic-link plugin is not used, which also avoids its 2026 advisories.
 - **Cross-device.** A link opened on another device asks for confirmation before signing that device in. "Another device" means a browser without the pending request that `/sign-in` keeps in `localStorage`. This is only a check on whether to ask: the code is the credential.
 - **Sessions** (web only; native apps use tokens, TS-30). The cookie is `__Secure-tonaris.session_token`; it uses the `__Secure-` prefix because `__Host-` forbids the parent-domain `Domain` attribute TS-08 needs. It is `Secure`, `HttpOnly`, `SameSite=Lax`, with `Domain=tonaris.<tld>`, which is the web origin's host. Locally there is no `Domain`, since a host-only `localhost` cookie reaches both ports. Sessions roll over 30 days: a session used more than a day after its last renewal is extended, and the cookie is renewed with it.
-- **Endpoints.** The API serves only the Better Auth endpoints sign-in needs, under `/auth/*`: request a code, sign in, read the session, and sign out. Any other path is `not_found`, so plugins and upgrades expose nothing unplanned, such as `/update-user`. Admission's two endpoints sit beside them, at `/auth/admission/*` (TS-71). The signed-in account is `GET /v1/me`.
+- **Endpoints.** The API serves only the Better Auth endpoints sign-in needs, under `/auth/*`: request a code, sign in, the passkey ceremonies, read the session, and sign out. Any other path is `not_found`, so plugins and upgrades expose nothing unplanned, such as `/update-user`. Admission's two endpoints sit beside them, at `/auth/admission/*` (TS-71). The signed-in account is `GET /v1/me`.
 - **Privacy.** Sessions store no IP address (`disableIpTracking`), and Better Auth's telemetry is off.
 - **Rate limits.** Sign-in requests are limited per email and per IP (TS-104).
 - **Email normalization.** Email keys are `trim`, then lowercase, then IDNA-to-ASCII for the domain. Plus-addresses are kept as-is.
+
+*As built in TON-143:* **passkeys**, beside the code (decided with the creator on 31 October 2026).
+- **The plugin:** `@better-auth/passkey` 1.7.12, on SimpleWebAuthn 13. It keeps each ceremony's challenge in `verification`, behind a signed 5-minute cookie.
+- **The relying party** is the web host: `rpID` is `WEB_ORIGIN`'s hostname, `origin` is `WEB_ORIGIN`, and `rpName` is "Tonaris". The plugin's default, the API's host, isn't one browsers can use from the web app.
+- **Verification:** passkeys are discoverable, and registration asks for user verification. The plugin verifies with `requireUserVerification: false`, so its `afterVerification` hooks refuse a response without the UV flag, at registration and at sign-in (`USER_VERIFICATION_REQUIRED`).
+- **Names:** the registration hook names a passkey from its AAGUID (`getAuthenticatorName`), else "Passkey". The `before` hook overwrites a client's `name` and `createSession`.
+- **The notice:** an `after` hook on `verify-registration` queues `passkey-added` to the account's address, with the name and a link to Settings → Account.
+- **Endpoints:** four ceremony endpoints join the allowlist:
+  - `GET /auth/passkey/generate-register-options` and `POST …/verify-registration`, behind Better Auth's fresh-session check (a session from the last day, else 403 `SESSION_NOT_FRESH`);
+  - `GET /auth/passkey/generate-authenticate-options` and `POST …/verify-authentication`.
+
+  The plugin's list, update and delete stay `not_found`.
+- **Management:** listing, renaming and removing are `/v1/account/passkeys`: `GET`, `PATCH /:id {name}`, `DELETE /:id`. They are authorized as `account` writes, so app-only. A blank name, or one over 200 characters, is 422. A removal records `passkey.removed` in the ledger (TS-113).
+- **Storage:** `passkey` has `user_id` (cascading), `name`, `public_key`, `credential_id` (unique), `counter`, `device_type`, `backed_up`, `transports`, `aaguid`, and the timestamps.
+- **The web app** uses `@simplewebauthn/browser` with its own `fetch` (DS-90, DS-93).
 
 **TS-71 Invite-only gate and admission (Decided; spike done in [TON-24](spikes/2026-10-21-admission-gate.md); FR-11.2, FR-11.6).**
 
@@ -1392,6 +1407,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
     - a non-address, the current address, or another account's address is refused at the start;
     - an address that gets an account before the last code refuses the swap.
   - **Verifying** happens under the change's row lock, so two right codes swap once. The swap also locks the user, ends every session but the one making the change, and writes `email.change` with `{from, to}` in `details`.
+  - **Passkeys** are kept: the person proved both addresses (decided 31 October 2026, TON-143).
   - **Better Auth's** email-OTP change endpoints aren't used. They lowercase instead of using the email key, need an `email-verification` code that the sign-in hook refuses, and don't end sessions or write the audit log in the swap.
 - **Creator-assisted recovery (Decided 17 October 2026: the creator's judgment):**
   - The user contacts the creator at the support address shown on `/help/recovery`, which comes from the `SUPPORT_EMAIL` setting. There is no in-app request form.
@@ -1412,6 +1428,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
     - A new request replaces the waiting one, so its link stops working.
   - **Confirming:** `POST /auth/recovery/confirm {token, code}` is public, behind the code-submission limit. Under the recovery's row lock it runs the shared swap (`swapSignInEmail`, which TON-77's change uses too), keeping no session. It disconnects AI connections when asked, and writes `email.recover` with the creator as actor and `{from, to, reason, disconnectedConnections}`.
   - **The person** then signs in with the new address; confirming doesn't sign them in.
+  - *Since TON-143:* confirming also removes every passkey of the account, in the same transaction, and records `passkey.removed` for all of them. Someone who took over the old address could have added one (decided 31 October 2026).
 
 **TS-74 Account deletion (Decided; FR-11.10, FR-11.11).**
 
@@ -1426,7 +1443,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 *As built in TON-79* (decided 29 October 2026: without the export block, which TON-89 adds):
 - **Confirming:** `POST /v1/account/deletion {email}` (session, an `account` write) checks the typed email's key. It refuses the creator, who runs admissions. Then one transaction (`beginAccountDeletion`):
   - sets `deleting_at` and moves `email` to the placeholder `{id}@deleted.invalid`, so the address signs in to nothing at once and can be invited again;
-  - deletes sessions, OAuth consents and tokens;
+  - deletes sessions, passkeys (since TON-143: a passkey signs in without the email), OAuth consents and tokens;
   - revokes the account's live links and its open grants, and withdraws its own open grants as a viewer;
   - writes `audit_log` (`account.delete`, empty details);
   - inserts `account_deletions` and queues the `account-deletion` job.
@@ -1443,6 +1460,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Recording:** joining records the current version in the transaction that creates the account (`admitAccount`), and for an address that already had an account, once its owner is signed in through the invitation, since the landing says continuing agrees. `POST /v1/me/terms {version}` records it from the agreement screen; a version that isn't the current one is 422 `validation_failed`, so a person who loaded older texts reads them again.
 - **Gates:** the web workspace shows the agreement screen instead of the collection until `termsAgreed`; nothing of the sync client starts behind it. Capture reads YouTube's API only when `agreedToTerms(owner, termsVersion)` (TS-41), which covers agents' captures through MCP too.
 - **Tests:** the browser-test API marks every seeded account as agreed, except addresses starting `unagreed-`.
+- *Since TON-143:* the privacy notice describes passkeys and their 5-minute challenge cookie, which the sign-in page's autofill sets on every visit, so the version moved to `2026-11-01`, the day it ships. Members agree once more (decided 31 October 2026).
 
 ---
 
@@ -1580,7 +1598,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | --- | --- | --- |
 | Private collections | Broken access control (IDOR), sharing-inheritance bugs | Domain policies with every query scoped by principal (TS-30, TS-31); property tests for inheritance and moves |
 | Share links | Leakage, guessing | 256-bit tokens, hashed, `no-referrer` (TS-32) |
-| Accounts | OTP brute force, takeover through email change or recovery | Attempt limits, rate limits, dual verification, audited recovery (TS-70–TS-73) |
+| Accounts | OTP brute force, takeover through email change or recovery, a passkey added through a stolen session | Attempt limits, rate limits, dual verification, audited recovery; passkeys need a fresh session and a verified person, announce themselves by email, and go at recovery and deletion (TS-70–TS-74) |
 | MCP | Token theft, confused deputy, prompt injection | Audience-bound short tokens, server-side mode checks, verifiable approvals, data framing (TS-61–TS-65) |
 | Server | SSRF through links and artwork | Allowlisted parsing, guarded fetcher (TS-103) |
 | Users' browsers | XSS through metadata or descriptions | React escaping, no `dangerouslySetInnerHTML` for user text, strict CSP (TS-101) |
@@ -1681,7 +1699,7 @@ There is no resizing in v1.
 
 | Endpoint | Limit |
 | --- | --- |
-| Sign-in | Code requests: 5 per email per 15 min. Code requests and submissions together: 20 per IP per 15 min. |
+| Sign-in | Code requests: 5 per email per 15 min. Code requests, code submissions, and passkey sign-ins' starts and finishes together: 20 per IP per 15 min (passkeys since TON-143, decided 31 October 2026). |
 | Mutations | 30 per second per account (burst) |
 | Captures | 100 per hour per account (TS-18) |
 | Guest share views | 120 per minute per IP |
@@ -1781,6 +1799,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
   - grant revocation, withdrawal, or decline
   - Trash purge
   - admission-invitation revocation
+  - passkey removal (since TON-143)
 - **Restore runbook:**
   1. restore into a new database with both services in maintenance mode, which blocks all access, including guests and MCP;
   2. replay ledger events newer than the restore point;
@@ -1798,7 +1817,8 @@ The creator chooses the host, region, and budget; the current preference is Rend
     - `shareLink.revoked`;
     - `shareGrant.ended` (declined, withdrawn or revoked);
     - `trash.purged`, by hand or by the expiry;
-    - `admission.revoked`.
+    - `admission.revoked`;
+    - `passkey.removed` (TON-143), for one removed in Settings, or for every passkey of an account at a recovery. A deletion's replay removes them through `account.deleted`.
   - **Writing:** the API's worker appends each event to `LEDGER_URL`, which production requires, with the queue's retries.
     - `file:` writes monthly JSON-lines files.
     - `s3://bucket/prefix` writes one object per event, since objects can't be appended to.

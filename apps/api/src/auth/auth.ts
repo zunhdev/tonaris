@@ -1,16 +1,19 @@
-// Sign-in with Better Auth (TS-70): an emailed 6-digit code, or the link carrying it, opens a 30-day web session
-// whose cookie both hosts see (TS-08). Sign-in never creates an account (FR-11.2): an unknown address gets an
-// email saying so instead of a code, and the response is the same either way (DS-90).
+// Sign-in with Better Auth (TS-70): an emailed 6-digit code, or the link carrying it, or a passkey the member added
+// (TON-143), opens a 30-day web session whose cookie both hosts see (TS-08). Sign-in never creates an account
+// (FR-11.2): an unknown address gets an email saying so instead of a code, and the response is the same either way
+// (DS-90).
 
 import { cimd } from "@better-auth/cimd";
 import { fetchClientMetadataResource } from "@better-auth/cimd/node";
 import { mcp } from "@better-auth/mcp";
 import type { ClientMetadataResourceFetch } from "@better-auth/oauth-provider";
+import { getAuthenticatorName, passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { emailOTP, jwt } from "better-auth/plugins";
+import { z } from "zod";
 
 import {
   authAccounts,
@@ -23,16 +26,27 @@ import {
   oauthConsents,
   oauthRefreshTokens,
   oauthResources,
+  passkeys,
   sessions,
   users,
   verifications,
 } from "@tonaris/db";
-import { emailKey, type EmailPort, mcpScopes, signInCode, userRoles } from "@tonaris/domain";
+import {
+  defaultPasskeyName,
+  emailKey,
+  type EmailPort,
+  mcpScopes,
+  signInCode,
+  userRoles,
+} from "@tonaris/domain";
 
 import type { ApiConfig } from "../config";
 import { recordingTransactions } from "./transaction";
 
 const day = 24 * 60 * 60;
+
+/** What adding a passkey answers: the new passkey's row. */
+const passkeyAdded = z.object({ userId: z.string(), name: z.string().nullish() });
 
 /** The MCP endpoint (TS-60): the protected resource every MCP token is bound to (RFC 8707). */
 export function mcpResource(apiOrigin: string): string {
@@ -49,6 +63,19 @@ export const mcpRequestedScopes = [mcpScopes.read, mcpScopes.manage, "offline_ac
 const requestCodePath = "/email-otp/send-verification-otp";
 const signInPath = "/sign-in/email-otp";
 
+/** Adding a passkey, after the browser created it (TON-143). */
+const passkeyRegistrationPath = "/passkey/verify-registration";
+
+/**
+ * A passkey must verify the person, with a face, fingerprint or PIN, since it stands in for the emailed code. The
+ * plugin accepts a touch alone, so registration and sign-in refuse that (TON-143).
+ */
+const userVerificationRequired = () =>
+  APIError.from("BAD_REQUEST", {
+    code: "USER_VERIFICATION_REQUIRED",
+    message: "Use a passkey that asks for your face, fingerprint or PIN.",
+  });
+
 /** Better Auth's models, for the in-memory store (`db: "in-memory"`). */
 const memoryModels = [
   "user",
@@ -63,6 +90,7 @@ const memoryModels = [
   "oauthRefreshToken",
   "oauthAccessToken",
   "oauthClientAssertion",
+  "passkey",
 ];
 
 export type AuthOptions = {
@@ -127,6 +155,7 @@ export function createAuth({
               oauthRefreshToken: oauthRefreshTokens,
               oauthAccessToken: oauthAccessTokens,
               oauthClientAssertion: oauthClientAssertions,
+              passkey: passkeys,
             },
           }),
     user: {
@@ -164,6 +193,11 @@ export function createAuth({
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === passkeyRegistrationPath) {
+          // Tonaris names the passkey (below) and renames it through /v1, and adding one never starts a second
+          // session. The context merges into the body, so both are overwritten rather than left out.
+          return { context: { body: { ...ctx.body, name: "", createSession: false } } };
+        }
         if (ctx.path !== requestCodePath && ctx.path !== signInPath) return undefined;
         if (ctx.path === requestCodePath && ctx.body?.type !== "sign-in") {
           throw APIError.fromStatus("BAD_REQUEST", {
@@ -174,7 +208,23 @@ export function createAuth({
         return { context: { body: { ...ctx.body, email: emailKey(ctx.body.email) } } };
       }),
       after: createAuthMiddleware(async (ctx) => {
-        if (ctx.path !== requestCodePath || ctx.context.returned instanceof Error) return;
+        if (ctx.context.returned instanceof Error) return;
+        if (ctx.path === passkeyRegistrationPath) {
+          // The notice that a passkey was added (TON-143), to the account's address, after the response.
+          const added = passkeyAdded.safeParse(ctx.context.returned);
+          const account = added.success
+            ? await ctx.context.internalAdapter.findUserById(added.data.userId)
+            : null;
+          if (!added.success || !account) return;
+          await ctx.context.runInBackgroundOrAwait(
+            email.send("passkey-added", account.email, {
+              name: added.data.name ?? defaultPasskeyName,
+              link: `${config.webOrigin}/settings/account`,
+            }),
+          );
+          return;
+        }
+        if (ctx.path !== requestCodePath) return;
         const address: string = ctx.body.email;
         if (await ctx.context.internalAdapter.findUserByEmail(address)) return;
         await ctx.context.runInBackgroundOrAwait(email.send("sign-in-no-account", address, {}));
@@ -193,6 +243,29 @@ export function createAuth({
             code: otp,
             link: signInLink(config.webOrigin, address, otp),
           });
+        },
+      }),
+      // Passkeys (TON-143) belong to the web host, where browsers create them, not the API's host, the plugin's
+      // default. Each is discoverable, so the sign-in page needs no email first, and verifies the person.
+      passkey({
+        rpID: new URL(config.webOrigin).hostname,
+        rpName: "Tonaris",
+        origin: config.webOrigin,
+        authenticatorSelection: { residentKey: "required", userVerification: "required" },
+        registration: {
+          afterVerification: ({ verification }) => {
+            if (!verification.registrationInfo?.userVerified) throw userVerificationRequired();
+            // Named after the password manager when its model says; Apple's say nothing.
+            return {
+              name:
+                getAuthenticatorName(verification.registrationInfo.aaguid) ?? defaultPasskeyName,
+            };
+          },
+        },
+        authentication: {
+          afterVerification: ({ verification }) => {
+            if (!verification.authenticationInfo.userVerified) throw userVerificationRequired();
+          },
         },
       }),
       // Signs MCP access tokens; JWKS at /auth/jwks. Sessions stay cookies, never JWTs.
