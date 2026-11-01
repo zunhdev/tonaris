@@ -35,6 +35,8 @@ export type CollectionData = {
   albumsById: ReadonlyMap<string, Album>;
   /** Each list's entries. */
   entriesByList: ReadonlyMap<string, readonly Membership[]>;
+  /** The IDs of the lists each album is in. */
+  listsByAlbum: ReadonlyMap<string, readonly string[]>;
   /** The albums in no list (FR-01.9). */
   unsortedAlbums: readonly Album[];
   /** Each album's links to the streaming services (FR-06.2). */
@@ -61,6 +63,7 @@ const empty: CollectionData = {
   albums: 0,
   albumsById: new Map(),
   entriesByList: new Map(),
+  listsByAlbum: new Map(),
   unsortedAlbums: [],
   linksByAlbum: new Map(),
   fields: [],
@@ -110,14 +113,16 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
     const entries = membershipData ?? [];
     const owned = albumData ?? [];
     const entriesByList = new Map<string, Membership[]>();
-    const listed = new Set<string>();
+    const listsByAlbum = new Map<string, string[]>();
     for (const entry of entries) {
       const inList = entriesByList.get(entry.listId);
       if (inList) inList.push(entry);
       else entriesByList.set(entry.listId, [entry]);
-      listed.add(entry.albumId);
+      const ofAlbum = listsByAlbum.get(entry.albumId);
+      if (ofAlbum) ofAlbum.push(entry.listId);
+      else listsByAlbum.set(entry.albumId, [entry.listId]);
     }
-    const unsortedAlbums = owned.filter((album) => !listed.has(album.id));
+    const unsortedAlbums = owned.filter((album) => !listsByAlbum.has(album.id));
     const linksByAlbum = new Map<string, ServiceLink[]>();
     for (const link of linkData ?? []) {
       const ofAlbum = linksByAlbum.get(link.albumId);
@@ -155,6 +160,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       albums: owned.length,
       albumsById: new Map(owned.map((album) => [album.id, album])),
       entriesByList,
+      listsByAlbum,
       unsortedAlbums,
       linksByAlbum,
       fields,

@@ -57,6 +57,7 @@ import {
 import { Input } from "@tonaris/ui/components/input";
 
 import { ConfirmDialog } from "../shell/confirm-dialog";
+import { count } from "../shell/words";
 
 /** A unit to recover: what it is, where it was, and, after a deletion just made, what that deletion took out. */
 export type RecoveryTarget = {
@@ -91,8 +92,6 @@ export function useRecover(): (target: RecoveryTarget) => void {
 /** The siblings a recovered root would have under `parentId`. */
 const siblingsUnder = (tree: Tree, parentId: string | null): Container[] =>
   parentId === null ? tree.roots : (tree.children.get(parentId) ?? []);
-
-const memberships = (n: number) => `${n} ${n === 1 ? "membership" : "memberships"}`;
 
 export function RecoveryProvider({ children }: { children: ReactNode }) {
   const client = useSyncClient();
@@ -142,10 +141,14 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
         notify?.info(`Restored '${name}'`);
         return;
       }
-      notify?.info(`Restored · ${memberships(skipped.length)} skipped`, undefined, {
-        label: "Details",
-        onClick: () => setPrompt({ step: "skipped", name, skipped }),
-      });
+      notify?.info(
+        `Restored · ${count(skipped.length, "membership", "memberships")} skipped`,
+        undefined,
+        {
+          label: "Details",
+          onClick: () => setPrompt({ step: "skipped", name, skipped }),
+        },
+      );
     })();
   }
 

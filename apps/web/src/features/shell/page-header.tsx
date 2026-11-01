@@ -7,7 +7,7 @@ import { AccountMenu } from "@/features/account/account-menu";
 import { useNarrowScreen } from "@/features/shell/media";
 import { useRouter } from "@tanstack/react-router";
 import { ChevronLeft, PanelLeftOpen, Search } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 import {
@@ -21,6 +21,13 @@ import { cn } from "@tonaris/ui/lib/utils";
 import { useShell } from "./shell-context";
 
 export const pageTitleId = "page-title";
+
+/** Names the page "{title} · Tonaris": a view's name is only in the client store, so its route can't. */
+export function useDocumentTitle(title: string): void {
+  useEffect(() => {
+    document.title = `${title} · Tonaris`;
+  }, [title]);
+}
 
 export function PageHeader({
   title,

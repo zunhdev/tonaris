@@ -9,6 +9,7 @@ import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialo
 import { DesktopOnly } from "@/features/shell/desktop-only";
 import { useNarrowScreen } from "@/features/shell/media";
 import { PageHeader } from "@/features/shell/page-header";
+import { count } from "@/features/shell/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -30,8 +31,6 @@ const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
-
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** "Folder · 6 lists, 2 folders", "List", or "Album" (DS-55). */
 function contentsOf(unit: TrashUnit): string {

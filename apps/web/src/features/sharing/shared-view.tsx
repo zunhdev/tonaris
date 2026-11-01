@@ -21,10 +21,10 @@ import {
   type LinkTo,
 } from "@/features/guest/share-content";
 import { useNarrowScreen } from "@/features/shell/media";
-import { PageHeader } from "@/features/shell/page-header";
+import { PageHeader, useDocumentTitle } from "@/features/shell/page-header";
 import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { Container, SharedSnapshot } from "@tonaris/domain";
 
@@ -58,9 +58,7 @@ export function SharedView({ rootId, containerId }: { rootId: string; containerI
 }
 
 function NoLongerAvailable() {
-  useEffect(() => {
-    document.title = "Not available · Tonaris";
-  }, []);
+  useDocumentTitle("Not available");
   return (
     <>
       <PageHeader title="Not available" />
@@ -112,9 +110,7 @@ function SharedContent({
       label: parent.name,
     };
   };
-  useEffect(() => {
-    document.title = `${title} · Tonaris`;
-  }, [title]);
+  useDocumentTitle(title);
   if (!current) return <NoLongerAvailable />;
   const owner = snapshot.owner.displayName ?? "a Tonaris member";
   const kind = current.kind === "folder" ? "containers" : "albums";

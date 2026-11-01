@@ -26,24 +26,21 @@ export function AddToListDialog() {
   const client = useSyncClient();
   const announce = useAnnounce();
   const { addingToList, endAddToList } = useCollectionUi();
-  const { tree, albumsById, entriesByList } = useCollectionData();
+  const { tree, albumsById, listsByAlbum } = useCollectionData();
   const list = useRef<HTMLUListElement>(null);
   const album = addingToList === undefined ? undefined : albumsById.get(addingToList);
 
   const choices = useMemo(() => {
     if (!album) return [];
+    const inLists = new Set(listsByAlbum.get(album.id));
     return [...tree.byId.values()]
-      .filter(
-        (container) =>
-          container.kind === "list" &&
-          !(entriesByList.get(container.id) ?? []).some((entry) => entry.albumId === album.id),
-      )
+      .filter((container) => container.kind === "list" && !inLists.has(container.id))
       .map((container) => ({
         list: container,
         path: [...ancestorsOf(tree, container.id).map((folder) => folder.name), container.name],
       }))
       .toSorted((a, b) => a.path.join(" › ").localeCompare(b.path.join(" › ")));
-  }, [album, tree, entriesByList]);
+  }, [album, tree, listsByAlbum]);
 
   function add(listId: string, name: string) {
     if (!client || !album) return;

@@ -475,11 +475,10 @@ function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
   const client = useSyncClient();
   const notify = useNotify();
   const announce = useAnnounce();
-  const { tree, entriesByList } = useCollectionData();
+  const { tree, listsByAlbum } = useCollectionData();
   const { startAddToList } = useCollectionUi();
-  const lists = [...entriesByList]
-    .filter(([, entries]) => entries.some((entry) => entry.albumId === album.id))
-    .flatMap(([listId]) => tree.byId.get(listId) ?? [])
+  const lists = (listsByAlbum.get(album.id) ?? [])
+    .flatMap((listId) => tree.byId.get(listId) ?? [])
     .toSorted((a, b) => a.name.localeCompare(b.name));
 
   function remove(listId: string, name: string) {

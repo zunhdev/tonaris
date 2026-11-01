@@ -13,6 +13,7 @@ import { FieldCreateDialog } from "@/features/collection/field-create-dialog";
 import { fieldTypeNames } from "@/features/collection/field-types";
 import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
 import { useKeyedRead } from "@/features/shell/use-keyed-read";
+import { count } from "@/features/shell/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ChevronRight, X } from "lucide-react";
@@ -40,7 +41,7 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 type Usage = { albums: number; inTrash: number };
 
-const albums = (n: number) => `${n} ${n === 1 ? "album" : "albums"}`;
+const albums = (n: number) => count(n, "album", "albums");
 
 /** "Used by 214 albums · 3 in Trash", "Unused", or "—" before the counts arrive (DS-60). */
 function usageText(usage: Usage | undefined): string {
@@ -214,9 +215,7 @@ function FieldRows({
         </th>
         <td className="py-1 pr-3 text-fg-secondary">{fieldTypeNames[field.type]}</td>
         <td className="py-1 pr-3 text-fg-secondary">
-          {choice
-            ? `${field.options.length} ${field.options.length === 1 ? "option" : "options"}`
-            : "—"}
+          {choice ? count(field.options.length, "option", "options") : "—"}
         </td>
         <td className="py-1 text-fg-secondary">{usageText(usage)}</td>
       </tr>

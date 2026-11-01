@@ -38,15 +38,14 @@ function indexOf(
   albums: Album[],
   entries: Pick<Membership, "listId" | "albumId">[] = [],
 ) {
-  const entriesByList = new Map<string, Membership[]>();
+  const listsByAlbum = new Map<string, string[]>();
   for (const { listId, albumId } of entries) {
-    const entry = { listId, albumId, addedAt: "2026-10-28T00:00:00.000Z" };
-    entriesByList.set(listId, [...(entriesByList.get(listId) ?? []), entry]);
+    listsByAlbum.set(albumId, [...(listsByAlbum.get(albumId) ?? []), listId]);
   }
   return buildSearchIndex({
     tree: buildTree(containers),
     albumsById: new Map(albums.map((each) => [each.id, each])),
-    entriesByList,
+    listsByAlbum,
   });
 }
 

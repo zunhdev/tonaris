@@ -11,7 +11,7 @@ import { CaptureRows } from "@/features/capture/capture-rows";
 import { PhoneShared } from "@/features/sharing/phone-shared";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { phoneRootTab } from "@/features/shell/device";
-import { PageHeader } from "@/features/shell/page-header";
+import { PageHeader, useDocumentTitle } from "@/features/shell/page-header";
 import { useShell } from "@/features/shell/shell-context";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
@@ -45,13 +45,6 @@ import { ancestorsOf } from "./tree";
 import { usePresentation } from "./use-presentation";
 import { useRearrange, type ViewMoves } from "./use-rearrange";
 import { ViewOptions } from "./view-options";
-
-/** Names the page "{title} · Tonaris": the view's name is only in the client store, so the route can't. */
-function useDocumentTitle(title: string): void {
-  useEffect(() => {
-    document.title = `${title} · Tonaris`;
-  }, [title]);
-}
 
 function Body({ children }: { children: ReactNode }) {
   return (

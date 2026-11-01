@@ -32,6 +32,7 @@ import {
 } from "@/features/shell/shortcuts";
 import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import type { CommandRunner, CommandTarget } from "@/features/shell/use-shortcuts";
+import { count } from "@/features/shell/words";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { defaultRangeExtractor, useVirtualizer } from "@tanstack/react-virtual";
@@ -234,10 +235,10 @@ function PaletteBody({
   const { accountId } = useCollectionUi();
   const { editing } = useMode();
   const { sidebarHidden } = useShell();
-  const { tree, albumsById, entriesByList } = useCollectionData();
+  const { tree, albumsById, listsByAlbum } = useCollectionData();
   const index = useMemo(
-    () => buildSearchIndex({ tree, albumsById, entriesByList }),
-    [tree, albumsById, entriesByList],
+    () => buildSearchIndex({ tree, albumsById, listsByAlbum }),
+    [tree, albumsById, listsByAlbum],
   );
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<ReadonlySet<Group>>(new Set());
@@ -546,7 +547,7 @@ function PaletteBody({
         </p>
       )}
       <output className="sr-only">
-        {blank ? "" : total === 0 ? "No results" : total === 1 ? "1 result" : `${total} results`}
+        {blank ? "" : total === 0 ? "No results" : count(total, "result", "results")}
       </output>
     </>
   );

@@ -9,6 +9,7 @@ import { api } from "@/api";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { unreachable, useSend, type Unsent } from "@/features/sharing/send";
+import { count } from "@/features/shell/words";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Check, Copy, Ellipsis, Folder } from "lucide-react";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
@@ -271,7 +272,7 @@ function RowMenu({
 /** "2 people · link", as DS-65 lists an ancestor's audience. */
 function audienceOf({ people, link }: { people: number; link: boolean }): string {
   const parts = [
-    ...(people > 0 ? [people === 1 ? "1 person" : `${people} people`] : []),
+    ...(people > 0 ? [count(people, "person", "people")] : []),
     ...(link ? ["link"] : []),
   ];
   return parts.join(" · ");
