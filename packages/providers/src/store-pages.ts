@@ -7,9 +7,11 @@
 
 import { z } from "zod";
 
+import { serviceNames, type ProviderCache } from "@tonaris/domain";
+
+import { ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
 import { PacedQueue, realClock } from "./paced-queue";
-import { ProviderUnavailableError, type ProviderCache } from "./provider-cache";
 import { safeFetch, type SafeFetchInit } from "./safe-fetch";
 
 const qobuz = "https://www.qobuz.com";
@@ -251,13 +253,9 @@ export class StorePages {
     try {
       return await answer.response.text();
     } catch (error) {
-      throw new ProviderUnavailableError(
-        store,
-        `${store === "qobuz" ? "Qobuz" : "Tidal"}'s page broke off`,
-        {
-          cause: error,
-        },
-      );
+      throw new ProviderUnavailableError(store, `${serviceNames[store]}'s page broke off`, {
+        cause: error,
+      });
     }
   }
 
@@ -268,19 +266,15 @@ export class StorePages {
     try {
       response = await this.fetch(url, { redirect: "manual" });
     } catch (error) {
-      throw new ProviderUnavailableError(
-        store,
-        `${store === "qobuz" ? "Qobuz" : "Tidal"} didn't answer`,
-        {
-          cause: error,
-        },
-      );
+      throw new ProviderUnavailableError(store, `${serviceNames[store]} didn't answer`, {
+        cause: error,
+      });
     }
     if (response.status >= 500 || response.status === 429 || response.status === 403) {
       void response.body?.cancel().catch(() => {});
       throw new ProviderUnavailableError(
         store,
-        `${store === "qobuz" ? "Qobuz" : "Tidal"} answered ${response.status}`,
+        `${serviceNames[store]} answered ${response.status}`,
       );
     }
     return { status: response.status, location: response.headers.get("location"), response };

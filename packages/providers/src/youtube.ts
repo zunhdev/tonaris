@@ -10,9 +10,9 @@
 
 import { z } from "zod";
 
+import { ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
 import { PacedQueue, realClock } from "./paced-queue";
-import { ProviderUnavailableError } from "./provider-cache";
 import { safeFetch, type SafeFetchInit } from "./safe-fetch";
 
 const api = "https://www.googleapis.com/youtube/v3";

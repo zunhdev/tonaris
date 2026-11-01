@@ -5,8 +5,10 @@
 
 import { z } from "zod";
 
+import type { ProviderCache } from "@tonaris/domain";
+
+import { ProviderUnavailableError } from "./errors";
 import { PacedQueue, realClock } from "./paced-queue";
-import { ProviderUnavailableError, type ProviderCache } from "./provider-cache";
 import { safeFetch, SafeFetchError, type SafeFetchInit } from "./safe-fetch";
 
 const api = "https://musicbrainz.org/ws/2";

@@ -14,7 +14,6 @@
 import { z } from "zod";
 
 import {
-  failure,
   linkEntityId,
   type CapturePrefill,
   serviceNames,
@@ -23,12 +22,12 @@ import {
   type StreamingService,
 } from "@tonaris/domain";
 
+import { ProviderUnavailableError, unavailableFailure } from "./errors";
 import { cleanTitle, matchHints, type HintMatch, type Hints } from "./hints";
 import type { AppleAlbum, ItunesLookup } from "./itunes";
 import { barcodeForms, qobuzBarcode, urlForms } from "./link-forms";
 import { readLink, type Fetcher, type ParsedLink } from "./links";
 import type { MusicBrainz } from "./musicbrainz";
-import { ProviderUnavailableError } from "./provider-cache";
 import { safeFetch } from "./safe-fetch";
 import type { Spotify } from "./spotify";
 import { extractQobuzHints, type StorePages } from "./store-pages";
@@ -88,16 +87,6 @@ export const unidentifiedReasons = {
     "Tonaris can't ask Spotify which album this track is on right now. Enter the album's details; the link is kept.",
   gone: (service: StreamingService) =>
     `${serviceNames[service]} doesn't have this anymore. Check the link, or enter the album's details.`,
-};
-
-const providerNames: Record<ProviderUnavailableError["provider"], string> = {
-  musicbrainz: "MusicBrainz",
-  coverartarchive: "the Cover Art Archive",
-  itunes: "Apple Music",
-  spotify: "Spotify",
-  qobuz: "Qobuz",
-  tidal: "Tidal",
-  youtube: "YouTube",
 };
 
 const releaseGroupSchema = z.object({
@@ -323,13 +312,7 @@ export function createIdentifier(deps: IdentifierDeps) {
       return await chains[link.service](link, context);
     } catch (error) {
       if (!(error instanceof ProviderUnavailableError)) throw error;
-      return {
-        status: "failed",
-        failure: failure(
-          "provider_unavailable",
-          `Couldn't reach ${providerNames[error.provider]}. Try again, or enter the details manually.`,
-        ),
-      };
+      return { status: "failed", failure: unavailableFailure(error) };
     }
   }
 

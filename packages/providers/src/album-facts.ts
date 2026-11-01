@@ -14,9 +14,9 @@ import type {
   SourcedValues,
 } from "@tonaris/domain";
 
+import { ProviderUnavailableError } from "./errors";
 import type { MusicBrainz } from "./musicbrainz";
 import { policy } from "./policy";
-import { ProviderUnavailableError } from "./provider-cache";
 
 const releaseGroupSchema = z.object({
   id: z.string(),

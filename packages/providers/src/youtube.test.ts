@@ -3,7 +3,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { ProviderUnavailableError } from "./provider-cache";
+import { ProviderUnavailableError } from "./errors";
 import type { SafeFetchInit } from "./safe-fetch";
 import { albumTitle, descriptionDate, topicArtist, YouTubeData } from "./youtube";
 

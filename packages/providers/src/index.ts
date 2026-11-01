@@ -45,7 +45,13 @@ export {
   type PolicyUse,
   type Withheld,
 } from "./policy";
-export { memoryCache, ProviderUnavailableError, type ProviderCache } from "./provider-cache";
+export {
+  providerNames,
+  ProviderUnavailableError,
+  unavailableFailure,
+  type ProviderId,
+} from "./errors";
+export { memoryCache } from "./provider-cache";
 export { PacedQueue, realClock, type Clock } from "./paced-queue";
 export { Spotify, type SpotifyOptions } from "./spotify";
 export {

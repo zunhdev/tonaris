@@ -4,9 +4,9 @@
 
 import { z } from "zod";
 
+import { ProviderUnavailableError } from "./errors";
 import { firstArtist, phrase, searchTitle } from "./hints";
 import type { MusicBrainz } from "./musicbrainz";
-import { ProviderUnavailableError } from "./provider-cache";
 
 /** A cover to choose: its album on MusicBrainz, and the archive's stable `front-500` address. */
 export type Cover = {

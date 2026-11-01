@@ -3,8 +3,9 @@
 
 import { describe, expect, test } from "bun:test";
 
+import { ProviderUnavailableError } from "./errors";
 import { MusicBrainz, providerCacheMs, type UrlTarget } from "./musicbrainz";
-import { memoryCache, ProviderUnavailableError } from "./provider-cache";
+import { memoryCache } from "./provider-cache";
 import { createSafeFetch, userAgent } from "./safe-fetch";
 
 type Sent = { at: number; url: URL; method: string; headers: Headers };

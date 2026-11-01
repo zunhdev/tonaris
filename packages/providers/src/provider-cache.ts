@@ -1,13 +1,8 @@
-// Where provider answers are kept for a while (TS-41): MusicBrainz's and the Cover Art Archive's for 7 days. The
-// API keeps them in Postgres (`providerCache` in packages/db); tests and tooling keep them in memory. Keys are
-// namespaced by provider, such as `musicbrainz:url:{url}`, and values are JSON objects or arrays.
+// Where provider answers are kept for a while (TS-41): MusicBrainz's and the Cover Art Archive's for 7 days, iTunes
+// Lookup's and robots.txt's for a day. The port is the domain's `ProviderCache`; the API keeps its entries in
+// Postgres (`providerCacheStore` in packages/db), and tests and tooling keep them in memory.
 
-export type ProviderCache = {
-  /** The entries among `keys` that haven't expired by `now`. */
-  get(keys: readonly string[], now: Date): Promise<Map<string, unknown>>;
-  /** Keeps `entries` until `expiresAt`, replacing what is kept under their keys. */
-  set(entries: readonly { key: string; value: unknown }[], expiresAt: Date): Promise<void>;
-};
+import type { ProviderCache } from "@tonaris/domain";
 
 /** A cache in this process's memory, for tests and tooling. */
 export function memoryCache(): ProviderCache & {
@@ -33,26 +28,4 @@ export function memoryCache(): ProviderCache & {
     size: () => entries.size,
     entries: () => [...entries].map(([key, { value }]) => [key, value]),
   };
-}
-
-/**
- * A provider didn't answer usefully in time: busy, unreachable or broken. The work that asked can be retried
- * later (TS-90), and the outcome is `provider_unavailable` (TS-27). Messages name no query (TS-41).
- */
-export class ProviderUnavailableError extends Error {
-  override name = "ProviderUnavailableError";
-  constructor(
-    readonly provider:
-      | "musicbrainz"
-      | "coverartarchive"
-      | "itunes"
-      | "spotify"
-      | "qobuz"
-      | "tidal"
-      | "youtube",
-    message: string,
-    options?: ErrorOptions,
-  ) {
-    super(message, options);
-  }
 }

@@ -2,8 +2,9 @@
 
 import { describe, expect, test } from "bun:test";
 
+import { ProviderUnavailableError } from "./errors";
 import { ItunesLookup, itunesCacheMs } from "./itunes";
-import { memoryCache, ProviderUnavailableError } from "./provider-cache";
+import { memoryCache } from "./provider-cache";
 import type { SafeFetchInit } from "./safe-fetch";
 import { Spotify } from "./spotify";
 import { extractQobuzHints, extractTidalHints, robotsAllows, StorePages } from "./store-pages";
