@@ -1,39 +1,27 @@
 // Capture in the API (TS-22, TS-41, TS-44): `album.capture` asks its providers before it takes the owner's write lock.
-// A capture is claimed first, so a copy sent while it runs answers `409 in_progress` and nothing runs twice. Then the
-// link is identified, MusicBrainz is asked about its album and about saved albums it may have merged, and the domain
-// command matches and saves under the lock. Answers decided before the lock, such as a choice to make, are stored
-// like any outcome. A link edit's URL is read before the lock too (TON-46). Every other mutation runs as it always
-// has.
+// The mutation runner claims the capture first (sync/runner.ts). Then the link is identified, MusicBrainz is asked
+// about its album and about saved albums it may have merged, and the domain command matches and saves under the lock.
+// Answers decided before the lock, such as a choice to make, are stored like any outcome. A link edit's URL is read
+// before the lock too (TON-46).
 
 import {
   agreedToTerms,
-  capturesSince,
-  claimMutation,
-  executeMutation,
   findLinkedAlbum,
-  finishMutation,
   mergeCandidates,
-  releaseClaim,
   savedAlbumsOf,
   type Database,
-  type ExecutedMutation,
 } from "@tonaris/db";
 import {
   actingUserId,
   failure,
-  maxCapturesPerHour,
   linkEntityId,
   type AlbumFacts,
   type CaptureArgs,
   type CaptureSource,
-  type EmailPort,
   type FoundFacts,
-  type Mutation,
   type Outcome,
   type PreparedLink,
   type Principal,
-  shareToken,
-  shareTokenHash,
   termsVersion,
 } from "@tonaris/domain";
 import {
@@ -45,8 +33,6 @@ import {
   type Identifier,
   type LinkParse,
 } from "@tonaris/providers";
-
-import { deliverInvitation } from "./invitations";
 
 /**
  * What capture asks: the identification chain, and MusicBrainz's facts about a release group. `readLink` reads a link
@@ -60,19 +46,7 @@ export type CaptureDeps = {
   readLink?: (input: string) => Promise<Exclude<LinkParse, { status: "short" }>>;
 };
 
-/** Thrown when a mutation is claimed by another request that is still running it (TS-22). */
-export class MutationInProgressError extends Error {
-  constructor(readonly mutationId: string) {
-    super("This change is still being saved.");
-  }
-}
-
 type Prepared = { outcome: Outcome } | { source: CaptureSource };
-
-const tooManyCaptures = failure(
-  "rate_limited",
-  `You've added ${maxCapturesPerHour} albums from links in the last hour. Try again later, or enter an album manually.`,
-);
 
 const unavailable = failure(
   "provider_unavailable",
@@ -115,13 +89,15 @@ async function mergeMatches(
 /**
  * What a capture saves from, or the answer it gets before the lock (design decision 3): a failure, a choice between
  * albums, or a request for the album's details. A resubmitted choice is used only when the link still offers it.
+ * Without `deps`, nothing can be asked, so it fails as `provider_unavailable`.
  */
 export async function prepareCapture(
   db: Database,
-  deps: CaptureDeps,
+  deps: CaptureDeps | undefined,
   principal: Principal,
   args: CaptureArgs,
 ): Promise<Prepared> {
+  if (!deps) return { outcome: unavailable };
   const ownerId = actingUserId(principal);
   if (!ownerId) return { outcome: failure("permission_denied", "You can't add albums here.") };
   try {
@@ -229,100 +205,3 @@ export async function prepareLink(
     link: { service: link.service, url: link.url, entityId: linkEntityId(link) },
   };
 }
-
-/**
- * Runs a mutation as the API does: a capture claimed, prepared and then saved; a link edit with its URL read first;
- * anything else by `executeMutation`. Throws `MutationInProgressError` while another request runs the same capture.
- */
-export type SharingDeps = {
-  /** Derives link tokens (TS-32). */
-  shareSecret: string;
-  /** Sends invitations (TS-72), with the web app's origin for their links. */
-  email: EmailPort;
-  webOrigin: string;
-  logError: (error: unknown, context: string) => void;
-};
-
-export function mutationRunner(db: Database, deps: CaptureDeps | undefined, sharing: SharingDeps) {
-  const run = runMutation(db, deps, sharing);
-  return async function runAndDeliver(
-    principal: Principal,
-    mutation: Mutation,
-    now?: Date,
-  ): Promise<ExecutedMutation> {
-    const executed = await run(principal, mutation, now);
-    // A saved invitation's email is queued after the response; a replay never sends again (FR-07.5).
-    const { outcome } = executed.result;
-    if (
-      (mutation.name === "share.invite" || mutation.name === "share.resendInvitation") &&
-      !executed.replayed &&
-      outcome.status === "confirmed" &&
-      typeof outcome.result === "object" &&
-      outcome.result !== null &&
-      "emailing" in outcome.result &&
-      outcome.result.emailing === true &&
-      "grantId" in outcome.result &&
-      typeof outcome.result.grantId === "string"
-    ) {
-      void deliverInvitation(
-        { db, email: sharing.email, webOrigin: sharing.webOrigin },
-        outcome.result.grantId,
-      ).catch((error: unknown) => sharing.logError(error, "invitation email"));
-    }
-    return executed;
-  };
-}
-
-function runMutation(
-  db: Database,
-  deps: CaptureDeps | undefined,
-  { shareSecret }: Pick<SharingDeps, "shareSecret">,
-) {
-  return async function run(
-    principal: Principal,
-    mutation: Mutation,
-    now?: Date,
-  ): Promise<ExecutedMutation> {
-    // A new link's token is derived with the server's secret, which commands never see: its hash goes in (TS-32).
-    if (mutation.name === "share.setLink" && mutation.args.enabled) {
-      const hash = await shareTokenHash(await shareToken(shareSecret, mutation.args.linkId));
-      return executeMutation(db, principal, mutation, now, { shareLink: { hash } });
-    }
-    if (mutation.name === "link.set") {
-      const link = await prepareLink(mutation.args.url, deps?.readLink);
-      return executeMutation(db, principal, mutation, now, { link });
-    }
-    if (mutation.name !== "album.capture") return executeMutation(db, principal, mutation, now);
-    const claim = await claimMutation(db, principal, mutation, now);
-    if (claim.status === "answered") return claim.executed;
-    if (claim.status === "in_progress") throw new MutationInProgressError(mutation.mutationId);
-    // At most 100 captures an hour, from the app or MCP (TS-18), refused before any provider is asked.
-    const ownerId = actingUserId(principal);
-    const at = now ?? new Date();
-    if (
-      ownerId &&
-      (await capturesSince(db, ownerId, new Date(at.getTime() - 3_600_000), mutation.mutationId)) >=
-        maxCapturesPerHour
-    ) {
-      return finishMutation(db, principal, mutation, tooManyCaptures, now);
-    }
-    try {
-      const prepared = deps
-        ? await prepareCapture(db, deps, principal, mutation.args)
-        : { outcome: unavailable };
-      if ("outcome" in prepared) {
-        return await finishMutation(db, principal, mutation, prepared.outcome, now);
-      }
-      return await executeMutation(db, principal, mutation, now, {
-        claimed: true,
-        capture: prepared.source,
-      });
-    } catch (error) {
-      // An unexpected failure leaves nothing claimed, so sending it again runs it.
-      await releaseClaim(db, principal, mutation.mutationId);
-      throw error;
-    }
-  };
-}
-
-export type MutationRunner = ReturnType<typeof mutationRunner>;

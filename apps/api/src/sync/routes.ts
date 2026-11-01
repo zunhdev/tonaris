@@ -16,7 +16,6 @@ import {
   findMutationResult,
   mutationRunning,
   type Database,
-  type ExecutedMutation,
 } from "@tonaris/db";
 import {
   batchResultSchema,
@@ -29,15 +28,10 @@ import {
 
 import { presentBootstrap, presentChange, type ArtworkSigner } from "../artwork";
 import type { SessionGuard } from "../auth/plugin";
-import {
-  MutationInProgressError,
-  mutationRunner,
-  type CaptureDeps,
-  type SharingDeps,
-} from "../capture";
 import { ProblemError } from "../problem";
 import { eventStream, type StreamSource } from "../sse";
 import type { SyncEvent, SyncHub } from "./hub";
+import { MutationInProgressError, type Mutations } from "./runner";
 
 const cursor = z
   .string()
@@ -93,26 +87,16 @@ export function syncRoutes(
   {
     db,
     hub,
-    capture,
     artwork,
-    sharing,
+    mutations: { run, announce },
   }: {
     db: Database;
     hub: SyncHub;
-    capture?: CaptureDeps | undefined;
     artwork: ArtworkSigner;
-    sharing: SharingDeps;
+    /** Runs each mutation and announces its changes, as MCP's writes do (X-02). */
+    mutations: Mutations;
   },
 ) {
-  const run = mutationRunner(db, capture, sharing);
-  /**
-   * Hands a write's changes to the account's streams. A confirmed write with none, such as sharing or the display
-   * name, still tells the account's guest pages to read again (TS-23, TON-70).
-   */
-  const announce = (accountId: string, { result, changes, replayed }: ExecutedMutation) => {
-    if (changes.length > 0) hub.publish(accountId, changes);
-    else if (!replayed && result.outcome.status === "confirmed") hub.notify(accountId);
-  };
   return new Elysia()
     .use(session)
     .post(

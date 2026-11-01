@@ -15,7 +15,7 @@ import type { Auth } from "./auth/auth";
 import { authRoutes, sessionGuard, type SessionGuard } from "./auth/plugin";
 import { recoveryRoutes } from "./auth/recovery";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
-import type { CaptureDeps, SharingDeps } from "./capture";
+import type { CaptureDeps } from "./capture";
 import { compression } from "./compression";
 import type { ApiConfig } from "./config";
 import { webCors } from "./cors";
@@ -44,6 +44,7 @@ import { supportRoutes } from "./routes/v1/support";
 import { csrfGuard, securityHeaders } from "./security";
 import { databaseHub, type SyncHub } from "./sync/hub";
 import { syncRoutes } from "./sync/routes";
+import { announcer, mutationRunner, type MutationRunnerDeps, type Mutations } from "./sync/runner";
 
 /**
  * The largest request body the API reads (TON-95), passed to `listen`. The largest legitimate request, a 200-item
@@ -67,10 +68,10 @@ function v1(
   sync: {
     db: Database;
     hub: SyncHub;
-    capture?: CaptureDeps | undefined;
+    mutations: Mutations;
     covers?: CoverFinder | undefined;
     artwork: ArtworkSigner;
-    sharing: SharingDeps;
+    sharing: Omit<MutationRunnerDeps, "capture">;
     emailChange: EmailChangeDeps;
     accountDeletion: AccountDeletionDeps;
     supportEmail: string;
@@ -168,6 +169,11 @@ export function createApp({
     problemOptions.logError ??
     ((error: unknown, context: string) => console.error(`Failed: ${context}`, error));
   const sharing = { shareSecret: config.authSecret, email, webOrigin: config.webOrigin, logError };
+  // One path for every write, from the app and MCP alike (X-02).
+  const mutations: Mutations = {
+    run: mutationRunner(db, { capture, ...sharing }),
+    announce: announcer(hub),
+  };
   return (
     new Elysia({ name: "tonaris-api" })
       .use(problemDetails(problemOptions))
@@ -189,9 +195,7 @@ export function createApp({
           db,
           config,
           logError,
-          hub,
-          capture,
-          sharing,
+          mutations,
           ...(mcpLimiter ? { limiter: mcpLimiter } : {}),
         }),
       )
@@ -201,7 +205,7 @@ export function createApp({
         v1(sessionGuard(auth), {
           db,
           hub,
-          capture,
+          mutations,
           covers,
           artwork,
           sharing,
