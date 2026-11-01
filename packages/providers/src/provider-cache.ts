@@ -29,3 +29,12 @@ export function memoryCache(): ProviderCache & {
     entries: () => [...entries].map(([key, { value }]) => [key, value]),
   };
 }
+
+/** What `cache` keeps under one key that hasn't expired by `now`, in milliseconds since the epoch. */
+export async function cachedValue(
+  cache: ProviderCache,
+  key: string,
+  now: number,
+): Promise<unknown> {
+  return (await cache.get([key], new Date(now))).get(key);
+}

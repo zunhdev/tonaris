@@ -7,9 +7,11 @@ import { z } from "zod";
 
 import type { ProviderCache } from "@tonaris/domain";
 
+import { clientParts, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
-import { PacedQueue, realClock } from "./paced-queue";
-import { safeFetch, SafeFetchError, type SafeFetchInit } from "./safe-fetch";
+import { PacedQueue, retryAfterMs } from "./paced-queue";
+import { cachedValue } from "./provider-cache";
+import { discard, SafeFetchError, type ProviderFetch } from "./safe-fetch";
 
 const api = "https://musicbrainz.org/ws/2";
 const coverArtArchive = "https://coverartarchive.org";
@@ -35,13 +37,7 @@ export type BarcodeRelease = { id: string; title: string; barcode: string; relea
  */
 export type CachePolicy = { cacheMisses: boolean };
 
-export type MusicBrainzOptions = {
-  cache: ProviderCache;
-  fetch?: (url: string, init: SafeFetchInit) => Promise<Response>;
-  /** Milliseconds since the epoch; tests pass a simulated clock with `sleep`. */
-  now?: () => number;
-  sleep?: (ms: number) => Promise<void>;
-};
+export type MusicBrainzOptions = ClientOptions & { cache: ProviderCache };
 
 const targetSchema = z.object({ id: z.string(), title: z.string() });
 const urlSchema = z.object({
@@ -104,23 +100,19 @@ const keys = {
  */
 export class MusicBrainz {
   private readonly cache: ProviderCache;
-  private readonly fetch: NonNullable<MusicBrainzOptions["fetch"]>;
+  private readonly fetch: ProviderFetch;
   private readonly now: () => number;
   /** MusicBrainz's 1 request a second, for every lookup of this process. */
   private readonly queue: PacedQueue;
   /** Requests in flight by URL, so identical lookups share one. */
   private readonly inFlight = new Map<string, Promise<unknown>>();
 
-  constructor({
-    cache,
-    fetch = safeFetch,
-    now = realClock.now,
-    sleep = realClock.sleep,
-  }: MusicBrainzOptions) {
-    this.cache = cache;
+  constructor(options: MusicBrainzOptions) {
+    const { fetch, clock } = clientParts(options);
+    this.cache = options.cache;
     this.fetch = fetch;
-    this.now = now;
-    this.queue = new PacedQueue(musicBrainzIntervalMs, { now, sleep });
+    this.now = clock.now;
+    this.queue = new PacedQueue(musicBrainzIntervalMs, clock);
   }
 
   /**
@@ -207,7 +199,7 @@ export class MusicBrainz {
   async lookup(entity: MusicBrainzEntity, id: string, inc: readonly string[]): Promise<unknown> {
     mbid.parse(id);
     const key = keys.entity(entity, id, inc);
-    const kept = (await this.cache.get([key], new Date(this.now()))).get(key);
+    const kept = await cachedValue(this.cache, key, this.now());
     if (kept !== undefined) return keptBodySchema.parse(kept).body;
     const body = await this.request(
       `${entity}/${id}`,
@@ -229,7 +221,7 @@ export class MusicBrainz {
   async releaseGroupFront(id: string): Promise<string | null> {
     mbid.parse(id);
     const key = keys.front(id);
-    const kept = (await this.cache.get([key], new Date(this.now()))).get(key);
+    const kept = await cachedValue(this.cache, key, this.now());
     if (kept !== undefined) return keptFrontSchema.parse(kept).url;
     const address = `${coverArtArchive}/release-group/${id}/front-500`;
     let response: Response;
@@ -240,7 +232,7 @@ export class MusicBrainz {
         cause: error,
       });
     }
-    void response.body?.cancel().catch(() => {});
+    discard(response);
     let url: string | null;
     if (response.status >= 300 && response.status < 400) url = address;
     else if (response.status === 404) url = null;
@@ -303,7 +295,7 @@ export class MusicBrainz {
 
   /** Holds the whole queue back after a busy answer: MusicBrainz's limit is everyone's. */
   private backOff(retry: number, retryAfter: string | null): void {
-    this.queue.holdFor(Math.max(Number(retryAfter) || 0, 2 ** retry) * 1_000);
+    this.queue.holdFor(retryAfterMs(retryAfter, retry));
   }
 
   private async send(url: URL): Promise<unknown> {
@@ -333,17 +325,17 @@ export class MusicBrainz {
         continue;
       }
       if (retriedStatuses.has(response.status)) {
-        void response.body?.cancel().catch(() => {});
+        discard(response);
         failure = new Error(`MusicBrainz answered ${response.status}`);
         this.backOff(retry, response.headers.get("retry-after"));
         continue;
       }
       if (response.status === 404) {
-        void response.body?.cancel().catch(() => {});
+        discard(response);
         return null;
       }
       if (!response.ok) {
-        void response.body?.cancel().catch(() => {});
+        discard(response);
         throw new Error(`MusicBrainz answered ${response.status} for ${where}`);
       }
       try {

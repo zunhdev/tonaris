@@ -7,9 +7,11 @@ import { z } from "zod";
 
 import type { ProviderCache } from "@tonaris/domain";
 
+import { clientParts, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
-import { PacedQueue, realClock } from "./paced-queue";
-import { safeFetch, type SafeFetchInit } from "./safe-fetch";
+import { PacedQueue } from "./paced-queue";
+import { cachedValue } from "./provider-cache";
+import { discard, type ProviderFetch } from "./safe-fetch";
 
 /** Calls start at least this far apart: 20 a minute. */
 export const itunesIntervalMs = 3_000;
@@ -26,12 +28,7 @@ export type AppleAlbum = {
   trackCount: number;
 };
 
-export type ItunesOptions = {
-  cache: ProviderCache;
-  fetch?: (url: string, init: SafeFetchInit) => Promise<Response>;
-  now?: () => number;
-  sleep?: (ms: number) => Promise<void>;
-};
+export type ItunesOptions = ClientOptions & { cache: ProviderCache };
 
 const resultSchema = z.object({
   wrapperType: z.string(),
@@ -59,20 +56,16 @@ const appleId = /^\d+$/;
 
 export class ItunesLookup {
   private readonly cache: ProviderCache;
-  private readonly fetch: NonNullable<ItunesOptions["fetch"]>;
+  private readonly fetch: ProviderFetch;
   private readonly now: () => number;
   private readonly queue: PacedQueue;
 
-  constructor({
-    cache,
-    fetch = safeFetch,
-    now = realClock.now,
-    sleep = realClock.sleep,
-  }: ItunesOptions) {
-    this.cache = cache;
+  constructor(options: ItunesOptions) {
+    const { fetch, clock } = clientParts(options);
+    this.cache = options.cache;
     this.fetch = fetch;
-    this.now = now;
-    this.queue = new PacedQueue(itunesIntervalMs, { now, sleep });
+    this.now = clock.now;
+    this.queue = new PacedQueue(itunesIntervalMs, clock);
   }
 
   /** The album with this id, from the first storefront that has it. */
@@ -106,7 +99,7 @@ export class ItunesLookup {
     wrapperType: "collection" | "track",
   ): Promise<AppleAlbum | null> {
     const key = `itunes:lookup:${id}:${storefront}`;
-    const kept = (await this.cache.get([key], new Date(this.now()))).get(key);
+    const kept = await cachedValue(this.cache, key, this.now());
     if (kept !== undefined) return keptSchema.parse(kept).album;
 
     await this.queue.turn();
@@ -117,7 +110,7 @@ export class ItunesLookup {
     try {
       const response = await this.fetch(url.href, { headers: { accept: "application/json" } });
       if (!response.ok) {
-        void response.body?.cancel().catch(() => {});
+        discard(response);
         throw new Error(`iTunes Lookup answered ${response.status}`);
       }
       body = await response.json();

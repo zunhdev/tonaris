@@ -5,22 +5,17 @@
 
 import { z } from "zod";
 
+import { clientParts, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
-import { PacedQueue, realClock } from "./paced-queue";
-import { safeFetch, type SafeFetchInit } from "./safe-fetch";
+import { PacedQueue, retryAfterMs } from "./paced-queue";
+import { discard, type ProviderFetch, type SafeFetchInit } from "./safe-fetch";
 
 /** Calls start at least this far apart. Development mode publishes no numbers; the spike saw no throttling. */
 export const spotifyIntervalMs = 250;
 /** 429s waited out before giving up. */
 export const spotifyMaxRetries = 3;
 
-export type SpotifyOptions = {
-  clientId: string;
-  clientSecret: string;
-  fetch?: (url: string, init: SafeFetchInit) => Promise<Response>;
-  now?: () => number;
-  sleep?: (ms: number) => Promise<void>;
-};
+export type SpotifyOptions = ClientOptions & { clientId: string; clientSecret: string };
 
 const tokenSchema = z.object({ access_token: z.string(), expires_in: z.number() });
 const albumSchema = z.object({ external_ids: z.object({ upc: z.string().optional() }).optional() });
@@ -31,17 +26,17 @@ type Call = "Get Album" | "Get Track" | "the token";
 
 export class Spotify {
   private readonly options: SpotifyOptions;
-  private readonly fetch: NonNullable<SpotifyOptions["fetch"]>;
+  private readonly fetch: ProviderFetch;
   private readonly now: () => number;
   private readonly queue: PacedQueue;
   private token: { value: string; expiresAt: number } | undefined;
 
   constructor(options: SpotifyOptions) {
-    const { fetch = safeFetch, now = realClock.now, sleep = realClock.sleep } = options;
+    const { fetch, clock } = clientParts(options);
     this.options = options;
     this.fetch = fetch;
-    this.now = now;
-    this.queue = new PacedQueue(spotifyIntervalMs, { now, sleep });
+    this.now = clock.now;
+    this.queue = new PacedQueue(spotifyIntervalMs, clock);
   }
 
   /** Get Album's UPC, held only by the caller; undefined when Spotify has no such album. */
@@ -69,16 +64,16 @@ export class Spotify {
         headers: { authorization: `Bearer ${token}`, accept: "application/json" },
       });
       if (response.status === 401 && attempt === 0) {
-        void response.body?.cancel().catch(() => {});
+        discard(response);
         this.token = undefined;
         continue;
       }
       if (response.status === 404 || response.status === 400) {
-        void response.body?.cancel().catch(() => {});
+        discard(response);
         return undefined;
       }
       if (!response.ok) {
-        void response.body?.cancel().catch(() => {});
+        discard(response);
         throw new ProviderUnavailableError(
           "spotify",
           `Spotify answered ${response.status} to ${call}`,
@@ -102,7 +97,7 @@ export class Spotify {
       body: "grant_type=client_credentials",
     });
     if (!response.ok) {
-      void response.body?.cancel().catch(() => {});
+      discard(response);
       throw new ProviderUnavailableError(
         "spotify",
         `Spotify answered ${response.status} to the token`,
@@ -129,13 +124,11 @@ export class Spotify {
         });
       }
       if (response.status !== 429) return response;
-      void response.body?.cancel().catch(() => {});
+      discard(response);
       if (retry === spotifyMaxRetries) {
         throw new ProviderUnavailableError("spotify", `Spotify kept refusing ${call} as too many`);
       }
-      this.queue.holdFor(
-        Math.max(Number(response.headers.get("retry-after")) || 0, 2 ** retry) * 1_000,
-      );
+      this.queue.holdFor(retryAfterMs(response.headers.get("retry-after"), retry));
     }
   }
 }

@@ -319,7 +319,7 @@ export async function resolveShortLink(
     } catch {
       return unreachable();
     }
-    // Only the status and Location matter.
+    // Only the status and Location matter. Not safe-fetch's `discard()`: this module runs in browsers too.
     void response.body?.cancel().catch(() => {});
     if (response.status >= 500 || response.status === 429) return unreachable();
     const location = response.headers.get("location");

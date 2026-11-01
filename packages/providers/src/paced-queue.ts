@@ -1,6 +1,7 @@
 // Turn-taking for providers with a request rate (TS-41): MusicBrainz's 1 a second, iTunes Lookup's 20 a minute,
-// Spotify's and the store pages' polite pace. Turns are taken in the order asked for and start at least
-// `intervalMs` apart, start to start; a turn passes once its request starts, so a slow answer holds nobody up.
+// and the polite pace of Spotify, the store pages and YouTube's Data API. Turns are taken in the order asked for
+// and start at least `intervalMs` apart, start to start; a turn passes once its request starts, so a slow answer
+// holds nobody up.
 
 export type Clock = {
   /** Milliseconds since the epoch. */
@@ -12,6 +13,14 @@ export const realClock: Clock = {
   now: Date.now,
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 };
+
+/**
+ * How long a busy answer holds the queue before retry number `retry` (from 0): the seconds `Retry-After` asks for,
+ * or 2^`retry` seconds when that is longer (TS-41).
+ */
+export function retryAfterMs(retryAfter: string | null, retry: number): number {
+  return Math.max(Number(retryAfter) || 0, 2 ** retry) * 1_000;
+}
 
 export class PacedQueue {
   /** The end of the queue: each turn waits for the one before it. */

@@ -10,20 +10,18 @@
 
 import { z } from "zod";
 
+import { clientParts, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
-import { PacedQueue, realClock } from "./paced-queue";
-import { safeFetch, type SafeFetchInit } from "./safe-fetch";
+import { PacedQueue } from "./paced-queue";
+import { discard, type ProviderFetch } from "./safe-fetch";
 
 const api = "https://www.googleapis.com/youtube/v3";
 /** Reads start at least this far apart: the spike saw no throttling at this pace. */
 export const youtubeIntervalMs = 250;
 
-export type YouTubeDataOptions = {
+export type YouTubeDataOptions = ClientOptions & {
   apiKey: string;
-  fetch?: (url: string, init: SafeFetchInit) => Promise<Response>;
-  now?: () => number;
-  sleep?: (ms: number) => Promise<void>;
   /** Told of a refused read (a 400 or 403: a used-up quota, a bad key), with the API's reason and never the key. */
   onRefused?: (read: Read, status: number, reason: string | undefined) => void;
 };
@@ -79,14 +77,14 @@ export function descriptionDate(description: string): string | undefined {
 
 export class YouTubeData {
   private readonly options: YouTubeDataOptions;
-  private readonly fetch: NonNullable<YouTubeDataOptions["fetch"]>;
+  private readonly fetch: ProviderFetch;
   private readonly queue: PacedQueue;
 
   constructor(options: YouTubeDataOptions) {
-    const { fetch = safeFetch, now = realClock.now, sleep = realClock.sleep } = options;
+    const { fetch, clock } = clientParts(options);
     this.options = options;
     this.fetch = fetch;
-    this.queue = new PacedQueue(youtubeIntervalMs, { now, sleep });
+    this.queue = new PacedQueue(youtubeIntervalMs, clock);
   }
 
   /**
@@ -132,7 +130,7 @@ export class YouTubeData {
       });
     }
     if (response.status === 429 || response.status >= 500) {
-      void response.body?.cancel().catch(() => {});
+      discard(response);
       throw new ProviderUnavailableError(
         "youtube",
         `YouTube answered ${response.status} to ${read}`,
@@ -144,7 +142,7 @@ export class YouTubeData {
       return undefined;
     }
     if (!response.ok) {
-      void response.body?.cancel().catch(() => {});
+      discard(response);
       return undefined;
     }
     try {

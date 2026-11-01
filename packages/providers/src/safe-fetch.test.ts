@@ -12,6 +12,7 @@ import { $ } from "bun";
 import {
   connectPinned,
   createSafeFetch,
+  discard,
   SafeFetchError,
   userAgent,
   type Connect,
@@ -380,6 +381,20 @@ describe("safeFetch: requests", () => {
       .catch((caught: unknown) => caught);
     expect(String(late)).toContain("https://musicbrainz.org/ws/2/release");
     expect(String(late)).not.toContain("0602445790081");
+  });
+
+  test("discard lets go of a body, even one that breaks off", async () => {
+    let cancelled = false;
+    discard(new Response(new ReadableStream({ cancel: () => void (cancelled = true) })));
+    await Promise.resolve();
+    expect(cancelled).toBe(true);
+    const broken = new Response(
+      new ReadableStream({
+        cancel: () => Promise.reject(new Error("already gone")),
+      }),
+    );
+    expect(() => discard(broken)).not.toThrow();
+    expect(() => discard(new Response(null, { status: 204 }))).not.toThrow();
   });
 });
 

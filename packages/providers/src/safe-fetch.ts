@@ -1,6 +1,7 @@
 // One fetch for every outbound call (TS-103, Q-05): short links, MusicBrainz, the Cover Art Archive, iTunes
-// Lookup, Spotify, the Qobuz and Tidal store pages, the YouTube Data API, and the image proxy. URLs reach it from
-// pasted links, provider metadata and owners' artwork, so it refuses anything but public https hosts:
+// Lookup, Spotify, the Qobuz and Tidal store pages, the YouTube Data API, Resend's email API, and the image proxy.
+// URLs reach it from pasted links, provider metadata and owners' artwork, so it refuses anything but public https
+// hosts:
 // - https on the default port only, with no credentials and no IP address for a host;
 // - DNS checked on every hop, every address public (`isPublicAddress`), and the connection made to the address
 //   that was checked, with the host's name for TLS and Host, so DNS can't answer differently in between;
@@ -52,6 +53,9 @@ export type SafeFetchInit = RequestInit & {
   /** Media types a successful response must have, as prefixes: `["image/"]` for the image proxy. */
   contentTypes?: readonly string[];
 };
+
+/** The fetch a provider client asks through: `safeFetch`, or a test's stand-in. */
+export type ProviderFetch = (url: string, init: SafeFetchInit) => Promise<Response>;
 
 export type ResolvedAddress = { address: string; family: number };
 
@@ -139,7 +143,7 @@ async function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promis
 }
 
 /** Lets go of a body nobody will read. */
-function discard(response: Response): void {
+export function discard(response: Response): void {
   void response.body?.cancel().catch(() => {});
 }
 

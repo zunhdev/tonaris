@@ -9,10 +9,12 @@ import { z } from "zod";
 
 import { serviceNames, type ProviderCache } from "@tonaris/domain";
 
+import { clientParts, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
-import { PacedQueue, realClock } from "./paced-queue";
-import { safeFetch, type SafeFetchInit } from "./safe-fetch";
+import { PacedQueue } from "./paced-queue";
+import { cachedValue } from "./provider-cache";
+import { discard, type ProviderFetch } from "./safe-fetch";
 
 const qobuz = "https://www.qobuz.com";
 const tidal = "https://tidal.com";
@@ -23,12 +25,7 @@ export const robotsCacheMs = 86_400_000;
 /** The product token robots.txt rules name (RFC 9309). */
 const robotsAgent = "Tonaris";
 
-export type StorePagesOptions = {
-  cache: ProviderCache;
-  fetch?: (url: string, init: SafeFetchInit) => Promise<Response>;
-  now?: () => number;
-  sleep?: (ms: number) => Promise<void>;
-};
+export type StorePagesOptions = ClientOptions & { cache: ProviderCache };
 
 /** What request A found: the slug for step 2's store forms, and the page itself when the slug is "-". */
 export type QobuzAddress = { slug: string; page?: string };
@@ -165,22 +162,18 @@ type Answer = { status: number; location: string | null; response: Response };
 
 export class StorePages {
   private readonly cache: ProviderCache;
-  private readonly fetch: NonNullable<StorePagesOptions["fetch"]>;
+  private readonly fetch: ProviderFetch;
   private readonly now: () => number;
   private readonly queues: Record<"qobuz" | "tidal", PacedQueue>;
 
-  constructor({
-    cache,
-    fetch = safeFetch,
-    now = realClock.now,
-    sleep = realClock.sleep,
-  }: StorePagesOptions) {
-    this.cache = cache;
+  constructor(options: StorePagesOptions) {
+    const { fetch, clock } = clientParts(options);
+    this.cache = options.cache;
     this.fetch = fetch;
-    this.now = now;
+    this.now = clock.now;
     this.queues = {
-      qobuz: new PacedQueue(storePageIntervalMs, { now, sleep }),
-      tidal: new PacedQueue(storePageIntervalMs, { now, sleep }),
+      qobuz: new PacedQueue(storePageIntervalMs, clock),
+      tidal: new PacedQueue(storePageIntervalMs, clock),
     };
   }
 
@@ -197,10 +190,10 @@ export class StorePages {
     const answer = await this.get("qobuz", `${qobuz}/fr-fr/album/-/${albumId}`);
     if (answer.status === 200) {
       const page = readPage ? await answer.response.text() : undefined;
-      if (!readPage) void answer.response.body?.cancel().catch(() => {});
+      if (!readPage) discard(answer.response);
       return { slug: "-", ...(page === undefined ? {} : { page }) };
     }
-    void answer.response.body?.cancel().catch(() => {});
+    discard(answer.response);
     const target = qobuzAlbumPath(answer.location, albumId);
     return target ? { slug: target.slug } : undefined;
   }
@@ -241,13 +234,13 @@ export class StorePages {
   ): Promise<string | undefined> {
     let answer = await this.get(store, url);
     if (answer.status === 301 || answer.status === 302) {
-      void answer.response.body?.cancel().catch(() => {});
+      discard(answer.response);
       const target = sameAlbum(answer.location);
       if (!target) return undefined;
       answer = await this.get(store, target);
     }
     if (answer.status !== 200) {
-      void answer.response.body?.cancel().catch(() => {});
+      discard(answer.response);
       return undefined;
     }
     try {
@@ -271,7 +264,7 @@ export class StorePages {
       });
     }
     if (response.status >= 500 || response.status === 429 || response.status === 403) {
-      void response.body?.cancel().catch(() => {});
+      discard(response);
       throw new ProviderUnavailableError(
         store,
         `${serviceNames[store]} answered ${response.status}`,
@@ -284,7 +277,7 @@ export class StorePages {
   private async allowed(store: "qobuz" | "tidal"): Promise<boolean> {
     const origin = store === "qobuz" ? qobuz : tidal;
     const key = `robots:${new URL(origin).host}`;
-    const kept = (await this.cache.get([key], new Date(this.now()))).get(key);
+    const kept = await cachedValue(this.cache, key, this.now());
     const parsed = z.object({ allowed: z.boolean() }).safeParse(kept);
     if (parsed.success) return parsed.data.allowed;
 
@@ -293,7 +286,7 @@ export class StorePages {
     try {
       const response = await this.fetch(`${origin}/robots.txt`, {});
       if (!response.ok) {
-        void response.body?.cancel().catch(() => {});
+        discard(response);
         return false;
       }
       robots = await response.text();
