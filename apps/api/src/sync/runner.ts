@@ -3,8 +3,8 @@
 // commands can't do themselves:
 // - a new share link's token is derived with the server's secret, which commands never see (TS-32);
 // - a link edit's URL is read before the owner's write lock (TON-46);
-// - a capture is claimed first, so a copy sent while it runs answers `409 in_progress` and nothing runs twice, held to
-//   100 an hour, and asks its providers before the lock (TS-41, ../capture.ts);
+// - a capture is claimed first, so a copy sent while it runs answers `409 in_progress` and nothing runs twice; it is
+//   held to 100 an hour, and asks its providers before the lock (TS-41, src/capture.ts);
 // - a saved invitation's email is queued after the response (FR-07.5).
 // After commit, `announce` hands the changes to the account's streams (TS-23). `mutationStatus` says what came of one
 // sent earlier.

@@ -1,6 +1,7 @@
 // The tonaris-api Elysia app (TS-01, TS-04). Routes stay thin: business rules live in packages/domain.
-// This module has no side effects; src/index.ts connects the database and email and listens. The web app imports
-// `type App` from here for its Eden client, types only (TS-29).
+// This module has no side effects: src/runtime.ts builds the app with its job worker and email, and src/index.ts
+// connects the database and listens. The web app imports `type App` from here for its Eden client, types only
+// (TS-29).
 
 import { Elysia } from "elysia";
 import { z } from "zod";
