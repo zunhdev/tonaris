@@ -11,6 +11,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode }
 
 import {
   appAccountDefaults,
+  sortFields,
   unsetView,
   type Album,
   type Container,
@@ -131,7 +132,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       if (ofAlbum) ofAlbum.push(link);
       else linksByAlbum.set(link.albumId, [link]);
     }
-    const fields = (fieldData ?? []).toSorted((a, b) => a.name.localeCompare(b.name));
+    const fields = sortFields(fieldData ?? []);
     const valuesByAlbum = new Map<string, FieldValue[]>();
     for (const row of valueData ?? []) {
       const ofAlbum = valuesByAlbum.get(row.albumId);

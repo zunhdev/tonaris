@@ -6,14 +6,11 @@
 import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 
-import { descriptionTooLong, maxDescriptionLength, type Container } from "@tonaris/domain";
+import { descriptionProblem, type Container } from "@tonaris/domain";
 import { Field } from "@tonaris/ui/components/field";
 
 import { useMode } from "./collection-ui";
 import { useInlineDraft } from "./inline-draft";
-
-// oxlint-disable-next-line no-misused-spread
-const tooLong = (text: string) => [...text].length > maxDescriptionLength;
 
 export function ContainerDescription({ container }: { container: Container }) {
   const { editing } = useMode();
@@ -34,7 +31,7 @@ function DescriptionEditor({ container }: { container: Container }) {
     props,
   } = useInlineDraft<HTMLTextAreaElement>({
     value: container.description ?? "",
-    check: (typed) => (tooLong(typed.trim()) ? descriptionTooLong : undefined),
+    check: (typed) => descriptionProblem(typed.trim())?.problem.detail,
     save: (typed) => {
       const text = typed.trim();
       const next = text === "" ? null : text;

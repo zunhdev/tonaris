@@ -12,7 +12,13 @@ import { useSyncClient } from "@/features/sync/sync-provider";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 
-import { fieldValueKey, type Album, type CustomField, type FieldValue } from "@tonaris/domain";
+import {
+  fieldValueKey,
+  sortFields,
+  type Album,
+  type CustomField,
+  type FieldValue,
+} from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   DropdownMenu,
@@ -29,12 +35,12 @@ import { FieldValueEditor, shownValue } from "./field-editors";
 /** The album's applied fields, by name, with their values. */
 function useAppliedFields(albumId: string): { field: CustomField; row: FieldValue }[] {
   const { fieldsById, valuesByAlbum } = useCollectionData();
-  return (valuesByAlbum.get(albumId) ?? [])
-    .flatMap((row) => {
+  return sortFields(
+    (valuesByAlbum.get(albumId) ?? []).flatMap((row) => {
       const field = fieldsById.get(row.fieldId);
-      return field ? [{ field, row }] : [];
-    })
-    .toSorted((a, b) => a.field.name.localeCompare(b.field.name));
+      return field ? [{ field, row, name: field.name }] : [];
+    }),
+  );
 }
 
 export function CustomFieldsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {

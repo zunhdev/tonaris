@@ -34,11 +34,11 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { z } from "zod";
 
 import {
   findNameConflict,
   recoveryResultSchema,
+  sameAlbumSchema,
   type SameAlbum,
   type SharingImpact,
   type SkippedEntry,
@@ -504,14 +504,6 @@ function SkipReport({
     </Dialog>
   );
 }
-
-const sameAlbumSchema = z.object({
-  unitId: z.string(),
-  albumId: z.string(),
-  title: z.string(),
-  artistCredit: z.string(),
-  originalYear: z.number().nullable(),
-});
 
 /** One of the two records a same-album pause shows. */
 function RecordCard({ title, detail }: { title: string; detail: string }) {

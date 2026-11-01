@@ -23,13 +23,13 @@ import { useId, useState } from "react";
 
 import {
   fieldNameProblem,
+  fieldLimitProblem,
   fieldNameTaken,
   fieldTypeInUse,
   fieldTypes,
   findNameConflict,
   isChoiceType,
   maxFieldOptions,
-  maxFields,
   optionLabelProblem,
   optionLabelTaken,
   optionRemovalSchema,
@@ -106,19 +106,19 @@ export function CustomFieldsSettings() {
   const [open, setOpen] = useState<string>();
   const [creating, setCreating] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation>();
-  const atLimit = fields.length >= maxFields;
+  const limit = fieldLimitProblem(fields.length);
 
   return (
     <div className="flex max-w-3xl flex-col gap-4 overflow-y-auto p-6">
       <div className="flex items-center gap-3">
-        <Button variant="primary" disabled={!ready || atLimit} onClick={() => setCreating(true)}>
+        <Button
+          variant="primary"
+          disabled={!ready || limit !== undefined}
+          onClick={() => setCreating(true)}
+        >
           New field
         </Button>
-        {atLimit && (
-          <p className="text-small text-fg-secondary">
-            You&apos;ve reached {maxFields} custom fields. Delete one to add another.
-          </p>
-        )}
+        {limit && <p className="text-small text-fg-secondary">{limit.problem.detail}</p>}
       </div>
       {ready && fields.length === 0 ? (
         <p className="text-fg-secondary">

@@ -53,6 +53,7 @@ import {
 import {
   matchRange,
   maxSearchLimit,
+  maxSearchQueryLength,
   searchKey,
   searchTier,
   type Album,
@@ -155,7 +156,7 @@ const sharedDelayMs = 150;
  */
 function useSharedSearch(text: string, wanted: boolean) {
   const offline = useConnection() === "offline";
-  const q = text.trim().slice(0, 200);
+  const q = text.trim().slice(0, maxSearchQueryLength);
   const asking = wanted && !offline && q !== "";
   const read = useKeyedRead(
     asking ? q : undefined,
