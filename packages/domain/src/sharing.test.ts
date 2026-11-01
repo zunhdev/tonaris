@@ -16,7 +16,6 @@ import {
   shareToken,
   shareTokenHash,
   sourcesOf,
-  viewerOf,
   type ShareViewer,
   type SharingState,
 } from "./sharing";
@@ -52,19 +51,6 @@ describe("link tokens (TS-32)", () => {
     const hash = await shareTokenHash(token);
     expect(hash).toHaveLength(32);
     expect(await shareTokenHash(token)).toEqual(hash);
-  });
-});
-
-describe("viewers (TS-30)", () => {
-  test("people and their MCP connections read as the person; guests through their link", () => {
-    expect(viewerOf({ kind: "user", userId: anna, role: "user", client: "web" })).toEqual(
-      annaViews,
-    );
-    expect(viewerOf({ kind: "mcp", userId: anna, grantId: uuidv7(), mode: "read_only" })).toEqual(
-      annaViews,
-    );
-    const linkId = uuidv7();
-    expect(viewerOf({ kind: "guest", linkId, rootId: uuidv7() })).toEqual({ kind: "link", linkId });
   });
 });
 

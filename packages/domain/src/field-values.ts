@@ -4,14 +4,14 @@
 // value, so applying it again starts empty. Values are checked against their field's type, here, by the server and
 // by the editors, with the same words.
 
+import { changeableAlbum } from "./albums";
+import { applied, conflict, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import type { CustomField, StoredField } from "./fields";
+import { maxTextValueLength } from "./limits";
+import { exceedsLength } from "./names";
 import { failure, type Failure } from "./outcomes";
-import { authorizeWrite } from "./policies";
 import { z } from "./zod";
-
-/** Characters in a text value, counted in code points (TS-18). */
-export const maxTextValueLength = 2_000;
 
 /**
  * A field's value on an album: text, a decimal number as a string, a `YYYY-MM-DD` date, yes/no, an option ID, or
@@ -80,8 +80,7 @@ export function normalizedValue(
     if (typeof value !== "string") return refuse(refusal);
     const text = value.trim();
     if (text === "") return null;
-    // oxlint-disable-next-line no-misused-spread
-    if (type === "text") return [...text].length > maxTextValueLength ? refuse(refusal) : text;
+    if (type === "text") return exceedsLength(text, maxTextValueLength) ? refuse(refusal) : text;
     if (type === "number") return decimal.test(text) ? text : refuse(refusal);
     return isCalendarDate(text) ? text : refuse(refusal);
   }
@@ -104,9 +103,6 @@ export function fieldValueProblem(field: CustomField, value: FieldValueData): Fa
   return isFailure(normalized) ? normalized : undefined;
 }
 
-const isFailure = (value: FieldValueData | Failure): value is Failure =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
 /** Whether two stored values are the same, a multiple choice as a set. */
 export function sameValue(a: FieldValueData, b: FieldValueData): boolean {
   if (Array.isArray(a) && Array.isArray(b)) {
@@ -118,18 +114,17 @@ export function sameValue(a: FieldValueData, b: FieldValueData): boolean {
 type ValueArgs = { albumId: string; fieldId: string };
 
 /**
- * The album and field a value change is about, if both are the principal's to change. A missing album or field and
- * someone else's get the same answer, so nobody can probe for other people's IDs.
+ * The field a value change is about, if the album is the principal's to change and the field its owner's. A missing
+ * album is `not_found`, and someone else's gets the policy's code; a missing field and another owner's get the same
+ * answer, so nobody can probe for other people's IDs.
  */
 async function target(
   { albumId, fieldId }: ValueArgs,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<StoredField | Failure> {
-  const album = await store.findAlbum(albumId);
-  if (!album) return failure("not_found", "This album doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this album.");
-  const field = await store.findField(fieldId);
+  const album = await changeableAlbum(albumId, context);
+  if (isFailure(album)) return album;
+  const field = await context.store.findField(fieldId);
   if (!field || field.ownerId !== album.ownerId) {
     return failure("not_found", "This field doesn't exist.");
   }
@@ -150,16 +145,11 @@ const change = (
 /** `fieldValue.apply` (FR-03.7): applies the field to the album, empty. Already applied, it changes nothing. */
 export async function applyField(args: ValueArgs, context: CommandContext): Promise<CommandResult> {
   const field = await target(args, context);
-  if (!("type" in field)) return field;
+  if (isFailure(field)) return field;
   const { store } = context;
-  if ((await store.findFieldValue(args.albumId, args.fieldId)) !== undefined) {
-    return { status: "applied", changes: [] };
-  }
+  if ((await store.findFieldValue(args.albumId, args.fieldId)) !== undefined) return applied();
   await store.applyField(args.albumId, args.fieldId);
-  return {
-    status: "applied",
-    changes: [{ ...change(args.albumId, args.fieldId, null), op: "insert" }],
-  };
+  return applied({ ...change(args.albumId, args.fieldId, null), op: "insert" });
 }
 
 /**
@@ -172,21 +162,16 @@ export async function setFieldValue(
   context: CommandContext,
 ): Promise<CommandResult> {
   const field = await target(args, context);
-  if (!("type" in field)) return field;
+  if (isFailure(field)) return field;
   const { store } = context;
   const current = await store.findFieldValue(args.albumId, args.fieldId);
   if (current === undefined) return failure("not_found", "This field isn't on this album.");
-  if (!sameValue(current, base.value)) {
-    return {
-      status: "conflict",
-      conflicts: [{ field: "value", current, attempted: args.value, base: base.value }],
-    };
-  }
+  if (!sameValue(current, base.value)) return conflict("value", current, args.value, base.value);
   const value = normalizedValue(field, args.value);
   if (isFailure(value)) return value;
-  if (sameValue(current, value)) return { status: "applied", changes: [] };
+  if (sameValue(current, value)) return applied();
   await store.setFieldValue(args.albumId, field, value);
-  return { status: "applied", changes: [change(args.albumId, args.fieldId, value)] };
+  return applied(change(args.albumId, args.fieldId, value));
 }
 
 /**
@@ -198,11 +183,9 @@ export async function removeField(
   context: CommandContext,
 ): Promise<CommandResult> {
   const field = await target(args, context);
-  if (!("type" in field)) return field;
+  if (isFailure(field)) return field;
   const { store } = context;
-  if ((await store.findFieldValue(args.albumId, args.fieldId)) === undefined) {
-    return { status: "applied", changes: [] };
-  }
+  if ((await store.findFieldValue(args.albumId, args.fieldId)) === undefined) return applied();
   await store.removeField(args.albumId, args.fieldId);
-  return { status: "applied", changes: [change(args.albumId, args.fieldId, undefined)] };
+  return applied(change(args.albumId, args.fieldId, undefined));
 }

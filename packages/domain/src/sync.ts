@@ -3,7 +3,12 @@
 // (TON-20) synced albums; folders and lists joined in TON-26 and list entries in TON-27, and each entity type M2
 // adds joins these unions.
 
-import { albumCreateArgsSchema, albumFieldsSchema, albumSchema, artworkUrlSchema } from "./albums";
+import {
+  albumCreateArgsSchema,
+  albumFieldsSchema,
+  artworkUrlSchema,
+  syncedAlbumSchema,
+} from "./albums";
 import { captureArgsSchema } from "./capture";
 import { containerFieldsSchema, containerSchema } from "./containers";
 import { fieldDeleteArgsSchema } from "./field-deletion";
@@ -499,17 +504,6 @@ export const mutationResultSchema = z
   .object({ mutationId: z.uuid(), outcome: outcomeSchema })
   .meta({ description: "A mutation's outcome (TS-27)." });
 export type MutationResult = z.infer<typeof mutationResultSchema>;
-
-/**
- * An album as the server sends it: with `artworkSignature`, the API's signature of its artwork URL, which clients show
- * through the image proxy (`artworkPath()`, TS-103). The API adds it; the database never stores it.
- */
-export const syncedAlbumSchema = albumSchema.extend({
-  artworkSignature: z.string().optional().meta({
-    description: "The image proxy's signature of `artworkUrl`, when it has one (TS-103).",
-  }),
-});
-export type SyncedAlbum = z.infer<typeof syncedAlbumSchema>;
 
 export const changeOps = ["insert", "update", "delete"] as const;
 export type ChangeOp = (typeof changeOps)[number];

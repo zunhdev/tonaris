@@ -2,7 +2,7 @@
 // Settings → Account. What a client sees of one, and the rules for renaming it.
 
 import { maxNameLength } from "./limits";
-import { isBlankName } from "./names";
+import { exceedsLength, isBlankName } from "./names";
 import { z } from "./zod";
 
 /** The name a new passkey gets when its password manager isn't known, as for Apple's, which don't say. */
@@ -39,8 +39,6 @@ export function passkeyName(
 ): { ok: true; name: string } | { ok: false; refusal: "blank" | "tooLong" } {
   if (isBlankName(name)) return { ok: false, refusal: "blank" };
   const trimmed = name.trim();
-  // Code points rather than graphemes, as for other names: the limit bounds stored text (TS-18).
-  // oxlint-disable-next-line no-misused-spread
-  if ([...trimmed].length > maxNameLength) return { ok: false, refusal: "tooLong" };
+  if (exceedsLength(trimmed, maxNameLength)) return { ok: false, refusal: "tooLong" };
   return { ok: true, name: trimmed };
 }

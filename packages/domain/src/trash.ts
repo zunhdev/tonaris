@@ -8,9 +8,10 @@
 // lists are reported, and with none it goes to Unsorted. A restore that would make a second active record of the same
 // album pauses instead, naming it, and changes nothing (FR-14.3).
 
-import { trashRetentionDays } from "./approvals";
-import { clientAlbum } from "./capture";
-import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
+import { albumOf, changeableAlbum } from "./albums";
+import type { CollectionStore } from "./collection-store";
+import { actingOwner, applied, isFailure } from "./command-kit";
+import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
   changeableContainer,
   containerKinds,
@@ -21,7 +22,7 @@ import {
   type Container,
 } from "./containers";
 import { fieldValueKey } from "./field-values";
-import { maxContainerDepth } from "./limits";
+import { maxContainerDepth, trashRetentionDays } from "./limits";
 import { membershipKey, type Membership } from "./memberships";
 import { findNameConflict } from "./names";
 import { failure } from "./outcomes";
@@ -138,8 +139,6 @@ export type DestinationNeed = {
 /** A name taken where the unit returns (FR-01.16). */
 export type NameNeed = { unitId: string; name: string; parentId: string | null };
 
-const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
-
 /** The unit as clients see it, from its members as they were deleted. */
 export function trashUnitOf(
   unit: Omit<StoredTrashUnit, "tombstones">,
@@ -189,19 +188,23 @@ export async function deleteContainer(
   args: z.infer<typeof containerDeleteArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store } = context;
+  const { store, principal } = context;
   const existing = await store.findTrashUnit(args.unitId);
   if (existing) {
-    const sameUnit =
-      existing.rootId === args.id && existing.ownerId === actingUserId(context.principal);
-    return sameUnit
+    const sameUnit = existing.rootId === args.id && existing.ownerId === actingUserId(principal);
+    if (!sameUnit) {
+      return failure("validation_failed", "This ID is already in use.", [
+        { path: "args.unitId", message: "Already in use" },
+      ]);
+    }
+    // A resend changes nothing, but only for someone who may make the change (TS-30).
+    const decision = authorizeWrite(principal, { ownerId: existing.ownerId, scope: "collection" });
+    return decision.allowed
       ? applied()
-      : failure("validation_failed", "This ID is already in use.", [
-          { path: "args.unitId", message: "Already in use" },
-        ]);
+      : failure(decision.code, "You can't change this folder or list.");
   }
   const container = await changeableContainer(args.id, context);
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   const { ownerId } = container;
 
   const members = await store.activeSubtree(container.id);
@@ -265,11 +268,14 @@ export async function recoverUnit(
   args: z.infer<typeof trashRecoverArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store } = context;
+  const { store, principal } = context;
   const unit = await store.findTrashUnit(args.unitId);
-  if (!unit || unit.ownerId !== actingUserId(context.principal)) {
+  // Someone else's unit is answered as gone, so nobody can probe for other people's IDs.
+  if (!unit || unit.ownerId !== actingUserId(principal)) {
     return failure("not_found", "This is no longer in Trash.");
   }
+  const decision = authorizeWrite(principal, { ownerId: unit.ownerId, scope: "collection" });
+  if (!decision.allowed) return failure(decision.code, "You can't recover this from Trash.");
   // Expiry is enforced at 30 days, even before the hourly purge removes it (FR-01.17, FR-10.7).
   if (unit.expiresAt.getTime() <= (context.now ?? new Date()).getTime()) {
     return failure(
@@ -299,7 +305,7 @@ export async function recoverUnit(
     }
   }
   const path = await destinationPath(parentId, ownerId, store);
-  if (!Array.isArray(path)) return path;
+  if (isFailure(path)) return path;
   if (path.length + depthOf(root.id, members) > maxContainerDepth) return tooDeep();
   const problem = containerNameProblem(name);
   if (problem) return problem;
@@ -421,16 +427,17 @@ export async function deleteAlbum(
   const { store, principal } = context;
   const existing = await store.findTrashUnit(args.unitId);
   if (existing) {
-    return existing.rootId === args.id && existing.ownerId === actingUserId(principal)
-      ? applied()
-      : failure("validation_failed", "This ID is already in use.", [
-          { path: "args.unitId", message: "Already in use" },
-        ]);
+    if (existing.rootId !== args.id || existing.ownerId !== actingUserId(principal)) {
+      return failure("validation_failed", "This ID is already in use.", [
+        { path: "args.unitId", message: "Already in use" },
+      ]);
+    }
+    // A resend changes nothing, but only for someone who may make the change (TS-30).
+    const decision = authorizeWrite(principal, { ownerId: existing.ownerId, scope: "collection" });
+    return decision.allowed ? applied() : failure(decision.code, "You can't change this album.");
   }
-  const album = await store.findAlbum(args.id);
-  if (!album) return failure("not_found", "This album doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this album.");
+  const album = await changeableAlbum(args.id, context);
+  if (isFailure(album)) return album;
   if (album.trashed) return failure("trashed", "This album is already in Trash.");
   const { ownerId } = album;
 
@@ -478,13 +485,14 @@ export async function deleteAlbum(
 }
 
 /** An active album the restore would duplicate (FR-14.3), as `needs_input` `match` names it. */
-export type SameAlbum = {
-  unitId: string;
-  albumId: string;
-  title: string;
-  artistCredit: string;
-  originalYear: number | null;
-};
+export const sameAlbumSchema = z.object({
+  unitId: z.uuid(),
+  albumId: z.uuid(),
+  title: z.string(),
+  artistCredit: z.string(),
+  originalYear: z.int().nullable(),
+});
+export type SameAlbum = z.infer<typeof sameAlbumSchema>;
 
 /**
  * Restores an album unit (FR-14.2, FR-14.3): its entries in still-active lists come back, those in trashed lists are
@@ -556,7 +564,7 @@ async function recoverAlbumUnit(
         entity: "album",
         id: album.id,
         op: "insert",
-        data: clientAlbum(album.id, album, album.artworkUrl),
+        data: albumOf(album),
       },
       ...back.map((entry): ChangeInput => ({
         entity: "membership",
@@ -653,15 +661,9 @@ export async function purgeUnits(
   args: z.infer<typeof trashPurgeArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store, principal } = context;
-  const ownerId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "trash_purge" });
-  if (!ownerId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "Only the app can empty Trash.",
-    );
-  }
+  const ownerId = actingOwner(context, "trash_purge", "Only the app can empty Trash.");
+  if (isFailure(ownerId)) return ownerId;
+  const { store } = context;
   const result: PurgeResult = { purged: [], gone: [] };
   const changes: ChangeInput[] = [];
   for (const unitId of new Set(args.unitIds)) {

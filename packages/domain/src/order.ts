@@ -3,11 +3,12 @@
 // DS-43's fixed sequence. Grouping splits the one sorted sequence, so the order within each group is the combined
 // order (FR-05.8). Manual order is the person's arrangement (TS-16): arranged items by their fractional-index keys,
 // then the rest in DS-44's fallback order, which the view supplies for albums. Every sort is total, ties going by
-// title or name, then ID, so the order never shifts between renders. The web app and the export's Markdown (TS-82)
-// share it.
+// title or name, then ID, so the order never shifts between renders. The web app, the export's Markdown (TS-82) and
+// the server's reads share it, with each view's fallback order and the custom fields' order.
 
 import type { Album } from "./albums";
 import type { Container } from "./containers";
+import type { Membership } from "./memberships";
 import { searchKey } from "./normalize";
 import type { FolderSortMode, ListSortMode, SortDirection } from "./views";
 
@@ -29,8 +30,35 @@ export type Keys = ReadonlyMap<string, string>;
 
 const noKeys: Keys = new Map();
 
-/** Compares bytewise, as fractional-index keys and IDs must be. Keys and IDs are ASCII, so code units are bytes. */
-const byKey = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+/**
+ * Compares bytewise, as fractional-index keys, IDs and search keys are compared everywhere (TS-12, TS-16). Keys and
+ * IDs are ASCII, so their code units are their bytes.
+ */
+export const byBytes = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * A list's fallback order (DS-44), which Manual arranges the person's keys before: its entries as they were added,
+ * oldest first, ties by album ID.
+ */
+export const entryOrder = (
+  a: Pick<Membership, "addedAt" | "albumId">,
+  b: Pick<Membership, "addedAt" | "albumId">,
+): number => byBytes(a.addedAt, b.addedAt) || byBytes(a.albumId, b.albumId);
+
+/** Unsorted's fallback order (DS-51): newest first, an inbox. UUIDv7 IDs hold when each album was made (TS-10). */
+export const unsortedOrder = (a: Pick<Album, "id">, b: Pick<Album, "id">): number =>
+  byBytes(b.id, a.id);
+
+/**
+ * Custom fields in the order every client lists them (FR-03.6): by name, ignoring case and accents, then bytewise, so
+ * the order is the same in every locale.
+ */
+export function sortFields<T extends { name: string }>(fields: readonly T[]): T[] {
+  return fields
+    .map((field) => ({ field, key: searchKey(field.name) }))
+    .toSorted((a, b) => byBytes(a.key, b.key) || byBytes(a.field.name, b.field.name))
+    .map(({ field }) => field);
+}
 
 /**
  * Items in manual order (TS-16): those with keys by key, ties by ID, then the rest in the order given, which is
@@ -45,7 +73,7 @@ export function arranged<T>(items: readonly T[], keys: Keys, idOf: (item: T) => 
     if (key === undefined) rest.push(item);
     else keyed.push({ item, id, key });
   }
-  keyed.sort((a, b) => byKey(a.key, b.key) || byKey(a.id, b.id));
+  keyed.sort((a, b) => byBytes(a.key, b.key) || byBytes(a.id, b.id));
   return [...keyed.map(({ item }) => item), ...rest];
 }
 
@@ -74,11 +102,11 @@ export function sortAlbums<T extends Chronology & Pick<Album, "id" | "title" | "
         if (a.year === null || b.year === null)
           primary = (a.year === null ? 1 : 0) - (b.year === null ? 1 : 0);
         else primary = sign * (a.year - b.year);
-      } else primary = sign * byKey(a.title, b.title);
+      } else primary = sign * byBytes(a.title, b.title);
       return (
         primary ||
-        (mode === "year" ? byKey(a.title, b.title) : byKey(a.artist, b.artist)) ||
-        byKey(a.album.id, b.album.id)
+        (mode === "year" ? byBytes(a.title, b.title) : byBytes(a.artist, b.artist)) ||
+        byBytes(a.album.id, b.album.id)
       );
     })
     .map(({ album }) => album);
@@ -94,7 +122,7 @@ export function sortContainers<T extends Pick<Container, "id" | "kind" | "name">
   { mode, dir }: Sort<FolderSortMode>,
   keys: Keys = noKeys,
 ): T[] {
-  const byCreation = (a: T, b: T) => byKey(a.id, b.id);
+  const byCreation = (a: T, b: T) => byBytes(a.id, b.id);
   if (mode === "manual") {
     return arranged(containers.toSorted(byCreation), keys, (container) => container.id);
   }
@@ -105,7 +133,7 @@ export function sortContainers<T extends Pick<Container, "id" | "kind" | "name">
       (a, b) =>
         (a.container.kind === b.container.kind ? 0 : a.container.kind === "folder" ? -1 : 1) ||
         (mode === "name"
-          ? sign * byKey(a.name, b.name) || byCreation(a.container, b.container)
+          ? sign * byBytes(a.name, b.name) || byCreation(a.container, b.container)
           : sign * byCreation(a.container, b.container)),
     )
     .map(({ container }) => container);

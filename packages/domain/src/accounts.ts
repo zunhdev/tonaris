@@ -100,9 +100,15 @@ export const emailChangeSchema = z
   .meta({ description: "A sign-in email change in progress (FR-11.4)." });
 export type EmailChange = z.infer<typeof emailChangeSchema>;
 
+/**
+ * An email address as a person types it: trimmed, not empty, and at most 320 characters. Whether it is an address
+ * at all is checked where it is used. Each request describes it in its own words.
+ */
+export const emailInputSchema = z.string().trim().min(1).max(320);
+
 /** Starts a change to `newEmail`; a change in progress is replaced. */
 export const emailChangeStartSchema = z.object({
-  newEmail: z.string().trim().min(1).max(320).meta({ description: "The new address, as typed." }),
+  newEmail: emailInputSchema.meta({ description: "The new address, as typed." }),
 });
 
 /** A step's code, from its email. */
@@ -151,7 +157,7 @@ export type Member = z.infer<typeof memberSchema>;
 
 /** Starts recovering a member's sign-in email: the new address, why, and whether AI connections end too. */
 export const emailRecoveryStartSchema = z.object({
-  newEmail: z.string().trim().min(1).max(320),
+  newEmail: emailInputSchema,
   reason: z
     .string()
     .max(maxRecoveryReasonLength)
@@ -186,12 +192,7 @@ export const accountDeletionRefusalDetails = {
 
 /** Confirms deleting the account: the sign-in email, typed. */
 export const accountDeletionConfirmSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1)
-    .max(320)
-    .meta({ description: "The account's sign-in email, typed to confirm." }),
+  email: emailInputSchema.meta({ description: "The account's sign-in email, typed to confirm." }),
 });
 
 /** The token that follows a deletion once its session is gone. */

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { accountSchema, emailKey } from "./accounts";
+import { accountSchema, emailInputSchema, emailKey } from "./accounts";
 
 describe("emailKey (TS-70)", () => {
   test("trims and lowercases", () => {
@@ -20,6 +20,14 @@ describe("emailKey (TS-70)", () => {
   test("leaves values that aren't addresses for validation to reject", () => {
     expect(emailKey("Not An Email")).toBe("not an email");
     expect(emailKey("x@évil.example/y")).toBe("x@évil.example/y");
+  });
+});
+
+describe("emailInputSchema", () => {
+  test("takes a typed address trimmed, and refuses an empty or overlong one", () => {
+    expect(emailInputSchema.parse("  anna@example.com ")).toBe("anna@example.com");
+    expect(emailInputSchema.safeParse("   ").success).toBe(false);
+    expect(emailInputSchema.safeParse(`${"a".repeat(309)}@example.com`).success).toBe(false);
   });
 });
 

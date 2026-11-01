@@ -161,6 +161,24 @@ describe("album.update: field-level compare-and-set (TS-21)", () => {
     expect(rows.get(album.id)?.title).toBe("Kind of Blue (Legacy)");
   });
 
+  test("logs the album as clients hold it, without what only the store keeps", async () => {
+    const album = kindOfBlue();
+    const memory = memoryCollection({ albums: [{ ...album, ownerId: owner }] });
+    const stored = { ...memory.store };
+    // A store may read more of the row than clients hold, such as its release group.
+    memory.store.findAlbum = async (id) => {
+      const found = await stored.findAlbum(id);
+      const row = found && { ...found, releaseGroupId: uuidv7() };
+      return row;
+    };
+    const result = await runCommand(
+      update(album.id, { title: "Kind of Blue (Legacy)" }, { title: "Kind of Blue" }),
+      { principal: anna, store: memory.store },
+    );
+    const [change] = result.status === "applied" ? result.changes : [];
+    expect(Object.keys(change?.data ?? {}).toSorted()).toEqual(Object.keys(album).toSorted());
+  });
+
   test("keeps the newer saved value and reports current, attempted and base (FR-09.4)", async () => {
     const { album, store, rows } = saved();
     await runCommand(update(album.id, { title: "A" }, { title: "Kind of Blue" }), {

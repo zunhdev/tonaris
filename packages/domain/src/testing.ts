@@ -3,9 +3,9 @@
 
 import { generateNKeysBetween } from "fractional-indexing";
 
-import type { Album } from "./albums";
+import type { Album, StoredAlbum } from "./albums";
 import type { CapturedLink, CaptureTarget } from "./capture";
-import type { CollectionStore, ShareGrant, StoredAlbum } from "./commands";
+import type { CollectionStore, ShareGrant } from "./collection-store";
 import { containerOf, type Container, type StoredContainer } from "./containers";
 import { enrichableFields, type EnrichableField, type ProvenanceEntry } from "./enrichment";
 import { fieldValueKey, type FieldValue, type FieldValueData } from "./field-values";

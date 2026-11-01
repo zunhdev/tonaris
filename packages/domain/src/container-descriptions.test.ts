@@ -1,11 +1,13 @@
 // Folder and list descriptions against an in-memory store (FR-03.5, TS-21; AC-03's description checks): set, trimmed
-// and cleared; at most 2,000 characters; compare-and-set; kept through a move; and not editable in Trash.
+// and cleared; at most 2,000 characters, as clients check too; compare-and-set; kept through a move; and not editable
+// in Trash.
 
 import { describe, expect, test } from "bun:test";
 
 import { runCommand, type CommandResult } from "./commands";
-import type { StoredContainer } from "./containers";
+import { descriptionProblem, type StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
+import { exceedsLength } from "./names";
 import type { Principal } from "./principals";
 import { mutationSchema, type Mutation } from "./sync";
 import { memoryStore } from "./testing";
@@ -82,6 +84,22 @@ describe("folder and list descriptions (FR-03.5; AC-03)", () => {
       problem: { detail: "Descriptions can be at most 2,000 characters." },
     });
     expect(containers.get(grunge.id)?.description).toBe("x".repeat(2_000));
+  });
+
+  test("clients check a description with the server's rule and words, in code points", () => {
+    // An emoji with a skin tone is one grapheme and two code points.
+    const wave = "👋🏽";
+    expect(descriptionProblem("")).toBeUndefined();
+    expect(descriptionProblem(wave.repeat(1_000))).toBeUndefined();
+    expect(descriptionProblem(`${wave.repeat(1_000)}.`)).toMatchObject({
+      code: "validation_failed",
+      problem: {
+        detail: "Descriptions can be at most 2,000 characters.",
+        errors: [{ path: "args.description", message: "At most 2000 characters" }],
+      },
+    });
+    expect(exceedsLength(wave, 1)).toBe(true);
+    expect(exceedsLength(wave, 2)).toBe(false);
   });
 
   test("a description changed elsewhere is a conflict, and the same one changes nothing", async () => {

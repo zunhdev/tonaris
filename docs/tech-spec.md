@@ -699,7 +699,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - The owner's client never needs these queries, because it holds its whole tree.
 - *As built in TON-64:*
   - **The definition** is `readableContainers(state, viewer)` in `packages/domain/src/sharing.ts`. It walks down from each active source through active children only.
-    - **A viewer** (`ShareViewer`) is a person or a link. `viewerOf(principal)` maps `user` and `mcp` to the person, so an MCP connection reads what its user may, and `guest` to its link.
+    - **A viewer** (`ShareViewer`) is a person or a link. A signed-in person and their MCP connections read as the person, so an MCP connection reads what its user may; a guest reads through its link.
     - **A person's sources** are their accepted grants and the live links their saved references name. A reference with no link reads through nothing by itself.
   - **`packages/db/src/sharing.ts`** walks the same rule with recursive CTEs, bounded by the depth limit:
     - `readableContainers(db, viewer)` goes down from the sources;

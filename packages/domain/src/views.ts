@@ -5,11 +5,20 @@
 // Choices belong to the person, never to the content, and follow the same conflict policy as content (FR-09.4):
 // each write names the values it replaces.
 
-import type { CollectionStore, CommandContext, CommandResult } from "./commands";
+import type { CollectionStore } from "./collection-store";
+import {
+  actingOwner,
+  applied,
+  baseProblem,
+  conflict,
+  isFailure,
+  nothingChanged,
+  staleFields,
+} from "./command-kit";
+import type { CommandContext, CommandResult } from "./commands";
 import { streamingServices, type StreamingService } from "./links";
-import { failure, type FieldConflict, type Failure } from "./outcomes";
-import { authorizeWrite } from "./policies";
-import { actingUserId } from "./principals";
+import { failure, type Failure } from "./outcomes";
+import type { ViewKind } from "./presentation";
 import { z } from "./zod";
 
 /** How lists and Unsorted sort their albums (FR-05.1). */
@@ -109,60 +118,9 @@ export function unsetView(viewKey: string): ViewPrefs {
   return { viewKey, sortMode: null, sortDir: null, grouped: null, layout: null };
 }
 
-/** The fields whose saved value isn't the one `base` says the change was made from (TS-21). */
-function staleFields<Fields extends object>(
-  fields: readonly (keyof Fields & string)[],
-  current: Fields,
-  attempted: Partial<Fields>,
-  base: Partial<Fields>,
-): FieldConflict[] {
-  return fields
-    .filter((field) => current[field] !== base[field])
-    .map((field) => ({
-      field,
-      current: current[field],
-      attempted: attempted[field],
-      base: base[field],
-    }));
-}
-
-/** Why `base` doesn't name the prior value of exactly the fields in `changed`, if it doesn't. */
-export function baseProblem<Field extends string>(
-  fields: readonly Field[],
-  changed: readonly Field[],
-  base: Partial<Record<Field, unknown>>,
-): Failure | undefined {
-  const unbased = changed.filter((field) => base[field] === undefined);
-  const extra = fields.filter((field) => base[field] !== undefined && !changed.includes(field));
-  if (unbased.length === 0 && extra.length === 0) return undefined;
-  return failure(
-    "validation_failed",
-    "`base` must hold the prior value of exactly the changed fields.",
-    [
-      ...unbased.map((field) => ({ path: `base.${field}`, message: "Required" })),
-      ...extra.map((field) => ({ path: `base.${field}`, message: "Not changed by this mutation" })),
-    ],
-  );
-}
-
-/**
- * The person a presentation write is for, or why it can't be made. Guests and read-only agents change nothing.
- * `refusal` says what they can't do.
- */
-export function personOf(
-  { principal }: CommandContext,
-  refusal = "You can't change view options here.",
-): string | Failure {
-  const personId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: personId ?? "", scope: "collection" });
-  if (!personId || !decision.allowed) {
-    return failure(decision.allowed ? "permission_denied" : decision.code, refusal);
-  }
-  return personId;
-}
-
-/** What a view holds: albums for a list and Unsorted, folders and lists for a folder and the root. */
-export type ViewItems = "albums" | "containers";
+/** The person a presentation write is for, or why it can't be made: guests and read-only agents change nothing. */
+const personOf = (context: CommandContext) =>
+  actingOwner(context, "collection", "You can't change view options here.");
 
 /** The folder or list a view is, by ID; undefined for the root and Unsorted, which are no record. */
 export function containerOfView(viewKey: string): string | undefined {
@@ -170,15 +128,15 @@ export function containerOfView(viewKey: string): string | undefined {
 }
 
 /**
- * What the view `viewKey` holds, if it is the person's: the root, Unsorted, or a folder or list of theirs (sharing
- * adds the containers shared with them, M7). One in Trash is still theirs, so a choice queued meanwhile isn't lost.
- * A missing folder and someone else's get the same answer.
+ * What the view `viewKey` holds, if it is the person's: the root, Unsorted, or a folder or list of theirs or shared
+ * with them (FR-07.17). One in Trash is still theirs, so a choice queued meanwhile isn't lost. A missing folder and
+ * someone else's they can't read get the same answer.
  */
 export async function viewKindOf(
   viewKey: string,
   personId: string,
   store: CollectionStore,
-): Promise<ViewItems | Failure> {
+): Promise<ViewKind | Failure> {
   if (viewKey === "root") return "containers";
   if (viewKey === "unsorted") return "albums";
   const container = await store.findContainer(viewKey);
@@ -189,11 +147,6 @@ export async function viewKindOf(
   if (!readable) return failure("not_found", "This folder or list isn't available.");
   return container.kind === "folder" ? "containers" : "albums";
 }
-
-const nothingChanged = () =>
-  failure("validation_failed", "The mutation changes nothing.", [
-    { path: "args", message: "Name at least one field" },
-  ]);
 
 /**
  * Remembers or clears a person's choices for one view (FR-05.2, FR-11.7). A field left out stays as it is, and null
@@ -206,11 +159,11 @@ export async function setView(
   context: CommandContext,
 ): Promise<CommandResult> {
   const personId = personOf(context);
-  if (typeof personId !== "string") return personId;
+  if (isFailure(personId)) return personId;
   const { store } = context;
 
   const kind = await viewKindOf(viewKey, personId, store);
-  if (typeof kind !== "string") return kind;
+  if (isFailure(kind)) return kind;
   const folders = kind === "containers";
 
   const changed = viewPrefsFields.filter((field) => values[field] !== undefined);
@@ -255,21 +208,13 @@ export async function setView(
 
   const next = { ...current };
   for (const field of changed) Object.assign(next, { [field]: values[field] });
-  if (viewPrefsFields.every((field) => next[field] === current[field])) {
-    return { status: "applied", changes: [] };
-  }
+  if (viewPrefsFields.every((field) => next[field] === current[field])) return applied();
   if (viewPrefsFields.every((field) => next[field] === null)) {
     await store.deleteViewPrefs(personId, viewKey);
-    return {
-      status: "applied",
-      changes: [{ entity: "view", id: viewKey, op: "delete", data: null }],
-    };
+    return applied({ entity: "view", id: viewKey, op: "delete", data: null });
   }
   await store.saveViewPrefs(personId, next);
-  return {
-    status: "applied",
-    changes: [{ entity: "view", id: viewKey, op: saved ? "update" : "insert", data: next }],
-  };
+  return applied({ entity: "view", id: viewKey, op: saved ? "update" : "insert", data: next });
 }
 
 /**
@@ -282,7 +227,7 @@ export async function setDefaults(
   context: CommandContext,
 ): Promise<CommandResult> {
   const personId = personOf(context);
-  if (typeof personId !== "string") return personId;
+  if (isFailure(personId)) return personId;
   const { store } = context;
 
   const changed = viewDefaultsFields.filter((field) => values[field] !== undefined);
@@ -296,14 +241,9 @@ export async function setDefaults(
 
   const next = { ...current };
   for (const field of changed) Object.assign(next, { [field]: values[field] });
-  if (viewDefaultsFields.every((field) => next[field] === current[field])) {
-    return { status: "applied", changes: [] };
-  }
+  if (viewDefaultsFields.every((field) => next[field] === current[field])) return applied();
   await store.saveDefaults(personId, next);
-  return {
-    status: "applied",
-    changes: [{ entity: "defaults", id: personId, op: "update", data: next }],
-  };
+  return applied({ entity: "defaults", id: personId, op: "update", data: next });
 }
 
 /** Services in the services' order, each once. */
@@ -328,33 +268,23 @@ export async function setHiddenServices(
   context: CommandContext,
 ): Promise<CommandResult> {
   const personId = personOf(context);
-  if (typeof personId !== "string") return personId;
+  if (isFailure(personId)) return personId;
   const { store } = context;
 
   const current = (await store.findDefaults(personId)) ?? appAccountDefaults;
   if (!sameServices(current.hiddenServices, base.hiddenServices)) {
-    return {
-      status: "conflict",
-      conflicts: [
-        {
-          field: "hiddenServices",
-          current: current.hiddenServices,
-          attempted: values.hiddenServices,
-          base: base.hiddenServices,
-        },
-      ],
-    };
+    return conflict(
+      "hiddenServices",
+      current.hiddenServices,
+      values.hiddenServices,
+      base.hiddenServices,
+    );
   }
   const hiddenServices = inOrder(values.hiddenServices);
-  if (sameServices(hiddenServices, current.hiddenServices)) {
-    return { status: "applied", changes: [] };
-  }
+  if (sameServices(hiddenServices, current.hiddenServices)) return applied();
   const next = { ...current, hiddenServices };
   await store.saveDefaults(personId, next);
-  return {
-    status: "applied",
-    changes: [{ entity: "defaults", id: personId, op: "update", data: next }],
-  };
+  return applied({ entity: "defaults", id: personId, op: "update", data: next });
 }
 
 /**
@@ -367,17 +297,14 @@ export async function setLinkTarget(
   context: CommandContext,
 ): Promise<CommandResult> {
   const personId = personOf(context);
-  if (typeof personId !== "string") return personId;
+  if (isFailure(personId)) return personId;
   const { store } = context;
 
   const current = (await store.findDefaults(personId)) ?? appAccountDefaults;
   const conflicts = staleFields(["linkTarget"], current, values, base);
   if (conflicts.length > 0) return { status: "conflict", conflicts };
-  if (values.linkTarget === current.linkTarget) return { status: "applied", changes: [] };
+  if (values.linkTarget === current.linkTarget) return applied();
   const next = { ...current, linkTarget: values.linkTarget };
   await store.saveDefaults(personId, next);
-  return {
-    status: "applied",
-    changes: [{ entity: "defaults", id: personId, op: "update", data: next }],
-  };
+  return applied({ entity: "defaults", id: personId, op: "update", data: next });
 }

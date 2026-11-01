@@ -6,9 +6,12 @@
 
 import { generateKeyBetween, generateNKeysBetween } from "fractional-indexing";
 
-import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
+import type { CollectionStore } from "./collection-store";
+import { actingOwner, applied, baseProblem, isFailure } from "./command-kit";
+import type { ChangeInput, CommandContext, CommandResult } from "./commands";
+import { maxAlbums } from "./limits";
 import { failure } from "./outcomes";
-import { baseProblem, personOf, viewKeySchema, viewKindOf } from "./views";
+import { viewKeySchema, viewKindOf } from "./views";
 import { z } from "./zod";
 
 /** An arranged item's place in one person's view. */
@@ -26,8 +29,8 @@ export function positionKey(viewKey: string, itemId: string): string {
   return `${viewKey}:${itemId}`;
 }
 
-/** Items one `order.set` may place: a view holds at most the collection's 5,000 albums (FR-15). */
-export const maxOrderItems = 5_000;
+/** Items one `order.set` may place: a view holds at most the collection's albums (FR-15). */
+export const maxOrderItems = maxAlbums;
 
 /** Fractional-index keys stay short; anything longer is no key of ours. */
 const maxKeyLength = 128;
@@ -54,11 +57,11 @@ export async function setOrder(
   base: Record<string, string | null>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const personId = personOf(context, "You can't arrange this view.");
-  if (typeof personId !== "string") return personId;
+  const personId = actingOwner(context, "collection", "You can't arrange this view.");
+  if (isFailure(personId)) return personId;
   const { store } = context;
   const kind = await viewKindOf(viewKey, personId, store);
-  if (typeof kind !== "string") return kind;
+  if (isFailure(kind)) return kind;
 
   const items = Object.keys(keys);
   if (items.length === 0) {
@@ -120,7 +123,7 @@ export async function setOrder(
       changes.push({ entity: "position", id, op: before ? "update" : "insert", data: position });
     }
   }
-  return { status: "applied", changes };
+  return applied(...changes);
 }
 
 /** Puts `itemId` at the top of the person's arrangement of `viewKey` (DS-51), as the change to log. */

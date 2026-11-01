@@ -1,11 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  authorizeAdmissionAdmin,
-  authorizeOwnerRead,
-  authorizeWrite,
-  type OperationScope,
-} from "./policies";
+import { authorizeAdmissionAdmin, authorizeWrite, type OperationScope } from "./policies";
 import type { Principal } from "./principals";
 
 const owner = "owner-id";
@@ -77,17 +72,6 @@ describe("authorizeWrite (X-01, X-03, FR-10.3)", () => {
       allowed: false,
       code: "permission_denied",
     });
-  });
-});
-
-describe("authorizeOwnerRead (X-01)", () => {
-  test("the owner and both MCP modes read; others don't, as owners", () => {
-    for (const principal of [user, manage, readOnly]) {
-      expect(authorizeOwnerRead(principal, { ownerId: owner })).toEqual({ allowed: true });
-    }
-    for (const principal of [otherUser, creator, guest]) {
-      expect(authorizeOwnerRead(principal, { ownerId: owner }).allowed).toBe(false);
-    }
   });
 });
 

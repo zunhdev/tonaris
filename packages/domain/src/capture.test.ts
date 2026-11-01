@@ -588,8 +588,19 @@ describe("album.capture: refusals change nothing (X-05)", () => {
     });
     expect(await t.run(capture(trashed.id), identified(bleachFacts))).toMatchObject({
       code: "trashed",
+      problem: { detail: "This list is in Trash. Recover it to change it." },
     });
     expect(t.albums.get(bleach.id)?.trashed).toBe(true);
+  });
+
+  test("someone else's list is refused as membership.add refuses it", async () => {
+    const theirs = list("Theirs", { ownerId: uuidv7() });
+    const t = setup({ containers: [theirs] });
+    expect(await t.run(capture(theirs.id), identified(bleachFacts))).toMatchObject({
+      code: "permission_denied",
+      problem: { detail: "You can't change this list." },
+    });
+    expect(t.albums.size).toBe(0);
   });
 
   test("an entry past the limit is refused before a trashed album is reactivated", async () => {

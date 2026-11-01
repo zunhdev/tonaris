@@ -1,7 +1,8 @@
 // Trash for folders and lists against an in-memory store (FR-01.11 to FR-01.16, TS-13, TS-26): deletion as one unit,
-// Unsorted placement, a resend, recovery to the parent or a chosen destination and name, and the questions recovery
-// asks. Property tests check unit semantics over random trees and deletions: content deleted together is one unit,
-// content deleted separately keeps its own unit and dates, and recovering a unit restores exactly its members.
+// Unsorted placement, a resend, recovery to the parent or a chosen destination and name, the questions recovery
+// asks, and a Read-only agent's refusals. Property tests check unit semantics over random trees and deletions:
+// content deleted together is one unit, content deleted separately keeps its own unit and dates, and recovering a
+// unit restores exactly its members.
 
 import { describe, expect, test } from "bun:test";
 
@@ -13,6 +14,7 @@ import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
 import { changeSchema, mutationSchema, type Mutation } from "./sync";
 import { memoryStore } from "./testing";
+import { sameAlbumSchema } from "./trash";
 
 const owner = uuidv7();
 const anna: Principal = { kind: "user", userId: owner, role: "user", client: "web" };
@@ -458,6 +460,9 @@ describe("deleting and restoring albums (FR-14.1 to FR-14.3)", () => {
     });
     expect(albums.get(first.id)?.trashed).toBe(true);
     expect(trashUnits.has(unitId)).toBe(true);
+    // Clients read the candidates with the domain's schema.
+    const candidates = paused.status === "needs_input" ? paused.candidates : [];
+    expect(sameAlbumSchema.array().safeParse(candidates).success).toBe(true);
   });
 });
 
@@ -559,5 +564,60 @@ describe("removing Trash for good (FR-01.17, FR-01.18, FR-14.5, TS-13)", () => {
       }),
     ).toMatchObject({ status: "failed", code: "app_only" });
     expect(context.trashUnits.has(unitId)).toBe(true);
+  });
+});
+
+describe("the connection's mode (FR-10.3, TS-30)", () => {
+  const readOnly: Principal = { kind: "mcp", userId: owner, grantId: uuidv7(), mode: "read_only" };
+  const someoneElse: Principal = { kind: "user", userId: uuidv7(), role: "user", client: "web" };
+
+  test("a Read-only agent can't recover its user's list or album, which stay in Trash", async () => {
+    const doom = container("list", "Doom");
+    const dopesmoker = album("Dopesmoker");
+    const { run, store, albums, containers, trashUnits } = setup([doom], { albums: [dopesmoker] });
+    const [listUnit, albumUnit] = [uuidv7(), uuidv7()];
+    await run(remove(doom.id, listUnit));
+    await run(deleteAlbum(dopesmoker.id, albumUnit));
+    const as = (principal: Principal, mutation: Mutation) =>
+      runCommand(mutationSchema.parse(mutation), { principal, store });
+
+    for (const unitId of [listUnit, albumUnit]) {
+      // oxlint-disable-next-line no-await-in-loop
+      expect(await as(readOnly, recover(unitId))).toMatchObject({
+        status: "failed",
+        code: "permission_denied",
+      });
+      // Someone else's unit is answered as gone, whatever their rights.
+      // oxlint-disable-next-line no-await-in-loop
+      expect(await as(someoneElse, recover(unitId))).toMatchObject({
+        status: "failed",
+        code: "not_found",
+      });
+      expect(trashUnits.has(unitId)).toBe(true);
+    }
+    expect(containers.get(doom.id)?.trashed).toBe(true);
+    expect(albums.get(dopesmoker.id)?.trashed).toBe(true);
+  });
+
+  test("a Read-only agent's resend of a deletion is refused, not answered as applied", async () => {
+    const doom = container("list", "Doom");
+    const dopesmoker = album("Dopesmoker");
+    const { run, store } = setup([doom], { albums: [dopesmoker] });
+    const [listUnit, albumUnit] = [uuidv7(), uuidv7()];
+    await run(remove(doom.id, listUnit));
+    await run(deleteAlbum(dopesmoker.id, albumUnit));
+    const asAgent = (mutation: Mutation) =>
+      runCommand(mutationSchema.parse(mutation), { principal: readOnly, store });
+
+    expect(await asAgent(remove(doom.id, listUnit))).toMatchObject({
+      status: "failed",
+      code: "permission_denied",
+    });
+    expect(await asAgent(deleteAlbum(dopesmoker.id, albumUnit))).toMatchObject({
+      status: "failed",
+      code: "permission_denied",
+    });
+    // The owner's own resend still changes nothing.
+    expect(await run(remove(doom.id, listUnit))).toEqual({ status: "applied", changes: [] });
   });
 });
