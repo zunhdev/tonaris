@@ -11,7 +11,12 @@ import { CaptureRows } from "@/features/capture/capture-rows";
 import { PhoneShared } from "@/features/sharing/phone-shared";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { phoneRootTab } from "@/features/shell/device";
-import { PageHeader, useDocumentTitle } from "@/features/shell/page-header";
+import {
+  PageHeader,
+  toCollection,
+  useDocumentTitle,
+  type PathStep,
+} from "@/features/shell/page-header";
 import { useShell } from "@/features/shell/shell-context";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
@@ -146,7 +151,7 @@ function AlbumsBody({
 function ViewHeader({
   title,
   breadcrumbs,
-  back,
+  path,
   viewKey,
   kind,
   container,
@@ -154,8 +159,8 @@ function ViewHeader({
 }: {
   title: string;
   breadcrumbs?: ReactNode[];
-  /** Where a phone's Back goes (DS-110). */
-  back?: { to: string; label: string };
+  /** On a phone, the views above, for Back and the name's path (DS-110, TON-153). */
+  path?: readonly PathStep[];
   viewKey: string;
   kind: "albums" | "containers";
   /** Whether it offers View options; a phone's Shared has none (TON-134). */
@@ -173,7 +178,7 @@ function ViewHeader({
     <PageHeader
       title={title}
       breadcrumbs={breadcrumbs}
-      back={back}
+      path={path}
       editing={editing}
       actions={
         <>
@@ -277,9 +282,6 @@ function NewListButton({ parentId }: { parentId: string | null }) {
     </Button>
   );
 }
-
-/** The collection's back, for a phone's Back (DS-110). */
-const toCollection = { to: "/c", label: "Collection" };
 
 /**
  * A phone's root screen ends with Unsorted, which the sidebar holds on a wider screen (DS-110); Shared with me is
@@ -416,8 +418,10 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
   }
 
   const ancestors = ancestorsOf(tree, id);
-  const parent = ancestors.at(-1);
-  const back = parent ? { to: `/f/${parent.id}`, label: parent.name } : toCollection;
+  const path = [
+    toCollection,
+    ...ancestors.map((folder) => ({ to: `/f/${folder.id}`, label: folder.name })),
+  ];
   const breadcrumbs = [
     <Link key="root" to="/c" className="hover:text-fg-primary">
       Collection
@@ -473,7 +477,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
       <ViewHeader
         title={container.name}
         breadcrumbs={breadcrumbs}
-        back={back}
+        path={path}
         viewKey={id}
         kind={container.kind === "folder" ? "containers" : "albums"}
         container={container}
@@ -490,7 +494,7 @@ export function UnsortedView() {
   useDocumentTitle("Unsorted");
   return (
     <>
-      <ViewHeader title="Unsorted" back={toCollection} viewKey="unsorted" kind="albums" />
+      <ViewHeader title="Unsorted" path={[toCollection]} viewKey="unsorted" kind="albums" />
       <CaptureRows listId={null} />
       {!ready ? null : albums.length > 0 ? (
         <AlbumsBody albums={albums} label="Unsorted" viewKey="unsorted" />
@@ -525,7 +529,7 @@ export function AlbumView({ id }: { id: string }) {
     <>
       <PageHeader
         title={album.title}
-        back={toCollection}
+        path={[toCollection]}
         editing={editing}
         actions={<ModeSwitch />}
       />

@@ -8,7 +8,7 @@ import { useCollectionData } from "@/features/collection/data";
 import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
 import { DesktopOnly } from "@/features/shell/desktop-only";
 import { useNarrowScreen } from "@/features/shell/media";
-import { PageHeader } from "@/features/shell/page-header";
+import { PageHeader, toCollection } from "@/features/shell/page-header";
 import { count } from "@/features/shell/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
@@ -171,7 +171,7 @@ export function TrashView() {
   if (narrow) {
     return (
       <>
-        <PageHeader title="Trash" back={{ to: "/c", label: "Collection" }} />
+        <PageHeader title="Trash" path={[toCollection]} />
         <DesktopOnly what="Trash" />
       </>
     );

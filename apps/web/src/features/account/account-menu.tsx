@@ -110,7 +110,8 @@ export function AccountMenu({
         {/* A phone's 44 px button is too narrow to size the menu by, so it sets its own width (TON-152). */}
         <DropdownMenuContent
           align={compact ? "end" : "start"}
-          className={cn(compact && "w-56 [&_[data-slot=dropdown-menu-item]]:h-11")}
+          size={compact ? "touch" : "default"}
+          className={cn(compact && "w-56")}
         >
           <DropdownMenuItem onClick={() => void router.navigate({ to: "/settings/preferences" })}>
             <Settings strokeWidth={1.5} aria-hidden />
