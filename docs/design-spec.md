@@ -101,6 +101,15 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 *As built in TON-136* (from the creator's manual testing; the creator chose the sizes, 31 October 2026): **phones get a step larger** (below 768 px, DS-110's breakpoint): `text.micro` 12/16, `text.small` 13/18, `text.base` 15/22, `text.title` 17/24, `text.brand` 19/26, `text.page` 22/30, `text.display` 30/36. Inputs stay 16 px there. Desktop keeps the table above. The tokens are redefined in a media query (`tokens.css`), so every class that names them follows.
 
+*As built in TON-155:* **the landing page's sizes** (DS-120), larger than the app's and used only there. The two headings are fluid, from phone to desktop width, so the phone step above doesn't apply to them.
+
+| Token | Size / line height (px) | Weight | Use |
+| --- | --- | --- | --- |
+| `text.hero` | 42–80 / 1.0, −0.045em | 600 | The landing page's title |
+| `text.headline` | 30–48 / 1.08, −0.035em | 600 | Its section headings |
+| `text.lead` | 18 / 28 | 400 | Its introductions under headings; card titles at 600 |
+| `text.body` | 15 / 24 | 400 | Its running text |
+
 **DS-14 Contrast targets.** Contrast is checked by an automated token test (`packages/ui/src/styles/tokens.test.ts`). It reads `tokens.css`, converts OKLCH to sRGB, blends translucent tokens over their background, and fails naming each pair below its minimum. It checks `fg.primary`, `fg.secondary` and `fg.tertiary` at 4.5:1; `border.strong`, `focus` and every `status.*` at 3:1; and `fg.on-accent` on `accent.fill` at 4.5:1, all against the four surfaces below.
 
 | Element | Minimum ratio | Against |
@@ -522,7 +531,8 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 
 | Path | Screen |
 | --- | --- |
-| `/` | Redirects to the last visited collection view, or `/c` |
+| `/` | Redirects to the last visited collection view, or `/c`; signed out, to `/welcome` (TON-155) |
+| `/welcome` | The landing page (DS-120, SSR) |
 | `/c` | Collection root |
 | `/f/:folderId`, `/l/:listId` | Folder or list. Owners and signed-in viewers with access use the same paths; access is checked server-side. |
 | `/unsorted`, `/trash` | Unsorted, Trash (Trash is desktop only) |
@@ -551,6 +561,11 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - **`?album={id}`** opens the inspector on any workspace view; a value that isn't an ID is dropped.
   - **`/a/$albumId`** shows the album's details on a page of its own, titled with its name, with View and Edit. A missing album reads "This album isn't available.", with "Go to your collection".
   - **Links inside the app** open the inspector over the current view, not the page.
+
+*As built in TON-155:* **signed out, `/` leads to the landing page** (the creator decided, 1 November 2026).
+- **On the server:** a `GET /` without a session cookie (`__Secure-tonaris.session_token`, or `tonaris.session_token` where cookies aren't secure) is answered with a `302` to `/welcome`, keeping any query, with `cache-control: no-store`. A first visit, a crawler and a link preview get the rendered page. Only the cookie's name is read; the API still decides who is signed in.
+- **In the browser:** the workspace sends a signed-out `/` to `/welcome` rather than `/sign-in`, which covers a stale cookie and links to `/` inside the app. Every other signed-out path still goes to `/sign-in` with its redirect.
+- **Signed in,** `/` opens the last view as before.
 
 ---
 
@@ -1252,6 +1267,8 @@ The block never says "private" while another access path remains.
   - phone rows show them on a third line, under the artist, and grow to fit; rows without links stay 56px (DS-110);
   - cards show them under the artist and year, wrapping, with each name whole.
 
+*As built in TON-155:* the wordmark at the top links to the landing page (DS-120), named "Tonaris, what it is", with a hover and focus ring.
+
 ---
 
 ## 10. Search palette
@@ -1609,6 +1626,10 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   - any other failure: "That passkey didn't work. Try again.";
   - and DS-90's limit and connection messages.
 
+*As built in TON-155:* **the card stands alone again.** TON-116's promo is gone: the landing page (DS-120) says what Tonaris is, in full.
+- **The wordmark above the card** links to `/welcome`, named "Tonaris, what it is", with a hover and focus ring, on the pages a signed-out visitor reaches: the sign-in steps, the admission landing (DS-91), recovery help, account recovery and the account-deleted page.
+- **It stays plain** on pages for signed-in people in the same frame: approvals, connection consent and the agreement screen.
+
 **DS-91 Admission landing** (`/join/:admissionToken`). *(FR-11.2, FR-11.6, FR-11.3)*
 1. "You're invited to Tonaris", showing the bound email.
 2. **Continue** sends a code to that email and leads to the verify screen.
@@ -1803,6 +1824,22 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **The texts** are in the repository (`apps/web/src/features/legal/texts.tsx`); a change to either is a new version, which shows the screen to every member again.
 - *As built in TON-144:* the privacy notice has **The feedback board**, after the services Tonaris runs on: the board runs on Fider, receives the display name and email of someone who signs in to it with Tonaris, shows what they post with their name, and keeps it when the Tonaris account is deleted. That was the version of 2 November 2026.
 
+**DS-120 Landing page** (`/welcome`, server-rendered). *(Section 1; as built in TON-155)*
+
+The creator chose direction 1, "in the app's clothes", refined, from sketches on 1 November 2026: the app's dark tokens, DS-13's landing sizes, and pictures of the app drawn from its own parts. A signed-out visit to `/` arrives here (DS-32).
+- **Title and preview:** "Your albums, organized your way · Tonaris", with a description and Open Graph title and description. No preview image.
+- **The header,** sticky, `bg.app` at 85% with a blur and `border.subtle` under it: the wordmark; from 768 px the links How it works, Features, AI agents and On your phone, which scroll to their sections; and **Sign in** (secondary, 44 px tall on phones), to `/sign-in`.
+- **The hero,** centred: a pill "Invitation-only for now" with an `accent.solid` dot; "Your albums, organized your way" (`text.hero`); "Paste a link from your streaming service and Tonaris fills in the rest. Folders as deep as you like, AI agents that lend a hand, sharing on your terms, and an export that is always yours." (`text.lead`); **Sign in** (primary) and **See how it works** (secondary); then "Paste links from" and the five services' names.
+- **The workspace picture,** framed in `bg.panel` with a large shadow: the sidebar (wordmark, account, Search, Add album, the tree with Moods › Late night selected, Unsorted, Shared with me, Trash), the list Late night grouped into Album, EP and Live with 36 px rows (title with artwork, artist, year, services), and Field Notes in the inspector (artwork, Open in, custom fields, lists). Below 1024 px the inspector goes, below 768 px the sidebar, below 640 px the artist; services show from 1280 px.
+- **How it works** ("Paste a link. Tonaris does the typing."), four cards, each a picture, a number, a title and a line: Paste a link (the Add album box), It fills itself in (an album filled in from MusicBrainz), File it away (Add to list with two lists checked), Play it where you listen (the Open in… menu).
+- **What sets it apart** ("Made for collections that outgrew the Library tab"): two large cards, Folders within folders, and lists (a tree five levels deep, and an album in three lists) and Your AI agents, through MCP (a chat that makes a list, then an approval card "Move 2 albums to Trash" with Decline and Approve); then three cards, Share a folder or a list (the share dialog), Your data stays yours (the export's ZIP) and Fast, quiet, keyboard-first (search finding an album and a list).
+- **On your phone** ("Your collection, in your pocket"): browsing, search, opening albums, approving agents' requests, and the Home Screen; beside it a phone showing Late night and an approval request.
+- **A short row:** custom fields, live on every device, 30 days of Trash, no passwords.
+- **The close:** the mark in `accent.solid`, "Your collection, the way you think about it", what invitation-only means, and **Sign in**. The footer: the wordmark, "Album details from MusicBrainz and the Cover Art Archive. The albums on this page are invented.", and Terms · Privacy.
+- **Pictures** are `role="img"` with a sentence each, so screen readers hear what they show rather than the mock's text. They carry no `style` attributes (TS-101's CSP) and no state.
+- **Invented albums:** ten, with names and artists made up for the page, because the Cover Art Archive's images are copyrighted by their owners. Their covers are the creator's choice, set 1, "Label series": inline SVG in one house style, a flat ground, one geometric motif, the artist and title in Inter at the top left and a catalogue number (TN 001–010) in the mono stack, with a fine grain from 64 px. The colors are the artwork's own (DS-04).
+- **Wordmarks that lead here:** the sign-in frame's on pages for signed-out visitors (DS-90) and the guest page's (DS-72).
+
 ## 15. States, copy, and mobile
 
 **DS-105 Empty states.** One sentence and one action. *(FR-01.9, FR-12)*
@@ -1955,7 +1992,7 @@ The tech spec sets the measurable targets (Q-01, pending approval).
 
 ## 17. Design decisions log
 
-No design questions are open. The creator settled these on 17 October 2026, and rows 10 and 11 on 18 October 2026:
+No design questions are open. The creator settled these on 17 October 2026, rows 10 and 11 on 18 October 2026, and row 12 on 1 November 2026:
 
 | # | Question | Decision |
 | --- | --- | --- |
@@ -1970,6 +2007,7 @@ No design questions are open. The creator settled these on 17 October 2026, and 
 | 9 | Typed confirmation for account deletion (DS-97) | The user types their sign-in email |
 | 10 | Input borders below 3:1 (DS-12, DS-14), 18 Oct 2026 | Raise `border.strong` to 0.52, reaching 3:1 on every surface |
 | 11 | Primary button labels below 4.5:1 on the accent (DS-12, DS-14), 18 Oct 2026 | New `accent.fill` (0.54 0.17 275) behind near-white `fg.on-accent` labels; `accent.solid` stays for focus and selection |
+| 12 | A landing page (DS-120), 1 Nov 2026 | Direction 1, "in the app's clothes", refined, with invented albums in cover set 1, "Label series"; at `/welcome`, where signed-out visits to `/` arrive, and `/sign-in` back to just the card |
 
 New questions are added here as **Open (design)** rows.
 
@@ -1977,6 +2015,7 @@ New questions are added here as **Open (design)** rows.
 
 | PRD area | Design decisions |
 | --- | --- |
+| Section 1 Purpose and users | DS-120 |
 | FR-01 Lists, folders, Unsorted, Trash | DS-27, DS-31, DS-41–DS-45, DS-49–DS-51, DS-55–DS-57 |
 | FR-02 Capture | DS-47, DS-48, DS-84 |
 | FR-03 Metadata and custom fields | DS-24, DS-26, DS-46, DS-60 |

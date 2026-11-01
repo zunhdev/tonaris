@@ -136,8 +136,8 @@ The web app, future native clients, and MCP all reach **the same commands** thro
 
 | Route group | Mode | Why |
 | --- | --- | --- |
-| `/s/$token/…` (guest share), `/sign-in…`, `/join/$token` (admission), `/approvals/$id` landing, `/help/recovery` | SSR (`ssr: true`) | Fast first paint on mobile and OG previews for shared links. These pages don't need a loaded workspace. |
-| Signed-in workspace: every other route in the DS-32 route map (`/`, `/c`, `/f/$id`, `/l/$id`, `/unsorted`, `/trash`, `/shared`, `/invitations`, `/settings/…`, `/admin/…`) | `ssr: false` (SPA) | The store bootstraps once per session, and SSR would duplicate data loading. `/` opens the view last visited on the device, which only the browser knows (TON-33). |
+| `/welcome` (the landing page, TON-155), `/s/$token/…` (guest share), `/sign-in…`, `/join/$token` (admission), `/approvals/$id` landing, `/help/recovery` | SSR (`ssr: true`) | Fast first paint on mobile and OG previews for shared links. These pages don't need a loaded workspace. |
+| Signed-in workspace: every other route in the DS-32 route map (`/`, `/c`, `/f/$id`, `/l/$id`, `/unsorted`, `/trash`, `/shared`, `/invitations`, `/settings/…`, `/admin/…`) | `ssr: false` (SPA) | The store bootstraps once per session, and SSR would duplicate data loading. `/` opens the view last visited on the device, which only the browser knows (TON-33). Without a session cookie, a request middleware answers `/` with a redirect to `/welcome` instead (TON-155). |
 
 Route paths follow the design spec's map (DS-32); this table only sets each route's rendering mode.
 

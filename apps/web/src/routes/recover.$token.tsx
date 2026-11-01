@@ -58,7 +58,7 @@ function ConfirmRecovery() {
 
   if (done) {
     return (
-      <SignInCard>
+      <SignInCard home>
         <h1 id={signInTitleId} className="text-title [overflow-wrap:anywhere] text-fg-primary">
           Done — use {done} to sign in.
         </h1>
@@ -71,7 +71,7 @@ function ConfirmRecovery() {
   }
 
   return (
-    <SignInCard>
+    <SignInCard home>
       <h1 id={signInTitleId} className="text-title text-fg-primary">
         Confirm your new sign-in email
       </h1>

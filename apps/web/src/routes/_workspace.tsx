@@ -1,7 +1,8 @@
 // The signed-in workspace (TS-03): client-only. Every route below this pathless layout inherits `ssr: false`,
 // so the server sends just the document and the browser renders the shell and loads the collection once, through
 // the sync client (src/features/sync), with what it says about saving around it.
-// It needs a session (FR-11.1): a signed-out visit goes to sign-in and comes back here afterwards. A member who hasn't
+// It needs a session (FR-11.1): a signed-out visit goes to sign-in and comes back here afterwards, but for `/`, which
+// goes to the landing page (TON-155: after an expired cookie, or a link to `/` in the browser). A member who hasn't
 // agreed to the current terms sees the agreement screen instead, and nothing of the collection loads until they do
 // (TON-131). Each collection view visited is remembered on the device, for `/` (DS-32), and each folder, list and
 // album opened, for the palette's Recent (DS-75).
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_workspace")({
   validateSearch: albumSearch,
   beforeLoad: async ({ location }) => {
     const account = await currentAccount();
+    if (!account && location.pathname === "/") throw redirect({ to: "/welcome", replace: true });
     if (!account) throw redirect({ to: "/sign-in", search: { redirect: location.href } });
     return { account };
   },

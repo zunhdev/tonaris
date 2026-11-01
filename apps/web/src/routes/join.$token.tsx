@@ -39,7 +39,7 @@ type JoinStep = { kind: "invited" } | { kind: "name" } | { kind: "refused"; sent
 function JoinPage() {
   const invitation = Route.useLoaderData();
   return (
-    <SignInCard>
+    <SignInCard home>
       {invitation.ok ? (
         <Join email={invitation.email} />
       ) : (

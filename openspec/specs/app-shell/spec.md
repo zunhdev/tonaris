@@ -30,14 +30,18 @@ Signed-in workspace routes (DS-32: `/c`, `/f/…`, `/l/…`, `/unsorted`, `/tras
 - **THEN** the HTML response contains the document shell but not the workspace's content, and the page renders after the client scripts run
 
 ### Requirement: Public pages render on the server
-Pages that don't need a loaded workspace (TS-03: sign-in, admission and approval landings, guest shares, help) SHALL be rendered on the server, so their first paint and link previews don't wait for client scripts.
+Pages that don't need a loaded workspace (TS-03: the landing page, sign-in, admission and approval landings, guest shares, help) SHALL be rendered on the server, so their first paint and link previews don't wait for client scripts.
 
 #### Scenario: Sign-in arrives rendered
 - **WHEN** `/sign-in` is requested from the web server
 - **THEN** the HTML response already contains the page's heading and content
 
+#### Scenario: The landing page arrives rendered
+- **WHEN** `/welcome` is requested from the web server
+- **THEN** the HTML response already contains the page's heading and sections
+
 ### Requirement: The root path opens the collection
-`/` SHALL lead to the collection view last visited on this device, or to the collection root `/c` when there is none (DS-32).
+For a signed-in person, `/` SHALL lead to the collection view last visited on this device, or to the collection root `/c` when there is none (DS-32). Signed out, it SHALL lead to the landing page.
 
 #### Scenario: Visiting the root
 - **WHEN** a person opens `/` on a device where they haven't visited a collection view
@@ -48,7 +52,7 @@ Pages that don't need a loaded workspace (TS-03: sign-in, admission and approval
 - **THEN** they land on the list 'Doom'
 
 ### Requirement: Workspace routes require a session
-Every workspace route SHALL require a signed-in session (FR-11.1). A signed-out visit SHALL go to `/sign-in`, carrying the requested path. After signing in, the person SHALL land on that path. Only paths within the web app SHALL be used as destinations.
+Every workspace route SHALL require a signed-in session (FR-11.1). A signed-out visit SHALL go to `/sign-in`, carrying the requested path, except `/`, which leads to the landing page. After signing in, the person SHALL land on that path. Only paths within the web app SHALL be used as destinations.
 
 #### Scenario: A signed-out visit asks for sign-in
 - **WHEN** a signed-out person opens `/c`
