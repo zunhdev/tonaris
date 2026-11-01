@@ -13,7 +13,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { Elysia } from "elysia";
 
 import type { Bootstrap, Change, SharedSnapshot } from "@tonaris/domain";
-import { safeFetch, SafeFetchError, type SafeFetchInit } from "@tonaris/providers";
+import { discard, safeFetch, SafeFetchError, type SafeFetchInit } from "@tonaris/providers";
 
 /** What the proxy fetches with: `safeFetch`, or a stand-in in tests. */
 export type ImageFetch = (url: string, init: SafeFetchInit) => Promise<Response>;
@@ -109,7 +109,7 @@ export function artworkRoutes(
       }
       const type = (response.headers.get("content-type") ?? "").split(";")[0]?.trim().toLowerCase();
       if (!response.ok || type === undefined || !artworkTypes.includes(type)) {
-        await response.body?.cancel().catch(() => {});
+        discard(response);
         return notFound();
       }
       return new Response(await response.arrayBuffer(), {

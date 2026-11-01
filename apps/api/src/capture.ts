@@ -31,6 +31,7 @@ import {
   safeFetch,
   unidentifiedReasons,
   type Identifier,
+  unavailableFailure,
   type LinkParse,
 } from "@tonaris/providers";
 
@@ -48,10 +49,7 @@ export type CaptureDeps = {
 
 type Prepared = { outcome: Outcome } | { source: CaptureSource };
 
-const unavailable = failure(
-  "provider_unavailable",
-  "Couldn't reach MusicBrainz. Try again, or enter the details manually.",
-);
+const unavailable = unavailableFailure({ provider: "musicbrainz" });
 
 /**
  * Saved albums under a release group MusicBrainz merged into `facts`' (TS-44), each with its own facts, which

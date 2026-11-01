@@ -6,7 +6,7 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 
 import { coversSchema, maxAlbumTextLength, problemSchema } from "@tonaris/domain";
-import { ProviderUnavailableError, type Cover } from "@tonaris/providers";
+import { providerNames, ProviderUnavailableError, type Cover } from "@tonaris/providers";
 
 import type { SessionGuard } from "../../auth/plugin";
 import type { ArtworkSigner } from "../../img/artwork";
@@ -30,15 +30,12 @@ const coversQuery = z.object({
     .meta({ description: "The album's artist credit." }),
 });
 
-const unavailable: Record<ProviderUnavailableError["provider"], string> = {
-  musicbrainz: "Couldn't reach MusicBrainz. Try again.",
-  coverartarchive: "Couldn't reach the Cover Art Archive. Try again.",
-  itunes: "Couldn't find artwork right now. Try again.",
-  spotify: "Couldn't find artwork right now. Try again.",
-  qobuz: "Couldn't find artwork right now. Try again.",
-  tidal: "Couldn't find artwork right now. Try again.",
-  youtube: "Couldn't find artwork right now. Try again.",
-};
+/** What a search that couldn't ask says: the archive it couldn't reach, the only two `findCovers` asks. */
+function unavailable(provider: ProviderUnavailableError["provider"]): string {
+  return provider === "musicbrainz" || provider === "coverartarchive"
+    ? `Couldn't reach ${providerNames[provider]}. Try again.`
+    : "Couldn't find artwork right now. Try again.";
+}
 
 export function coverRoutes(
   session: SessionGuard,
@@ -59,7 +56,7 @@ export function coverRoutes(
       },
     },
     async ({ query }) => {
-      if (!covers) throw new ProblemError(503, "provider_unavailable", unavailable.musicbrainz);
+      if (!covers) throw new ProblemError(503, "provider_unavailable", unavailable("musicbrainz"));
       try {
         const found = await covers(query);
         // Each is signed, as album records are, so the app can show it (TS-103).
@@ -70,7 +67,7 @@ export function coverRoutes(
         };
       } catch (error) {
         if (error instanceof ProviderUnavailableError) {
-          throw new ProblemError(503, "provider_unavailable", unavailable[error.provider]);
+          throw new ProblemError(503, "provider_unavailable", unavailable(error.provider));
         }
         throw error;
       }
