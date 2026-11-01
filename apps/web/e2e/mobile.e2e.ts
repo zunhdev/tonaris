@@ -1,8 +1,8 @@
 // DS-110's mobile web on the phone profiles (TON-103; AC-42, Q-03): `iphone` (WebKit) and `pixel` (Chromium) run
 // this file alone. A phone browses by drilling down: a top bar with Back, the name, Search and Account; the root's
 // folders and lists, then Unsorted; Mine and Shared switching the root (TON-134); 56 px album rows; an album in a
-// read-only sheet with its links; view options in a bottom sheet; Trash and custom fields left to the desktop; and
-// pull to refresh in an iPhone Home Screen app (TON-139).
+// read-only sheet with its links; view options in a bottom sheet; Trash and custom fields left to the desktop; the
+// path from the top bar's name (TON-153); and pull to refresh in an iPhone Home Screen app (TON-139).
 
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
@@ -263,6 +263,66 @@ test("Mine and Shared switch the Collection screen, and Back from a share return
   await page.getByRole("radio", { name: "Mine" }).click();
   await expect(page).toHaveURL(/\/c$/);
   await expect(page.getByRole("navigation", { name: "More" })).toBeVisible();
+});
+
+test("two levels down, the name opens the path, in the person's own folders and in a share", async ({
+  page,
+  browser,
+}) => {
+  await signIn(page, accounts.phonePath);
+  await live(page);
+  const anna = await (
+    await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  ).newPage();
+  await signIn(anna, accounts.phonePathSharer);
+  await live(anna);
+  const { metal, doom } = await seeded(page);
+  // Anna shares Trips, holding Europe, holding Road trip.
+  const trips: Container = { ...list("Trips"), kind: "folder" };
+  const europe: Container = { ...list("Europe"), kind: "folder", parentId: trips.id };
+  const road: Container = { ...list("Road trip"), parentId: europe.id };
+  await insert(anna, trips, europe, road);
+  await saved(anna);
+  await send(anna, "account.setDisplayName", { displayName: "Anna" });
+  const grantId = uuidv7();
+  await send(anna, "share.invite", { grantId, containerId: trips.id, email: accounts.phonePath });
+  await send(page, "share.accept", { grantId });
+
+  // One level down the name is plain, since Back already goes to Collection.
+  await page.goto(`/f/${metal.id}`);
+  await live(page);
+  const title = page.getByRole("heading", { level: 1 });
+  await expect(title).toHaveText("Metal");
+  await expect(title.getByRole("button")).toHaveCount(0);
+
+  // Two levels down it opens the path: Collection, then the folder above, each a 44 px target.
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  await expect(page.getByRole("heading", { level: 1, name: "Doom" })).toBeVisible();
+  await title.getByRole("button", { name: "Doom" }).click();
+  const path = page.getByRole("menu", { name: "Path" });
+  await expect(path.getByRole("menuitem")).toHaveText(["Collection", "Metal"]);
+  await expect
+    .poll(async () => Math.round((await path.getByRole("menuitem").first().boundingBox())!.height))
+    .toBe(44);
+  expect(await axe(page)).toEqual([]);
+  await path.getByRole("menuitem", { name: "Collection" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Collection" })).toBeVisible();
+  await expect(page).toHaveURL(/\/c$/);
+
+  // In a share: Collection on Shared, then the share's folders above.
+  await page.goto(`/shared/${trips.id}?c=${road.id}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Road trip" })).toBeVisible();
+  await title.getByRole("button", { name: "Road trip" }).click();
+  await expect(path.getByRole("menuitem")).toHaveText(["Collection", "Trips", "Europe"]);
+  await path.getByRole("menuitem", { name: "Trips" }).click();
+  await expect(title).toHaveText("Trips");
+  await expect(title.getByRole("button")).toHaveCount(0);
+  await page.goto(`/shared/${trips.id}?c=${road.id}`);
+  await title.getByRole("button", { name: "Road trip" }).click();
+  await path.getByRole("menuitem", { name: "Collection" }).click();
+  await expect(page).toHaveURL(/\/c\?show=shared$/);
+  await expect(page.getByRole("radio", { name: "Shared · 1" })).toBeChecked();
 });
 
 test("in an iPhone Home Screen app, pulling down at the top shows a spinner, and far enough reloads", async ({

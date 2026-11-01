@@ -195,6 +195,9 @@ export const accounts = {
   // A phone's Mine and Shared (mobile.e2e.ts, TON-134): the sharer and the person shared with.
   phoneSharer: at("phone-sharer"),
   phoneViewer: at("phone-viewer"),
+  // A phone's path from the top bar's name (mobile.e2e.ts, TON-153): the person and the one sharing with them.
+  phonePath: at("phone-path"),
+  phonePathSharer: at("phone-path-sharer"),
   // Pull to refresh in an iPhone Home Screen app (mobile.e2e.ts, TON-139).
   phonePull: at("phone-pull"),
   deleteCancel: at("delete-cancel"),

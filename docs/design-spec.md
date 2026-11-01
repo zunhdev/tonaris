@@ -1900,6 +1900,13 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 
 *Fixed in TON-152* (from the creator's manual testing, 1 November 2026): **the phone's account menu is 224 px wide, with 44 px items.** A menu takes its trigger's width unless it sets its own, and the top bar's Account button is 44 px, so the menu was at its 128 px minimum: "Feedback and ideas", "Terms of use" and "Privacy notice" wrapped onto two lines and ran into the items below. Each item is now one line and a 44 px target. A phone test checks both.
 
+*As built in TON-153* (from the creator's manual testing; the creator chose this, 1 November 2026): **two or more levels down, the top bar's name opens the path.** Back climbs one level at a time, and a phone had no other way to the top, which the desktop's breadcrumbs and logo give.
+- **The name** gets a chevron in `fg.tertiary` and becomes a button. Tapping it opens a menu, "Path", of the views above: Collection, with the Library icon, then each folder down to the one Back goes to. Choosing one goes there.
+- **One level down** the name stays plain, since the menu would only repeat Back.
+- **In a share**, Collection opens on Shared (TON-134), then come the share's folders above.
+- **Items are 44 px.** Phone menus have a `touch` size, which the account menu (TON-152) uses too.
+- The creator chose this over a Home button in the top bar, a breadcrumb row under it, or a long press on Back.
+
 *As built in TON-115:* **installable.** `/manifest.webmanifest` names the app "Tonaris", starts at `/c`, displays `standalone`, and gives `bg.app`'s color as its background and theme, with TON-114's icons: 192 and 512 px, and a maskable 512 px.
 - **Android Chrome** offers "Install app" in its menu, and the installed app opens without browser chrome.
 - **iOS** uses the square `apple-touch-icon` for Add to Home Screen, and `apple-mobile-web-app-capable` opens it full screen, with a black status bar above the top bar.

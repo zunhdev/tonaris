@@ -95,20 +95,9 @@ function SharedContent({
   );
   const narrow = useNarrowScreen();
   const title = current?.name ?? "Shared with me";
-  /**
-   * A phone's Back (DS-110): to the folder above in the share, or from its top to the Collection screen's Shared
-   * (TON-134).
-   */
-  const backFrom = (parentId: string | null) => {
-    const parent = parentId === null ? undefined : tree.byId.get(parentId);
-    if (!parent || current?.id === rootId) return { to: "/c?show=shared", label: "Collection" };
-    return {
-      to: parent.id === rootId ? `/shared/${rootId}` : `/shared/${rootId}?c=${parent.id}`,
-      label: parent.name,
-    };
-  };
   useDocumentTitle(title);
   if (!current) return <NoLongerAvailable />;
+  const ancestors = ancestorsOf(tree, current.id);
   const owner = snapshot.owner.displayName ?? "a Tonaris member";
   const kind = current.kind === "folder" ? "containers" : "albums";
   return (
@@ -120,7 +109,14 @@ function SharedContent({
             Shared with me
           </Link>,
         ]}
-        back={backFrom(current.parentId)}
+        // A phone's path (DS-110): the Collection screen's Shared (TON-134), then the share's folders above.
+        path={[
+          { to: "/c?show=shared", label: "Collection" },
+          ...ancestors.map((folder) => ({
+            to: folder.id === rootId ? `/shared/${rootId}` : `/shared/${rootId}?c=${folder.id}`,
+            label: folder.name,
+          })),
+        ]}
         actions={
           <>
             {!narrow && (
@@ -135,7 +131,7 @@ function SharedContent({
       <div className="flex flex-col gap-5 px-6 py-5">
         {/* A phone's top bar has no room for it (DS-110). */}
         {narrow && <p className="text-small text-fg-secondary">View only · Shared by {owner}</p>}
-        <ShareBreadcrumbs path={ancestorsOf(tree, current.id)} linkTo={linkTo} />
+        <ShareBreadcrumbs path={ancestors} linkTo={linkTo} />
         {current.description && (
           <p className="max-w-2xl whitespace-pre-line text-fg-secondary">{current.description}</p>
         )}

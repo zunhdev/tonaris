@@ -4,7 +4,7 @@
 // one already accepted. Answering is online-only and goes straight to the API, as sharing does.
 
 import { api } from "@/api";
-import { PageHeader } from "@/features/shell/page-header";
+import { PageHeader, toCollection } from "@/features/shell/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
@@ -108,7 +108,7 @@ export function InvitationsView() {
   }, [read]);
   return (
     <>
-      <PageHeader title="Invitations" back={{ to: "/c", label: "Collection" }} />
+      <PageHeader title="Invitations" path={[toCollection]} />
       <div className="flex flex-col gap-4 p-6">
         {accepted !== undefined && (
           <output className="block text-fg-secondary">
@@ -165,7 +165,7 @@ export function InvitationView({ id }: { id: string }) {
   }, [id]);
   return (
     <>
-      <PageHeader title="Invitation" back={{ to: "/c", label: "Collection" }} />
+      <PageHeader title="Invitation" path={[toCollection]} />
       <div className="flex max-w-2xl flex-col gap-4 p-6">
         {state?.state === "wrong_account" && (
           <p className="text-fg-primary">
