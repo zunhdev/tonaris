@@ -3,7 +3,8 @@
 // solid `focus` outline (DS-14).
 
 import { Switch as SwitchPrimitive } from "@base-ui/react/switch";
-import { cn } from "cn";
+
+import { cn } from "@tonaris/ui/lib/utils";
 
 function Switch({ className, ...props }: SwitchPrimitive.Root.Props) {
   return (

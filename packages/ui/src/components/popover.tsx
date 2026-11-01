@@ -3,7 +3,9 @@
 // moves into it and returns to the trigger when it closes.
 
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
-import { cn } from "cn";
+
+import { floatingLayerClass } from "@tonaris/ui/lib/floating";
+import { cn } from "@tonaris/ui/lib/utils";
 
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
@@ -33,7 +35,7 @@ function PopoverContent({
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
-        className={cn("isolate outline-none", inDialog ? "z-60" : "z-40")}
+        className={floatingLayerClass(inDialog)}
         align={align}
         alignOffset={alignOffset}
         side={side}

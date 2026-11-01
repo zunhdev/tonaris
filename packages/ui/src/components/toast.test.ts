@@ -95,4 +95,10 @@ describe("notifier (DS-108)", () => {
     expect(switched).toBe(1);
     expect(closed).toEqual([id]);
   });
+
+  test("information without an action carries none, so its toast has no row of buttons", () => {
+    const { added, manager } = recorder();
+    notifier(manager).info("Already in this list");
+    expect(added[0]?.data).toBeUndefined();
+  });
 });

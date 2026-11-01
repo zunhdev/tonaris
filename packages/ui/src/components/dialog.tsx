@@ -4,31 +4,31 @@
 // Focus stays inside until it closes, then returns to where it was.
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { cn } from "cn";
 import { X } from "lucide-react";
 import type * as React from "react";
 
 import { Button } from "@tonaris/ui/components/button";
+import {
+  dialogDescriptionClass,
+  dialogSurfaceClass,
+  dialogTitleClass,
+  scrimClass,
+} from "@tonaris/ui/lib/floating";
+import { cn } from "@tonaris/ui/lib/utils";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
-}
-
 function DialogContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
   return (
     <DialogPrimitive.Portal data-slot="dialog-portal">
-      <DialogPrimitive.Backdrop
-        data-slot="dialog-overlay"
-        className="fixed inset-0 isolate z-60 bg-scrim duration-200 ease-enter data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
-      />
+      <DialogPrimitive.Backdrop data-slot="dialog-overlay" className={cn(scrimClass, "z-60")} />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-60 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-xl bg-raised p-5 text-fg-primary shadow-floating duration-200 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95",
+          dialogSurfaceClass,
+          "max-h-[calc(100dvh-2rem)] max-w-lg overflow-y-auto",
           className,
         )}
         {...props}
@@ -55,11 +55,22 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** The dialog's buttons, at its end: side by side from 640px, stacked below it with the main one on top. */
+function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-footer"
+      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
+      {...props}
+    />
+  );
+}
+
 function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-title text-fg-primary", className)}
+      className={cn(dialogTitleClass, className)}
       {...props}
     />
   );
@@ -72,10 +83,10 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-base text-fg-secondary", className)}
+      className={cn(dialogDescriptionClass, className)}
       {...props}
     />
   );
 }
 
-export { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger };
+export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle };
