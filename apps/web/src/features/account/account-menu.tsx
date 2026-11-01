@@ -4,7 +4,7 @@
 // ideas** opens the feedback board, when there is one, already signed in (FR-11.15). Signing out deletes
 // what this browser keeps for the account: unsent changes and conflicts waiting for review. With changes still
 // unsent, it asks first (decided 22 October 2026). On a phone it is the top bar's Account button, without Admin or
-// the shortcuts, which a phone doesn't have (DS-110).
+// the shortcuts, which a phone doesn't have, and with 44 px items (DS-110).
 
 import { feedbackUrl } from "@/config";
 import { useShell } from "@/features/shell/shell-context";
@@ -40,6 +40,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@tonaris/ui/components/dropdown-menu";
+import { cn } from "@tonaris/ui/lib/utils";
 
 import { authFailureMessage, signOut } from "./auth-client";
 import { forgetSignIn } from "./pending-sign-in";
@@ -106,7 +107,11 @@ export function AccountMenu({
             </>
           )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={compact ? "end" : "start"}>
+        {/* A phone's 44 px button is too narrow to size the menu by, so it sets its own width (TON-152). */}
+        <DropdownMenuContent
+          align={compact ? "end" : "start"}
+          className={cn(compact && "w-56 [&_[data-slot=dropdown-menu-item]]:h-11")}
+        >
           <DropdownMenuItem onClick={() => void router.navigate({ to: "/settings/preferences" })}>
             <Settings strokeWidth={1.5} aria-hidden />
             Settings
