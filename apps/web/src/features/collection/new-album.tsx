@@ -29,12 +29,15 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
+import { Field } from "@tonaris/ui/components/field";
+import { Input } from "@tonaris/ui/components/input";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
+import { Select } from "@tonaris/ui/components/select";
 import { Switch } from "@tonaris/ui/components/switch";
-import { cn } from "@tonaris/ui/lib/utils";
 
 import { releaseTypeOptions } from "./album-edit";
 import {
@@ -240,10 +243,10 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
             />
 
             <div className="flex items-end gap-4">
-              <Labelled label="Release type" className="flex-1">
-                {(id) => (
+              <Field group label="Release type" className="flex-1">
+                {(_, labelId) => (
                   <SegmentedControl
-                    aria-labelledby={id}
+                    aria-labelledby={labelId}
                     options={releaseTypeOptions}
                     value={form.releaseType ?? "unknown"}
                     onValueChange={(value) =>
@@ -251,17 +254,17 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                     }
                   />
                 )}
-              </Labelled>
-              <Labelled label="Live">
-                {(id) => (
+              </Field>
+              <Field group label="Live">
+                {(_, labelId) => (
                   <Switch
-                    aria-labelledby={id}
+                    aria-labelledby={labelId}
                     checked={form.isLive}
                     onCheckedChange={(isLive) => set({ isLive })}
                     className="mb-1.5"
                   />
                 )}
-              </Labelled>
+              </Field>
             </div>
 
             <p className="text-small text-fg-tertiary">
@@ -333,13 +336,12 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
               <FormFields applied={form.fieldValues} onChange={setFields} />
             )}
 
-            <Labelled label="List">
-              {(id) => (
-                <select
-                  aria-labelledby={id}
+            <Field label="List">
+              {(control) => (
+                <Select
+                  {...control}
                   value={form.listId ?? ""}
                   onChange={(event) => set({ listId: event.target.value || null })}
-                  className="h-8 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
                 >
                   <option value="">No list (goes to Unsorted)</option>
                   {lists.map((list) => (
@@ -347,18 +349,18 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                       {list.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               )}
-            </Labelled>
+            </Field>
 
-            <div className="flex justify-end gap-2">
+            <DialogFooter>
               <Button type="button" onClick={requestClose}>
                 Cancel
               </Button>
               <Button type="submit" variant="primary" aria-keyshortcuts="Meta+Enter">
                 Add album
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -412,57 +414,32 @@ function TextField({
   type?: "url";
   placeholder?: string;
 }) {
-  const id = useId();
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-small text-fg-secondary">
-        {label}
-        {required && <span aria-hidden> *</span>}
-      </label>
-      <div className="flex items-center gap-1">
-        <input
-          ref={inputRef}
-          id={id}
-          name={name}
-          value={value}
-          required={required}
-          aria-invalid={problem !== undefined}
-          aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={onBlur}
-          className={cn(
-            "h-8 min-w-0 flex-1 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-            problem !== undefined && "border-status-danger",
-          )}
-          {...rest}
-        />
-        {action}
-      </div>
-      {problem !== undefined && (
-        <p id={`${id}-problem`} className="text-small text-status-danger">
-          {problem}
-        </p>
+    <Field
+      label={
+        <>
+          {label}
+          {required && <span aria-hidden> *</span>}
+        </>
+      }
+      problem={problem}
+    >
+      {(control) => (
+        <div className="flex items-center gap-1">
+          <Input
+            {...control}
+            ref={inputRef}
+            name={name}
+            value={value}
+            required={required}
+            onChange={(event) => onChange(event.target.value)}
+            onBlur={onBlur}
+            className="flex-1"
+            {...rest}
+          />
+          {action}
+        </div>
       )}
-    </div>
-  );
-}
-
-function Labelled({
-  label,
-  className,
-  children,
-}: {
-  label: string;
-  className?: string;
-  children: (id: string) => ReactNode;
-}) {
-  const id = useId();
-  return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <span id={id} className="text-small text-fg-secondary">
-        {label}
-      </span>
-      {children(id)}
-    </div>
+    </Field>
   );
 }

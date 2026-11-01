@@ -28,7 +28,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useId,
   useRef,
   useState,
   type FormEvent,
@@ -49,9 +48,11 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
+import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
 
 import { ConfirmDialog } from "../shell/confirm-dialog";
@@ -314,14 +315,14 @@ function DestinationPrompt({
         <form onSubmit={submit} className="flex flex-col gap-4">
           <PlaceList mode="radios" places={places} chosen={chosen} onChange={setChosen} />
           <SharingImpactPreview query={{ recover: target.unitId, to: chosen }} />
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button type="button" onClick={onCancel}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">
               Restore
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -352,14 +353,14 @@ function SharingPrompt({
           </DialogDescription>
         </DialogHeader>
         <SharingImpactBlock impact={impact} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button type="button" onClick={onCancel}>
             Cancel
           </Button>
           <Button type="button" variant="primary" onClick={onRestore}>
             Restore
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -380,7 +381,6 @@ function NamePrompt({
   onCancel: () => void;
 }) {
   const { tree } = useCollectionData();
-  const id = useId();
   const input = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(target.name);
   const [problem, setProblem] = useState<string>();
@@ -414,25 +414,19 @@ function NamePrompt({
         </DialogHeader>
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor={id} className="text-small text-fg-secondary">
-              Name
-            </label>
-            <Input
-              ref={input}
-              id={id}
-              value={name}
-              aria-invalid={problem !== undefined}
-              aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-              onChange={(event) => {
-                setName(event.target.value);
-                setProblem(undefined);
-              }}
-            />
-            {problem && (
-              <p id={`${id}-problem`} className="text-small text-status-danger">
-                {problem}
-              </p>
-            )}
+            <Field label="Name" problem={problem}>
+              {(control) => (
+                <Input
+                  {...control}
+                  ref={input}
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    setProblem(undefined);
+                  }}
+                />
+              )}
+            </Field>
             <Button
               type="button"
               variant="ghost"
@@ -443,14 +437,14 @@ function NamePrompt({
               Choose another location…
             </Button>
           </div>
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button type="button" onClick={onCancel}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">
               Restore
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -502,11 +496,11 @@ function SkipReport({
             );
           })}
         </ul>
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button type="button" variant="primary" onClick={onClose}>
             Done
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -563,7 +557,7 @@ function SameAlbumPrompt({
               .join(" · ")}
           />
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
+        <DialogFooter className="flex-wrap">
           <Button type="button" onClick={onKeep}>
             Cancel
           </Button>
@@ -573,7 +567,7 @@ function SameAlbumPrompt({
           <Button ref={keep} type="button" variant="primary" onClick={onKeep}>
             Keep the active album
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

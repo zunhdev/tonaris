@@ -16,6 +16,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
@@ -145,14 +146,14 @@ function DeleteAccountDialog({ account, onClose }: { account: Account; onClose: 
             {error}
           </p>
         )}
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button disabled={busy} onClick={onClose}>
             Cancel
           </Button>
           <Button variant="danger" disabled={!matches || busy} onClick={() => void remove()}>
             Delete account permanently
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

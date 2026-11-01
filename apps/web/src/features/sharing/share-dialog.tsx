@@ -29,6 +29,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@tonaris/ui/components/dropdown-menu";
+import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
 import { Switch } from "@tonaris/ui/components/switch";
 
@@ -280,7 +281,6 @@ function audienceOf({ people, link }: { people: number; link: boolean }): string
 
 /** Sharing needs a display name (FR-11.3): shown in place of Invite and the link switch until there is one. */
 function DisplayNameForm({ disabled, onSaved }: { disabled: boolean; onSaved: () => void }) {
-  const id = useId();
   const [name, setName] = useState("");
   const { run, busy, error, setError } = useSend();
   async function submit(event: FormEvent) {
@@ -293,26 +293,26 @@ function DisplayNameForm({ disabled, onSaved }: { disabled: boolean; onSaved: ()
     if (reason === undefined) onSaved();
   }
   return (
-    <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-1.5">
-      <label htmlFor={`${id}-name`} className="text-small text-fg-secondary">
-        Add a display name to share
-      </label>
-      <div className="flex gap-2">
-        <Input
-          id={`${id}-name`}
-          value={name}
-          maxLength={maxNameLength}
-          aria-invalid={error !== undefined}
-          aria-describedby={`${id}-hint`}
-          onChange={(event) => setName(event.target.value)}
-        />
-        <Button type="submit" disabled={disabled || busy}>
-          Save
-        </Button>
-      </div>
-      <p id={`${id}-hint`} className="text-small text-fg-tertiary">
-        {error ?? "Viewers see this name instead of your email."}
-      </p>
+    <form onSubmit={(event) => void submit(event)}>
+      <Field
+        label="Add a display name to share"
+        hint="Viewers see this name instead of your email."
+        problem={error}
+      >
+        {(control) => (
+          <div className="flex gap-2">
+            <Input
+              {...control}
+              value={name}
+              maxLength={maxNameLength}
+              onChange={(event) => setName(event.target.value)}
+            />
+            <Button type="submit" disabled={disabled || busy}>
+              Save
+            </Button>
+          </div>
+        )}
+      </Field>
     </form>
   );
 }

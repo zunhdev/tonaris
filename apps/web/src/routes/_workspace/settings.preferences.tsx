@@ -8,7 +8,6 @@
 import { defaultsKey } from "@/client/sync/views";
 import { useCollectionData } from "@/features/collection/data";
 import {
-  Choice,
   directionOptions,
   folderSortOptions,
   groupingOptions,
@@ -27,6 +26,7 @@ import {
   type LinkTarget,
   type StreamingService,
 } from "@tonaris/domain";
+import { Field } from "@tonaris/ui/components/field";
 import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
 import { Switch } from "@tonaris/ui/components/switch";
 
@@ -71,8 +71,8 @@ function Preferences() {
           <h2 id="list-defaults" className="text-title text-fg-primary">
             Lists and Unsorted
           </h2>
-          <Choice label="Sort">
-            {(id) => (
+          <Field group label="Sort">
+            {(_, id) => (
               <SegmentedControl
                 aria-labelledby={id}
                 options={listSortOptions}
@@ -81,9 +81,9 @@ function Preferences() {
                 onValueChange={(listSortMode) => set({ listSortMode })}
               />
             )}
-          </Choice>
-          <Choice label="Direction">
-            {(id) => (
+          </Field>
+          <Field group label="Direction">
+            {(_, id) => (
               <SegmentedControl
                 aria-labelledby={id}
                 options={directionOptions}
@@ -92,9 +92,9 @@ function Preferences() {
                 onValueChange={(listSortDir) => set({ listSortDir })}
               />
             )}
-          </Choice>
-          <Choice label="Grouping">
-            {(id) => (
+          </Field>
+          <Field group label="Grouping">
+            {(_, id) => (
               <SegmentedControl
                 aria-labelledby={id}
                 options={groupingOptions}
@@ -103,9 +103,9 @@ function Preferences() {
                 onValueChange={(grouping) => set({ grouped: grouping === "type" })}
               />
             )}
-          </Choice>
-          <Choice label="Layout">
-            {(id) => (
+          </Field>
+          <Field group label="Layout">
+            {(_, id) => (
               <SegmentedControl
                 aria-labelledby={id}
                 options={layoutOptions}
@@ -114,15 +114,15 @@ function Preferences() {
                 onValueChange={(layout) => set({ layout })}
               />
             )}
-          </Choice>
+          </Field>
         </section>
 
         <section aria-labelledby="folder-defaults" className="flex max-w-sm flex-col gap-3">
           <h2 id="folder-defaults" className="text-title text-fg-primary">
             Folders and Collection
           </h2>
-          <Choice label="Sort">
-            {(id) => (
+          <Field group label="Sort">
+            {(_, id) => (
               <SegmentedControl
                 aria-labelledby={id}
                 options={folderSortOptions}
@@ -131,9 +131,9 @@ function Preferences() {
                 onValueChange={(folderSortMode) => set({ folderSortMode })}
               />
             )}
-          </Choice>
-          <Choice label="Direction">
-            {(id) => (
+          </Field>
+          <Field group label="Direction">
+            {(_, id) => (
               <SegmentedControl
                 aria-labelledby={id}
                 options={directionOptions}
@@ -142,7 +142,7 @@ function Preferences() {
                 onValueChange={(folderSortDir) => set({ folderSortDir })}
               />
             )}
-          </Choice>
+          </Field>
         </section>
 
         <p className="max-w-md text-fg-secondary">
@@ -154,8 +154,8 @@ function Preferences() {
           <h2 id="link-target" className="text-title text-fg-primary">
             Links
           </h2>
-          <Choice label="Open links in">
-            {(id) => (
+          <Field group label="Open links in">
+            {(_, id) => (
               <SegmentedControl
                 aria-labelledby={id}
                 options={linkTargetOptions}
@@ -164,7 +164,7 @@ function Preferences() {
                 onValueChange={(linkTarget) => set({ linkTarget })}
               />
             )}
-          </Choice>
+          </Field>
           <p className="text-small text-fg-secondary">
             App opens Spotify, Apple Music, Qobuz and Tidal links in their apps, on every device you
             use. A link to a service whose app isn't installed won't open. YouTube Music has no

@@ -14,6 +14,9 @@ import {
 
 import { useCollectionUi } from "./collection-ui";
 
+/** An input or a textarea; its handlers take either, so one draft serves a field that is one or the other. */
+type TextField = HTMLInputElement | HTMLTextAreaElement;
+
 /** What a key does to a draft: commit it, discard it, or nothing, leaving the key to the field and the page. */
 export function draftKeyAction(
   key: Pick<KeyboardEvent, "key" | "shiftKey">,
@@ -25,7 +28,7 @@ export function draftKeyAction(
   return undefined;
 }
 
-export function useInlineDraft<Field extends HTMLInputElement | HTMLTextAreaElement>({
+export function useInlineDraft<Field extends TextField>({
   value,
   check,
   save,
@@ -128,11 +131,11 @@ export function useInlineDraft<Field extends HTMLInputElement | HTMLTextAreaElem
       onFocus: () => {
         if (opensOn === "focus" && current.current === undefined) setDraft(value);
       },
-      onChange: (event: ChangeEvent<Field>) => {
+      onChange: (event: ChangeEvent<TextField>) => {
         setDraft(event.target.value);
         setRefusal(undefined);
       },
-      onKeyDown: (event: KeyboardEvent<Field>) => {
+      onKeyDown: (event: KeyboardEvent<TextField>) => {
         const action = draftKeyAction(event, {
           multiline,
           escape,

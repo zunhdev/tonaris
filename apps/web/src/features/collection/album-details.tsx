@@ -24,6 +24,8 @@ import {
   type AlbumFields,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
+import { Field } from "@tonaris/ui/components/field";
+import { Input } from "@tonaris/ui/components/input";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 import { Switch } from "@tonaris/ui/components/switch";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -104,7 +106,7 @@ export function AlbumDetails({ album }: { album: Album }) {
           <>
             {/* The sections' headings stay under the album's, as fields replace it. */}
             <h2 className="sr-only">{album.title}</h2>
-            <FieldEditor album={album} cell="title" className="text-title font-medium" />
+            <FieldEditor album={album} cell="title" className="font-medium" />
             <FieldEditor album={album} cell="artistCredit" />
           </>
         ) : (
@@ -128,10 +130,10 @@ export function AlbumDetails({ album }: { album: Album }) {
       <Section title="Chronology">
         {canEdit ? (
           <div className="flex flex-col gap-3">
-            <Labelled label="Release type">
-              {(id) => (
+            <Field group label="Release type">
+              {(_, labelId) => (
                 <SegmentedControl
-                  aria-labelledby={id}
+                  aria-labelledby={labelId}
                   options={releaseTypeOptions}
                   value={album.releaseType ?? "unknown"}
                   onValueChange={(value) =>
@@ -139,7 +141,7 @@ export function AlbumDetails({ album }: { album: Album }) {
                   }
                 />
               )}
-            </Labelled>
+            </Field>
             <div className="flex items-center justify-between gap-3">
               <span id={liveId} className="text-fg-secondary">
                 Live
@@ -213,18 +215,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Labelled({ label, children }: { label: string; children: (id: string) => ReactNode }) {
-  const id = useId();
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span id={id} className="text-small text-fg-secondary">
-        {label}
-      </span>
-      {children(id)}
-    </div>
-  );
-}
-
 function Value({ term, children }: { term: string; children: ReactNode }) {
   return (
     <>
@@ -252,7 +242,6 @@ function FieldEditor({
   labelled?: boolean;
 }) {
   const client = useSyncClient();
-  const id = useId();
   const { refusal, props } = useInlineDraft<HTMLInputElement>({
     value: cellText(album, cell),
     check: (typed) => {
@@ -270,32 +259,16 @@ function FieldEditor({
     },
   });
 
-  const name = `${cellNames[cell]} of '${album.title}'`;
   return (
-    <div className="flex flex-col gap-1">
-      {labelled && (
-        <label htmlFor={id} className="text-small text-fg-secondary">
-          {cellNames[cell]}
-        </label>
-      )}
-      <input
-        {...props}
-        id={id}
-        aria-label={labelled ? undefined : name}
-        aria-invalid={refusal !== undefined}
-        aria-describedby={refusal === undefined ? undefined : `${id}-error`}
-        className={cn(
-          "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-          refusal !== undefined && "border-status-danger",
-          className,
-        )}
-      />
-      {refusal !== undefined && (
-        <p id={`${id}-error`} className="text-small text-status-danger">
-          {refusal}
-        </p>
-      )}
-    </div>
+    <Field
+      // Without its name above it, the field is named for assistive technology with the album's title.
+      label={labelled ? cellNames[cell] : `${cellNames[cell]} of '${album.title}'`}
+      hideLabel={!labelled}
+      problem={refusal}
+      className="gap-1"
+    >
+      {(control) => <Input {...props} {...control} className={className} />}
+    </Field>
   );
 }
 
@@ -306,7 +279,6 @@ function FieldEditor({
  */
 function ArtworkUrlEditor({ album }: { album: Album }) {
   const client = useSyncClient();
-  const id = useId();
   /** Saves the artwork's URL, null for none, unless it is already the album's. */
   const saveUrl = (artworkUrl: string | null) => {
     if (artworkUrl === album.artworkUrl || !client) return;
@@ -326,41 +298,30 @@ function ArtworkUrlEditor({ album }: { album: Album }) {
   });
 
   return (
-    <div className="flex w-full max-w-[500px] flex-col gap-1">
-      <label htmlFor={id} className="text-small text-fg-secondary">
-        Artwork URL
-      </label>
-      {/* Find sits beside the field it fills (TON-124). */}
-      <div className="flex items-center gap-1">
-        <input
-          {...props}
-          id={id}
-          type="url"
-          placeholder="https://…"
-          spellCheck={false}
-          aria-invalid={refusal !== undefined}
-          aria-describedby={refusal === undefined ? undefined : `${id}-error`}
-          className={cn(
-            "h-8 min-w-0 flex-1 rounded-md border border-subtle bg-panel px-2 text-small text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-            refusal !== undefined && "border-status-danger",
-          )}
-        />
-        <FindArtwork
-          title={album.title}
-          artist={album.artistCredit}
-          onChoose={(artworkUrl) => {
-            // A chosen cover is an artwork edit like a typed one, replacing whatever was typed.
-            discard();
-            saveUrl(artworkUrl);
-          }}
-        />
-      </div>
-      {refusal !== undefined && (
-        <p id={`${id}-error`} className="text-small text-status-danger">
-          {refusal}
-        </p>
+    <Field label="Artwork URL" problem={refusal} className="w-full max-w-[500px] gap-1">
+      {(control) => (
+        // Find sits beside the field it fills (TON-124).
+        <div className="flex items-center gap-1">
+          <Input
+            {...props}
+            {...control}
+            type="url"
+            placeholder="https://…"
+            spellCheck={false}
+            className="flex-1 text-small"
+          />
+          <FindArtwork
+            title={album.title}
+            artist={album.artistCredit}
+            onChoose={(artworkUrl) => {
+              // A chosen cover is an artwork edit like a typed one, replacing whatever was typed.
+              discard();
+              saveUrl(artworkUrl);
+            }}
+          />
+        </div>
       )}
-    </div>
+    </Field>
   );
 }
 

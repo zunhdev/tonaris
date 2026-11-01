@@ -7,7 +7,7 @@ import { emptyForm } from "@/features/collection/album-form";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { useListOptions } from "@/features/collection/list-options";
 import { CapacityNotice } from "@/features/settings/usage";
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import { maxBatchItems } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
@@ -18,7 +18,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
-import { cn } from "@tonaris/ui/lib/utils";
+import { Field } from "@tonaris/ui/components/field";
+import { Select } from "@tonaris/ui/components/select";
+import { Textarea } from "@tonaris/ui/components/textarea";
 
 import { useCapture } from "./capture-context";
 import { linesIn } from "./links-in";
@@ -43,7 +45,6 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
   const [listId, setListId] = useState(initialList);
   const [problem, setProblem] = useState<string>();
   const linksRef = useRef<HTMLTextAreaElement>(null);
-  const id = useId();
 
   function submit(event?: FormEvent) {
     event?.preventDefault();
@@ -87,54 +88,41 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) submit(event);
           }}
         >
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-links`} className="text-small text-fg-secondary">
-              Links
-            </label>
-            <textarea
-              ref={linksRef}
-              id={`${id}-links`}
-              rows={5}
-              spellCheck={false}
-              autoComplete="off"
-              placeholder="One link per line"
-              aria-invalid={problem !== undefined}
-              aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-              value={text}
-              onChange={(event) => {
-                setText(event.target.value);
-                setProblem(undefined);
-              }}
-              className={cn(
-                "min-h-24 rounded-md border border-subtle bg-panel px-2 py-1.5 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-                problem !== undefined && "border-status-danger",
-              )}
-            />
-            {problem !== undefined && (
-              <p id={`${id}-problem`} className="text-small text-status-danger">
-                {problem}
-              </p>
+          <Field label="Links" problem={problem}>
+            {(control) => (
+              <Textarea
+                {...control}
+                ref={linksRef}
+                rows={5}
+                spellCheck={false}
+                autoComplete="off"
+                placeholder="One link per line"
+                value={text}
+                onChange={(event) => {
+                  setText(event.target.value);
+                  setProblem(undefined);
+                }}
+                className="min-h-24"
+              />
             )}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-list`} className="text-small text-fg-secondary">
-              List
-            </label>
-            <select
-              id={`${id}-list`}
-              value={listId ?? ""}
-              onChange={(event) => setListId(event.target.value || null)}
-              className="h-8 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
-            >
-              <option value="">No list (goes to Unsorted)</option>
-              {lists.map((list) => (
-                <option key={list.id} value={list.id}>
-                  {list.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Field label="List">
+            {(control) => (
+              <Select
+                {...control}
+                value={listId ?? ""}
+                onChange={(event) => setListId(event.target.value || null)}
+              >
+                <option value="">No list (goes to Unsorted)</option>
+                {lists.map((list) => (
+                  <option key={list.id} value={list.id}>
+                    {list.label}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
 
           <div className="flex items-center justify-between gap-2">
             <Button

@@ -37,7 +37,9 @@ import {
   type FieldType,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
+import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
+import { Select } from "@tonaris/ui/components/select";
 import { cn } from "@tonaris/ui/lib/utils";
 
 type Usage = { albums: number; inTrash: number };
@@ -362,7 +364,6 @@ function InlineText({
   onSave: (text: string) => void;
   hideLabel?: boolean;
 }) {
-  const id = useId();
   const { refusal: problem, props } = useInlineDraft<HTMLInputElement>({
     value,
     // Unchanged, it closes without a check.
@@ -378,28 +379,11 @@ function InlineText({
   });
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-small text-fg-secondary"}>
-        {label}
-      </label>
-      <Input
-        {...props}
-        id={id}
-        aria-invalid={problem !== undefined}
-        aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-        className="max-w-sm"
-      />
-      {problem && (
-        <p id={`${id}-problem`} className="text-small text-status-danger">
-          {problem}
-        </p>
-      )}
-    </div>
+    <Field label={label} hideLabel={hideLabel} problem={problem} className="min-w-0 flex-1">
+      {(control) => <Input {...props} {...control} className="max-w-sm" />}
+    </Field>
   );
 }
-
-const selectClass =
-  "h-8 max-w-sm rounded-md border border-strong bg-app px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid disabled:opacity-50";
 
 /**
  * The type select (FR-03.12, FR-03.13): disabled while any album uses the field, saying why, with Create new field;
@@ -418,7 +402,6 @@ function TypeChoice({
   onCreate: () => void;
   onChange: (type: FieldType) => void;
 }) {
-  const id = useId();
   const [pending, setPending] = useState<FieldType>();
   const counts = usage ?? { albums: used ? 1 : 0, inTrash: 0 };
   const locked = used || counts.albums + counts.inTrash > 0;
@@ -437,62 +420,65 @@ function TypeChoice({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-small text-fg-secondary">
-        Type
-      </label>
-      <select
-        id={id}
-        value={pending ?? field.type}
-        disabled={locked}
-        aria-describedby={locked ? `${id}-locked` : undefined}
-        onChange={(event) => {
-          const chosen = fieldTypes.find((each) => each === event.target.value);
-          if (chosen) choose(chosen);
-        }}
-        className={selectClass}
-      >
-        {fieldTypes.map((type) => (
-          <option key={type} value={type}>
-            {fieldTypeNames[type]}
-          </option>
-        ))}
-      </select>
-      {locked && (
-        <div className="flex flex-wrap items-center gap-3">
-          <p id={`${id}-locked`} className="text-small text-fg-secondary">
-            {
-              fieldTypeInUse({ active: counts.albums + counts.inTrash, trashed: counts.inTrash })
-                .problem.detail
-            }
-          </p>
-          <Button size="sm" onClick={onCreate}>
-            Create new field
-          </Button>
-        </div>
-      )}
-      {pending && (
-        <div className="flex flex-wrap items-center gap-3">
-          <p role="alert" className="text-small text-status-warning">
-            Changing to {fieldTypeNames[pending]} discards its options:{" "}
-            {field.options.map((option) => option.label).join(", ")}.
-          </p>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() => {
-              onChange(pending);
-              setPending(undefined);
+    <Field label="Type">
+      {(control) => (
+        <>
+          <Select
+            {...control}
+            value={pending ?? field.type}
+            disabled={locked}
+            aria-describedby={locked ? `${control.id}-locked` : undefined}
+            onChange={(event) => {
+              const chosen = fieldTypes.find((each) => each === event.target.value);
+              if (chosen) choose(chosen);
             }}
+            className="max-w-sm"
           >
-            Change type
-          </Button>
-          <Button size="sm" onClick={() => setPending(undefined)}>
-            Keep options
-          </Button>
-        </div>
+            {fieldTypes.map((type) => (
+              <option key={type} value={type}>
+                {fieldTypeNames[type]}
+              </option>
+            ))}
+          </Select>
+          {locked && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p id={`${control.id}-locked`} className="text-small text-fg-secondary">
+                {
+                  fieldTypeInUse({
+                    active: counts.albums + counts.inTrash,
+                    trashed: counts.inTrash,
+                  }).problem.detail
+                }
+              </p>
+              <Button size="sm" onClick={onCreate}>
+                Create new field
+              </Button>
+            </div>
+          )}
+          {pending && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p role="alert" className="text-small text-status-warning">
+                Changing to {fieldTypeNames[pending]} discards its options:{" "}
+                {field.options.map((option) => option.label).join(", ")}.
+              </p>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => {
+                  onChange(pending);
+                  setPending(undefined);
+                }}
+              >
+                Change type
+              </Button>
+              <Button size="sm" onClick={() => setPending(undefined)}>
+                Keep options
+              </Button>
+            </div>
+          )}
+        </>
       )}
-    </div>
+    </Field>
   );
 }
 
@@ -512,7 +498,6 @@ function OptionsEditor({
   onError: (error: string | undefined) => void;
 }) {
   const announce = useAnnounce();
-  const addId = useId();
   const [adding, setAdding] = useState("");
   const [addProblem, setAddProblem] = useState<string>();
 
@@ -611,36 +596,31 @@ function OptionsEditor({
         ))}
       </ul>
       {field.options.length < maxFieldOptions && (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1.5">
-            <Input
-              aria-label="New option"
-              value={adding}
-              placeholder="New option"
-              aria-invalid={addProblem !== undefined}
-              aria-describedby={addProblem === undefined ? undefined : addId}
-              onChange={(event) => {
-                setAdding(event.target.value);
-                setAddProblem(undefined);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  add();
-                }
-              }}
-              className="max-w-sm"
-            />
-            <Button size="sm" onClick={add}>
-              Add option
-            </Button>
-          </div>
-          {addProblem && (
-            <p id={addId} className="text-small text-status-danger">
-              {addProblem}
-            </p>
+        <Field label="New option" hideLabel problem={addProblem} className="gap-1">
+          {(control) => (
+            <div className="flex items-center gap-1.5">
+              <Input
+                {...control}
+                value={adding}
+                placeholder="New option"
+                onChange={(event) => {
+                  setAdding(event.target.value);
+                  setAddProblem(undefined);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    add();
+                  }
+                }}
+                className="max-w-sm"
+              />
+              <Button size="sm" onClick={add}>
+                Add option
+              </Button>
+            </div>
           )}
-        </div>
+        </Field>
       )}
     </fieldset>
   );

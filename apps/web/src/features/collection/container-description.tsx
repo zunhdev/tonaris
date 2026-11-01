@@ -4,9 +4,9 @@
 // cleared. Over 2,000 characters it stays with its reason (X-05).
 
 import { useSyncClient } from "@/features/sync/sync-provider";
-import { useId } from "react";
 
 import { descriptionTooLong, maxDescriptionLength, type Container } from "@tonaris/domain";
+import { Field } from "@tonaris/ui/components/field";
 
 import { useMode } from "./collection-ui";
 import { useInlineDraft } from "./inline-draft";
@@ -27,7 +27,6 @@ export function ContainerDescription({ container }: { container: Container }) {
 
 function DescriptionEditor({ container }: { container: Container }) {
   const client = useSyncClient();
-  const id = useId();
   const {
     text: shown,
     refusal: problem,
@@ -52,24 +51,17 @@ function DescriptionEditor({ container }: { container: Container }) {
   });
 
   return (
-    <div className="flex shrink-0 flex-col gap-1 px-6 pt-3">
-      <label htmlFor={id} className="sr-only">
-        Description
-      </label>
-      <textarea
-        {...props}
-        id={id}
-        placeholder="Add a description"
-        rows={Math.min(6, Math.max(1, shown.split("\n").length))}
-        aria-invalid={problem !== undefined}
-        aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-        className="-mx-2 max-w-3xl resize-none rounded-md border border-transparent bg-transparent px-2 py-1 text-fg-secondary outline-none placeholder:text-fg-tertiary hover:border-subtle focus-visible:border-strong focus-visible:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-invalid:border-status-danger"
-      />
-      {problem && (
-        <p id={`${id}-problem`} className="text-small text-status-danger">
-          {problem}
-        </p>
+    <Field label="Description" hideLabel problem={problem} className="shrink-0 gap-1 px-6 pt-3">
+      {(control) => (
+        // Text under the header, not a form's box: it shows its edge only on hover and focus.
+        <textarea
+          {...props}
+          {...control}
+          placeholder="Add a description"
+          rows={Math.min(6, Math.max(1, shown.split("\n").length))}
+          className="-mx-2 max-w-3xl resize-none rounded-md border border-transparent bg-transparent px-2 py-1 text-fg-secondary outline-none placeholder:text-fg-tertiary hover:border-subtle focus-visible:border-strong focus-visible:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-invalid:border-status-danger"
+        />
       )}
-    </div>
+    </Field>
   );
 }

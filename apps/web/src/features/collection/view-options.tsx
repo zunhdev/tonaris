@@ -11,11 +11,12 @@ import {
   Rows3,
   SlidersHorizontal,
 } from "lucide-react";
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 
 import type { FolderSortMode, ListSortMode, SortDirection, ViewLayout } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@tonaris/ui/components/dialog";
+import { Field } from "@tonaris/ui/components/field";
 import {
   Popover,
   PopoverContent,
@@ -88,25 +89,6 @@ export const layoutOptions: readonly SegmentedOption<ViewLayout>[] = [
   },
 ];
 
-/** One choice: its name over its control. */
-export function Choice({
-  label,
-  children,
-}: {
-  label: string;
-  children: (labelId: string) => ReactNode;
-}) {
-  const id = useId();
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span id={id} className="text-small text-fg-secondary">
-        {label}
-      </span>
-      {children(id)}
-    </div>
-  );
-}
-
 export function ViewOptions({ viewKey, kind }: { viewKey: string; kind: ViewKind }) {
   const [open, setOpen] = useState(false);
   const { setViewOptionsOpener } = useCollectionUi();
@@ -167,41 +149,41 @@ function AlbumViewChoices({ viewKey }: { viewKey: string }) {
   const { presentation, choose } = view;
   return (
     <>
-      <Choice label="Sort">
-        {(id) => (
+      <Field group label="Sort">
+        {(_, labelId) => (
           <SegmentedControl
-            aria-labelledby={id}
+            aria-labelledby={labelId}
             options={listSortOptions}
             value={presentation.sortMode}
             onValueChange={(sortMode) => choose({ sortMode })}
           />
         )}
-      </Choice>
+      </Field>
       <DirectionChoice
         sortMode={view.presentation.sortMode}
         sortDir={view.presentation.sortDir}
         onChange={(sortDir) => view.choose({ sortDir })}
       />
-      <Choice label="Grouping">
-        {(id) => (
+      <Field group label="Grouping">
+        {(_, labelId) => (
           <SegmentedControl
-            aria-labelledby={id}
+            aria-labelledby={labelId}
             options={groupingOptions}
             value={presentation.grouped ? "type" : "none"}
             onValueChange={(grouping) => choose({ grouped: grouping === "type" })}
           />
         )}
-      </Choice>
-      <Choice label="Layout">
-        {(id) => (
+      </Field>
+      <Field group label="Layout">
+        {(_, labelId) => (
           <SegmentedControl
-            aria-labelledby={id}
+            aria-labelledby={labelId}
             options={layoutOptions}
             value={presentation.layout}
             onValueChange={(layout) => choose({ layout })}
           />
         )}
-      </Choice>
+      </Field>
       <DefaultsFooter view={view} />
     </>
   );
@@ -212,16 +194,16 @@ function FolderViewChoices({ viewKey }: { viewKey: string }) {
   const view = usePresentation(viewKey, "containers");
   return (
     <>
-      <Choice label="Sort">
-        {(id) => (
+      <Field group label="Sort">
+        {(_, labelId) => (
           <SegmentedControl
-            aria-labelledby={id}
+            aria-labelledby={labelId}
             options={folderSortOptions}
             value={view.presentation.sortMode}
             onValueChange={(sortMode) => view.choose({ sortMode })}
           />
         )}
-      </Choice>
+      </Field>
       <DirectionChoice
         sortMode={view.presentation.sortMode}
         sortDir={view.presentation.sortDir}
@@ -243,17 +225,17 @@ function DirectionChoice({
   onChange: (sortDir: SortDirection) => void;
 }) {
   return (
-    <Choice label="Direction">
-      {(id) => (
+    <Field group label="Direction">
+      {(_, labelId) => (
         <SegmentedControl
-          aria-labelledby={id}
+          aria-labelledby={labelId}
           options={directionOptions}
           value={sortDir}
           disabled={sortMode === "manual"}
           onValueChange={onChange}
         />
       )}
-    </Choice>
+    </Field>
   );
 }
 

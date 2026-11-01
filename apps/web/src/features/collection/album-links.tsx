@@ -14,7 +14,7 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   serviceLinkKey,
@@ -25,7 +25,8 @@ import {
   type StreamingService,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
-import { cn } from "@tonaris/ui/lib/utils";
+import { Field } from "@tonaris/ui/components/field";
+import { Input } from "@tonaris/ui/components/input";
 
 import { useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
@@ -228,7 +229,6 @@ function LinkEditor({
   onClose: () => void;
 }) {
   const client = useSyncClient();
-  const id = useId();
   const name = serviceNames[service];
   /** Empty, or unchanged, the field closes without sending anything. */
   const unchanged = (typed: string) => typed === "" || typed === link?.url;
@@ -256,30 +256,18 @@ function LinkEditor({
   }, [ref]);
 
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-small text-fg-secondary">
-        {name} link
-      </label>
-      <input
-        {...props}
-        id={id}
-        type="url"
-        inputMode="url"
-        autoComplete="off"
-        spellCheck={false}
-        placeholder="Album or track link"
-        aria-invalid={refusal !== undefined}
-        aria-describedby={refusal === undefined ? undefined : `${id}-error`}
-        className={cn(
-          "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-          refusal !== undefined && "border-status-danger",
-        )}
-      />
-      {refusal !== undefined && (
-        <p id={`${id}-error`} className="text-small text-status-danger">
-          {refusal}
-        </p>
+    <Field label={`${name} link`} problem={refusal} className="gap-1">
+      {(control) => (
+        <Input
+          {...props}
+          {...control}
+          type="url"
+          inputMode="url"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Album or track link"
+        />
       )}
-    </div>
+    </Field>
   );
 }
