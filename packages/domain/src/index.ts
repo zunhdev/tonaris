@@ -377,3 +377,4 @@ export * from "./export-readme";
 export * from "./export-archive";
 export * from "./ledger";
 export * from "./telemetry";
+export * from "./provider-cache";
