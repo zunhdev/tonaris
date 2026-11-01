@@ -21,14 +21,15 @@ import { webCors } from "./cors";
 import { artworkRoutes, artworkSigner, type ArtworkSigner, type ImageFetch } from "./img/artwork";
 import type { McpLimiter } from "./mcp/limits";
 import { mcpRoutes } from "./mcp/routes";
+import type { LogError } from "./observability";
 import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
-import { accountDeletionRoutes, type AccountDeletionDeps } from "./routes/v1/account-deletion";
+import { accountDeletionRoutes } from "./routes/v1/account-deletion";
 import { admissionAdminRoutes } from "./routes/v1/admissions";
 import { approvalRoutes } from "./routes/v1/approvals";
 import { connectionRoutes } from "./routes/v1/connections";
 import { coverRoutes, type CoverFinder } from "./routes/v1/covers";
-import { emailChangeRoutes, type EmailChangeDeps } from "./routes/v1/email-change";
+import { emailChangeRoutes } from "./routes/v1/email-change";
 import { exportRoutes } from "./routes/v1/export";
 import { fieldRoutes } from "./routes/v1/fields";
 import { guestRoutes } from "./routes/v1/guests";
@@ -44,7 +45,7 @@ import { supportRoutes } from "./routes/v1/support";
 import { csrfGuard, securityHeaders } from "./security";
 import { databaseHub, type SyncHub } from "./sync/hub";
 import { syncRoutes } from "./sync/routes";
-import { announcer, mutationRunner, type MutationRunnerDeps, type Mutations } from "./sync/runner";
+import { announcer, mutationRunner, type Mutations } from "./sync/runner";
 
 /**
  * The largest request body the API reads (TON-95), passed to `listen`. The largest legitimate request, a 200-item
@@ -62,22 +63,28 @@ export const healthSchema = z
   })
   .meta({ description: "The API is up." });
 
-/** The versioned contract (TS-09): additive changes only within /v1. */
+/** The versioned contract (TS-09): additive changes only within /v1. Each resource gets what it uses. */
 function v1(
   session: SessionGuard,
-  sync: {
+  deps: {
+    config: Pick<
+      ApiConfig,
+      "authSecret" | "webOrigin" | "supportEmail" | "clientIpHeader" | "commit"
+    >;
     db: Database;
     hub: SyncHub;
     mutations: Mutations;
+    /** Sends invitations, recoveries and email changes' codes (TS-72). */
+    email: EmailPort;
+    limiter: SignInLimiter;
+    wakeJobs: () => void;
     covers?: CoverFinder | undefined;
     artwork: ArtworkSigner;
-    sharing: Omit<MutationRunnerDeps, "capture">;
-    emailChange: EmailChangeDeps;
-    accountDeletion: AccountDeletionDeps;
-    supportEmail: string;
-    commit: string | undefined;
+    logError: LogError;
   },
 ) {
+  const { config, db, hub, mutations, email, limiter, wakeJobs, covers, artwork, logError } = deps;
+  const { webOrigin, clientIpHeader, commit } = config;
   return new Elysia({ prefix: "/v1" })
     .use(openApiJson)
     .get(
@@ -86,46 +93,27 @@ function v1(
         response: healthSchema,
         detail: { summary: "Check that the API is up", tags: ["system"], operationId: "getHealth" },
       },
-      () => ({ status: "ok" as const, ...(sync.commit ? { commit: sync.commit } : {}) }),
+      () => ({ status: "ok" as const, ...(commit ? { commit } : {}) }),
     )
-    .use(supportRoutes(sync))
-    .use(meRoutes(session, { db: sync.db }))
-    .use(emailChangeRoutes(session, sync.emailChange))
-    .use(accountDeletionRoutes(session, sync.accountDeletion))
-    .use(connectionRoutes(session, { db: sync.db }))
-    .use(passkeyRoutes(session, { db: sync.db }))
-    .use(approvalRoutes(session, { db: sync.db }))
-    .use(fieldRoutes(session, { db: sync.db }))
-    .use(searchRoutes(session, { db: sync.db }))
-    .use(coverRoutes(session, sync))
-    .use(exportRoutes(session, { db: sync.db }))
-    .use(
-      sharingRoutes(session, {
-        db: sync.db,
-        shareSecret: sync.sharing.shareSecret,
-        webOrigin: sync.sharing.webOrigin,
-      }),
-    )
-    .use(invitationRoutes(session, { db: sync.db }))
-    .use(
-      admissionAdminRoutes(session, {
-        db: sync.db,
-        email: sync.sharing.email,
-        webOrigin: sync.sharing.webOrigin,
-        logError: sync.sharing.logError,
-      }),
-    )
-    .use(
-      memberAdminRoutes(session, {
-        db: sync.db,
-        email: sync.sharing.email,
-        webOrigin: sync.sharing.webOrigin,
-      }),
-    )
-    .use(operationsRoutes(session, { db: sync.db }))
-    .use(sharedRoutes(session, sync))
-    .use(guestRoutes(sync))
-    .use(syncRoutes(session, sync));
+    .use(supportRoutes({ supportEmail: config.supportEmail }))
+    .use(meRoutes(session, { db }))
+    .use(emailChangeRoutes(session, { db, email, limiter, clientIpHeader }))
+    .use(accountDeletionRoutes(session, { db, wakeJobs, notify: (id) => hub.notify(id) }))
+    .use(connectionRoutes(session, { db }))
+    .use(passkeyRoutes(session, { db }))
+    .use(approvalRoutes(session, { db }))
+    .use(fieldRoutes(session, { db }))
+    .use(searchRoutes(session, { db }))
+    .use(coverRoutes(session, { covers, artwork }))
+    .use(exportRoutes(session, { db }))
+    .use(sharingRoutes(session, { db, shareSecret: config.authSecret, webOrigin }))
+    .use(invitationRoutes(session, { db }))
+    .use(admissionAdminRoutes(session, { db, email, webOrigin, logError }))
+    .use(memberAdminRoutes(session, { db, email, webOrigin }))
+    .use(operationsRoutes(session, { db }))
+    .use(sharedRoutes(session, { db, hub, artwork }))
+    .use(guestRoutes({ db, hub, artwork }))
+    .use(syncRoutes(session, { db, hub, artwork, mutations }));
 }
 
 export type AppOptions = ProblemDetailsOptions & {
@@ -165,13 +153,17 @@ export function createApp({
   ...problemOptions
 }: AppOptions) {
   const artwork = artworkSigner(config.authSecret);
-  const logError =
-    problemOptions.logError ??
-    ((error: unknown, context: string) => console.error(`Failed: ${context}`, error));
-  const sharing = { shareSecret: config.authSecret, email, webOrigin: config.webOrigin, logError };
+  const logError: LogError =
+    problemOptions.logError ?? ((error, context) => console.error(`Failed: ${context}`, error));
   // One path for every write, from the app and MCP alike (X-02).
   const mutations: Mutations = {
-    run: mutationRunner(db, { capture, ...sharing }),
+    run: mutationRunner(db, {
+      capture,
+      shareSecret: config.authSecret,
+      email,
+      webOrigin: config.webOrigin,
+      logError,
+    }),
     announce: announcer(hub),
   };
   return (
@@ -203,16 +195,16 @@ export function createApp({
       .use(artworkRoutes(artwork, imageFetch ? { fetch: imageFetch } : {}))
       .use(
         v1(sessionGuard(auth), {
+          config,
           db,
           hub,
           mutations,
+          email,
+          limiter,
+          wakeJobs,
           covers,
           artwork,
-          sharing,
-          emailChange: { db, email, limiter, clientIpHeader: config.clientIpHeader },
-          accountDeletion: { db, wakeJobs, notify: (accountId) => hub.notify(accountId) },
-          supportEmail: config.supportEmail,
-          commit: config.commit,
+          logError,
         }),
       )
   );
