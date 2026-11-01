@@ -29,6 +29,20 @@ export type SignInLimiter = {
   clientRegistration(ip: string | undefined): number | undefined;
 };
 
+/**
+ * Counts a hit in each window that has a key, or returns the seconds to wait when one of them is full; a refusal
+ * counts nothing.
+ */
+function take(entries: [SlidingWindow, string | undefined][]): number | undefined {
+  const counted = entries.filter(
+    (entry): entry is [SlidingWindow, string] => entry[1] !== undefined,
+  );
+  const waitMs = Math.max(0, ...counted.map(([window, key]) => window.waitMs(key)));
+  if (waitMs > 0) return Math.ceil(waitMs / 1000);
+  for (const [window, key] of counted) window.hit(key);
+  return undefined;
+}
+
 export function createSignInLimiter(
   limits: { perEmail: Limit; perIp: Limit } = signInLimits,
   now: () => number = Date.now,
@@ -43,16 +57,6 @@ export function createSignInLimiter(
     registrationsByIp.sweep();
   }, fifteenMinutes);
   sweep.unref();
-
-  const take = (entries: [SlidingWindow, string | undefined][]): number | undefined => {
-    const counted = entries.filter(
-      (entry): entry is [SlidingWindow, string] => entry[1] !== undefined,
-    );
-    const waitMs = Math.max(0, ...counted.map(([window, key]) => window.waitMs(key)));
-    if (waitMs > 0) return Math.ceil(waitMs / 1000);
-    for (const [window, key] of counted) window.hit(key);
-    return undefined;
-  };
 
   return {
     codeRequest: (emailKey, ip) =>
