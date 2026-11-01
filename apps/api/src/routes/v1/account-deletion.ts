@@ -18,18 +18,22 @@ import {
 import type { SessionGuard } from "../../auth/plugin";
 import { newToken, sha256 } from "../../auth/secrets";
 import { ProblemError } from "../../problem";
+import type { SyncHub } from "../../sync/hub";
 
 export type AccountDeletionDeps = {
   db: Database;
   /** Wakes the job worker, so the data job starts at once (TS-90). */
   wakeJobs: () => void;
-  /** Tells the account's guest pages and viewers to read again, and find nothing (TON-70). */
-  notify: (accountId: string) => void;
+  /**
+   * Ends the account's change streams with its sessions, at once (TS-23), and tells its guest pages and viewers to
+   * read again, and find nothing (TON-70).
+   */
+  hub: Pick<SyncHub, "endSessionsOf" | "notify">;
 };
 
 export function accountDeletionRoutes(
   session: SessionGuard,
-  { db, wakeJobs, notify }: AccountDeletionDeps,
+  { db, wakeJobs, hub }: AccountDeletionDeps,
 ) {
   return new Elysia().use(session).post(
     "/account/deletion",
@@ -73,7 +77,8 @@ export function accountDeletionRoutes(
       if (started !== "started")
         throw new ProblemError(401, "unauthenticated", "Sign in to continue.");
       wakeJobs();
-      notify(account.id);
+      hub.endSessionsOf(account.id);
+      hub.notify(account.id);
       return { token };
     },
   );

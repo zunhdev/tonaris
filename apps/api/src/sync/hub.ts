@@ -7,7 +7,8 @@
 // So delivery is correct even when a publish is lost, which is what lets a second instance swap the bus for
 // Postgres LISTEN/NOTIFY later. A cursor the log no longer reaches, or one it never had, ends with `reset`.
 // A stream also ends once the session that opened it is signed out, revoked or expired: while streams are open,
-// the hub checks their sessions every 30 s.
+// the hub checks their sessions every 30 s. An email change, a recovery and an account's deletion end the account's
+// other sessions' streams at once instead (TS-73, TS-74).
 
 import type { SSEPayload } from "elysia";
 
@@ -273,10 +274,16 @@ export function createSyncHub(options: SyncHubOptions) {
       return subscription;
     },
 
-    /** Ends the streams of these sessions at once, as a revocation that can't wait for the next check does. */
-    endSessions(sessionIds: Iterable<string>): void {
-      const ending = new Set(sessionIds);
-      endWhere(({ sessionId }) => sessionId !== undefined && ending.has(sessionId));
+    /**
+     * Ends the account's streams at once, but those `keepSessionId` opened: after a change that ended the account's
+     * other sessions and can't wait for the next check, such as an email change, a recovery or a deletion.
+     */
+    endSessionsOf(accountId: string, keepSessionId?: string): void {
+      endWhere(
+        (subscription) =>
+          subscription.accountId === accountId &&
+          (keepSessionId === undefined || subscription.sessionId !== keepSessionId),
+      );
     },
 
     /** Aborts on `close()`: every stream ends, so a graceful stop can complete (TS-23). */

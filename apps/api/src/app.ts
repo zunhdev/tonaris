@@ -97,8 +97,8 @@ function v1(
     )
     .use(supportRoutes({ supportEmail: config.supportEmail }))
     .use(meRoutes(session, { db }))
-    .use(emailChangeRoutes(session, { db, email, limiter, clientIpHeader }))
-    .use(accountDeletionRoutes(session, { db, wakeJobs, notify: (id) => hub.notify(id) }))
+    .use(emailChangeRoutes(session, { db, email, limiter, clientIpHeader, hub }))
+    .use(accountDeletionRoutes(session, { db, wakeJobs, hub }))
     .use(connectionRoutes(session, { db }))
     .use(passkeyRoutes(session, { db }))
     .use(approvalRoutes(session, { db }))
@@ -178,7 +178,7 @@ export function createApp({
       // The host's health check (TS-110), outside the versioned contract.
       .get("/healthz", { detail: { hide: true } }, () => "ok")
       .use(admissionRoutes({ auth, db, config, email, limiter, logError }))
-      .use(recoveryRoutes({ db, limiter, clientIpHeader: config.clientIpHeader }))
+      .use(recoveryRoutes({ db, limiter, clientIpHeader: config.clientIpHeader, hub }))
       .use(accountDeletionProgressRoutes({ db, wakeJobs }))
       .use(authRoutes({ auth, limiter, clientIpHeader: config.clientIpHeader }))
       .use(

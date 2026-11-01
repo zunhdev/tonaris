@@ -32,6 +32,7 @@ import type { SessionGuard } from "../../auth/plugin";
 import { codeDigits, newCode, sha256 } from "../../auth/secrets";
 import type { SignInLimiter } from "../../auth/sign-in-limits";
 import { ProblemError } from "../../problem";
+import type { SyncHub } from "../../sync/hub";
 
 export type EmailChangeDeps = {
   db: Database;
@@ -39,6 +40,8 @@ export type EmailChangeDeps = {
   email: EmailPort;
   limiter: SignInLimiter;
   clientIpHeader: string | undefined;
+  /** Ends the change streams of the sessions the swap ended, at once (TS-23). */
+  hub: Pick<SyncHub, "endSessionsOf">;
 };
 
 function authorize(principal: Principal, ownerId: string): void {
@@ -65,7 +68,7 @@ const noFields = z.object({}).meta({ description: "No fields." });
 
 export function emailChangeRoutes(
   session: SessionGuard,
-  { db, email, limiter, clientIpHeader }: EmailChangeDeps,
+  { db, email, limiter, clientIpHeader, hub }: EmailChangeDeps,
 ) {
   return new Elysia()
     .use(session)
@@ -170,7 +173,10 @@ export function emailChangeRoutes(
           await email.send("email-change-new", newEmail, { code: next });
           return { stage: "new" as const, newEmail };
         }
-        if (submitted.outcome === "changed") return { stage: "done" as const, email: submitted.to };
+        if (submitted.outcome === "changed") {
+          hub.endSessionsOf(account.id, sessionId);
+          return { stage: "done" as const, email: submitted.to };
+        }
         throw submissionRefusals[submitted.outcome]();
       },
     )

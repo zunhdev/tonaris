@@ -174,10 +174,13 @@ describe("deleting (FR-11.11)", () => {
       .insert(oauthConsents)
       .values({ id: uuidv7(), clientId: "c", userId: anna.id, scopes: ["collection:read"] });
     expect((await t.call(`/v1/s/${linkToken}`)).status).toBe(200);
+    const stream = await t.openStream(anna.cookie);
 
     const token = await tokenOf(await confirm(" Anna@Example.com "));
 
     expect((await t.call("/v1/me", { headers: { cookie: anna.cookie } })).status).toBe(401);
+    // Her stream ends at once, not at the next session check (TS-23).
+    expect(await stream.endsWithin(1_000)).toBe(true);
     expect((await t.call(`/v1/s/${linkToken}`)).status).toBe(404);
     expect((await t.call(`/v1/shared/${doom}`, { headers: { cookie: ben.cookie } })).status).toBe(
       404,

@@ -180,6 +180,28 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     return { id, cookie };
   };
 
+  /**
+   * Opens the account's change stream as `cookie`, read until the server ends it, for tests of what ends one
+   * (TS-23). `endsWithin(ms)` answers whether it ended by then; `close()` leaves it.
+   */
+  const openStream = async (cookie: string) => {
+    const response = await call("/v1/sync/stream", { headers: { cookie } });
+    const reader = response.body?.getReader();
+    if (!response.ok || !reader) throw new Error(`The stream answered ${response.status}`);
+    // The opening comment comes once the stream is in the hub.
+    await reader.read();
+    const ended = (async () => {
+      for (;;) {
+        // oxlint-disable-next-line no-await-in-loop
+        if ((await reader.read()).done) return true;
+      }
+    })();
+    return {
+      endsWithin: (ms: number) => Promise.race([ended, Bun.sleep(ms).then(() => false)]),
+      close: () => reader.cancel(),
+    };
+  };
+
   /** Listens on `port` (default: a free one), for clients that need a real connection. Returns the origin. */
   const listen = (port = 0): string => {
     app.listen({ port, maxRequestBodySize });
@@ -192,7 +214,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     if (app.server) await app.stop();
     await worker.stop();
   };
-  return { app, auth, config, db, email, hub, ledger, call, signIn, listen, stop };
+  return { app, auth, config, db, email, hub, ledger, call, signIn, openStream, listen, stop };
 }
 
 /** The app on its own test schema; call `drop()` afterwards. */
