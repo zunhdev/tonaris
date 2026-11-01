@@ -40,6 +40,11 @@ export function SaveStateItem({
   // A capture waiting for the person: a choice, or the album's details (DS-48).
   const need = captureNeed(state.outcome);
   const reason = gone ? goneReason : reasonForState(state, names, report);
+  // Activity names the state first, so it leaves out a reason that only says the state again.
+  const restated =
+    state.status === "conflict" ||
+    state.status === "needs_approval" ||
+    (state.status === "needs_input" && need === undefined);
   const retry = failed && !gone && onRetry !== undefined;
   const edit =
     actions !== undefined &&
@@ -65,7 +70,7 @@ export function SaveStateItem({
         {report === undefined ? (
           <p className="text-small text-fg-secondary">
             {statusLabels[state.status]}
-            {reason !== undefined && `: ${reason}`}
+            {reason !== undefined && !restated && `: ${reason}`}
           </p>
         ) : (
           reason && <p className="text-small text-fg-secondary">{reason}</p>
