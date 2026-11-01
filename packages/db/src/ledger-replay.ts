@@ -8,20 +8,8 @@ import { openGrantStatuses, type LedgerEvent } from "@tonaris/domain";
 
 import { deleteAccountData, endAccountAccess } from "./account-deletion";
 import type { Database } from "./client";
-import {
-  admissionInvitations,
-  albums,
-  containers,
-  oauthAccessTokens,
-  oauthConsents,
-  oauthRefreshTokens,
-  passkeys,
-  positions,
-  shareGrants,
-  shareLinks,
-  trashUnits,
-  users,
-} from "./schema";
+import { admissionInvitations, passkeys, shareGrants, shareLinks, users } from "./schema";
+import { endConnections, purgeRows } from "./teardowns";
 
 export type ReplayReport = Record<LedgerEvent["type"], number>;
 
@@ -60,20 +48,11 @@ async function apply(db: Database, event: LedgerEvent): Promise<void> {
       await deleteAccountData(db, event.userId);
       return;
     }
-    case "connection.revoked": {
-      const mine = (
-        table: typeof oauthAccessTokens | typeof oauthRefreshTokens | typeof oauthConsents,
-      ) =>
-        event.clientId === null
-          ? eq(table.userId, event.userId)
-          : and(eq(table.userId, event.userId), eq(table.clientId, event.clientId));
-      await db.transaction(async (tx) => {
-        await tx.delete(oauthAccessTokens).where(mine(oauthAccessTokens));
-        await tx.delete(oauthRefreshTokens).where(mine(oauthRefreshTokens));
-        await tx.delete(oauthConsents).where(mine(oauthConsents));
-      });
+    case "connection.revoked":
+      await db.transaction((tx) =>
+        endConnections(tx, { userId: event.userId, clientId: event.clientId }),
+      );
       return;
-    }
     case "shareLink.revoked":
       await db
         .update(shareLinks)
@@ -92,15 +71,7 @@ async function apply(db: Database, event: LedgerEvent): Promise<void> {
         );
       return;
     case "trash.purged":
-      await db.transaction(async (tx) => {
-        if (event.containerIds.length > 0)
-          await tx.delete(containers).where(inArray(containers.id, event.containerIds));
-        if (event.albumIds.length > 0) {
-          await tx.delete(positions).where(inArray(positions.itemId, event.albumIds));
-          await tx.delete(albums).where(inArray(albums.id, event.albumIds));
-        }
-        await tx.delete(trashUnits).where(eq(trashUnits.id, event.unitId));
-      });
+      await db.transaction((tx) => purgeRows(tx, event));
       return;
     case "admission.revoked":
       await db

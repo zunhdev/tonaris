@@ -24,9 +24,9 @@ import {
   albumServiceLinks,
   containers,
   memberships,
-  positions,
   trashUnits,
 } from "../schema";
+import { purgeRows } from "../teardowns";
 
 /** The album, whoever owns it, in Trash or not. */
 export async function findAlbumIn(db: Executor, id: string) {
@@ -155,9 +155,8 @@ export function albumStore(tx: Transaction) {
         .where(eq(trashUnits.id, unitId));
     },
     async purgeContainers(unitId, ids) {
-      // Their entries cascade (TS-11); albums stay where else they are (FR-01.17).
-      if (ids.length > 0) await tx.delete(containers).where(inArray(containers.id, ids));
-      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
+      // Albums stay where else they are (FR-01.17).
+      await purgeRows(tx, { unitId, containerIds: ids, albumIds: [] });
       await recordInLedger(tx, {
         type: "trash.purged",
         unitId,
@@ -174,10 +173,7 @@ export function albumStore(tx: Transaction) {
         .select({ fieldId: albumFieldValues.fieldId })
         .from(albumFieldValues)
         .where(eq(albumFieldValues.albumId, albumId));
-      // Its entries, links, values and provenance cascade (TS-11); its places don't refer to it by key.
-      await tx.delete(positions).where(eq(positions.itemId, albumId));
-      await tx.delete(albums).where(eq(albums.id, albumId));
-      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
+      await purgeRows(tx, { unitId, containerIds: [], albumIds: [albumId] });
       await recordInLedger(tx, {
         type: "trash.purged",
         unitId,

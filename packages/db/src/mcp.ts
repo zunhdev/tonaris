@@ -17,17 +17,9 @@ import { albumsOfReleaseGroupIn } from "./album-writes";
 import type { Database, Executor, Transaction } from "./client";
 import { activeListsOf, inActiveList } from "./columns";
 import { recordInLedger } from "./ledger";
-import {
-  albums,
-  containers,
-  memberships,
-  oauthAccessTokens,
-  oauthClients,
-  oauthConsents,
-  oauthRefreshTokens,
-  trashUnits,
-} from "./schema";
+import { albums, containers, memberships, oauthClients, oauthConsents, trashUnits } from "./schema";
 import { impactState } from "./sharing-impact";
+import { endConnections } from "./teardowns";
 
 export type ConnectionRow = {
   id: string;
@@ -114,10 +106,7 @@ export function revokeConnection(
       .where(and(eq(oauthConsents.id, id), eq(oauthConsents.userId, userId)))
       .returning({ clientId: oauthConsents.clientId });
     if (!consent) return false;
-    const ofGrant = (table: typeof oauthRefreshTokens | typeof oauthAccessTokens) =>
-      and(eq(table.userId, userId), eq(table.clientId, consent.clientId));
-    await tx.delete(oauthAccessTokens).where(ofGrant(oauthAccessTokens));
-    await tx.delete(oauthRefreshTokens).where(ofGrant(oauthRefreshTokens));
+    await endConnections(tx, { userId, clientId: consent.clientId });
     await recordInLedger(tx, { type: "connection.revoked", userId, clientId: consent.clientId });
     return true;
   });

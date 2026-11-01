@@ -7,18 +7,12 @@ import { asc, eq, isNull } from "drizzle-orm";
 
 import { emailRecoveryHours } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import type { Database } from "./client";
 import { recordInLedger } from "./ledger";
 import { removeAllPasskeys } from "./passkeys";
-import {
-  auditLog,
-  emailRecoveries,
-  oauthAccessTokens,
-  oauthConsents,
-  oauthRefreshTokens,
-  users,
-} from "./schema";
+import { auditLog, emailRecoveries, users } from "./schema";
 import { checkCode, emailKeyHolder, isUniqueViolation, swapSignInEmail } from "./sign-in-email";
+import { endConnections } from "./teardowns";
 
 export type MemberRow = {
   id: string;
@@ -108,14 +102,6 @@ export type EmailRecoveryConfirmation =
   | { outcome: "none" | "expired" | "locked" | "wrong" | "taken" }
   | { outcome: "recovered"; userId: string; from: string; to: string };
 
-/** Ends every AI connection of `userId`: consents and the tokens they gave (TS-61). */
-async function disconnectAll(tx: Transaction, userId: string): Promise<void> {
-  await tx.delete(oauthAccessTokens).where(eq(oauthAccessTokens.userId, userId));
-  await tx.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.userId, userId));
-  await tx.delete(oauthConsents).where(eq(oauthConsents.userId, userId));
-  await recordInLedger(tx, { type: "connection.revoked", userId, clientId: null });
-}
-
 /**
  * Confirms the recovery behind `tokenHash` with its code, under its row's lock. A wrong code counts an attempt,
  * which commits. A right one swaps in this transaction (`swapSignInEmail`, keeping no session), disconnects AI
@@ -150,7 +136,14 @@ export async function confirmEmailRecovery(
       if (swapped === "taken") return { outcome: "taken" };
       // Someone who took the old address over could have added a passkey (TON-143).
       await removeAllPasskeys(tx, recovery.userId);
-      if (recovery.disconnectConnections) await disconnectAll(tx, recovery.userId);
+      if (recovery.disconnectConnections) {
+        await endConnections(tx, { userId: recovery.userId, clientId: null });
+        await recordInLedger(tx, {
+          type: "connection.revoked",
+          userId: recovery.userId,
+          clientId: null,
+        });
+      }
       await tx.insert(auditLog).values({
         id: auditId,
         actor: recovery.requestedBy,

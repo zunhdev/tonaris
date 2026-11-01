@@ -26,9 +26,6 @@ import {
   fieldDefinitions,
   memberships,
   mutations,
-  oauthAccessTokens,
-  oauthConsents,
-  oauthRefreshTokens,
   passkeys,
   positions,
   savedReferences,
@@ -39,6 +36,7 @@ import {
   users,
   viewPrefs,
 } from "./schema";
+import { endConnections } from "./teardowns";
 
 /** The address a deleted account holds until its row goes: under `.invalid`, which never receives email. */
 export const deletedEmailKey = (userId: string) => `${userId}@deleted.invalid`;
@@ -66,9 +64,7 @@ export async function endAccountAccess(tx: Transaction, userId: string, now: Dat
   await tx.delete(sessions).where(eq(sessions.userId, userId));
   // A passkey signs in without the email, so moving the email alone wouldn't stop it.
   await tx.delete(passkeys).where(eq(passkeys.userId, userId));
-  await tx.delete(oauthAccessTokens).where(eq(oauthAccessTokens.userId, userId));
-  await tx.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.userId, userId));
-  await tx.delete(oauthConsents).where(eq(oauthConsents.userId, userId));
+  await endConnections(tx, { userId, clientId: null });
 
   const owned = tx
     .select({ id: containers.id })
