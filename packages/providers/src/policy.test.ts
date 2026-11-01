@@ -2,9 +2,9 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { provenanceSources, type ProvenanceSource } from "@tonaris/domain";
+import { provenanceSources, withheld, type ProvenanceSource } from "@tonaris/domain";
 
-import { filterFields, policy, withheld, type PolicyFlags } from "./policy";
+import { filterFields, policy, type PolicyFlags } from "./policy";
 
 const album = {
   title: "Bleach",

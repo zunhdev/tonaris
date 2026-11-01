@@ -2,7 +2,8 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { policy, withheld } from "@tonaris/providers";
+import { withheld } from "@tonaris/domain";
+import { policy } from "@tonaris/providers";
 
 import { agentAlbum, nextCursor, offsetOf, summaryKeys } from "./results";
 

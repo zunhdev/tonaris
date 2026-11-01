@@ -14,9 +14,9 @@ import { discard, type ProviderFetch, type SafeFetchInit } from "./safe-fetch";
 import { services } from "./services";
 
 /** Calls start at least this far apart. Development mode publishes no numbers; the spike saw no throttling. */
-export const spotifyIntervalMs = 250;
+const spotifyIntervalMs = 250;
 /** 429s waited out before giving up. */
-export const spotifyMaxRetries = 3;
+const spotifyMaxRetries = 3;
 
 export type SpotifyOptions = ClientOptions & { clientId: string; clientSecret: string };
 

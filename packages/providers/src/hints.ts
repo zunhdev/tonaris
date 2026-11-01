@@ -159,10 +159,7 @@ const groupSearchSchema = z.object({
  * The releases the hints find: by title and first artist, or by title alone when the artist as the store spells
  * it finds nothing, such as "Mumiy Troll" for Мумий Тролль. Each gets its album's first release date.
  */
-export async function searchCandidates(
-  musicBrainz: MusicBrainz,
-  hints: Hints,
-): Promise<Candidate[]> {
+async function searchCandidates(musicBrainz: MusicBrainz, hints: Hints): Promise<Candidate[]> {
   const found = await searchByTitle(
     "release",
     { title: searchTitle(hints.title), artist: firstArtist(hints.artist) },

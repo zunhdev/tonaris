@@ -1,102 +1,28 @@
 // Public entry point of @tonaris/providers: link parsing, the outbound fetch, metadata sources and their policy
-// (TS-15, TS-40, TS-41, TS-103).
+// (TS-15, TS-40, TS-41, TS-103). It exports what the API uses; the package's own tests import its modules directly.
 
-export { isPublicAddress } from "./addresses";
-export { classify, describeAlbum, recordingYears, type Classification } from "./album-facts";
-export { findCovers, maxCovers, type Cover } from "./covers";
-export {
-  cleanTitle,
-  matchHints,
-  type AlbumCandidate,
-  type Candidate,
-  type Found,
-  type Hints,
-} from "./hints";
+export { describeAlbum } from "./album-facts";
+export { findCovers, type Cover } from "./covers";
+export { providerNames, ProviderUnavailableError, unavailableFailure } from "./errors";
 export {
   createIdentifier,
   identificationOutcome,
   unidentifiedReasons,
-  type AgentDetails,
   type Identification,
-  type IdentifierDeps,
   type Identifier,
-  type IdentifyContext,
-  type Prefill,
 } from "./identify";
-export {
-  ItunesLookup,
-  itunesCacheMs,
-  itunesIntervalMs,
-  type AppleAlbum,
-  type ItunesOptions,
-} from "./itunes";
-export { barcodeForms, urlForms } from "./link-forms";
-export {
-  MusicBrainz,
-  musicBrainzIntervalMs,
-  musicBrainzMaxRetries,
-  providerCacheMs,
-  type BarcodeRelease,
-  type CachePolicy,
-  type MusicBrainzEntity,
-  type MusicBrainzOptions,
-  type UrlTarget,
-} from "./musicbrainz";
-export {
-  filterFields,
-  policy,
-  policyVersion,
-  withheld,
-  type PolicyFlags,
-  type PolicyUse,
-  type Withheld,
-} from "./policy";
-export {
-  providerNames,
-  ProviderUnavailableError,
-  unavailableFailure,
-  type ProviderId,
-} from "./errors";
+export { ItunesLookup } from "./itunes";
+export { parseLink, readLink, type Fetcher, type LinkParse, type ParsedLink } from "./links";
+export { MusicBrainz, providerCacheMs } from "./musicbrainz";
+export { filterFields, policy, type PolicyFlags } from "./policy";
 export { memoryCache } from "./provider-cache";
-export { PacedQueue, realClock, type Clock } from "./paced-queue";
-export { Spotify, type SpotifyOptions } from "./spotify";
 export {
-  StorePages,
-  robotsAllows,
-  extractQobuzHints,
-  extractTidalHints,
-  type StorePagesOptions,
-} from "./store-pages";
-export {
-  albumTitle,
-  descriptionDate,
-  topicArtist,
-  YouTubeData,
-  youtubeIntervalMs,
-  type YouTubeDataOptions,
-  type YouTubeHints,
-} from "./youtube";
-export {
-  maxShortLinkHops,
-  parseLink,
-  readLink,
-  resolveShortLink,
-  type Fetcher,
-  type LinkParse,
-  type ParsedLink,
-} from "./links";
-export {
-  connectPinned,
   createSafeFetch,
+  discard,
   safeFetch,
-  safeFetchMaxBytes,
-  safeFetchMaxRedirects,
-  safeFetchTimeoutMs,
   SafeFetchError,
-  userAgent,
-  type Connect,
-  type Resolve,
-  type ResolvedAddress,
   type SafeFetchInit,
-  type SafeFetchReason,
 } from "./safe-fetch";
+export { Spotify } from "./spotify";
+export { StorePages } from "./store-pages";
+export { YouTubeData } from "./youtube";

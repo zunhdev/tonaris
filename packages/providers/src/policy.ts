@@ -4,8 +4,6 @@
 
 import { withheld, type ProvenanceSource } from "@tonaris/domain";
 
-export { withheld, type Withheld } from "@tonaris/domain";
-
 /** Bumped whenever a flag changes, so exports and agents can say which policy filtered them. */
 export const policyVersion = 1;
 

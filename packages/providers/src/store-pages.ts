@@ -21,9 +21,9 @@ import { qobuzHomeLocale } from "./services";
 const qobuz = "https://www.qobuz.com";
 const tidal = "https://tidal.com";
 /** Requests to one host start at least this far apart: TS-41 sets no pace, so this keeps a batch polite. */
-export const storePageIntervalMs = 1_000;
+const storePageIntervalMs = 1_000;
 /** How long a robots.txt answer holds (TS-41: checked daily). */
-export const robotsCacheMs = 86_400_000;
+const robotsCacheMs = 86_400_000;
 /** The product token robots.txt rules name (RFC 9309). */
 const robotsAgent = "Tonaris";
 
@@ -33,7 +33,7 @@ export type StorePagesOptions = ClientOptions & { cache: ProviderCache };
  * What request A found: the slug and store for step 2's store forms and request B, and the page itself when the slug
  * is "-".
  */
-export type QobuzAddress = { slug: string; locale: string; page?: string };
+type QobuzAddress = { slug: string; locale: string; page?: string };
 
 /** Matches a robots.txt path pattern, where `*` is any run of characters and a final `$` anchors the end. */
 function patternMatches(pattern: string, pathname: string): boolean {
