@@ -186,9 +186,14 @@ export const commands: readonly Command[] = [
   { id: "shortcuts", title: "Keyboard shortcuts", keys: ["?"], section: "Help" },
 ];
 
-export const commandsById: ReadonlyMap<CommandId, Command> = new Map(
+const commandsById: ReadonlyMap<CommandId, Command> = new Map(
   commands.map((command) => [command.id, command]),
 );
+
+/** A command's keys as a menu shows them, from the list above: "⇧N", "F2". */
+export function shortcutLabel(id: CommandId): string {
+  return commandsById.get(id)?.keys.join("") ?? "";
+}
 
 /** The palette's frequent commands before there is any history (decided with the creator, 29 October 2026). */
 export const starterCommands: readonly CommandId[] = [

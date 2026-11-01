@@ -12,10 +12,11 @@ import { useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { Plus, Trash2, X } from "lucide-react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import {
   artworkUrlRefusal,
+  groupNames,
   isArtworkUrl,
   membershipKey,
   uuidv7Time,
@@ -23,28 +24,28 @@ import {
   type AlbumFields,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
-import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
+import { Field } from "@tonaris/ui/components/field";
+import { Input } from "@tonaris/ui/components/input";
+import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 import { Switch } from "@tonaris/ui/components/switch";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { albumChoice, albumEdit, cellText, type AlbumCell } from "./album-edit";
+import {
+  albumChoice,
+  albumEdit,
+  cellNames,
+  cellText,
+  releaseTypeOptions,
+  type AlbumCell,
+} from "./album-edit";
 import { CustomFieldsSection } from "./album-fields";
 import { LinksSection } from "./album-links";
-import { cellNames } from "./album-rows";
 import { Artwork, artworkSrc } from "./artwork";
 import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
+import { useInlineDraft } from "./inline-draft";
 import { ancestorsOf } from "./tree";
-
-const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation" | "unknown">[] = [
-  { value: "album", label: "Album" },
-  { value: "ep", label: "EP" },
-  { value: "compilation", label: "Compilation" },
-  { value: "unknown", label: "Unknown" },
-];
-
-const releaseTypeNames = { album: "Album", ep: "EP", compilation: "Compilation" } as const;
 
 const addedDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
@@ -105,7 +106,7 @@ export function AlbumDetails({ album }: { album: Album }) {
           <>
             {/* The sections' headings stay under the album's, as fields replace it. */}
             <h2 className="sr-only">{album.title}</h2>
-            <FieldEditor album={album} cell="title" className="text-title font-medium" />
+            <FieldEditor album={album} cell="title" className="font-medium" />
             <FieldEditor album={album} cell="artistCredit" />
           </>
         ) : (
@@ -129,10 +130,10 @@ export function AlbumDetails({ album }: { album: Album }) {
       <Section title="Chronology">
         {canEdit ? (
           <div className="flex flex-col gap-3">
-            <Labelled label="Release type">
-              {(id) => (
+            <Field group label="Release type">
+              {(_, labelId) => (
                 <SegmentedControl
-                  aria-labelledby={id}
+                  aria-labelledby={labelId}
                   options={releaseTypeOptions}
                   value={album.releaseType ?? "unknown"}
                   onValueChange={(value) =>
@@ -140,7 +141,7 @@ export function AlbumDetails({ album }: { album: Album }) {
                   }
                 />
               )}
-            </Labelled>
+            </Field>
             <div className="flex items-center justify-between gap-3">
               <span id={liveId} className="text-fg-secondary">
                 Live
@@ -158,7 +159,7 @@ export function AlbumDetails({ album }: { album: Album }) {
         ) : (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
             <Value term="Release type">
-              {album.releaseType === null ? "Unknown" : releaseTypeNames[album.releaseType]}
+              {album.releaseType === null ? "Unknown" : groupNames[album.releaseType]}
             </Value>
             <Value term="Live">{album.isLive === true ? "Yes" : "No"}</Value>
             <Value term="Original release year">{cellText(album, "originalYear") || "—"}</Value>
@@ -214,18 +215,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Labelled({ label, children }: { label: string; children: (id: string) => ReactNode }) {
-  const id = useId();
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span id={id} className="text-small text-fg-secondary">
-        {label}
-      </span>
-      {children(id)}
-    </div>
-  );
-}
-
 function Value({ term, children }: { term: string; children: ReactNode }) {
   return (
     <>
@@ -253,101 +242,33 @@ function FieldEditor({
   labelled?: boolean;
 }) {
   const client = useSyncClient();
-  const { registerEditor } = useCollectionUi();
-  const [draft, setDraftState] = useState<string | undefined>(undefined);
-  const [refusal, setRefusal] = useState<string>();
-  const current = useRef<string | undefined>(undefined);
-  const latestAlbum = useRef(album);
-  const input = useRef<HTMLInputElement>(null);
-  const id = useId();
-  const setDraft = (next: string | undefined) => {
-    current.current = next;
-    setDraftState(next);
-  };
-  useEffect(() => {
-    latestAlbum.current = album;
+  const { refusal, props } = useInlineDraft<HTMLInputElement>({
+    value: cellText(album, cell),
+    check: (typed) => {
+      const result = albumEdit(album, cell, typed);
+      return result.kind === "refuse" ? result.reason : undefined;
+    },
+    save: (typed) => {
+      const result = albumEdit(album, cell, typed);
+      if (result.kind !== "save" || !client) return;
+      sent(
+        client.albums.update(album.id, (record) => {
+          Object.assign(record, result.values);
+        }),
+      );
+    },
   });
 
-  /** Saves the draft, or shows why it can't be saved; whether nothing is left open. */
-  const commit = useRef<() => boolean>(() => true);
-  useEffect(() => {
-    commit.current = () => {
-      const typed = current.current;
-      if (typed === undefined) return true;
-      const result = albumEdit(latestAlbum.current, cell, typed);
-      if (result.kind === "refuse") {
-        setRefusal(result.reason);
-        return false;
-      }
-      if (result.kind === "save" && client) {
-        sent(
-          client.albums.update(latestAlbum.current.id, (record) => {
-            Object.assign(record, result.values);
-          }),
-        );
-      }
-      setRefusal(undefined);
-      setDraft(undefined);
-      return true;
-    };
-  });
-  const open = draft !== undefined;
-  useEffect(() => {
-    if (!open) return undefined;
-    return registerEditor(() => {
-      const closed = commit.current();
-      if (!closed) input.current?.focus();
-      return closed;
-    });
-  }, [open, registerEditor]);
-
-  const name = `${cellNames[cell]} of '${album.title}'`;
   return (
-    <div className="flex flex-col gap-1">
-      {labelled && (
-        <label htmlFor={id} className="text-small text-fg-secondary">
-          {cellNames[cell]}
-        </label>
-      )}
-      <input
-        ref={input}
-        id={id}
-        aria-label={labelled ? undefined : name}
-        aria-invalid={refusal !== undefined}
-        aria-describedby={refusal === undefined ? undefined : `${id}-error`}
-        value={draft ?? cellText(album, cell)}
-        onFocus={() => {
-          if (current.current === undefined) setDraft(cellText(album, cell));
-        }}
-        onChange={(event) => {
-          setDraft(event.target.value);
-          setRefusal(undefined);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit.current();
-          } else if (event.key === "Escape") {
-            // Discards the draft; the inspector stays open.
-            event.preventDefault();
-            event.stopPropagation();
-            setDraft(undefined);
-            setRefusal(undefined);
-          }
-        }}
-        onBlur={() => commit.current()}
-        className={cn(
-          "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-          refusal !== undefined && "border-status-danger",
-          className,
-        )}
-      />
-      {refusal !== undefined && (
-        <p id={`${id}-error`} className="text-small text-status-danger">
-          {refusal}
-        </p>
-      )}
-    </div>
+    <Field
+      // Without its name above it, the field is named for assistive technology with the album's title.
+      label={labelled ? cellNames[cell] : `${cellNames[cell]} of '${album.title}'`}
+      hideLabel={!labelled}
+      problem={refusal}
+      className="gap-1"
+    >
+      {(control) => <Input {...props} {...control} className={className} />}
+    </Field>
   );
 }
 
@@ -358,114 +279,49 @@ function FieldEditor({
  */
 function ArtworkUrlEditor({ album }: { album: Album }) {
   const client = useSyncClient();
-  const { registerEditor } = useCollectionUi();
-  const [draft, setDraftState] = useState<string | undefined>(undefined);
-  const [refusal, setRefusal] = useState<string>();
-  const current = useRef<string | undefined>(undefined);
-  const latest = useRef(album);
-  const input = useRef<HTMLInputElement>(null);
-  const id = useId();
-  const setDraft = (next: string | undefined) => {
-    current.current = next;
-    setDraftState(next);
+  /** Saves the artwork's URL, null for none, unless it is already the album's. */
+  const saveUrl = (artworkUrl: string | null) => {
+    if (artworkUrl === album.artworkUrl || !client) return;
+    sent(
+      client.albums.update(album.id, (record) => {
+        record.artworkUrl = artworkUrl;
+      }),
+    );
   };
-  useEffect(() => {
-    latest.current = album;
+  const { refusal, props, discard } = useInlineDraft<HTMLInputElement>({
+    value: album.artworkUrl ?? "",
+    check: (typed) => {
+      const value = typed.trim();
+      return value !== "" && !isArtworkUrl(value) ? artworkUrlRefusal : undefined;
+    },
+    save: (typed) => saveUrl(typed.trim() || null),
   });
-  const commit = useRef<() => boolean>(() => true);
-  useEffect(() => {
-    commit.current = () => {
-      const typed = current.current;
-      if (typed === undefined) return true;
-      const value = typed.trim() || null;
-      if (value !== null && !isArtworkUrl(value)) {
-        setRefusal(artworkUrlRefusal);
-        return false;
-      }
-      if (value !== latest.current.artworkUrl && client) {
-        sent(
-          client.albums.update(latest.current.id, (record) => {
-            record.artworkUrl = value;
-          }),
-        );
-      }
-      setRefusal(undefined);
-      setDraft(undefined);
-      return true;
-    };
-  });
-  const open = draft !== undefined;
-  useEffect(() => {
-    if (!open) return undefined;
-    return registerEditor(() => {
-      const closed = commit.current();
-      if (!closed) input.current?.focus();
-      return closed;
-    });
-  }, [open, registerEditor]);
 
   return (
-    <div className="flex w-full max-w-[500px] flex-col gap-1">
-      <label htmlFor={id} className="text-small text-fg-secondary">
-        Artwork URL
-      </label>
-      {/* Find sits beside the field it fills (TON-124). */}
-      <div className="flex items-center gap-1">
-        <input
-          ref={input}
-          id={id}
-          type="url"
-          placeholder="https://…"
-          spellCheck={false}
-          aria-invalid={refusal !== undefined}
-          aria-describedby={refusal === undefined ? undefined : `${id}-error`}
-          value={draft ?? album.artworkUrl ?? ""}
-          onFocus={() => {
-            if (current.current === undefined) setDraft(album.artworkUrl ?? "");
-          }}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            setRefusal(undefined);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              commit.current();
-            } else if (event.key === "Escape") {
-              event.preventDefault();
-              event.stopPropagation();
-              setDraft(undefined);
-              setRefusal(undefined);
-            }
-          }}
-          onBlur={() => commit.current()}
-          className={cn(
-            "h-8 min-w-0 flex-1 rounded-md border border-subtle bg-panel px-2 text-small text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-            refusal !== undefined && "border-status-danger",
-          )}
-        />
-        <FindArtwork
-          title={album.title}
-          artist={album.artistCredit}
-          onChoose={(artworkUrl) => {
-            // A chosen cover is an artwork edit like a typed one, replacing whatever was typed.
-            setDraft(undefined);
-            setRefusal(undefined);
-            if (artworkUrl === latest.current.artworkUrl || !client) return;
-            sent(
-              client.albums.update(latest.current.id, (record) => {
-                record.artworkUrl = artworkUrl;
-              }),
-            );
-          }}
-        />
-      </div>
-      {refusal !== undefined && (
-        <p id={`${id}-error`} className="text-small text-status-danger">
-          {refusal}
-        </p>
+    <Field label="Artwork URL" problem={refusal} className="w-full max-w-[500px] gap-1">
+      {(control) => (
+        // Find sits beside the field it fills (TON-124).
+        <div className="flex items-center gap-1">
+          <Input
+            {...props}
+            {...control}
+            type="url"
+            placeholder="https://…"
+            spellCheck={false}
+            className="flex-1 text-small"
+          />
+          <FindArtwork
+            title={album.title}
+            artist={album.artistCredit}
+            onChoose={(artworkUrl) => {
+              // A chosen cover is an artwork edit like a typed one, replacing whatever was typed.
+              discard();
+              saveUrl(artworkUrl);
+            }}
+          />
+        </div>
       )}
-    </div>
+    </Field>
   );
 }
 
@@ -477,11 +333,10 @@ function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
   const client = useSyncClient();
   const notify = useNotify();
   const announce = useAnnounce();
-  const { tree, entriesByList } = useCollectionData();
+  const { tree, listsByAlbum } = useCollectionData();
   const { startAddToList } = useCollectionUi();
-  const lists = [...entriesByList]
-    .filter(([, entries]) => entries.some((entry) => entry.albumId === album.id))
-    .flatMap(([listId]) => tree.byId.get(listId) ?? [])
+  const lists = (listsByAlbum.get(album.id) ?? [])
+    .flatMap((listId) => tree.byId.get(listId) ?? [])
     .toSorted((a, b) => a.name.localeCompare(b.name));
 
   function remove(listId: string, name: string) {

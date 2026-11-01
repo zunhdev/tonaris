@@ -1,7 +1,8 @@
 // Label (DS-20): shadcn's label, in DS-13's base size with primary text.
 
-import { cn } from "cn";
 import type * as React from "react";
+
+import { cn } from "@tonaris/ui/lib/utils";
 
 function Label({ className, ...props }: React.ComponentProps<"label">) {
   return (

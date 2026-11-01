@@ -4,11 +4,12 @@
 // Restore (R), which asks where or as what when it must (DS-56), and Delete permanently…, confirmed; the header has
 // a local name filter and Empty Trash…, confirmed. Every control is a button or a field, so Trash works by keyboard.
 
-import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
 import { DesktopOnly } from "@/features/shell/desktop-only";
+import { useNarrowScreen } from "@/features/shell/media";
 import { PageHeader } from "@/features/shell/page-header";
+import { count } from "@/features/shell/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -30,8 +31,6 @@ const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
-
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** "Folder · 6 lists, 2 folders", "List", or "Album" (DS-55). */
 function contentsOf(unit: TrashUnit): string {

@@ -3,43 +3,27 @@
 // rendered the public page: a guest, or the owner, sees no banner.
 
 import { api } from "@/api";
-import { failureOf, sendNow } from "@/features/sharing/send";
-import { useEffect, useState } from "react";
+import { useSend } from "@/features/sharing/send";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
+import { useState } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 
 export function LinkBanner({ token, owner }: { token: string; owner: string }) {
-  const [state, setState] = useState<"hidden" | "offer" | "saved">("hidden");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-  useEffect(() => {
-    let current = true;
+  const [added, setAdded] = useState(false);
+  const { run, busy, error } = useSend();
+  const asked = useKeyedRead(token, () =>
     api.v1
       .s({ token })
       .reference.get()
-      .then(
-        ({ data }) => {
-          if (current && data && !data.own) setState(data.saved ? "saved" : "offer");
-          return data;
-        },
-        () => undefined,
-      );
-    return () => {
-      current = false;
-    };
-  }, [token]);
+      .then(({ data }) =>
+        data && !data.own ? (data.saved ? ("saved" as const) : ("offer" as const)) : undefined,
+      ),
+  );
+  const state = added ? "saved" : (asked?.value ?? "hidden");
   if (state === "hidden") return null;
   const add = async () => {
-    setBusy(true);
-    try {
-      const reason = failureOf(await sendNow({ name: "share.saveLink", args: { token } }));
-      setError(reason);
-      if (reason === undefined) setState("saved");
-    } catch {
-      setError("Couldn't reach Tonaris. Try again.");
-    } finally {
-      setBusy(false);
-    }
+    if ((await run({ name: "share.saveLink", args: { token } })) === undefined) setAdded(true);
   };
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-subtle bg-panel px-6 py-2 text-small">

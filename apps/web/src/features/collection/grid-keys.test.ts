@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { nextCell, type GridKey, type GridShape } from "./grid-keys";
+import { directionOf, nextCell, type GridKey, type GridShape } from "./grid-keys";
 
 const key = (name: string, changes: Partial<GridKey> = {}): GridKey => ({
   key: name,
@@ -16,6 +16,22 @@ const key = (name: string, changes: Partial<GridKey> = {}): GridKey => ({
 /** Ten cards in rows of four: the last row holds two. */
 const cards: GridShape = { rows: 3, columns: (row) => (row === 2 ? 2 : 4), page: 2 };
 const rows: GridShape = { rows: 50, columns: () => 5, page: 10 };
+
+describe("moving an item (DS-49)", () => {
+  test("⌥↑ and ⌥↓ move by one, and with ⇧ to the ends", () => {
+    expect(directionOf(key("ArrowUp", { altKey: true }))).toBe("up");
+    expect(directionOf(key("ArrowDown", { altKey: true }))).toBe("down");
+    expect(directionOf(key("ArrowUp", { altKey: true, shiftKey: true }))).toBe("top");
+    expect(directionOf(key("ArrowDown", { altKey: true, shiftKey: true }))).toBe("bottom");
+  });
+
+  test("without ⌥, with ⌘ or Ctrl, or another key, nothing moves", () => {
+    expect(directionOf(key("ArrowUp"))).toBeUndefined();
+    expect(directionOf(key("ArrowUp", { altKey: true, metaKey: true }))).toBeUndefined();
+    expect(directionOf(key("ArrowUp", { altKey: true, ctrlKey: true }))).toBeUndefined();
+    expect(directionOf(key("ArrowLeft", { altKey: true }))).toBeUndefined();
+  });
+});
 
 describe("grid keys (DS-115)", () => {
   test("arrows move without wrapping, and keep the column clamped to a shorter row", () => {

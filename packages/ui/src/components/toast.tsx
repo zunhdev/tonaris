@@ -11,10 +11,10 @@ import type * as React from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 
-export type ToastAction = { label: string; onClick: () => void };
+type ToastAction = { label: string; onClick: () => void };
 
 /** What a Tonaris toast carries besides its title and description. */
-export type ToastData = {
+type ToastData = {
   /** `danger` for failures, `warning` for conflicts; each adds its icon, so status is never color only. */
   tone?: "danger" | "warning";
   actions?: ToastAction[];
@@ -28,9 +28,34 @@ export function createToastManager() {
 }
 
 /** How long each kind of toast stays, in ms (DS-108). Problems stay until closed. */
-export const toastTimeouts = { info: 4_000, undo: 8_000, notice: 8_000 } as const;
+const toastTimeouts = { info: 4_000, undo: 8_000, notice: 8_000 } as const;
 
 export type Notifier = ReturnType<typeof notifier>;
+
+/** Adds a toast with `actions`, if it has any, each of which closes the toast once taken. */
+function addClosing(
+  manager: Pick<ToastManager, "add" | "close">,
+  toast: Omit<Parameters<ToastManager["add"]>[0], "data">,
+  actions: readonly ToastAction[],
+): string {
+  const id: string = manager.add({
+    ...toast,
+    ...(actions.length === 0
+      ? {}
+      : {
+          data: {
+            actions: actions.map(({ label, onClick }) => ({
+              label,
+              onClick: () => {
+                onClick();
+                manager.close(id);
+              },
+            })),
+          },
+        }),
+  });
+  return id;
+}
 
 /** DS-108's kinds of toast, each with its duration and priority, raised through `manager`. */
 export function notifier(manager: Pick<ToastManager, "add" | "close">) {
@@ -40,71 +65,31 @@ export function notifier(manager: Pick<ToastManager, "add" | "close">) {
      * "Switch to manual order"; taking it closes the toast.
      */
     info(title: string, description?: string, action?: ToastAction): string {
-      const id: string = manager.add({
-        title,
-        ...(description === undefined ? {} : { description }),
-        timeout: toastTimeouts.info,
-        priority: "low",
-        ...(action === undefined
-          ? {}
-          : {
-              data: {
-                actions: [
-                  {
-                    label: action.label,
-                    onClick: () => {
-                      action.onClick();
-                      manager.close(id);
-                    },
-                  },
-                ],
-              },
-            }),
-      });
-      return id;
+      return addClosing(
+        manager,
+        {
+          title,
+          ...(description === undefined ? {} : { description }),
+          timeout: toastTimeouts.info,
+          priority: "low",
+        },
+        action === undefined ? [] : [action],
+      );
     },
     /**
      * News from someone else, with a way to it, such as a new invitation: gone after 8 s, like Undo, so there's time
      * to take it. Taking the action closes the toast (TON-129).
      */
     notice(title: string, action: ToastAction): string {
-      const id: string = manager.add({
-        title,
-        timeout: toastTimeouts.notice,
-        priority: "low",
-        data: {
-          actions: [
-            {
-              label: action.label,
-              onClick: () => {
-                action.onClick();
-                manager.close(id);
-              },
-            },
-          ],
-        },
-      });
-      return id;
+      return addClosing(manager, { title, timeout: toastTimeouts.notice, priority: "low" }, [
+        action,
+      ]);
     },
     /** A reversible action done: **Undo** for 8 s, which undoes it and closes the toast (DS-50). */
     undo({ title, onUndo }: { title: string; onUndo: () => void }): string {
-      const id: string = manager.add({
-        title,
-        timeout: toastTimeouts.undo,
-        priority: "low",
-        data: {
-          actions: [
-            {
-              label: "Undo",
-              onClick: () => {
-                onUndo();
-                manager.close(id);
-              },
-            },
-          ],
-        },
-      });
-      return id;
+      return addClosing(manager, { title, timeout: toastTimeouts.undo, priority: "low" }, [
+        { label: "Undo", onClick: onUndo },
+      ]);
     },
     /**
      * A failure, a conflict or anything needing a decision: it stays until closed, and is announced assertively.

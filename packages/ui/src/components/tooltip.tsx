@@ -4,7 +4,9 @@
 // menu's does (TON-122).
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
-import { cn } from "cn";
+import type * as React from "react";
+
+import { cn } from "@tonaris/ui/lib/utils";
 
 function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;

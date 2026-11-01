@@ -9,8 +9,9 @@ import {
   buildSharedTree,
   buildTree,
   canMoveInto,
-  moveDestinations,
+  destinations,
   sharedClosedKey,
+  siblingsOf,
   typeAhead,
   visibleRows,
   type TreeRow,
@@ -205,16 +206,32 @@ describe("moving folders and lists (FR-01.4, FR-01.5)", () => {
 
   test("the picker offers Collection and the folders that can take the item, in tree order", () => {
     const tree = buildTree([metal, doom, funeral, deep, later]);
-    expect(moveDestinations(tree, later.id)).toEqual([
+    expect(destinations(tree, { moving: later.id })).toEqual([
       { parentId: metal.id, name: "Metal", level: 1 },
       { parentId: funeral.id, name: "Funeral", level: 2 },
     ]);
-    expect(moveDestinations(tree, funeral.id)).toEqual([
+    expect(destinations(tree, { moving: funeral.id })).toEqual([
       { parentId: null, name: "Collection", level: 0 },
     ]);
-    expect(moveDestinations(tree, deep.id)).toEqual([
+    expect(destinations(tree, { moving: deep.id })).toEqual([
       { parentId: null, name: "Collection", level: 0 },
       { parentId: metal.id, name: "Metal", level: 1 },
     ]);
+  });
+
+  test("a recovery can go to Collection or any folder (DS-56)", () => {
+    const tree = buildTree([metal, doom, funeral, deep, later]);
+    expect(destinations(tree)).toEqual([
+      { parentId: null, name: "Collection", level: 0 },
+      { parentId: metal.id, name: "Metal", level: 1 },
+      { parentId: funeral.id, name: "Funeral", level: 2 },
+    ]);
+  });
+
+  test("a folder's or the root's siblings", () => {
+    const tree = buildTree([metal, doom, funeral, deep, later]);
+    expect(siblingsOf(tree, null)).toBe(tree.roots);
+    expect(siblingsOf(tree, funeral.id).map((each) => each.name)).toEqual(["Deep"]);
+    expect(siblingsOf(tree, later.id)).toEqual([]);
   });
 });

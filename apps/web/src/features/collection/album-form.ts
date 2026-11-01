@@ -8,6 +8,7 @@ import {
   albumProblem,
   artworkUrlRefusal,
   isArtworkUrl,
+  serviceNames,
   streamingServices,
   uuidv7,
   type Album,
@@ -16,7 +17,7 @@ import {
   type StreamingService,
 } from "@tonaris/domain";
 
-import { cellText, formatRefusal, parseYears } from "./album-edit";
+import { cellNames, cellText, formatRefusal, parseYears } from "./album-edit";
 import { checkLink } from "./link-check";
 
 /** The form as typed. Years are text until saved. */
@@ -46,13 +47,25 @@ export type FormField =
   | "artworkUrl"
   | StreamingService;
 
-const noLinks = (): Record<StreamingService, string> => ({
-  spotify: "",
-  "apple-music": "",
-  qobuz: "",
-  tidal: "",
-  "youtube-music": "",
-});
+/** One value for each service. */
+function perService<T>(value: (service: StreamingService) => T): Record<StreamingService, T> {
+  const entries = streamingServices.map((service) => [service, value(service)] as const);
+  // Every service is a key, so the record is whole.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return Object.fromEntries(entries) as Record<StreamingService, T>;
+}
+
+const noLinks = () => perService(() => "");
+
+/** Each field's name, as its label and in the summary of problems (DS-47): "Title", "Spotify link". */
+export const formFieldNames: Record<FormField, string> = {
+  title: cellNames.title,
+  artistCredit: cellNames.artistCredit,
+  originalYear: cellNames.originalYear,
+  recording: cellNames.recording,
+  artworkUrl: "Artwork URL",
+  ...perService((service) => `${serviceNames[service]} link`),
+};
 
 /** An empty form, going to `listId` if given. */
 export function emptyForm(listId: string | null): AlbumForm {

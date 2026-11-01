@@ -4,7 +4,9 @@
 // Escape or a click outside closes it. Its contents are the caller's: the field and the listbox of results.
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { cn } from "cn";
+
+import { scrimClass } from "@tonaris/ui/lib/floating";
+import { cn } from "@tonaris/ui/lib/utils";
 
 function CommandDialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="command-dialog" {...props} />;
@@ -21,10 +23,7 @@ function CommandDialogContent({
 }) {
   return (
     <DialogPrimitive.Portal data-slot="command-portal">
-      <DialogPrimitive.Backdrop
-        data-slot="command-overlay"
-        className="fixed inset-0 isolate z-70 bg-scrim duration-200 ease-enter data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
-      />
+      <DialogPrimitive.Backdrop data-slot="command-overlay" className={cn(scrimClass, "z-70")} />
       <DialogPrimitive.Popup
         data-slot="command-content"
         className={cn(

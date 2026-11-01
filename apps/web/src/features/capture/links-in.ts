@@ -1,9 +1,7 @@
 // Which pasted lines are links (DS-48, TS-40): each trimmed line that is an `http(s)` URL, a `spotify:` URI, or starts
 // with a host the services use, without its scheme. Capture reads each one and explains any it can't use, so this
-// only keeps a paste of ordinary text from becoming captures; it never decides what is supported.
-
-/** Links pasted at once, at most: one batch (TS-25). */
-export const maxPastedLinks = 200;
+// only keeps a paste of ordinary text from becoming captures; it never decides what is supported. A paste takes
+// at most one batch's links (`maxBatchItems`, TS-25).
 
 const schemeless =
   /^(open\.spotify\.com|spotify\.link|spotify\.app\.link|(geo\.)?music\.apple\.com|(www\.|open\.|play\.)?qobuz\.com|(www\.|listen\.)?tidal\.com|(music\.|www\.|m\.)?youtube\.com)\//i;

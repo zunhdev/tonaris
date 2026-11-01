@@ -1,9 +1,9 @@
 // Settings → Custom fields (DS-60): the account's fields, each to rename, retype, give options or delete. Set up on
 // the desktop (DS-110).
 
-import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { CustomFieldsSettings } from "@/features/settings/custom-fields";
 import { DesktopOnly } from "@/features/shell/desktop-only";
+import { useNarrowScreen } from "@/features/shell/media";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_workspace/_settings/settings/custom-fields")({

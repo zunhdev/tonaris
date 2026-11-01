@@ -4,8 +4,9 @@
 // while offline (DS-45, DS-81).
 
 import type { SaveState } from "@/client/sync/writer";
-import { useCollectionUi, useMode, useNarrowScreen } from "@/features/collection/collection-ui";
+import { useCollectionUi, useMode } from "@/features/collection/collection-ui";
 import { useInspector } from "@/features/collection/inspector-state";
+import { useNarrowScreen } from "@/features/shell/media";
 import { inLayer, isTextField } from "@/features/shell/shortcuts";
 import { useAnnounce } from "@/features/sync/announcer";
 import { reasonOf } from "@/features/sync/describe";
@@ -24,9 +25,9 @@ import {
   type ReactNode,
 } from "react";
 
-import type { OutcomeStatus, StreamingService } from "@tonaris/domain";
+import { maxBatchItems, type OutcomeStatus, type StreamingService } from "@tonaris/domain";
 
-import { linksIn, maxPastedLinks } from "./links-in";
+import { linksIn } from "./links-in";
 import {
   captureNeed,
   captureResult,
@@ -76,8 +77,9 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
   const capture = useCallback(
     (links: readonly string[], into: string | null) => {
       if (!client || offline || links.length === 0) return false;
-      if (links.length > maxPastedLinks) {
-        notify?.info(`Add up to ${maxPastedLinks} links at once.`);
+      // At most one batch at once (TS-25).
+      if (links.length > maxBatchItems) {
+        notify?.info(`Add up to ${maxBatchItems} links at once.`);
         return false;
       }
       enterEditing();

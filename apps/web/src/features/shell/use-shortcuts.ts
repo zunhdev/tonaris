@@ -8,7 +8,6 @@ import { useCapture } from "@/features/capture/capture-context";
 import {
   useCollectionUi,
   useMode,
-  useNarrowScreen,
   useStartEditor,
   useViewContainerId,
 } from "@/features/collection/collection-ui";
@@ -21,6 +20,7 @@ import { useRecover } from "@/features/trash/recovery";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 
+import { useNarrowScreen } from "./media";
 import { createShortcutMatcher, inLayer, type CommandId, type ShortcutAction } from "./shortcuts";
 
 const destinations: Partial<

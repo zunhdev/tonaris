@@ -12,6 +12,7 @@ import {
   appAccountDefaults,
   unsetView,
   type Album,
+  type Container,
   type CustomField,
   type FieldValue,
   type Membership,
@@ -35,6 +36,8 @@ export type CollectionData = {
   albumsById: ReadonlyMap<string, Album>;
   /** Each list's entries. */
   entriesByList: ReadonlyMap<string, readonly Membership[]>;
+  /** The IDs of the lists each album is in. */
+  listsByAlbum: ReadonlyMap<string, readonly string[]>;
   /** The albums in no list (FR-01.9). */
   unsortedAlbums: readonly Album[];
   /** Each album's links to the streaming services (FR-06.2). */
@@ -61,6 +64,7 @@ const empty: CollectionData = {
   albums: 0,
   albumsById: new Map(),
   entriesByList: new Map(),
+  listsByAlbum: new Map(),
   unsortedAlbums: [],
   linksByAlbum: new Map(),
   fields: [],
@@ -110,14 +114,16 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
     const entries = membershipData ?? [];
     const owned = albumData ?? [];
     const entriesByList = new Map<string, Membership[]>();
-    const listed = new Set<string>();
+    const listsByAlbum = new Map<string, string[]>();
     for (const entry of entries) {
       const inList = entriesByList.get(entry.listId);
       if (inList) inList.push(entry);
       else entriesByList.set(entry.listId, [entry]);
-      listed.add(entry.albumId);
+      const ofAlbum = listsByAlbum.get(entry.albumId);
+      if (ofAlbum) ofAlbum.push(entry.listId);
+      else listsByAlbum.set(entry.albumId, [entry.listId]);
     }
-    const unsortedAlbums = owned.filter((album) => !listed.has(album.id));
+    const unsortedAlbums = owned.filter((album) => !listsByAlbum.has(album.id));
     const linksByAlbum = new Map<string, ServiceLink[]>();
     for (const link of linkData ?? []) {
       const ofAlbum = linksByAlbum.get(link.albumId);
@@ -139,15 +145,9 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       if (inView) inView.set(itemId, key);
       else keys.set(viewKey, new Map([[itemId, key]]));
     }
-    const tree = buildTree(containerData ?? [], (siblings, parentId) => {
-      const viewKey = parentId ?? "root";
-      const { sortMode: mode, sortDir: dir } = presentationOf(
-        "containers",
-        views.get(viewKey),
-        defaults,
-      );
-      return sortContainers(siblings, { mode, dir }, keys.get(viewKey));
-    });
+    const tree = buildTree(containerData ?? [], (siblings, parentId) =>
+      sortForView(siblings, parentId ?? "root", { views, defaults, keys }),
+    );
     return {
       tree,
       counts: new Map([...entriesByList].map(([listId, inList]) => [listId, inList.length])),
@@ -155,6 +155,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       albums: owned.length,
       albumsById: new Map(owned.map((album) => [album.id, album])),
       entriesByList,
+      listsByAlbum,
       unsortedAlbums,
       linksByAlbum,
       fields,
@@ -185,6 +186,23 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
 
 export function useCollectionData(): CollectionData {
   return useContext(CollectionDataContext);
+}
+
+/**
+ * The folders and lists of the view `viewKey` in its sort (FR-05.1): the person's choice for it, or their default for
+ * folders, manual order as they arranged it (TS-16).
+ */
+export function sortForView<T extends Pick<Container, "id" | "kind" | "name">>(
+  siblings: readonly T[],
+  viewKey: string,
+  { views, defaults, keys }: Pick<CollectionData, "views" | "defaults" | "keys">,
+): T[] {
+  const { sortMode: mode, sortDir: dir } = presentationOf(
+    "containers",
+    views.get(viewKey),
+    defaults,
+  );
+  return sortContainers(siblings, { mode, dir }, keys.get(viewKey));
 }
 
 /**

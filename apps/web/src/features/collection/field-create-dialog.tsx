@@ -6,7 +6,7 @@
 
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { Plus, X } from "lucide-react";
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import {
   fieldNameProblem,
@@ -26,16 +26,16 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
-import { cn } from "@tonaris/ui/lib/utils";
+import { Field } from "@tonaris/ui/components/field";
+import { Input } from "@tonaris/ui/components/input";
+import { Select } from "@tonaris/ui/components/select";
 
 import { useCollectionData } from "./data";
 import { fieldTypeNames } from "./field-types";
-
-const control =
-  "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid";
 
 type DraftOption = { id: string; label: string };
 
@@ -88,7 +88,6 @@ export function FieldCreateDialog({
   const [options, setOptions] = useState<DraftOption[]>([{ id: uuidv7(), label: "" }]);
   const [submitted, setSubmitted] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
-  const id = useId();
   const choice = isChoiceType(type);
   // Option rows left empty are left out: a choice field may start without options.
   const filled = options.filter((option) => option.label.trim() !== "");
@@ -142,52 +141,41 @@ export function FieldCreateDialog({
               {shown.form}
             </p>
           )}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-name`} className="text-small text-fg-secondary">
-              Name
-            </label>
-            <input
-              ref={nameRef}
-              id={`${id}-name`}
-              value={name}
-              aria-invalid={shown.name !== undefined}
-              aria-describedby={shown.name === undefined ? undefined : `${id}-name-problem`}
-              onChange={(event) => setName(event.target.value)}
-              className={cn(control, shown.name && "border-status-danger")}
-            />
-            {shown.name && (
-              <p id={`${id}-name-problem`} className="text-small text-status-danger">
-                {shown.name}
-              </p>
+          <Field label="Name" problem={shown.name}>
+            {(control) => (
+              <Input
+                {...control}
+                ref={nameRef}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
             )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-type`} className="text-small text-fg-secondary">
-              Type
-            </label>
-            <select
-              id={`${id}-type`}
-              value={type}
-              onChange={(event) => {
-                const chosen = fieldTypes.find((each) => each === event.target.value);
-                if (chosen) setType(chosen);
-              }}
-              className={control}
-            >
-              {fieldTypes.map((each) => (
-                <option key={each} value={each}>
-                  {fieldTypeNames[each]}
-                </option>
-              ))}
-            </select>
-          </div>
+          </Field>
+          <Field label="Type">
+            {(control) => (
+              <Select
+                {...control}
+                value={type}
+                onChange={(event) => {
+                  const chosen = fieldTypes.find((each) => each === event.target.value);
+                  if (chosen) setType(chosen);
+                }}
+              >
+                {fieldTypes.map((each) => (
+                  <option key={each} value={each}>
+                    {fieldTypeNames[each]}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
           {choice && (
             <fieldset className="flex flex-col gap-1.5">
               <legend className="mb-1.5 text-small text-fg-secondary">Options</legend>
               {options.map((option, index) => (
                 <div key={option.id} className="flex flex-col gap-1">
                   <div className="flex items-center gap-1">
-                    <input
+                    <Input
                       aria-label={`Option ${index + 1}`}
                       value={option.label}
                       aria-invalid={shown.options[index] !== undefined}
@@ -200,11 +188,7 @@ export function FieldCreateDialog({
                           ),
                         )
                       }
-                      className={cn(
-                        control,
-                        "flex-1",
-                        shown.options[index] && "border-status-danger",
-                      )}
+                      className="flex-1"
                     />
                     <Button
                       type="button"
@@ -235,14 +219,14 @@ export function FieldCreateDialog({
               )}
             </fieldset>
           )}
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button type="button" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" aria-keyshortcuts="Meta+Enter">
               Create field
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

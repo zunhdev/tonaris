@@ -6,12 +6,8 @@
 // the owner's saves (its stream), and "No longer available" once access ends. The content draws as on guest pages.
 
 import { api } from "@/api";
-import { useNarrowScreen } from "@/features/collection/collection-ui";
-import { useCollectionData } from "@/features/collection/data";
-import { sections, sortAlbums, sortContainers, type Direction } from "@/features/collection/order";
+import { useAlbumArrangement, useContainerArrangement } from "@/features/collection/arrangement";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
-import { usePresentation } from "@/features/collection/use-presentation";
-import { useRearrange } from "@/features/collection/use-rearrange";
 import { ViewOptions } from "@/features/collection/view-options";
 import {
   AlbumSections,
@@ -21,39 +17,32 @@ import {
   ShareBreadcrumbs,
   type LinkTo,
 } from "@/features/guest/share-content";
-import { useShareStream } from "@/features/guest/use-share-stream";
-import { PageHeader } from "@/features/shell/page-header";
+import { useNarrowScreen } from "@/features/shell/media";
+import { PageHeader, useDocumentTitle } from "@/features/shell/page-header";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { Container, SharedSnapshot } from "@tonaris/domain";
+
+import { useShareStream } from "./use-share-stream";
 
 type Loaded = { snapshot: SharedSnapshot } | { snapshot: undefined; missing: true };
 
 /** The share as the person may see it now: read when shown and again on `reread`. */
 function useSharedSnapshot(rootId: string) {
-  const [loaded, setLoaded] = useState<Loaded>();
   const [revision, setRevision] = useState(0);
   const reread = useCallback(() => setRevision((count) => count + 1), []);
-  useEffect(() => {
-    let current = true;
+  const loaded = useKeyedRead(`${rootId}#${revision}`, () =>
     api.v1
       .shared({ id: rootId })
       .get()
-      .then(
-        ({ data, error }) => {
-          if (!current) return revision;
-          if (data) setLoaded({ snapshot: data });
-          // Access ended, or never was: say so. Anything else keeps what's shown, until the next read.
-          else if (error?.status === 404) setLoaded({ snapshot: undefined, missing: true });
-          return revision;
-        },
-        () => revision,
-      );
-    return () => {
-      current = false;
-    };
-  }, [rootId, revision]);
+      .then(({ data, error }): Loaded | undefined => {
+        if (data) return { snapshot: data };
+        // Access ended, or never was: say so. Anything else keeps what's shown, until the next read.
+        return error?.status === 404 ? { snapshot: undefined, missing: true } : undefined;
+      }),
+  )?.value;
   return { loaded, reread };
 }
 
@@ -66,9 +55,7 @@ export function SharedView({ rootId, containerId }: { rootId: string; containerI
 }
 
 function NoLongerAvailable() {
-  useEffect(() => {
-    document.title = "Not available · Tonaris";
-  }, []);
+  useDocumentTitle("Not available");
   return (
     <>
       <PageHeader title="Not available" />
@@ -120,9 +107,7 @@ function SharedContent({
       label: parent.name,
     };
   };
-  useEffect(() => {
-    document.title = `${title} · Tonaris`;
-  }, [title]);
+  useDocumentTitle(title);
   if (!current) return <NoLongerAvailable />;
   const owner = snapshot.owner.displayName ?? "a Tonaris member";
   const kind = current.kind === "folder" ? "containers" : "albums";
@@ -179,63 +164,22 @@ function FolderBody({
   items: readonly Container[];
   linkTo: LinkTo;
 }) {
-  const { keys } = useCollectionData();
-  const { presentation, choose } = usePresentation(folder.id, "containers");
-  const { sortMode, sortDir } = presentation;
-  const manualOrder = sortContainers(items, { mode: "manual", dir: sortDir }, keys.get(folder.id));
-  const shown =
-    sortMode === "manual" ? manualOrder : sortContainers(items, { mode: sortMode, dir: sortDir });
-  const rearrange = useRearrange(folder.id, {
-    manual: sortMode === "manual",
-    toManual: () => choose({ sortMode: "manual" }),
-  });
-  const sequence = manualOrder.map((item) => item.id);
-  const onMove = (id: string, to: Direction) =>
-    rearrange.move(sequence, sequence, id, to, items.find((item) => item.id === id)?.name ?? "it");
-  return <FolderItems folder={folder} items={shown} linkTo={linkTo} onMove={onMove} />;
+  const { shown, moves } = useContainerArrangement(items, folder.id);
+  return <FolderItems folder={folder} items={shown} linkTo={linkTo} onMove={moves.move} />;
 }
 
 /** A shared list's albums in the person's own sort, grouping and layout (DS-40, DS-43). */
 function ListBody({ list, snapshot }: { list: Container; snapshot: SharedSnapshot }) {
-  const { keys } = useCollectionData();
-  const { presentation, choose } = usePresentation(list.id, "albums");
-  const { sortMode, sortDir, grouped, layout } = presentation;
   const albums = useMemo(() => albumsIn(snapshot, list.id), [snapshot, list.id]);
   const linksOf = useMemo(() => linksByAlbum(snapshot), [snapshot]);
-  const viewKeys = keys.get(list.id);
-  const manualOrder = useMemo(
-    () => sortAlbums(albums, { mode: "manual", dir: sortDir }, viewKeys),
-    [albums, sortDir, viewKeys],
-  );
-  const parts = useMemo(
-    () =>
-      sections(
-        sortMode === "manual" ? manualOrder : sortAlbums(albums, { mode: sortMode, dir: sortDir }),
-        grouped,
-      ),
-    [albums, manualOrder, sortMode, sortDir, grouped],
-  );
-  const manual = sortMode === "manual";
-  const rearrange = useRearrange(list.id, {
-    manual,
-    toManual: () => choose({ sortMode: "manual" }),
-  });
-  const onMove = (id: string, to: Direction) => {
-    const sequence = manualOrder.map((album) => album.id);
-    // Grouped, an album moves among its group's albums, in the one arrangement (FR-05.8).
-    const group = (
-      parts.find((part) => part.albums.some((album) => album.id === id))?.albums ?? []
-    ).map((album) => album.id);
-    const name = albums.find((album) => album.id === id)?.title ?? "the album";
-    return rearrange.move(sequence, group, id, to, name);
-  };
+  const { presentation, sections, manual, moves } = useAlbumArrangement(albums, list.id);
   return (
     <AlbumSections
       list={list}
-      parts={parts}
+      parts={sections}
       linksOf={linksOf}
-      layout={layout}
-      onMove={manual ? onMove : undefined}
+      layout={presentation.layout}
+      onMove={manual ? moves.move : undefined}
     />
   );
 }

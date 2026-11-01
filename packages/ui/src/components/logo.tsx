@@ -2,7 +2,7 @@
 // mark beside the name. The permanent logo replaces the shapes here and in apps/web/public/favicon.svg, whose PNGs
 // apps/web/scripts/render-icons.mjs renders again.
 
-import { cn } from "cn";
+import { cn } from "@tonaris/ui/lib/utils";
 
 /** The mark, in the current color. Decorative: the name always goes with it. */
 function Logo({ className }: { className?: string }) {
@@ -37,4 +37,4 @@ function Wordmark({ size = "brand", className }: { size?: "brand" | "page"; clas
   );
 }
 
-export { Logo, Wordmark };
+export { Wordmark };

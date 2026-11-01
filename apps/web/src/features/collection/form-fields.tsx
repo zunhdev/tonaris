@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
+import { Select } from "@tonaris/ui/components/select";
 
 import type { AlbumForm } from "./album-form";
 import { useCollectionData } from "./data";
@@ -63,7 +64,7 @@ export function FormFields({
         );
       })}
       {/* A select rather than a menu: it stays inside the form's dialog. */}
-      <select
+      <Select
         aria-label="Add field"
         value=""
         onChange={(event) => {
@@ -71,7 +72,7 @@ export function FormFields({
           if (chosen === create) setCreating(true);
           else if (chosen) add(chosen);
         }}
-        className="h-8 self-start rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+        className="self-start"
       >
         <option value="">Add field…</option>
         {unused.map((field) => (
@@ -80,7 +81,7 @@ export function FormFields({
           </option>
         ))}
         <option value={create}>Create field…</option>
-      </select>
+      </Select>
       {creating && <FieldCreateDialog onClose={() => setCreating(false)} onCreated={add} />}
     </fieldset>
   );

@@ -5,6 +5,7 @@
 // buttons, also move with ⌥↑ and ⌥↓, ⇧ for the ends (DS-49), in the viewer's own arrangement.
 
 import { Artwork, artworkSrc } from "@/features/collection/artwork";
+import { directionOf } from "@/features/collection/grid-keys";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology, groupNames, type Direction, type Section } from "@/features/collection/order";
 import { ServiceNames } from "@/features/open/service-names";
@@ -52,14 +53,6 @@ export function linksByAlbum(snapshot: SharedSnapshot): Map<string, SharedSnapsh
     links.set(link.albumId, [...(links.get(link.albumId) ?? []), link]);
   }
   return links;
-}
-
-/** The move a key asks for: ⌥↑ and ⌥↓, with ⇧ for the ends. */
-function directionOf(event: KeyboardEvent): Direction | undefined {
-  if (!event.altKey || event.ctrlKey || event.metaKey) return undefined;
-  if (event.key === "ArrowUp") return event.shiftKey ? "top" : "up";
-  if (event.key === "ArrowDown") return event.shiftKey ? "bottom" : "down";
-  return undefined;
 }
 
 const rowOf = (element: HTMLElement) => element.closest("li") ?? element;

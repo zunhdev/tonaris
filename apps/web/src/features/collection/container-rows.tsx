@@ -1,8 +1,8 @@
 // Folder and root rows (DS-41): a folder's, or the root's, folders and lists as a virtualized ARIA grid, each row
 // with its icon and name, as a link, and its count: albums for a list, folders and lists for a folder. Sorted by
 // creation date, a Created column shows when each was made, which its UUIDv7 ID holds (TS-10). Enter opens it from
-// any cell. Descriptions (M4) and sharing glyphs (M7) join later. Each row shows its save state, is busy while saving
-// and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+// any cell. A description's first line follows the name; DS-41's sharing glyph isn't shown yet. Each row shows its
+// save state, is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 
 // Virtualized rows are absolutely positioned CSS grid rows, which table elements can't be without overriding their
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -17,8 +17,10 @@ import { useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useNarrowScreen } from "../shell/media";
+import { count } from "../shell/words";
 import { DragHandle, DropLine } from "./album-rows";
-import { useCollectionUi, useNarrowScreen } from "./collection-ui";
+import { useCollectionUi } from "./collection-ui";
 import { useRowDrag } from "./drag";
 import { ContainerIcon } from "./icons";
 import { useGridFocus, type GridRearrange } from "./use-grid";
@@ -27,8 +29,6 @@ import type { ViewMoves } from "./use-rearrange";
 const rowHeight = 36;
 /** A phone's rows (DS-110): tall enough for a 44 px touch target. */
 const phoneRowHeight = 48;
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 const createdDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
@@ -128,15 +128,15 @@ export function ContainerRows({
           {virtualizer.getVirtualItems().map((item) => {
             const container = containers[item.index];
             if (!container) return null;
-            const count =
+            const contents =
               container.kind === "list"
-                ? plural(albumCounts.get(container.id) ?? 0, "album", "albums")
-                : plural(childCounts(container.id), "folder or list", "folders and lists");
+                ? count(albumCounts.get(container.id) ?? 0, "album", "albums")
+                : count(childCounts(container.id), "folder or list", "folders and lists");
             return (
               <ContainerRow
                 key={container.id}
                 container={container}
-                count={count}
+                contents={contents}
                 created={showCreated ? created(container.id) : undefined}
                 viewKey={viewKey}
                 manual={moves.handles}
@@ -159,7 +159,7 @@ const focusable =
 
 function ContainerRow({
   container,
-  count,
+  contents,
   created: createdOn,
   viewKey,
   manual,
@@ -170,7 +170,8 @@ function ContainerRow({
   cellProps,
 }: {
   container: Container;
-  count: string;
+  /** What it holds, counted: "3 albums", "2 folders and lists". */
+  contents: string;
   /** When it was created, if the rows show it. */
   created: string | undefined;
   viewKey: string;
@@ -278,7 +279,7 @@ function ContainerRow({
         className={cn(focusable, "flex items-center rounded-sm text-fg-tertiary")}
         {...cellProps(index, createdOn === undefined ? 1 : 2)}
       >
-        {count}
+        {contents}
       </div>
     </div>
   );

@@ -32,11 +32,12 @@ import {
 import type { Album, ServiceLink } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useNarrowScreen } from "../shell/media";
 import { isTextField } from "../shell/shortcuts";
-import { albumEdit, cellText, type AlbumCell } from "./album-edit";
+import { albumEdit, cellNames, cellText, typeName, type AlbumCell } from "./album-edit";
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
-import { useCollectionUi, useMode, useNarrowScreen } from "./collection-ui";
+import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
@@ -52,33 +53,12 @@ const phoneRowHeight = 56;
 /** The cells that edit inline, by column: title, artist and year (DS-45). */
 const editableCells: readonly AlbumCell[] = ["title", "artistCredit", "year"];
 
-/** Each editor's name, for its accessible label: "Title of 'Nightfall'". */
-export const cellNames: Record<AlbumCell, string> = {
-  title: "Title",
-  artistCredit: "Artist",
-  year: "Year",
-  originalYear: "Original release year",
-  recording: "Recording year or range",
-};
-
 /** The cell being edited inline: its album, its value as typed, and why that was refused, if it was. */
 type CellEdit = { albumId: string; cell: AlbumCell; draft: string; refusal?: string };
 /** Below this width, the type column collapses (DS-21). */
 const typeFrom = 640;
 /** Below this width, the services column collapses, before the type (DS-21). */
 const servicesFrom = 760;
-
-const typeNames: Record<NonNullable<Album["releaseType"]>, string> = {
-  album: "Album",
-  ep: "EP",
-  compilation: "Compilation",
-};
-
-/** The release type in words (DS-19): live first, as the groups have it (FR-05.9). */
-export function typeName(album: Pick<Album, "releaseType" | "isLive">): string {
-  if (album.isLive) return "Live";
-  return album.releaseType === null ? "—" : typeNames[album.releaseType];
-}
 
 type Item =
   | { type: "header"; group: ReleaseGroup; count: number }

@@ -7,8 +7,7 @@
 import { SharingImpactPreview } from "@/features/sharing/sharing-impact";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
-import { FolderClosed, Library } from "lucide-react";
-import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import {
   Dialog,
@@ -17,11 +16,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
-import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionUi } from "./collection-ui";
 import { useCollectionData } from "./data";
-import { ancestorsOf, canMoveInto, moveDestinations } from "./tree";
+import { PlaceList } from "./place-list";
+import { ancestorsOf, canMoveInto, destinations } from "./tree";
 
 /** Moves the folder or list `id` into `parentId`, null being the root; answers whether it went. */
 export function useMoveContainer(): (id: string, parentId: string | null) => boolean {
@@ -56,25 +55,14 @@ export function MoveDialog() {
   const { moving, endMove } = useCollectionUi();
   const { tree } = useCollectionData();
   const move = useMoveContainer();
-  const list = useRef<HTMLUListElement>(null);
   const item = moving === undefined ? undefined : tree.byId.get(moving);
   // The destination last focused or pointed at, for this item.
   const [previewed, setPreviewed] = useState<{ id: string; to: string | null }>();
   const preview = item !== undefined && previewed?.id === item.id ? previewed : undefined;
-  const destinations = useMemo(
-    () => (moving === undefined ? [] : moveDestinations(tree, moving)),
+  const places = useMemo(
+    () => (moving === undefined ? [] : destinations(tree, { moving })),
     [tree, moving],
   );
-
-  function onKeyDown(event: KeyboardEvent<HTMLUListElement>) {
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-    event.preventDefault();
-    const buttons = [...(list.current?.querySelectorAll("button") ?? [])];
-    const at = buttons.findIndex((button) => button === document.activeElement);
-    const next =
-      event.key === "ArrowDown" ? Math.min(at + 1, buttons.length - 1) : Math.max(at - 1, 0);
-    buttons[next]?.focus();
-  }
 
   return (
     <Dialog
@@ -89,47 +77,20 @@ export function MoveDialog() {
             <DialogHeader>
               <DialogTitle>Move '{item.name}' to…</DialogTitle>
               <DialogDescription>
-                {destinations.length > 0
+                {places.length > 0
                   ? "It moves with everything in it."
                   : "There's nowhere else to move it yet. Create a folder first."}
               </DialogDescription>
             </DialogHeader>
-            {destinations.length > 0 && (
-              // The choices are buttons, so Tab and the arrows both move between them.
-              // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-              <ul
-                ref={list}
-                aria-label="Places"
-                className="flex max-h-80 flex-col overflow-y-auto"
-                onKeyDown={onKeyDown}
-              >
-                {destinations.map((destination) => {
-                  const Icon = destination.parentId === null ? Library : FolderClosed;
-                  return (
-                    <li key={destination.parentId ?? "root"}>
-                      <button
-                        type="button"
-                        className={cn(
-                          "flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid",
-                        )}
-                        style={{ paddingLeft: 8 + destination.level * 16 }}
-                        onFocus={() => setPreviewed({ id: item.id, to: destination.parentId })}
-                        onMouseEnter={() => setPreviewed({ id: item.id, to: destination.parentId })}
-                        onClick={() => {
-                          if (move(item.id, destination.parentId)) endMove();
-                        }}
-                      >
-                        <Icon
-                          aria-hidden
-                          strokeWidth={1.5}
-                          className="size-4 shrink-0 text-fg-secondary"
-                        />
-                        <span className="truncate">{destination.name}</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+            {places.length > 0 && (
+              <PlaceList
+                mode="buttons"
+                places={places}
+                onFocus={(to) => setPreviewed({ id: item.id, to })}
+                onChoose={(to) => {
+                  if (move(item.id, to)) endMove();
+                }}
+              />
             )}
             <SharingImpactPreview
               query={preview === undefined ? undefined : { move: preview.id, to: preview.to }}

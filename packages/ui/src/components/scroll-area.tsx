@@ -1,9 +1,8 @@
 // ScrollArea (DS-20): Base UI scroll area with a solid focus outline (DS-14) and a visible thumb.
 
-"use client";
-
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
-import { cn } from "cn";
+
+import { cn } from "@tonaris/ui/lib/utils";
 
 function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.Props) {
   return (
@@ -48,4 +47,4 @@ function ScrollBar({
   );
 }
 
-export { ScrollArea, ScrollBar };
+export { ScrollArea };

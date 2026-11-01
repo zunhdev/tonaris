@@ -4,6 +4,7 @@
 
 import { ContainerIcon } from "@/features/collection/icons";
 import { buildSharedTree } from "@/features/collection/tree";
+import { count } from "@/features/shell/words";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, MailOpen, Users } from "lucide-react";
 import { useMemo } from "react";
@@ -26,9 +27,7 @@ export function PhoneShared() {
       {invitations > 0 && (
         <Link to="/invitations" className={row}>
           <MailOpen strokeWidth={1.5} aria-hidden className="size-4 text-fg-secondary" />
-          <span className="flex-1">
-            {invitations === 1 ? "1 invitation" : `${invitations} invitations`}
-          </span>
+          <span className="flex-1">{count(invitations, "invitation", "invitations")}</span>
           <ChevronRight strokeWidth={1.5} aria-hidden className="size-4 text-fg-tertiary" />
         </Link>
       )}

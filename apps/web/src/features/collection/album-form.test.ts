@@ -7,6 +7,7 @@ import { uuidv7 } from "@tonaris/domain";
 import {
   albumOfForm,
   emptyForm,
+  formFieldNames,
   formOf,
   formProblems,
   isFormDirty,
@@ -113,6 +114,18 @@ describe("the album it makes", () => {
 });
 
 describe("links (FR-06.3, TS-40)", () => {
+  test("every service has an empty field to start, named after the service", () => {
+    expect(emptyForm(null).links).toEqual({
+      spotify: "",
+      "apple-music": "",
+      qobuz: "",
+      tidal: "",
+      "youtube-music": "",
+    });
+    expect(formFieldNames["apple-music"]).toBe("Apple Music link");
+    expect(formFieldNames.originalYear).toBe("Original release year");
+  });
+
   const valid = {
     ...emptyForm(null),
     title: "Bleach",
