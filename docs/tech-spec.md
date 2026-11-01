@@ -525,8 +525,8 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 - **Sessions** (TON-29). A stream ends within 30 s once the session that opened it is signed out, revoked or expired.
   - While streams are open, the hub checks all their sessions every 30 s, in one query, and ends the streams of those that no longer exist or have expired.
   - The stream just ends, with no `reset`. The client's reconnect gets `401`, which it treats as signed out.
-  - `hub.endSessions(ids)` ends a session's streams at once. M8 will call it for the revocations that can't wait: email change, recovery and account deletion (TS-73, TS-74).
-- **Contract.** A stream route documents `text/event-stream` in `detail.responses`, pointing at its event schema registered as a component of the OpenAPI document. It declares no `response` schema: on a generator route, that breaks Eden's types and validates nothing.
+  - *Built in TON-147:* the revocations that can't wait end the account's streams at once, with `hub.endSessionsOf(accountId, keep)`: an email change ends all but its own session's, and a recovery and an account deletion end all of them (TS-73, TS-74).
+- **Contract.** A stream route documents `text/event-stream` in `detail.responses`, pointing at its event schema registered as a component of the OpenAPI document. It declares no `response` schema: on a generator route, that breaks Eden's types and validates nothing. *As built in TON-147:* `streamResponses()` (`apps/api/src/openapi.ts`) writes that block, with the problems a stream answers before it starts, such as `401`, `404` and `422`.
 - **The web client reads the stream with `fetch`, not EventSource** ([TON-20](spikes/2026-10-20-sync-prototype.md)). With `fetch` it sees a refused stream's status (401), reconnects when nothing arrives for 45 s, spreads its reconnects with jittered backoff, and runs in tests. It sends the cursor in the query: a `Last-Event-ID` header makes a cross-origin request need a CORS preflight, which the API's rules refuse (TS-102), and Chromium then fails the fetch. An EventSource client would need `last-event-id` on the CORS allowlist.
 - **One stream per browser (web client only).** A leader tab, elected through BroadcastChannel and the Web Locks API, holds the single stream and fans events out to other tabs. This avoids HTTP/1.1 connection limits; most hosts terminate HTTP/2 at the edge regardless. It is a web-client optimization, not part of the protocol (TS-28). Built in TON-30 (`apps/web/src/client/sync/tabs.ts`, `engine.ts`):
   - The leader holds the Web Lock `tonaris-leader:<accountId>`. It relays each change, its connection status and `reset` over the BroadcastChannel `tonaris-sync:<accountId>`.
@@ -1219,7 +1219,7 @@ There are deliberately **no** tools for sharing management, Trash purge, export,
   - `move_albums`, a list-to-list move of albums: join the target, then leave the source;
   - `set_artwork`, `set_link` and `remove_link`, over `album.setArtwork`, `link.set` and `link.remove`.
 - **`base`.** A change the agent doesn't base on values it read is based on the values saved now. Passing `base` gets a `conflict` with the current values when they changed (TS-21).
-- **`set_order`** places items, in the order given, at the top, at the bottom, or before or after an item, with the app's own `planMove` (now in `packages/domain`), as one `order.set`.
+- **`set_order`** places items, in the order given, at the top, at the bottom, or before or after an item, with the app's own `planMove`, through `planMoves` (both in `packages/domain`), as one `order.set`.
 - **`add_albums`** takes links or details, with an optional list. A link's `needs_input` (`match` or `details`) is answered by sending the item again with `releaseGroupId` or `details` (TS-26). Captures read no store page for agents (FR-10.5).
 - **Outcomes.** Each item is TS-27's outcome, with `failed` carrying `code` and `message`. A `skipped` item names the item it waited for by index.
 - **References.** `share.saveLink` and `share.removeReference` now authorize as collection writes, so a Manage agent may keep or drop references, and a Read-only one may not (FR-07.13, AC-24). Leaving an invitation stays app-only.
@@ -1567,7 +1567,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 **TS-90 Queue (Decided).** Jobs live in a Postgres `jobs` table.
 
 - Workers claim jobs with `SELECT … FOR UPDATE SKIP LOCKED` and run in the API service process.
-- Periodic schedules run only under an advisory lock named after the schedule, which keeps them single-runner if a second instance ever exists. Built in TON-29 (`apps/api/src/schedules.ts`):
+- Periodic schedules run only under an advisory lock named after the schedule, which keeps them single-runner if a second instance ever exists. Built in TON-29 (`apps/api/src/jobs/schedules.ts`):
   - each run is one transaction that takes `pg_try_advisory_xact_lock(hashtext(name))` and skips the run if another holds it, so no pooled connection keeps a lock;
   - each schedule first runs a minute after start, then on its interval;
   - shutdown waits for a run in progress before the database closes;
@@ -1575,7 +1575,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
   - the `jobs` table and its worker arrived with the first queued job, email (TON-73).
 - Retries use exponential backoff; dead jobs are visible in the admin UI.
 - No Redis or external queue.
-- *As built in TON-73* (`apps/api/src/jobs.ts`, `packages/db/src/jobs.ts`), with email as the first kind (TS-72):
+- *As built in TON-73* (`apps/api/src/jobs/worker.ts`, `packages/db/src/jobs.ts`), with email as the first kind (TS-72):
   - **Waking:** queuing a job wakes the worker in the same process, so it starts at once. The worker also looks for due jobs every 5 s, for retries, a restart's leftovers, and jobs another instance queued.
   - **Claims:** two jobs run at a time. A claim holds a job for 2 minutes, so a worker that died lets it go. Due times come from the API's clock, which claims compare with.
   - *Fixed in TON-102:* a lane that had finished started again only once every lane had. So while one ran a long job, everything queued meanwhile waited for it, and a burst of sign-in emails stalled behind one long job. Waking now starts any finished lane at once.

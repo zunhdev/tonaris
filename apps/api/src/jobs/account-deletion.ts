@@ -7,7 +7,7 @@ import { z } from "zod";
 import { type Database, deleteAccountData, finishAccountDeletion } from "@tonaris/db";
 import { accountDeletionJobKind } from "@tonaris/domain";
 
-import type { JobHandler } from "./jobs";
+import type { JobHandler } from "./worker";
 
 const payloadSchema = z.object({ deletionId: z.uuid(), userId: z.uuid() });
 

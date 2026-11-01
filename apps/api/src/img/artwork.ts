@@ -12,7 +12,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { Elysia } from "elysia";
 
-import type { Bootstrap, Change } from "@tonaris/domain";
+import type { Bootstrap, Change, SharedSnapshot } from "@tonaris/domain";
 import { safeFetch, SafeFetchError, type SafeFetchInit } from "@tonaris/providers";
 
 /** What the proxy fetches with: `safeFetch`, or a stand-in in tests. */
@@ -53,6 +53,16 @@ export function presentChange(signer: ArtworkSigner, change: Change): Change {
 
 /** The bootstrap as clients get it: its albums with their artwork signed. */
 export function presentBootstrap(signer: ArtworkSigner, snapshot: Bootstrap): Bootstrap {
+  return {
+    ...snapshot,
+    albums: snapshot.albums.map((album) =>
+      album.artworkUrl ? { ...album, artworkSignature: signer.sign(album.artworkUrl) } : album,
+    ),
+  };
+}
+
+/** A shared folder or list as its guests and viewers get it: its albums with their artwork signed. */
+export function presentSnapshot(signer: ArtworkSigner, snapshot: SharedSnapshot): SharedSnapshot {
   return {
     ...snapshot,
     albums: snapshot.albums.map((album) =>

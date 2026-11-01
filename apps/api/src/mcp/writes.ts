@@ -28,7 +28,7 @@ import {
   type MutationResult,
 } from "@tonaris/domain";
 
-import { MutationInProgressError, type MutationRunner } from "../capture";
+import { MutationInProgressError, type Mutations } from "../sync/runner";
 
 /**
  * A UUIDv7 derived from the v7 `base` and `salt`: its timestamp stays the base's, so the mutation keeps the age TS-22's
@@ -129,13 +129,11 @@ export type McpWriter = {
 
 export function mcpWriter({
   db,
-  run,
-  announce,
+  mutations: { run, announce },
 }: {
   db: Database;
-  run: MutationRunner;
-  /** Hands a write's changes to the account's streams, as the sync routes do. */
-  announce: (accountId: string, executed: ExecutedMutation) => void;
+  /** The API's mutation runner, and the announcer that hands changes to the streams, as the sync routes use them. */
+  mutations: Mutations;
 }): McpWriter {
   /** Claims the key for the request's batch, and plans its envelopes with the batch's IDs. */
   async function claim(

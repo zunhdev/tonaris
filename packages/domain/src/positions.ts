@@ -202,3 +202,32 @@ export function planMove(
   writes.set(itemId, fresh.at(-1) ?? "");
   return writes;
 }
+
+/**
+ * The keys a move of several items writes, as one move (TS-16): the first at `place`, each next one after the one
+ * before it, all with `planMove`. Each is planned on the order the earlier ones left, where an item without a key
+ * sorts after every key. MCP's `set_order` writes them in one `order.set`.
+ */
+export function planMoves(
+  sequence: readonly string[],
+  keys: ReadonlyMap<string, string>,
+  itemIds: readonly string[],
+  place: Place,
+): Map<string, string> {
+  const current = new Map(keys);
+  const written = new Map<string, string>();
+  let order = [...sequence];
+  let at = place;
+  for (const itemId of itemIds) {
+    for (const [id, key] of planMove(order, current, itemId, at)) {
+      current.set(id, key);
+      written.set(id, key);
+    }
+    order = order.filter((id) => id !== itemId);
+    const key = current.get(itemId) ?? "";
+    const next = order.findIndex((id) => (current.get(id) ?? "￿") > key);
+    order.splice(next === -1 ? order.length : next, 0, itemId);
+    at = { after: itemId };
+  }
+  return written;
+}

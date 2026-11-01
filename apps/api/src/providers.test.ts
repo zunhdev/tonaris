@@ -2,15 +2,20 @@
 // failures without Spotify values; enrichment published to the owner's sessions, or nothing written when
 // MusicBrainz is busy (TS-42, TS-90). Against the local Postgres 18, as schedules run in a transaction.
 
-import { afterEach, beforeEach, expect, test } from "bun:test";
+import { afterEach, beforeEach, expect, spyOn, test } from "bun:test";
 
 import { executeMutation, users } from "@tonaris/db";
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { uuidv7, type Album, type Change, type Principal } from "@tonaris/domain";
 import { memoryCache, MusicBrainz, ProviderUnavailableError } from "@tonaris/providers";
 
+import {
+  apiSchedules,
+  runSchedule,
+  spotifyHealthAlbum,
+  spotifyHealthSchedule,
+} from "./jobs/schedules";
 import { createEnricher, createProviders } from "./providers";
-import { apiSchedules, runSchedule, spotifyHealthAlbum, spotifyHealthSchedule } from "./schedules";
 
 let t: TestDatabase;
 
@@ -69,6 +74,30 @@ test("spotify-health logs a refused token and a missing UPC, naming no Spotify v
   ]);
   expect(asked).toEqual([spotifyHealthAlbum]);
   expect(logged.join()).not.toContain("886443927087");
+});
+
+test("the API's spotify-health logs a failure as a JSON error line (TS-115)", async () => {
+  const lines: unknown[] = [];
+  const errors = spyOn(console, "error").mockImplementation((line: unknown) => {
+    lines.push(line);
+  });
+  try {
+    const spotify = { album: () => Promise.resolve({}) };
+    const health = apiSchedules(spotify, { db: t.db, publish: () => {} }).find(
+      (schedule) => schedule.name === "spotify-health",
+    );
+    if (!health) throw new Error("No spotify-health schedule");
+    await runSchedule(t.db, health);
+  } finally {
+    errors.mockRestore();
+  }
+  expect(lines.map((line) => JSON.parse(String(line)))).toEqual([
+    expect.objectContaining({
+      level: "error",
+      message:
+        "Spotify health check failed: Get Album returned no UPC, so the bridge can't search barcodes.",
+    }),
+  ]);
 });
 
 const bleachId = "f1afec0b-26dd-3db5-9aa1-c91229a74a24";

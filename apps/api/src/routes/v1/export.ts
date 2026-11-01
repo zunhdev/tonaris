@@ -12,9 +12,9 @@ import { buildExport, exportFiles, maxExportsPerHour } from "@tonaris/domain";
 import { policy } from "@tonaris/providers";
 
 import type { SessionGuard } from "../../auth/plugin";
-import { SlidingWindow } from "../../auth/sign-in-limits";
 import { problemResponse } from "../../openapi";
 import { ProblemError } from "../../problem";
+import { SlidingWindow } from "../../sliding-window";
 
 const hour = 60 * 60_000;
 

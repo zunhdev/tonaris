@@ -7,13 +7,15 @@
 // So delivery is correct even when a publish is lost, which is what lets a second instance swap the bus for
 // Postgres LISTEN/NOTIFY later. A cursor the log no longer reaches, or one it never had, ends with `reset`.
 // A stream also ends once the session that opened it is signed out, revoked or expired: while streams are open,
-// the hub checks their sessions every 30 s.
+// the hub checks their sessions every 30 s. An email change, a recovery and an account's deletion end the account's
+// other sessions' streams at once instead (TS-73, TS-74).
 
 import type { SSEPayload } from "elysia";
 
 import { activeSessionIds, headSeq, readChanges, type Database } from "@tonaris/db";
 import type { Change, StreamReset } from "@tonaris/domain";
 
+import type { LogError } from "../observability";
 import type { StreamSource } from "../sse";
 
 export type ChangeEvent = SSEPayload<Change, "change"> & { id: string; data: Change };
@@ -49,7 +51,7 @@ export type SyncHubOptions = {
   /** How often open streams' sessions are checked (TS-23). */
   sessionCheckMs?: number;
   /** Gets a failed session check; the streams stay open until the next one. */
-  logError?: (error: unknown) => void;
+  logError?: LogError;
   /** Changes read from the log at a time. */
   pageSize?: number;
   /** Changes a stream holds for a slow client before it drops them and reads the log instead. */
@@ -182,7 +184,7 @@ export function createSyncHub(options: SyncHubOptions) {
   const {
     sessions,
     sessionCheckMs = 30_000,
-    logError = (error: unknown) => console.error("Checking stream sessions failed", error),
+    logError = (error, context) => console.error(`${context} failed`, error),
     ...rest
   } = options;
   const settings: StreamSettings = { pageSize: 500, bufferLimit: 1_000, ...rest };
@@ -211,7 +213,7 @@ export function createSyncHub(options: SyncHubOptions) {
     try {
       active = await sessions.active(ids);
     } catch (error) {
-      logError(error);
+      logError(error, "Checking stream sessions");
       return;
     }
     endWhere(({ sessionId }) => sessionId !== undefined && !active.has(sessionId));
@@ -272,10 +274,16 @@ export function createSyncHub(options: SyncHubOptions) {
       return subscription;
     },
 
-    /** Ends the streams of these sessions at once, as a revocation that can't wait for the next check does. */
-    endSessions(sessionIds: Iterable<string>): void {
-      const ending = new Set(sessionIds);
-      endWhere(({ sessionId }) => sessionId !== undefined && ending.has(sessionId));
+    /**
+     * Ends the account's streams at once, but those `keepSessionId` opened: after a change that ended the account's
+     * other sessions and can't wait for the next check, such as an email change, a recovery or a deletion.
+     */
+    endSessionsOf(accountId: string, keepSessionId?: string): void {
+      endWhere(
+        (subscription) =>
+          subscription.accountId === accountId &&
+          (keepSessionId === undefined || subscription.sessionId !== keepSessionId),
+      );
     },
 
     /** Aborts on `close()`: every stream ends, so a graceful stop can complete (TS-23). */

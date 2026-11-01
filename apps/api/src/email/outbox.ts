@@ -19,25 +19,21 @@ import {
   EmailDeliveryError,
   emailDataSchemas,
   emailLifetimeMs,
+  emailOutcomeSchema,
   emailTemplateSchema,
   type EmailOutcome,
   type EmailPort,
 } from "@tonaris/domain";
 
-import type { JobHandler } from "../jobs";
+import type { JobHandler } from "../jobs/worker";
 
 export const emailJobKind = "email";
-
-const outcomeSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("share_grant"), id: z.string() }),
-  z.object({ kind: z.literal("admission_invitation"), id: z.string() }),
-]);
 
 const emailJobSchema = z.object({
   template: emailTemplateSchema,
   to: z.string(),
   data: z.unknown(),
-  outcome: outcomeSchema.optional(),
+  outcome: emailOutcomeSchema.optional(),
   /** When the email stops being worth sending: its code's expiry. */
   expiresAt: z.iso.datetime().optional(),
 });

@@ -17,6 +17,7 @@ import {
   type McpPrincipal,
 } from "@tonaris/domain";
 
+import { keyReusedMessage } from "./results";
 import type { McpWriter, PlanIds, PlannedItem, WriteResult } from "./writes";
 
 /** What a gated tool answers. Every field is data for the agent to act on or relay (TS-65). */
@@ -61,6 +62,37 @@ export type GatedRequest = {
   missing: string;
 };
 
+/**
+ * The scope a request reads now, in one read-only snapshot, so the owner is asked about one consistent state: on a
+ * first call and after an approval expired alike.
+ */
+export function readScope(
+  db: Database,
+  scope: GatedRequest["scope"],
+): Promise<ApprovalScope | undefined> {
+  return db.transaction((tx) => scope(tx), {
+    isolationLevel: "repeatable read",
+    accessMode: "read only",
+  });
+}
+
+/** The answer that asks for the owner's decision on `approval`, with its page on the web app (DS-87). */
+function needsApproval(
+  approval: { id: string; scope: ApprovalScope; expiresAt: Date },
+  webOrigin: string,
+  note?: string,
+): GatedAnswer {
+  return {
+    status: "needs_approval",
+    approvalId: approval.id,
+    url: `${webOrigin}/approvals/${approval.id}`,
+    summary: approvalSummary(approval.scope),
+    consequences: approvalConsequences(approval.scope),
+    expiresAt: approval.expiresAt.toISOString(),
+    ...(note ? { note } : {}),
+  };
+}
+
 async function ask(
   { db, principal, webOrigin, now = () => new Date() }: GatedContext,
   { operation, args }: Pick<GatedRequest, "operation" | "args">,
@@ -80,15 +112,7 @@ async function ask(
     scopeHash: await scopeHash(scope),
     expiresAt,
   });
-  return {
-    status: "needs_approval",
-    approvalId: id,
-    url: `${webOrigin}/approvals/${id}`,
-    summary: approvalSummary(scope),
-    consequences: approvalConsequences(scope),
-    expiresAt: expiresAt.toISOString(),
-    ...(note ? { note } : {}),
-  };
+  return needsApproval({ id, scope, expiresAt }, webOrigin, note);
 }
 
 /** Asks for the owner's approval of `request`, or runs it under the approval it names (TS-64). */
@@ -96,10 +120,7 @@ export async function gated(context: GatedContext, request: GatedRequest): Promi
   const { db, principal, writer, now = () => new Date() } = context;
   const { approvalId } = request.args;
   if (!approvalId) {
-    const scope = await db.transaction((tx) => request.scope(tx), {
-      isolationLevel: "repeatable read",
-      accessMode: "read only",
-    });
+    const scope = await readScope(db, request.scope);
     if (!scope) return { status: "failed", code: "not_found", message: request.missing };
     return ask(context, request, scope);
   }
@@ -119,18 +140,10 @@ export async function gated(context: GatedContext, request: GatedRequest): Promi
   const state = approvalState(approval, now());
   if (state === "declined") return { status: "declined" };
   if (state === "pending") {
-    return {
-      status: "needs_approval",
-      approvalId: approval.id,
-      url: `${context.webOrigin}/approvals/${approval.id}`,
-      summary: approvalSummary(approval.scope),
-      consequences: approvalConsequences(approval.scope),
-      expiresAt: approval.expiresAt.toISOString(),
-      note: "The owner hasn't decided yet.",
-    };
+    return needsApproval(approval, context.webOrigin, "The owner hasn't decided yet.");
   }
   if (state === "expired") {
-    const scope = await db.transaction((tx) => request.scope(tx));
+    const scope = await readScope(db, request.scope);
     if (!scope) return { status: "failed", code: "not_found", message: request.missing };
     return ask(context, request, scope, "The earlier approval expired.");
   }
@@ -147,12 +160,7 @@ export async function gated(context: GatedContext, request: GatedRequest): Promi
   });
   if (written.status === "ran") return written;
   if (written.status === "key_reused") {
-    return {
-      status: "failed",
-      code: "validation_failed",
-      message:
-        "This idempotencyKey was already used for a different change, so nothing was done. Use a new key.",
-    };
+    return { status: "failed", code: "validation_failed", message: keyReusedMessage };
   }
   if (written.status === "scope_changed") {
     if (!written.scope) return { status: "failed", code: "not_found", message: request.missing };

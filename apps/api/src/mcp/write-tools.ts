@@ -25,9 +25,15 @@ import {
   albumFields,
   containerKinds,
   fieldTypes,
+  maxBatchItems,
+  maxDescriptionLength,
+  maxFieldOptions,
+  maxLinkLength,
+  maxNameLength,
   maxOrderItems,
-  planMove,
+  planMoves,
   releaseTypes,
+  shareTokenSchema,
   sortDirections,
   sortModes,
   streamingServices,
@@ -35,13 +41,19 @@ import {
   type AlbumFields,
   type Audience,
   type McpPrincipal,
-  type MutationResult,
-  type Outcome,
-  type Place,
   viewPrefsFields,
 } from "@tonaris/domain";
 
-import { failed, result } from "./results";
+import {
+  answerWritten,
+  failed,
+  idempotencyKeyInput,
+  idsInput as ids,
+  keyReused,
+  maxIdempotencyKeyLength,
+  tooMany,
+  uuidInput as uuid,
+} from "./results";
 import type { McpWriter, PlanIds, PlannedItem } from "./writes";
 
 const writes = {
@@ -51,18 +63,22 @@ const writes = {
   openWorldHint: false,
 } as const;
 
-const idempotencyKey = z
-  .string()
-  .min(1)
-  .max(100)
+const idempotencyKey = idempotencyKeyInput
   .optional()
   .describe(
-    "Any unique text, up to 100 characters, made once for this change. Send the same key with the same arguments to retry safely: nothing already done is done twice. Without one, the result names the key it used.",
+    `Any unique text, up to ${maxIdempotencyKeyLength} characters, made once for this change. Send the same key with the same arguments to retry safely: nothing already done is done twice. Without one, the result names the key it used.`,
   );
 
-const uuid = z.uuid();
-const ids = (max: number) => z.array(uuid).min(1).max(max);
 const year = z.number().int();
+
+/**
+ * Changes in one call of a tool that plans two envelopes for each, such as a join and then a leave: as many as fit in
+ * one batch (TS-25).
+ */
+const maxPairedChanges = maxBatchItems / 2;
+
+/** As limits are written in tool descriptions: 2,000. */
+const count = (limit: number) => limit.toLocaleString("en");
 
 const viewInput = z
   .union([z.enum(["root", "unsorted"]), uuid])
@@ -77,32 +93,6 @@ const albumValues = z.object({
   recordingYearStart: year.nullable().optional().describe("For a live album."),
   recordingYearEnd: year.nullable().optional(),
 });
-
-/** What an agent reads of one item's outcome (TS-27): a skipped item names the item, by index, it waited for. */
-export function agentOutcome(outcome: Outcome, items: readonly MutationResult[]) {
-  if (outcome.status === "confirmed") {
-    return outcome.result == null
-      ? { status: outcome.status }
-      : { status: outcome.status, result: outcome.result };
-  }
-  if (outcome.status === "failed") {
-    const { problem } = outcome;
-    return {
-      status: outcome.status,
-      code: outcome.code,
-      message: problem.detail ?? problem.title,
-      ...(problem.errors ? { errors: problem.errors } : {}),
-    };
-  }
-  if (outcome.status === "skipped") {
-    return {
-      status: outcome.status,
-      because: outcome.because,
-      after: items.findIndex((item) => item.mutationId === outcome.dependsOn),
-    };
-  }
-  return outcome;
-}
 
 const outcomeOutput = z
   .looseObject({
@@ -120,12 +110,6 @@ const output = (target: z.ZodRawShape) =>
     items: z.array(z.object({ ...target, outcome: outcomeOutput })),
   });
 
-export function countsOf(outcomes: readonly { status: string }[]): string {
-  const counts = new Map<string, number>();
-  for (const { status } of outcomes) counts.set(status, (counts.get(status) ?? 0) + 1);
-  return [...counts].map(([status, n]) => `${n} ${status.replace("_", " ")}`).join(", ");
-}
-
 /** A planned change: its envelopes, and what each is about for the agent; steps without a target aren't reported. */
 type Plan = { items: PlannedItem[]; targets: (Record<string, unknown> | undefined)[] };
 
@@ -139,11 +123,14 @@ const each = (items: PlannedItem[], targets: Record<string, unknown>[]): Plan =>
 const pairsOf = (albumIds: readonly string[], listIds: readonly string[]) =>
   listIds.flatMap((listId) => albumIds.map((albumId) => ({ listId, albumId })));
 
-/** The share link's token in `url`, or `url` itself if it is a bare token (TS-32). */
-function shareTokenOf(url: string): string | undefined {
+/**
+ * The share link's token in `url` (TS-32): `url` itself, or what precedes its first `/`, `?` or `#`, if that is a
+ * bare token; otherwise the first path segment after an `/s/` that is one.
+ */
+export function shareTokenOf(url: string): string | undefined {
   const trimmed = url.trim();
-  const token = /(?:^|\/s\/)([A-Za-z0-9_-]{43})(?:[/?#]|$)/.exec(trimmed)?.[1];
-  return token;
+  const candidates = [trimmed.split(/[/?#]/, 1)[0], ...(trimmed.match(/(?<=\/s\/)[^/?#]*/g) ?? [])];
+  return candidates.find((candidate) => shareTokenSchema.safeParse(candidate).success);
 }
 
 /** Someone who sees content, as an agent reads it: a person by name, or anyone with a link, and through what. */
@@ -193,21 +180,8 @@ export function registerWriteTools(
         return planned.items;
       },
     });
-    if (written.status === "key_reused") {
-      return failed(
-        "validation_failed",
-        "This idempotencyKey was already used for a different change, so nothing was done. Use a new key for a new change.",
-      );
-    }
-    const items = written.items.flatMap((item, index) => {
-      const target = targets[index];
-      return target ? [{ ...target, outcome: agentOutcome(item.outcome, written.items) }] : [];
-    });
-    const done = items.every((item) => item.outcome.status === "confirmed");
-    return result(
-      `${done ? "Done" : "Not all done"}: ${countsOf(items.map((item) => item.outcome))}.`,
-      { idempotencyKey: written.idempotencyKey, items },
-    );
+    if (written.status === "key_reused") return keyReused();
+    return answerWritten(written, targets);
   }
 
   // Organizing (FR-01, FR-10.4).
@@ -220,12 +194,15 @@ export function registerWriteTools(
         "Creates a folder or a list at the top level or in a folder, optionally with a description. A name must be unique among its neighbours, ignoring case.",
       inputSchema: z.object({
         kind: z.enum(containerKinds),
-        name: z.string().describe("At most 200 characters."),
+        name: z.string().describe(`At most ${maxNameLength} characters.`),
         parentId: uuid
           .nullable()
           .optional()
           .describe("The folder to put it in; the top level if left out."),
-        description: z.string().optional().describe("Plain text, at most 2,000 characters."),
+        description: z
+          .string()
+          .optional()
+          .describe(`Plain text, at most ${count(maxDescriptionLength)} characters.`),
         idempotencyKey,
       }),
       outputSchema: output({ containerId: uuid, name: z.string() }),
@@ -286,8 +263,7 @@ export function registerWriteTools(
     "set_description",
     {
       title: "Describe a folder or list",
-      description:
-        "Sets a folder's or list's plain-text description, at most 2,000 characters, or clears it with null. Pass base, the description you read, to be told if it changed since.",
+      description: `Sets a folder's or list's plain-text description, at most ${count(maxDescriptionLength)} characters, or clears it with null. Pass base, the description you read, to be told if it changed since.`,
       inputSchema: containerChange.extend({
         description: z.string().nullable(),
         base: z.object({ description: z.string().nullable() }).optional(),
@@ -320,7 +296,7 @@ export function registerWriteTools(
       description:
         "Moves folders and lists into a folder, or to the top level with parentId null, with everything inside them. Each moves on its own: one that can't, such as a folder into itself or a name already there, fails alone. Each reports its sharing effects: who newly sees it, who no longer does through the folders it leaves, and the shares it keeps.",
       inputSchema: z.object({
-        containerIds: ids(200),
+        containerIds: ids(maxBatchItems),
         parentId: uuid.nullable().describe("The folder to move them into; null for the top level."),
         idempotencyKey,
       }),
@@ -361,15 +337,14 @@ export function registerWriteTools(
     "add_to_lists",
     {
       title: "Add albums to lists",
-      description:
-        "Puts each album in each list, at most 200 pairs at a time. An album already in a list keeps its place there (result alreadyInList). Each pair is its own change, so one that fails doesn't stop the others.",
-      inputSchema: z.object({ albumIds: ids(200), listIds: ids(20), idempotencyKey }),
+      description: `Puts each album in each list, at most ${maxBatchItems} pairs at a time. An album already in a list keeps its place there (result alreadyInList). Each pair is its own change, so one that fails doesn't stop the others.`,
+      inputSchema: z.object({ albumIds: ids(maxBatchItems), listIds: ids(20), idempotencyKey }),
       outputSchema: output({ albumId: uuid, listId: uuid }),
       annotations: { ...writes, idempotentHint: true },
     },
     async (args) => {
       const pairs = pairsOf(args.albumIds, args.listIds);
-      if (pairs.length > 200) return tooMany(200);
+      if (pairs.length > maxBatchItems) return tooMany(maxBatchItems);
       return run("add_to_lists", args, () =>
         each(
           pairs.map((pair) => ({ name: "membership.add", args: pair })),
@@ -383,15 +358,14 @@ export function registerWriteTools(
     "remove_from_lists",
     {
       title: "Take albums out of lists",
-      description:
-        "Takes each album out of each list, at most 200 pairs at a time. The albums stay in the collection, in Unsorted when they are in no list any more. Nothing is deleted.",
-      inputSchema: z.object({ albumIds: ids(200), listIds: ids(20), idempotencyKey }),
+      description: `Takes each album out of each list, at most ${maxBatchItems} pairs at a time. The albums stay in the collection, in Unsorted when they are in no list any more. Nothing is deleted.`,
+      inputSchema: z.object({ albumIds: ids(maxBatchItems), listIds: ids(20), idempotencyKey }),
       outputSchema: output({ albumId: uuid, listId: uuid }),
       annotations: { ...writes, idempotentHint: true },
     },
     async (args) => {
       const pairs = pairsOf(args.albumIds, args.listIds);
-      if (pairs.length > 200) return tooMany(200);
+      if (pairs.length > maxBatchItems) return tooMany(maxBatchItems);
       return run("remove_from_lists", args, () =>
         each(
           pairs.map((pair) => ({ name: "membership.remove", args: pair })),
@@ -408,7 +382,8 @@ export function registerWriteTools(
       description:
         "Moves albums from one list to another: each joins the target list, then leaves the source list once it has. An album that can't join stays where it was.",
       inputSchema: z.object({
-        albumIds: ids(100),
+        // Each album joins, then leaves: two envelopes.
+        albumIds: ids(maxPairedChanges),
         fromListId: uuid,
         toListId: uuid,
         idempotencyKey,
@@ -444,7 +419,7 @@ export function registerWriteTools(
         "Places items in the user's manual order of a view, in the order given: at the top, at the bottom, or before or after another item. The items are folders and lists at the top level or in a folder, or albums in a list or in Unsorted. The order is the user's own and doesn't change what others see.",
       inputSchema: z.object({
         view: viewInput,
-        itemIds: ids(200).describe("The items to place, in the order they should come."),
+        itemIds: ids(maxBatchItems).describe("The items to place, in the order they should come."),
         place: z
           .union([z.enum(["top", "bottom"]), z.object({ before: uuid }), z.object({ after: uuid })])
           .describe("Where the items go: top, bottom, {before: itemId} or {after: itemId}."),
@@ -461,20 +436,7 @@ export function registerWriteTools(
       });
       if (!sequence) return failed("not_found", "There is no such folder or list.");
       // Each item after the one before it, the first at the place: one move, written together (TS-16).
-      const keys = new Map(sequence.keys);
-      let order = sequence.ids;
-      const written = new Map<string, string>();
-      let place: Place = args.place;
-      for (const itemId of args.itemIds) {
-        for (const [id, key] of planMove(order, keys, itemId, place)) {
-          keys.set(id, key);
-          written.set(id, key);
-        }
-        order = order.filter((id) => id !== itemId);
-        const at = order.findIndex((id) => (keys.get(id) ?? "￿") > (keys.get(itemId) ?? ""));
-        order.splice(at === -1 ? order.length : at, 0, itemId);
-        place = { after: itemId };
-      }
+      const written = planMoves(sequence.ids, sequence.keys, args.itemIds, args.place);
       const base = Object.fromEntries(
         [...written.keys()].map((id) => [id, sequence.keys.get(id) ?? null]),
       );
@@ -724,8 +686,7 @@ export function registerWriteTools(
     "set_album_fields",
     {
       title: "Set albums' custom fields",
-      description:
-        "Changes custom fields on albums, at most 100 changes: apply a field (empty), set its value (applying it first if needed), clear its value (it stays applied), or remove it with its value. A value is text, a number or a date as text (YYYY-MM-DD), true or false, or a choice field's option ID (an array of IDs for multiple choice); list_fields gives the IDs.",
+      description: `Changes custom fields on albums, at most ${maxPairedChanges} changes: apply a field (empty), set its value (applying it first if needed), clear its value (it stays applied), or remove it with its value. A value is text, a number or a date as text (YYYY-MM-DD), true or false, or a choice field's option ID (an array of IDs for multiple choice); list_fields gives the IDs.`,
       inputSchema: z.object({
         changes: z
           .array(
@@ -740,7 +701,8 @@ export function registerWriteTools(
             }),
           )
           .min(1)
-          .max(100),
+          // A set applies the field first: two envelopes.
+          .max(maxPairedChanges),
         idempotencyKey,
       }),
       outputSchema: output({ change: z.number(), albumId: uuid, fieldId: uuid }),
@@ -804,7 +766,7 @@ export function registerWriteTools(
         type: z.enum(fieldTypes),
         options: z
           .array(z.string())
-          .max(100)
+          .max(maxFieldOptions)
           .optional()
           .describe("A choice field's options, in order."),
         idempotencyKey,
@@ -889,7 +851,7 @@ export function registerWriteTools(
       description: "Adds options at the end of a single- or multiple-choice field, in order.",
       inputSchema: z.object({
         fieldId: uuid,
-        labels: z.array(z.string()).min(1).max(100),
+        labels: z.array(z.string()).min(1).max(maxFieldOptions),
         idempotencyKey,
       }),
       outputSchema: output({ optionId: uuid, label: z.string() }),
@@ -1012,7 +974,7 @@ export function registerWriteTools(
       title: "Keep a shared link in Shared with me",
       description:
         "Saves the folder or list a Tonaris share link opens to the user's Shared with me, from the link the user gives (https://…/s/…). It reads nothing more than the link allows.",
-      inputSchema: z.object({ url: z.string().max(2_048), idempotencyKey }),
+      inputSchema: z.object({ url: z.string().max(maxLinkLength), idempotencyKey }),
       outputSchema: output({ url: z.string() }),
       annotations: { ...writes, idempotentHint: true },
     },
@@ -1055,9 +1017,6 @@ export function registerWriteTools(
     return field?.ownerId === userId ? field : undefined;
   }
 }
-
-const tooMany = (max: number) =>
-  failed("validation_failed", `That is more than ${max} changes in one call. Split it.`);
 
 /** An album's values a hand-entered album leaves out: unknown (FR-03.1). */
 const emptyAlbum = {

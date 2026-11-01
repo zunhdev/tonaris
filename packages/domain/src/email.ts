@@ -36,10 +36,12 @@ export type EmailTemplate = keyof EmailTemplates;
 
 export type RenderedEmail = { subject: string; text: string };
 
-/** The record whose `email_status` says how its email went (FR-07.5, FR-11.6). */
-export type EmailOutcome =
-  | { kind: "share_grant"; id: string }
-  | { kind: "admission_invitation"; id: string };
+/** The record whose `email_status` says how its email went (FR-07.5, FR-11.6), as an email's job carries it. */
+export const emailOutcomeSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("share_grant"), id: z.string() }),
+  z.object({ kind: z.literal("admission_invitation"), id: z.string() }),
+]);
+export type EmailOutcome = z.infer<typeof emailOutcomeSchema>;
 
 export type EmailOptions = {
   /** Where the outcome is recorded: sent, failed, or unknown when it couldn't be confirmed. */

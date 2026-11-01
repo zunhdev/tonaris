@@ -1,6 +1,6 @@
 // Periodic jobs in the API process (TS-90, TS-91). Each runs on its interval, in one transaction holding an
 // advisory lock named after it, so a second instance skips a run rather than overlapping it. Queued jobs with
-// retries, such as email, run in the job worker (src/jobs.ts).
+// retries, such as email, run in the job worker (worker.ts).
 
 import {
   expireAdmissionInvitations,
@@ -15,6 +15,8 @@ import {
 } from "@tonaris/db";
 import type { Change } from "@tonaris/domain";
 import type { Spotify } from "@tonaris/providers";
+
+import { log, type LogError } from "../observability";
 
 export type Schedule = {
   /** Names the advisory lock too, so it must be unique. */
@@ -90,7 +92,7 @@ export const spotifyHealthAlbum = "4m2880jivSbbyEGAKfITCa";
  */
 export function spotifyHealthSchedule(
   spotify: Pick<Spotify, "album">,
-  log: (message: string) => void = console.error,
+  report: (message: string) => void = console.error,
 ): Schedule {
   return {
     name: "spotify-health",
@@ -100,20 +102,23 @@ export function spotifyHealthSchedule(
       try {
         upc = (await spotify.album(spotifyHealthAlbum))?.upc;
       } catch (error) {
-        log(
+        report(
           `Spotify health check failed: ${error instanceof Error ? error.message : "unknown error"}.`,
         );
         return;
       }
       if (!upc)
-        log(
+        report(
           "Spotify health check failed: Get Album returned no UPC, so the bridge can't search barcodes.",
         );
     },
   };
 }
 
-/** Every schedule the API runs; the Spotify health check only while the bridge is on. */
+/**
+ * Every schedule the API runs; the Spotify health check only while the bridge is on, logging its failures as the
+ * API's other errors are (TS-115).
+ */
 export function apiSchedules(
   spotify: Pick<Spotify, "album"> | undefined,
   trash: { db: Database; publish: (accountId: string, changes: readonly Change[]) => void },
@@ -125,7 +130,7 @@ export function apiSchedules(
     expireAdmissionInvitationsSchedule,
     pruneAccountDeletionsSchedule,
     trashExpirySchedule(trash.db, trash.publish),
-    ...(spotify ? [spotifyHealthSchedule(spotify)] : []),
+    ...(spotify ? [spotifyHealthSchedule(spotify, (message) => log("error", message))] : []),
   ];
 }
 
@@ -141,7 +146,8 @@ export function runSchedule(
 export type ScheduleOptions = {
   /** How long after the start each schedule first runs, so the start isn't slowed. */
   firstAfterMs?: number;
-  logError?: (error: unknown, schedule: string) => void;
+  /** Gets a failed run, with the schedule's name. */
+  logError?: LogError;
 };
 
 /** Runs each schedule after `firstAfterMs`, then every `everyMs`. `stop()` waits for the runs in progress. */

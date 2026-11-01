@@ -5,19 +5,13 @@
 // - a capture, which asks metadata sources before the write lock, answers `409 in_progress` while it runs;
 // - GET /v1/sync/bootstrap is the account's data at a `seq`;
 // - GET /v1/sync/stream streams the changes after a cursor, as server-sent events.
-// Each accepts the session cookie today; bearer tokens for native apps and MCP arrive with TS-30 and TS-61.
+// Each takes the session cookie. A bearer token is refused: MCP's are for /mcp only (TS-62), and native apps' don't
+// exist yet (TS-30).
 
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import {
-  bootstrapSnapshot,
-  executeBatch,
-  findMutationResult,
-  mutationRunning,
-  type Database,
-  type ExecutedMutation,
-} from "@tonaris/db";
+import { bootstrapSnapshot, executeBatch, type Database } from "@tonaris/db";
 import {
   batchResultSchema,
   batchSchema,
@@ -27,17 +21,13 @@ import {
   problemSchema,
 } from "@tonaris/domain";
 
-import { presentBootstrap, presentChange, type ArtworkSigner } from "../artwork";
 import type { SessionGuard } from "../auth/plugin";
-import {
-  MutationInProgressError,
-  mutationRunner,
-  type CaptureDeps,
-  type SharingDeps,
-} from "../capture";
+import { presentBootstrap, presentChange, type ArtworkSigner } from "../img/artwork";
+import { streamResponses } from "../openapi";
 import { ProblemError } from "../problem";
 import { eventStream, type StreamSource } from "../sse";
 import type { SyncEvent, SyncHub } from "./hub";
+import { MutationInProgressError, mutationStatus, type Mutations } from "./runner";
 
 const cursor = z
   .string()
@@ -93,26 +83,16 @@ export function syncRoutes(
   {
     db,
     hub,
-    capture,
     artwork,
-    sharing,
+    mutations: { run, announce },
   }: {
     db: Database;
     hub: SyncHub;
-    capture?: CaptureDeps | undefined;
     artwork: ArtworkSigner;
-    sharing: SharingDeps;
+    /** Runs each mutation and announces its changes, as MCP's writes do (X-02). */
+    mutations: Mutations;
   },
 ) {
-  const run = mutationRunner(db, capture, sharing);
-  /**
-   * Hands a write's changes to the account's streams. A confirmed write with none, such as sharing or the display
-   * name, still tells the account's guest pages to read again (TS-23, TON-70).
-   */
-  const announce = (accountId: string, { result, changes, replayed }: ExecutedMutation) => {
-    if (changes.length > 0) hub.publish(accountId, changes);
-    else if (!replayed && result.outcome.status === "confirmed") hub.notify(accountId);
-  };
   return new Elysia()
     .use(session)
     .post(
@@ -202,10 +182,11 @@ export function syncRoutes(
         },
       },
       async ({ params, account }) => {
-        const result = await findMutationResult(db, account.id, params.id);
-        if (result) return result;
-        if (await mutationRunning(db, account.id, params.id)) throw inProgress();
-        throw new ProblemError(404, "not_found", "No mutation with this ID was received.");
+        const status = await mutationStatus(db, account.id, params.id);
+        if (status === "running") throw inProgress();
+        if (!status)
+          throw new ProblemError(404, "not_found", "No mutation with this ID was received.");
+        return status;
       },
     )
     .get(
@@ -235,22 +216,18 @@ export function syncRoutes(
             "Server-sent events (TS-23): `change` events with `id` set to their `seq`, after `Last-Event-ID` (or `after` on a first connection), then live. `reset` means the cursor can't be continued: bootstrap again. Comment lines keep the connection alive.",
           tags: ["sync"],
           operationId: "streamChanges",
-          responses: {
-            200: {
+          responses: streamResponses(
+            {
               description: "`change` and `reset` events",
-              // Component references: Zod's JSON Schema type doesn't fit openapi-types' schema objects.
-              content: {
-                "text/event-stream": {
-                  schema: {
-                    oneOf: [
-                      { $ref: "#/components/schemas/Change" },
-                      { $ref: "#/components/schemas/StreamReset" },
-                    ],
-                  },
-                },
+              schema: {
+                oneOf: [
+                  { $ref: "#/components/schemas/Change" },
+                  { $ref: "#/components/schemas/StreamReset" },
+                ],
               },
             },
-          },
+            [401, 422],
+          ),
         },
       },
       async function* ({ request, server, headers, query, account, sessionId }) {

@@ -5,6 +5,8 @@
 
 import { buryJob, claimJob, finishJob, retryJob, type Database, type JobRow } from "@tonaris/db";
 
+import type { LogError } from "../observability";
+
 export type JobHandler = {
   kind: string;
   /** Does the job; a rejection is a failure. */
@@ -24,7 +26,7 @@ export type JobWorkerOptions = {
   leaseMs?: number;
   /** The waits before each retry; a job runs at most one more time than there are waits. */
   retryDelaysMs?: readonly number[];
-  logError?: (error: unknown, context: string) => void;
+  logError?: LogError;
 };
 
 export type JobWorker = {

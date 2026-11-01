@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { accountSchema, emailInputSchema, emailKey } from "./accounts";
+import { accountSchema, emailInputSchema, emailKey, parseEmailAddress } from "./accounts";
 
 describe("emailKey (TS-70)", () => {
   test("trims and lowercases", () => {
@@ -28,6 +28,19 @@ describe("emailInputSchema", () => {
     expect(emailInputSchema.parse("  anna@example.com ")).toBe("anna@example.com");
     expect(emailInputSchema.safeParse("   ").success).toBe(false);
     expect(emailInputSchema.safeParse(`${"a".repeat(309)}@example.com`).success).toBe(false);
+  });
+});
+
+describe("parseEmailAddress (TS-70)", () => {
+  test("answers an address's email key", () => {
+    expect(parseEmailAddress("  Anna@Bücher.example ")).toBe("anna@xn--bcher-kva.example");
+    expect(parseEmailAddress("anna+albums@example.com")).toBe("anna+albums@example.com");
+  });
+
+  test("answers nothing for what isn't an address", () => {
+    expect(parseEmailAddress("Not An Email")).toBeUndefined();
+    expect(parseEmailAddress("x@évil.example/y")).toBeUndefined();
+    expect(parseEmailAddress("")).toBeUndefined();
   });
 });
 

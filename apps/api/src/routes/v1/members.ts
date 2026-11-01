@@ -8,17 +8,18 @@ import { z } from "zod";
 import {
   cancelEmailRecovery,
   type Database,
+  findMember,
   issueEmailRecovery,
   listMembers,
   type MemberRow,
 } from "@tonaris/db";
 import {
-  emailKey,
   type EmailPort,
   emailRecoveryRefusalDetails as refusals,
   emailRecoveryStartSchema,
   type Member,
   memberSchema,
+  parseEmailAddress,
   problemSchema,
 } from "@tonaris/domain";
 
@@ -26,7 +27,7 @@ import type { SessionGuard } from "../../auth/plugin";
 import { recoveryLink } from "../../auth/recovery";
 import { newCode, newToken, sha256 } from "../../auth/secrets";
 import { ProblemError } from "../../problem";
-import { requireCreator } from "./admissions";
+import { noContent, refused, requireCreator } from "./common";
 
 export type MemberAdminDeps = {
   db: Database;
@@ -50,7 +51,6 @@ function listed(row: MemberRow): Member {
   };
 }
 
-const refused = (detail: string) => new ProblemError(422, "validation_failed", detail);
 const memberParams = z.object({ id: z.uuid() });
 
 export function memberAdminRoutes(
@@ -104,8 +104,8 @@ export function memberAdminRoutes(
       },
       async ({ principal, account, params, body }) => {
         requireCreator(principal);
-        const newEmail = emailKey(body.newEmail);
-        if (!z.email().safeParse(newEmail).success) throw refused(refusals.notEmail);
+        const newEmail = parseEmailAddress(body.newEmail);
+        if (!newEmail) throw refused(refusals.notEmail);
         const reason = body.reason.trim();
         if (reason === "") throw refused(refusals.noReason);
 
@@ -126,7 +126,7 @@ export function memberAdminRoutes(
           code,
           link: recoveryLink(webOrigin, token, code),
         });
-        const member = (await listMembers(db)).find((row) => row.id === params.id);
+        const member = await findMember(db, params.id);
         if (!member) throw new ProblemError(404, "not_found", refusals.none);
         return listed(member);
       },
@@ -137,8 +137,7 @@ export function memberAdminRoutes(
         signedIn: true,
         params: memberParams,
         response: {
-          // Elysia sends a 204 without a body, so validation sees undefined; the document shows no content.
-          204: z.null().optional().meta({ description: "No recovery is waiting any more." }),
+          204: noContent("No recovery is waiting any more."),
           401: problemSchema,
           403: problemSchema,
           422: problemSchema,

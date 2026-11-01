@@ -5,7 +5,7 @@
 
 import { timingSafeEqual } from "node:crypto";
 
-import { and, asc, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, ne, sql, type SQL } from "drizzle-orm";
 
 import { emailRecoveryHours, signInCode } from "@tonaris/domain";
 
@@ -33,6 +33,16 @@ export type MemberRow = {
 
 /** Every account, oldest first: its email, display name and join date, and nothing of its collection. */
 export async function listMembers(db: Database): Promise<MemberRow[]> {
+  return memberRows(db);
+}
+
+/** The account `id` as `listMembers` lists it, or undefined if there is none. */
+export async function findMember(db: Database, id: string): Promise<MemberRow | undefined> {
+  const [member] = await memberRows(db, eq(users.id, id));
+  return member;
+}
+
+async function memberRows(db: Database, where?: SQL): Promise<MemberRow[]> {
   const rows = await db
     .select({
       id: users.id,
@@ -45,7 +55,7 @@ export async function listMembers(db: Database): Promise<MemberRow[]> {
     .from(users)
     .leftJoin(emailRecoveries, eq(emailRecoveries.userId, users.id))
     // An account being deleted holds a placeholder address until it goes (TS-74).
-    .where(isNull(users.deletingAt))
+    .where(and(isNull(users.deletingAt), where))
     .orderBy(asc(users.createdAt), asc(users.id));
   return rows.map(({ id, email, displayName, joinedAt, newEmailKey, requestedAt }) => ({
     id,

@@ -9,6 +9,7 @@ import { searchCollection, type Database } from "@tonaris/db";
 import {
   defaultSearchLimit,
   maxSearchLimit,
+  maxSearchQueryLength,
   problemSchema,
   searchResultsSchema,
 } from "@tonaris/domain";
@@ -20,7 +21,7 @@ const searchQuery = z.object({
     .string()
     .trim()
     .min(1)
-    .max(200)
+    .max(maxSearchQueryLength)
     .meta({ description: "The text to find, matched as a substring ignoring case and accents." }),
   limit: z.coerce
     .number()

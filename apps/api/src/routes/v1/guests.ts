@@ -4,39 +4,23 @@
 // content. Tokens appear only on `/v1/s/` paths, and the error log hides them (problem.ts).
 
 import { Elysia } from "elysia";
-import type { SSEPayload } from "elysia";
 import { z } from "zod";
 
 import { findShareLink, sharedSnapshot, type Database } from "@tonaris/db";
 import {
   problemSchema,
   sharedSnapshotSchema,
+  shareTokenSchema,
   unavailableLink,
-  type SharedInvalidate,
-  type SharedSnapshot,
 } from "@tonaris/domain";
 
-import type { ArtworkSigner } from "../../artwork";
+import { presentSnapshot, type ArtworkSigner } from "../../img/artwork";
+import { invalidationEvents, streamResponses } from "../../openapi";
 import { ProblemError } from "../../problem";
-import { eventChannel, eventStream } from "../../sse";
+import { invalidationStream } from "../../sse";
 import type { SyncHub } from "../../sync/hub";
 
-const token = z
-  .string()
-  .regex(/^[A-Za-z0-9_-]{43}$/)
-  .meta({ description: "The link's token (TS-32)." });
-
-export type InvalidateEvent = SSEPayload<SharedInvalidate, "shared-invalidate"> & {
-  data: SharedInvalidate;
-};
-
-/** The snapshot with its artwork signed, to show through the API's image proxy (TS-103). */
-export function signed(snapshot: SharedSnapshot, artwork: ArtworkSigner): SharedSnapshot {
-  for (const album of snapshot.albums) {
-    if (album.artworkUrl) album.artworkSignature = artwork.sign(album.artworkUrl);
-  }
-  return snapshot;
-}
+const token = shareTokenSchema.meta({ description: "The link's token (TS-32)." });
 
 const unavailable = () => new ProblemError(404, "not_found", unavailableLink);
 
@@ -74,7 +58,8 @@ export function guestRoutes({
       },
       async ({ params }) => {
         const { snapshot } = await working(params.token);
-        return signed(snapshot, artwork);
+        // Its artwork shows through the API's image proxy (TS-103).
+        return presentSnapshot(artwork, snapshot);
       },
     )
     .get(
@@ -87,27 +72,17 @@ export function guestRoutes({
             "Server-sent `shared-invalidate` events (TS-23) whenever the owner saves a change, so the guest page reads the link again; a read that fails means the link stopped working. Comment lines keep the connection alive.",
           tags: ["sharing"],
           operationId: "streamSharedLink",
-          responses: {
-            200: {
-              description: "`shared-invalidate` events",
-              content: {
-                "text/event-stream": {
-                  schema: { $ref: "#/components/schemas/SharedInvalidate" },
-                },
-              },
-            },
-            404: { description: "The link isn't available." },
-          },
+          responses: streamResponses(invalidationEvents, [404, 422]),
         },
       },
       async function* ({ params, request, server }) {
         const { link } = await working(params.token);
         // The page follows its owner's writes.
-        const channel = eventChannel<InvalidateEvent>(() => stop());
-        const stop = hub.watch(link.ownerId, () =>
-          channel.push({ event: "shared-invalidate", data: { rootId: link.containerId } }),
+        yield* invalidationStream(
+          hub,
+          { ownerId: link.ownerId, rootId: link.containerId },
+          { request, server },
         );
-        yield* eventStream(channel, { request, server, signal: hub.signal });
       },
     );
 }

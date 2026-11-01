@@ -109,12 +109,15 @@ describe("recovering (FR-11.5)", () => {
     // Waiting: Anna still signs in with the old address, and her row says so.
     expect((await t.call("/v1/me", { headers: { cookie: anna.cookie } })).status).toBe(200);
     expect((await members()).members[1]?.recovery).toMatchObject({ newEmail: newAddress });
+    const stream = await t.openStream(anna.cookie);
 
     const confirmed = await confirm(token, code);
     expect(confirmed.status).toBe(200);
     expect(await confirmed.json()).toEqual({ email: newAddress });
 
     expect((await t.call("/v1/me", { headers: { cookie: anna.cookie } })).status).toBe(401);
+    // Her stream ends at once, not at the next session check (TS-23).
+    expect(await stream.endsWithin(1_000)).toBe(true);
     const again = await t.signIn(newAddress);
     expect(again.id).toBe(anna.id);
     const me = accountSchema.parse(

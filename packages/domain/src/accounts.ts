@@ -33,6 +33,12 @@ function asciiDomain(domain: string): string {
   }
 }
 
+/** `input`'s email key, if it is an email address; undefined if it isn't one. */
+export function parseEmailAddress(input: string): string | undefined {
+  const key = emailKey(input);
+  return z.email().safeParse(key).success ? key : undefined;
+}
+
 /** The signed-in account (`GET /v1/me`). */
 export const accountSchema = z
   .object({

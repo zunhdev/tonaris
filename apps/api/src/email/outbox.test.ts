@@ -8,7 +8,7 @@ import { admissionInvitations, jobs } from "@tonaris/db";
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { EmailDeliveryError, type EmailOptions, type EmailPort } from "@tonaris/domain";
 
-import { startJobWorker, type JobWorker } from "../jobs";
+import { startJobWorker, type JobWorker } from "../jobs/worker";
 import { insertUser, inviteForTest } from "../testing";
 import { emailJob, emailOutbox } from "./outbox";
 
