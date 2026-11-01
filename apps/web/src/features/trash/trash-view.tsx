@@ -4,10 +4,10 @@
 // Restore (R), which asks where or as what when it must (DS-56), and Delete permanently…, confirmed; the header has
 // a local name filter and Empty Trash…, confirmed. Every control is a button or a field, so Trash works by keyboard.
 
-import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
 import { DesktopOnly } from "@/features/shell/desktop-only";
+import { useNarrowScreen } from "@/features/shell/media";
 import { PageHeader } from "@/features/shell/page-header";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";

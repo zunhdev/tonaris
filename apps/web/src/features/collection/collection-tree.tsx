@@ -9,9 +9,9 @@
 // live while open; they open the shared view (TON-130).
 
 import { usePendingApprovals } from "@/features/connections/pending-approvals";
-import { useShareStream } from "@/features/guest/use-share-stream";
 import { usePendingInvitations } from "@/features/sharing/pending-invitations";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
+import { useShareStream } from "@/features/sharing/use-share-stream";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection } from "@/features/sync/sync-provider";

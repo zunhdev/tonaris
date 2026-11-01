@@ -17,8 +17,9 @@ import { useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useNarrowScreen } from "../shell/media";
 import { DragHandle, DropLine } from "./album-rows";
-import { useCollectionUi, useNarrowScreen } from "./collection-ui";
+import { useCollectionUi } from "./collection-ui";
 import { useRowDrag } from "./drag";
 import { ContainerIcon } from "./icons";
 import { useGridFocus, type GridRearrange } from "./use-grid";

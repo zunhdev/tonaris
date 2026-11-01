@@ -4,8 +4,8 @@
 
 import { api, refusalOf } from "@/api";
 import { AdminNav } from "@/features/admin/admin-nav";
-import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { DesktopOnly } from "@/features/shell/desktop-only";
+import { useNarrowScreen } from "@/features/shell/media";
 import { PageHeader } from "@/features/shell/page-header";
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useId, useState } from "react";

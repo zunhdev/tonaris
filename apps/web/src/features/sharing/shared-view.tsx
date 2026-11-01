@@ -6,7 +6,6 @@
 // the owner's saves (its stream), and "No longer available" once access ends. The content draws as on guest pages.
 
 import { api } from "@/api";
-import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { sections, sortAlbums, sortContainers, type Direction } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
@@ -21,12 +20,14 @@ import {
   ShareBreadcrumbs,
   type LinkTo,
 } from "@/features/guest/share-content";
-import { useShareStream } from "@/features/guest/use-share-stream";
+import { useNarrowScreen } from "@/features/shell/media";
 import { PageHeader } from "@/features/shell/page-header";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Container, SharedSnapshot } from "@tonaris/domain";
+
+import { useShareStream } from "./use-share-stream";
 
 type Loaded = { snapshot: SharedSnapshot } | { snapshot: undefined; missing: true };
 

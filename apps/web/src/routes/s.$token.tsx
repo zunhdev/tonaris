@@ -5,7 +5,7 @@
 import { createApiClient } from "@/api";
 import { serverApiUrl } from "@/config";
 import { GuestPage, UnavailableShare } from "@/features/guest/guest-page";
-import { useShareStream } from "@/features/guest/use-share-stream";
+import { useShareStream } from "@/features/sharing/use-share-stream";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCallback } from "react";
 

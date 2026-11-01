@@ -22,6 +22,7 @@ import {
 import type { ContainerKind } from "@tonaris/domain";
 
 import { editMode, expandedFolders, type Mode } from "../shell/device";
+import { useNarrowScreen } from "../shell/media";
 import { emptyForm, type AlbumForm } from "./album-form";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
 import { ancestorsOf, buildTree } from "./tree";
@@ -294,20 +295,6 @@ export function useStartEditor(): (editor: Editor | { mode: "new"; kind: Contain
       ui.editing.start(editor);
     },
     [client, ui, viewId, enterEditing],
-  );
-}
-
-const narrowQuery = "(max-width: 767px)";
-
-/** Whether the screen is narrower than the desktop app (DS-110): there the app is for browsing. */
-export function useNarrowScreen(): boolean {
-  return useSyncExternalStore(
-    (listener) => {
-      const query = globalThis.matchMedia?.(narrowQuery);
-      query?.addEventListener("change", listener);
-      return () => query?.removeEventListener("change", listener);
-    },
-    () => globalThis.matchMedia?.(narrowQuery).matches ?? false,
   );
 }
 

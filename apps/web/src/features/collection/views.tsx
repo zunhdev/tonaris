@@ -28,10 +28,11 @@ import {
   TooltipTrigger,
 } from "@tonaris/ui/components/tooltip";
 
+import { useNarrowScreen } from "../shell/media";
 import { AlbumCards } from "./album-cards";
 import { AlbumDetails } from "./album-details";
 import { AlbumRows } from "./album-rows";
-import { useCollectionUi, useMode, useNarrowScreen, useStartEditor } from "./collection-ui";
+import { useCollectionUi, useMode, useStartEditor } from "./collection-ui";
 import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";

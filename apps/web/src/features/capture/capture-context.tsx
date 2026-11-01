@@ -4,8 +4,9 @@
 // while offline (DS-45, DS-81).
 
 import type { SaveState } from "@/client/sync/writer";
-import { useCollectionUi, useMode, useNarrowScreen } from "@/features/collection/collection-ui";
+import { useCollectionUi, useMode } from "@/features/collection/collection-ui";
 import { useInspector } from "@/features/collection/inspector-state";
+import { useNarrowScreen } from "@/features/shell/media";
 import { inLayer, isTextField } from "@/features/shell/shortcuts";
 import { useAnnounce } from "@/features/sync/announcer";
 import { reasonOf } from "@/features/sync/describe";

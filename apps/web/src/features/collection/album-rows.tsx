@@ -32,11 +32,12 @@ import {
 import type { Album, ServiceLink } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useNarrowScreen } from "../shell/media";
 import { isTextField } from "../shell/shortcuts";
 import { albumEdit, cellText, type AlbumCell } from "./album-edit";
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
-import { useCollectionUi, useMode, useNarrowScreen } from "./collection-ui";
+import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";

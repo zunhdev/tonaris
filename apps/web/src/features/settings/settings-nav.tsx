@@ -2,7 +2,7 @@
 // assistive technology too. Profile has the display name (TON-76); Account the sign-in email (TON-77); Data the
 // usage meter (TON-60). A phone leaves out Custom fields, set up on the desktop (DS-110), and the row scrolls sideways.
 
-import { useNarrowScreen } from "@/features/collection/collection-ui";
+import { useNarrowScreen } from "@/features/shell/media";
 import { Link } from "@tanstack/react-router";
 
 const pages = [

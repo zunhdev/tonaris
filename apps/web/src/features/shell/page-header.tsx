@@ -4,7 +4,7 @@
 // view above, the name, the view's own controls, Search and Account.
 
 import { AccountMenu } from "@/features/account/account-menu";
-import { useNarrowScreen } from "@/features/collection/collection-ui";
+import { useNarrowScreen } from "@/features/shell/media";
 import { useRouter } from "@tanstack/react-router";
 import { ChevronLeft, PanelLeftOpen, Search } from "lucide-react";
 import type { ReactNode } from "react";

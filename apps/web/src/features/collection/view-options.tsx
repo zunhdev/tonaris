@@ -24,7 +24,8 @@ import {
 } from "@tonaris/ui/components/popover";
 import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
 
-import { useCollectionUi, useNarrowScreen } from "./collection-ui";
+import { useNarrowScreen } from "../shell/media";
+import { useCollectionUi } from "./collection-ui";
 import type { ViewKind } from "./presentation";
 import { usePresentation, type ViewPresentation } from "./use-presentation";
 

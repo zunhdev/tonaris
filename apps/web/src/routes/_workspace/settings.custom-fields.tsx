@@ -1,9 +1,9 @@
 // Settings → Custom fields (DS-60): the account's fields, each to rename, retype, give options or delete.
 
-import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { CustomFieldsSettings } from "@/features/settings/custom-fields";
 import { SettingsNav } from "@/features/settings/settings-nav";
 import { DesktopOnly } from "@/features/shell/desktop-only";
+import { useNarrowScreen } from "@/features/shell/media";
 import { PageHeader } from "@/features/shell/page-header";
 import { createFileRoute } from "@tanstack/react-router";
 
