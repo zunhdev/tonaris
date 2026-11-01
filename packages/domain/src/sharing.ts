@@ -9,6 +9,7 @@ import { syncedAlbumSchema } from "./albums";
 import { actingOwner, applied, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { containerFieldsSchema, containerKinds, containerSchema } from "./containers";
+import { base64url } from "./encoding";
 import { fieldValueSchema } from "./field-values";
 import { customFieldSchema } from "./fields";
 import { maxNameLength } from "./limits";
@@ -94,13 +95,6 @@ export function readableContainers(
     }
   }
   return readable;
-}
-
-/** Base64url without padding (RFC 4648 §5). */
-function base64url(bytes: Uint8Array): string {
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCodePoint(byte);
-  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "");
 }
 
 const encoder = new TextEncoder();

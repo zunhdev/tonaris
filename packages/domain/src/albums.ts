@@ -13,6 +13,7 @@ import {
   staleFields,
 } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
+import { base64url } from "./encoding";
 import { maxAlbumTextLength, maxAlbums, maxLinkLength } from "./limits";
 import { exceedsLength } from "./names";
 import { failure, type Failure } from "./outcomes";
@@ -183,10 +184,7 @@ export const coversSchema = z
  * signature the server sent with the album. Clients add the API's origin.
  */
 export function artworkPath(url: string, signature: string): string {
-  let binary = "";
-  for (const byte of new TextEncoder().encode(url)) binary += String.fromCodePoint(byte);
-  const encoded = btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
-  return `/img/${signature}/${encoded}`;
+  return `/img/${signature}/${base64url(new TextEncoder().encode(url))}`;
 }
 
 /**
