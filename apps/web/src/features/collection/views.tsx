@@ -32,6 +32,7 @@ import { useNarrowScreen } from "../shell/media";
 import { AlbumCards } from "./album-cards";
 import { AlbumDetails } from "./album-details";
 import { AlbumRows } from "./album-rows";
+import { useAlbumArrangement, useContainerArrangement } from "./arrangement";
 import { useCollectionUi, useMode, useStartEditor } from "./collection-ui";
 import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
@@ -40,10 +41,8 @@ import { useDeleteContainer } from "./delete-containers";
 import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
 import { ModeSwitch } from "./mode-switch";
-import { sections, sortAlbums, type Direction } from "./order";
 import { ancestorsOf } from "./tree";
-import { usePresentation } from "./use-presentation";
-import { useRearrange, type ViewMoves } from "./use-rearrange";
+import type { ViewMoves } from "./use-rearrange";
 import { ViewOptions } from "./view-options";
 
 function Body({ children }: { children: ReactNode }) {
@@ -55,8 +54,8 @@ function Body({ children }: { children: ReactNode }) {
 }
 
 /**
- * A folder's or the root's folders and lists, as rows (DS-41), in the order the tree already holds them: the view's
- * sort. Sorted by creation date, the rows show when each was created.
+ * A folder's or the root's folders and lists, as rows (DS-41), in the view's sort, as the tree holds them too. Sorted by
+ * creation date, the rows show when each was created.
  */
 function ContainersBody({
   containers,
@@ -68,27 +67,21 @@ function ContainersBody({
   viewKey: string;
 }) {
   const { tree, counts } = useCollectionData();
-  const { presentation, choose } = usePresentation(viewKey, "containers");
+  const {
+    presentation,
+    shown,
+    manual,
+    moves: arranged,
+  } = useContainerArrangement(containers, viewKey);
   const { editing } = useMode();
-  const rearrange = useRearrange(viewKey, {
-    manual: presentation.sortMode === "manual",
-    toManual: () => choose({ sortMode: "manual" }),
-  });
-  // The tree holds them in the view's order already: under Manual, the arrangement.
-  const moves = useMemo<ViewMoves>(() => {
-    const sequence = containers.map((container) => container.id);
-    const nameOf = (id: string) => tree.byId.get(id)?.name ?? "the folder or list";
-    return {
-      manual: rearrange.manual,
-      handles: rearrange.manual && editing,
-      move: (id: string, to: Direction) => rearrange.move(sequence, sequence, id, to, nameOf(id)),
-      drop: (id, place) => rearrange.drop(sequence, sequence, id, place, nameOf(id)),
-    };
-  }, [containers, tree, rearrange, editing]);
+  const moves = useMemo<ViewMoves>(
+    () => ({ manual, handles: manual && editing, ...arranged }),
+    [manual, editing, arranged],
+  );
   useDropHandler(viewKey, moves.drop);
   return (
     <ContainerRows
-      containers={containers}
+      containers={shown}
       label={label}
       viewKey={viewKey}
       albumCounts={counts}
@@ -132,46 +125,16 @@ function AlbumsBody({
   label: string;
   viewKey: string;
 }) {
-  const { keys } = useCollectionData();
-  const { presentation, choose } = usePresentation(viewKey, "albums");
+  const { presentation, sections, manual, moves: arranged } = useAlbumArrangement(albums, viewKey);
   const { editing } = useMode();
-  const { sortMode, sortDir, grouped, layout } = presentation;
-  const viewKeys = keys.get(viewKey);
-  const manualOrder = useMemo(
-    () => sortAlbums(albums, { mode: "manual", dir: sortDir }, viewKeys),
-    [albums, sortDir, viewKeys],
+  const moves = useMemo<ViewMoves>(
+    () => ({ manual, handles: manual && editing, ...arranged }),
+    [manual, editing, arranged],
   );
-  const shown = useMemo(
-    () =>
-      sections(
-        sortMode === "manual" ? manualOrder : sortAlbums(albums, { mode: sortMode, dir: sortDir }),
-        grouped,
-      ),
-    [albums, manualOrder, sortMode, sortDir, grouped],
-  );
-  const rearrange = useRearrange(viewKey, {
-    manual: sortMode === "manual",
-    toManual: () => choose({ sortMode: "manual" }),
-  });
-  const moves = useMemo<ViewMoves>(() => {
-    const sequence = manualOrder.map((album) => album.id);
-    // Grouped, an album moves among its group's albums, in the one arrangement (FR-05.8).
-    const groupOf = (id: string) =>
-      (shown.find((section) => section.albums.some((album) => album.id === id))?.albums ?? []).map(
-        (album) => album.id,
-      );
-    const nameOf = (id: string) =>
-      manualOrder.find((album) => album.id === id)?.title ?? "the album";
-    return {
-      manual: rearrange.manual,
-      handles: rearrange.manual && editing,
-      move: (id, to) => rearrange.move(sequence, groupOf(id), id, to, nameOf(id)),
-      drop: (id, place) => rearrange.drop(sequence, groupOf(id), id, place, nameOf(id)),
-    };
-  }, [manualOrder, shown, rearrange, editing]);
   useDropHandler(viewKey, moves.drop);
   const [collapsed, toggle] = useCollapsedGroups(viewKey);
-  const props = { sections: shown, label, viewKey, collapsed, onToggle: toggle, moves };
+  const { layout } = presentation;
+  const props = { sections, label, viewKey, collapsed, onToggle: toggle, moves };
   return layout === "grid" ? <AlbumCards {...props} /> : <AlbumRows {...props} />;
 }
 

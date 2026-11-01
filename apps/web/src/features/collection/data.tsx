@@ -12,6 +12,7 @@ import {
   appAccountDefaults,
   unsetView,
   type Album,
+  type Container,
   type CustomField,
   type FieldValue,
   type Membership,
@@ -144,15 +145,9 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       if (inView) inView.set(itemId, key);
       else keys.set(viewKey, new Map([[itemId, key]]));
     }
-    const tree = buildTree(containerData ?? [], (siblings, parentId) => {
-      const viewKey = parentId ?? "root";
-      const { sortMode: mode, sortDir: dir } = presentationOf(
-        "containers",
-        views.get(viewKey),
-        defaults,
-      );
-      return sortContainers(siblings, { mode, dir }, keys.get(viewKey));
-    });
+    const tree = buildTree(containerData ?? [], (siblings, parentId) =>
+      sortForView(siblings, parentId ?? "root", { views, defaults, keys }),
+    );
     return {
       tree,
       counts: new Map([...entriesByList].map(([listId, inList]) => [listId, inList.length])),
@@ -191,6 +186,23 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
 
 export function useCollectionData(): CollectionData {
   return useContext(CollectionDataContext);
+}
+
+/**
+ * The folders and lists of the view `viewKey` in its sort (FR-05.1): the person's choice for it, or their default for
+ * folders, manual order as they arranged it (TS-16).
+ */
+export function sortForView<T extends Pick<Container, "id" | "kind" | "name">>(
+  siblings: readonly T[],
+  viewKey: string,
+  { views, defaults, keys }: Pick<CollectionData, "views" | "defaults" | "keys">,
+): T[] {
+  const { sortMode: mode, sortDir: dir } = presentationOf(
+    "containers",
+    views.get(viewKey),
+    defaults,
+  );
+  return sortContainers(siblings, { mode, dir }, keys.get(viewKey));
 }
 
 /**

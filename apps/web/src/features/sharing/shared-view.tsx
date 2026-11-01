@@ -6,11 +6,8 @@
 // the owner's saves (its stream), and "No longer available" once access ends. The content draws as on guest pages.
 
 import { api } from "@/api";
-import { useCollectionData } from "@/features/collection/data";
-import { sections, sortAlbums, sortContainers, type Direction } from "@/features/collection/order";
+import { useAlbumArrangement, useContainerArrangement } from "@/features/collection/arrangement";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
-import { usePresentation } from "@/features/collection/use-presentation";
-import { useRearrange } from "@/features/collection/use-rearrange";
 import { ViewOptions } from "@/features/collection/view-options";
 import {
   AlbumSections,
@@ -167,63 +164,22 @@ function FolderBody({
   items: readonly Container[];
   linkTo: LinkTo;
 }) {
-  const { keys } = useCollectionData();
-  const { presentation, choose } = usePresentation(folder.id, "containers");
-  const { sortMode, sortDir } = presentation;
-  const manualOrder = sortContainers(items, { mode: "manual", dir: sortDir }, keys.get(folder.id));
-  const shown =
-    sortMode === "manual" ? manualOrder : sortContainers(items, { mode: sortMode, dir: sortDir });
-  const rearrange = useRearrange(folder.id, {
-    manual: sortMode === "manual",
-    toManual: () => choose({ sortMode: "manual" }),
-  });
-  const sequence = manualOrder.map((item) => item.id);
-  const onMove = (id: string, to: Direction) =>
-    rearrange.move(sequence, sequence, id, to, items.find((item) => item.id === id)?.name ?? "it");
-  return <FolderItems folder={folder} items={shown} linkTo={linkTo} onMove={onMove} />;
+  const { shown, moves } = useContainerArrangement(items, folder.id);
+  return <FolderItems folder={folder} items={shown} linkTo={linkTo} onMove={moves.move} />;
 }
 
 /** A shared list's albums in the person's own sort, grouping and layout (DS-40, DS-43). */
 function ListBody({ list, snapshot }: { list: Container; snapshot: SharedSnapshot }) {
-  const { keys } = useCollectionData();
-  const { presentation, choose } = usePresentation(list.id, "albums");
-  const { sortMode, sortDir, grouped, layout } = presentation;
   const albums = useMemo(() => albumsIn(snapshot, list.id), [snapshot, list.id]);
   const linksOf = useMemo(() => linksByAlbum(snapshot), [snapshot]);
-  const viewKeys = keys.get(list.id);
-  const manualOrder = useMemo(
-    () => sortAlbums(albums, { mode: "manual", dir: sortDir }, viewKeys),
-    [albums, sortDir, viewKeys],
-  );
-  const parts = useMemo(
-    () =>
-      sections(
-        sortMode === "manual" ? manualOrder : sortAlbums(albums, { mode: sortMode, dir: sortDir }),
-        grouped,
-      ),
-    [albums, manualOrder, sortMode, sortDir, grouped],
-  );
-  const manual = sortMode === "manual";
-  const rearrange = useRearrange(list.id, {
-    manual,
-    toManual: () => choose({ sortMode: "manual" }),
-  });
-  const onMove = (id: string, to: Direction) => {
-    const sequence = manualOrder.map((album) => album.id);
-    // Grouped, an album moves among its group's albums, in the one arrangement (FR-05.8).
-    const group = (
-      parts.find((part) => part.albums.some((album) => album.id === id))?.albums ?? []
-    ).map((album) => album.id);
-    const name = albums.find((album) => album.id === id)?.title ?? "the album";
-    return rearrange.move(sequence, group, id, to, name);
-  };
+  const { presentation, sections, manual, moves } = useAlbumArrangement(albums, list.id);
   return (
     <AlbumSections
       list={list}
-      parts={parts}
+      parts={sections}
       linksOf={linksOf}
-      layout={layout}
-      onMove={manual ? onMove : undefined}
+      layout={presentation.layout}
+      onMove={manual ? moves.move : undefined}
     />
   );
 }

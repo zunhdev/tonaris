@@ -28,17 +28,16 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
-import { sortContainers, type ContainerKind } from "@tonaris/domain";
+import type { ContainerKind } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionUi, useEditor, useStartEditor, useViewContainerId } from "./collection-ui";
 import { ContainerMenu, type ContainerMenuTarget } from "./container-menu";
-import { useCollectionData } from "./data";
+import { sortForView, useCollectionData } from "./data";
 import { useDestination, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
 import { ContainerIcon } from "./icons";
 import { NameEditor } from "./name-editor";
-import { presentationOf } from "./presentation";
 import {
   ancestorsOf,
   buildSharedTree,
@@ -169,14 +168,13 @@ export function CollectionTree() {
   const { entries, reread: rereadShared } = useSharedEntries();
   const sharedTree = useMemo(
     () =>
-      buildSharedTree(entries ?? [], (siblings, parentId) => {
-        const { sortMode: mode, sortDir: dir } = presentationOf(
-          "containers",
-          data.views.get(parentId),
-          data.defaults,
-        );
-        return sortContainers(siblings, { mode, dir }, data.keys.get(parentId));
-      }),
+      buildSharedTree(entries ?? [], (siblings, parentId) =>
+        sortForView(siblings, parentId, {
+          views: data.views,
+          defaults: data.defaults,
+          keys: data.keys,
+        }),
+      ),
     [entries, data.views, data.defaults, data.keys],
   );
 
