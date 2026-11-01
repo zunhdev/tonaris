@@ -1,10 +1,11 @@
 // A folder's or list's menu in the sidebar (TON-117, DS-27): New list and New folder, made inside a folder and beside
 // a list, as N and ⇧N make them from its row (TON-120); then Rename, Move to…, Share… and Delete…, each the command
-// its shortcut runs (F2, M, ⇧S, ⌫) on that folder or list. It opens from the row's ⋯ with the pointer, and with
-// Shift+F10 or the Menu key from the keyboard. Offline, the commands wait, and the menu says why (DS-81).
+// its shortcut runs (F2, M, ⇧S, ⌫) on that folder or list. Each shows its keys from the shortcuts' list (DS-78). It
+// opens from the row's ⋯ with the pointer, and with Shift+F10 or the Menu key from the keyboard. Offline, the
+// commands wait, and the menu says why (DS-81).
 
 import { useShell } from "@/features/shell/shell-context";
-import type { CommandId } from "@/features/shell/shortcuts";
+import { shortcutLabel, type CommandId } from "@/features/shell/shortcuts";
 import { Fragment, useRef } from "react";
 
 import type { ContainerKind } from "@tonaris/domain";
@@ -23,16 +24,16 @@ import { placeFor } from "./editing";
 /** The folder or list the menu is for, and the row it opens by. */
 export type ContainerMenuTarget = { id: string; name: string; row: HTMLElement };
 
-const creates: { id: CommandId; kind: ContainerKind; label: string; keys: string }[] = [
-  { id: "new-list", kind: "list", label: "New list", keys: "N" },
-  { id: "new-folder", kind: "folder", label: "New folder", keys: "⇧N" },
+const creates: { id: CommandId; kind: ContainerKind; label: string }[] = [
+  { id: "new-list", kind: "list", label: "New list" },
+  { id: "new-folder", kind: "folder", label: "New folder" },
 ];
 
-const items: { id: CommandId; label: string; keys: string; destructive?: boolean }[] = [
-  { id: "rename", label: "Rename", keys: "F2" },
-  { id: "move", label: "Move to…", keys: "M" },
-  { id: "share", label: "Share…", keys: "⇧S" },
-  { id: "delete", label: "Delete…", keys: "⌫", destructive: true },
+const items: { id: CommandId; label: string; destructive?: boolean }[] = [
+  { id: "rename", label: "Rename" },
+  { id: "move", label: "Move to…" },
+  { id: "share", label: "Share…" },
+  { id: "delete", label: "Delete…", destructive: true },
 ];
 
 export function ContainerMenu({
@@ -70,7 +71,7 @@ export function ContainerMenu({
         {blocked !== undefined && (
           <p className="px-2 py-1 text-small text-fg-tertiary">{blocked}</p>
         )}
-        {creates.map(({ id, kind, label, keys }) => (
+        {creates.map(({ id, kind, label }) => (
           <DropdownMenuItem
             key={id}
             disabled={commandBlocked(id, on) !== undefined}
@@ -88,11 +89,11 @@ export function ContainerMenu({
             }}
           >
             {label}
-            <DropdownMenuShortcut>{keys}</DropdownMenuShortcut>
+            <DropdownMenuShortcut>{shortcutLabel(id)}</DropdownMenuShortcut>
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        {items.map(({ id, label, keys, destructive }) => (
+        {items.map(({ id, label, destructive }) => (
           <Fragment key={id}>
             {destructive && <DropdownMenuSeparator />}
             <DropdownMenuItem
@@ -105,7 +106,7 @@ export function ContainerMenu({
               }}
             >
               {label}
-              <DropdownMenuShortcut>{keys}</DropdownMenuShortcut>
+              <DropdownMenuShortcut>{shortcutLabel(id)}</DropdownMenuShortcut>
             </DropdownMenuItem>
           </Fragment>
         ))}
