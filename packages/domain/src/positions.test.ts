@@ -330,15 +330,16 @@ describe("placement (DS-51)", () => {
   });
 });
 
+/** The view's order after `writes`: arranged items by key, then the rest as `sequence` has them. */
+function after(sequence: string[], keys: Map<string, string>, writes: Map<string, string>) {
+  const merged = new Map([...keys, ...writes]);
+  const arranged = sequence
+    .filter((id) => merged.has(id))
+    .toSorted((a, b) => ((merged.get(a) ?? "") < (merged.get(b) ?? "") ? -1 : 1));
+  return [...arranged, ...sequence.filter((id) => !merged.has(id))];
+}
+
 describe("planning a move of several items (TS-16)", () => {
-  /** The view's order after `writes`: arranged items by key, then the rest as `sequence` has them. */
-  const after = (sequence: string[], keys: Map<string, string>, writes: Map<string, string>) => {
-    const merged = new Map([...keys, ...writes]);
-    const arranged = sequence
-      .filter((id) => merged.has(id))
-      .toSorted((a, b) => ((merged.get(a) ?? "") < (merged.get(b) ?? "") ? -1 : 1));
-    return [...arranged, ...sequence.filter((id) => !merged.has(id))];
-  };
   const arranged = new Map([
     ["a", "a0"],
     ["b", "a1"],
