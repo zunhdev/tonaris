@@ -29,7 +29,7 @@ A Bun workspace (tech spec TS-05):
 | `packages/db` | `@tonaris/db` | Drizzle schema, migrations, repositories. |
 | `packages/providers` | `@tonaris/providers` | Link parsing, MusicBrainz and Cover Art Archive clients, provider adapters. |
 | `packages/ui` | `@tonaris/ui` | Design system: tokens, primitives, patterns. |
-| `tooling` | `@tonaris/tooling` | Repository tooling: workspace checks, seeds and the reference workload, restore drill, export validator. |
+| `tooling` | `@tonaris/tooling` | Repository tooling: workspace checks, seeds and the reference workload, export validator, MCP client verification, and the M1 spikes. |
 | `docs` | — | Product requirements, design spec, tech spec, audits. |
 
 Packages may depend only on these internal packages (TS-02):
@@ -58,7 +58,7 @@ bun run check:workspace         # layering and pinning rules
 bun run check:specs             # openspec validate --all --strict
 bun run db:check                # migrations match the schema (drizzle-kit check, no-diff generate)
 bun run openapi:check           # the committed OpenAPI document matches the API routes
-bun test                        # all tests; the integration tests need the local Postgres
+bun test                        # all tests but the finished spikes' (bunfig.toml); the integration tests need the local Postgres
 bun run test:e2e                # Playwright browser tests of the web app (needs Node and Chromium)
 bun run --cwd apps/web test:perf  # TS-120 performance run on the reference workload; not part of check
 bun run build                   # production bundles: apps/api/dist (bin/*.js) and apps/web/dist

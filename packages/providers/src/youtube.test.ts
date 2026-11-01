@@ -3,7 +3,8 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { ProviderUnavailableError } from "./provider-cache";
+import { brokenBody } from "../fixtures/broken-body";
+import { ProviderUnavailableError } from "./errors";
 import type { SafeFetchInit } from "./safe-fetch";
 import { albumTitle, descriptionDate, topicArtist, YouTubeData } from "./youtube";
 
@@ -139,13 +140,15 @@ describe("refusals and outages", () => {
     expect(refused).toEqual([]);
   });
 
-  test("429, 5xx and no answer are YouTube being unavailable", async () => {
+  test("429, 5xx, another 4xx, no answer and a broken-off answer are YouTube being unavailable", async () => {
     for (const answer of [
       () => new Response(null, { status: 429 }),
       () => new Response(null, { status: 503 }),
+      () => new Response(null, { status: 401 }),
       () => {
         throw new Error("network down");
       },
+      () => brokenBody(),
     ]) {
       const { youtube } = client(answer);
       // oxlint-disable-next-line no-await-in-loop

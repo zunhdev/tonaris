@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { PacedQueue } from "./paced-queue";
+import { PacedQueue, retryAfterMs } from "./paced-queue";
 
 /** A queue on a simulated clock, recording when each turn starts. */
 function simulated(intervalMs: number) {
@@ -41,5 +41,20 @@ describe("PacedQueue", () => {
       ["a", 0],
       ["b", 10_000],
     ]);
+  });
+});
+
+describe("retryAfterMs", () => {
+  test("Retry-After's seconds, or 2^retry seconds when longer", () => {
+    expect([0, 1, 2, 3].map((retry) => retryAfterMs(null, retry))).toEqual([
+      1_000, 2_000, 4_000, 8_000,
+    ]);
+    expect(retryAfterMs("7", 0)).toBe(7_000);
+    expect(retryAfterMs("7", 3)).toBe(8_000);
+  });
+
+  test("a Retry-After that isn't a number of seconds is ignored", () => {
+    expect(retryAfterMs("Wed, 21 Oct 2026 07:28:00 GMT", 1)).toBe(2_000);
+    expect(retryAfterMs("", 0)).toBe(1_000);
   });
 });

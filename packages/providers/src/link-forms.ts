@@ -1,90 +1,19 @@
 // The forms MusicBrainz may hold an identifier in (TS-41), measured by the G1 spikes (TON-14, TON-15, TON-100,
 // TON-128): step 2 asks for every URL form of an album's link in one request, as editors paste links as they find
-// them, and step 3 asks for every barcode form of a UPC or EAN in one search.
+// them, and step 3 asks for every barcode form of a UPC or EAN in one search. Each service's URL forms are in the
+// services' table (services.ts), beside its canonical URL.
 
 import type { StreamingService } from "@tonaris/domain";
 
-/** Storefronts tried besides the link's own: MusicBrainz keeps the storefront its editor pasted. */
-const appleStorefronts = ["us", "gb", "de", "fr", "jp", "ca", "au", "nl", "se", "it", "es", "fi"];
-
-/** Qobuz store locales, which MusicBrainz also keeps as pasted. */
-const qobuzLocales = [
-  "us-en",
-  "gb-en",
-  "fr-fr",
-  "de-de",
-  "it-it",
-  "es-es",
-  "nl-nl",
-  "be-fr",
-  "be-nl",
-  "ch-de",
-  "ch-fr",
-  "at-de",
-  "lu-fr",
-  "ie-en",
-  "fi-en",
-  "se-en",
-  "dk-en",
-  "no-en",
-  "au-en",
-  "nz-en",
-  "ca-en",
-  "ca-fr",
-  "jp-ja",
-  "br-pt",
-  "mx-es",
-  "ar-es",
-  "cl-es",
-  "co-es",
-];
-
-const unique = (items: readonly (string | undefined)[]) => [
-  ...new Set(items.filter((item): item is string => item !== undefined)),
-];
-
-/** What a link adds to its album's forms: Apple's storefront, and a Qobuz store's locale and slug. */
-export type FormHints = { storefront?: string; locale?: string; slug?: string };
-
-const forms: Record<StreamingService, (albumId: string, hints: FormHints) => string[]> = {
-  spotify: (albumId) => [`https://open.spotify.com/album/${albumId}`],
-  "apple-music": (albumId, { storefront }) =>
-    unique([storefront, ...appleStorefronts]).map(
-      (code) => `https://music.apple.com/${code}/album/${albumId}`,
-    ),
-  qobuz: (albumId, { locale, slug }) =>
-    unique([
-      `https://open.qobuz.com/album/${albumId}`,
-      slug && `https://www.qobuz.com/album/${slug}/${albumId}`,
-      ...(slug
-        ? unique([locale, ...qobuzLocales]).map(
-            (code) => `https://www.qobuz.com/${code}/album/${slug}/${albumId}`,
-          )
-        : []),
-      `https://play.qobuz.com/album/${albumId}`,
-    ]),
-  // MusicBrainz cleans Tidal URLs to the first form; older entries keep the forms they were added in.
-  tidal: (albumId) => [
-    `https://tidal.com/album/${albumId}`,
-    `https://tidal.com/browse/album/${albumId}`,
-    `http://www.tidal.com/album/${albumId}`,
-    `https://listen.tidal.com/album/${albumId}`,
-  ],
-  // MusicBrainz mostly stores www.youtube.com's form, sometimes music.youtube.com's.
-  "youtube-music": (albumId) => [
-    `https://music.youtube.com/playlist?list=${albumId}`,
-    `https://www.youtube.com/playlist?list=${albumId}`,
-    `https://youtube.com/playlist?list=${albumId}`,
-  ],
-};
+import { services, type LinkHints } from "./services";
 
 /** Every URL form MusicBrainz may hold this album's link in, the canonical one first. */
 export function urlForms(
   service: StreamingService,
   albumId: string,
-  hints: FormHints = {},
+  hints: LinkHints = {},
 ): string[] {
-  return forms[service](albumId, hints);
+  return services[service].forms(albumId, hints);
 }
 
 /**

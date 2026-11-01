@@ -194,7 +194,7 @@ packages/domain/           framework-free business logic + Zod schemas + normali
 packages/db/               Drizzle schema, migrations, repositories
 packages/ui/               design system: src/styles/tokens.css (DS-10 token layers), shadcn components on Base UI
 packages/providers/        link parsing, MusicBrainz/CAA clients, provider adapters (policy-gated)
-tooling/                   seed + workload generator, restore drill, export validator
+tooling/                   seed + workload generator, export validator, MCP verification, M1 spikes
 openspec/                  OpenSpec specs and changes (TS-132)
 .claude/                   Claude Code: /opsx commands, OpenSpec skills, SessionStart hook (TS-132)
 docs/                      PRD, design spec, tech spec, audits, runbooks
@@ -884,7 +884,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
     - **The key** travels in the `X-Goog-Api-Key` header, so it is in no URL, log or error. Reads go through `safeFetch`, 250 ms apart, and nothing is cached.
     - **The track count** is `playlists.list`'s `contentDetails.itemCount`, asked in the same read. `Hints.tracks` carries it, and only YouTube's hints set it; `passes()` then requires the release's `track-count` from the search to equal it.
     - **The date** is "Released on: {date}", else the "℗ {year}" line's year alone.
-    - **Answers:** a 404, an empty answer, no "- Topic" track or no date gives no hints. A 400 or 403 (a used-up quota, a bad key) gives no hints and logs "The YouTube Data API refused a read" with the read, status and reason. A timeout, 429 or 5xx is `provider_unavailable`, "Couldn't reach YouTube".
+    - **Answers:** a 404, an empty answer, no "- Topic" track or no date gives no hints. A 400 or 403 (a used-up quota, a bad key) gives no hints and logs "The YouTube Data API refused a read" with the read, status and reason. A timeout, a 429, a 5xx, another 4xx or an answer that breaks off is `provider_unavailable`, "Couldn't reach YouTube".
     - **The chain:** a track link's album playlist is the link; step 2, then step 4 when the key is set and `mayReadYouTube()` says the owner agreed. Without either, the link asks for details.
 - **As built in TON-42** (`identify()` in `packages/providers/src/identify.ts`):
   - **The answer.** It is linked, identified (a release group, with the step), ambiguous (candidates), unidentified (a reason, and Apple's hints as prefill), or failed. `identificationOutcome()` gives TS-27's outcome:
@@ -899,8 +899,8 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - **Store pages:**
     - one request a second per host;
     - robots.txt kept a day in `provider_cache`, and one that can't be read allows nothing;
-    - a 404 or a redirect to another album gives no hints;
-    - a 5xx, 429, 403 or timeout fails as `provider_unavailable`.
+    - a 404, a 410 or a redirect to another album gives no hints;
+    - a 5xx, a 429, another 4xx, a timeout or a page that breaks off fails as `provider_unavailable`.
   - **iTunes Lookup:**
     - one call every 3 s;
     - only the title, artist, date, track count and album id kept, for a day;
@@ -930,6 +930,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
     - 503s, 502s, 504s and failed connections are retried after `max(Retry-After, 2^n)` seconds: 1, 2, 4, 8.
     - The wait holds back the whole queue.
     - After 4 retries the lookup throws `ProviderUnavailableError`. The capture's job retries later, and its outcome is `provider_unavailable`.
+    - Any other answer but a 404, and an answer that breaks off, throws it at once (*as built in TON-147*: one rule for every client, in `packages/providers/src/errors.ts`).
     - Messages name the path, never the query.
   - **The Cover Art Archive** is asked with `HEAD …/release-group/{mbid}/front-500` and redirects not followed. A redirect means a front, kept as that stable address. It is archive.org's service, outside MusicBrainz's limit, so it isn't queued.
   - Every outbound request in the chain has a timeout: MusicBrainz, Spotify, iTunes Lookup and the store pages.

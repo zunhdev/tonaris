@@ -2,7 +2,8 @@
 // about 1.8 list memberships per album, 12 custom fields used on 40% of albums, and 3 shared collections holding
 // 5,000 albums in total. The sync measurements (TON-21) and later performance tests run against it.
 // generateWorkload() is pure and deterministic: one seed always yields the same rows, IDs and timestamps included.
-// It avoids Bun APIs so that Node-run tools, such as Playwright tests, can import it.
+// The seeder (seed.ts) writes its rows, for `bun run seed:workload` and the performance runs' API
+// (apps/api/src/perf-server.ts), which runs the seeder in a child process.
 
 import { createHash } from "node:crypto";
 

@@ -381,3 +381,4 @@ export * from "./telemetry";
 export { isUuid } from "./ids";
 export { conflictOutcomeSchema, failedOutcomeSchema, needsInputOutcomeSchema } from "./outcomes";
 export { containerOfView, sameServices } from "./views";
+export * from "./provider-cache";

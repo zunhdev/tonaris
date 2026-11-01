@@ -14,9 +14,10 @@ import type {
   SourcedValues,
 } from "@tonaris/domain";
 
+import { ProviderUnavailableError } from "./errors";
 import type { MusicBrainz } from "./musicbrainz";
+import { artistCreditSchema, creditText, yearOf } from "./musicbrainz-answers";
 import { policy } from "./policy";
-import { ProviderUnavailableError } from "./provider-cache";
 
 const releaseGroupSchema = z.object({
   id: z.string(),
@@ -24,9 +25,7 @@ const releaseGroupSchema = z.object({
   "primary-type": z.string().nullish(),
   "secondary-types": z.array(z.string()).nullish(),
   "first-release-date": z.string().nullish(),
-  "artist-credit": z
-    .array(z.object({ name: z.string(), joinphrase: z.string().nullish() }))
-    .nullish(),
+  "artist-credit": artistCreditSchema,
   releases: z
     .array(z.object({ id: z.string(), status: z.string().nullish(), date: z.string().nullish() }))
     .nullish(),
@@ -101,12 +100,6 @@ export function classify(
     };
   }
   return { isLive: false };
-}
-
-/** The year of a MusicBrainz date (`YYYY`, `YYYY-MM` or `YYYY-MM-DD`), if it has one. */
-function yearOf(date: string | null | undefined): number | undefined {
-  const year = Number(/^(\d{4})/.exec(date ?? "")?.[1]);
-  return year >= 1 ? year : undefined;
 }
 
 /**
@@ -184,10 +177,7 @@ export async function describeAlbum(
 
   const title = group.title.trim();
   if (title !== "") keep("title", title);
-  const artistCredit = (group["artist-credit"] ?? [])
-    .map((credit) => credit.name + (credit.joinphrase ?? ""))
-    .join("")
-    .trim();
+  const artistCredit = creditText(group["artist-credit"]).trim();
   if (artistCredit !== "") keep("artistCredit", artistCredit);
   const { releaseType, isLive } = classify(group["primary-type"], group["secondary-types"] ?? []);
   if (releaseType) keep("releaseType", releaseType);

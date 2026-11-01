@@ -5,9 +5,14 @@
 
 import { z } from "zod";
 
-import { PacedQueue, realClock } from "./paced-queue";
-import { ProviderUnavailableError, type ProviderCache } from "./provider-cache";
-import { safeFetch, type SafeFetchInit } from "./safe-fetch";
+import type { ProviderCache } from "@tonaris/domain";
+
+import { clientParts, readBody, type ClientOptions } from "./client";
+import { ProviderUnavailableError } from "./errors";
+import { PacedQueue } from "./paced-queue";
+import { cachedValue } from "./provider-cache";
+import { discard, type ProviderFetch } from "./safe-fetch";
+import { services } from "./services";
 
 /** Calls start at least this far apart: 20 a minute. */
 export const itunesIntervalMs = 3_000;
@@ -24,12 +29,7 @@ export type AppleAlbum = {
   trackCount: number;
 };
 
-export type ItunesOptions = {
-  cache: ProviderCache;
-  fetch?: (url: string, init: SafeFetchInit) => Promise<Response>;
-  now?: () => number;
-  sleep?: (ms: number) => Promise<void>;
-};
+export type ItunesOptions = ClientOptions & { cache: ProviderCache };
 
 const resultSchema = z.object({
   wrapperType: z.string(),
@@ -53,24 +53,20 @@ const keptSchema = z.object({
     .nullable(),
 });
 
-const appleId = /^\d+$/;
+const appleIds = services["apple-music"].ids;
 
 export class ItunesLookup {
   private readonly cache: ProviderCache;
-  private readonly fetch: NonNullable<ItunesOptions["fetch"]>;
+  private readonly fetch: ProviderFetch;
   private readonly now: () => number;
   private readonly queue: PacedQueue;
 
-  constructor({
-    cache,
-    fetch = safeFetch,
-    now = realClock.now,
-    sleep = realClock.sleep,
-  }: ItunesOptions) {
-    this.cache = cache;
+  constructor(options: ItunesOptions) {
+    const { fetch, clock } = clientParts(options);
+    this.cache = options.cache;
     this.fetch = fetch;
-    this.now = now;
-    this.queue = new PacedQueue(itunesIntervalMs, { now, sleep });
+    this.now = clock.now;
+    this.queue = new PacedQueue(itunesIntervalMs, clock);
   }
 
   /** The album with this id, from the first storefront that has it. */
@@ -88,7 +84,7 @@ export class ItunesLookup {
     storefronts: readonly string[],
     wrapperType: "collection" | "track",
   ): Promise<AppleAlbum | undefined> {
-    if (!appleId.test(id)) return undefined;
+    if (!appleIds[wrapperType === "collection" ? "album" : "track"].test(id)) return undefined;
     for (const storefront of new Set(storefronts)) {
       // Storefronts are tried in order, each waiting its turn.
       // oxlint-disable-next-line no-await-in-loop
@@ -104,24 +100,25 @@ export class ItunesLookup {
     wrapperType: "collection" | "track",
   ): Promise<AppleAlbum | null> {
     const key = `itunes:lookup:${id}:${storefront}`;
-    const kept = (await this.cache.get([key], new Date(this.now()))).get(key);
+    const kept = await cachedValue(this.cache, key, this.now());
     if (kept !== undefined) return keptSchema.parse(kept).album;
 
     await this.queue.turn();
     const url = new URL("https://itunes.apple.com/lookup");
     url.searchParams.set("id", id);
     url.searchParams.set("country", storefront);
-    let body: unknown;
+    let response: Response;
     try {
-      const response = await this.fetch(url.href, { headers: { accept: "application/json" } });
-      if (!response.ok) {
-        void response.body?.cancel().catch(() => {});
-        throw new Error(`iTunes Lookup answered ${response.status}`);
-      }
-      body = await response.json();
+      response = await this.fetch(url.href, { headers: { accept: "application/json" } });
     } catch (error) {
       throw new ProviderUnavailableError("itunes", "iTunes Lookup didn't answer", { cause: error });
     }
+    // An id iTunes doesn't know has no results, so every answer that isn't ok is unexpected.
+    if (!response.ok) {
+      discard(response);
+      throw new ProviderUnavailableError("itunes", `iTunes Lookup answered ${response.status}`);
+    }
+    const body = await readBody("itunes", response, "json");
     const result = lookupSchema
       .parse(body)
       .results.find((entry) => entry.wrapperType === wrapperType);

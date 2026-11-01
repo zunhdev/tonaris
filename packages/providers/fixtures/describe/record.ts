@@ -5,7 +5,7 @@
 
 import path from "node:path";
 
-import { ProviderUnavailableError } from "../../src/provider-cache";
+import { ProviderUnavailableError } from "../../src/errors";
 import { safeFetch } from "../../src/safe-fetch";
 import { cases } from "./cases";
 import { harness, type Recording } from "./harness";

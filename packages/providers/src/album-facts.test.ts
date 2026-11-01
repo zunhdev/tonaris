@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { cases, ids } from "../fixtures/describe/cases";
 import { frontUrl, harness } from "../fixtures/describe/harness";
 import recorded from "../fixtures/describe/recorded.json";
-import { ProviderUnavailableError } from "./provider-cache";
+import { ProviderUnavailableError } from "./errors";
 
 const run = (testCase: (typeof cases)[keyof typeof cases]) => harness(testCase, { recorded });
 

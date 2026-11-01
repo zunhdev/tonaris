@@ -4,9 +4,10 @@
 
 import { z } from "zod";
 
-import { firstArtist, phrase, searchTitle } from "./hints";
+import { ProviderUnavailableError } from "./errors";
+import { firstArtist, searchTitle } from "./hints";
 import type { MusicBrainz } from "./musicbrainz";
-import { ProviderUnavailableError } from "./provider-cache";
+import { artistCreditSchema, creditText, searchByTitle, yearOf } from "./musicbrainz-answers";
 
 /** A cover to choose: its album on MusicBrainz, and the archive's stable `front-500` address. */
 export type Cover = {
@@ -29,20 +30,12 @@ const groupSearchSchema = z.object({
         id: z.string(),
         title: z.string(),
         "primary-type": z.string().nullish(),
-        "first-release-date": z.string().optional(),
-        "artist-credit": z
-          .array(z.object({ name: z.string(), joinphrase: z.string().optional() }))
-          .optional(),
+        "first-release-date": z.string().nullish(),
+        "artist-credit": artistCreditSchema,
       }),
     )
     .default([]),
 });
-
-async function searchGroups(musicBrainz: MusicBrainz, query: string) {
-  return groupSearchSchema.parse(await musicBrainz.search("release-group", query, maxCovers))[
-    "release-groups"
-  ];
-}
 
 /**
  * The covers for albums named `title` by `artist`, in MusicBrainz's order: by title and first artist, or by title
@@ -53,12 +46,14 @@ export async function findCovers(
   musicBrainz: MusicBrainz,
   { title, artist }: { title: string; artist: string },
 ): Promise<Cover[]> {
-  const name = phrase(searchTitle(title));
-  let groups = await searchGroups(
-    musicBrainz,
-    `releasegroup:${name} AND artist:${phrase(firstArtist(artist))}`,
+  const groups = await searchByTitle(
+    "releasegroup",
+    { title: searchTitle(title), artist: firstArtist(artist) },
+    async (query) =>
+      groupSearchSchema.parse(await musicBrainz.search("release-group", query, maxCovers))[
+        "release-groups"
+      ],
   );
-  if (groups.length === 0) groups = await searchGroups(musicBrainz, `releasegroup:${name}`);
   // The archive isn't under MusicBrainz's limit, and each answer is kept 7 days.
   const fronts = await Promise.allSettled(
     groups.map((group) => musicBrainz.releaseGroupFront(group.id)),
@@ -70,15 +65,12 @@ export async function findCovers(
   return groups.flatMap((group, index): Cover[] => {
     const front = fronts[index];
     if (front?.status !== "fulfilled" || !front.value) return [];
-    const year = Number(group["first-release-date"]?.slice(0, 4));
     return [
       {
         releaseGroupId: group.id,
         title: group.title,
-        artistCredit: (group["artist-credit"] ?? [])
-          .map((credit) => credit.name + (credit.joinphrase ?? ""))
-          .join(""),
-        year: Number.isInteger(year) && year > 0 ? year : null,
+        artistCredit: creditText(group["artist-credit"]),
+        year: yearOf(group["first-release-date"]) ?? null,
         type: group["primary-type"] ?? null,
         artworkUrl: front.value,
       },

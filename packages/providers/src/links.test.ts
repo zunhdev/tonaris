@@ -6,7 +6,7 @@ import path from "node:path";
 
 import { sameLink, type StreamingService } from "@tonaris/domain";
 
-import { parseLink, resolveShortLink, type Fetcher, type ParsedLink } from "./links";
+import { isLinkHost, parseLink, resolveShortLink, type Fetcher, type ParsedLink } from "./links";
 
 function parsed(input: string): ParsedLink {
   const result = parseLink(input);
@@ -483,13 +483,15 @@ function scripted(answers: (Response | Error)[]): Fetcher & { requested: string[
 }
 
 describe("short links (TS-40)", () => {
-  test("parseLink leaves them for the resolver, as https", () => {
+  test("parseLink leaves them for the resolver, as https, with their service", () => {
     expect(parseLink("https://spotify.link/abc123XYZ")).toEqual({
       status: "short",
+      service: "spotify",
       url: "https://spotify.link/abc123XYZ",
     });
     expect(parseLink("http://spotify.app.link/abc123XYZ?_p=x#y")).toEqual({
       status: "short",
+      service: "spotify",
       url: "https://spotify.app.link/abc123XYZ?_p=x",
     });
   });
@@ -601,5 +603,44 @@ describe("short links (TS-40)", () => {
         });
       }),
     );
+  });
+
+  test("a URL that isn't a short link is never requested", async () => {
+    const fetcher = scripted([]);
+    for (const url of ["https://open.spotify.com/album/1KVGLuPtrMrLlyy4Je6df7", "not a url"]) {
+      // oxlint-disable-next-line no-await-in-loop
+      expect(await resolveShortLink(url, fetcher)).toMatchObject({
+        status: "failed",
+        failure: { code: "unsupported_link" },
+      });
+    }
+    expect(fetcher.requested).toEqual([]);
+  });
+});
+
+describe("isLinkHost", () => {
+  test("the services' hosts and their short links' hosts, in any case", () => {
+    for (const host of [
+      "open.spotify.com",
+      "spotify.link",
+      "spotify.app.link",
+      "music.apple.com",
+      "geo.music.apple.com",
+      "qobuz.com",
+      "play.qobuz.com",
+      "listen.tidal.com",
+      "m.youtube.com",
+      "Music.YouTube.com",
+    ]) {
+      expect(isLinkHost(host)).toBe(true);
+    }
+    for (const host of [
+      "example.com",
+      "spotify.com",
+      "open.spotify.com.example.net",
+      "constructor",
+    ]) {
+      expect(isLinkHost(host)).toBe(false);
+    }
   });
 });

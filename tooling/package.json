@@ -2,7 +2,7 @@
   "name": "@tonaris/tooling",
   "version": "0.0.0",
   "private": true,
-  "description": "Repository tooling: workspace checks, seeds and workload generator, restore drill, export validator.",
+  "description": "Repository tooling: workspace checks, seeds and workload generator, export validator, MCP client verification, and the M1 spikes.",
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit"

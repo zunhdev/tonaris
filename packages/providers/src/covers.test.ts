@@ -4,8 +4,9 @@
 import { describe, expect, test } from "bun:test";
 
 import { findCovers } from "./covers";
+import { ProviderUnavailableError } from "./errors";
 import { MusicBrainz } from "./musicbrainz";
-import { memoryCache, ProviderUnavailableError } from "./provider-cache";
+import { memoryCache } from "./provider-cache";
 
 const ids = {
   killEmAll: "f44f4f73-a714-31a1-a4b8-bfcaaf311f50",

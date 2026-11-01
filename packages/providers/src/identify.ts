@@ -14,7 +14,6 @@
 import { z } from "zod";
 
 import {
-  failure,
   linkEntityId,
   type CapturePrefill,
   serviceNames,
@@ -23,19 +22,24 @@ import {
   type StreamingService,
 } from "@tonaris/domain";
 
-import { cleanTitle, matchHints, type HintMatch, type Hints } from "./hints";
+import { ProviderUnavailableError, unavailableFailure } from "./errors";
+import {
+  albumsFound,
+  cleanTitle,
+  matchHints,
+  type AlbumCandidate,
+  type Found,
+  type Hints,
+} from "./hints";
 import type { AppleAlbum, ItunesLookup } from "./itunes";
 import { barcodeForms, qobuzBarcode, urlForms } from "./link-forms";
 import { readLink, type Fetcher, type ParsedLink } from "./links";
 import type { MusicBrainz } from "./musicbrainz";
-import { ProviderUnavailableError } from "./provider-cache";
 import { safeFetch } from "./safe-fetch";
+import { appleLookupStorefronts } from "./services";
 import type { Spotify } from "./spotify";
 import { extractQobuzHints, type StorePages } from "./store-pages";
 import type { YouTubeData } from "./youtube";
-
-/** An album offered to choose from: MusicBrainz's release group and a title to show. */
-export type AlbumCandidate = { releaseGroupId: string; title: string };
 
 /** Manual entry's prefill: only Apple's hints, which may become album data once confirmed (TS-41). */
 export type Prefill = CapturePrefill & { source: "itunes-lookup" };
@@ -90,34 +94,12 @@ export const unidentifiedReasons = {
     `${serviceNames[service]} doesn't have this anymore. Check the link, or enter the album's details.`,
 };
 
-const providerNames: Record<ProviderUnavailableError["provider"], string> = {
-  musicbrainz: "MusicBrainz",
-  coverartarchive: "the Cover Art Archive",
-  itunes: "Apple Music",
-  spotify: "Spotify",
-  qobuz: "Qobuz",
-  tidal: "Tidal",
-  youtube: "YouTube",
-};
-
 const releaseGroupSchema = z.object({
   "release-group": z.object({ id: z.string(), title: z.string() }).optional(),
 });
 
 /** Releases looked up for their album in step 2, at most: a streaming URL names one or a few. */
 const maxReleasesPerUrl = 10;
-
-type Found =
-  | { kind: "one"; album: AlbumCandidate }
-  | { kind: "several"; albums: AlbumCandidate[] }
-  | undefined;
-
-function albumsFound(albums: readonly AlbumCandidate[]): Found {
-  const unique = [...new Map(albums.map((album) => [album.releaseGroupId, album])).values()];
-  const [only] = unique;
-  if (unique.length === 1 && only) return { kind: "one", album: only };
-  return unique.length > 1 ? { kind: "several", albums: unique } : undefined;
-}
 
 /** The answer a step found, or undefined to go on. */
 function answer(link: ParsedLink, step: 2 | 3 | 4, found: Found): Identification | undefined {
@@ -167,12 +149,7 @@ export function createIdentifier(deps: IdentifierDeps) {
   }
 
   /** Step 4: the strict match. */
-  async function byHints(hints: Hints): Promise<Found> {
-    const match: HintMatch = await matchHints(musicBrainz, hints);
-    if (match.kind === "one")
-      return { kind: "one", album: { releaseGroupId: match.releaseGroupId, title: "" } };
-    return match.kind === "several" ? { kind: "several", albums: match.albums } : undefined;
-  }
+  const byHints = (hints: Hints): Promise<Found> => matchHints(musicBrainz, hints);
 
   async function spotifyChain(link: ParsedLink): Promise<Identification> {
     // A track's album id comes from Spotify: it lives only here, and its misses are never cached (TS-41).
@@ -196,7 +173,9 @@ export function createIdentifier(deps: IdentifierDeps) {
   }
 
   async function appleChain(link: ParsedLink): Promise<Identification> {
-    const storefronts = [...new Set([link.storefront ?? "us", "us", "gb"])];
+    const storefronts = [
+      ...new Set([...(link.storefront ? [link.storefront] : []), ...appleLookupStorefronts]),
+    ];
     let album: AppleAlbum | undefined;
     let albumId = link.albumId;
     if (!albumId) {
@@ -235,8 +214,8 @@ export function createIdentifier(deps: IdentifierDeps) {
       // Request A, for open. and play. links. Agents' captures read only its `Location` (FR-10.5).
       const address = await pages.qobuzAddress(albumId, { readPage: !agent });
       slug = address?.slug;
+      locale = address?.locale;
       page = address?.page;
-      locale = "fr-fr";
     }
     const forms = urlForms("qobuz", albumId, {
       ...(slug ? { slug } : {}),
@@ -251,7 +230,7 @@ export function createIdentifier(deps: IdentifierDeps) {
       // Request B, or request A's answer when it was the page. The hints go to step 4 and nowhere else.
       const hints =
         page === undefined
-          ? await pages.qobuzHints(albumId, slug, locale ?? "fr-fr")
+          ? await pages.qobuzHints(albumId, slug, locale)
           : extractQobuzHints(page);
       const step4 = hints ? answer(link, 4, await byHints(hints)) : undefined;
       if (step4) return step4;
@@ -323,13 +302,7 @@ export function createIdentifier(deps: IdentifierDeps) {
       return await chains[link.service](link, context);
     } catch (error) {
       if (!(error instanceof ProviderUnavailableError)) throw error;
-      return {
-        status: "failed",
-        failure: failure(
-          "provider_unavailable",
-          `Couldn't reach ${providerNames[error.provider]}. Try again, or enter the details manually.`,
-        ),
-      };
+      return { status: "failed", failure: unavailableFailure(error) };
     }
   }
 
