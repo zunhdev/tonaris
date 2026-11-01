@@ -12,7 +12,9 @@
 
 import type { Deleted, RecoveryChoice } from "@/client/sync/trash";
 import { useCollectionData } from "@/features/collection/data";
-import type { Tree } from "@/features/collection/tree";
+import { nameRefusal } from "@/features/collection/editing";
+import { PlaceList } from "@/features/collection/place-list";
+import { destinations, siblingsOf } from "@/features/collection/tree";
 import {
   readImpact,
   SharingImpactBlock,
@@ -21,7 +23,6 @@ import {
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
-import { FolderClosed, Library } from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -36,11 +37,8 @@ import {
 import { z } from "zod";
 
 import {
-  containerNameProblem,
   findNameConflict,
-  nameTakenProblem,
   recoveryResultSchema,
-  type Container,
   type SameAlbum,
   type SharingImpact,
   type SkippedEntry,
@@ -88,10 +86,6 @@ const RecoveryContext = createContext<(target: RecoveryTarget) => void>(() => {}
 export function useRecover(): (target: RecoveryTarget) => void {
   return useContext(RecoveryContext);
 }
-
-/** The siblings a recovered root would have under `parentId`. */
-const siblingsUnder = (tree: Tree, parentId: string | null): Container[] =>
-  parentId === null ? tree.roots : (tree.children.get(parentId) ?? []);
 
 export function RecoveryProvider({ children }: { children: ReactNode }) {
   const client = useSyncClient();
@@ -186,7 +180,7 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
       return;
     }
     const name = choice.name ?? target.name;
-    if (findNameConflict(name, siblingsUnder(now, parentId))) {
+    if (findNameConflict(name, siblingsOf(now, parentId))) {
       setPrompt({ step: "name", target, choice, parentId });
       return;
     }
@@ -281,22 +275,6 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** The collection and every active folder, nested, as places to recover into. */
-function places(tree: Tree): { parentId: string | null; name: string; level: number }[] {
-  const found: { parentId: string | null; name: string; level: number }[] = [
-    { parentId: null, name: "Collection", level: 0 },
-  ];
-  const walk = (siblings: readonly Container[], level: number) => {
-    for (const folder of siblings) {
-      if (folder.kind !== "folder") continue;
-      found.push({ parentId: folder.id, name: folder.name, level });
-      walk(tree.children.get(folder.id) ?? [], level + 1);
-    }
-  };
-  walk(tree.roots, 1);
-  return found;
-}
-
 /** "'Metal' is in Trash or no longer exists. Choose where to restore 'Doom'." (DS-56) */
 function DestinationPrompt({
   target,
@@ -309,9 +287,9 @@ function DestinationPrompt({
 }) {
   const client = useSyncClient();
   const { tree } = useCollectionData();
-  const options = places(tree);
-  const [chosen, setChosen] = useState<string>("root");
-  const group = useId();
+  // Collection and every active folder (DS-56).
+  const places = destinations(tree);
+  const [chosen, setChosen] = useState<string | null>(null);
   const formerName =
     target.parentId === null
       ? undefined
@@ -321,7 +299,7 @@ function DestinationPrompt({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    onChoose(chosen === "root" ? null : chosen);
+    onChoose(chosen);
   }
 
   return (
@@ -334,40 +312,8 @@ function DestinationPrompt({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <fieldset aria-labelledby={group} className="flex max-h-80 flex-col overflow-y-auto">
-            <legend id={group} className="sr-only">
-              Places
-            </legend>
-            {options.map((place) => {
-              const value = place.parentId ?? "root";
-              const Icon = place.parentId === null ? Library : FolderClosed;
-              return (
-                <label
-                  key={value}
-                  className="flex h-8 cursor-default items-center gap-2 rounded-md px-2 text-fg-primary hover:bg-hover has-[:checked]:bg-selected has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-focus has-[:focus-visible]:outline-solid"
-                  style={{ paddingLeft: 8 + place.level * 16 }}
-                >
-                  <input
-                    type="radio"
-                    name="place"
-                    value={value}
-                    checked={chosen === value}
-                    onChange={() => setChosen(value)}
-                    className="sr-only"
-                  />
-                  <Icon
-                    aria-hidden
-                    strokeWidth={1.5}
-                    className="size-4 shrink-0 text-fg-secondary"
-                  />
-                  <span className="truncate">{place.name}</span>
-                </label>
-              );
-            })}
-          </fieldset>
-          <SharingImpactPreview
-            query={{ recover: target.unitId, to: chosen === "root" ? null : chosen }}
-          />
+          <PlaceList mode="radios" places={places} chosen={chosen} onChange={setChosen} />
+          <SharingImpactPreview query={{ recover: target.unitId, to: chosen }} />
           <div className="flex justify-end gap-2">
             <Button type="button" onClick={onCancel}>
               Cancel
@@ -446,20 +392,15 @@ function NamePrompt({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    const trimmed = name.trim();
-    const invalid = containerNameProblem(trimmed);
-    if (invalid) {
-      setProblem(invalid.problem.detail);
+    const refusal = nameRefusal(name, {
+      siblings: siblingsOf(tree, parentId),
+      parentName: parentId === null ? null : destination,
+    });
+    if (refusal) {
+      setProblem(refusal);
       return;
     }
-    const taken = findNameConflict(trimmed, siblingsUnder(tree, parentId));
-    if (taken) {
-      setProblem(
-        nameTakenProblem(taken.name, parentId === null ? null : destination).problem.detail,
-      );
-      return;
-    }
-    onName(trimmed);
+    onName(name.trim());
   }
 
   return (

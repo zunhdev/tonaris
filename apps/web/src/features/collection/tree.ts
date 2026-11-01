@@ -265,20 +265,28 @@ export function canMoveInto(tree: Tree, id: string, parentId: string | null): bo
   return !ancestorsOf(tree, parentId).some((folder) => folder.id === id);
 }
 
-/** A place the M picker offers: the root, or a folder at its level in the tree. */
+/** The folders and lists under `parentId`, null being the root: a new or recovered one's siblings. */
+export function siblingsOf(tree: Tree, parentId: string | null): readonly Container[] {
+  return parentId === null ? tree.roots : (tree.children.get(parentId) ?? []);
+}
+
+/** A place a folder or list can go: the root, or a folder at its level in the tree. */
 export type Destination = { parentId: string | null; name: string; level: number };
 
-/** Where `id` can move, for the M picker (DS-49): Collection, then the folders in the tree's order. */
-export function moveDestinations(tree: Tree, id: string): Destination[] {
+/**
+ * The places a folder or list can go: Collection, then the folders in the tree's order. Moving `moving`, for the M
+ * picker (DS-49), only those that can take it; recovering from Trash, all of them (DS-56).
+ */
+export function destinations(tree: Tree, { moving }: { moving?: string } = {}): Destination[] {
+  const takes = (parentId: string | null) =>
+    moving === undefined || canMoveInto(tree, moving, parentId);
   const found: Destination[] = [];
-  if (canMoveInto(tree, id, null)) found.push({ parentId: null, name: "Collection", level: 0 });
+  if (takes(null)) found.push({ parentId: null, name: "Collection", level: 0 });
   const walk = (siblings: readonly Container[], level: number) => {
     for (const folder of siblings) {
       // Nothing under the item itself can take it.
-      if (folder.kind !== "folder" || folder.id === id) continue;
-      if (canMoveInto(tree, id, folder.id)) {
-        found.push({ parentId: folder.id, name: folder.name, level });
-      }
+      if (folder.kind !== "folder" || folder.id === moving) continue;
+      if (takes(folder.id)) found.push({ parentId: folder.id, name: folder.name, level });
       walk(tree.children.get(folder.id) ?? [], level + 1);
     }
   };

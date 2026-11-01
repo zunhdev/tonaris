@@ -16,6 +16,7 @@ import { useCollectionUi } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { nameRefusal, type Editor } from "./editing";
 import { ContainerIcon } from "./icons";
+import { siblingsOf } from "./tree";
 
 export function NameEditor({
   level,
@@ -78,10 +79,9 @@ export function NameEditor({
   /** Saves the name, or shows why it can't be used; whether the editor closed. */
   function save(): boolean {
     if (!client || !editor) return false;
-    const siblings = parentId === null ? data.tree.roots : (data.tree.children.get(parentId) ?? []);
     const parentName = parentId === null ? null : (data.tree.byId.get(parentId)?.name ?? null);
     const reason = nameRefusal(name, {
-      siblings,
+      siblings: siblingsOf(data.tree, parentId),
       parentName,
       ...(editor.mode === "rename" ? { selfId: editor.id } : {}),
     });
