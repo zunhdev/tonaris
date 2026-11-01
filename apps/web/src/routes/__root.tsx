@@ -40,7 +40,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: stylesheet },
-      // The temporary mark (TON-114): SVG where browsers take it, a PNG where they don't, and iOS's own.
+      // The mark (TON-114, TON-154): SVG where browsers take it, a PNG where they don't, and iOS's own.
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },

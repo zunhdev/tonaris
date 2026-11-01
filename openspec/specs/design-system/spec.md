@@ -58,8 +58,8 @@ Text SHALL use Inter Variable, served by Tonaris itself rather than a third-part
 - **WHEN** the workspace is narrower than 768 px
 - **THEN** rows and menus use 15px text, and the desktop keeps 13px
 
-### Requirement: A temporary mark identifies Tonaris
-The sidebar, guest pages and the sign-in page SHALL show the mark beside the name "Tonaris", and browsers SHALL get the mark as the favicon and the iOS home-screen icon (DS-19). The mark SHALL be defined once for the app and once as an SVG for the icons, so the permanent logo can replace it.
+### Requirement: The logo identifies Tonaris
+The sidebar, guest pages and the sign-in page SHALL show the logo's mark, a disc on a compact CD player, beside the name "Tonaris", and browsers SHALL get the mark as the favicon and the iOS home-screen icon (DS-19). The mark SHALL be defined once for the app and once as an SVG for the icons.
 
 #### Scenario: A browser tab
 - **WHEN** a page of Tonaris opens in a browser

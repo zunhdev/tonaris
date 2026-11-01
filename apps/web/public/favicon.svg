@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Tonaris's temporary mark (TON-114): a record sliding out of its sleeve, light on the accent. The same shapes
-       as packages/ui's Logo; scripts/render-icons.mjs turns this file into the PNG icons. -->
+  <!-- Tonaris's mark (TON-154): a disc on a compact CD player, light on the accent, 0.25 right of centre for balance.
+       The same shapes as packages/ui's Logo; scripts/render-icons.mjs turns this file into the PNG icons. -->
   <rect width="32" height="32" rx="7" fill="#5560cf"/>
-  <g fill="#edeef1">
-    <rect x="4.5" y="6.25" width="14" height="19.5" rx="2.25"/>
-    <path d="M20.25 6.7805A9.25 9.25 0 0 1 20.25 25.2195L20.25 18.1213A2.25 2.25 0 0 0 20.25 13.8787Z"/>
+  <g fill="#edeef1" transform="translate(5.45 8.32) scale(0.96)">
+    <path d="M7.905 16L2.5 16A2.5 2.5 0 0 1 0 13.5L0 2.5A2.5 2.5 0 0 1 2.5 0L7.905 0A0.35 0.35 0 0 1 8.134 0.615A9.75 9.75 0 0 0 8.134 15.385A0.35 0.35 0 0 1 7.905 16Z"/>
+    <path fill-rule="evenodd" d="M6.5 8a8 8 0 1 0 16 0a8 8 0 1 0-16 0ZM11.75 8a2.75 2.75 0 1 0 5.5 0a2.75 2.75 0 1 0-5.5 0ZM13.25 8a1.25 1.25 0 1 0 2.5 0a1.25 1.25 0 1 0-2.5 0Z"/>
   </g>
 </svg>

@@ -1,4 +1,4 @@
-// The temporary identity in a real browser (TON-114, DS-11): the mark and the name on the sign-in page and in the
+// The identity in a real browser (TON-114, TON-154, DS-19): the mark and the name on the sign-in page and in the
 // sidebar, and the icons the page names served from the web app.
 
 import { expect, test } from "@playwright/test";
