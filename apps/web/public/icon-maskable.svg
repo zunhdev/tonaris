@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- The temporary mark for Android's adaptive icons (TON-114): full bleed, the mark inside the central safe zone. -->
+  <!-- The mark for Android's adaptive icons (TON-154): full bleed, the mark inside the central safe zone. -->
   <rect width="32" height="32" fill="#5560cf"/>
-  <g fill="#edeef1" transform="translate(16 16) scale(0.62) translate(-16.625 -16)">
-    <rect x="4.5" y="6.25" width="14" height="19.5" rx="2.25"/>
-    <path d="M20.25 6.7805A9.25 9.25 0 0 1 20.25 25.2195L20.25 18.1213A2.25 2.25 0 0 0 20.25 13.8787Z"/>
+  <g fill="#edeef1" transform="translate(7.7 9.92) scale(0.76)">
+    <path d="M7.905 16L2.5 16A2.5 2.5 0 0 1 0 13.5L0 2.5A2.5 2.5 0 0 1 2.5 0L7.905 0A0.35 0.35 0 0 1 8.134 0.615A9.75 9.75 0 0 0 8.134 15.385A0.35 0.35 0 0 1 7.905 16Z"/>
+    <path fill-rule="evenodd" d="M6.5 8a8 8 0 1 0 16 0a8 8 0 1 0-16 0ZM11.75 8a2.75 2.75 0 1 0 5.5 0a2.75 2.75 0 1 0-5.5 0ZM13.25 8a1.25 1.25 0 1 0 2.5 0a1.25 1.25 0 1 0-2.5 0Z"/>
   </g>
 </svg>

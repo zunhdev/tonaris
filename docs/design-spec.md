@@ -153,10 +153,12 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - **Services are named in plain text**: "Spotify", "Apple Music", "Qobuz", "Tidal", "YouTube Music". No logos, badges or brand colors (decided 19 October 2026, [G1 terms review](spikes/2026-10-19-g1-terms-review.md); Tidal added 20 October 2026, [Tidal spike](spikes/2026-10-20-g1-tidal.md); YouTube Music 31 October 2026, TON-131): Spotify forbids pairing its brand with others', Apple allows only its own badge artwork, Qobuz's logo needs its consent, and Tidal's marks belong to its developer program, which Tonaris doesn't use. No provider-sourced content needs attribution (G1).
 - Release types are written as text, not icons.
 - **Branding:** a text wordmark, "Tonaris" in Inter semibold. The favicon and app icon are a "T" mark on the accent color.
-  - *As built in TON-114* (temporary, until the creator's permanent logo): **the mark is a record sliding out of its sleeve,** flat and in one color, in `packages/ui`'s `Logo`.
-    - **The wordmark** is the mark beside "Tonaris": `text.brand` with a 20 px mark in the sidebar and on guest pages, and `text.page` with a 28 px mark above the sign-in card.
-    - **The favicon** (`apps/web/public/favicon.svg`) is the mark in `fg.primary`'s color on a rounded `accent.fill` square. PNGs at 32 px, 180 px (iOS, square), 192 px and 512 px, and a 512 px maskable icon with the mark in the safe zone, come from `apps/web/scripts/render-icons.mjs`.
-    - **Replacing it** means new shapes in `logo.tsx`, `favicon.svg` and `icon-maskable.svg`, then running the script.
+  - *As built in TON-114* (temporary): a record sliding out of its sleeve. TON-154 replaced it.
+  - *As built in TON-154* (the creator chose it from three rounds of variants, 1 November 2026): **the mark is a disc on a compact CD player,** flat and in one color, in `packages/ui`'s `Logo`.
+    - **The shapes,** on a 22.5 × 16 grid: a 16-unit square body with 2.5-unit corners, and the disc, as tall as the body, in front of it, overhanging its right side by 6.5. A 1.75-unit gap follows the disc's edge through the body. The disc's hole shows the player's spindle.
+    - **The wordmark** is the mark beside "Tonaris", sized by its height: 16 px beside `text.brand` in the sidebar and on guest pages, 22 px beside `text.page` above the sign-in card.
+    - **The favicon** (`apps/web/public/favicon.svg`) is the mark in `fg.primary`'s color on a rounded `accent.fill` square, a little right of centre, since the body's straight edge weighs more than the round disc. PNGs at 32 px, 180 px (iOS, square), 192 px and 512 px, and a 512 px maskable icon with the mark in the safe zone, come from `apps/web/scripts/render-icons.mjs`.
+    - **Changing it** means new shapes in `logo.tsx`, `favicon.svg` and `icon-maskable.svg`, then running the script.
 
 ---
 
@@ -1964,7 +1966,7 @@ No design questions are open. The creator settled these on 17 October 2026, and 
 | 5 | Approval pages on mobile (DS-87) | Yes, fully usable |
 | 6 | Lost-email recovery (DS-93, DS-100) | A help page with a contact address; the creator performs the recovery from Admin |
 | 7 | Link-preview artwork (DS-72) | Text-only until G1 clears artwork use |
-| 8 | Wordmark and app icon (DS-19) | A simple text wordmark; a temporary mark beside it since TON-114 |
+| 8 | Wordmark and app icon (DS-19) | A simple text wordmark beside the mark, a disc on a compact CD player (TON-154, 1 November 2026; after TON-114's temporary one) |
 | 9 | Typed confirmation for account deletion (DS-97) | The user types their sign-in email |
 | 10 | Input borders below 3:1 (DS-12, DS-14), 18 Oct 2026 | Raise `border.strong` to 0.52, reaching 3:1 on every surface |
 | 11 | Primary button labels below 4.5:1 on the accent (DS-12, DS-14), 18 Oct 2026 | New `accent.fill` (0.54 0.17 275) behind near-white `fg.on-accent` labels; `accent.solid` stays for focus and selection |

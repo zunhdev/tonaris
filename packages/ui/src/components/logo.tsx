@@ -1,22 +1,29 @@
-// Tonaris's temporary identity (TON-114, DS-11): the mark, a record sliding out of its sleeve, and the wordmark, the
-// mark beside the name. The permanent logo replaces the shapes here and in apps/web/public/favicon.svg, whose PNGs
-// apps/web/scripts/render-icons.mjs renders again.
+// Tonaris's logo (TON-154, DS-19): the mark, a disc on a compact CD player, and the wordmark, the mark beside the name.
+// The same shapes are in apps/web/public/favicon.svg and icon-maskable.svg, whose PNGs
+// apps/web/scripts/render-icons.mjs renders.
 
 import { cn } from "@tonaris/ui/lib/utils";
 
-/** The mark, in the current color. Decorative: the name always goes with it. */
+/**
+ * The mark, in the current color, sized by its height. Decorative: the name always goes with it. On a 22.5 × 16 grid:
+ * a 16-unit body with the disc, as tall as the body, in front of it, a 1.75-unit gap between them, and the spindle in
+ * the disc's hole.
+ */
 function Logo({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="4.375 3.75 24.5 24.5"
+      viewBox="0 0 22.5 16"
       fill="currentColor"
       aria-hidden
       focusable="false"
       data-slot="logo"
-      className={cn("size-5 shrink-0", className)}
+      className={cn("aspect-[45/32] h-4 w-auto shrink-0", className)}
     >
-      <rect x="4.5" y="6.25" width="14" height="19.5" rx="2.25" />
-      <path d="M20.25 6.7805A9.25 9.25 0 0 1 20.25 25.2195L20.25 18.1213A2.25 2.25 0 0 0 20.25 13.8787Z" />
+      <path d="M7.905 16L2.5 16A2.5 2.5 0 0 1 0 13.5L0 2.5A2.5 2.5 0 0 1 2.5 0L7.905 0A0.35 0.35 0 0 1 8.134 0.615A9.75 9.75 0 0 0 8.134 15.385A0.35 0.35 0 0 1 7.905 16Z" />
+      <path
+        fillRule="evenodd"
+        d="M6.5 8a8 8 0 1 0 16 0a8 8 0 1 0-16 0ZM11.75 8a2.75 2.75 0 1 0 5.5 0a2.75 2.75 0 1 0-5.5 0ZM13.25 8a1.25 1.25 0 1 0 2.5 0a1.25 1.25 0 1 0-2.5 0Z"
+      />
     </svg>
   );
 }
@@ -31,7 +38,7 @@ function Wordmark({ size = "brand", className }: { size?: "brand" | "page"; clas
         className,
       )}
     >
-      <Logo className={size === "page" ? "size-7" : "size-5"} />
+      <Logo className={size === "page" ? "h-5.5" : "h-4"} />
       Tonaris
     </span>
   );
