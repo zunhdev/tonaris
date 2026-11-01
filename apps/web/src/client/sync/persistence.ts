@@ -7,12 +7,11 @@
 import { z } from "zod";
 
 import {
-  errorCodeSchema,
-  fieldConflictSchema,
-  inputNeeds,
+  conflictOutcomeSchema,
+  failedOutcomeSchema,
   mutationSchema,
+  needsInputOutcomeSchema,
   outcomeSchema,
-  problemSchema,
 } from "@tonaris/domain";
 
 const outboxItemSchema = z.object({ mutation: mutationSchema, key: z.string() });
@@ -35,26 +34,16 @@ const outboxEntrySchema = z.object({
  */
 export type OutboxEntry = z.infer<typeof outboxEntrySchema>;
 
-const storedConflictSchema = outboxItemSchema.extend({
-  outcome: z.object({
-    status: z.literal("conflict"),
-    conflicts: z.array(fieldConflictSchema).min(1),
-  }),
-});
+// The kept outcomes are the domain's own members of `outcomeSchema`: Zod drops the keys a schema doesn't name, so a
+// copy here would lose a field added there on the next reload.
+export const storedConflictSchema = outboxItemSchema.extend({ outcome: conflictOutcomeSchema });
 
 /** An attempt that met a newer saved value, kept until the person reviews it. */
 export type StoredConflict = z.infer<typeof storedConflictSchema>;
 
-const storedFailureSchema = outboxItemSchema.extend({
-  outcome: z.discriminatedUnion("status", [
-    z.object({ status: z.literal("failed"), code: errorCodeSchema, problem: problemSchema }),
-    // A capture waiting for the person's choice or details keeps its link the same way (TON-45).
-    z.object({
-      status: z.literal("needs_input"),
-      need: z.enum(inputNeeds),
-      candidates: z.array(z.unknown()),
-    }),
-  ]),
+export const storedFailureSchema = outboxItemSchema.extend({
+  // A capture waiting for the person's choice or details keeps its link the same way (TON-45).
+  outcome: z.discriminatedUnion("status", [failedOutcomeSchema, needsInputOutcomeSchema]),
 });
 
 /**
@@ -162,7 +151,7 @@ export function memoryPersistence(): SyncPersistence {
 }
 
 /** The account's database name. */
-export const syncDatabaseName = (accountId: string) => `tonaris-sync:${accountId}`;
+const syncDatabaseName = (accountId: string) => `tonaris-sync:${accountId}`;
 
 function settled<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {

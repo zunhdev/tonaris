@@ -6,7 +6,9 @@ import { isUuid } from "@tonaris/domain";
 /** A route's `validateSearch` that keeps `key` when it holds an ID, and drops it and everything else otherwise. */
 export function uuidSearch<Key extends string>(key: Key) {
   return (search: Record<string, unknown>): Partial<Record<Key, string>> => {
+    const kept: Partial<Record<Key, string>> = {};
     const value = search[key];
-    return isUuid(value) ? ({ [key]: value } as Partial<Record<Key, string>>) : {};
+    if (isUuid(value)) kept[key] = value;
+    return kept;
   };
 }

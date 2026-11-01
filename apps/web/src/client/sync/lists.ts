@@ -4,8 +4,8 @@
 // (TON-27), each becoming one envelope whose `base` is the value before the edit (TS-21).
 
 import {
+  containerFieldsSchema,
   membershipKey,
-  uuidv7,
   type Container,
   type Membership,
   type Mutation,
@@ -14,11 +14,10 @@ import {
 import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
+import { envelope, pick } from "./writes";
 
 /** What `container.create` takes: the container's own fields, without a description, which is set afterwards. */
-function createArgsOf({ id, kind, parentId, name }: Container) {
-  return { id, kind, parentId, name };
-}
+const createFields = containerFieldsSchema.keyof().options;
 
 /**
  * A rename for a new name, a move for a new parent, and a description for a new one, each with the value before it
@@ -28,28 +27,25 @@ function containerUpdates(original: Container, changes: Partial<Container>): Mut
   const updates: Mutation[] = [];
   const { id } = original;
   if (changes.name !== undefined && changes.name !== original.name) {
-    updates.push({
-      mutationId: uuidv7(),
-      name: "container.rename",
-      args: { id, name: changes.name },
-      base: { name: original.name },
-    });
+    updates.push(envelope("container.rename", { id, name: changes.name }, { name: original.name }));
   }
   if (changes.parentId !== undefined && changes.parentId !== original.parentId) {
-    updates.push({
-      mutationId: uuidv7(),
-      name: "container.move",
-      args: { id, parentId: changes.parentId },
-      base: { parentId: original.parentId },
-    });
+    updates.push(
+      envelope(
+        "container.move",
+        { id, parentId: changes.parentId },
+        { parentId: original.parentId },
+      ),
+    );
   }
   if (changes.description !== undefined && changes.description !== original.description) {
-    updates.push({
-      mutationId: uuidv7(),
-      name: "container.describe",
-      args: { id, description: changes.description },
-      base: { description: original.description },
-    });
+    updates.push(
+      envelope(
+        "container.describe",
+        { id, description: changes.description },
+        { description: original.description },
+      ),
+    );
   }
   return updates;
 }
@@ -61,54 +57,36 @@ export function createContainerCollection({
   engine: SyncEngine;
   writer: Writer;
 }) {
-  return snapshotCollection<Container>(
+  return snapshotCollection({
     engine,
-    "containers",
-    (s) => s.containers,
-    (c) => c.id,
-    (change) => (change.entity === "container" ? { key: change.id, row: change.data } : undefined),
-    {
+    id: "containers",
+    entity: "container",
+    rows: (s) => s.containers,
+    getKey: (c) => c.id,
+    handlers: {
       onInsert: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.flatMap((pending) => {
-            const create: Mutation = {
-              mutationId: uuidv7(),
-              name: "container.create",
-              args: createArgsOf(pending.modified),
-            };
-            const { description } = pending.modified;
-            const describe: Mutation = {
-              mutationId: uuidv7(),
-              name: "container.describe",
-              args: { id: pending.modified.id, description },
-              base: { description: null },
-            };
-            return [
-              { key: pending.key, mutation: create },
-              ...(description ? [{ key: pending.key, mutation: describe }] : []),
-            ];
-          }),
-        ),
+        writer.persistEach(transaction, ({ modified }) => {
+          const { id, description } = modified;
+          return [
+            envelope("container.create", pick(modified, createFields)),
+            ...(description
+              ? [envelope("container.describe", { id, description }, { description: null })]
+              : []),
+          ];
+        }),
       onUpdate: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.flatMap((pending) =>
-            containerUpdates(pending.original, pending.changes).map((mutation) => ({
-              key: pending.key,
-              mutation,
-            })),
-          ),
+        writer.persistEach(transaction, ({ original, changes }) =>
+          containerUpdates(original, changes),
         ),
     },
-  );
+  });
 }
 
 /** The write that adds an album to a list, or removes it. */
-function entryWrite(name: "membership.add" | "membership.remove", { listId, albumId }: Membership) {
-  const mutation: Mutation = { mutationId: uuidv7(), name, args: { listId, albumId } };
-  return { key: membershipKey(listId, albumId), mutation };
-}
+const entryWrite = (
+  name: "membership.add" | "membership.remove",
+  { listId, albumId }: Membership,
+) => [envelope(name, { listId, albumId })];
 
 export function createMembershipCollection({
   engine,
@@ -117,25 +95,21 @@ export function createMembershipCollection({
   engine: SyncEngine;
   writer: Writer;
 }) {
-  return snapshotCollection<Membership>(
+  return snapshotCollection({
     engine,
-    "memberships",
-    (s) => s.memberships,
-    (m) => membershipKey(m.listId, m.albumId),
-    (change) => (change.entity === "membership" ? { key: change.id, row: change.data } : undefined),
-    {
+    id: "memberships",
+    entity: "membership",
+    rows: (s) => s.memberships,
+    getKey: (m) => membershipKey(m.listId, m.albumId),
+    handlers: {
       onInsert: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.map((pending) => entryWrite("membership.add", pending.modified)),
-        ),
+        writer.persistEach(transaction, ({ modified }) => entryWrite("membership.add", modified)),
       onDelete: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.map((pending) => entryWrite("membership.remove", pending.original)),
+        writer.persistEach(transaction, ({ original }) =>
+          entryWrite("membership.remove", original),
         ),
     },
-  );
+  });
 }
 
 export type ContainerCollection = ReturnType<typeof createContainerCollection>;

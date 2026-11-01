@@ -3,20 +3,17 @@
 // depend on the owners' data and come from `GET /v1/shared` (features/sharing/shared-with-me.tsx). Writes go
 // straight to the API from where they're made, not through these.
 
-import type { Reference } from "@tonaris/domain";
-
 import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
 
 export function createReferenceCollection({ engine }: { engine: SyncEngine }) {
-  return snapshotCollection<Reference>(
+  return snapshotCollection({
     engine,
-    "references",
-    (snapshot) => snapshot.references,
-    (reference) => reference.containerId,
-    (change) => (change.entity === "reference" ? { key: change.id, row: change.data } : undefined),
-    {},
-  );
+    id: "references",
+    entity: "reference",
+    rows: (snapshot) => snapshot.references,
+    getKey: (reference) => reference.containerId,
+  });
 }
 
 export type ReferenceCollection = ReturnType<typeof createReferenceCollection>;

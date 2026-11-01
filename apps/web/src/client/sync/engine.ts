@@ -11,7 +11,7 @@ import { bootstrapSchema, changeSchema, type Bootstrap, type Change } from "@ton
 import { readEventStream } from "./event-stream";
 import type { TabCoordinator, TabMessage } from "./tabs";
 
-/** A store fed by the engine: TanStack DB collections (albums.ts). */
+/** A store fed by the engine: the TanStack DB collections (snapshot.ts). */
 export type SyncConsumer = {
   /** Replaces everything with a snapshot: on the first bootstrap, and after a `reset`. */
   reset(snapshot: Bootstrap): void;

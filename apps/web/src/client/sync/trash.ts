@@ -6,30 +6,23 @@
 
 import { createTransaction } from "@tanstack/db";
 
-import {
-  membershipKey,
-  uuidv7,
-  type Container,
-  type Membership,
-  type Mutation,
-  type TrashUnit,
-} from "@tonaris/domain";
+import { membershipKey, uuidv7, type Container, type Membership } from "@tonaris/domain";
 
 import type { AlbumCollection } from "./albums";
 import type { SyncEngine } from "./engine";
 import type { ContainerCollection, MembershipCollection } from "./lists";
 import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
+import { envelope } from "./writes";
 
 export function createTrashUnitCollection({ engine }: { engine: SyncEngine }) {
-  return snapshotCollection<TrashUnit>(
+  return snapshotCollection({
     engine,
-    "trashUnits",
-    (snapshot) => snapshot.trashUnits,
-    (unit) => unit.id,
-    (change) => (change.entity === "trashUnit" ? { key: change.id, row: change.data } : undefined),
-    {},
-  );
+    id: "trashUnits",
+    entity: "trashUnit",
+    rows: (snapshot) => snapshot.trashUnits,
+    getKey: (unit) => unit.id,
+  });
 }
 
 export type TrashUnitCollection = ReturnType<typeof createTrashUnitCollection>;
@@ -95,14 +88,10 @@ export function createTrash({
         mutationFn: async ({ transaction: written }) => {
           await writer.persist(
             written,
-            units.map(({ unitId, rootId }) => {
-              const mutation: Mutation = {
-                mutationId: uuidv7(),
-                name: "container.delete",
-                args: { id: rootId, unitId },
-              };
-              return { key: rootId, mutation };
-            }),
+            units.map(({ unitId, rootId }) => ({
+              key: rootId,
+              mutation: envelope("container.delete", { id: rootId, unitId }),
+            })),
           );
         },
       });
@@ -124,11 +113,7 @@ export function createTrash({
       const entries = [...memberships.values()].filter((entry) => entry.albumId === albumId);
       const transaction = createTransaction({
         mutationFn: async ({ transaction: written }) => {
-          const mutation: Mutation = {
-            mutationId: uuidv7(),
-            name: "album.delete",
-            args: { id: albumId, unitId },
-          };
+          const mutation = envelope("album.delete", { id: albumId, unitId });
           await writer.persist(written, [{ key: albumId, mutation }]);
         },
       });
@@ -146,11 +131,7 @@ export function createTrash({
      * `trash.purge` reports any already gone. Answers the transaction and its write's ID.
      */
     purge(unitIds: readonly string[]) {
-      const mutation: Mutation = {
-        mutationId: uuidv7(),
-        name: "trash.purge",
-        args: { unitIds: [...unitIds] },
-      };
+      const mutation = envelope("trash.purge", { unitIds: [...unitIds] });
       const transaction = createTransaction({
         mutationFn: async ({ transaction: written }) => {
           await writer.persist(written, [{ key: `purge:${mutation.mutationId}`, mutation }]);
@@ -173,11 +154,7 @@ export function createTrash({
       choice: RecoveryChoice = {},
       deleted?: Deleted,
     ) {
-      const mutation: Mutation = {
-        mutationId: uuidv7(),
-        name: "trash.recover",
-        args: { unitId: unit.unitId, ...choice },
-      };
+      const mutation = envelope("trash.recover", { unitId: unit.unitId, ...choice });
       const transaction = createTransaction({
         mutationFn: async ({ transaction: written }) => {
           await writer.persist(written, [{ key: unit.rootId, mutation }]);

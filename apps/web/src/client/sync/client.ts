@@ -17,10 +17,11 @@ import { createOutbox } from "./outbox";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
 import { createArrange, createPositionCollection } from "./positions";
 import { createReferenceCollection } from "./references";
+import { createSaveStates } from "./save-states";
 import { entrySender } from "./transport";
 import { createTrash, createTrashUnitCollection } from "./trash";
 import { createDefaultsCollection, createViewCollection } from "./views";
-import { createSaveStates, createWriter } from "./writer";
+import { createWriter } from "./writer";
 
 export type SyncClientOptions = SyncEngineOptions & {
   /** How long a mutation request may take before it counts as unanswered. */

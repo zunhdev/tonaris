@@ -6,24 +6,24 @@
 
 import { createTransaction, type PendingMutation } from "@tanstack/db";
 
-import { positionKey, uuidv7, type Mutation, type Position } from "@tonaris/domain";
+import { positionKey, type Mutation, type Position } from "@tonaris/domain";
 
 import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
+import { envelope } from "./writes";
 
 /** Where the save states keep a view's moves. */
-export const orderStateKey = (viewKey: string) => `order:${viewKey}`;
+const orderStateKey = (viewKey: string) => `order:${viewKey}`;
 
 export function createPositionCollection({ engine }: { engine: SyncEngine }) {
-  return snapshotCollection<Position>(
+  return snapshotCollection({
     engine,
-    "positions",
-    (s) => s.positions,
-    (position) => positionKey(position.viewKey, position.itemId),
-    (change) => (change.entity === "position" ? { key: change.id, row: change.data } : undefined),
-    {},
-  );
+    id: "positions",
+    entity: "position",
+    rows: (s) => s.positions,
+    getKey: (position) => positionKey(position.viewKey, position.itemId),
+  });
 }
 
 export type PositionCollection = ReturnType<typeof createPositionCollection>;
@@ -44,7 +44,7 @@ function orderWrite(
   }
   return {
     key: orderStateKey(viewKey),
-    mutation: { mutationId: uuidv7(), name: "order.set", args: { viewKey, keys }, base },
+    mutation: envelope("order.set", { viewKey, keys }, base),
   };
 }
 

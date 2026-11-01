@@ -4,10 +4,24 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { failure, uuidv7, type Mutation, type Outcome } from "@tonaris/domain";
+import {
+  failure,
+  outcomeStatuses,
+  uuidv7,
+  type Mutation,
+  type Outcome,
+  type OutcomeStatus,
+} from "@tonaris/domain";
 
 import { memoryPersistence } from "./persistence";
-import { createSaveStates, type BatchReport } from "./writer";
+import {
+  createSaveStates,
+  isUnderway,
+  markerStatuses,
+  needsPerson,
+  storeOf,
+  type BatchReport,
+} from "./save-states";
 
 const rename = (name: string): Mutation => ({
   mutationId: uuidv7(),
@@ -198,5 +212,31 @@ describe("batch reports (FR-13.4, DS-84)", () => {
     expect(states.open().map((state) => [state.status, state.batch])).toEqual([
       ["pending", undefined],
     ]);
+  });
+});
+
+/** The statuses `holds` holds for, in the vocabulary's order. */
+const where = (holds: (status: OutcomeStatus) => unknown) =>
+  outcomeStatuses.filter((status) => holds(status));
+
+describe("status categories (TON-147)", () => {
+  test("a write is underway, saved, or waits for the person, never two of them", () => {
+    expect(where(isUnderway)).toEqual(["pending", "unconfirmed"]);
+    expect(where(needsPerson)).toEqual([
+      "failed",
+      "conflict",
+      "needs_input",
+      "needs_approval",
+      "skipped",
+    ]);
+  });
+
+  test("a marker shows every state but saved", () => {
+    expect(new Set(markerStatuses)).toEqual(new Set(where((status) => status !== "confirmed")));
+  });
+
+  test("conflicts and failures, with captures waiting for input, each have their store", () => {
+    expect(where((status) => storeOf(status) === "conflicts")).toEqual(["conflict"]);
+    expect(where((status) => storeOf(status) === "failures")).toEqual(["failed", "needs_input"]);
   });
 });
