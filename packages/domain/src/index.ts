@@ -383,3 +383,4 @@ export { guestMutationRefusal, mutationIdInUse, mutationTooOld } from "./sync";
 export { codeRefusal, type CodeRefusal } from "./codes";
 export { invitationStateFor, shownEmailStatus } from "./invitations";
 export { maxMergeCandidates } from "./limits";
+export { endedGrantStatuses, openGrantStatuses } from "./sharing";

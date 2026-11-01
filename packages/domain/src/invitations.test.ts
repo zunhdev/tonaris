@@ -1,10 +1,15 @@
 // An invitation from its recipient's side (DS-66, FR-07.5): what its page shows each person, in every grant status,
-// and when an unanswered send reads as unconfirmed.
+// when an unanswered send reads as unconfirmed, and which statuses are open or ended.
 
 import { describe, expect, test } from "bun:test";
 
 import { invitationStateFor, shownEmailStatus } from "./invitations";
-import { shareGrantStatuses, type Invitation } from "./sharing";
+import {
+  endedGrantStatuses,
+  openGrantStatuses,
+  shareGrantStatuses,
+  type Invitation,
+} from "./sharing";
 
 const invitation: Invitation = {
   id: "0195d0a0-0000-7000-8000-000000000001",
@@ -62,5 +67,13 @@ describe("an invitation's email status (FR-07.5)", () => {
     expect(shownEmailStatus("sent", ago(60), now)).toBe("sent");
     expect(shownEmailStatus("failed", ago(60), now)).toBe("failed");
     expect(shownEmailStatus(null, ago(60), now)).toBeNull();
+  });
+});
+
+describe("grant statuses (TS-33)", () => {
+  test("every status is open or ended, never both", () => {
+    expect([...openGrantStatuses, ...endedGrantStatuses].toSorted()).toEqual(
+      [...shareGrantStatuses].toSorted(),
+    );
   });
 });

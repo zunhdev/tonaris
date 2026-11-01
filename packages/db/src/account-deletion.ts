@@ -5,7 +5,11 @@
 
 import { and, eq, inArray, isNull, lt } from "drizzle-orm";
 
-import { accountDeletionJobKind, type AccountDeletionStatus } from "@tonaris/domain";
+import {
+  accountDeletionJobKind,
+  openGrantStatuses,
+  type AccountDeletionStatus,
+} from "@tonaris/domain";
 
 import type { Database, Executor, Transaction } from "./client";
 import { enqueueJob } from "./jobs";
@@ -74,7 +78,7 @@ export async function endAccountAccess(tx: Transaction, userId: string, now: Dat
     .update(shareLinks)
     .set({ revokedAt: now })
     .where(and(inArray(shareLinks.containerId, owned), isNull(shareLinks.revokedAt)));
-  const open = inArray(shareGrants.status, ["pending", "accepted"]);
+  const open = inArray(shareGrants.status, [...openGrantStatuses]);
   await tx
     .update(shareGrants)
     .set({ status: "revoked" })

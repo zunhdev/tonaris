@@ -4,7 +4,7 @@
 
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
-import type { LedgerEvent } from "@tonaris/domain";
+import { openGrantStatuses, type LedgerEvent } from "@tonaris/domain";
 
 import { deleteAccountData, endAccountAccess } from "./account-deletion";
 import type { Database } from "./client";
@@ -87,7 +87,7 @@ async function apply(db: Database, event: LedgerEvent): Promise<void> {
         .where(
           and(
             eq(shareGrants.id, event.grantId),
-            inArray(shareGrants.status, ["pending", "accepted"]),
+            inArray(shareGrants.status, [...openGrantStatuses]),
           ),
         );
       return;

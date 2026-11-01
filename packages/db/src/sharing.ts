@@ -6,6 +6,7 @@ import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import {
   isChoiceType,
+  openGrantStatuses,
   shareTokenHash,
   shownEmailStatus,
   type ContainerFields,
@@ -193,7 +194,7 @@ export function shareSettings(
       .from(shareGrants)
       .innerJoin(users, eq(users.id, shareGrants.granteeId))
       .where(
-        and(eq(shareGrants.containerId, id), inArray(shareGrants.status, ["pending", "accepted"])),
+        and(eq(shareGrants.containerId, id), inArray(shareGrants.status, [...openGrantStatuses])),
       )
       .orderBy(asc(shareGrants.id));
     const [link] = await tx
@@ -206,25 +207,20 @@ export function shareSettings(
         : await tx.execute<{ id: string; name: string; people: number; link: boolean }>(sql`
             with recursive ${ancestorsCte(container.parentId)}
             select up.id, c.name,
-              (select count(*) from ${shareGrants} g
-                where g.container_id = up.id and g.status in ('pending', 'accepted'))::int as people,
+              (select count(*) from ${shareGrants}
+                where ${shareGrants.containerId} = up.id and ${inArray(shareGrants.status, [...openGrantStatuses])})::int as people,
               exists (select 1 from ${shareLinks} l where l.container_id = up.id and l.revoked_at is null) as link
             from up join ${containers} c on c.id = up.id order by up.level`);
     return {
       containerId: id,
       ownerDisplayName: owner?.displayName ?? null,
-      invitations: invitations.flatMap(({ updatedAt, emailStatus, ...each }) =>
-        each.status === "pending" || each.status === "accepted"
-          ? [
-              {
-                ...each,
-                status: each.status,
-                // A send that never reported back is unconfirmed: the server may have stopped (FR-07.5).
-                emailStatus: shownEmailStatus(emailStatus, updatedAt, now),
-              },
-            ]
-          : [],
-      ),
+      invitations: invitations.flatMap(({ updatedAt, emailStatus, ...each }) => {
+        const status = openGrantStatuses.find((open) => open === each.status);
+        // A send that never reported back is unconfirmed: the server may have stopped (FR-07.5).
+        return status
+          ? [{ ...each, status, emailStatus: shownEmailStatus(emailStatus, updatedAt, now) }]
+          : [];
+      }),
       link: link ?? null,
       inherited: above
         .filter((each) => each.people > 0 || each.link)

@@ -3,7 +3,7 @@
 
 import { and, count, eq, inArray, isNull } from "drizzle-orm";
 
-import type { CollectionStore } from "@tonaris/domain";
+import { endedGrantStatuses, openGrantStatuses, type CollectionStore } from "@tonaris/domain";
 
 import { canReadContainer, linkByTokenHash } from "../access";
 import type { Transaction } from "../client";
@@ -41,7 +41,7 @@ export function sharingStore(tx: Transaction) {
         .where(
           and(
             inArray(shareGrants.containerId, owned),
-            inArray(shareGrants.status, ["pending", "accepted"]),
+            inArray(shareGrants.status, [...openGrantStatuses]),
           ),
         );
       const [links] = await tx
@@ -58,7 +58,7 @@ export function sharingStore(tx: Transaction) {
           and(
             eq(shareGrants.containerId, containerId),
             eq(shareGrants.granteeId, granteeId),
-            inArray(shareGrants.status, ["pending", "accepted"]),
+            inArray(shareGrants.status, [...openGrantStatuses]),
           ),
         );
       return grant;
@@ -85,8 +85,9 @@ export function sharingStore(tx: Transaction) {
         .where(and(eq(shareGrants.id, id), eq(shareGrants.status, from)))
         .returning({ id: shareGrants.id });
       // An ended grant stays ended after a restore (TS-113).
-      if (moved.length > 0 && (to === "declined" || to === "withdrawn" || to === "revoked"))
-        await recordInLedger(tx, { type: "shareGrant.ended", grantId: id, status: to });
+      const ended = endedGrantStatuses.find((status) => status === to);
+      if (moved.length > 0 && ended)
+        await recordInLedger(tx, { type: "shareGrant.ended", grantId: id, status: ended });
       return moved.length > 0;
     },
     async setGrantEmailStatus(id, status) {

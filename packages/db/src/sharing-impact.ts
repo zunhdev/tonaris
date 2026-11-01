@@ -7,6 +7,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import {
   listsImpact,
   moveImpact,
+  openGrantStatuses,
   recoveryImpact,
   type ImpactState,
   type SharingImpact,
@@ -49,7 +50,7 @@ export async function impactState(
       .innerJoin(containers, eq(containers.id, shareGrants.containerId))
       .innerJoin(users, eq(users.id, shareGrants.granteeId))
       .where(
-        and(eq(containers.ownerId, ownerId), inArray(shareGrants.status, ["pending", "accepted"])),
+        and(eq(containers.ownerId, ownerId), inArray(shareGrants.status, [...openGrantStatuses])),
       ),
     tx
       .select({ containerId: shareLinks.containerId })
