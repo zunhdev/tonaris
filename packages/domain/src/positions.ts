@@ -9,6 +9,7 @@ import { generateKeyBetween, generateNKeysBetween } from "fractional-indexing";
 import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, baseProblem, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
+import { maxAlbums } from "./limits";
 import { failure } from "./outcomes";
 import { viewKeySchema, viewKindOf } from "./views";
 import { z } from "./zod";
@@ -28,8 +29,8 @@ export function positionKey(viewKey: string, itemId: string): string {
   return `${viewKey}:${itemId}`;
 }
 
-/** Items one `order.set` may place: a view holds at most the collection's 5,000 albums (FR-15). */
-export const maxOrderItems = 5_000;
+/** Items one `order.set` may place: a view holds at most the collection's albums (FR-15). */
+export const maxOrderItems = maxAlbums;
 
 /** Fractional-index keys stay short; anything longer is no key of ours. */
 const maxKeyLength = 128;

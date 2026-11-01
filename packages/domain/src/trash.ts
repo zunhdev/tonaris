@@ -9,7 +9,6 @@
 // album pauses instead, naming it, and changes nothing (FR-14.3).
 
 import { changeableAlbum } from "./albums";
-import { trashRetentionDays } from "./approvals";
 import { clientAlbum } from "./capture";
 import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, isFailure } from "./command-kit";
@@ -24,7 +23,7 @@ import {
   type Container,
 } from "./containers";
 import { fieldValueKey } from "./field-values";
-import { maxContainerDepth } from "./limits";
+import { maxContainerDepth, trashRetentionDays } from "./limits";
 import { membershipKey, type Membership } from "./memberships";
 import { findNameConflict } from "./names";
 import { failure } from "./outcomes";

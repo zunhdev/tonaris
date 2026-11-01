@@ -8,11 +8,9 @@ import { changeableAlbum } from "./albums";
 import { applied, conflict, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import type { CustomField, StoredField } from "./fields";
+import { maxTextValueLength } from "./limits";
 import { failure, type Failure } from "./outcomes";
 import { z } from "./zod";
-
-/** Characters in a text value, counted in code points (TS-18). */
-export const maxTextValueLength = 2_000;
 
 /**
  * A field's value on an album: text, a decimal number as a string, a `YYYY-MM-DD` date, yes/no, an option ID, or

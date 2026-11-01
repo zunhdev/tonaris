@@ -5,6 +5,7 @@
 import type { FieldDeletion } from "./field-deletion";
 import type { OptionRemoval } from "./field-options";
 import { fieldTypes, type FieldType } from "./fields";
+import { trashRetentionDays } from "./limits";
 import { audienceSchema, type Audience } from "./sharing-impact";
 import { z } from "./zod";
 
@@ -31,9 +32,6 @@ export type ApprovalOperation = (typeof approvalOperations)[number];
 
 /** An approval is answered within 30 minutes (TS-64), then the agent asks again. */
 export const approvalValidMinutes = 30;
-
-/** Deleted albums stay recoverable in Trash for 30 days (FR-14.1, FR-14.5). */
-export const trashRetentionDays = 30;
 
 const listRefSchema = z.object({ id: z.uuid(), name: z.string() });
 

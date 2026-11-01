@@ -116,7 +116,6 @@ export {
   approvalValidMinutes,
   canonicalJson,
   scopeHash,
-  trashRetentionDays,
   type AlbumDeletionScope,
   type AlbumDeletionTarget,
   type DeletionTargets,
@@ -197,6 +196,7 @@ export {
   maxLinkLength,
   maxMemberships,
   maxNameLength,
+  trashRetentionDays,
 } from "./limits";
 export {
   linkEntityId,
@@ -214,7 +214,6 @@ export {
   fieldValueKey,
   fieldValueProblem,
   fieldValueSchema,
-  maxTextValueLength,
   normalizedValue,
   sameValue,
   valueRefusals,
