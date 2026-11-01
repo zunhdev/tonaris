@@ -71,7 +71,6 @@ export {
   type YouTubeHints,
 } from "./youtube";
 export {
-  maxLinkLength,
   maxShortLinkHops,
   parseLink,
   readLink,

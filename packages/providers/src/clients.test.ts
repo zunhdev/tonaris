@@ -337,7 +337,7 @@ describe("store pages: requests (TS-41)", () => {
     ).toBe(true);
   });
 
-  test("Qobuz's request A reads only Location, or the page when allowed", async () => {
+  test("Qobuz's request A reads only Location, or the page when allowed, in the home store", async () => {
     const answers: Record<string, () => Response> = {
       "https://www.qobuz.com/robots.txt": () =>
         new Response("User-agent: *\nDisallow: /commande/\n"),
@@ -352,10 +352,17 @@ describe("store pages: requests (TS-41)", () => {
       (url) => answers[url]?.() ?? new Response(null, { status: 404 }),
     );
     const pages = new StorePages(options);
-    expect(await pages.qobuzAddress("abc", { readPage: true })).toEqual({ slug: "the-slug" });
-    expect(await pages.qobuzAddress("def", { readPage: false })).toEqual({ slug: "-" });
+    expect(await pages.qobuzAddress("abc", { readPage: true })).toEqual({
+      slug: "the-slug",
+      locale: "fr-fr",
+    });
+    expect(await pages.qobuzAddress("def", { readPage: false })).toEqual({
+      slug: "-",
+      locale: "fr-fr",
+    });
     expect(await pages.qobuzAddress("def", { readPage: true })).toEqual({
       slug: "-",
+      locale: "fr-fr",
       page: "<html>the page itself</html>",
     });
     expect(await pages.qobuzAddress("ghi", { readPage: true })).toBeUndefined();
@@ -390,6 +397,16 @@ describe("store pages: requests (TS-41)", () => {
       date: "1989-06-01",
     });
     expect(await pages.qobuzHints("other", "x", "gb-en")).toBeUndefined();
+  });
+
+  test("Qobuz's request B asks the home store for a link without one", async () => {
+    const { options, sent } = scripted((url) =>
+      url.endsWith("robots.txt")
+        ? new Response("User-agent: *\nAllow: /\n")
+        : new Response(null, { status: 404 }),
+    );
+    expect(await new StorePages(options).qobuzHints("abc", "a-slug")).toBeUndefined();
+    expect(sent.map(({ url }) => url).at(-1)).toBe("https://www.qobuz.com/fr-fr/album/a-slug/abc");
   });
 
   test("a Location that isn't a URL leads to no album", async () => {

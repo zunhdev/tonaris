@@ -29,6 +29,7 @@ import { barcodeForms, qobuzBarcode, urlForms } from "./link-forms";
 import { readLink, type Fetcher, type ParsedLink } from "./links";
 import type { MusicBrainz } from "./musicbrainz";
 import { safeFetch } from "./safe-fetch";
+import { appleLookupStorefronts } from "./services";
 import type { Spotify } from "./spotify";
 import { extractQobuzHints, type StorePages } from "./store-pages";
 import type { YouTubeData } from "./youtube";
@@ -185,7 +186,9 @@ export function createIdentifier(deps: IdentifierDeps) {
   }
 
   async function appleChain(link: ParsedLink): Promise<Identification> {
-    const storefronts = [...new Set([link.storefront ?? "us", "us", "gb"])];
+    const storefronts = [
+      ...new Set([...(link.storefront ? [link.storefront] : []), ...appleLookupStorefronts]),
+    ];
     let album: AppleAlbum | undefined;
     let albumId = link.albumId;
     if (!albumId) {
@@ -224,8 +227,8 @@ export function createIdentifier(deps: IdentifierDeps) {
       // Request A, for open. and play. links. Agents' captures read only its `Location` (FR-10.5).
       const address = await pages.qobuzAddress(albumId, { readPage: !agent });
       slug = address?.slug;
+      locale = address?.locale;
       page = address?.page;
-      locale = "fr-fr";
     }
     const forms = urlForms("qobuz", albumId, {
       ...(slug ? { slug } : {}),
@@ -240,7 +243,7 @@ export function createIdentifier(deps: IdentifierDeps) {
       // Request B, or request A's answer when it was the page. The hints go to step 4 and nowhere else.
       const hints =
         page === undefined
-          ? await pages.qobuzHints(albumId, slug, locale ?? "fr-fr")
+          ? await pages.qobuzHints(albumId, slug, locale)
           : extractQobuzHints(page);
       const step4 = hints ? answer(link, 4, await byHints(hints)) : undefined;
       if (step4) return step4;

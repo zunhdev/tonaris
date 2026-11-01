@@ -1,6 +1,6 @@
 // Qobuz's and Tidal's album pages, as the G1 terms review permits them (TS-41): read only to identify a pasted link,
 // transiently, at most two requests per Qobuz link and one per Tidal link, to www.qobuz.com and tidal.com only.
-// Request A asks Qobuz's French store for the album with the slug "-" and reads only the redirect's `Location`;
+// Request A asks Qobuz's home store for the album with the slug "-" and reads only the redirect's `Location`;
 // request B reads that page's schema.org title, artist and date as hints for step 4. Nothing from a page outlives
 // the call: no cache, no log, no prefill. robots.txt is read at most once a day per host, and no album page is asked
 // for while it disallows them. Requests to one host start a second apart.
@@ -12,9 +12,11 @@ import { serviceNames, type ProviderCache } from "@tonaris/domain";
 import { clientParts, readBody, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
+import { parseLink, type ParsedLink } from "./links";
 import { PacedQueue } from "./paced-queue";
 import { cachedValue } from "./provider-cache";
 import { discard, type ProviderFetch } from "./safe-fetch";
+import { qobuzHomeLocale } from "./services";
 
 const qobuz = "https://www.qobuz.com";
 const tidal = "https://tidal.com";
@@ -27,8 +29,11 @@ const robotsAgent = "Tonaris";
 
 export type StorePagesOptions = ClientOptions & { cache: ProviderCache };
 
-/** What request A found: the slug for step 2's store forms, and the page itself when the slug is "-". */
-export type QobuzAddress = { slug: string; page?: string };
+/**
+ * What request A found: the slug and store for step 2's store forms and request B, and the page itself when the slug
+ * is "-".
+ */
+export type QobuzAddress = { slug: string; locale: string; page?: string };
 
 /** Matches a robots.txt path pattern, where `*` is any run of characters and a final `$` anchors the end. */
 function patternMatches(pattern: string, pathname: string): boolean {
@@ -178,31 +183,36 @@ export class StorePages {
   }
 
   /**
-   * Request A, for an open. or play. link: the album's slug, from the French store's redirect (decided 21 October
-   * 2026). Only `Location` is read, unless the answer is the page itself (slug "-") and `readPage` allows it, as
-   * request B. Undefined when the store has no such album, or robots.txt disallows album pages.
+   * Request A, for an open. or play. link: the album's slug, from the home store's redirect (decided 21 October
+   * 2026), with that store. Only `Location` is read, unless the answer is the page itself (slug "-") and `readPage`
+   * allows it, as request B. Undefined when the store has no such album, or robots.txt disallows album pages.
    */
   async qobuzAddress(
     albumId: string,
     { readPage }: { readPage: boolean },
   ): Promise<QobuzAddress | undefined> {
     if (!(await this.allowed("qobuz"))) return undefined;
-    const answer = await this.get("qobuz", `${qobuz}/fr-fr/album/-/${albumId}`);
+    const locale = qobuzHomeLocale;
+    const answer = await this.get("qobuz", `${qobuz}/${locale}/album/-/${albumId}`);
     if (answer.status === 200) {
       const page = readPage ? await readBody("qobuz", answer.response, "text") : undefined;
       if (!readPage) discard(answer.response);
-      return { slug: "-", ...(page === undefined ? {} : { page }) };
+      return { slug: "-", locale, ...(page === undefined ? {} : { page }) };
     }
     discard(answer.response);
     const target = qobuzAlbumPath(answer.location, albumId);
-    return target ? { slug: target.slug } : undefined;
+    return target ? { slug: target.slug, locale } : undefined;
   }
 
   /**
-   * Request B: the hints on the album's page in `locale`'s store, under `slug`. A redirect to the same album, as a
-   * stale slug gets, is followed once.
+   * Request B: the hints on the album's page in `locale`'s store, the home store for a link without one, under
+   * `slug`. A redirect to the same album, as a stale slug gets, is followed once.
    */
-  async qobuzHints(albumId: string, slug: string, locale: string): Promise<Hints | undefined> {
+  async qobuzHints(
+    albumId: string,
+    slug: string,
+    locale = qobuzHomeLocale,
+  ): Promise<Hints | undefined> {
     if (!(await this.allowed("qobuz"))) return undefined;
     const page = await this.page(
       "qobuz",
@@ -216,10 +226,8 @@ export class StorePages {
   async tidalHints(albumId: string): Promise<Hints | undefined> {
     if (!(await this.allowed("tidal"))) return undefined;
     const page = await this.page("tidal", `${tidal}/album/${albumId}`, (location) => {
-      const url = onOrigin(location, tidal);
-      return url && new RegExp(`^(/browse)?/album/${albumId}/?$`).test(url.pathname)
-        ? url.href
-        : undefined;
+      const target = redirectLink(location, tidal);
+      return target?.link.kind === "album" && target.link.id === albumId ? target.url : undefined;
     });
     return page === undefined ? undefined : extractTidalHints(page);
   }
@@ -291,15 +299,21 @@ export class StorePages {
     const allowed = robotsAllows(
       robots,
       robotsAgent,
-      store === "qobuz" ? "/fr-fr/album/x/0" : "/album/0",
+      store === "qobuz" ? `/${qobuzHomeLocale}/album/x/0` : "/album/0",
     );
     await this.cache.set([{ key, value: { allowed } }], new Date(this.now() + robotsCacheMs));
     return allowed;
   }
 }
 
-/** A redirect's `Location`, read against `origin`, when it is a URL on that origin; a malformed one leads nowhere. */
-function onOrigin(location: string | null, origin: string): URL | undefined {
+/**
+ * A redirect's `Location`, read against `origin`, as the link it is (TS-40): one on another origin, or that isn't a
+ * URL or an album or track link, leads nowhere.
+ */
+function redirectLink(
+  location: string | null,
+  origin: string,
+): { url: string; link: ParsedLink } | undefined {
   if (location === null) return undefined;
   let url: URL;
   try {
@@ -307,16 +321,20 @@ function onOrigin(location: string | null, origin: string): URL | undefined {
   } catch {
     return undefined;
   }
-  return url.origin === origin ? url : undefined;
+  if (url.origin !== origin) return undefined;
+  const read = parseLink(url.href);
+  return read.status === "parsed" ? { url: url.href, link: read.link } : undefined;
 }
 
-/** The slug and URL of a www.qobuz.com album path, `/{locale}/album/{slug}/{id}`, for the album asked about. */
+/** The slug and URL of a www.qobuz.com store link, `/{locale}/album/{slug}/{id}`, to the album asked about. */
 function qobuzAlbumPath(
   location: string | null,
   albumId: string,
 ): { slug: string; url: string } | undefined {
-  const url = onOrigin(location, qobuz);
-  if (!url) return undefined;
-  const slug = new RegExp(`^/[a-z]{2}-[a-z]{2}/album/([^/]+)/${albumId}$`).exec(url.pathname)?.[1];
-  return slug ? { slug, url: url.href } : undefined;
+  const target = redirectLink(location, qobuz);
+  if (!target) return undefined;
+  const { kind, id, locale, slug } = target.link;
+  return kind === "album" && id === albumId && locale && slug
+    ? { slug, url: target.url }
+    : undefined;
 }

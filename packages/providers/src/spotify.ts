@@ -5,10 +5,13 @@
 
 import { z } from "zod";
 
+import type { LinkKind } from "@tonaris/domain";
+
 import { clientParts, readBody, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import { PacedQueue, retryAfterMs } from "./paced-queue";
 import { discard, type ProviderFetch, type SafeFetchInit } from "./safe-fetch";
+import { services } from "./services";
 
 /** Calls start at least this far apart. Development mode publishes no numbers; the spike saw no throttling. */
 export const spotifyIntervalMs = 250;
@@ -20,7 +23,6 @@ export type SpotifyOptions = ClientOptions & { clientId: string; clientSecret: s
 const tokenSchema = z.object({ access_token: z.string(), expires_in: z.number() });
 const albumSchema = z.object({ external_ids: z.object({ upc: z.string().optional() }).optional() });
 const trackSchema = z.object({ album: z.object({ id: z.string() }) });
-const spotifyId = /^[0-9A-Za-z]{22}$/;
 
 type Call = "Get Album" | "Get Track" | "the token";
 
@@ -41,7 +43,7 @@ export class Spotify {
 
   /** Get Album's UPC, held only by the caller; undefined when Spotify has no such album. */
   async album(id: string): Promise<{ upc?: string } | undefined> {
-    const body = await this.get("Get Album", "albums", id);
+    const body = await this.get("Get Album", "album", id);
     if (body === undefined) return undefined;
     const upc = albumSchema.parse(body).external_ids?.upc;
     return upc ? { upc } : {};
@@ -49,18 +51,18 @@ export class Spotify {
 
   /** The album a track belongs to (FR-02.3), held only by the caller; undefined when there's no such track. */
   async parentAlbum(trackId: string): Promise<string | undefined> {
-    const body = await this.get("Get Track", "tracks", trackId);
+    const body = await this.get("Get Track", "track", trackId);
     return body === undefined ? undefined : trackSchema.parse(body).album.id;
   }
 
-  private async get(call: Call, collection: string, id: string): Promise<unknown> {
-    if (!spotifyId.test(id)) return undefined;
+  private async get(call: Call, kind: LinkKind, id: string): Promise<unknown> {
+    if (!services.spotify.ids[kind].test(id)) return undefined;
     for (let attempt = 0; attempt < 2; attempt++) {
       // A token refused once is fetched again, once.
       // oxlint-disable-next-line no-await-in-loop
       const token = await this.accessToken();
       // oxlint-disable-next-line no-await-in-loop
-      const response = await this.send(call, `https://api.spotify.com/v1/${collection}/${id}`, {
+      const response = await this.send(call, `https://api.spotify.com/v1/${kind}s/${id}`, {
         headers: { authorization: `Bearer ${token}`, accept: "application/json" },
       });
       if (response.status === 401 && attempt === 0) {

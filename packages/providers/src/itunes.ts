@@ -12,6 +12,7 @@ import { ProviderUnavailableError } from "./errors";
 import { PacedQueue } from "./paced-queue";
 import { cachedValue } from "./provider-cache";
 import { discard, type ProviderFetch } from "./safe-fetch";
+import { services } from "./services";
 
 /** Calls start at least this far apart: 20 a minute. */
 export const itunesIntervalMs = 3_000;
@@ -52,7 +53,7 @@ const keptSchema = z.object({
     .nullable(),
 });
 
-const appleId = /^\d+$/;
+const appleIds = services["apple-music"].ids;
 
 export class ItunesLookup {
   private readonly cache: ProviderCache;
@@ -83,7 +84,7 @@ export class ItunesLookup {
     storefronts: readonly string[],
     wrapperType: "collection" | "track",
   ): Promise<AppleAlbum | undefined> {
-    if (!appleId.test(id)) return undefined;
+    if (!appleIds[wrapperType === "collection" ? "album" : "track"].test(id)) return undefined;
     for (const storefront of new Set(storefronts)) {
       // Storefronts are tried in order, each waiting its turn.
       // oxlint-disable-next-line no-await-in-loop
