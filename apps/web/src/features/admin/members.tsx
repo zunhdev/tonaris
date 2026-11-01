@@ -4,11 +4,7 @@
 // outside the app (TS-73).
 
 import { api, refusalOf } from "@/api";
-import { AdminNav } from "@/features/admin/admin-nav";
-import { useNarrowScreen } from "@/features/collection/collection-ui";
-import { DesktopOnly } from "@/features/shell/desktop-only";
-import { PageHeader } from "@/features/shell/page-header";
-import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { type FormEvent, useId, useRef, useState } from "react";
 
 import { maxRecoveryReasonLength, type Member } from "@tonaris/domain";
@@ -23,24 +19,9 @@ import {
 import { Input } from "@tonaris/ui/components/input";
 import { Label } from "@tonaris/ui/components/label";
 
-export const Route = createFileRoute("/_workspace/admin/members")({
-  head: () => ({ meta: [{ title: "Members · Tonaris" }] }),
-  beforeLoad: ({ context }) => {
-    if (context.account.role !== "creator") throw notFound();
-  },
-  loader: async () => {
-    const { data, status } = await api.v1.admin.members.get();
-    if (!data) throw new Error(`Couldn't load the members (HTTP ${status}).`);
-    return data.members;
-  },
-  component: MembersPage,
-});
-
 const date = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
-function MembersPage() {
-  const narrow = useNarrowScreen();
-  const members = Route.useLoaderData();
+export function AdminMembers({ members }: { members: readonly Member[] }) {
   const router = useRouter();
   const id = useId();
   const [recovering, setRecovering] = useState<Member>();
@@ -58,102 +39,92 @@ function MembersPage() {
 
   return (
     <>
-      <PageHeader title="Members" back={{ to: "/c", label: "Collection" }} />
-      <AdminNav />
-      {narrow ? (
-        <DesktopOnly what="Admin" />
-      ) : (
-        <>
-          <div className="flex max-w-5xl flex-col gap-3 p-6">
-            <p className="text-fg-secondary">
-              Recover a sign-in email only once you're sure the account is theirs. The new address
-              confirms it before anything changes, and the reason goes in the audit log.
-            </p>
-            {error && (
-              <p role="alert" className="text-small text-status-danger">
-                {error}
-              </p>
-            )}
-            <div className="overflow-x-auto rounded-lg border border-subtle">
-              <table aria-labelledby={`${id}-title`} className="w-full min-w-[44rem] text-left">
-                <caption id={`${id}-title`} className="sr-only">
-                  Members
-                </caption>
-                <thead className="text-small text-fg-secondary">
-                  <tr className="border-b border-subtle">
-                    <th scope="col" className="px-3 py-2 font-normal">
-                      Email
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-normal">
-                      Display name
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-normal">
-                      Joined
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-normal">
-                      Recovery
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-normal">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-subtle">
-                  {members.map((member) => (
-                    <tr key={member.id}>
-                      <td className="max-w-64 truncate px-3 py-2 text-fg-primary">
-                        {member.email}
-                      </td>
-                      <td className="max-w-48 truncate px-3 py-2 text-fg-primary">
-                        {member.displayName ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-fg-secondary">
-                        {date.format(new Date(member.joinedAt))}
-                      </td>
-                      <td className="max-w-64 truncate px-3 py-2 text-fg-secondary">
-                        {member.recovery
-                          ? `Waiting for verification · ${member.recovery.newEmail}`
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <div className="flex justify-end gap-1">
-                          {member.recovery && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled={busy === member.id}
-                              aria-label={`Cancel recovery for ${member.email}`}
-                              onClick={() => void cancel(member)}
-                            >
-                              Cancel recovery
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            aria-label={`Recover sign-in email for ${member.email}`}
-                            onClick={() => setRecovering(member)}
-                          >
-                            Recover sign-in email
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          {recovering && (
-            <RecoverDialog
-              member={recovering}
-              onClose={() => setRecovering(undefined)}
-              onSent={() => {
-                setRecovering(undefined);
-                void router.invalidate();
-              }}
-            />
-          )}
-        </>
+      <div className="flex max-w-5xl flex-col gap-3 p-6">
+        <p className="text-fg-secondary">
+          Recover a sign-in email only once you're sure the account is theirs. The new address
+          confirms it before anything changes, and the reason goes in the audit log.
+        </p>
+        {error && (
+          <p role="alert" className="text-small text-status-danger">
+            {error}
+          </p>
+        )}
+        <div className="overflow-x-auto rounded-lg border border-subtle">
+          <table aria-labelledby={`${id}-title`} className="w-full min-w-[44rem] text-left">
+            <caption id={`${id}-title`} className="sr-only">
+              Members
+            </caption>
+            <thead className="text-small text-fg-secondary">
+              <tr className="border-b border-subtle">
+                <th scope="col" className="px-3 py-2 font-normal">
+                  Email
+                </th>
+                <th scope="col" className="px-3 py-2 font-normal">
+                  Display name
+                </th>
+                <th scope="col" className="px-3 py-2 font-normal">
+                  Joined
+                </th>
+                <th scope="col" className="px-3 py-2 font-normal">
+                  Recovery
+                </th>
+                <th scope="col" className="px-3 py-2 font-normal">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-subtle">
+              {members.map((member) => (
+                <tr key={member.id}>
+                  <td className="max-w-64 truncate px-3 py-2 text-fg-primary">{member.email}</td>
+                  <td className="max-w-48 truncate px-3 py-2 text-fg-primary">
+                    {member.displayName ?? "—"}
+                  </td>
+                  <td className="px-3 py-2 text-fg-secondary">
+                    {date.format(new Date(member.joinedAt))}
+                  </td>
+                  <td className="max-w-64 truncate px-3 py-2 text-fg-secondary">
+                    {member.recovery
+                      ? `Waiting for verification · ${member.recovery.newEmail}`
+                      : "—"}
+                  </td>
+                  <td className="px-3 py-1.5">
+                    <div className="flex justify-end gap-1">
+                      {member.recovery && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy === member.id}
+                          aria-label={`Cancel recovery for ${member.email}`}
+                          onClick={() => void cancel(member)}
+                        >
+                          Cancel recovery
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        aria-label={`Recover sign-in email for ${member.email}`}
+                        onClick={() => setRecovering(member)}
+                      >
+                        Recover sign-in email
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {recovering && (
+        <RecoverDialog
+          member={recovering}
+          onClose={() => setRecovering(undefined)}
+          onSent={() => {
+            setRecovering(undefined);
+            void router.invalidate();
+          }}
+        />
       )}
     </>
   );

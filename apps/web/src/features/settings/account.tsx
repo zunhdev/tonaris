@@ -4,33 +4,18 @@
 // the passkeys (TON-143), and the Danger zone, at the bottom, which deletes the account (DS-97).
 
 import { api, refusalOf } from "@/api";
+import { resendLabel, useCodeEntry } from "@/features/account/code-entry";
 import { CodeField, useResendCountdown } from "@/features/account/code-field";
 import { DangerZone } from "@/features/account/delete-account";
 import { Passkeys } from "@/features/account/passkeys";
 import { forgetAccount } from "@/features/account/session";
-import { SettingsNav } from "@/features/settings/settings-nav";
-import { PageHeader } from "@/features/shell/page-header";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { type FormEvent, useId, useRef, useState } from "react";
+import { Link, useRouter } from "@tanstack/react-router";
+import { type FormEvent, useId, useState } from "react";
 
-import { type EmailChangeStage, signInCode } from "@tonaris/domain";
+import type { Account, EmailChange, EmailChangeStage, Passkey } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Input } from "@tonaris/ui/components/input";
 import { Label } from "@tonaris/ui/components/label";
-
-export const Route = createFileRoute("/_workspace/settings/account")({
-  head: () => ({ meta: [{ title: "Account · Tonaris" }] }),
-  loader: async () => {
-    const [change, passkeys] = await Promise.all([
-      api.v1.account["email-change"].get(),
-      api.v1.account.passkeys.get(),
-    ]);
-    if (!change.data) throw new Error(`Couldn't load the email change (HTTP ${change.status}).`);
-    if (!passkeys.data) throw new Error(`Couldn't load the passkeys (HTTP ${passkeys.status}).`);
-    return { change: change.data.change, passkeys: passkeys.data };
-  },
-  component: AccountPage,
-});
 
 const unreachable = "Couldn't reach Tonaris. Try again.";
 
@@ -40,50 +25,53 @@ type Step =
   | { kind: "code"; stage: EmailChangeStage; newEmail: string }
   | { kind: "done"; email: string };
 
-function AccountPage() {
-  const { account } = Route.useRouteContext();
-  const { change: inProgress, passkeys } = Route.useLoaderData();
+export function AccountSettings({
+  account,
+  change: inProgress,
+  passkeys,
+}: {
+  account: Account;
+  /** The email change in progress, which resumes at its step. */
+  change: EmailChange | null;
+  passkeys: Passkey[];
+}) {
   const id = useId();
   const [step, setStep] = useState<Step>(
     inProgress ? { kind: "code", ...inProgress } : { kind: "idle" },
   );
 
   return (
-    <>
-      <PageHeader title="Account" back={{ to: "/c", label: "Collection" }} />
-      <SettingsNav />
-      <div className="flex max-w-2xl flex-col gap-6 p-6">
-        <section aria-labelledby={`${id}-email`} className="flex flex-col gap-3">
-          <h2 id={`${id}-email`} className="text-title text-fg-primary">
-            Sign-in email
-          </h2>
-          <p className="[overflow-wrap:anywhere] text-fg-primary">{account.email}</p>
-          {step.kind === "done" && (
-            <output className="block text-fg-secondary">Done — use {step.email} to sign in.</output>
-          )}
-          {step.kind === "idle" || step.kind === "done" ? (
-            <div className="flex flex-wrap items-center gap-4">
-              <Button onClick={() => setStep({ kind: "address" })}>Change sign-in email</Button>
-              <Link
-                to="/help/recovery"
-                className="text-accent-solid underline-offset-4 hover:underline"
-              >
-                Lost access to your email?
-              </Link>
-            </div>
-          ) : (
-            <ChangeEmail
-              currentEmail={account.email}
-              step={step}
-              onStep={setStep}
-              onCancelled={() => setStep({ kind: "idle" })}
-            />
-          )}
-        </section>
-        <Passkeys account={account} passkeys={passkeys} />
-        <DangerZone account={account} />
-      </div>
-    </>
+    <div className="flex max-w-2xl flex-col gap-6 p-6">
+      <section aria-labelledby={`${id}-email`} className="flex flex-col gap-3">
+        <h2 id={`${id}-email`} className="text-title text-fg-primary">
+          Sign-in email
+        </h2>
+        <p className="[overflow-wrap:anywhere] text-fg-primary">{account.email}</p>
+        {step.kind === "done" && (
+          <output className="block text-fg-secondary">Done — use {step.email} to sign in.</output>
+        )}
+        {step.kind === "idle" || step.kind === "done" ? (
+          <div className="flex flex-wrap items-center gap-4">
+            <Button onClick={() => setStep({ kind: "address" })}>Change sign-in email</Button>
+            <Link
+              to="/help/recovery"
+              className="text-accent-solid underline-offset-4 hover:underline"
+            >
+              Lost access to your email?
+            </Link>
+          </div>
+        ) : (
+          <ChangeEmail
+            currentEmail={account.email}
+            step={step}
+            onStep={setStep}
+            onCancelled={() => setStep({ kind: "idle" })}
+          />
+        )}
+      </section>
+      <Passkeys account={account} passkeys={passkeys} />
+      <DangerZone account={account} />
+    </div>
   );
 }
 
@@ -212,25 +200,16 @@ function CodeStep({
   onStep: (step: Step) => void;
 }) {
   const router = useRouter();
-  const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-  const [notice, setNotice] = useState<string>();
-  const codeInput = useRef<HTMLInputElement>(null);
+  const entry = useCodeEntry({ submit: (value) => void submit(value) });
   const { resendIn, restart } = useResendCountdown(address);
   const emailChange = api.v1.account["email-change"];
 
   async function submit(value: string) {
-    setBusy(true);
-    setError(undefined);
-    setNotice(undefined);
+    entry.begin();
     try {
       const { data, error: failed } = await emailChange.verify.post({ code: value });
       if (!data) {
-        setBusy(false);
-        setCode("");
-        setError(refusalOf(failed, unreachable));
-        codeInput.current?.focus();
+        entry.refuse(refusalOf(failed, unreachable));
         return;
       }
       if (data.stage === "new") {
@@ -242,40 +221,26 @@ function CodeStep({
       await router.invalidate();
       onStep({ kind: "done", email: data.email });
     } catch {
-      setBusy(false);
-      setError(unreachable);
+      entry.setBusy(false);
+      entry.setError(unreachable);
     }
   }
 
   async function resend() {
-    setBusy(true);
-    setError(undefined);
-    setNotice(undefined);
+    entry.begin();
     try {
       const { data, error: failed } = await emailChange.resend.post({});
       if (data) {
         restart();
-        setCode("");
-        setNotice(`We sent a new code to ${address}.`);
+        entry.resent(address);
       } else {
-        setError(refusalOf(failed, unreachable));
+        entry.setError(refusalOf(failed, unreachable));
       }
     } catch {
-      setError(unreachable);
+      entry.setError(unreachable);
     } finally {
-      setBusy(false);
+      entry.setBusy(false);
     }
-  }
-
-  function onCodeChange(digits: string) {
-    setCode(digits);
-    if (digits.length === signInCode.length && !busy) void submit(digits);
-  }
-
-  function onSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (code.length === signInCode.length) void submit(code);
-    else setError(`Enter the ${signInCode.length}-digit code from the email.`);
   }
 
   return (
@@ -283,30 +248,30 @@ function CodeStep({
       <h3 className="text-base font-medium [overflow-wrap:anywhere] text-fg-primary">
         Check {address}
       </h3>
-      <form className="flex max-w-sm flex-col gap-3" onSubmit={onSubmit}>
+      <form className="flex max-w-sm flex-col gap-3" onSubmit={entry.onSubmit}>
         <CodeField
-          value={code}
-          onChange={onCodeChange}
+          value={entry.code}
+          onChange={entry.onCodeChange}
           hint={
             stage === "current"
               ? "We sent a code to your current address, to confirm it's you."
               : "We sent a code to the new address, to confirm it's yours."
           }
-          error={error}
-          inputRef={codeInput}
+          error={entry.error}
+          inputRef={entry.codeInput}
         />
-        <Button type="submit" variant="primary" className="self-start" disabled={busy}>
+        <Button type="submit" variant="primary" className="self-start" disabled={entry.busy}>
           {stage === "current" ? "Continue" : "Change email"}
         </Button>
       </form>
-      <output className="text-fg-secondary empty:hidden">{notice}</output>
+      <output className="text-fg-secondary empty:hidden">{entry.notice}</output>
       <Button
         variant="ghost"
         className="self-start"
-        disabled={busy || resendIn > 0}
+        disabled={entry.busy || resendIn > 0}
         onClick={() => void resend()}
       >
-        {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
+        {resendLabel(resendIn)}
       </Button>
     </>
   );

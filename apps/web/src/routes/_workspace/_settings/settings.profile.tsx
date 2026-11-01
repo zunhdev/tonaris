@@ -3,9 +3,7 @@
 // while they share, the server refuses (AC-38), and the field goes back to the saved name with the reason.
 
 import { forgetAccount } from "@/features/account/session";
-import { SettingsNav } from "@/features/settings/settings-nav";
 import { failureOf, sendNow } from "@/features/sharing/send";
-import { PageHeader } from "@/features/shell/page-header";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useId, useState } from "react";
 
@@ -13,7 +11,8 @@ import { maxNameLength } from "@tonaris/domain";
 import { Input } from "@tonaris/ui/components/input";
 import { Label } from "@tonaris/ui/components/label";
 
-export const Route = createFileRoute("/_workspace/settings/profile")({
+export const Route = createFileRoute("/_workspace/_settings/settings/profile")({
+  staticData: { title: "Profile" },
   head: () => ({ meta: [{ title: "Profile · Tonaris" }] }),
   component: Profile,
 });
@@ -60,41 +59,36 @@ function Profile() {
   }
 
   return (
-    <>
-      <PageHeader title="Profile" back={{ to: "/c", label: "Collection" }} />
-      <SettingsNav />
-      <div className="flex max-w-2xl flex-col gap-6 p-6">
-        <form onSubmit={submit} className="flex flex-col gap-1.5">
-          <Label htmlFor={`${id}-name`}>Display name</Label>
-          <Input
-            id={`${id}-name`}
-            value={name}
-            maxLength={maxNameLength}
-            autoComplete="nickname"
-            className="max-w-sm"
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? `${id}-hint ${id}-error` : `${id}-hint`}
-            onChange={(event) => {
-              setName(event.target.value);
-              setError(undefined);
-              setSaved(false);
-            }}
-            onBlur={() => void save()}
-          />
-          <p id={`${id}-hint`} className="text-small text-fg-secondary">
-            People you share with see this name instead of your email. It's optional until you
-            share.
+    <div className="flex max-w-2xl flex-col gap-6 p-6">
+      <form onSubmit={submit} className="flex flex-col gap-1.5">
+        <Label htmlFor={`${id}-name`}>Display name</Label>
+        <Input
+          id={`${id}-name`}
+          value={name}
+          maxLength={maxNameLength}
+          autoComplete="nickname"
+          className="max-w-sm"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-hint ${id}-error` : `${id}-hint`}
+          onChange={(event) => {
+            setName(event.target.value);
+            setError(undefined);
+            setSaved(false);
+          }}
+          onBlur={() => void save()}
+        />
+        <p id={`${id}-hint`} className="text-small text-fg-secondary">
+          People you share with see this name instead of your email. It's optional until you share.
+        </p>
+        {error && (
+          <p id={`${id}-error`} role="alert" className="text-small text-status-danger">
+            {error}
           </p>
-          {error && (
-            <p id={`${id}-error`} role="alert" className="text-small text-status-danger">
-              {error}
-            </p>
-          )}
-          <output className="text-small text-fg-secondary empty:hidden">
-            {saved ? "Saved." : ""}
-          </output>
-        </form>
-      </div>
-    </>
+        )}
+        <output className="text-small text-fg-secondary empty:hidden">
+          {saved ? "Saved." : ""}
+        </output>
+      </form>
+    </div>
   );
 }
