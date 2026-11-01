@@ -2,14 +2,15 @@
 // is defined once per account (FR-03.6): text, number, date, yes/no, or a choice field with its options. Names are
 // unique per account across types, and option labels within their field, case-insensitively (FR-03.9, FR-03.14,
 // X-06). Renaming changes the one definition everywhere, albums in Trash included, and nothing else (FR-03.11,
-// X-09). Per-album values, option changes, type changes and deletion come with TON-50 to TON-52.
+// X-09). Per-album values are field-values.ts, option and type changes field-options.ts, and deletion
+// field-deletion.ts.
 
 import { generateNKeysBetween } from "fractional-indexing";
 
 import { actingOwner, applied, conflict, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { maxFieldOptions, maxFields, maxNameLength } from "./limits";
-import { exceedsLength, findNameConflict, isBlankName } from "./names";
+import { exceedsLength, findNameConflict, isBlankName, type NamedItem } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { z } from "./zod";
@@ -143,27 +144,59 @@ export function ownField(
     : failure(decision.code, "You can't change this field.");
 }
 
-/** The options a new field starts with, trimmed and checked; or why they can't be. */
-function initialOptions(args: FieldCreateArgs): FieldOption[] | Failure {
-  if (args.options.length > 0 && !isChoiceType(args.type)) {
-    return failure("validation_failed", "Only choice fields have options.", [
-      { path: "args.options", message: "Only for single and multiple choice" },
-    ]);
+/** Why the options a new field starts with can't be its own, each with its path, in order (FR-03.10, FR-03.14). */
+function optionProblems(type: FieldType, options: readonly FieldOption[]): Failure[] {
+  if (options.length > 0 && !isChoiceType(type)) {
+    return [
+      failure("validation_failed", "Only choice fields have options.", [
+        { path: "args.options", message: "Only for single and multiple choice" },
+      ]),
+    ];
   }
-  if (args.options.length > maxFieldOptions) return optionLimitProblem();
-  const options: FieldOption[] = [];
-  for (const [index, option] of args.options.entries()) {
+  if (options.length > maxFieldOptions) return [optionLimitProblem()];
+  const problems: Failure[] = [];
+  const labelled: FieldOption[] = [];
+  for (const [index, option] of options.entries()) {
     const label = option.label.trim();
-    const problem = optionLabelProblem(label, `args.options.${index}.label`);
-    if (problem) return problem;
-    if (optionLabelConflict(label, options)) {
-      return failure("validation_failed", "Each option needs its own label.", [
-        { path: `args.options.${index}.label`, message: "Already used in this field" },
-      ]);
+    const path = `args.options.${index}.label`;
+    const problem = optionLabelProblem(label, path);
+    if (problem) problems.push(problem);
+    else if (optionLabelConflict(label, labelled)) {
+      problems.push(
+        failure("validation_failed", "Each option needs its own label.", [
+          { path, message: "Already used in this field" },
+        ]),
+      );
     }
-    options.push({ id: option.id, label });
+    labelled.push({ id: option.id, label });
   }
-  return options;
+  return problems;
+}
+
+/**
+ * Why a new field can't be defined as `name`, `type` and `options`, if it can't (FR-03.6, FR-03.9, FR-03.10): its
+ * name, blank, too long or another of `fields`', then its options, each refusal with its path, in the order the
+ * server checks them. Clients check it before sending, with these words.
+ */
+export function fieldDefinitionProblems(
+  name: string,
+  type: FieldType,
+  options: readonly FieldOption[],
+  fields: readonly NamedItem[],
+): Failure[] {
+  const trimmed = name.trim();
+  const taken = findNameConflict(trimmed, fields);
+  const nameProblem = fieldNameProblem(trimmed) ?? (taken ? fieldNameTaken(taken.name) : undefined);
+  return [...(nameProblem ? [nameProblem] : []), ...optionProblems(type, options)];
+}
+
+/** The refusal of a new field for an account with `count` fields, at the limit (TS-18); none below it. */
+export function fieldLimitProblem(count: number): Failure | undefined {
+  if (count < maxFields) return undefined;
+  return failure(
+    "limit_exceeded",
+    `You've reached ${maxFields} custom fields. Delete one to add another.`,
+  );
 }
 
 /** Whether two fields are the same definition: name, type and options, in order. */
@@ -189,10 +222,10 @@ export async function createField(
   if (isFailure(ownerId)) return ownerId;
   const { store } = context;
   const name = args.name.trim();
-  const problem = fieldNameProblem(name);
+  // The account's fields come after the resend check below: a resend's own field has its name (FR-13.5).
+  const [problem] = fieldDefinitionProblems(name, args.type, args.options, []);
   if (problem) return problem;
-  const options = initialOptions(args);
-  if (isFailure(options)) return options;
+  const options = args.options.map(({ id, label }) => ({ id, label: label.trim() }));
   const field: CustomField = { id: args.id, name, type: args.type, options };
 
   const existing = await store.findField(args.id);
@@ -208,12 +241,8 @@ export async function createField(
   const fields = await store.fieldsOf(ownerId);
   const taken = findNameConflict(name, fields);
   if (taken) return fieldNameTaken(taken.name);
-  if (fields.length >= maxFields) {
-    return failure(
-      "limit_exceeded",
-      `You've reached ${maxFields} custom fields. Delete one to add another.`,
-    );
-  }
+  const full = fieldLimitProblem(fields.length);
+  if (full) return full;
 
   const keys = generateNKeysBetween(null, null, options.length);
   await store.insertField(

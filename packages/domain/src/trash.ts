@@ -485,13 +485,14 @@ export async function deleteAlbum(
 }
 
 /** An active album the restore would duplicate (FR-14.3), as `needs_input` `match` names it. */
-export type SameAlbum = {
-  unitId: string;
-  albumId: string;
-  title: string;
-  artistCredit: string;
-  originalYear: number | null;
-};
+export const sameAlbumSchema = z.object({
+  unitId: z.uuid(),
+  albumId: z.uuid(),
+  title: z.string(),
+  artistCredit: z.string(),
+  originalYear: z.int().nullable(),
+});
+export type SameAlbum = z.infer<typeof sameAlbumSchema>;
 
 /**
  * Restores an album unit (FR-14.2, FR-14.3): its entries in still-active lists come back, those in trashed lists are

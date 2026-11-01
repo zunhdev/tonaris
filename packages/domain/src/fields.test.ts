@@ -5,7 +5,13 @@
 import { describe, expect, test } from "bun:test";
 
 import { runCommand, type CommandResult } from "./commands";
-import { optionLabelConflict, optionLimitProblem, type StoredField } from "./fields";
+import {
+  fieldDefinitionProblems,
+  fieldLimitProblem,
+  optionLabelConflict,
+  optionLimitProblem,
+  type StoredField,
+} from "./fields";
 import { uuidv7 } from "./ids";
 import { maxFieldOptions, maxFields } from "./limits";
 import type { Principal } from "./principals";
@@ -282,6 +288,55 @@ describe("option labels and limits (FR-03.14, X-06, TS-18)", () => {
     expect(optionLimitProblem()).toMatchObject({
       code: "limit_exceeded",
       problem: { detail: `A choice field can have at most ${maxFieldOptions} options.` },
+    });
+  });
+});
+
+describe("checking a new field before sending (FR-03.6, FR-03.9, FR-03.10)", () => {
+  const fields = [{ id: "f1", name: "Rating" }];
+  const pathsOf = (problems: ReturnType<typeof fieldDefinitionProblems>) =>
+    problems.map((problem) => problem.problem.errors?.[0]?.path);
+
+  test("a good definition has no problems", () => {
+    expect(
+      fieldDefinitionProblems(" Format ", "single_choice", [{ id: "o1", label: "Vinyl" }], fields),
+    ).toEqual([]);
+  });
+
+  test("each problem comes with its path and the server's words: the name, then each option", () => {
+    const problems = fieldDefinitionProblems(
+      "rating",
+      "multiple_choice",
+      [
+        { id: "o1", label: "Vinyl" },
+        { id: "o2", label: " " },
+        { id: "o3", label: "vinyl" },
+      ],
+      fields,
+    );
+    expect(pathsOf(problems)).toEqual([
+      "args.name",
+      "args.options.1.label",
+      "args.options.2.label",
+    ]);
+    expect(problems.map((problem) => problem.problem.detail)).toEqual([
+      "'Rating' already exists. Choose another name.",
+      "Give each option a label.",
+      "Each option needs its own label.",
+    ]);
+  });
+
+  test("only a choice field has options", () => {
+    expect(
+      pathsOf(fieldDefinitionProblems("Notes", "text", [{ id: "o1", label: "A" }], [])),
+    ).toEqual(["args.options"]);
+  });
+
+  test("the field limit refuses only at the limit", () => {
+    expect(fieldLimitProblem(maxFields - 1)).toBeUndefined();
+    expect(fieldLimitProblem(maxFields)).toMatchObject({
+      code: "limit_exceeded",
+      problem: { detail: `You've reached ${maxFields} custom fields. Delete one to add another.` },
     });
   });
 });

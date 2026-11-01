@@ -13,6 +13,7 @@ import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
 import { changeSchema, mutationSchema, type Mutation } from "./sync";
 import { memoryStore } from "./testing";
+import { sameAlbumSchema } from "./trash";
 
 const owner = uuidv7();
 const anna: Principal = { kind: "user", userId: owner, role: "user", client: "web" };
@@ -458,6 +459,9 @@ describe("deleting and restoring albums (FR-14.1 to FR-14.3)", () => {
     });
     expect(albums.get(first.id)?.trashed).toBe(true);
     expect(trashUnits.has(unitId)).toBe(true);
+    // Clients read the candidates with the domain's schema.
+    const candidates = paused.status === "needs_input" ? paused.candidates : [];
+    expect(sameAlbumSchema.array().parse(candidates)).toEqual(candidates);
   });
 });
 
