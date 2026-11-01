@@ -9,28 +9,13 @@ import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 
-import { uuidv7, type Invitation, type InvitationState } from "@tonaris/domain";
+import type { Invitation, InvitationState } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 
 import { refreshPendingInvitations } from "./pending-invitations";
+import { useSend } from "./send";
 
 const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
-
-/** Accepts or declines; answers the reason it didn't, if it didn't. */
-async function answer(name: "share.accept" | "share.decline", grantId: string) {
-  const mutation = { mutationId: uuidv7(), name, args: { grantId } } as const;
-  try {
-    const { data } = await api.v1.mutations.post(mutation);
-    const outcome = data?.outcome;
-    refreshPendingInvitations();
-    if (outcome?.status === "confirmed") return undefined;
-    return outcome?.status === "failed"
-      ? (outcome.problem.detail ?? "That didn't work. Try again.")
-      : "Couldn't reach Tonaris. Try again.";
-  } catch {
-    return "Couldn't reach Tonaris. Try again.";
-  }
-}
 
 /** "Doom", a list from Denis, invited 29 Oct 2026. */
 function Summary({ invitation }: { invitation: Invitation }) {
@@ -46,7 +31,7 @@ function Summary({ invitation }: { invitation: Invitation }) {
   );
 }
 
-/** Accept and Decline, and what came of them. */
+/** Accept and Decline, and what came of them; either way, the pending count is read again. */
 function Answers({
   invitation,
   onAnswered,
@@ -55,13 +40,13 @@ function Answers({
   onAnswered: (accepted: boolean) => void;
 }) {
   const offline = useConnection() === "offline";
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+  const { run, busy, error } = useSend();
   const choose = async (accept: boolean) => {
-    setBusy(true);
-    const reason = await answer(accept ? "share.accept" : "share.decline", invitation.id);
-    setBusy(false);
-    setError(reason);
+    const reason = await run({
+      name: accept ? "share.accept" : "share.decline",
+      args: { grantId: invitation.id },
+    });
+    refreshPendingInvitations();
     if (reason === undefined) onAnswered(accept);
   };
   const name = `"${invitation.container.name}"`;

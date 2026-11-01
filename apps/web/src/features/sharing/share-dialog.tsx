@@ -8,12 +8,12 @@
 import { api } from "@/api";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
-import { failureOf, sendNow } from "@/features/sharing/send";
+import { unreachable, useSend, type Unsent } from "@/features/sharing/send";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Check, Copy, Ellipsis, Folder } from "lucide-react";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 
-import { uuidv7, type ShareSettings } from "@tonaris/domain";
+import { maxNameLength, uuidv7, type ShareSettings } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -30,9 +30,6 @@ import {
 } from "@tonaris/ui/components/dropdown-menu";
 import { Input } from "@tonaris/ui/components/input";
 import { Switch } from "@tonaris/ui/components/switch";
-
-const send = sendNow;
-const reasonOf = failureOf;
 
 export function ShareDialog() {
   const { sharing, endShare } = useCollectionUi();
@@ -130,30 +127,12 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
             {settings.invitations.length > 0 && (
               <ul aria-label="People with access" className="flex flex-col gap-1">
                 {settings.invitations.map((invitation) => (
-                  <li key={invitation.id} className="flex items-center gap-3 text-base">
-                    <span className="min-w-0 flex-1 truncate">
-                      {invitation.displayName && (
-                        <span className="mr-2 text-fg-primary">{invitation.displayName}</span>
-                      )}
-                      <span className="text-fg-secondary">{invitation.email}</span>
-                    </span>
-                    <span className="text-small text-fg-secondary">
-                      {invitation.status === "accepted"
-                        ? "Accepted"
-                        : `Pending${deliveryOf(invitation.emailStatus)}`}
-                    </span>
-                    {invitation.status === "pending" &&
-                      (invitation.emailStatus === "failed" ||
-                        invitation.emailStatus === "unknown") && (
-                        <ResendButton grantId={invitation.id} disabled={offline} onSent={load} />
-                      )}
-                    <RowMenu
-                      who={invitation.displayName ?? invitation.email}
-                      grantId={invitation.id}
-                      disabled={offline}
-                      onRevoked={load}
-                    />
-                  </li>
+                  <PersonRow
+                    key={invitation.id}
+                    invitation={invitation}
+                    disabled={offline}
+                    onChanged={load}
+                  />
                 ))}
               </ul>
             )}
@@ -201,17 +180,72 @@ function deliveryOf(status: ShareSettings["invitations"][number]["emailStatus"])
   return "";
 }
 
+/**
+ * A person with access (DS-65): who, their invitation's status, Resend while its email didn't go, and their menu. A
+ * write that didn't go through says why under the row; either way the dialog reads again.
+ */
+function PersonRow({
+  invitation,
+  disabled,
+  onChanged,
+}: {
+  invitation: ShareSettings["invitations"][number];
+  disabled: boolean;
+  onChanged: () => void;
+}) {
+  const { run, busy, error } = useSend();
+  const send = (mutation: Unsent) => void run(mutation).then(onChanged);
+  return (
+    <li className="flex flex-col gap-1">
+      <div className="flex items-center gap-3 text-base">
+        <span className="min-w-0 flex-1 truncate">
+          {invitation.displayName && (
+            <span className="mr-2 text-fg-primary">{invitation.displayName}</span>
+          )}
+          <span className="text-fg-secondary">{invitation.email}</span>
+        </span>
+        <span className="text-small text-fg-secondary">
+          {invitation.status === "accepted"
+            ? "Accepted"
+            : `Pending${deliveryOf(invitation.emailStatus)}`}
+        </span>
+        {invitation.status === "pending" &&
+          (invitation.emailStatus === "failed" || invitation.emailStatus === "unknown") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={disabled || busy}
+              onClick={() =>
+                send({ name: "share.resendInvitation", args: { grantId: invitation.id } })
+              }
+            >
+              Resend
+            </Button>
+          )}
+        <RowMenu
+          who={invitation.displayName ?? invitation.email}
+          disabled={disabled}
+          onRevoke={() => send({ name: "share.revoke", args: { grantId: invitation.id } })}
+        />
+      </div>
+      {error !== undefined && (
+        <p role="alert" className="text-small text-status-danger">
+          {error}
+        </p>
+      )}
+    </li>
+  );
+}
+
 /** A person's menu (DS-65): Remove access, which revokes their invitation, pending or accepted (FR-07.15). */
 function RowMenu({
   who,
-  grantId,
   disabled,
-  onRevoked,
+  onRevoke,
 }: {
   who: string;
-  grantId: string;
   disabled: boolean;
-  onRevoked: () => void;
+  onRevoke: () => void;
 }) {
   return (
     <DropdownMenu>
@@ -228,48 +262,9 @@ function RowMenu({
         <Ellipsis strokeWidth={1.5} aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" inDialog className="w-44">
-        <DropdownMenuItem
-          onClick={() => {
-            void send({ name: "share.revoke", args: { grantId } })
-              .catch(() => undefined)
-              .finally(onRevoked);
-          }}
-        >
-          Remove access
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onRevoke}>Remove access</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-/** Sends a pending invitation's email again (FR-07.5). */
-function ResendButton({
-  grantId,
-  disabled,
-  onSent,
-}: {
-  grantId: string;
-  disabled: boolean;
-  onSent: () => void;
-}) {
-  const [busy, setBusy] = useState(false);
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      disabled={disabled || busy}
-      onClick={() => {
-        setBusy(true);
-        void send({ name: "share.resendInvitation", args: { grantId } })
-          .catch(() => undefined)
-          .finally(() => {
-            setBusy(false);
-            onSent();
-          });
-      }}
-    >
-      Resend
-    </Button>
   );
 }
 
@@ -286,24 +281,15 @@ function audienceOf({ people, link }: { people: number; link: boolean }): string
 function DisplayNameForm({ disabled, onSaved }: { disabled: boolean; onSaved: () => void }) {
   const id = useId();
   const [name, setName] = useState("");
-  const [error, setError] = useState<string>();
-  const [busy, setBusy] = useState(false);
+  const { run, busy, error, setError } = useSend();
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (name.trim() === "") {
       setError("Enter a name.");
       return;
     }
-    setBusy(true);
-    try {
-      const outcome = await send({ name: "account.setDisplayName", args: { displayName: name } });
-      setError(reasonOf(outcome));
-      if (outcome.status !== "failed") onSaved();
-    } catch {
-      setError("Couldn't reach Tonaris. Try again.");
-    } finally {
-      setBusy(false);
-    }
+    const reason = await run({ name: "account.setDisplayName", args: { displayName: name } });
+    if (reason === undefined) onSaved();
   }
   return (
     <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-1.5">
@@ -314,7 +300,7 @@ function DisplayNameForm({ disabled, onSaved }: { disabled: boolean; onSaved: ()
         <Input
           id={`${id}-name`}
           value={name}
-          maxLength={200}
+          maxLength={maxNameLength}
           aria-invalid={error !== undefined}
           aria-describedby={`${id}-hint`}
           onChange={(event) => setName(event.target.value)}
@@ -342,26 +328,17 @@ function InviteForm({
 }) {
   const id = useId();
   const [email, setEmail] = useState("");
-  const [error, setError] = useState<string>();
-  const [busy, setBusy] = useState(false);
+  const { run, busy, error, setError } = useSend();
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (email.trim() === "") return;
-    setBusy(true);
-    try {
-      const outcome = await send({
-        name: "share.invite",
-        args: { grantId: uuidv7(), containerId, email },
-      });
-      setError(reasonOf(outcome));
-      if (outcome.status !== "failed") {
-        setEmail("");
-        onInvited();
-      }
-    } catch {
-      setError("Couldn't reach Tonaris. Try again.");
-    } finally {
-      setBusy(false);
+    const reason = await run({
+      name: "share.invite",
+      args: { grantId: uuidv7(), containerId, email },
+    });
+    if (reason === undefined) {
+      setEmail("");
+      onInvited();
     }
   }
   return (
@@ -410,23 +387,16 @@ function LinkSharing({
   const id = useId();
   const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string>();
-  const [busy, setBusy] = useState(false);
+  const { run, busy, error, setError } = useSend();
   async function turn(enabled: boolean) {
-    setBusy(true);
-    try {
-      const outcome = await send({
-        name: "share.setLink",
-        args: { containerId, linkId: uuidv7(), enabled },
-      });
-      setError(reasonOf(outcome));
-      setConfirming(false);
-      onChanged();
-    } catch {
-      setError("Couldn't reach Tonaris. Try again.");
-    } finally {
-      setBusy(false);
-    }
+    const reason = await run({
+      name: "share.setLink",
+      args: { containerId, linkId: uuidv7(), enabled },
+    });
+    // With no answer, the confirmation stays, to try again.
+    if (reason === unreachable) return;
+    setConfirming(false);
+    onChanged();
   }
   async function copy() {
     if (!link) return;
