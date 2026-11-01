@@ -3,11 +3,18 @@
 
 import { and, asc, count, eq, exists, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
-import { searchKey, type CollectionStore } from "@tonaris/domain";
+import type { CollectionStore } from "@tonaris/domain";
 
 import { albumsOfReleaseGroupIn, applyPlan, findCaptureTarget } from "../album-writes";
 import type { Transaction } from "../client";
-import { albumColumns, containerColumns, membershipColumns, membershipOf } from "../columns";
+import {
+  albumColumns,
+  albumSearchKeys,
+  containerColumns,
+  membershipColumns,
+  membershipOf,
+  storedUnitColumns,
+} from "../columns";
 import { recordInLedger } from "../ledger";
 import { recordUserValues, userEntries, writeProvenance } from "../provenance";
 import {
@@ -38,8 +45,7 @@ export function albumStore(tx: Transaction) {
         ownerId,
         ...values,
         ...(origin ? { mbReleaseGroupId: origin.releaseGroupId } : {}),
-        searchTitleKey: searchKey(values.title),
-        searchArtistKey: searchKey(values.artistCredit),
+        ...albumSearchKeys(values),
       });
       // A new album has no rows to clear.
       await writeProvenance(tx, id, origin ? origin.provenance : userEntries(values));
@@ -49,10 +55,7 @@ export function albumStore(tx: Transaction) {
         .update(albums)
         .set({
           ...values,
-          ...(values.title === undefined ? {} : { searchTitleKey: searchKey(values.title) }),
-          ...(values.artistCredit === undefined
-            ? {}
-            : { searchArtistKey: searchKey(values.artistCredit) }),
+          ...albumSearchKeys(values),
         })
         .where(eq(albums.id, id));
       await recordUserValues(tx, id, values);
@@ -210,15 +213,7 @@ export function albumStore(tx: Transaction) {
     },
     async findTrashUnit(id) {
       const [unit] = await tx
-        .select({
-          id: trashUnits.id,
-          ownerId: trashUnits.ownerId,
-          kind: trashUnits.kind,
-          rootId: trashUnits.rootId,
-          deletedAt: trashUnits.deletedAt,
-          expiresAt: trashUnits.expiresAt,
-          tombstones: trashUnits.tombstones,
-        })
+        .select(storedUnitColumns)
         .from(trashUnits)
         .where(eq(trashUnits.id, id));
       return unit;

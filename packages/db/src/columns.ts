@@ -1,14 +1,16 @@
-// Column maps and the reads other modules share (TS-11, TS-13): an album, folder, list, entry, view choice, position
-// and the account defaults as clients hold them, an entry of an active list, and Trash units as clients hold them.
+// Column maps and the reads other modules share (TS-11, TS-13): an album, folder, list, entry, view choice, position,
+// link, Trash unit and the account defaults as clients hold them, the search keys every write stores (TS-12), whether
+// an album is in an active list and which, and Trash units as clients hold them.
 
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, exists, inArray, isNull, sql, type SQL } from "drizzle-orm";
 
-import { trashUnitOf, type Membership, type TrashUnit } from "@tonaris/domain";
+import { nameKey, searchKey, trashUnitOf, type Membership, type TrashUnit } from "@tonaris/domain";
 
-import type { Transaction } from "./client";
+import type { Executor, Transaction } from "./client";
 import {
   accountSettings,
   albums,
+  albumServiceLinks,
   containers,
   memberships,
   positions,
@@ -76,26 +78,76 @@ export const positionColumns = {
   key: positions.key,
 };
 
-/** An entry of an active list: the album is in Unsorted while it has none (FR-01.9, TS-13). */
-export function activeEntryOf(tx: Transaction, albumId: typeof albums.id | string) {
-  return tx
-    .select({ one: sql`1` })
+/** A Trash unit's columns, as the export holds it (TS-13). */
+export const trashUnitColumns = {
+  id: trashUnits.id,
+  kind: trashUnits.kind,
+  rootId: trashUnits.rootId,
+  deletedAt: trashUnits.deletedAt,
+  expiresAt: trashUnits.expiresAt,
+};
+
+/** A Trash unit as the store keeps it: with its owner, and what was purged while it referred to it (TS-13). */
+export const storedUnitColumns = {
+  ...trashUnitColumns,
+  ownerId: trashUnits.ownerId,
+  tombstones: trashUnits.tombstones,
+};
+
+/** A service link's columns as an album's page shows it; clients hold it with `albumId` too (TS-11). */
+export const serviceLinkColumns = {
+  service: albumServiceLinks.service,
+  url: albumServiceLinks.url,
+};
+
+/** The stored keys of an album's title and artist credit (TS-12): one for each of them `values` gives. */
+export function albumSearchKeys(values: { title: string; artistCredit: string }): {
+  searchTitleKey: string;
+  searchArtistKey: string;
+};
+export function albumSearchKeys(values: { title?: string; artistCredit?: string }): {
+  searchTitleKey?: string;
+  searchArtistKey?: string;
+};
+export function albumSearchKeys(values: { title?: string; artistCredit?: string }) {
+  return {
+    ...(values.title === undefined ? {} : { searchTitleKey: searchKey(values.title) }),
+    ...(values.artistCredit === undefined
+      ? {}
+      : { searchArtistKey: searchKey(values.artistCredit) }),
+  };
+}
+
+/** The stored keys of a folder's or list's name: the unique-name key and the search key (TS-12). */
+export const containerNameKeys = (name: string) => ({
+  nameKey: nameKey(name),
+  searchNameKey: searchKey(name),
+});
+
+/** Whether the album `albumId` has an entry in an active list: it is in Unsorted while it has none (FR-01.9, TS-13). */
+export function inActiveList(db: Executor, albumId: typeof albums.id | string): SQL {
+  return exists(
+    db
+      .select({ one: sql`1` })
+      .from(memberships)
+      .innerJoin(containers, eq(containers.id, memberships.listId))
+      .where(and(eq(memberships.albumId, albumId), isNull(containers.trashedAt))),
+  );
+}
+
+/** The active lists `albumIds` are in, each with the album it holds (FR-01.6): only an active list's entry counts (TS-13). */
+export function activeListsOf(db: Executor, albumIds: readonly string[]) {
+  return db
+    .select({ albumId: memberships.albumId, id: containers.id, name: containers.name })
     .from(memberships)
     .innerJoin(containers, eq(containers.id, memberships.listId))
-    .where(and(eq(memberships.albumId, albumId), isNull(containers.trashedAt)));
+    .where(and(inArray(memberships.albumId, [...albumIds]), isNull(containers.trashedAt)));
 }
 
 /** The account's Trash units as clients hold them, oldest first: each with its root's name and its members (FR-01.12). */
 export async function unitsOfAccount(tx: Transaction, accountId: string): Promise<TrashUnit[]> {
   const units = await tx
-    .select({
-      id: trashUnits.id,
-      ownerId: trashUnits.ownerId,
-      kind: trashUnits.kind,
-      rootId: trashUnits.rootId,
-      deletedAt: trashUnits.deletedAt,
-      expiresAt: trashUnits.expiresAt,
-    })
+    .select({ ...trashUnitColumns, ownerId: trashUnits.ownerId })
     .from(trashUnits)
     .where(eq(trashUnits.ownerId, accountId))
     .orderBy(asc(trashUnits.deletedAt), asc(trashUnits.id));

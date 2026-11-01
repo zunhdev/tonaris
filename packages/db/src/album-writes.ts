@@ -3,9 +3,10 @@
 
 import { and, asc, eq, sql } from "drizzle-orm";
 
-import { searchKey, type CaptureTarget, type EnrichmentPlan } from "@tonaris/domain";
+import type { CaptureTarget, EnrichmentPlan } from "@tonaris/domain";
 
 import type { Transaction } from "./client";
+import { albumSearchKeys } from "./columns";
 import { writeProvenance } from "./provenance";
 import { albums } from "./schema";
 
@@ -68,10 +69,7 @@ export async function applyPlan(
       .set({
         ...values,
         ...(releaseGroupId === undefined ? {} : { mbReleaseGroupId: releaseGroupId }),
-        ...(values.title === undefined ? {} : { searchTitleKey: searchKey(values.title) }),
-        ...(values.artistCredit === undefined
-          ? {}
-          : { searchArtistKey: searchKey(values.artistCredit) }),
+        ...albumSearchKeys(values),
       })
       .where(eq(albums.id, albumId));
   }

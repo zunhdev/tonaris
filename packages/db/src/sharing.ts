@@ -18,7 +18,13 @@ import {
 
 import { canReadContainer, linkByTokenHash, readableContainers } from "./access";
 import { readSnapshot, type Database, type Executor, type Transaction } from "./client";
-import { albumColumns, containerColumns, membershipColumns, membershipOf } from "./columns";
+import {
+  albumColumns,
+  containerColumns,
+  membershipColumns,
+  membershipOf,
+  serviceLinkColumns,
+} from "./columns";
 import { valuesOfAlbums } from "./field-values";
 import { ancestorsCte, descendantsCte } from "./hierarchy";
 import { sendingStale } from "./invitations";
@@ -94,11 +100,7 @@ export function sharedSnapshot(
       albumIds.length === 0
         ? []
         : await tx
-            .select({
-              albumId: albumServiceLinks.albumId,
-              service: albumServiceLinks.service,
-              url: albumServiceLinks.url,
-            })
+            .select({ albumId: albumServiceLinks.albumId, ...serviceLinkColumns })
             .from(albumServiceLinks)
             .where(inArray(albumServiceLinks.albumId, albumIds))
             .orderBy(asc(albumServiceLinks.albumId), asc(albumServiceLinks.service));

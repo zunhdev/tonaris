@@ -1,12 +1,12 @@
 // The store's personal choices (TS-16; FR-05.2, FR-11.7, FR-11.8): view choices, account defaults, and manual order,
 // with what a view holds now for a move to be placed in.
 
-import { and, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import type { CollectionStore } from "@tonaris/domain";
 
 import type { Transaction } from "../client";
-import { accountDefaultsColumns, activeEntryOf, viewPrefsColumns } from "../columns";
+import { accountDefaultsColumns, inActiveList, viewPrefsColumns } from "../columns";
 import { accountSettings, albums, containers, memberships, positions, viewPrefs } from "../schema";
 
 /** View choices, defaults and manual order, on `tx`. */
@@ -113,7 +113,7 @@ export function viewStore(tx: Transaction) {
             and(
               eq(albums.ownerId, personId),
               isNull(albums.trashedAt),
-              notExists(activeEntryOf(tx, albums.id)),
+              not(inActiveList(tx, albums.id)),
             ),
           );
       } else {
@@ -126,7 +126,10 @@ export function viewStore(tx: Transaction) {
       return new Set(rows.map((row) => row.id));
     },
     async inActiveList(albumId) {
-      return (await activeEntryOf(tx, albumId).limit(1)).length > 0;
+      const [row] = await tx.execute<{ listed: boolean }>(
+        sql`select ${inActiveList(tx, albumId)} as listed`,
+      );
+      return row?.listed === true;
     },
   } satisfies Partial<CollectionStore>;
 }

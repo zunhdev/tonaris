@@ -44,6 +44,8 @@ import {
   positionColumns,
   unitsOfAccount,
   viewPrefsColumns,
+  serviceLinkColumns,
+  storedUnitColumns,
 } from "./columns";
 import { fieldsOfAccount, valuesOfAccount } from "./field-values";
 import {
@@ -483,11 +485,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
     const fields = await fieldsOfAccount(tx, accountId);
     const fieldValues = await valuesOfAccount(tx, accountId);
     const links: ServiceLink[] = await tx
-      .select({
-        albumId: albumServiceLinks.albumId,
-        service: albumServiceLinks.service,
-        url: albumServiceLinks.url,
-      })
+      .select({ albumId: albumServiceLinks.albumId, ...serviceLinkColumns })
       .from(albumServiceLinks)
       .where(eq(albumServiceLinks.ownerId, accountId))
       .orderBy(asc(albumServiceLinks.albumId), asc(albumServiceLinks.service));
@@ -562,15 +560,7 @@ export async function purgeExpiredTrash(
       const seq = await lockAccount(tx, ownerId);
       const store = collectionStore(tx);
       const units = await tx
-        .select({
-          id: trashUnits.id,
-          ownerId: trashUnits.ownerId,
-          kind: trashUnits.kind,
-          rootId: trashUnits.rootId,
-          deletedAt: trashUnits.deletedAt,
-          expiresAt: trashUnits.expiresAt,
-          tombstones: trashUnits.tombstones,
-        })
+        .select(storedUnitColumns)
         .from(trashUnits)
         .where(and(eq(trashUnits.ownerId, ownerId), lte(trashUnits.expiresAt, now)))
         .orderBy(asc(trashUnits.expiresAt), asc(trashUnits.id));

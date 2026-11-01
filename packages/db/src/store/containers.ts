@@ -3,10 +3,10 @@
 
 import { and, asc, count, eq, inArray, isNull, sql } from "drizzle-orm";
 
-import { nameKey, searchKey, type CollectionStore } from "@tonaris/domain";
+import type { CollectionStore } from "@tonaris/domain";
 
 import type { Transaction } from "../client";
-import { containerColumns, membershipColumns, membershipOf } from "../columns";
+import { containerColumns, containerNameKeys, membershipColumns, membershipOf } from "../columns";
 import { ancestorsCte, descendantsCte } from "../hierarchy";
 import { containers, memberships } from "../schema";
 
@@ -61,8 +61,7 @@ export function containerStore(tx: Transaction) {
     async insertContainer(container) {
       await tx.insert(containers).values({
         ...container,
-        nameKey: nameKey(container.name),
-        searchNameKey: searchKey(container.name),
+        ...containerNameKeys(container.name),
       });
     },
     async updateContainer(id, values) {
@@ -70,9 +69,7 @@ export function containerStore(tx: Transaction) {
         .update(containers)
         .set({
           ...values,
-          ...(values.name === undefined
-            ? {}
-            : { nameKey: nameKey(values.name), searchNameKey: searchKey(values.name) }),
+          ...(values.name === undefined ? {} : containerNameKeys(values.name)),
         })
         .where(eq(containers.id, id));
     },

@@ -13,7 +13,8 @@ import {
 } from "@tonaris/domain";
 
 import { readSnapshot, type Database, type Transaction } from "./client";
-import { containers, memberships, shareGrants, shareLinks, trashUnits, users } from "./schema";
+import { activeListsOf } from "./columns";
+import { containers, shareGrants, shareLinks, trashUnits, users } from "./schema";
 
 /** A move of a folder or list into a folder or the root, or a Trash unit's recovery, by default to where it was. */
 export type ImpactQuery =
@@ -108,14 +109,10 @@ export function sharingImpact(
       .where(and(eq(trashUnits.id, query.unitId), eq(trashUnits.ownerId, ownerId)));
     if (!unit) return "not_found";
     if (unit.kind === "album") {
-      const lists = await tx
-        .select({ listId: memberships.listId })
-        .from(memberships)
-        .innerJoin(containers, eq(containers.id, memberships.listId))
-        .where(and(eq(memberships.albumId, unit.rootId), isNull(containers.trashedAt)));
+      const lists = await activeListsOf(tx, [unit.rootId]);
       return listsImpact(
         state,
-        lists.map((row) => row.listId),
+        lists.map((list) => list.id),
       );
     }
     const members = await tx

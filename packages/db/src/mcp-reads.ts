@@ -3,7 +3,7 @@
 // and their custom fields with usage. Albums carry the sources of their values, which the tools filter by policy
 // before an agent sees them (TS-15). Pages are offsets into an order that is stable between calls.
 
-import { and, asc, count, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import type {
   Album,
@@ -17,7 +17,7 @@ import type {
 
 import { canReadContainer, readableContainers } from "./access";
 import { readSnapshot, type Database, type Executor } from "./client";
-import { albumColumns, unitsOfAccount } from "./columns";
+import { albumColumns, inActiveList, serviceLinkColumns, unitsOfAccount } from "./columns";
 import { readFieldUsage } from "./field-options";
 import { fieldsOfAccount, valuesOfAlbums } from "./field-values";
 import {
@@ -281,13 +281,7 @@ export function unsortedPage(
     const unsorted = and(
       eq(albums.ownerId, ownerId),
       isNull(albums.trashedAt),
-      notExists(
-        tx
-          .select({ one: sql`1` })
-          .from(memberships)
-          .innerJoin(containers, eq(containers.id, memberships.listId))
-          .where(and(eq(memberships.albumId, albums.id), isNull(containers.trashedAt))),
-      ),
+      not(inActiveList(tx, albums.id)),
     );
     const [rows, [total]] = await Promise.all([
       tx
@@ -398,7 +392,7 @@ export function albumDetail(
 
     const [links, values, definitions, sources] = await Promise.all([
       tx
-        .select({ service: albumServiceLinks.service, url: albumServiceLinks.url })
+        .select(serviceLinkColumns)
         .from(albumServiceLinks)
         .where(eq(albumServiceLinks.albumId, albumId))
         .orderBy(asc(albumServiceLinks.service)),

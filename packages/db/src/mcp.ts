@@ -3,7 +3,7 @@
 // their scopes carry the mode (`mcpModeOf`). What a gated deletion or match would touch is read here for its approval;
 // the operations themselves are the app's commands (TON-83).
 
-import { and, asc, count, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import {
   deletionImpact,
@@ -14,6 +14,7 @@ import {
 
 import { albumsOfReleaseGroupIn } from "./album-writes";
 import type { Database, Executor, Transaction } from "./client";
+import { activeListsOf, inActiveList } from "./columns";
 import { recordInLedger } from "./ledger";
 import {
   albums,
@@ -139,13 +140,9 @@ export async function collectionOverview(
     .select({
       albums: count(),
       // Unsorted: active albums in no active list (FR-01.9). It is this query, never stored (TS-13).
-      unsorted: sql<number>`count(*) filter (where ${notExists(
-        db
-          .select({ one: sql`1` })
-          .from(memberships)
-          .innerJoin(containers, eq(containers.id, memberships.listId))
-          .where(and(eq(memberships.albumId, albums.id), isNull(containers.trashedAt))),
-      )})`.mapWith(Number),
+      unsorted: sql<number>`count(*) filter (where ${not(inActiveList(db, albums.id))})`.mapWith(
+        Number,
+      ),
     })
     .from(albums)
     .where(activeAlbum);
@@ -257,19 +254,10 @@ export async function albumDeletionTargets(
     );
   const found = lock ? await query.for("update") : await query;
   if (found.length === 0) return [];
-  const lists = await db
-    .select({ albumId: memberships.albumId, id: containers.id, name: containers.name })
-    .from(memberships)
-    .innerJoin(containers, eq(containers.id, memberships.listId))
-    .where(
-      and(
-        inArray(
-          memberships.albumId,
-          found.map((album) => album.id),
-        ),
-        isNull(containers.trashedAt),
-      ),
-    );
+  const lists = await activeListsOf(
+    db,
+    found.map((album) => album.id),
+  );
   return found.map(({ id, title, artist }) => ({
     id,
     title,
@@ -383,12 +371,13 @@ export async function savedAlbumOfReleaseGroup(
 ): Promise<AlbumDeletionTarget | undefined> {
   const [saved] = await albumsOfReleaseGroupIn(tx, ownerId, releaseGroupId);
   if (!saved) return undefined;
-  const lists = await tx
-    .select({ id: containers.id, name: containers.name })
-    .from(memberships)
-    .innerJoin(containers, eq(containers.id, memberships.listId))
-    .where(and(eq(memberships.albumId, saved.id), isNull(containers.trashedAt)));
-  return { id: saved.id, title: saved.title, artist: saved.artistCredit, lists };
+  const lists = await activeListsOf(tx, [saved.id]);
+  return {
+    id: saved.id,
+    title: saved.title,
+    artist: saved.artistCredit,
+    lists: lists.map(({ id, name }) => ({ id, name })),
+  };
 }
 
 /** The owner's active list `id`'s name, if it is one. */

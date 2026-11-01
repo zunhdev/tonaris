@@ -13,6 +13,8 @@ import {
   defaultsColumns,
   positionColumns,
   viewPrefsColumns,
+  serviceLinkColumns,
+  trashUnitColumns,
 } from "./columns";
 import { fieldsOfAccount, valuesOfAccount } from "./field-values";
 import {
@@ -60,11 +62,7 @@ export function exportSource(
       .where(eq(memberships.ownerId, accountId))
       .orderBy(asc(memberships.addedAt), asc(memberships.albumId));
     const links = await tx
-      .select({
-        albumId: albumServiceLinks.albumId,
-        service: albumServiceLinks.service,
-        url: albumServiceLinks.url,
-      })
+      .select({ albumId: albumServiceLinks.albumId, ...serviceLinkColumns })
       .from(albumServiceLinks)
       .where(eq(albumServiceLinks.ownerId, accountId))
       .orderBy(asc(albumServiceLinks.albumId), asc(albumServiceLinks.service));
@@ -91,13 +89,7 @@ export function exportSource(
       .from(accountSettings)
       .where(eq(accountSettings.accountId, accountId));
     const units = await tx
-      .select({
-        id: trashUnits.id,
-        kind: trashUnits.kind,
-        rootId: trashUnits.rootId,
-        deletedAt: trashUnits.deletedAt,
-        expiresAt: trashUnits.expiresAt,
-      })
+      .select(trashUnitColumns)
       .from(trashUnits)
       .where(eq(trashUnits.ownerId, accountId))
       .orderBy(asc(trashUnits.deletedAt), asc(trashUnits.id));
