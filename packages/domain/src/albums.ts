@@ -241,8 +241,8 @@ export function albumOf({
 }
 
 /**
- * `album.create`: creates an album with the client's ID (TS-10). If that album already exists for the same owner, as when a
- * create is sent again without its idempotency record, nothing is duplicated (FR-13.5): the same values are
+ * `album.create`: creates an album with the client's ID (TS-10). If that album already exists for the same owner, as
+ * when a create is sent again without its idempotency record, nothing is duplicated (FR-13.5): the same values are
  * already saved, and different ones are a conflict.
  */
 export async function createAlbum(
@@ -307,8 +307,8 @@ export async function setArtwork(
 }
 
 /**
- * `album.update`: changes the fields in `args` if each still holds its `base` value (TS-21). Fields not named are never
- * compared, so edits to different fields of one album all succeed.
+ * `album.update`: changes the fields in `args` if each still holds its `base` value (TS-21). Fields not named are
+ * never compared, so edits to different fields of one album all succeed.
  */
 export async function updateAlbum(
   { id, ...values }: Partial<AlbumFields> & { id: string },

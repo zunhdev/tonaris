@@ -1,7 +1,8 @@
 // Trash for folders and lists against an in-memory store (FR-01.11 to FR-01.16, TS-13, TS-26): deletion as one unit,
 // Unsorted placement, a resend, recovery to the parent or a chosen destination and name, the questions recovery
-// asks, and a Read-only agent's refusals. Property tests check unit semantics over random trees and deletions: content deleted together is one unit,
-// content deleted separately keeps its own unit and dates, and recovering a unit restores exactly its members.
+// asks, and a Read-only agent's refusals. Property tests check unit semantics over random trees and deletions:
+// content deleted together is one unit, content deleted separately keeps its own unit and dates, and recovering a
+// unit restores exactly its members.
 
 import { describe, expect, test } from "bun:test";
 
