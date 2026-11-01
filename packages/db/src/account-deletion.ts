@@ -48,10 +48,6 @@ const finishedDeletionRetentionMs = 7 * 24 * 60 * 60_000;
 export const deletionChunkSize = 500;
 
 /**
- * Starts deleting `userId` (TS-74), in one transaction. Refused for an unknown account, the creator, and one
- * already being deleted; otherwise answers "started", with the job queued on the same transaction.
- */
-/**
  * Ends every way into `userId`'s account and what it shares, at once (FR-11.11): its sign-in email, sessions,
  * passkeys and AI connections, its links and the grants it gave or held. Its data goes after, chunk by chunk. A restore's replay
  * of the deletion does the same (TS-113).
@@ -85,6 +81,10 @@ export async function endAccountAccess(tx: Transaction, userId: string, now: Dat
     .where(and(eq(shareGrants.granteeId, userId), open));
 }
 
+/**
+ * Starts deleting `userId` (TS-74), in one transaction. Refused for an unknown account, the creator, and one
+ * already being deleted; otherwise answers "started", with the job queued on the same transaction.
+ */
 export async function beginAccountDeletion(
   db: Database,
   {

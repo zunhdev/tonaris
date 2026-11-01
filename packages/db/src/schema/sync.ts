@@ -7,8 +7,9 @@ import { users } from "./auth";
 import { instant, table, timestamps } from "./columns";
 
 /**
- * One row per account. `UPDATE account_sync SET seq = seq + 1 … RETURNING seq` is the owner's write lock,
- * so commit order equals `seq` order, and `seq` is the stream cursor (TS-20, TS-23).
+ * One row per account. `INSERT … ON CONFLICT DO NOTHING` then `SELECT seq … FOR UPDATE` is the owner's write lock
+ * (`lockAccount`), so commit order equals `seq` order; `seq` advances by one per logged change and is the stream
+ * cursor (TS-20, TS-23).
  */
 export const accountSync = table("account_sync", {
   accountId: uuid()

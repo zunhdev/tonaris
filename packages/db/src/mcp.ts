@@ -1,7 +1,7 @@
 // What MCP needs from storage (TS-60–TS-63): the connection behind a token, the connection list and revocation
-// for Settings (TS-61), and what the first tools read and write. Connections are Better Auth's consents (TS-30);
-// their scopes carry the mode (`mcpModeOf`). What a gated deletion or match would touch is read here for its approval;
-// the operations themselves are the app's commands (TON-83).
+// for Settings (TS-61), and the overview's counts. Connections are Better Auth's consents (TS-30); their scopes carry
+// the mode (`mcpModeOf`). What a gated deletion or match would touch is read here for its approval; the operations
+// themselves are the app's commands (TON-83), and the other tools' reads are in mcp-reads.ts and mcp-writes.ts.
 
 import { and, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
