@@ -26,7 +26,7 @@ import {
   containerKinds,
   fieldTypes,
   maxOrderItems,
-  planMove,
+  planMoves,
   releaseTypes,
   shareTokenSchema,
   sortDirections,
@@ -38,7 +38,6 @@ import {
   type McpPrincipal,
   type MutationResult,
   type Outcome,
-  type Place,
   viewPrefsFields,
 } from "@tonaris/domain";
 
@@ -465,20 +464,7 @@ export function registerWriteTools(
       });
       if (!sequence) return failed("not_found", "There is no such folder or list.");
       // Each item after the one before it, the first at the place: one move, written together (TS-16).
-      const keys = new Map(sequence.keys);
-      let order = sequence.ids;
-      const written = new Map<string, string>();
-      let place: Place = args.place;
-      for (const itemId of args.itemIds) {
-        for (const [id, key] of planMove(order, keys, itemId, place)) {
-          keys.set(id, key);
-          written.set(id, key);
-        }
-        order = order.filter((id) => id !== itemId);
-        const at = order.findIndex((id) => (keys.get(id) ?? "￿") > (keys.get(itemId) ?? ""));
-        order.splice(at === -1 ? order.length : at, 0, itemId);
-        place = { after: itemId };
-      }
+      const written = planMoves(sequence.ids, sequence.keys, args.itemIds, args.place);
       const base = Object.fromEntries(
         [...written.keys()].map((id) => [id, sequence.keys.get(id) ?? null]),
       );

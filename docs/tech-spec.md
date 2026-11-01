@@ -1218,7 +1218,7 @@ There are deliberately **no** tools for sharing management, Trash purge, export,
   - `move_albums`, a list-to-list move of albums: join the target, then leave the source;
   - `set_artwork`, `set_link` and `remove_link`, over `album.setArtwork`, `link.set` and `link.remove`.
 - **`base`.** A change the agent doesn't base on values it read is based on the values saved now. Passing `base` gets a `conflict` with the current values when they changed (TS-21).
-- **`set_order`** places items, in the order given, at the top, at the bottom, or before or after an item, with the app's own `planMove` (now in `packages/domain`), as one `order.set`.
+- **`set_order`** places items, in the order given, at the top, at the bottom, or before or after an item, with the app's own `planMove`, through `planMoves` (both in `packages/domain`), as one `order.set`.
 - **`add_albums`** takes links or details, with an optional list. A link's `needs_input` (`match` or `details`) is answered by sending the item again with `releaseGroupId` or `details` (TS-26). Captures read no store page for agents (FR-10.5).
 - **Outcomes.** Each item is TS-27's outcome, with `failed` carrying `code` and `message`. A `skipped` item names the item it waited for by index.
 - **References.** `share.saveLink` and `share.removeReference` now authorize as collection writes, so a Manage agent may keep or drop references, and a Read-only one may not (FR-07.13, AC-24). Leaving an invitation stays app-only.

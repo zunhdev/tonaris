@@ -9,7 +9,7 @@ import { runCommand, type CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
 import { membershipKey } from "./memberships";
-import { isOrderKey } from "./positions";
+import { isOrderKey, planMoves } from "./positions";
 import type { Principal } from "./principals";
 import { changeSchema, mutationSchema, type Mutation } from "./sync";
 import { memoryStore, positionRowKey } from "./testing";
@@ -327,5 +327,49 @@ describe("placement (DS-51)", () => {
       { entity: "position", id: `root:${doom.id}`, op: "delete", data: null },
     ]);
     expect(memory.positions.size).toBe(0);
+  });
+});
+
+describe("planning a move of several items (TS-16)", () => {
+  /** The view's order after `writes`: arranged items by key, then the rest as `sequence` has them. */
+  const after = (sequence: string[], keys: Map<string, string>, writes: Map<string, string>) => {
+    const merged = new Map([...keys, ...writes]);
+    const arranged = sequence
+      .filter((id) => merged.has(id))
+      .toSorted((a, b) => ((merged.get(a) ?? "") < (merged.get(b) ?? "") ? -1 : 1));
+    return [...arranged, ...sequence.filter((id) => !merged.has(id))];
+  };
+  const arranged = new Map([
+    ["a", "a0"],
+    ["b", "a1"],
+    ["c", "a2"],
+    ["d", "a3"],
+  ]);
+  const sequence = ["a", "b", "c", "d"];
+
+  test("the items come in the order given, the first at the place", () => {
+    const top = planMoves(sequence, arranged, ["d", "c"], "top");
+    expect(after(sequence, arranged, top)).toEqual(["d", "c", "a", "b"]);
+    const behind = planMoves(sequence, arranged, ["a", "b"], { after: "c" });
+    expect(after(sequence, arranged, behind)).toEqual(["c", "a", "b", "d"]);
+    const before = planMoves(sequence, arranged, ["d", "a"], { before: "c" });
+    expect(after(sequence, arranged, before)).toEqual(["b", "d", "a", "c"]);
+    for (const writes of [top, behind, before]) {
+      expect([...writes.values()].every(isOrderKey)).toBe(true);
+    }
+  });
+
+  test("in an unarranged view, only what the moves pass gets a key", () => {
+    const top = planMoves(["a", "b", "c"], new Map(), ["c", "a"], "top");
+    expect([...top.keys()]).toEqual(["c", "a"]);
+    expect(after(["a", "b", "c"], new Map(), top)).toEqual(["c", "a", "b"]);
+
+    const bottom = planMoves(["a", "b", "c"], new Map(), ["a"], "bottom");
+    expect([...bottom.keys()]).toEqual(["b", "c", "a"]);
+    expect(after(["a", "b", "c"], new Map(), bottom)).toEqual(["b", "c", "a"]);
+  });
+
+  test("no items, no keys", () => {
+    expect(planMoves(sequence, arranged, [], "top").size).toBe(0);
   });
 });
