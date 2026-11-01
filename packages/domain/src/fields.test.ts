@@ -5,9 +5,9 @@
 import { describe, expect, test } from "bun:test";
 
 import { runCommand, type CommandResult } from "./commands";
-import type { StoredField } from "./fields";
+import { optionLabelConflict, optionLimitProblem, type StoredField } from "./fields";
 import { uuidv7 } from "./ids";
-import { maxFields } from "./limits";
+import { maxFieldOptions, maxFields } from "./limits";
 import type { Principal } from "./principals";
 import { changeSchema, mutationSchema, type Mutation } from "./sync";
 import { memoryStore } from "./testing";
@@ -263,5 +263,25 @@ describe("field.rename (FR-03.11, X-06)", () => {
         }),
       ),
     ).toBe("not_found");
+  });
+});
+
+describe("option labels and limits (FR-03.14, X-06, TS-18)", () => {
+  const options = [
+    { id: "o1", label: "Vinyl" },
+    { id: "o2", label: "CD" },
+  ];
+
+  test("a label collides with another option's, ignoring case, never with its own", () => {
+    expect(optionLabelConflict("vinyl", options)).toEqual(options[0]);
+    expect(optionLabelConflict("vinyl", options, "o1")).toBeUndefined();
+    expect(optionLabelConflict("Cassette", options)).toBeUndefined();
+  });
+
+  test("the option limit is refused with its own words", () => {
+    expect(optionLimitProblem()).toMatchObject({
+      code: "limit_exceeded",
+      problem: { detail: `A choice field can have at most ${maxFieldOptions} options.` },
+    });
   });
 });

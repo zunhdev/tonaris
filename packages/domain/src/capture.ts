@@ -33,7 +33,12 @@ import {
 } from "./enrichment";
 import { maxLinkLength, maxMemberships } from "./limits";
 import { streamingServices, type StreamingService } from "./links";
-import { addMembership, membershipKey } from "./memberships";
+import {
+  addMembership,
+  changeableList,
+  membershipKey,
+  membershipLimitProblem,
+} from "./memberships";
 import { failure, type Outcome } from "./outcomes";
 import { forgetPlace, placeAtTop } from "./positions";
 import { serviceLinkKey } from "./service-links";
@@ -278,10 +283,7 @@ async function entryLimit(
   if (listId === null) return undefined;
   if (albumId !== undefined && (await store.findMembership(listId, albumId))) return undefined;
   if ((await store.countMemberships(ownerId)) < maxMemberships) return undefined;
-  return failure(
-    "limit_exceeded",
-    `You've reached ${maxMemberships.toLocaleString("en")} list entries (including Trash). Remove albums from lists, or permanently delete lists from Trash, to add more.`,
-  );
+  return membershipLimitProblem();
 }
 
 /** Whether the plan fills a value clients hold: the artwork too (TON-48). */
@@ -443,7 +445,6 @@ export async function captureAlbum(
   source: CaptureSource | undefined,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store } = context;
   if (!source) {
     return failure(
       "provider_unavailable",
@@ -453,14 +454,8 @@ export async function captureAlbum(
   const ownerId = actingOwner(context, "collection", "You can't add albums here.");
   if (isFailure(ownerId)) return ownerId;
   if (args.listId !== null) {
-    const list = await store.findContainer(args.listId);
-    if (!list || list.ownerId !== ownerId) return failure("not_found", "This list doesn't exist.");
-    if (list.kind !== "list") {
-      return failure("invalid_destination", "Folders don't hold albums. Choose a list.");
-    }
-    if (list.trashed) {
-      return failure("trashed", "This list is in Trash. Recover it to add albums to it.");
-    }
+    const list = await changeableList(args.listId, context);
+    if (isFailure(list)) return list;
   }
 
   const match = await matchOf(ownerId, source, context);

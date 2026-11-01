@@ -91,6 +91,28 @@ export function optionLabelProblem(label: string, path: string): Failure | undef
   return undefined;
 }
 
+/** The refusal of an option past a choice field's limit (TS-18), at its creation or when one is added. */
+export function optionLimitProblem(): Failure {
+  return failure("limit_exceeded", `A choice field can have at most ${maxFieldOptions} options.`);
+}
+
+/**
+ * The option among `options` whose label collides with `label`, if any (FR-03.14, X-06). The option being relabelled
+ * (`selfId`) never collides with itself.
+ */
+export function optionLabelConflict(
+  label: string,
+  options: readonly FieldOption[],
+  selfId?: string,
+): FieldOption | undefined {
+  const taken = findNameConflict(
+    label,
+    options.map(({ id, label: name }) => ({ id, name })),
+    selfId,
+  );
+  return taken && options.find((option) => option.id === taken.id);
+}
+
 /** The refusal of a name another field of the account has (FR-03.9). Clients check it too, with these words. */
 export function fieldNameTaken(takenName: string): Failure {
   return failure("name_conflict", `'${takenName}' already exists. Choose another name.`, [
@@ -132,20 +154,13 @@ function initialOptions(args: FieldCreateArgs): FieldOption[] | Failure {
       { path: "args.options", message: "Only for single and multiple choice" },
     ]);
   }
-  if (args.options.length > maxFieldOptions) {
-    return failure("limit_exceeded", `A choice field can have at most ${maxFieldOptions} options.`);
-  }
+  if (args.options.length > maxFieldOptions) return optionLimitProblem();
   const options: FieldOption[] = [];
   for (const [index, option] of args.options.entries()) {
     const label = option.label.trim();
     const problem = optionLabelProblem(label, `args.options.${index}.label`);
     if (problem) return problem;
-    if (
-      findNameConflict(
-        label,
-        options.map(({ id, label: taken }) => ({ id, name: taken })),
-      )
-    ) {
+    if (optionLabelConflict(label, options)) {
       return failure("validation_failed", "Each option needs its own label.", [
         { path: `args.options.${index}.label`, message: "Already used in this field" },
       ]);

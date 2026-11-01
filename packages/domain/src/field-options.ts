@@ -15,7 +15,9 @@ import {
   fieldOf,
   fieldTypes,
   isChoiceType,
+  optionLabelConflict,
   optionLabelProblem,
+  optionLimitProblem,
   ownField,
   type CustomField,
   type FieldOption,
@@ -23,7 +25,6 @@ import {
   type StoredField,
 } from "./fields";
 import { maxFieldOptions } from "./limits";
-import { findNameConflict } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { z } from "./zod";
 
@@ -223,14 +224,9 @@ export async function addFieldOption(
       { path: "args.id", message: "Already in use" },
     ]);
   }
-  const taken = findNameConflict(
-    label,
-    field.options.map(({ id, label: name }) => ({ id, name })),
-  );
-  if (taken) return optionLabelTaken(taken.name);
-  if (field.options.length >= maxFieldOptions) {
-    return failure("limit_exceeded", `A choice field can have at most ${maxFieldOptions} options.`);
-  }
+  const taken = optionLabelConflict(label, field.options);
+  if (taken) return optionLabelTaken(taken.label);
+  if (field.options.length >= maxFieldOptions) return optionLimitProblem();
 
   const option = { id: args.id, label };
   const sortKey = generateKeyBetween(await context.store.lastOptionKey(field.id), null);
@@ -256,12 +252,8 @@ export async function renameFieldOption(
   const problem = optionLabelProblem(label, "args.label");
   if (problem) return problem;
   if (label === option.label) return applied();
-  const taken = findNameConflict(
-    label,
-    field.options.map(({ id, label: name }) => ({ id, name })),
-    option.id,
-  );
-  if (taken) return optionLabelTaken(taken.name);
+  const taken = optionLabelConflict(label, field.options, option.id);
+  if (taken) return optionLabelTaken(taken.label);
 
   await context.store.renameFieldOption(option.id, label);
   return applied(
