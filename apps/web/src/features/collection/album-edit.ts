@@ -4,10 +4,42 @@
 // inspector edits the original year and the recording years each on their own. The domain's `albumProblem` has the
 // last word, so nothing the server would refuse is sent (X-05). Pure, so the rules are tested without a DOM.
 
-import { albumFields, albumProblem, type Album, type AlbumFields } from "@tonaris/domain";
+import {
+  albumFields,
+  albumProblem,
+  groupNames,
+  groupOf,
+  releaseTypes,
+  type Album,
+  type AlbumFields,
+} from "@tonaris/domain";
 
 /** A text editor: a row's cells (title, artist, year) and the inspector's years. */
 export type AlbumCell = "title" | "artistCredit" | "year" | "originalYear" | "recording";
+
+/** Each editor's name, for its label: "Title", or "Title of 'Nightfall'" where the album isn't on show. */
+export const cellNames: Record<AlbumCell, string> = {
+  title: "Title",
+  artistCredit: "Artist",
+  year: "Year",
+  originalYear: "Original release year",
+  recording: "Recording year or range",
+};
+
+/** The release type's choices (DS-46, DS-47): the domain's types, by their groups' names, then Unknown, for none. */
+export const releaseTypeOptions: readonly {
+  value: NonNullable<Album["releaseType"]> | "unknown";
+  label: string;
+}[] = [
+  ...releaseTypes.map((value) => ({ value, label: groupNames[value] })),
+  { value: "unknown", label: "Unknown" },
+];
+
+/** The release type in words (DS-19): its group's name, live first as the groups have it (FR-05.9), or — for none. */
+export function typeName(album: Pick<Album, "releaseType" | "isLive">): string {
+  const group = groupOf(album);
+  return group === "unclassified" ? "—" : groupNames[group];
+}
 
 /** What an edit does: save these fields, refuse with a reason, or nothing, for an unchanged value. */
 export type AlbumEdit =

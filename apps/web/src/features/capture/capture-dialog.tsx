@@ -9,6 +9,7 @@ import { useListOptions } from "@/features/collection/list-options";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useId, useRef, useState, type FormEvent } from "react";
 
+import { maxBatchItems } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -20,7 +21,7 @@ import {
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCapture } from "./capture-context";
-import { linesIn, maxPastedLinks } from "./links-in";
+import { linesIn } from "./links-in";
 
 export function CaptureDialog() {
   const ui = useCapture();
@@ -52,8 +53,9 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
       linksRef.current?.focus();
       return;
     }
-    if (lines.length > maxPastedLinks) {
-      setProblem(`Add up to ${maxPastedLinks} links at once.`);
+    // At most one batch at once (TS-25).
+    if (lines.length > maxBatchItems) {
+      setProblem(`Add up to ${maxBatchItems} links at once.`);
       linksRef.current?.focus();
       return;
     }

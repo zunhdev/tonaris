@@ -32,12 +32,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
-import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
+import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 import { Switch } from "@tonaris/ui/components/switch";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { releaseTypeOptions } from "./album-edit";
 import {
   albumOfForm,
+  formFieldNames,
   formProblems,
   isFormDirty,
   linksOfForm,
@@ -50,13 +52,6 @@ import { FindArtwork } from "./find-artwork";
 import { FormFields } from "./form-fields";
 import { useListOptions } from "./list-options";
 
-const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation" | "unknown">[] = [
-  { value: "album", label: "Album" },
-  { value: "ep", label: "EP" },
-  { value: "compilation", label: "Compilation" },
-  { value: "unknown", label: "Unknown" },
-];
-
 const formFields: readonly FormField[] = [
   "title",
   "artistCredit",
@@ -65,19 +60,6 @@ const formFields: readonly FormField[] = [
   "artworkUrl",
   ...streamingServices,
 ];
-
-const fieldNames: Record<FormField, string> = {
-  title: "Title",
-  artistCredit: "Artist",
-  originalYear: "Original release year",
-  recording: "Recording year or range",
-  artworkUrl: "Artwork URL",
-  spotify: "Spotify link",
-  "apple-music": "Apple Music link",
-  qobuz: "Qobuz link",
-  tidal: "Tidal link",
-  "youtube-music": "YouTube Music link",
-};
 
 /** The time an entry is made; the server records its own (TON-27). */
 const now = () => new Date().toISOString();
@@ -230,7 +212,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                   {problemCount === 1 ? "Check 1 field:" : `Check ${problemCount} fields:`}{" "}
                   {formFields
                     .filter((field) => problems[field])
-                    .map((field) => fieldNames[field])
+                    .map((field) => formFieldNames[field])
                     .join(", ")}
                   .
                 </p>
@@ -337,7 +319,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                 <TextField
                   key={service}
                   name={service}
-                  label={fieldNames[service]}
+                  label={formFieldNames[service]}
                   type="url"
                   placeholder="Album or track link"
                   value={form.links[service]}

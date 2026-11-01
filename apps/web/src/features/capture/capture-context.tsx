@@ -25,9 +25,9 @@ import {
   type ReactNode,
 } from "react";
 
-import type { OutcomeStatus, StreamingService } from "@tonaris/domain";
+import { maxBatchItems, type OutcomeStatus, type StreamingService } from "@tonaris/domain";
 
-import { linksIn, maxPastedLinks } from "./links-in";
+import { linksIn } from "./links-in";
 import {
   captureNeed,
   captureResult,
@@ -77,8 +77,9 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
   const capture = useCallback(
     (links: readonly string[], into: string | null) => {
       if (!client || offline || links.length === 0) return false;
-      if (links.length > maxPastedLinks) {
-        notify?.info(`Add up to ${maxPastedLinks} links at once.`);
+      // At most one batch at once (TS-25).
+      if (links.length > maxBatchItems) {
+        notify?.info(`Add up to ${maxBatchItems} links at once.`);
         return false;
       }
       enterEditing();

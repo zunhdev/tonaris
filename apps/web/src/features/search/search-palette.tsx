@@ -50,6 +50,7 @@ import {
 
 import {
   matchRange,
+  maxSearchLimit,
   searchKey,
   searchTier,
   type Album,
@@ -160,7 +161,7 @@ function useSharedSearch(text: string, wanted: boolean) {
     if (!asking) return () => {};
     let current = true;
     const timer = setTimeout(() => {
-      api.v1.search.get({ query: { q, limit: 100 } }).then(
+      api.v1.search.get({ query: { q, limit: maxSearchLimit } }).then(
         ({ data }) => {
           if (current) setRead({ q, shared: data?.shared });
           return data;

@@ -16,6 +16,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 import {
   artworkUrlRefusal,
+  groupNames,
   isArtworkUrl,
   membershipKey,
   uuidv7Time,
@@ -23,28 +24,25 @@ import {
   type AlbumFields,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
-import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
+import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 import { Switch } from "@tonaris/ui/components/switch";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { albumChoice, albumEdit, cellText, type AlbumCell } from "./album-edit";
+import {
+  albumChoice,
+  albumEdit,
+  cellNames,
+  cellText,
+  releaseTypeOptions,
+  type AlbumCell,
+} from "./album-edit";
 import { CustomFieldsSection } from "./album-fields";
 import { LinksSection } from "./album-links";
-import { cellNames } from "./album-rows";
 import { Artwork, artworkSrc } from "./artwork";
 import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { ancestorsOf } from "./tree";
-
-const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation" | "unknown">[] = [
-  { value: "album", label: "Album" },
-  { value: "ep", label: "EP" },
-  { value: "compilation", label: "Compilation" },
-  { value: "unknown", label: "Unknown" },
-];
-
-const releaseTypeNames = { album: "Album", ep: "EP", compilation: "Compilation" } as const;
 
 const addedDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
@@ -158,7 +156,7 @@ export function AlbumDetails({ album }: { album: Album }) {
         ) : (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
             <Value term="Release type">
-              {album.releaseType === null ? "Unknown" : releaseTypeNames[album.releaseType]}
+              {album.releaseType === null ? "Unknown" : groupNames[album.releaseType]}
             </Value>
             <Value term="Live">{album.isLive === true ? "Yes" : "No"}</Value>
             <Value term="Original release year">{cellText(album, "originalYear") || "—"}</Value>

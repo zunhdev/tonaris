@@ -4,7 +4,7 @@ import { describe, expect, test } from "bun:test";
 
 import { uuidv7, type Album } from "@tonaris/domain";
 
-import { albumChoice, albumEdit, cellText } from "./album-edit";
+import { albumChoice, albumEdit, cellText, releaseTypeOptions, typeName } from "./album-edit";
 
 const album = (values: Partial<Album> = {}): Album => ({
   id: uuidv7(),
@@ -152,5 +152,22 @@ describe("the inspector's chronology (DS-46)", () => {
       values: { releaseType: "ep" },
     });
     expect(albumChoice(album(), { releaseType: "album" })).toEqual({ kind: "unchanged" });
+  });
+});
+
+describe("release types in words (DS-19, FR-05.9)", () => {
+  test("the choices are the domain's types by their groups' names, then Unknown", () => {
+    expect(releaseTypeOptions.map(({ label }) => label)).toEqual([
+      "Album",
+      "EP",
+      "Compilation",
+      "Unknown",
+    ]);
+  });
+
+  test("a row's type says Live first, and — without a type", () => {
+    expect(typeName(album({ releaseType: "ep" }))).toBe("EP");
+    expect(typeName(live({ releaseType: "ep" }))).toBe("Live");
+    expect(typeName(album({ releaseType: null }))).toBe("—");
   });
 });
