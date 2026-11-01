@@ -6,7 +6,8 @@
 import { and, asc, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import {
-  deletionImpact,
+  deletedListsOf,
+  deletionTargetsOf,
   type AlbumDeletionTarget,
   type ContainerKind,
   type DeletionTargets,
@@ -269,10 +270,9 @@ export async function albumDeletionTargets(
 }
 
 /**
- * What deleting `albumIds` and `containerIds` to Trash would do (FR-10.6, FR-07.14), for the approval: the owner's
- * active albums among them with the lists each leaves; the active folders and lists, each with what goes with it; the
- * albums left in no list, which go to Unsorted; and who no longer sees it. A container inside another one deleted goes
- * with it, so it is left out. `missing` names the IDs that are nothing active of the owner's.
+ * What deleting `albumIds` and `containerIds` to Trash would do (FR-10.6, FR-07.14), for the approval, as the domain's
+ * `deletionTargetsOf` decides from what this reads in `tx`: the owner's active albums among them with their lists, the
+ * owner's active folders and lists, every entry of the active albums in the lists that go, and the owner's sharing.
  */
 export async function deletionTargets(
   tx: Transaction,
@@ -293,75 +293,35 @@ export async function deletionTargets(
     })
     .from(containers)
     .where(and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt)));
-  const byId = new Map(places.map((place) => [place.id, place]));
-  const children = Map.groupBy(places, (place) => place.parentId);
-  const asked = new Set(containerIds.filter((id) => byId.has(id)));
-  const within = (id: string) => {
-    for (
-      let at = byId.get(id)?.parentId ?? null;
-      at !== null;
-      at = byId.get(at)?.parentId ?? null
-    ) {
-      if (asked.has(at)) return true;
-    }
-    return false;
-  };
-  const roots = [...asked].filter((id) => !within(id));
-  const subtree = (id: string) => {
-    const ids = [id];
-    for (let at = 0; at < ids.length; at += 1) {
-      ids.push(...(children.get(ids[at] ?? "") ?? []).map((child) => child.id));
-    }
-    return ids;
-  };
-  const deleted = new Set(roots.flatMap(subtree));
-  const containerTargets = roots.map((id) => {
-    const below = subtree(id).slice(1);
-    const place = byId.get(id);
-    return {
-      id,
-      kind: place?.kind ?? "list",
-      name: place?.name ?? "",
-      folders: below.filter((each) => byId.get(each)?.kind === "folder").length,
-      lists: below.filter((each) => byId.get(each)?.kind === "list").length,
-    };
-  });
-
-  // Albums in the deleted lists that are in no other active list go to Unsorted, unless they are deleted too.
-  const deletedLists = [...deleted].filter((id) => byId.get(id)?.kind === "list");
-  let unsorted = 0;
-  if (deletedLists.length > 0) {
-    const inDeleted = tx
-      .select({ albumId: memberships.albumId })
-      .from(memberships)
-      .where(inArray(memberships.listId, deletedLists));
-    const entries = await tx
-      .select({ albumId: memberships.albumId, listId: memberships.listId })
-      .from(memberships)
-      .innerJoin(albums, eq(albums.id, memberships.albumId))
-      .where(and(inArray(memberships.albumId, inDeleted), isNull(albums.trashedAt)));
-    const goingToo = new Set(albumTargets.map((album) => album.id));
-    for (const [albumId, lists] of Map.groupBy(entries, (entry) => entry.albumId)) {
-      if (goingToo.has(albumId)) continue;
-      if (lists.every((entry) => deleted.has(entry.listId) || !byId.has(entry.listId)))
-        unsorted += 1;
-    }
-  }
-
+  const deletedLists = deletedListsOf(places, containerIds);
+  const entries =
+    deletedLists.length === 0
+      ? []
+      : await tx
+          .select({ albumId: memberships.albumId, listId: memberships.listId })
+          .from(memberships)
+          .innerJoin(albums, eq(albums.id, memberships.albumId))
+          .where(
+            and(
+              inArray(
+                memberships.albumId,
+                tx
+                  .select({ albumId: memberships.albumId })
+                  .from(memberships)
+                  .where(inArray(memberships.listId, deletedLists)),
+              ),
+              isNull(albums.trashedAt),
+            ),
+          );
   const { state } = await impactState(tx, ownerId);
-  const sharing = deletionImpact(state, {
-    containerIds: roots,
-    albumListIds: albumTargets.flatMap((album) => album.lists.map((list) => list.id)),
-  });
-  const found = new Set([...albumTargets.map((album) => album.id), ...asked]);
-  return {
+  return deletionTargetsOf({
+    places,
     albums: albumTargets,
-    containers: containerTargets,
-    unsorted,
-    sharing,
-    containerIds: roots,
-    missing: [...albumIds, ...containerIds].filter((id) => !found.has(id)),
-  };
+    albumIds,
+    containerIds,
+    entries,
+    state,
+  });
 }
 
 /** The owner's saved album of `releaseGroupId`, if any, with its active lists: what a confirmed match joins (FR-02.9). */

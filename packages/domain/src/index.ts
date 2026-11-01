@@ -384,3 +384,6 @@ export { codeRefusal, type CodeRefusal } from "./codes";
 export { invitationStateFor, shownEmailStatus } from "./invitations";
 export { maxMergeCandidates } from "./limits";
 export { endedGrantStatuses, openGrantStatuses } from "./sharing";
+export { chainOf, subtreeOf, treeOf, type Tree, type TreeNode } from "./container-tree";
+export { deletedListsOf, deletionTargetsOf, type DeletionPlace } from "./deletion-targets";
+export { impactOf, type ImpactQuery, type ImpactUnit } from "./sharing-preview";

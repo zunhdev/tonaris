@@ -3,6 +3,7 @@
 // and their audiences, so the API previews it for the app and MCP can report the same. Nobody is named as losing
 // access while another path keeps it: an audience reached both before and after is neither added nor removed.
 
+import { chainOf, subtreeOf, treeOf } from "./container-tree";
 import { z } from "./zod";
 
 /** The owner's containers and who each is shared with: pending and accepted invitations, and live links. */
@@ -48,15 +49,9 @@ const keyOf = (audience: Audience) =>
   audience.kind === "person" ? `person:${audience.id}` : `link:${audience.via.id}`;
 
 function indexOf(state: ImpactState) {
-  const byId = new Map(state.containers.map((container) => [container.id, container]));
-  const children = new Map<string, string[]>();
-  for (const container of state.containers) {
-    if (container.parentId === null || container.trashed) continue;
-    children.set(container.parentId, [...(children.get(container.parentId) ?? []), container.id]);
-  }
   const people = Map.groupBy(state.people, (person) => person.containerId);
   const links = new Set(state.links.map((link) => link.containerId));
-  return { byId, children, people, links };
+  return { ...treeOf(state.containers), people, links };
 }
 type Index = ReturnType<typeof indexOf>;
 
@@ -84,23 +79,6 @@ function audiencesOn(index: Index, ids: Iterable<string>): Audience[] {
     if (index.links.has(id)) found.set(`link:${id}`, { kind: "link", via });
   }
   return [...found.values()];
-}
-
-/** `parentId` and the folders above it, nearest first; none for the root. */
-function chainOf(index: Index, parentId: string | null): string[] {
-  const chain: string[] = [];
-  for (let id = parentId; id !== null && !chain.includes(id);) {
-    chain.push(id);
-    id = index.byId.get(id)?.parentId ?? null;
-  }
-  return chain;
-}
-
-/** `id` and its active descendants. */
-function subtreeOf(index: Index, id: string): string[] {
-  const ids = [id];
-  for (let at = 0; at < ids.length; at += 1) ids.push(...(index.children.get(ids[at] ?? "") ?? []));
-  return ids;
 }
 
 const pending = (audience: Audience) => audience.kind === "person" && audience.pending;
