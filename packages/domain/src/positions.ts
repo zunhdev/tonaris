@@ -6,8 +6,9 @@
 
 import { generateKeyBetween, generateNKeysBetween } from "fractional-indexing";
 
+import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, baseProblem, isFailure } from "./command-kit";
-import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
+import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import { failure } from "./outcomes";
 import { viewKeySchema, viewKindOf } from "./views";
 import { z } from "./zod";

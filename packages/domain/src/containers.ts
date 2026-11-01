@@ -1,8 +1,9 @@
 // Folders and lists as clients hold them (TS-11, TS-24), and the commands that create, rename and move them
 // (TON-26) and describe them (TON-54). The albums in lists are memberships.ts.
 
+import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, conflict, isFailure } from "./command-kit";
-import type { CollectionStore, CommandContext, CommandResult } from "./commands";
+import type { CommandContext, CommandResult } from "./commands";
 import { maxContainerDepth, maxContainers, maxDescriptionLength, maxNameLength } from "./limits";
 import { findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";

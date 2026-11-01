@@ -164,14 +164,8 @@ export {
   type ContainerKind,
   type StoredContainer,
 } from "./containers";
-export {
-  runCommand,
-  type ChangeInput,
-  type CollectionStore,
-  type CommandContext,
-  type CommandResult,
-  type StoredAlbum,
-} from "./commands";
+export type { CollectionStore } from "./collection-store";
+export { runCommand, type ChangeInput, type CommandContext, type CommandResult } from "./commands";
 export {
   blankAlbum,
   enrichableFields,
@@ -349,7 +343,6 @@ export {
   viewPrefsFields,
   viewPrefsFieldsSchema,
   viewPrefsSchema,
-  type ViewItems,
   type AccountDefaults,
   type FolderSortMode,
   type LinkTarget,

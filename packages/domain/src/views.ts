@@ -5,6 +5,7 @@
 // Choices belong to the person, never to the content, and follow the same conflict policy as content (FR-09.4):
 // each write names the values it replaces.
 
+import type { CollectionStore } from "./collection-store";
 import {
   actingOwner,
   applied,
@@ -14,9 +15,10 @@ import {
   nothingChanged,
   staleFields,
 } from "./command-kit";
-import type { CollectionStore, CommandContext, CommandResult } from "./commands";
+import type { CommandContext, CommandResult } from "./commands";
 import { streamingServices, type StreamingService } from "./links";
 import { failure, type Failure } from "./outcomes";
+import type { ViewKind } from "./presentation";
 import { z } from "./zod";
 
 /** How lists and Unsorted sort their albums (FR-05.1). */
@@ -120,9 +122,6 @@ export function unsetView(viewKey: string): ViewPrefs {
 const personOf = (context: CommandContext) =>
   actingOwner(context, "collection", "You can't change view options here.");
 
-/** What a view holds: albums for a list and Unsorted, folders and lists for a folder and the root. */
-export type ViewItems = "albums" | "containers";
-
 /**
  * What the view `viewKey` holds, if it is the person's: the root, Unsorted, or a folder or list of theirs (sharing
  * adds the containers shared with them, M7). One in Trash is still theirs, so a choice queued meanwhile isn't lost.
@@ -132,7 +131,7 @@ export async function viewKindOf(
   viewKey: string,
   personId: string,
   store: CollectionStore,
-): Promise<ViewItems | Failure> {
+): Promise<ViewKind | Failure> {
   if (viewKey === "root") return "containers";
   if (viewKey === "unsorted") return "albums";
   const container = await store.findContainer(viewKey);

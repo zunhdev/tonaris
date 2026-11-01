@@ -1,11 +1,22 @@
-// Albums as clients hold and edit them (TS-11, TS-24), and the rules every save checks (FR-02.6). The sync
-// prototype (TON-20) carries the core metadata; the artwork URL joined in TON-48 (FR-03.4), edited with its own
-// mutation, and links, provenance, memberships and Trash have their own records.
+// Albums as clients hold and edit them (TS-11, TS-24), the rules every save checks (FR-02.6), and the commands that
+// create and edit them. The sync prototype (TON-20) carries the core metadata; the artwork URL joined in TON-48
+// (FR-03.4), edited with its own mutation, and links, provenance, memberships and Trash have their own records.
 
-import type { CollectionStore, CommandContext, StoredAlbum } from "./commands";
+import type { CollectionStore } from "./collection-store";
+import {
+  actingOwner,
+  applied,
+  baseProblem,
+  conflict,
+  isFailure,
+  nothingChanged,
+  staleFields,
+} from "./command-kit";
+import type { CommandContext, CommandResult } from "./commands";
 import { maxAlbumTextLength, maxAlbums, maxLinkLength } from "./limits";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
+import { placeAtTop } from "./positions";
 import { z } from "./zod";
 
 /** Null means Unclassified (TS-45). */
@@ -47,6 +58,9 @@ export const albumSchema = albumCreateArgsSchema
   .extend({ artworkUrl: artworkUrlSchema })
   .meta({ description: "An album record (FR-01.6)." });
 export type Album = z.infer<typeof albumSchema>;
+
+/** An album as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
+export type StoredAlbum = Album & { ownerId: string; trashed: boolean };
 
 /**
  * Why `album` can't be saved, if it can't (FR-02.6): the title, the artist and the applicable year are
@@ -191,4 +205,103 @@ export async function changeableAlbum(
   const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
   if (!decision.allowed) return failure(decision.code, "You can't change this album.");
   return album;
+}
+
+/** The album as clients see it, without the owner and Trash state. */
+function albumOf(stored: StoredAlbum): Album {
+  const { ownerId: _, trashed: __, ...album } = stored;
+  return album;
+}
+
+/**
+ * `album.create`: creates an album with the client's ID (TS-10). If that album already exists for the same owner, as when a
+ * create is sent again without its idempotency record, nothing is duplicated (FR-13.5): the same values are
+ * already saved, and different ones are a conflict.
+ */
+export async function createAlbum(
+  args: AlbumCreateArgs,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const ownerId = actingOwner(context, "collection", "You can't add albums here.");
+  if (isFailure(ownerId)) return ownerId;
+  const { store } = context;
+  const problem = albumProblem(args);
+  if (problem) return problem;
+
+  const existing = await store.findAlbum(args.id);
+  if (existing) {
+    if (existing.ownerId !== ownerId) {
+      return failure("validation_failed", "This album ID is already in use.", [
+        { path: "args.id", message: "Already in use" },
+      ]);
+    }
+    const conflicts = albumFields
+      .filter((field) => existing[field] !== args[field])
+      .map((field) => ({ field, current: existing[field], attempted: args[field] }));
+    return conflicts.length > 0 ? { status: "conflict", conflicts } : applied();
+  }
+
+  // A new record needs a slot; Trash counts (FR-15.2).
+  if (!(await hasAlbumSlot(store, ownerId))) return albumCapacityProblem();
+  // Its artwork, if any, follows with `album.setArtwork` (TON-48).
+  const album: Album = { ...args, artworkUrl: null };
+  await store.insertAlbum({ ...album, ownerId });
+  // A new album is in no list yet, so it enters Unsorted, at the top (DS-51). Until Unsorted is arranged, its
+  // fallback order, newest first, already puts it there.
+  const arranged = (await store.firstKey(ownerId, "unsorted")) !== undefined;
+  return applied(
+    { entity: "album", id: args.id, op: "insert", data: album },
+    ...(arranged ? [await placeAtTop(store, ownerId, "unsorted", args.id)] : []),
+  );
+}
+
+/**
+ * `album.setArtwork` (FR-03.4): sets or clears the album's artwork URL if it is still `base.artworkUrl` (TS-21). It
+ * must be an https link; the image proxy checks the rest each time it fetches (TS-103). The same URL changes nothing.
+ */
+export async function setArtwork(
+  { id, artworkUrl }: { id: string; artworkUrl: string | null },
+  base: { artworkUrl: string | null },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const album = await changeableAlbum(id, context);
+  if (isFailure(album)) return album;
+  if (album.artworkUrl !== base.artworkUrl) {
+    return conflict("artworkUrl", album.artworkUrl, artworkUrl, base.artworkUrl);
+  }
+  if (artworkUrl !== null && !isArtworkUrl(artworkUrl)) {
+    return failure("validation_failed", artworkUrlRefusal, [
+      { path: "args.artworkUrl", message: "Not an https link" },
+    ]);
+  }
+  if (artworkUrl === album.artworkUrl) return applied();
+  await context.store.updateAlbum(id, { artworkUrl });
+  return applied({ entity: "album", id, op: "update", data: albumOf({ ...album, artworkUrl }) });
+}
+
+/**
+ * `album.update`: changes the fields in `args` if each still holds its `base` value (TS-21). Fields not named are never
+ * compared, so edits to different fields of one album all succeed.
+ */
+export async function updateAlbum(
+  { id, ...values }: Partial<AlbumFields> & { id: string },
+  base: Partial<AlbumFields>,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const album = await changeableAlbum(id, context);
+  if (isFailure(album)) return album;
+
+  const changed = albumFields.filter((field) => values[field] !== undefined);
+  if (changed.length === 0) return nothingChanged();
+  const unbased = baseProblem(albumFields, changed, base);
+  if (unbased) return unbased;
+  const conflicts = staleFields(changed, album, values, base);
+  if (conflicts.length > 0) return { status: "conflict", conflicts };
+
+  const next = albumOf({ ...album, ...values, id });
+  const problem = albumProblem(next);
+  if (problem) return problem;
+
+  await context.store.updateAlbum(id, values);
+  return applied({ entity: "album", id, op: "update", data: next });
 }

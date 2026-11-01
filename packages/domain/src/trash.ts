@@ -11,8 +11,9 @@
 import { changeableAlbum } from "./albums";
 import { trashRetentionDays } from "./approvals";
 import { clientAlbum } from "./capture";
+import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, isFailure } from "./command-kit";
-import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
+import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
   changeableContainer,
   containerKinds,
