@@ -2,32 +2,14 @@
 // are expanded, the sidebar's width and whether it is hidden, the album inspector's width (TON-124), the last
 // collection view visited, Viewing or Editing mode, what was opened lately and which palette commands are run most, which invitations were announced, a phone's Mine or Shared, and, for the tab's session, which groups
 // are collapsed. Kept in localStorage and sessionStorage, which can be missing or refuse writes (private
-// modes, blocked storage): then nothing is remembered, and nothing fails.
+// modes, blocked storage): then nothing is remembered, and nothing fails (storage.ts).
 
-const storageOf = (session: boolean): Storage | undefined => {
-  try {
-    return session ? globalThis.sessionStorage : globalThis.localStorage;
-  } catch {
-    return undefined;
-  }
-};
+import { readJson, storageOf, writeJson } from "./storage";
 
-const read = (key: string, session = false): unknown => {
-  try {
-    const text = storageOf(session)?.getItem(key);
-    return text ? (JSON.parse(text) as unknown) : undefined;
-  } catch {
-    return undefined;
-  }
-};
+const read = (key: string, session = false): unknown => readJson(key, storageOf(session));
 
-const write = (key: string, value: unknown, session = false): void => {
-  try {
-    storageOf(session)?.setItem(key, JSON.stringify(value));
-  } catch {
-    // Not remembered; the workspace works the same.
-  }
-};
+const write = (key: string, value: unknown, session = false): void =>
+  writeJson(key, value, storageOf(session));
 
 /** Which of a phone's Collection screen shows: the person's own folders and lists, or those shared (TON-134). */
 export const phoneRootTab = {
