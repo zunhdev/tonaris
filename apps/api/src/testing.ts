@@ -12,9 +12,7 @@ import {
   type UserRole,
 } from "@tonaris/domain";
 
-import { accountDeletionJob } from "./account-deletion";
 import { createApp, maxRequestBodySize } from "./app";
-import type { ImageFetch } from "./artwork";
 import { issueAdmissionInvitation } from "./auth/admission";
 import { type AuthOptions, createAuth } from "./auth/auth";
 import { syncFeedbackClient } from "./auth/feedback";
@@ -22,8 +20,10 @@ import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import type { CaptureDeps } from "./capture";
 import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
-import { startJobWorker } from "./jobs";
-import { ledgerJob, memoryLedger } from "./ledger";
+import type { ImageFetch } from "./img/artwork";
+import { accountDeletionJob } from "./jobs/account-deletion";
+import { ledgerJob, memoryLedger } from "./jobs/ledger";
+import { startJobWorker } from "./jobs/worker";
 import type { McpLimiter } from "./mcp/limits";
 import type { CoverFinder } from "./routes/v1/covers";
 import { databaseHub, type SyncHubOptions } from "./sync/hub";

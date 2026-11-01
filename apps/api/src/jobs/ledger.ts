@@ -5,7 +5,7 @@
 import type { LedgerStore } from "@tonaris/db";
 import { ledgerEventSchema, ledgerJobKind, type LedgerEvent } from "@tonaris/domain";
 
-import type { JobHandler } from "./jobs";
+import type { JobHandler } from "./worker";
 
 export function ledgerJob(store: LedgerStore): JobHandler {
   return {

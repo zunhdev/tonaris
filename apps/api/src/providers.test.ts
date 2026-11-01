@@ -9,8 +9,13 @@ import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { uuidv7, type Album, type Change, type Principal } from "@tonaris/domain";
 import { memoryCache, MusicBrainz, ProviderUnavailableError } from "@tonaris/providers";
 
+import {
+  apiSchedules,
+  runSchedule,
+  spotifyHealthAlbum,
+  spotifyHealthSchedule,
+} from "./jobs/schedules";
 import { createEnricher, createProviders } from "./providers";
-import { apiSchedules, runSchedule, spotifyHealthAlbum, spotifyHealthSchedule } from "./schedules";
 
 let t: TestDatabase;
 

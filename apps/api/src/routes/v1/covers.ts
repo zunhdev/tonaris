@@ -8,8 +8,8 @@ import { z } from "zod";
 import { coversSchema, maxAlbumTextLength, problemSchema } from "@tonaris/domain";
 import { ProviderUnavailableError, type Cover } from "@tonaris/providers";
 
-import type { ArtworkSigner } from "../../artwork";
 import type { SessionGuard } from "../../auth/plugin";
+import type { ArtworkSigner } from "../../img/artwork";
 import { ProblemError } from "../../problem";
 
 /** What the route asks: `findCovers` with the API's MusicBrainz, or a stand-in in tests. */

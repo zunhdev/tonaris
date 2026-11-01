@@ -8,7 +8,7 @@ import { enqueueJob, jobs } from "@tonaris/db";
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { uuidv7 } from "@tonaris/domain";
 
-import { startJobWorker, type JobHandler, type JobWorker } from "./jobs";
+import { startJobWorker, type JobHandler, type JobWorker } from "./worker";
 
 let t: TestDatabase;
 let worker: JobWorker | undefined;

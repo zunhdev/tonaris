@@ -8,7 +8,6 @@ import { agreeToTerms } from "@tonaris/db";
 import { createTestDatabase } from "@tonaris/db/testing";
 import { emailKey, termsVersion } from "@tonaris/domain";
 
-import { accountDeletionJob } from "./account-deletion";
 import { createApp, maxRequestBodySize } from "./app";
 import { createAuth } from "./auth/auth";
 import { seedCreator } from "./auth/seed-creator";
@@ -17,8 +16,9 @@ import { fixtureCapture, fixtureCovers, fixtureImageFetch } from "./capture-fixt
 import { apiConfig } from "./config";
 import { emailJob, emailOutbox } from "./email/outbox";
 import { smtpEmail } from "./email/smtp";
-import { startJobWorker } from "./jobs";
-import { ledgerJob, memoryLedger } from "./ledger";
+import { accountDeletionJob } from "./jobs/account-deletion";
+import { ledgerJob, memoryLedger } from "./jobs/ledger";
+import { startJobWorker } from "./jobs/worker";
 import { databaseHub } from "./sync/hub";
 import { insertUser } from "./testing";
 

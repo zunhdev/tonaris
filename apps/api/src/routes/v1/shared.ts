@@ -21,8 +21,8 @@ import {
   unavailableLink,
 } from "@tonaris/domain";
 
-import type { ArtworkSigner } from "../../artwork";
 import type { SessionGuard } from "../../auth/plugin";
+import type { ArtworkSigner } from "../../img/artwork";
 import { ProblemError } from "../../problem";
 import { eventChannel, eventStream } from "../../sse";
 import type { SyncHub } from "../../sync/hub";

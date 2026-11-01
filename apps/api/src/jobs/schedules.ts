@@ -1,6 +1,6 @@
 // Periodic jobs in the API process (TS-90, TS-91). Each runs on its interval, in one transaction holding an
 // advisory lock named after it, so a second instance skips a run rather than overlapping it. Queued jobs with
-// retries, such as email, run in the job worker (src/jobs.ts).
+// retries, such as email, run in the job worker (worker.ts).
 
 import {
   expireAdmissionInvitations,

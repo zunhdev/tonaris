@@ -6,7 +6,7 @@
 // The same limiter bounds open client registration for MCP (DCR, TS-61): 10 per IP address per hour, proposed
 // in TON-22 and approved by the creator on 29 October 2026 (TON-80).
 
-export type Limit = { max: number; windowMs: number };
+import { type Limit, SlidingWindow } from "../sliding-window";
 
 const fifteenMinutes = 15 * 60_000;
 
@@ -19,40 +19,6 @@ export const signInLimits = {
 
 /** Dynamic client registrations per client address (TS-61). Claude, ChatGPT and Codex use CIMD instead. */
 export const registrationLimit: Limit = { max: 10, windowMs: 60 * 60_000 };
-
-/** Hit times per key within a sliding window. The export limit counts with one too (TS-80). */
-export class SlidingWindow {
-  readonly #hits = new Map<string, number[]>();
-
-  constructor(
-    private readonly limit: Limit,
-    private readonly now: () => number,
-  ) {}
-
-  /** Milliseconds until `key` may be counted again; 0 when it may be now. */
-  waitMs(key: string): number {
-    const hits = this.#current(key);
-    if (hits.length < this.limit.max) return 0;
-    return (hits[0] ?? 0) + this.limit.windowMs - this.now();
-  }
-
-  hit(key: string): void {
-    this.#hits.set(key, [...this.#current(key), this.now()]);
-  }
-
-  /** The key's hits still in the window. Keys whose hits have all expired are dropped. */
-  #current(key: string): number[] {
-    const since = this.now() - this.limit.windowMs;
-    const hits = (this.#hits.get(key) ?? []).filter((at) => at > since);
-    if (hits.length === 0) this.#hits.delete(key);
-    return hits;
-  }
-
-  /** Forgets every key with no hit in the window, so idle addresses don't accumulate. */
-  sweep(): void {
-    for (const key of this.#hits.keys()) this.#current(key);
-  }
-}
 
 export type SignInLimiter = {
   /** Counts a code request, or returns the seconds to wait when a limit is reached; a refusal counts nothing. */

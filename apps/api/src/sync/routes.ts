@@ -26,8 +26,8 @@ import {
   problemSchema,
 } from "@tonaris/domain";
 
-import { presentBootstrap, presentChange, type ArtworkSigner } from "../artwork";
 import type { SessionGuard } from "../auth/plugin";
+import { presentBootstrap, presentChange, type ArtworkSigner } from "../img/artwork";
 import { ProblemError } from "../problem";
 import { eventStream, type StreamSource } from "../sse";
 import type { SyncEvent, SyncHub } from "./hub";

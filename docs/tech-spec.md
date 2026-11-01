@@ -1566,7 +1566,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 **TS-90 Queue (Decided).** Jobs live in a Postgres `jobs` table.
 
 - Workers claim jobs with `SELECT … FOR UPDATE SKIP LOCKED` and run in the API service process.
-- Periodic schedules run only under an advisory lock named after the schedule, which keeps them single-runner if a second instance ever exists. Built in TON-29 (`apps/api/src/schedules.ts`):
+- Periodic schedules run only under an advisory lock named after the schedule, which keeps them single-runner if a second instance ever exists. Built in TON-29 (`apps/api/src/jobs/schedules.ts`):
   - each run is one transaction that takes `pg_try_advisory_xact_lock(hashtext(name))` and skips the run if another holds it, so no pooled connection keeps a lock;
   - each schedule first runs a minute after start, then on its interval;
   - shutdown waits for a run in progress before the database closes;
@@ -1574,7 +1574,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
   - the `jobs` table and its worker arrived with the first queued job, email (TON-73).
 - Retries use exponential backoff; dead jobs are visible in the admin UI.
 - No Redis or external queue.
-- *As built in TON-73* (`apps/api/src/jobs.ts`, `packages/db/src/jobs.ts`), with email as the first kind (TS-72):
+- *As built in TON-73* (`apps/api/src/jobs/worker.ts`, `packages/db/src/jobs.ts`), with email as the first kind (TS-72):
   - **Waking:** queuing a job wakes the worker in the same process, so it starts at once. The worker also looks for due jobs every 5 s, for retries, a restart's leftovers, and jobs another instance queued.
   - **Claims:** two jobs run at a time. A claim holds a job for 2 minutes, so a worker that died lets it go. Due times come from the API's clock, which claims compare with.
   - *Fixed in TON-102:* a lane that had finished started again only once every lane had. So while one ran a long job, everything queued meanwhile waited for it, and a burst of sign-in emails stalled behind one long job. Waking now starts any finished lane at once.

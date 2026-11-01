@@ -8,7 +8,6 @@ import { z } from "zod";
 import type { Database } from "@tonaris/db";
 import type { EmailPort } from "@tonaris/domain";
 
-import { artworkRoutes, artworkSigner, type ArtworkSigner, type ImageFetch } from "./artwork";
 import { accountDeletionProgressRoutes } from "./auth/account-deletion";
 import { admissionRoutes } from "./auth/admission";
 import type { Auth } from "./auth/auth";
@@ -19,6 +18,7 @@ import type { CaptureDeps } from "./capture";
 import { compression } from "./compression";
 import type { ApiConfig } from "./config";
 import { webCors } from "./cors";
+import { artworkRoutes, artworkSigner, type ArtworkSigner, type ImageFetch } from "./img/artwork";
 import type { McpLimiter } from "./mcp/limits";
 import { mcpRoutes } from "./mcp/routes";
 import { openApiJson } from "./openapi";

@@ -24,7 +24,7 @@ import {
   type EmailPort,
 } from "@tonaris/domain";
 
-import type { JobHandler } from "../jobs";
+import type { JobHandler } from "../jobs/worker";
 
 export const emailJobKind = "email";
 
