@@ -1,13 +1,36 @@
-// What a viewer may read through sharing (FR-07.8–FR-07.10; TS-31, TS-33): `readableContainers` in packages/domain,
+// What a viewer may read through sharing (FR-07.8–FR-07.10; TS-31–TS-33): `readableContainers` in packages/domain,
 // walked here with recursive CTEs over active containers only, cut off past the depth limit as the other hierarchy
-// walks are; property tests hold the two equal. Its own module, so the sync store and the sharing reads both use it.
+// walks are; property tests hold the two equal. Also the live link a token's hash opens. Its own module, so the sync
+// store and the sharing reads both use it.
 
-import { sql, type SQL } from "drizzle-orm";
+import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
 
 import { maxContainerDepth, type ShareViewer } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
 import { containers, savedReferences, shareGrants, shareLinks } from "./schema";
+
+/**
+ * The live link a token's SHA-256 names, while its folder or list is active (TS-32): Trash suspends a link, as it does
+ * an invitation (FR-07.10). The one lookup by token, for the guest routes, the reference check and `share.saveLink`.
+ */
+export async function linkByTokenHash(
+  db: Database | Transaction,
+  hash: Uint8Array,
+): Promise<{ id: string; containerId: string; ownerId: string } | undefined> {
+  const [link] = await db
+    .select({ id: shareLinks.id, containerId: shareLinks.containerId, ownerId: containers.ownerId })
+    .from(shareLinks)
+    .innerJoin(containers, eq(containers.id, shareLinks.containerId))
+    .where(
+      and(
+        eq(shareLinks.tokenHash, Buffer.from(hash)),
+        isNull(shareLinks.revokedAt),
+        isNull(containers.trashedAt),
+      ),
+    );
+  return link;
+}
 
 /** The containers `viewer` reads through directly (`sourcesOf` in packages/domain), as SQL. */
 function sourcesOf(viewer: ShareViewer): SQL {

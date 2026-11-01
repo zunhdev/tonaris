@@ -17,7 +17,7 @@ import {
   type ShareViewer,
 } from "@tonaris/domain";
 
-import { canReadContainer, readableContainers } from "./access";
+import { canReadContainer, linkByTokenHash, readableContainers } from "./access";
 import type { Database, Transaction } from "./client";
 import { sendingStale } from "./invitations";
 import {
@@ -40,18 +40,15 @@ import {
   valuesOfAlbums,
 } from "./sync";
 
-/** The live link a token opens (TS-32): looked up by the token's SHA-256, never the token itself. */
+/**
+ * The live link a token opens, while its folder or list is active (TS-32): looked up by the token's SHA-256, never
+ * the token itself.
+ */
 export async function findShareLink(
   db: Database | Transaction,
   token: string,
 ): Promise<{ id: string; containerId: string; ownerId: string } | undefined> {
-  const hash = Buffer.from(await shareTokenHash(token));
-  const [link] = await db
-    .select({ id: shareLinks.id, containerId: shareLinks.containerId, ownerId: containers.ownerId })
-    .from(shareLinks)
-    .innerJoin(containers, eq(containers.id, shareLinks.containerId))
-    .where(and(eq(shareLinks.tokenHash, hash), isNull(shareLinks.revokedAt)));
-  return link;
+  return linkByTokenHash(db, await shareTokenHash(token));
 }
 
 /** The container `id` and its active descendants, if it is active. */

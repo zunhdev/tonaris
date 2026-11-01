@@ -63,7 +63,7 @@ import {
   type ViewPrefs,
 } from "@tonaris/domain";
 
-import { canReadContainer } from "./access";
+import { canReadContainer, linkByTokenHash } from "./access";
 import { albumsOfReleaseGroupIn, applyPlan, findCaptureTarget } from "./album-writes";
 import type { Database, Transaction } from "./client";
 import { recordInLedger } from "./ledger";
@@ -1145,24 +1145,7 @@ function collectionStore(tx: Transaction): CollectionStore {
         .returning({ containerId: savedReferences.containerId });
       return removed.length > 0;
     },
-    async findLinkByHash(hash) {
-      const [link] = await tx
-        .select({
-          id: shareLinks.id,
-          containerId: shareLinks.containerId,
-          ownerId: containers.ownerId,
-        })
-        .from(shareLinks)
-        .innerJoin(containers, eq(containers.id, shareLinks.containerId))
-        .where(
-          and(
-            eq(shareLinks.tokenHash, Buffer.from(hash)),
-            isNull(shareLinks.revokedAt),
-            isNull(containers.trashedAt),
-          ),
-        );
-      return link;
-    },
+    findLinkByHash: (hash) => linkByTokenHash(tx, hash),
     async findLiveLink(containerId) {
       const [link] = await tx
         .select({ id: shareLinks.id })
