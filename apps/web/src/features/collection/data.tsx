@@ -4,12 +4,14 @@
 // so the tree and the view share one pass over the data. The tree orders each level as its folder's view is sorted,
 // and the top level as the root is (decided 23 October 2026), manual order included.
 
+import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
 
 import {
   appAccountDefaults,
+  sortFields,
   unsetView,
   type Album,
   type Container,
@@ -130,7 +132,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       if (ofAlbum) ofAlbum.push(link);
       else linksByAlbum.set(link.albumId, [link]);
     }
-    const fields = (fieldData ?? []).toSorted((a, b) => a.name.localeCompare(b.name));
+    const fields = sortFields(fieldData ?? []);
     const valuesByAlbum = new Map<string, FieldValue[]>();
     for (const row of valueData ?? []) {
       const ofAlbum = valuesByAlbum.get(row.albumId);
@@ -226,7 +228,7 @@ function useDeviceLayoutsSaved({ ready, tree, views }: CollectionData): void {
             draft.layout = "grid";
           })
         : client.views.insert({ ...unsetView(viewKey), layout: "grid" });
-      write.isPersisted.promise.catch(() => {});
+      sent(write);
     }
   }, [client, ready, accountId, tree, views]);
 }

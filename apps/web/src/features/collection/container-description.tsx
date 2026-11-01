@@ -3,16 +3,14 @@
 // it saves, Shift+Enter adds a line, Escape reverts, and leaving Editing mode saves it too (DS-45). Emptied, it is
 // cleared. Over 2,000 characters it stays with its reason (X-05).
 
+import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 
-import { descriptionTooLong, maxDescriptionLength, type Container } from "@tonaris/domain";
+import { descriptionProblem, type Container } from "@tonaris/domain";
 import { Field } from "@tonaris/ui/components/field";
 
 import { useMode } from "./collection-ui";
 import { useInlineDraft } from "./inline-draft";
-
-// oxlint-disable-next-line no-misused-spread
-const tooLong = (text: string) => [...text].length > maxDescriptionLength;
 
 export function ContainerDescription({ container }: { container: Container }) {
   const { editing } = useMode();
@@ -33,17 +31,16 @@ function DescriptionEditor({ container }: { container: Container }) {
     props,
   } = useInlineDraft<HTMLTextAreaElement>({
     value: container.description ?? "",
-    check: (typed) => (tooLong(typed.trim()) ? descriptionTooLong : undefined),
+    check: (typed) => descriptionProblem(typed.trim())?.problem.detail,
     save: (typed) => {
       const text = typed.trim();
       const next = text === "" ? null : text;
       if (next === container.description || !client) return;
-      // The save-state layer reports a write that fails.
-      client.containers
-        .update(container.id, (row) => {
+      sent(
+        client.containers.update(container.id, (row) => {
           row.description = next;
-        })
-        .isPersisted.promise.catch(() => {});
+        }),
+      );
     },
     multiline: true,
     // Once saved, Escape is the page's again.

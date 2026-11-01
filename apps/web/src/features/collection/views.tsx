@@ -18,7 +18,14 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Inbox, Pencil, Plus, Share2, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
-import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
+import {
+  entryOrder,
+  unsortedOrder,
+  type Album,
+  type Container,
+  type ContainerKind,
+  type Membership,
+} from "@tonaris/domain";
 import { Button, buttonVariants } from "@tonaris/ui/components/button";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 import {
@@ -97,18 +104,12 @@ function addedOrder(
   entries: readonly Membership[],
   albumsById: ReadonlyMap<string, Album>,
 ): Album[] {
-  return entries
-    .toSorted(
-      (a, b) =>
-        (a.addedAt < b.addedAt ? -1 : a.addedAt > b.addedAt ? 1 : 0) ||
-        (a.albumId < b.albumId ? -1 : a.albumId > b.albumId ? 1 : 0),
-    )
-    .flatMap((entry) => albumsById.get(entry.albumId) ?? []);
+  return entries.toSorted(entryOrder).flatMap((entry) => albumsById.get(entry.albumId) ?? []);
 }
 
-/** Unsorted's albums newest first, an inbox: the fallback manual order arranges (DS-51). UUIDv7 IDs hold when. */
+/** Unsorted's albums newest first, an inbox: the fallback manual order arranges (DS-51). */
 function newestFirst(albums: readonly Album[]): Album[] {
-  return albums.toSorted((a, b) => (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
+  return albums.toSorted(unsortedOrder);
 }
 
 /**

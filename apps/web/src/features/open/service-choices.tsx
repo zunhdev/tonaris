@@ -31,7 +31,7 @@ export function ServiceChoices({
   useEffect(() => first.current?.focus(), []);
   return (
     <>
-      <PopoverTitle className="text-body font-medium">Open in…</PopoverTitle>
+      <PopoverTitle className="text-base font-medium">Open in…</PopoverTitle>
       <PopoverDescription className="truncate text-small">{title}</PopoverDescription>
       <ul className="flex flex-col gap-1">
         {ordered(links).map((link, index) => (

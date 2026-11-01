@@ -12,6 +12,8 @@
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
+import { isUnderway } from "@/client/sync/save-states";
+import { sent } from "@/client/sync/writer";
 import { useOpenIn } from "@/features/open/open-in";
 import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -213,12 +215,12 @@ export function AlbumRows({
       return false;
     }
     if (result.kind === "save" && client) {
-      // One update from the values it replaces (TS-21); the save-state layer reports one that isn't saved.
-      client.albums
-        .update(album.id, (draft) => {
+      // One update from the values it replaces (TS-21).
+      sent(
+        client.albums.update(album.id, (draft) => {
           Object.assign(draft, result.values);
-        })
-        .isPersisted.promise.catch(() => {});
+        }),
+      );
     }
     closeEdit(edit);
     return true;
@@ -513,7 +515,7 @@ function AlbumRow({
       ref={rowRef}
       role="row"
       aria-rowindex={index + 2}
-      aria-busy={status === "pending" || status === "unconfirmed" ? true : undefined}
+      aria-busy={isUnderway(status) || undefined}
       className={cn(
         "group/row absolute inset-x-0 top-0 grid items-stretch rounded-md px-2 hover:bg-hover",
         drag.dragging && "opacity-40",

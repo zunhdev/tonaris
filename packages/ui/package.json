@@ -5,6 +5,7 @@
   "description": "Design system: tokens, Base UI/shadcn primitives and shared patterns (design spec DS-10–DS-29).",
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
     "./globals.css": "./src/styles/globals.css",
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts"

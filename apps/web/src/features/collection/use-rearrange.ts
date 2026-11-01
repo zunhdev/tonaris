@@ -2,6 +2,7 @@
 // as one `order.set` through the sync client, and announced (DS-83). Only manual order is rearranged; under another
 // sort, trying offers to switch. Rearranging is presentation, not a collection edit, so it works offline too (X-04).
 
+import { sent } from "@/client/sync/writer";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -29,8 +30,7 @@ export function useRearrange(
     (sequence: readonly string[], itemId: string, place: Place) => {
       if (!client) return;
       const writes = planMove(sequence, keys.get(viewKey) ?? noKeys, itemId, place);
-      // The save-state layer reports a move that isn't saved.
-      client.arrange(viewKey, writes).isPersisted.promise.catch(() => {});
+      sent(client.arrange(viewKey, writes));
     },
     [client, keys, viewKey],
   );

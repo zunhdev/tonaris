@@ -1,9 +1,11 @@
-// The token test (DS-14): contrast targets, the DS-12 values as tuned, and no primitives outside tokens.css.
+// The token test (DS-14): contrast targets, the DS-12 values as tuned, no primitives outside tokens.css, and the
+// text sizes the class merging knows (DS-13).
 
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 
 import { contrastRatio } from "./color";
+import { textSizes } from "./text-sizes";
 import { readTokens, tokensPath } from "./tokens";
 
 const tokens = await readTokens();
@@ -114,5 +116,16 @@ describe("components use semantic tokens only (DS-10)", () => {
     ).flat();
     expect(files.length).toBeGreaterThan(5);
     expect(offenders).toEqual([]);
+  });
+});
+
+describe("text sizes (DS-13)", () => {
+  test("the class merging knows every size tokens.css declares, but input, which Tailwind reads as a color", async () => {
+    const css = await Bun.file(tokensPath).text();
+    const declared = new Set<string>(
+      [...css.matchAll(/--text-([a-z]+):/g)].map(([, name]) => name ?? ""),
+    );
+    declared.delete("input");
+    expect(new Set<string>(textSizes)).toEqual(declared);
   });
 });

@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { uuidv7 } from "@tonaris/domain";
+import { maxAlbumTextLength, uuidv7 } from "@tonaris/domain";
 
 import {
   albumOfForm,
@@ -51,6 +51,28 @@ describe("required information (FR-02.6)", () => {
     expect(formProblems(form({ isLive: true, recording: "1982–1978" }))).toEqual({
       recording: "The recording period ends before it starts.",
     });
+  });
+});
+
+describe("the domain's last word (X-05)", () => {
+  const tooLong = "x".repeat(maxAlbumTextLength + 1);
+  const said = `Titles and artist credits can be at most ${maxAlbumTextLength.toLocaleString("en")} characters.`;
+
+  test("a title over the limit is refused at its field, and makes no album", () => {
+    expect(formProblems(form({ title: tooLong }))).toEqual({ title: said });
+    expect(albumOfForm(form({ title: tooLong }))).toBeUndefined();
+  });
+
+  test("an artist over the limit is refused at its field, and both at once at each", () => {
+    expect(formProblems(form({ artistCredit: tooLong }))).toEqual({ artistCredit: said });
+    expect(formProblems(form({ title: tooLong, artistCredit: tooLong }))).toEqual({
+      title: said,
+      artistCredit: said,
+    });
+  });
+
+  test("at the limit, it's an album", () => {
+    expect(albumOfForm(form({ title: "x".repeat(maxAlbumTextLength) }))).toBeDefined();
   });
 });
 

@@ -4,19 +4,17 @@
 // Saving defines the field; the caller can then apply it, as "+ Add field" → "Create field…" does (DS-46). Settings →
 // Custom fields reuses it (TON-53).
 
+import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { Plus, X } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 
 import {
-  fieldNameProblem,
-  fieldNameTaken,
+  fieldDefinitionProblems,
+  fieldLimitProblem,
   fieldTypes,
-  findNameConflict,
   isChoiceType,
   maxFieldOptions,
-  maxFields,
-  optionLabelProblem,
   uuidv7,
   type CustomField,
   type FieldType,
@@ -39,7 +37,10 @@ import { fieldTypeNames } from "./field-types";
 
 type DraftOption = { id: string; label: string };
 
-/** What is wrong with a new field, if anything: its name, or an option by index. */
+/**
+ * What is wrong with a new field, if anything, in the domain's words (`fieldDefinitionProblems`): its name, an
+ * option by its row, or the form, at the account's limit of fields or with no place of its own.
+ */
 export function newFieldProblems(
   name: string,
   type: FieldType,
@@ -49,27 +50,28 @@ export function newFieldProblems(
   const problems: { name?: string; options: Record<number, string>; form?: string } = {
     options: {},
   };
-  const trimmed = name.trim();
-  const nameProblem = fieldNameProblem(trimmed);
-  const taken = findNameConflict(trimmed, fields);
-  if (nameProblem) problems.name = nameProblem.problem.detail;
-  else if (taken) problems.name = fieldNameTaken(taken.name).problem.detail;
-  if (fields.length >= maxFields) {
-    problems.form = `You've reached ${maxFields} custom fields. Delete one to add another.`;
+  // A row left empty is no option; the others keep their rows' indexes.
+  const rows = options.flatMap((option, index) =>
+    option.label.trim() === "" ? [] : [{ option, index }],
+  );
+  const found = fieldDefinitionProblems(
+    name,
+    type,
+    rows.map(({ option }) => option),
+    fields,
+  );
+  for (const { problem } of found) {
+    const path = problem.errors?.[0]?.path;
+    const row = /^args\.options\.(\d+)\.label$/.exec(path ?? "")?.[1];
+    const detail = problem.detail ?? "";
+    if (path === "args.name") problems.name ??= detail;
+    else if (row !== undefined) {
+      const index = rows[Number(row)]?.index;
+      if (index !== undefined) problems.options[index] ??= detail;
+    } else problems.form ??= detail;
   }
-  if (!isChoiceType(type)) return problems;
-  const seen: { id: string; name: string }[] = [];
-  for (const [index, option] of options.entries()) {
-    const label = option.label.trim();
-    // A row left empty is no option.
-    if (label === "") continue;
-    const problem = optionLabelProblem(label, `options.${index}`);
-    if (problem) problems.options[index] = problem.problem.detail ?? "";
-    else if (findNameConflict(label, seen)) {
-      problems.options[index] = "Each option needs its own label.";
-    }
-    seen.push({ id: option.id, name: label });
-  }
+  const limit = fieldLimitProblem(fields.length);
+  if (limit) problems.form = limit.problem.detail;
   return problems;
 }
 
@@ -113,7 +115,7 @@ export function FieldCreateDialog({
         ? filled.map((option) => ({ id: option.id, label: option.label.trim() }))
         : [],
     };
-    client.fields.insert(field).isPersisted.promise.catch(() => {});
+    sent(client.fields.insert(field));
     onCreated?.(field.id);
     onClose();
   }

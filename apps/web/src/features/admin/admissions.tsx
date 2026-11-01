@@ -11,6 +11,7 @@ import {
   type Admissions,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
+import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
 import { Switch } from "@tonaris/ui/components/switch";
 
@@ -126,28 +127,25 @@ function InviteForm({ onInvited }: { onInvited: () => void }) {
       <p className="text-fg-secondary">
         The invitation works once, only for this address, and expires in 14 days.
       </p>
-      <form onSubmit={(event) => void submit(event)} className="flex max-w-lg gap-2">
-        <Input
-          type="email"
-          aria-label="Email address to invite"
-          placeholder="anna@example.com"
-          value={email}
-          aria-invalid={error !== undefined}
-          aria-describedby={error === undefined ? undefined : `${id}-error`}
-          onChange={(event) => {
-            setEmail(event.target.value);
-            setError(undefined);
-          }}
-        />
-        <Button type="submit" disabled={busy}>
-          Invite
-        </Button>
-      </form>
-      {error !== undefined && (
-        <p id={`${id}-error`} role="alert" className="text-small text-status-danger">
-          {error}
-        </p>
-      )}
+      <Field label="Email address to invite" hideLabel problem={error} announce>
+        {(control) => (
+          <form onSubmit={(event) => void submit(event)} className="flex max-w-lg gap-2">
+            <Input
+              {...control}
+              type="email"
+              placeholder="anna@example.com"
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setError(undefined);
+              }}
+            />
+            <Button type="submit" disabled={busy}>
+              Invite
+            </Button>
+          </form>
+        )}
+      </Field>
     </section>
   );
 }

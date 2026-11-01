@@ -14,8 +14,8 @@ import { type FormEvent, useId, useState } from "react";
 
 import type { Account, EmailChange, EmailChangeStage, Passkey } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
+import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
-import { Label } from "@tonaris/ui/components/label";
 
 const unreachable = "Couldn't reach Tonaris. Try again.";
 
@@ -135,7 +135,6 @@ function ChangeEmail({
 
 /** Step 1: the new address. Its code goes to the current address. */
 function AddressStep({ onStarted }: { onStarted: (newEmail: string) => void }) {
-  const id = useId();
   const [newEmail, setNewEmail] = useState("");
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -157,31 +156,25 @@ function AddressStep({ onStarted }: { onStarted: (newEmail: string) => void }) {
 
   return (
     <form className="flex flex-col gap-3" onSubmit={(event) => void submit(event)}>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${id}-new`}>New email address</Label>
-        <Input
-          id={`${id}-new`}
-          type="email"
-          autoComplete="email"
-          required
-          value={newEmail}
-          className="max-w-sm"
-          // The step's only task, so the field takes focus on arrival.
-          // oxlint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${id}-error` : undefined}
-          onChange={(event) => {
-            setNewEmail(event.target.value);
-            setError(undefined);
-          }}
-        />
-      </div>
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-status-danger">
-          {error}
-        </p>
-      )}
+      <Field label="New email address" problem={error} announce>
+        {(control) => (
+          <Input
+            {...control}
+            type="email"
+            autoComplete="email"
+            required
+            value={newEmail}
+            className="max-w-sm"
+            // The step's only task, so the field takes focus on arrival.
+            // oxlint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
+            onChange={(event) => {
+              setNewEmail(event.target.value);
+              setError(undefined);
+            }}
+          />
+        )}
+      </Field>
       <Button type="submit" variant="primary" className="self-start" disabled={busy}>
         Continue
       </Button>

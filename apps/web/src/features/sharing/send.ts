@@ -5,6 +5,7 @@
 // a 503, so that is no answer too.
 
 import { api, type ApiClient } from "@/api";
+import { problemSentence } from "@/features/sync/problems";
 import { useCallback, useState } from "react";
 
 import {
@@ -59,10 +60,10 @@ export async function sendNow(
   return outcome;
 }
 
-/** The outcome's reason, if it failed. */
+/** The outcome's reason, if it failed: the server's sentence, or a general one. */
 export const failureOf = (outcome: MutationResult["outcome"]): string | undefined =>
   outcome.status === "failed"
-    ? (outcome.problem.detail ?? "That didn't work. Try again.")
+    ? problemSentence(outcome.problem, "That didn't work. Try again.")
     : undefined;
 
 /**

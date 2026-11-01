@@ -18,6 +18,7 @@ function Field({
   label,
   hint,
   problem,
+  announce = false,
   group = false,
   hideLabel = false,
   className,
@@ -28,6 +29,8 @@ function Field({
   hint?: ReactNode;
   /** Why the value can't be used, under the control. */
   problem?: ReactNode;
+  /** Whether the problem is announced as it appears (`role="alert"`), as a form's answer from the server is. */
+  announce?: boolean;
   /** The control isn't a label's target: it takes `aria-labelledby` from the label's ID, the second argument. */
   group?: boolean;
   /** The label only for assistive technology, where the field's place already shows what it is. */
@@ -64,7 +67,11 @@ function Field({
           </p>
         )
       ) : (
-        <p id={belowId} className="text-small text-status-danger">
+        <p
+          id={belowId}
+          role={announce ? "alert" : undefined}
+          className="text-small text-status-danger"
+        >
           {problem}
         </p>
       )}

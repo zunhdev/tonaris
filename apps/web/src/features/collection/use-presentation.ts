@@ -4,7 +4,8 @@
 // layer reports one that fails. Choosing is not a collection edit (X-04), so it works offline too, waiting in the
 // outbox.
 
-import { defaultsKey } from "@/client/sync/views";
+import { sent } from "@/client/sync/writer";
+import { useAccountDefaults } from "@/features/settings/account-defaults";
 import { useSyncClient } from "@/features/sync/sync-provider";
 
 import {
@@ -16,11 +17,6 @@ import {
 
 import { useCollectionData } from "./data";
 import { defaultsFrom, presentationOf, type Presentation, type ViewKind } from "./presentation";
-
-/** The new writes report their own outcomes in the save states; a rejection is expected there, not here. */
-const sent = (transaction: { isPersisted: { promise: Promise<unknown> } }) => {
-  transaction.isPersisted.promise.catch(() => {});
-};
 
 export type ViewPresentation<Mode = ListSortMode | FolderSortMode> = {
   presentation: Presentation<Mode>;
@@ -47,6 +43,7 @@ export function usePresentation(
 ): ViewPresentation<ListSortMode> | ViewPresentation<FolderSortMode> {
   const client = useSyncClient();
   const { views, defaults } = useCollectionData();
+  const accountDefaults = useAccountDefaults();
   const prefs = views.get(viewKey);
 
   function viewOf<Mode extends ListSortMode | FolderSortMode>(
@@ -84,15 +81,7 @@ export function usePresentation(
         if (client?.views.has(viewKey)) sent(client.views.delete(viewKey));
       },
 
-      saveAsDefault: () => {
-        if (!client?.defaults.has(defaultsKey)) return;
-        const values = defaultsFrom(kind, presentation);
-        sent(
-          client.defaults.update(defaultsKey, (draft) => {
-            Object.assign(draft, values);
-          }),
-        );
-      },
+      saveAsDefault: () => accountDefaults.set(defaultsFrom(kind, presentation)),
     };
   }
 

@@ -18,7 +18,7 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Container, SharedSnapshot } from "@tonaris/domain";
+import { entryOrder, type Container, type SharedSnapshot } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
@@ -38,11 +38,7 @@ export function albumsIn(snapshot: SharedSnapshot, listId: string): SharedAlbum[
   const byId = new Map(snapshot.albums.map((album) => [album.id, album]));
   return snapshot.memberships
     .filter((entry) => entry.listId === listId)
-    .toSorted(
-      (a, b) =>
-        (a.addedAt < b.addedAt ? -1 : a.addedAt > b.addedAt ? 1 : 0) ||
-        (a.albumId < b.albumId ? -1 : a.albumId > b.albumId ? 1 : 0),
-    )
+    .toSorted(entryOrder)
     .flatMap((entry) => byId.get(entry.albumId) ?? []);
 }
 
