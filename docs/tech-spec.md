@@ -194,7 +194,7 @@ packages/domain/           framework-free business logic + Zod schemas + normali
 packages/db/               Drizzle schema, migrations, repositories
 packages/ui/               design system: src/styles/tokens.css (DS-10 token layers), shadcn components on Base UI
 packages/providers/        link parsing, MusicBrainz/CAA clients, provider adapters (policy-gated)
-tooling/                   seed + workload generator, restore drill, export validator
+tooling/                   seed + workload generator, export validator, MCP verification, M1 spikes
 openspec/                  OpenSpec specs and changes (TS-132)
 .claude/                   Claude Code: /opsx commands, OpenSpec skills, SessionStart hook (TS-132)
 docs/                      PRD, design spec, tech spec, audits, runbooks
