@@ -3,10 +3,11 @@
 
 import { and, asc, count, eq, inArray, isNull, sql } from "drizzle-orm";
 
-import { maxContainerDepth, nameKey, searchKey, type CollectionStore } from "@tonaris/domain";
+import { nameKey, searchKey, type CollectionStore } from "@tonaris/domain";
 
 import type { Transaction } from "../client";
 import { containerColumns, membershipColumns, membershipOf } from "../columns";
+import { ancestorsCte, descendantsCte } from "../hierarchy";
 import { containers, memberships } from "../schema";
 
 /** Folders, lists and their entries, on `tx`. */
@@ -26,27 +27,16 @@ export function containerStore(tx: Transaction) {
       return { ...container, trashed: trashedAt !== null };
     },
     async containerPath(id) {
-      const rows = await tx.execute<{ id: string }>(sql`
-      with recursive path (id, parent_id, level) as (
-        select id, parent_id, 1 from ${containers} where id = ${id}
-        union all
-        select c.id, c.parent_id, path.level + 1
-        from ${containers} c join path on c.id = path.parent_id
-        where path.level <= ${maxContainerDepth}
-      )
-      select id from path order by level`);
+      const rows = await tx.execute<{ id: string }>(
+        sql`with recursive ${ancestorsCte(id)} select id from up order by level`,
+      );
       return rows.map((row) => row.id);
     },
     async subtreeDepth(id) {
-      const [row] = await tx.execute<{ depth: number | null }>(sql`
-      with recursive tree (id, level) as (
-        select id, 1 from ${containers} where id = ${id} and trashed_at is null
-        union all
-        select c.id, tree.level + 1
-        from ${containers} c join tree on c.parent_id = tree.id
-        where c.trashed_at is null and tree.level <= ${maxContainerDepth}
-      )
-      select max(level)::int as depth from tree`);
+      const [row] = await tx.execute<{ depth: number | null }>(
+        sql`with recursive ${descendantsCte(eq(containers.id, id))}
+          select max(level)::int as depth from tree`,
+      );
       return row?.depth ?? 0;
     },
     activeChildren(ownerId, parentId) {
@@ -102,16 +92,10 @@ export function containerStore(tx: Transaction) {
       return row?.count ?? 0;
     },
     async activeSubtree(id) {
-      const rows = await tx.execute<{ id: string }>(sql`
-      with recursive tree (id, level) as (
-        select id, 1 from ${containers} where id = ${id} and trashed_at is null
-        union all
-        select c.id, tree.level + 1
-        from ${containers} c join tree on c.parent_id = tree.id
-        where c.trashed_at is null and tree.level <= ${maxContainerDepth}
-      )
-      select id from tree order by level, id
-    `);
+      const rows = await tx.execute<{ id: string }>(
+        sql`with recursive ${descendantsCte(eq(containers.id, id))}
+          select id from tree order by level, id`,
+      );
       const ids = rows.map((row) => row.id);
       if (ids.length === 0) return [];
       const found = await tx

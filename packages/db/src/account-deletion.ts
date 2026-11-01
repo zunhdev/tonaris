@@ -7,7 +7,7 @@ import { and, eq, inArray, isNull, lt } from "drizzle-orm";
 
 import { accountDeletionJobKind, type AccountDeletionStatus } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import type { Database, Executor, Transaction } from "./client";
 import { enqueueJob } from "./jobs";
 import { recordInLedger } from "./ledger";
 import {
@@ -233,7 +233,7 @@ export async function retryAccountDeletion(
 }
 
 /** Finished deletions older than a week: the daily prune (TS-91). */
-export async function pruneAccountDeletions(db: Database | Transaction, now: Date): Promise<void> {
+export async function pruneAccountDeletions(db: Executor, now: Date): Promise<void> {
   const before = new Date(now.getTime() - finishedDeletionRetentionMs);
   // Only a finished deletion has `finished_at`.
   await db.delete(accountDeletions).where(lt(accountDeletions.finishedAt, before));

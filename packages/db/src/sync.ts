@@ -34,7 +34,7 @@ import {
   type ViewPrefs,
 } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import { readSnapshot, type Database, type Executor, type Transaction } from "./client";
 import {
   accountDefaultsColumns,
   albumColumns,
@@ -144,7 +144,7 @@ export type ExecutedMutation = {
  * `link.set`'s URL.
  */
 export async function executeMutation(
-  db: Database | Transaction,
+  db: Executor,
   principal: Principal,
   mutation: Mutation,
   now: Date = new Date(),
@@ -376,7 +376,7 @@ export async function mutationRunning(
  * `execute` replaces `executeMutation` per item, as the API's does to run captures with their providers.
  */
 export function executeBatch(
-  db: Database | Transaction,
+  db: Executor,
   principal: Principal,
   batch: Batch,
   {
@@ -450,84 +450,81 @@ export async function readChanges(
  * hold active content, and Trash comes as units (TS-13). Links and field values of albums in Trash still come.
  */
 export function bootstrapSnapshot(db: Database, accountId: string): Promise<Bootstrap> {
-  return db.transaction(
-    async (tx) => {
-      const [sync] = await tx
-        .select({ seq: accountSync.seq })
-        .from(accountSync)
-        .where(eq(accountSync.accountId, accountId));
-      const owned: Album[] = await tx
-        .select(albumColumns)
-        .from(albums)
-        .where(and(eq(albums.ownerId, accountId), isNull(albums.trashedAt)))
-        .orderBy(asc(albums.id));
-      const folders: Container[] = await tx
-        .select(containerColumns)
-        .from(containers)
-        .where(and(eq(containers.ownerId, accountId), isNull(containers.trashedAt)))
-        .orderBy(asc(containers.id));
-      // Only an entry of an active list and an active album is effective (TS-13).
-      const entries = await tx
-        .select(membershipColumns)
-        .from(memberships)
-        .innerJoin(containers, eq(containers.id, memberships.listId))
-        .innerJoin(albums, eq(albums.id, memberships.albumId))
-        .where(
-          and(
-            eq(memberships.ownerId, accountId),
-            isNull(containers.trashedAt),
-            isNull(albums.trashedAt),
-          ),
-        )
-        .orderBy(asc(memberships.listId), asc(memberships.albumId));
-      const trash = await unitsOfAccount(tx, accountId);
-      const fields = await fieldsOfAccount(tx, accountId);
-      const fieldValues = await valuesOfAccount(tx, accountId);
-      const links: ServiceLink[] = await tx
-        .select({
-          albumId: albumServiceLinks.albumId,
-          service: albumServiceLinks.service,
-          url: albumServiceLinks.url,
-        })
-        .from(albumServiceLinks)
-        .where(eq(albumServiceLinks.ownerId, accountId))
-        .orderBy(asc(albumServiceLinks.albumId), asc(albumServiceLinks.service));
-      const views: ViewPrefs[] = await tx
-        .select(viewPrefsColumns)
-        .from(viewPrefs)
-        .where(eq(viewPrefs.personId, accountId))
-        .orderBy(asc(viewPrefs.viewKey));
-      const arranged: Position[] = await tx
-        .select(positionColumns)
-        .from(positions)
-        .where(eq(positions.personId, accountId))
-        .orderBy(asc(positions.viewKey), asc(positions.itemId));
-      const [defaults]: AccountDefaults[] = await tx
-        .select(accountDefaultsColumns)
-        .from(accountSettings)
-        .where(eq(accountSettings.accountId, accountId));
-      const references = await tx
-        .select({ containerId: savedReferences.containerId })
-        .from(savedReferences)
-        .where(eq(savedReferences.viewerId, accountId))
-        .orderBy(desc(savedReferences.createdAt), asc(savedReferences.containerId));
-      return {
-        seq: sync?.seq ?? 0,
-        albums: owned,
-        containers: folders,
-        memberships: entries.map(membershipOf),
-        links,
-        fields,
-        fieldValues,
-        views,
-        positions: arranged,
-        defaults: defaults ?? appAccountDefaults,
-        trashUnits: trash,
-        references,
-      };
-    },
-    { isolationLevel: "repeatable read", accessMode: "read only" },
-  );
+  return readSnapshot(db, async (tx) => {
+    const [sync] = await tx
+      .select({ seq: accountSync.seq })
+      .from(accountSync)
+      .where(eq(accountSync.accountId, accountId));
+    const owned: Album[] = await tx
+      .select(albumColumns)
+      .from(albums)
+      .where(and(eq(albums.ownerId, accountId), isNull(albums.trashedAt)))
+      .orderBy(asc(albums.id));
+    const folders: Container[] = await tx
+      .select(containerColumns)
+      .from(containers)
+      .where(and(eq(containers.ownerId, accountId), isNull(containers.trashedAt)))
+      .orderBy(asc(containers.id));
+    // Only an entry of an active list and an active album is effective (TS-13).
+    const entries = await tx
+      .select(membershipColumns)
+      .from(memberships)
+      .innerJoin(containers, eq(containers.id, memberships.listId))
+      .innerJoin(albums, eq(albums.id, memberships.albumId))
+      .where(
+        and(
+          eq(memberships.ownerId, accountId),
+          isNull(containers.trashedAt),
+          isNull(albums.trashedAt),
+        ),
+      )
+      .orderBy(asc(memberships.listId), asc(memberships.albumId));
+    const trash = await unitsOfAccount(tx, accountId);
+    const fields = await fieldsOfAccount(tx, accountId);
+    const fieldValues = await valuesOfAccount(tx, accountId);
+    const links: ServiceLink[] = await tx
+      .select({
+        albumId: albumServiceLinks.albumId,
+        service: albumServiceLinks.service,
+        url: albumServiceLinks.url,
+      })
+      .from(albumServiceLinks)
+      .where(eq(albumServiceLinks.ownerId, accountId))
+      .orderBy(asc(albumServiceLinks.albumId), asc(albumServiceLinks.service));
+    const views: ViewPrefs[] = await tx
+      .select(viewPrefsColumns)
+      .from(viewPrefs)
+      .where(eq(viewPrefs.personId, accountId))
+      .orderBy(asc(viewPrefs.viewKey));
+    const arranged: Position[] = await tx
+      .select(positionColumns)
+      .from(positions)
+      .where(eq(positions.personId, accountId))
+      .orderBy(asc(positions.viewKey), asc(positions.itemId));
+    const [defaults]: AccountDefaults[] = await tx
+      .select(accountDefaultsColumns)
+      .from(accountSettings)
+      .where(eq(accountSettings.accountId, accountId));
+    const references = await tx
+      .select({ containerId: savedReferences.containerId })
+      .from(savedReferences)
+      .where(eq(savedReferences.viewerId, accountId))
+      .orderBy(desc(savedReferences.createdAt), asc(savedReferences.containerId));
+    return {
+      seq: sync?.seq ?? 0,
+      albums: owned,
+      containers: folders,
+      memberships: entries.map(membershipOf),
+      links,
+      fields,
+      fieldValues,
+      views,
+      positions: arranged,
+      defaults: defaults ?? appAccountDefaults,
+      trashUnits: trash,
+      references,
+    };
+  });
 }
 
 /**
@@ -535,10 +532,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
  * cursor before the remaining log is then answered with `reset`, and a replay of a removed mutation is `expired`.
  * The daily schedule runs it in its own transaction (TS-91).
  */
-export async function pruneSyncHistory(
-  db: Database | Transaction,
-  now: Date = new Date(),
-): Promise<void> {
+export async function pruneSyncHistory(db: Executor, now: Date = new Date()): Promise<void> {
   const before = new Date(now.getTime() - syncRetentionMs);
   await db.delete(changeLog).where(lt(changeLog.createdAt, before));
   await db.delete(mutations).where(lt(mutations.receivedAt, before));

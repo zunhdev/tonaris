@@ -5,9 +5,10 @@
 
 import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
 
-import { maxContainerDepth, type ShareViewer } from "@tonaris/domain";
+import type { ShareViewer } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import type { Executor } from "./client";
+import { ancestorsCte, descendantsCte } from "./hierarchy";
 import { containers, savedReferences, shareGrants, shareLinks } from "./schema";
 
 /**
@@ -15,7 +16,7 @@ import { containers, savedReferences, shareGrants, shareLinks } from "./schema";
  * an invitation (FR-07.10). The one lookup by token, for the guest routes, the reference check and `share.saveLink`.
  */
 export async function linkByTokenHash(
-  db: Database | Transaction,
+  db: Executor,
   hash: Uint8Array,
 ): Promise<{ id: string; containerId: string; ownerId: string } | undefined> {
   const [link] = await db
@@ -50,18 +51,13 @@ function sourcesOf(viewer: ShareViewer): SQL {
 
 /** Every container `viewer` may read, each with the sources it is read through: down from each active source. */
 export async function readableContainers(
-  db: Database | Transaction,
+  db: Executor,
   viewer: ShareViewer,
 ): Promise<Map<string, Set<string>>> {
   const rows = await db.execute<{ id: string; source: string }>(sql`
     with recursive sources (id) as (${sourcesOf(viewer)}),
-    tree (id, source, level) as (
-      select c.id, c.id, 1 from ${containers} c join sources s on s.id = c.id where c.trashed_at is null
-      union all
-      select c.id, t.source, t.level + 1 from ${containers} c join tree t on c.parent_id = t.id
-      where c.trashed_at is null and t.level <= ${maxContainerDepth}
-    )
-    select distinct id, source from tree`);
+    ${descendantsCte(sql`${containers.id} in (select id from sources)`)}
+    select distinct id, root as source from tree`);
   const readable = new Map<string, Set<string>>();
   for (const { id, source } of rows) readable.set(id, (readable.get(id) ?? new Set()).add(source));
   return readable;
@@ -69,18 +65,13 @@ export async function readableContainers(
 
 /** Whether `viewer` may read the container `id`: up from it while every container is active, is one a source? */
 export async function canReadContainer(
-  db: Database | Transaction,
+  db: Executor,
   viewer: ShareViewer,
   id: string,
 ): Promise<boolean> {
   const [row] = await db.execute<{ readable: boolean }>(sql`
     with recursive sources (id) as (${sourcesOf(viewer)}),
-    up (id, parent_id, level) as (
-      select id, parent_id, 1 from ${containers} where id = ${id} and trashed_at is null
-      union all
-      select c.id, c.parent_id, up.level + 1 from ${containers} c join up on c.id = up.parent_id
-      where c.trashed_at is null and up.level <= ${maxContainerDepth}
-    )
+    ${ancestorsCte(id, { active: true })}
     select exists (select 1 from up join sources on sources.id = up.id) as readable`);
   return row?.readable === true;
 }

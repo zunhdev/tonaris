@@ -12,7 +12,7 @@ import {
   type SharingImpact,
 } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import { readSnapshot, type Database, type Transaction } from "./client";
 import { containers, memberships, shareGrants, shareLinks, trashUnits, users } from "./schema";
 
 /** A move of a folder or list into a folder or the root, or a Trash unit's recovery, by default to where it was. */
@@ -86,49 +86,46 @@ export function sharingImpact(
   ownerId: string,
   query: ImpactQuery,
 ): Promise<SharingImpact | "not_found" | "invalid"> {
-  return db.transaction(
-    async (tx) => {
-      const { state, folders } = await impactState(tx, ownerId);
-      const byId = new Map(state.containers.map((container) => [container.id, container]));
-      const activeFolder = (id: string | null) =>
-        id === null || (folders.has(id) && byId.get(id)?.trashed === false);
+  return readSnapshot(db, async (tx) => {
+    const { state, folders } = await impactState(tx, ownerId);
+    const byId = new Map(state.containers.map((container) => [container.id, container]));
+    const activeFolder = (id: string | null) =>
+      id === null || (folders.has(id) && byId.get(id)?.trashed === false);
 
-      if (query.kind === "move") {
-        const item = byId.get(query.id);
-        if (!item || item.trashed) return "not_found";
-        if (!activeFolder(query.to)) return "invalid";
-        for (let at = query.to; at !== null; at = byId.get(at)?.parentId ?? null) {
-          if (at === query.id) return "invalid";
-        }
-        return moveImpact(state, query.id, query.to);
+    if (query.kind === "move") {
+      const item = byId.get(query.id);
+      if (!item || item.trashed) return "not_found";
+      if (!activeFolder(query.to)) return "invalid";
+      for (let at = query.to; at !== null; at = byId.get(at)?.parentId ?? null) {
+        if (at === query.id) return "invalid";
       }
+      return moveImpact(state, query.id, query.to);
+    }
 
-      const [unit] = await tx
-        .select({ kind: trashUnits.kind, rootId: trashUnits.rootId })
-        .from(trashUnits)
-        .where(and(eq(trashUnits.id, query.unitId), eq(trashUnits.ownerId, ownerId)));
-      if (!unit) return "not_found";
-      if (unit.kind === "album") {
-        const lists = await tx
-          .select({ listId: memberships.listId })
-          .from(memberships)
-          .innerJoin(containers, eq(containers.id, memberships.listId))
-          .where(and(eq(memberships.albumId, unit.rootId), isNull(containers.trashedAt)));
-        return listsImpact(
-          state,
-          lists.map((row) => row.listId),
-        );
-      }
-      const members = await tx
-        .select({ id: containers.id })
-        .from(containers)
-        .where(eq(containers.trashUnitId, query.unitId));
-      const where = byId.get(unit.rootId)?.parentId ?? null;
-      const to = query.to === undefined ? (activeFolder(where) ? where : null) : query.to;
-      if (!activeFolder(to)) return "invalid";
-      const ids = [unit.rootId, ...members.map((row) => row.id).filter((id) => id !== unit.rootId)];
-      return recoveryImpact(state, ids, to);
-    },
-    { isolationLevel: "repeatable read", accessMode: "read only" },
-  );
+    const [unit] = await tx
+      .select({ kind: trashUnits.kind, rootId: trashUnits.rootId })
+      .from(trashUnits)
+      .where(and(eq(trashUnits.id, query.unitId), eq(trashUnits.ownerId, ownerId)));
+    if (!unit) return "not_found";
+    if (unit.kind === "album") {
+      const lists = await tx
+        .select({ listId: memberships.listId })
+        .from(memberships)
+        .innerJoin(containers, eq(containers.id, memberships.listId))
+        .where(and(eq(memberships.albumId, unit.rootId), isNull(containers.trashedAt)));
+      return listsImpact(
+        state,
+        lists.map((row) => row.listId),
+      );
+    }
+    const members = await tx
+      .select({ id: containers.id })
+      .from(containers)
+      .where(eq(containers.trashUnitId, query.unitId));
+    const where = byId.get(unit.rootId)?.parentId ?? null;
+    const to = query.to === undefined ? (activeFolder(where) ? where : null) : query.to;
+    if (!activeFolder(to)) return "invalid";
+    const ids = [unit.rootId, ...members.map((row) => row.id).filter((id) => id !== unit.rootId)];
+    return recoveryImpact(state, ids, to);
+  });
 }

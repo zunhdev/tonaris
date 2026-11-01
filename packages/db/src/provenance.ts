@@ -10,7 +10,7 @@ import {
   type ProvenanceEntry,
 } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import type { Executor, Transaction } from "./client";
 import { albumProvenance as provenance } from "./schema";
 
 /** Inserts `entries` for the album, replacing the rows of the fields they name. */
@@ -70,10 +70,7 @@ export function userEntries(values: Partial<EnrichableFields>): ProvenanceEntry[
 }
 
 /** The album's provenance, by field. */
-export async function albumProvenance(
-  db: Database | Transaction,
-  albumId: string,
-): Promise<ProvenanceEntry[]> {
+export async function albumProvenance(db: Executor, albumId: string): Promise<ProvenanceEntry[]> {
   return db
     .select({
       field: provenance.field,

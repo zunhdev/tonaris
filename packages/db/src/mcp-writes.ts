@@ -6,7 +6,7 @@ import { and, eq } from "drizzle-orm";
 
 import type { FieldValueData, StreamingService, ViewPrefsFields } from "@tonaris/domain";
 
-import type { Database } from "./client";
+import { readSnapshot, type Database } from "./client";
 import { albumColumns } from "./columns";
 import { valuesOfAlbums } from "./field-values";
 import { containerPage, unsortedPage } from "./mcp-reads";
@@ -95,10 +95,7 @@ export async function fieldValueBase(
   db: Database,
   { albumId, fieldId }: { albumId: string; fieldId: string },
 ): Promise<FieldValueData | undefined> {
-  const values = await db.transaction((tx) => valuesOfAlbums(tx, [albumId]), {
-    isolationLevel: "repeatable read",
-    accessMode: "read only",
-  });
+  const values = await readSnapshot(db, (tx) => valuesOfAlbums(tx, [albumId]));
   return values.find((value) => value.fieldId === fieldId)?.value;
 }
 

@@ -14,7 +14,7 @@ import {
   type StoredField,
 } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import type { Executor, Transaction } from "./client";
 import {
   albumFieldMulti,
   albumFieldValues,
@@ -24,10 +24,7 @@ import {
 } from "./schema";
 
 /** A field with its owner and its options in order: keys compare bytewise (TS-16). */
-export async function findFieldIn(
-  tx: Transaction | Database,
-  id: string,
-): Promise<StoredField | undefined> {
+export async function findFieldIn(tx: Executor, id: string): Promise<StoredField | undefined> {
   const [row] = await tx
     .select({
       id: fieldDefinitions.id,
@@ -148,7 +145,7 @@ export function selectedBy(
 }
 
 /** The albums applying the field, even empty, in Trash or not (FR-03.18). */
-export function fieldUsersIn(tx: Transaction | Database, fieldId: string): Promise<OptionUser[]> {
+export function fieldUsersIn(tx: Executor, fieldId: string): Promise<OptionUser[]> {
   return tx
     .select({ id: albums.id, trashed: sql<boolean>`${albums.trashedAt} is not null` })
     .from(albumFieldValues)
@@ -158,7 +155,7 @@ export function fieldUsersIn(tx: Transaction | Database, fieldId: string): Promi
 
 /** The albums choosing the option, single or multiple choice, in Trash or not (FR-03.17). */
 export async function optionUsersIn(
-  tx: Transaction | Database,
+  tx: Executor,
   fieldId: string,
   optionId: string,
 ): Promise<OptionUser[]> {

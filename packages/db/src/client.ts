@@ -11,6 +11,17 @@ export type Database = ReturnType<typeof createDatabase>;
 /** The handle inside `db.transaction(…)`, with the same query methods. */
 export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
+/** Where a query runs: on its own, or in the caller's transaction. */
+export type Executor = Database | Transaction;
+
+/**
+ * Runs `read` in one read-only REPEATABLE READ transaction, so its parts are one point in time and agree, as the
+ * bootstrap's do (TS-24).
+ */
+export function readSnapshot<T>(db: Database, read: (tx: Transaction) => Promise<T>): Promise<T> {
+  return db.transaction(read, { isolationLevel: "repeatable read", accessMode: "read only" });
+}
+
 /** Opens a connection pool. Close it with `db.$client.end()`. */
 export function createDatabase(url: string = databaseUrl(), options: postgres.Options<{}> = {}) {
   const client = postgres(url, { onnotice: () => {}, ...options });

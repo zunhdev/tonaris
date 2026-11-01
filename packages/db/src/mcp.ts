@@ -13,7 +13,7 @@ import {
 } from "@tonaris/domain";
 
 import { albumsOfReleaseGroupIn } from "./album-writes";
-import type { Database, Transaction } from "./client";
+import type { Database, Executor, Transaction } from "./client";
 import { recordInLedger } from "./ledger";
 import {
   albums,
@@ -26,8 +26,6 @@ import {
   trashUnits,
 } from "./schema";
 import { impactState } from "./sharing-impact";
-
-type Executor = Database | Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export type ConnectionRow = {
   id: string;

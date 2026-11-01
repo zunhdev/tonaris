@@ -16,7 +16,7 @@ import type {
 } from "@tonaris/domain";
 
 import { canReadContainer, readableContainers } from "./access";
-import type { Database, Transaction } from "./client";
+import { readSnapshot, type Database, type Executor } from "./client";
 import { albumColumns, unitsOfAccount } from "./columns";
 import { readFieldUsage } from "./field-options";
 import { fieldsOfAccount, valuesOfAlbums } from "./field-values";
@@ -41,7 +41,7 @@ export type Page<T> = { items: T[]; total: number };
 
 /** The sources of these albums' values. */
 export async function albumSources(
-  db: Database | Transaction,
+  db: Executor,
   albumIds: readonly string[],
 ): Promise<Map<string, AlbumSources>> {
   const bySource = new Map<string, AlbumSources>(albumIds.map((id) => [id, {}]));
@@ -61,10 +61,7 @@ export async function albumSources(
   return bySource;
 }
 
-async function withSources(
-  db: Database | Transaction,
-  rows: readonly Album[],
-): Promise<SourcedAlbum[]> {
+async function withSources(db: Executor, rows: readonly Album[]): Promise<SourcedAlbum[]> {
   const sources = await albumSources(
     db,
     rows.map((album) => album.id),
@@ -180,98 +177,95 @@ export function containerPage(
     limit,
   }: { readerId: string; containerId?: string; offset: number; limit: number },
 ): Promise<ContainerPage> {
-  return db.transaction(
-    async (tx): Promise<ContainerPage> => {
-      let container: ContainerInfo | null = null;
-      let ownerId = readerId;
-      let owner: SharedOwner | null = null;
-      if (containerId) {
-        const [found] = await tx
-          .select({
-            id: containers.id,
-            kind: containers.kind,
-            name: containers.name,
-            parentId: containers.parentId,
-            description: containers.description,
-            ownerId: containers.ownerId,
-            ownerName: users.displayName,
-          })
-          .from(containers)
-          .innerJoin(users, eq(users.id, containers.ownerId))
-          .where(and(eq(containers.id, containerId), isNull(containers.trashedAt)));
-        if (!found) return { kind: "missing" };
-        const { ownerId: foundOwner, ownerName, ...info } = found;
-        if (foundOwner !== readerId) {
-          const viewer = { kind: "person", userId: readerId } as const;
-          if (!(await canReadContainer(tx, viewer, found.id))) return { kind: "missing" };
-          owner = { displayName: ownerName };
-          // A shared root's folder may be one the reader can't see.
-          if (info.parentId && !(await canReadContainer(tx, viewer, info.parentId))) {
-            info.parentId = null;
-          }
+  return readSnapshot(db, async (tx): Promise<ContainerPage> => {
+    let container: ContainerInfo | null = null;
+    let ownerId = readerId;
+    let owner: SharedOwner | null = null;
+    if (containerId) {
+      const [found] = await tx
+        .select({
+          id: containers.id,
+          kind: containers.kind,
+          name: containers.name,
+          parentId: containers.parentId,
+          description: containers.description,
+          ownerId: containers.ownerId,
+          ownerName: users.displayName,
+        })
+        .from(containers)
+        .innerJoin(users, eq(users.id, containers.ownerId))
+        .where(and(eq(containers.id, containerId), isNull(containers.trashedAt)));
+      if (!found) return { kind: "missing" };
+      const { ownerId: foundOwner, ownerName, ...info } = found;
+      if (foundOwner !== readerId) {
+        const viewer = { kind: "person", userId: readerId } as const;
+        if (!(await canReadContainer(tx, viewer, found.id))) return { kind: "missing" };
+        owner = { displayName: ownerName };
+        // A shared root's folder may be one the reader can't see.
+        if (info.parentId && !(await canReadContainer(tx, viewer, info.parentId))) {
+          info.parentId = null;
         }
-        container = info;
-        ownerId = foundOwner;
       }
+      container = info;
+      ownerId = foundOwner;
+    }
 
-      const viewKey = container?.id ?? "root";
-      if (container?.kind === "list") {
-        const order = manualOrder(readerId, viewKey, albums.id);
-        const inList = and(
-          eq(memberships.listId, container.id),
-          eq(albums.ownerId, ownerId),
-          isNull(albums.trashedAt),
-        );
-        const [rows, [total]] = await Promise.all([
-          tx
-            .select(albumColumns)
-            .from(memberships)
-            .innerJoin(albums, eq(albums.id, memberships.albumId))
-            .leftJoin(positions, order.join)
-            .where(inList)
-            .orderBy(order.first, asc(memberships.addedAt), asc(albums.id))
-            .offset(offset)
-            .limit(limit),
-          tx
-            .select({ n: count() })
-            .from(memberships)
-            .innerJoin(albums, eq(albums.id, memberships.albumId))
-            .where(inList),
-        ]);
-        return {
-          kind: "albums",
-          container,
-          owner,
-          page: { items: await withSources(tx, rows), total: total?.n ?? 0 },
-        };
-      }
-
-      const order = manualOrder(readerId, viewKey, containers.id);
-      const inFolder = and(
-        eq(containers.ownerId, ownerId),
-        isNull(containers.trashedAt),
-        container ? eq(containers.parentId, container.id) : isNull(containers.parentId),
+    const viewKey = container?.id ?? "root";
+    if (container?.kind === "list") {
+      const order = manualOrder(readerId, viewKey, albums.id);
+      const inList = and(
+        eq(memberships.listId, container.id),
+        eq(albums.ownerId, ownerId),
+        isNull(albums.trashedAt),
       );
       const [rows, [total]] = await Promise.all([
         tx
-          .select({
-            id: containers.id,
-            kind: containers.kind,
-            name: containers.name,
-            parentId: containers.parentId,
-          })
-          .from(containers)
+          .select(albumColumns)
+          .from(memberships)
+          .innerJoin(albums, eq(albums.id, memberships.albumId))
           .leftJoin(positions, order.join)
-          .where(inFolder)
-          .orderBy(order.first, asc(containers.createdAt), asc(containers.id))
+          .where(inList)
+          .orderBy(order.first, asc(memberships.addedAt), asc(albums.id))
           .offset(offset)
           .limit(limit),
-        tx.select({ n: count() }).from(containers).where(inFolder),
+        tx
+          .select({ n: count() })
+          .from(memberships)
+          .innerJoin(albums, eq(albums.id, memberships.albumId))
+          .where(inList),
       ]);
-      return { kind: "children", container, owner, page: { items: rows, total: total?.n ?? 0 } };
-    },
-    { isolationLevel: "repeatable read", accessMode: "read only" },
-  );
+      return {
+        kind: "albums",
+        container,
+        owner,
+        page: { items: await withSources(tx, rows), total: total?.n ?? 0 },
+      };
+    }
+
+    const order = manualOrder(readerId, viewKey, containers.id);
+    const inFolder = and(
+      eq(containers.ownerId, ownerId),
+      isNull(containers.trashedAt),
+      container ? eq(containers.parentId, container.id) : isNull(containers.parentId),
+    );
+    const [rows, [total]] = await Promise.all([
+      tx
+        .select({
+          id: containers.id,
+          kind: containers.kind,
+          name: containers.name,
+          parentId: containers.parentId,
+        })
+        .from(containers)
+        .leftJoin(positions, order.join)
+        .where(inFolder)
+        .orderBy(order.first, asc(containers.createdAt), asc(containers.id))
+        .offset(offset)
+        .limit(limit),
+      tx.select({ n: count() }).from(containers).where(inFolder),
+    ]);
+    return { kind: "children", container, owner, page: { items: rows, total: total?.n ?? 0 } };
+  });
 }
 
 /**
@@ -282,35 +276,32 @@ export function unsortedPage(
   db: Database,
   { ownerId, offset, limit }: { ownerId: string; offset: number; limit: number },
 ): Promise<Page<SourcedAlbum>> {
-  return db.transaction(
-    async (tx) => {
-      const order = manualOrder(ownerId, "unsorted", albums.id);
-      const unsorted = and(
-        eq(albums.ownerId, ownerId),
-        isNull(albums.trashedAt),
-        notExists(
-          tx
-            .select({ one: sql`1` })
-            .from(memberships)
-            .innerJoin(containers, eq(containers.id, memberships.listId))
-            .where(and(eq(memberships.albumId, albums.id), isNull(containers.trashedAt))),
-        ),
-      );
-      const [rows, [total]] = await Promise.all([
+  return readSnapshot(db, async (tx) => {
+    const order = manualOrder(ownerId, "unsorted", albums.id);
+    const unsorted = and(
+      eq(albums.ownerId, ownerId),
+      isNull(albums.trashedAt),
+      notExists(
         tx
-          .select(albumColumns)
-          .from(albums)
-          .leftJoin(positions, order.join)
-          .where(unsorted)
-          .orderBy(order.first, desc(albums.createdAt), desc(albums.id))
-          .offset(offset)
-          .limit(limit),
-        tx.select({ n: count() }).from(albums).where(unsorted),
-      ]);
-      return { items: await withSources(tx, rows), total: total?.n ?? 0 };
-    },
-    { isolationLevel: "repeatable read", accessMode: "read only" },
-  );
+          .select({ one: sql`1` })
+          .from(memberships)
+          .innerJoin(containers, eq(containers.id, memberships.listId))
+          .where(and(eq(memberships.albumId, albums.id), isNull(containers.trashedAt))),
+      ),
+    );
+    const [rows, [total]] = await Promise.all([
+      tx
+        .select(albumColumns)
+        .from(albums)
+        .leftJoin(positions, order.join)
+        .where(unsorted)
+        .orderBy(order.first, desc(albums.createdAt), desc(albums.id))
+        .offset(offset)
+        .limit(limit),
+      tx.select({ n: count() }).from(albums).where(unsorted),
+    ]);
+    return { items: await withSources(tx, rows), total: total?.n ?? 0 };
+  });
 }
 
 /** A custom field's value on an album, with the options it chooses for a choice field. */
@@ -360,106 +351,97 @@ export function albumDetail(
   db: Database,
   { readerId, albumId }: { readerId: string; albumId: string },
 ): Promise<AlbumDetail | undefined> {
-  return db.transaction(
-    async (tx) => {
-      const [found] = await tx
-        .select({
-          ...albumColumns,
-          ownerId: albums.ownerId,
-          ownerName: users.displayName,
-          trashedAt: albums.trashedAt,
-        })
-        .from(albums)
-        .innerJoin(users, eq(users.id, albums.ownerId))
-        .where(eq(albums.id, albumId));
-      if (!found) return undefined;
-      const { ownerId, ownerName, trashedAt, ...album } = found;
-      const own = ownerId === readerId;
-      if (!own && trashedAt !== null) return undefined;
+  return readSnapshot(db, async (tx) => {
+    const [found] = await tx
+      .select({
+        ...albumColumns,
+        ownerId: albums.ownerId,
+        ownerName: users.displayName,
+        trashedAt: albums.trashedAt,
+      })
+      .from(albums)
+      .innerJoin(users, eq(users.id, albums.ownerId))
+      .where(eq(albums.id, albumId));
+    if (!found) return undefined;
+    const { ownerId, ownerName, trashedAt, ...album } = found;
+    const own = ownerId === readerId;
+    if (!own && trashedAt !== null) return undefined;
 
-      const places = new Map(
-        (
-          await tx
-            .select({ id: containers.id, name: containers.name, parentId: containers.parentId })
-            .from(containers)
-            .where(and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt)))
-        ).map((place) => [place.id, place]),
+    const places = new Map(
+      (
+        await tx
+          .select({ id: containers.id, name: containers.name, parentId: containers.parentId })
+          .from(containers)
+          .where(and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt)))
+      ).map((place) => [place.id, place]),
+    );
+    const entries = await tx
+      .select({ listId: memberships.listId })
+      .from(memberships)
+      .where(eq(memberships.albumId, albumId));
+    let listIds = entries.map((entry) => entry.listId).filter((id) => places.has(id));
+    let readable: ReadonlySet<string> | undefined;
+    if (!own) {
+      readable = new Set(
+        (await readableContainers(tx, { kind: "person", userId: readerId })).keys(),
       );
-      const entries = await tx
-        .select({ listId: memberships.listId })
-        .from(memberships)
-        .where(eq(memberships.albumId, albumId));
-      let listIds = entries.map((entry) => entry.listId).filter((id) => places.has(id));
-      let readable: ReadonlySet<string> | undefined;
-      if (!own) {
-        readable = new Set(
-          (await readableContainers(tx, { kind: "person", userId: readerId })).keys(),
-        );
-        listIds = listIds.filter((id) => readable?.has(id));
-        if (listIds.length === 0) return undefined;
-      }
-      const lists = listIds
-        .map((id) => ({
-          id,
-          name: places.get(id)?.name ?? "",
-          location: locationOf(places, id, readable),
-        }))
-        .toSorted((a, b) => a.location.join("\u0000").localeCompare(b.location.join("\u0000")));
+      listIds = listIds.filter((id) => readable?.has(id));
+      if (listIds.length === 0) return undefined;
+    }
+    const lists = listIds
+      .map((id) => ({
+        id,
+        name: places.get(id)?.name ?? "",
+        location: locationOf(places, id, readable),
+      }))
+      .toSorted((a, b) => a.location.join("\u0000").localeCompare(b.location.join("\u0000")));
 
-      const [links, values, definitions, sources] = await Promise.all([
-        tx
-          .select({ service: albumServiceLinks.service, url: albumServiceLinks.url })
-          .from(albumServiceLinks)
-          .where(eq(albumServiceLinks.albumId, albumId))
-          .orderBy(asc(albumServiceLinks.service)),
-        valuesOfAlbums(tx, [albumId]),
-        fieldsOfAccount(tx, ownerId),
-        albumSources(tx, [albumId]),
-      ]);
-      const fields = values.flatMap(({ fieldId, value }): AlbumFieldValue[] => {
-        const field = definitions.find((definition) => definition.id === fieldId);
-        if (!field) return [];
-        const ids = new Set(
-          Array.isArray(value) ? value : typeof value === "string" ? [value] : [],
-        );
-        const chosen = field.options.filter((option) => ids.has(option.id));
-        return [{ fieldId, name: field.name, type: field.type, value, chosen }];
-      });
-      return {
-        album: { ...album, sources: sources.get(albumId) ?? {} },
-        owner: own ? null : { displayName: ownerName },
-        inTrash: trashedAt !== null,
-        lists,
-        links,
-        fields: fields.toSorted((a, b) => a.name.localeCompare(b.name)),
-      };
-    },
-    { isolationLevel: "repeatable read", accessMode: "read only" },
-  );
+    const [links, values, definitions, sources] = await Promise.all([
+      tx
+        .select({ service: albumServiceLinks.service, url: albumServiceLinks.url })
+        .from(albumServiceLinks)
+        .where(eq(albumServiceLinks.albumId, albumId))
+        .orderBy(asc(albumServiceLinks.service)),
+      valuesOfAlbums(tx, [albumId]),
+      fieldsOfAccount(tx, ownerId),
+      albumSources(tx, [albumId]),
+    ]);
+    const fields = values.flatMap(({ fieldId, value }): AlbumFieldValue[] => {
+      const field = definitions.find((definition) => definition.id === fieldId);
+      if (!field) return [];
+      const ids = new Set(Array.isArray(value) ? value : typeof value === "string" ? [value] : []);
+      const chosen = field.options.filter((option) => ids.has(option.id));
+      return [{ fieldId, name: field.name, type: field.type, value, chosen }];
+    });
+    return {
+      album: { ...album, sources: sources.get(albumId) ?? {} },
+      owner: own ? null : { displayName: ownerName },
+      inTrash: trashedAt !== null,
+      lists,
+      links,
+      fields: fields.toSorted((a, b) => a.name.localeCompare(b.name)),
+    };
+  });
 }
 
 /** The owner's Trash, oldest first (FR-10.7): every unit, as the app's Trash view holds them. */
 export function trashContents(db: Database, ownerId: string): Promise<TrashUnit[]> {
-  return db.transaction((tx) => unitsOfAccount(tx, ownerId), {
-    isolationLevel: "repeatable read",
-    accessMode: "read only",
-  });
+  return readSnapshot(db, (tx) => unitsOfAccount(tx, ownerId));
 }
 
 /** A custom field with how many albums apply it, active and in Trash (FR-03.12). */
 export type FieldWithUsage = CustomField & { albums: number; inTrash: number };
 
 /** The owner's custom fields, in the order they were created, with their options and usage. */
-export async function fieldsWithUsage(db: Database, ownerId: string): Promise<FieldWithUsage[]> {
-  const [fields, usage] = await Promise.all([
-    db.transaction((tx) => fieldsOfAccount(tx, ownerId), {
-      isolationLevel: "repeatable read",
-      accessMode: "read only",
-    }),
-    readFieldUsage(db, ownerId),
-  ]);
-  return fields.map((field) => {
-    const used = usage.fields.find((each) => each.fieldId === field.id);
-    return Object.assign(field, { albums: used?.albums ?? 0, inTrash: used?.inTrash ?? 0 });
+export function fieldsWithUsage(db: Database, ownerId: string): Promise<FieldWithUsage[]> {
+  return readSnapshot(db, async (tx) => {
+    const [fields, usage] = await Promise.all([
+      fieldsOfAccount(tx, ownerId),
+      readFieldUsage(tx, ownerId),
+    ]);
+    return fields.map((field) => {
+      const used = usage.fields.find((each) => each.fieldId === field.id);
+      return Object.assign(field, { albums: used?.albums ?? 0, inTrash: used?.inTrash ?? 0 });
+    });
   });
 }
