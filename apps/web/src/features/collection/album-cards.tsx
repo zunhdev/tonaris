@@ -64,7 +64,6 @@ export function AlbumCards({
 }: {
   sections: readonly Section<Album>[];
   label: string;
-  viewKey: string;
   collapsed: ReadonlySet<ReleaseGroup>;
   onToggle: (group: ReleaseGroup) => void;
   /** Cards are rearranged by keyboard; the drag handle is a row's (DS-21). */

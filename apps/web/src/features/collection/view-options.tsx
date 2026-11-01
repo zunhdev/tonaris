@@ -2,7 +2,7 @@
 // sets the view's sort, direction (not for manual order), and for lists and Unsorted the grouping and layout. Each
 // choice is remembered for the view and saved to the account (FR-11.7, FR-11.8); "Use account defaults" forgets the
 // view's choices, and "Save as my default" makes them the defaults for its kind of view. Defaults are also set in
-// Settings → Preferences (DS-94). Rearranging comes with manual order (TON-36).
+// Settings → Preferences (DS-94). Under Manual, the view itself is rearranged, by dragging or ⌥↑ and ⌥↓ (TON-36).
 
 import {
   ArrowDownWideNarrow,

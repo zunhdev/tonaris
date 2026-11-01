@@ -23,7 +23,7 @@ import type { ContainerKind } from "@tonaris/domain";
 
 import { editMode, expandedFolders, type Mode } from "../shell/device";
 import { useNarrowScreen } from "../shell/media";
-import { emptyForm, type AlbumForm } from "./album-form";
+import type { AlbumForm } from "./album-form";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
 import { ancestorsOf, buildTree } from "./tree";
 
@@ -243,20 +243,6 @@ export function useEditor(): Editor | undefined {
 export function useViewContainerId(): string | undefined {
   const params = useParams({ strict: false });
   return params.folderId ?? params.listId;
-}
-
-/**
- * Opens the manual entry form (DS-47), going to the list on view, if one is, switching to Editing first, since adding
- * is an edit (DS-45).
- */
-export function useStartNewAlbum(): () => void {
-  const { enterEditing } = useMode();
-  const { startNewAlbum } = useCollectionUi();
-  const listId = useParams({ strict: false }).listId ?? null;
-  return useCallback(() => {
-    enterEditing();
-    startNewAlbum({ form: emptyForm(listId) });
-  }, [enterEditing, startNewAlbum, listId]);
 }
 
 /**

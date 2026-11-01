@@ -92,7 +92,7 @@ export function useRecover(): (target: RecoveryTarget) => void {
 const siblingsUnder = (tree: Tree, parentId: string | null): Container[] =>
   parentId === null ? tree.roots : (tree.children.get(parentId) ?? []);
 
-const albums = (n: number) => `${n} ${n === 1 ? "membership" : "memberships"}`;
+const memberships = (n: number) => `${n} ${n === 1 ? "membership" : "memberships"}`;
 
 export function RecoveryProvider({ children }: { children: ReactNode }) {
   const client = useSyncClient();
@@ -142,7 +142,7 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
         notify?.info(`Restored '${name}'`);
         return;
       }
-      notify?.info(`Restored · ${albums(skipped.length)} skipped`, undefined, {
+      notify?.info(`Restored · ${memberships(skipped.length)} skipped`, undefined, {
         label: "Details",
         onClick: () => setPrompt({ step: "skipped", name, skipped }),
       });

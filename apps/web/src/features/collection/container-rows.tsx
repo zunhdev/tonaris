@@ -1,8 +1,8 @@
 // Folder and root rows (DS-41): a folder's, or the root's, folders and lists as a virtualized ARIA grid, each row
 // with its icon and name, as a link, and its count: albums for a list, folders and lists for a folder. Sorted by
 // creation date, a Created column shows when each was made, which its UUIDv7 ID holds (TS-10). Enter opens it from
-// any cell. Descriptions (M4) and sharing glyphs (M7) join later. Each row shows its save state, is busy while saving
-// and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+// any cell. A description's first line follows the name; DS-41's sharing glyph isn't shown yet. Each row shows its
+// save state, is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 
 // Virtualized rows are absolutely positioned CSS grid rows, which table elements can't be without overriding their
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.

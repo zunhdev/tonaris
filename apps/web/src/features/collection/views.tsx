@@ -1,10 +1,10 @@
 // The collection views (DS-30, DS-32, DS-40, DS-49, DS-105; FR-01.3, FR-05): each view's header (breadcrumbs, its
 // name as the heading and in the page title, and View options) over what it holds, or its empty state with one way
 // forward. Folders and the root show their folders and lists as rows, in the view's sort; lists and Unsorted their
-// albums as rows or cards, sorted and grouped as the person chose (FR-05.1, FR-05.7). Manual order is DS-44's
-// fallback until TON-36: a list's albums in the order they were added, Unsorted's newest first (DS-51). A folder link
-// that names a list leads to the list, and the other way round; a folder or list that doesn't exist says so, once
-// the collection has loaded.
+// albums as rows or cards, sorted and grouped as the person chose (FR-05.1, FR-05.7). Manual order is the person's
+// arrangement (TS-16, TON-36), then DS-44's fallback for the rest: a list's albums in the order they were added,
+// Unsorted's newest first (DS-51). A folder link that names a list leads to the list, and the other way round; a
+// folder or list that doesn't exist says so, once the collection has loaded.
 
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
@@ -106,7 +106,7 @@ function ContainersBody({
   );
 }
 
-/** A list's albums in the order they were added, oldest first: its manual order until TON-36 (DS-44). */
+/** A list's albums in the order they were added, oldest first: the fallback manual order arranges (DS-44). */
 function addedOrder(
   entries: readonly Membership[],
   albumsById: ReadonlyMap<string, Album>,
@@ -120,7 +120,7 @@ function addedOrder(
     .flatMap((entry) => albumsById.get(entry.albumId) ?? []);
 }
 
-/** Unsorted's albums newest first, an inbox: its manual order until TON-36 (DS-51). Their UUIDv7 IDs hold when. */
+/** Unsorted's albums newest first, an inbox: the fallback manual order arranges (DS-51). UUIDv7 IDs hold when. */
 function newestFirst(albums: readonly Album[]): Album[] {
   return albums.toSorted((a, b) => (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
 }
@@ -544,8 +544,6 @@ export function UnsortedView() {
   );
 }
 
-/** Shared with me, until sharing arrives (M7). */
-/** Trash, until deleting arrives (M5): nothing can be in it yet. */
 /** An album on its own page (DS-32): `/a/{albumId}`, its details as the inspector shows them. */
 export function AlbumView({ id }: { id: string }) {
   const { ready, albumsById } = useCollectionData();
