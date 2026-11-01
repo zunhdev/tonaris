@@ -231,6 +231,11 @@ describe("status categories (TON-147)", () => {
     ]);
   });
 
+  test("a record without a write is neither", () => {
+    expect(isUnderway(undefined)).toBe(false);
+    expect(needsPerson(undefined)).toBe(false);
+  });
+
   test("a marker shows every state but saved", () => {
     expect(new Set(markerStatuses)).toEqual(new Set(where((status) => status !== "confirmed")));
   });

@@ -34,9 +34,12 @@ export type BatchReport = {
   kept: boolean;
 };
 
-/** Whether a write is still on its way: queued or in flight, or sent without an answer (TS-22). */
-export function isUnderway(status: OutcomeStatus): status is QueuedState {
-  return (queuedStates as readonly OutcomeStatus[]).includes(status);
+/**
+ * Whether a write is still on its way: queued or in flight, or sent without an answer (TS-22). A record with no write
+ * has no status, as `useSaveState` gives it, and none on its way.
+ */
+export function isUnderway(status: OutcomeStatus | undefined): status is QueuedState {
+  return status !== undefined && (queuedStates as readonly OutcomeStatus[]).includes(status);
 }
 
 /**
@@ -44,8 +47,8 @@ export function isUnderway(status: OutcomeStatus): status is QueuedState {
  * choice or approval. The person deals with it, so it is kept until retried, resolved or dismissed. Only a batch's
  * writes are skipped. Activity lists these and the writes still underway (DS-81).
  */
-export function needsPerson(status: OutcomeStatus): boolean {
-  return status !== "confirmed" && !isUnderway(status);
+export function needsPerson(status: OutcomeStatus | undefined): boolean {
+  return status !== undefined && status !== "confirmed" && !isUnderway(status);
 }
 
 /**
