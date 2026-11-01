@@ -12,6 +12,7 @@ import { shareToken, uuidv7, type Mutation, type McpPrincipal } from "@tonaris/d
 import { fixtureCapture, fixtureLinks } from "../capture-fixtures";
 import { createTestApp } from "../testing";
 import { mcpHarness } from "./testing";
+import { shareTokenOf } from "./write-tools";
 
 let t: Awaited<ReturnType<typeof createTestApp>>;
 
@@ -562,6 +563,25 @@ describe("shared references (FR-07.13, FR-10.4)", () => {
       arguments: { url: "https://example.com/elsewhere" },
     });
     expect(notALink.isError).toBe(true);
+  });
+});
+
+describe("shareTokenOf (TS-32)", () => {
+  const token = "a".repeat(21) + "-_" + "Z9".repeat(10);
+
+  test("finds the token in a link, or a bare token", () => {
+    expect(shareTokenOf(`https://tonaris.app/s/${token}`)).toBe(token);
+    expect(shareTokenOf(` https://tonaris.app/s/${token}/l/x?y#z `)).toBe(token);
+    expect(shareTokenOf(`https://tonaris.app/s/s/${token}`)).toBe(token);
+    expect(shareTokenOf(token)).toBe(token);
+    expect(shareTokenOf(`${token}?from=mail`)).toBe(token);
+  });
+
+  test("finds nothing in another link, or in a token of the wrong length", () => {
+    expect(shareTokenOf("https://example.com/elsewhere")).toBeUndefined();
+    expect(shareTokenOf(`https://tonaris.app/s/${token}x`)).toBeUndefined();
+    expect(shareTokenOf(`https://tonaris.app/x${token}`)).toBeUndefined();
+    expect(shareTokenOf("")).toBeUndefined();
   });
 });
 

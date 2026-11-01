@@ -15,6 +15,7 @@ import {
   shareGrantStatuses,
   shareToken,
   shareTokenHash,
+  shareTokenSchema,
   sourcesOf,
   viewerOf,
   type ShareViewer,
@@ -52,6 +53,14 @@ describe("link tokens (TS-32)", () => {
     const hash = await shareTokenHash(token);
     expect(hash).toHaveLength(32);
     expect(await shareTokenHash(token)).toEqual(hash);
+  });
+
+  test("shareTokenSchema takes exactly a token's shape", async () => {
+    const token = await shareToken("secret", uuidv7());
+    expect(shareTokenSchema.safeParse(token).success).toBe(true);
+    for (const other of [token.slice(1), `${token}a`, `${token.slice(1)}=`, `${token.slice(1)}/`]) {
+      expect(shareTokenSchema.safeParse(other).success).toBe(false);
+    }
   });
 });
 

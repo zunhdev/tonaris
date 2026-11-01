@@ -28,6 +28,7 @@ import {
   maxOrderItems,
   planMove,
   releaseTypes,
+  shareTokenSchema,
   sortDirections,
   sortModes,
   streamingServices,
@@ -139,11 +140,14 @@ const each = (items: PlannedItem[], targets: Record<string, unknown>[]): Plan =>
 const pairsOf = (albumIds: readonly string[], listIds: readonly string[]) =>
   listIds.flatMap((listId) => albumIds.map((albumId) => ({ listId, albumId })));
 
-/** The share link's token in `url`, or `url` itself if it is a bare token (TS-32). */
-function shareTokenOf(url: string): string | undefined {
+/**
+ * The share link's token in `url` (TS-32): `url` itself, or what precedes its first `/`, `?` or `#`, if that is a
+ * bare token; otherwise the first path segment after an `/s/` that is one.
+ */
+export function shareTokenOf(url: string): string | undefined {
   const trimmed = url.trim();
-  const token = /(?:^|\/s\/)([A-Za-z0-9_-]{43})(?:[/?#]|$)/.exec(trimmed)?.[1];
-  return token;
+  const candidates = [trimmed.split(/[/?#]/, 1)[0], ...(trimmed.match(/(?<=\/s\/)[^/?#]*/g) ?? [])];
+  return candidates.find((candidate) => shareTokenSchema.safeParse(candidate).success);
 }
 
 /** Someone who sees content, as an agent reads it: a person by name, or anyone with a link, and through what. */

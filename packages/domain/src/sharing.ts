@@ -535,12 +535,12 @@ export const referenceSchema = z
   .meta({ description: "A shared folder or list in the person's Shared with me (FR-07.13)." });
 export type Reference = z.infer<typeof referenceSchema>;
 
+/** A share link's token as links carry it (TS-32): 256 bits as base64url, 43 characters. */
+export const shareTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
+
 /** `share.saveLink`'s argument: the link's token, sent in the body, which is never stored (TS-32). */
 export const saveLinkArgsSchema = z.object({
-  token: z
-    .string()
-    .regex(/^[A-Za-z0-9_-]{43}$/)
-    .meta({ description: "The link's token." }),
+  token: shareTokenSchema.meta({ description: "The link's token." }),
 });
 
 /** `share.removeReference`'s argument: the folder or list to drop from Shared with me. */

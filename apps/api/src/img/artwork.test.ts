@@ -12,11 +12,12 @@ import {
   uuidv7,
   type Album,
   type Mutation,
+  type SharedSnapshot,
 } from "@tonaris/domain";
 import { SafeFetchError, type SafeFetchInit } from "@tonaris/providers";
 
 import { createTestApp } from "../testing";
-import { artworkSigner, presentChange, type ImageFetch } from "./artwork";
+import { artworkSigner, presentChange, presentSnapshot, type ImageFetch } from "./artwork";
 
 const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const cover = "https://images.example/covers/bleach.png";
@@ -118,6 +119,26 @@ describe("artwork signatures (TS-103)", () => {
       await (await t.call("/v1/sync/bootstrap", { headers: { cookie } })).json(),
     );
     expect(again.albums.find((each) => each.id === plain.id)).toEqual(plain);
+  });
+
+  test("a shared snapshot's albums carry their artwork's signature, and only those with artwork", () => {
+    const withArtwork = album(cover);
+    const without = album(null);
+    const snapshot: SharedSnapshot = {
+      rootId: uuidv7(),
+      owner: { displayName: "Anna" },
+      containers: [],
+      albums: [withArtwork, without],
+      memberships: [],
+      links: [],
+      fields: [],
+      fieldValues: [],
+    };
+    const presented = presentSnapshot(signer(), snapshot);
+    expect(presented.albums.map((each) => each.artworkSignature)).toEqual([
+      signer().sign(cover),
+      undefined,
+    ]);
   });
 
   test("an artwork URL must be an https link", async () => {

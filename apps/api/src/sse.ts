@@ -8,8 +8,13 @@
 //   on shutdown the streams must end first.
 // - Its end ends the source, so the subscriber leaves the hub. An async generator can't serve as the source:
 //   its `return()` waits for the pending `next()`, which may wait forever. `eventChannel` returns at once.
+// `invalidationStream` is the stream guests and viewers of a share follow: an event after each of its owner's writes.
 
 import { type SSEPayload, type Server, sse } from "elysia";
+
+import type { SharedInvalidate } from "@tonaris/domain";
+
+import type { SyncHub } from "./sync/hub";
 
 /** A comment line. It carries no event, so its type has neither `event` nor `data`. */
 export type Comment = SSEPayload<never, never>;
@@ -85,6 +90,26 @@ export type EventStreamOptions = {
   /** Ends the stream, such as on shutdown. */
   signal?: AbortSignal;
 };
+
+export type InvalidateEvent = SSEPayload<SharedInvalidate, "shared-invalidate"> & {
+  data: SharedInvalidate;
+};
+
+/**
+ * `shared-invalidate` events for `rootId`, one after each of `ownerId`'s writes, so the page reads the share again
+ * (TS-23). The stream stops watching the owner when it ends.
+ */
+export function invalidationStream(
+  hub: Pick<SyncHub, "watch" | "signal">,
+  { ownerId, rootId }: { ownerId: string; rootId: string },
+  context: Omit<EventStreamOptions, "signal">,
+): AsyncGenerator<InvalidateEvent | Comment, void> {
+  const channel = eventChannel<InvalidateEvent>(() => stop());
+  const stop = hub.watch(ownerId, () =>
+    channel.push({ event: "shared-invalidate", data: { rootId } }),
+  );
+  return eventStream(channel, { ...context, signal: hub.signal });
+}
 
 /** The events of `source` as an SSE response body, kept alive and ended as above. */
 export async function* eventStream<Event extends SSEPayload>(

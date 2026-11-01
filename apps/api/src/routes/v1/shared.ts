@@ -18,20 +18,17 @@ import {
   problemSchema,
   sharedSnapshotSchema,
   sharedWithMeSchema,
+  shareTokenSchema,
   unavailableLink,
 } from "@tonaris/domain";
 
 import type { SessionGuard } from "../../auth/plugin";
-import type { ArtworkSigner } from "../../img/artwork";
+import { presentSnapshot, type ArtworkSigner } from "../../img/artwork";
 import { ProblemError } from "../../problem";
-import { eventChannel, eventStream } from "../../sse";
+import { invalidationStream } from "../../sse";
 import type { SyncHub } from "../../sync/hub";
-import { signed, type InvalidateEvent } from "./guests";
 
-const token = z
-  .string()
-  .regex(/^[A-Za-z0-9_-]{43}$/)
-  .meta({ description: "The link's token." });
+const token = shareTokenSchema.meta({ description: "The link's token." });
 
 const unavailable = () =>
   new ProblemError(404, "not_found", "This folder or list isn't available to you anymore.");
@@ -83,7 +80,7 @@ export function sharedRoutes(
           params.id,
         );
         if (!snapshot) throw unavailable();
-        return signed(snapshot, artwork);
+        return presentSnapshot(artwork, snapshot);
       },
     )
     .get(
@@ -114,11 +111,7 @@ export function sharedRoutes(
         const ownerId = await sharedOwner(db, { kind: "person", userId: account.id }, params.id);
         if (ownerId === undefined) throw unavailable();
         // The page follows its owner's writes.
-        const channel = eventChannel<InvalidateEvent>(() => stop());
-        const stop = hub.watch(ownerId, () =>
-          channel.push({ event: "shared-invalidate", data: { rootId: params.id } }),
-        );
-        yield* eventStream(channel, { request, server, signal: hub.signal });
+        yield* invalidationStream(hub, { ownerId, rootId: params.id }, { request, server });
       },
     )
     .get(

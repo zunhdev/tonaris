@@ -380,3 +380,4 @@ export * from "./telemetry";
 
 // TON-147: helpers the API's adapters share.
 export { parseEmailAddress } from "./accounts";
+export { shareTokenSchema } from "./sharing";
