@@ -38,10 +38,22 @@ export type Candidate = {
   firstReleaseDate?: string | undefined;
 };
 
-export type HintMatch =
-  | { kind: "one"; releaseGroupId: string }
-  | { kind: "several"; albums: { releaseGroupId: string; title: string }[] }
-  | { kind: "none" };
+/** An album offered to choose from: MusicBrainz's release group and a title to show. */
+export type AlbumCandidate = { releaseGroupId: string; title: string };
+
+/** What a step of the chain found (TS-41): one album, several to choose from, or none. */
+export type Found =
+  | { kind: "one"; album: AlbumCandidate }
+  | { kind: "several"; albums: AlbumCandidate[] }
+  | undefined;
+
+/** `albums`, each release group once: one is found, several are to choose from. */
+export function albumsFound(albums: readonly AlbumCandidate[]): Found {
+  const unique = [...new Map(albums.map((album) => [album.releaseGroupId, album])).values()];
+  const [only] = unique;
+  if (unique.length === 1 && only) return { kind: "one", album: only };
+  return unique.length > 1 ? { kind: "several", albums: unique } : undefined;
+}
 
 const editionNote =
   /\s*[([](?=[^)\]]*\b(?:deluxe|remaster(?:ed)?|edition|expanded|anniversary|bonus|version|mono|stereo|reissue|special|collector'?s|legacy|super|explicit|clean|standard)\b)[^)\]]*[)\]]\s*$/i;
@@ -107,18 +119,15 @@ export function passes(hints: Hints, candidate: Candidate): boolean {
 }
 
 /** Accepted only when exactly one album passes, whichever of its releases do. */
-export function decide(hints: Hints, candidates: readonly Candidate[]): HintMatch {
-  const albums = new Map<string, string>();
-  for (const candidate of candidates) {
-    if (passes(hints, candidate)) albums.set(candidate.releaseGroupId, candidate.releaseGroupTitle);
-  }
-  const [only] = albums.keys();
-  if (albums.size === 1 && only) return { kind: "one", releaseGroupId: only };
-  if (albums.size === 0) return { kind: "none" };
-  return {
-    kind: "several",
-    albums: [...albums].map(([releaseGroupId, title]) => ({ releaseGroupId, title })),
-  };
+export function decide(hints: Hints, candidates: readonly Candidate[]): Found {
+  return albumsFound(
+    candidates
+      .filter((candidate) => passes(hints, candidate))
+      .map((candidate) => ({
+        releaseGroupId: candidate.releaseGroupId,
+        title: candidate.releaseGroupTitle,
+      })),
+  );
 }
 
 const releaseSearchSchema = z.object({
@@ -195,6 +204,6 @@ export async function searchCandidates(
 }
 
 /** Step 4 for one set of hints: the search, then the rule. */
-export async function matchHints(musicBrainz: MusicBrainz, hints: Hints): Promise<HintMatch> {
+export async function matchHints(musicBrainz: MusicBrainz, hints: Hints): Promise<Found> {
   return decide(hints, await searchCandidates(musicBrainz, hints));
 }

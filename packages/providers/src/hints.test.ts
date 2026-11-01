@@ -97,10 +97,10 @@ describe("passes", () => {
 });
 
 describe("decide", () => {
-  test("one album, whichever of its releases pass", () => {
+  test("one album, whichever of its releases pass, with its title", () => {
     expect(decide(ikra, [candidate({}), candidate({ releaseId: "r2" })])).toEqual({
       kind: "one",
-      releaseGroupId: "g1",
+      album: { releaseGroupId: "g1", title: "Икра" },
     });
   });
 
@@ -117,6 +117,7 @@ describe("decide", () => {
         { releaseGroupId: "g2", title: "Икра (2)" },
       ],
     });
-    expect(decide(ikra, [])).toEqual({ kind: "none" });
+    expect(decide(ikra, [])).toBeUndefined();
+    expect(decide(ikra, [candidate({ status: "Bootleg" })])).toBeUndefined();
   });
 });

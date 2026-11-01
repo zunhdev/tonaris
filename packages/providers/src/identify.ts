@@ -23,7 +23,14 @@ import {
 } from "@tonaris/domain";
 
 import { ProviderUnavailableError, unavailableFailure } from "./errors";
-import { cleanTitle, matchHints, type HintMatch, type Hints } from "./hints";
+import {
+  albumsFound,
+  cleanTitle,
+  matchHints,
+  type AlbumCandidate,
+  type Found,
+  type Hints,
+} from "./hints";
 import type { AppleAlbum, ItunesLookup } from "./itunes";
 import { barcodeForms, qobuzBarcode, urlForms } from "./link-forms";
 import { readLink, type Fetcher, type ParsedLink } from "./links";
@@ -33,9 +40,6 @@ import { appleLookupStorefronts } from "./services";
 import type { Spotify } from "./spotify";
 import { extractQobuzHints, type StorePages } from "./store-pages";
 import type { YouTubeData } from "./youtube";
-
-/** An album offered to choose from: MusicBrainz's release group and a title to show. */
-export type AlbumCandidate = { releaseGroupId: string; title: string };
 
 /** Manual entry's prefill: only Apple's hints, which may become album data once confirmed (TS-41). */
 export type Prefill = CapturePrefill & { source: "itunes-lookup" };
@@ -97,18 +101,6 @@ const releaseGroupSchema = z.object({
 /** Releases looked up for their album in step 2, at most: a streaming URL names one or a few. */
 const maxReleasesPerUrl = 10;
 
-type Found =
-  | { kind: "one"; album: AlbumCandidate }
-  | { kind: "several"; albums: AlbumCandidate[] }
-  | undefined;
-
-function albumsFound(albums: readonly AlbumCandidate[]): Found {
-  const unique = [...new Map(albums.map((album) => [album.releaseGroupId, album])).values()];
-  const [only] = unique;
-  if (unique.length === 1 && only) return { kind: "one", album: only };
-  return unique.length > 1 ? { kind: "several", albums: unique } : undefined;
-}
-
 /** The answer a step found, or undefined to go on. */
 function answer(link: ParsedLink, step: 2 | 3 | 4, found: Found): Identification | undefined {
   if (found?.kind === "one") {
@@ -157,12 +149,7 @@ export function createIdentifier(deps: IdentifierDeps) {
   }
 
   /** Step 4: the strict match. */
-  async function byHints(hints: Hints): Promise<Found> {
-    const match: HintMatch = await matchHints(musicBrainz, hints);
-    if (match.kind === "one")
-      return { kind: "one", album: { releaseGroupId: match.releaseGroupId, title: "" } };
-    return match.kind === "several" ? { kind: "several", albums: match.albums } : undefined;
-  }
+  const byHints = (hints: Hints): Promise<Found> => matchHints(musicBrainz, hints);
 
   async function spotifyChain(link: ParsedLink): Promise<Identification> {
     // A track's album id comes from Spotify: it lives only here, and its misses are never cached (TS-41).
