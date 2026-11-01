@@ -3,7 +3,12 @@
 
 import { and, asc, eq, gt, or } from "drizzle-orm";
 
-import { approvalState, type ApprovalOperation, type ApprovalScope } from "@tonaris/domain";
+import {
+  approvalScopeSchema,
+  approvalState,
+  type ApprovalOperation,
+  type ApprovalScope,
+} from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
 import { approvals, oauthClients, oauthConsents } from "./schema";
@@ -12,6 +17,19 @@ export type ApprovalRow = typeof approvals.$inferSelect & {
   /** The client of the connection that asked, as it named itself. */
   clientName: string | null;
 };
+
+/**
+ * A stored approval with its client's name. Its scope is read back through the schema it was written with, as the
+ * mutations' outcomes are, so the page and the batch see what the owner approved.
+ */
+const approvalOf = (row: {
+  approval: typeof approvals.$inferSelect;
+  clientName: string | null;
+}): ApprovalRow => ({
+  ...row.approval,
+  scope: approvalScopeSchema.parse(row.approval.scope),
+  clientName: row.clientName,
+});
 
 export async function createApproval(
   db: Database,
@@ -36,7 +54,7 @@ export async function findApproval(db: Database, id: string): Promise<ApprovalRo
     .innerJoin(oauthConsents, eq(oauthConsents.id, approvals.grantId))
     .innerJoin(oauthClients, eq(oauthClients.clientId, oauthConsents.clientId))
     .where(eq(approvals.id, id));
-  return row && { ...row.approval, clientName: row.clientName };
+  return row && approvalOf(row);
 }
 
 /**
@@ -130,5 +148,5 @@ export async function pendingApprovals(
       ),
     )
     .orderBy(asc(approvals.createdAt), asc(approvals.id));
-  return rows.map((row) => Object.assign(row.approval, { clientName: row.clientName }));
+  return rows.map(approvalOf);
 }
