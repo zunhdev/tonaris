@@ -9,6 +9,7 @@ import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import type { OptionUser } from "./field-options";
 import { fieldValueKey } from "./field-values";
 import { fieldTypes, ownField, type CustomField, type FieldOption } from "./fields";
+import { byBytes } from "./order";
 import { failure } from "./outcomes";
 import { z } from "./zod";
 
@@ -30,8 +31,6 @@ export type FieldDeletionScope = {
   albums: OptionUser[];
 };
 
-const byId = (a: OptionUser, b: OptionUser) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-
 /** The scope of deleting `field`, in a canonical order so the same deletion always hashes the same. */
 export function fieldDeletionScope(
   field: CustomField,
@@ -43,7 +42,9 @@ export function fieldDeletionScope(
     name: field.name,
     type: field.type,
     options: field.options.map(({ id, label }) => ({ id, label })),
-    albums: users.map(({ id, trashed }) => ({ id, trashed })).toSorted(byId),
+    albums: users
+      .map(({ id, trashed }) => ({ id, trashed }))
+      .toSorted((a, b) => byBytes(a.id, b.id)),
   };
 }
 

@@ -25,6 +25,7 @@ import {
   type StoredField,
 } from "./fields";
 import { maxFieldOptions } from "./limits";
+import { byBytes } from "./order";
 import { failure, type Failure } from "./outcomes";
 import { z } from "./zod";
 
@@ -84,8 +85,6 @@ export type OptionRemovalScope = {
   albums: OptionUser[];
 };
 
-const byId = (a: OptionUser, b: OptionUser) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-
 /** The scope of removing the option, in a canonical order so the same removal always hashes the same. */
 export function optionRemovalScope(
   fieldId: string,
@@ -96,7 +95,9 @@ export function optionRemovalScope(
     operation: "remove_option",
     fieldId,
     optionId,
-    albums: users.map(({ id, trashed }) => ({ id, trashed })).toSorted(byId),
+    albums: users
+      .map(({ id, trashed }) => ({ id, trashed }))
+      .toSorted((a, b) => byBytes(a.id, b.id)),
   };
 }
 
