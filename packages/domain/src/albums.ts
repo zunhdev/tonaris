@@ -14,6 +14,7 @@ import {
 } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { maxAlbumTextLength, maxAlbums, maxLinkLength } from "./limits";
+import { exceedsLength } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { placeAtTop } from "./positions";
@@ -84,10 +85,8 @@ export function albumProblem(
       missing.map((path) => ({ path, message: "Required" })),
     );
   }
-  const tooLong = (["title", "artistCredit"] as const).filter(
-    // Code points rather than graphemes: the limit bounds stored text (TS-18).
-    // oxlint-disable-next-line no-misused-spread
-    (field) => [...album[field]].length > maxAlbumTextLength,
+  const tooLong = (["title", "artistCredit"] as const).filter((field) =>
+    exceedsLength(album[field], maxAlbumTextLength),
   );
   if (tooLong.length > 0) {
     const most = maxAlbumTextLength.toLocaleString("en");

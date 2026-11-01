@@ -9,6 +9,7 @@ import { applied, conflict, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import type { CustomField, StoredField } from "./fields";
 import { maxTextValueLength } from "./limits";
+import { exceedsLength } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { z } from "./zod";
 
@@ -79,8 +80,7 @@ export function normalizedValue(
     if (typeof value !== "string") return refuse(refusal);
     const text = value.trim();
     if (text === "") return null;
-    // oxlint-disable-next-line no-misused-spread
-    if (type === "text") return [...text].length > maxTextValueLength ? refuse(refusal) : text;
+    if (type === "text") return exceedsLength(text, maxTextValueLength) ? refuse(refusal) : text;
     if (type === "number") return decimal.test(text) ? text : refuse(refusal);
     return isCalendarDate(text) ? text : refuse(refusal);
   }

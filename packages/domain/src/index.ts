@@ -156,6 +156,7 @@ export {
   containerKinds,
   containerNameProblem,
   containerSchema,
+  descriptionProblem,
   descriptionTooLong,
   nameTakenProblem,
   type Container,
@@ -247,7 +248,7 @@ export {
   type PreparedLink,
   type ServiceLink,
 } from "./service-links";
-export { findNameConflict, isBlankName, type NamedItem } from "./names";
+export { exceedsLength, findNameConflict, isBlankName, type NamedItem } from "./names";
 export {
   isOrderKey,
   maxOrderItems,

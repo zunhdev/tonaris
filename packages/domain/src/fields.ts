@@ -9,7 +9,7 @@ import { generateNKeysBetween } from "fractional-indexing";
 import { actingOwner, applied, conflict, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { maxFieldOptions, maxFields, maxNameLength } from "./limits";
-import { findNameConflict, isBlankName } from "./names";
+import { exceedsLength, findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { z } from "./zod";
@@ -57,10 +57,6 @@ export const fieldCreateArgsSchema = z.object({
 });
 export type FieldCreateArgs = z.infer<typeof fieldCreateArgsSchema>;
 
-/** Code points rather than graphemes: the limit bounds stored text (TS-18). */
-// oxlint-disable-next-line no-misused-spread
-const tooLong = (text: string) => [...text].length > maxNameLength;
-
 /** Why `name`, already trimmed, can't name a field, if it can't (X-06, TS-18). Clients check it too. */
 export function fieldNameProblem(name: string): Failure | undefined {
   if (isBlankName(name)) {
@@ -68,7 +64,7 @@ export function fieldNameProblem(name: string): Failure | undefined {
       { path: "args.name", message: "Required" },
     ]);
   }
-  if (tooLong(name)) {
+  if (exceedsLength(name, maxNameLength)) {
     return failure("validation_failed", `Names can be at most ${maxNameLength} characters.`, [
       { path: "args.name", message: `At most ${maxNameLength} characters` },
     ]);
@@ -83,7 +79,7 @@ export function optionLabelProblem(label: string, path: string): Failure | undef
       { path, message: "Required" },
     ]);
   }
-  if (tooLong(label)) {
+  if (exceedsLength(label, maxNameLength)) {
     return failure("validation_failed", `Labels can be at most ${maxNameLength} characters.`, [
       { path, message: `At most ${maxNameLength} characters` },
     ]);

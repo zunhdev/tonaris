@@ -5,7 +5,7 @@ import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, conflict, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { maxContainerDepth, maxContainers, maxDescriptionLength, maxNameLength } from "./limits";
-import { findNameConflict, isBlankName } from "./names";
+import { exceedsLength, findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { forgetPlace } from "./positions";
@@ -44,12 +44,19 @@ export function containerOf({ id, kind, parentId, name, description }: Container
   return { id, kind, parentId, name, description };
 }
 
-/** Code points rather than graphemes: the limit bounds stored text (TS-18). */
-// oxlint-disable-next-line no-misused-spread
-const longerThan = (text: string, limit: number) => [...text].length > limit;
-
 /** The refusal of a description over the limit (FR-03.5, TS-18). Clients check it too, with these words. */
 export const descriptionTooLong = `Descriptions can be at most ${maxDescriptionLength.toLocaleString("en")} characters.`;
+
+/**
+ * Why `text`, already trimmed, can't describe a folder or list, if it can't (FR-03.5, TS-18). Empty text clears the
+ * description. Clients check it before sending too, with the same words.
+ */
+export function descriptionProblem(text: string): Failure | undefined {
+  if (!exceedsLength(text, maxDescriptionLength)) return undefined;
+  return failure("validation_failed", descriptionTooLong, [
+    { path: "args.description", message: `At most ${maxDescriptionLength} characters` },
+  ]);
+}
 
 /**
  * Why `name`, already trimmed, can't name a folder or list, if it can't (X-06, TS-18). Clients check it before
@@ -61,9 +68,7 @@ export function containerNameProblem(name: string): Failure | undefined {
       { path: "args.name", message: "Required" },
     ]);
   }
-  // Code points rather than graphemes: the limit bounds stored text, and a grapheme can hold any number of them.
-  // oxlint-disable-next-line no-misused-spread
-  if ([...name].length > maxNameLength) {
+  if (exceedsLength(name, maxNameLength)) {
     return failure("validation_failed", `Names can be at most ${maxNameLength} characters.`, [
       { path: "args.name", message: `At most ${maxNameLength} characters` },
     ]);
@@ -265,11 +270,8 @@ export async function describeContainer(
   if (isFailure(container)) return container;
   const text = description?.trim() ?? "";
   const described = text === "" ? null : text;
-  if (described !== null && longerThan(described, maxDescriptionLength)) {
-    return failure("validation_failed", descriptionTooLong, [
-      { path: "args.description", message: `At most ${maxDescriptionLength} characters` },
-    ]);
-  }
+  const problem = descriptionProblem(text);
+  if (problem) return problem;
   if (container.description !== base.description) {
     return conflict("description", container.description, described, base.description);
   }
