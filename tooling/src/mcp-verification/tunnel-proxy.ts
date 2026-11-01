@@ -1,13 +1,14 @@
-// TON-22 (G3): one local origin in front of the API and the web app, for a cloudflared quick tunnel, so Claude
-// web and ChatGPT web can reach the MCP server and the browser keeps one host-only session cookie. Paths the
-// API serves go to it; everything else goes to the web app. Production keeps two hosts (TS-08).
+// TS-123's per-client verification (TON-85), first built for the G3 spike (TON-22): one local origin in front of the
+// API and the web app, for a cloudflared quick tunnel, so Claude web and ChatGPT web can reach the MCP server and the
+// browser keeps one host-only session cookie. Paths the API serves go to it; everything else goes to the web app.
+// Production keeps two hosts (TS-08).
 //
 //   1. bun run build                                                        (both apps)
 //   2. cloudflared tunnel --url http://localhost:8787                       (prints https://<name>.trycloudflare.com)
-//   3. bun tooling/src/spikes/g3-mcp/tunnel-proxy.ts
+//   3. bun tooling/src/mcp-verification/tunnel-proxy.ts
 //   4. In apps/api:  API_ORIGIN=$TUNNEL WEB_ORIGIN=$TUNNEL CLIENT_IP_HEADER=cf-connecting-ip bun dist/bin/server.js
 //      In apps/web:  API_URL=$TUNNEL bun run start
-//   5. Add $TUNNEL/mcp as a connector in each client (docs/spikes/2026-10-21-g3-mcp-oauth.md).
+//   5. Add $TUNNEL/mcp as a connector in each client, as docs/mcp-verification.md says.
 //
 // Every request is logged with its status and time, so a client's OAuth and MCP traffic can be followed.
 
