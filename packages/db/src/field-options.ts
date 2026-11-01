@@ -13,8 +13,8 @@ import {
 } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
+import { fieldUsersIn, findFieldIn, optionUsersIn } from "./field-values";
 import { albumFieldValues, albums, fieldDefinitions } from "./schema";
-import { fieldUsersIn, findFieldIn, optionUsersIn } from "./sync";
 
 /** The removal of the option, if it is an option of `accountId`'s field; undefined otherwise. */
 export async function readOptionRemoval(

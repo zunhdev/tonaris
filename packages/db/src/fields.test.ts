@@ -11,7 +11,8 @@ import { uuidv7, type Mutation, type Principal } from "@tonaris/domain";
 import { createDatabase } from "./client";
 import { testDatabaseUrl } from "./config";
 import { albumFieldValues, albums, fieldDefinitions, trashUnits, users } from "./schema";
-import { bootstrapSnapshot, collectionStore, executeMutation } from "./sync";
+import { collectionStore } from "./store";
+import { bootstrapSnapshot, executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
 let t: TestDatabase;

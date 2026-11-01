@@ -19,6 +19,8 @@ import {
 
 import { canReadContainer, linkByTokenHash, readableContainers } from "./access";
 import type { Database, Transaction } from "./client";
+import { albumColumns, containerColumns, membershipColumns, membershipOf } from "./columns";
+import { valuesOfAlbums } from "./field-values";
 import { sendingStale } from "./invitations";
 import {
   albums,
@@ -32,13 +34,6 @@ import {
   shareLinks,
   users,
 } from "./schema";
-import {
-  albumColumns,
-  containerColumns,
-  membershipColumns,
-  membershipOf,
-  valuesOfAlbums,
-} from "./sync";
 
 /**
  * The live link a token opens, while its folder or list is active (TS-32): looked up by the token's SHA-256, never

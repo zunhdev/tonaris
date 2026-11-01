@@ -17,7 +17,9 @@ import type {
 
 import { canReadContainer, readableContainers } from "./access";
 import type { Database, Transaction } from "./client";
+import { albumColumns, unitsOfAccount } from "./columns";
 import { readFieldUsage } from "./field-options";
+import { fieldsOfAccount, valuesOfAlbums } from "./field-values";
 import {
   albumProvenance,
   albums,
@@ -28,7 +30,6 @@ import {
   positions,
   users,
 } from "./schema";
-import { albumColumns, fieldsOfAccount, unitsOfAccount, valuesOfAlbums } from "./sync";
 
 /** The source of each of an album's values that has one, by the API's field name (TS-15). */
 export type AlbumSources = Partial<Record<string, ProvenanceSource>>;

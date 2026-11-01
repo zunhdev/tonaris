@@ -7,6 +7,8 @@ import { and, eq } from "drizzle-orm";
 import type { FieldValueData, StreamingService, ViewPrefsFields } from "@tonaris/domain";
 
 import type { Database } from "./client";
+import { albumColumns } from "./columns";
+import { valuesOfAlbums } from "./field-values";
 import { containerPage, unsortedPage } from "./mcp-reads";
 import {
   albumServiceLinks,
@@ -16,7 +18,6 @@ import {
   positions,
   viewPrefs,
 } from "./schema";
-import { albumColumns, valuesOfAlbums } from "./sync";
 
 /**
  * What claiming a key found: a new batch, the same request sent again under it (its batch, to replay), or a key the

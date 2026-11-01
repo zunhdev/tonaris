@@ -8,6 +8,14 @@ import { appViewDefaults, type ExportSource, type ViewDefaults } from "@tonaris/
 
 import type { Database } from "./client";
 import {
+  albumColumns,
+  containerColumns,
+  defaultsColumns,
+  positionColumns,
+  viewPrefsColumns,
+} from "./columns";
+import { fieldsOfAccount, valuesOfAccount } from "./field-values";
+import {
   accountSettings,
   albumProvenance,
   albumServiceLinks,
@@ -18,15 +26,6 @@ import {
   trashUnits,
   viewPrefs,
 } from "./schema";
-import {
-  albumColumns,
-  containerColumns,
-  defaultsColumns,
-  fieldsOfAccount,
-  positionColumns,
-  valuesOfAccount,
-  viewPrefsColumns,
-} from "./sync";
 
 /** What the export of `accountId`'s collection is built from, as of `exportedAt`. */
 export function exportSource(
