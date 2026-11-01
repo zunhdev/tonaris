@@ -7,15 +7,20 @@ import { shownLink } from "@/features/capture/outcomes";
 import { fieldTypeNames } from "@/features/collection/field-types";
 
 import {
+  groupNames,
+  isUuid,
   serviceNames,
   streamingServices,
+  viewDefaultsFields,
+  viewPrefsFields,
   type Container,
   type ContainerKind,
-  type ErrorCode,
   type Mutation,
   type Outcome,
   type OutcomeStatus,
 } from "@tonaris/domain";
+
+import { problemSentence } from "./problems";
 
 /** The names the collections hold now. */
 export type Names = {
@@ -55,349 +60,331 @@ function viewNamed(viewKey: string, names: Names): string {
   return quoted(names.container(viewKey)?.name, "a folder or list");
 }
 
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /** Whether a conflicting field is an item's place in an arrangement: its field is the item's ID (TS-16). */
-const isPlace = (field: string) => uuidPattern.test(field);
+const isPlace = (field: string) => isUuid(field);
 
 export function describeWrite(mutation: Mutation, names: Names): Described {
-  if (mutation.name === "album.create") {
-    const title = quoted(mutation.args.title, "an album");
-    return { summary: `Add ${title}`, what: title, subject: capitalized(title) };
-  }
-  if (mutation.name === "album.capture") {
-    // Until saved, a capture is told apart by its link (DS-48).
-    const title = quoted(
-      names.album(mutation.args.albumId),
-      `an album from ${shownLink(mutation.args.link)}`,
-    );
-    return { summary: `Add ${title}`, what: title, subject: capitalized(title) };
-  }
-  if (mutation.name === "album.update") {
-    const title = quoted(mutation.base.title ?? names.album(mutation.args.id), "an album");
-    return { summary: `Edit ${title}`, what: `changes to ${title}`, subject: capitalized(title) };
-  }
-  if (mutation.name === "album.setArtwork") {
-    const title = quoted(names.album(mutation.args.id), "an album");
-    return {
-      summary: `Change the artwork of ${title}`,
-      what: `the artwork of ${title}`,
-      subject: capitalized(`the artwork of ${title}`),
-    };
-  }
-  if (mutation.name === "field.create") {
-    const { name } = mutation.args;
-    return { summary: `New field '${name}'`, what: `the field '${name}'`, subject: `'${name}'` };
-  }
-  if (mutation.name === "field.rename") {
-    const seen = `'${mutation.base.name}'`;
-    return {
-      summary: `Rename field ${seen} to '${mutation.args.name}'`,
-      what: `the new name for the field ${seen}`,
-      subject: `The field ${seen}`,
-    };
-  }
-  if (mutation.name === "field.delete") {
-    const field = quoted(names.field?.(mutation.args.id), "a field");
-    return {
-      summary: `Delete field ${field}`,
-      what: `the deletion of ${field}`,
-      subject: capitalized(`field ${field}`),
-    };
-  }
-  if (
-    mutation.name === "field.changeType" ||
-    mutation.name === "field.addOption" ||
-    mutation.name === "field.renameOption" ||
-    mutation.name === "field.removeOption"
-  ) {
-    const fieldId = mutation.name === "field.changeType" ? mutation.args.id : mutation.args.fieldId;
-    const field = quoted(names.field?.(fieldId), "a field");
-    if (mutation.name === "field.changeType") {
-      const type = fieldTypeNames[mutation.args.type];
+  switch (mutation.name) {
+    case "album.create": {
+      const title = quoted(mutation.args.title, "an album");
+      return { summary: `Add ${title}`, what: title, subject: capitalized(title) };
+    }
+    case "album.capture": {
+      // Until saved, a capture is told apart by its link (DS-48).
+      const title = quoted(
+        names.album(mutation.args.albumId),
+        `an album from ${shownLink(mutation.args.link)}`,
+      );
+      return { summary: `Add ${title}`, what: title, subject: capitalized(title) };
+    }
+    case "album.update": {
+      const title = quoted(mutation.base.title ?? names.album(mutation.args.id), "an album");
+      return { summary: `Edit ${title}`, what: `changes to ${title}`, subject: capitalized(title) };
+    }
+    case "album.setArtwork": {
+      const title = quoted(names.album(mutation.args.id), "an album");
       return {
-        summary: `Change ${field} to ${type}`,
-        what: `the type of ${field}`,
-        subject: capitalized(`the type of ${field}`),
+        summary: `Change the artwork of ${title}`,
+        what: `the artwork of ${title}`,
+        subject: capitalized(`the artwork of ${title}`),
       };
     }
-    if (mutation.name === "field.addOption") {
-      const option = quoted(mutation.args.label, "an option");
+    case "field.create": {
+      const { name } = mutation.args;
+      return { summary: `New field '${name}'`, what: `the field '${name}'`, subject: `'${name}'` };
+    }
+    case "field.rename": {
+      const seen = `'${mutation.base.name}'`;
       return {
-        summary: `Add option ${option} to ${field}`,
-        what: `option ${option} of ${field}`,
+        summary: `Rename field ${seen} to '${mutation.args.name}'`,
+        what: `the new name for the field ${seen}`,
+        subject: `The field ${seen}`,
+      };
+    }
+    case "field.delete": {
+      const field = quoted(names.field?.(mutation.args.id), "a field");
+      return {
+        summary: `Delete field ${field}`,
+        what: `the deletion of ${field}`,
+        subject: capitalized(`field ${field}`),
+      };
+    }
+    case "field.changeType":
+    case "field.addOption":
+    case "field.renameOption":
+    case "field.removeOption": {
+      const fieldId =
+        mutation.name === "field.changeType" ? mutation.args.id : mutation.args.fieldId;
+      const field = quoted(names.field?.(fieldId), "a field");
+      if (mutation.name === "field.changeType") {
+        const type = fieldTypeNames[mutation.args.type];
+        return {
+          summary: `Change ${field} to ${type}`,
+          what: `the type of ${field}`,
+          subject: capitalized(`the type of ${field}`),
+        };
+      }
+      if (mutation.name === "field.addOption") {
+        const option = quoted(mutation.args.label, "an option");
+        return {
+          summary: `Add option ${option} to ${field}`,
+          what: `option ${option} of ${field}`,
+          subject: capitalized(`option ${option} of ${field}`),
+        };
+      }
+      if (mutation.name === "field.renameOption") {
+        const option = quoted(mutation.base.label, "an option");
+        return {
+          summary: `Rename option ${option} to ${quoted(mutation.args.label, "a new label")}`,
+          what: `the label of ${option} in ${field}`,
+          subject: capitalized(`option ${option} of ${field}`),
+        };
+      }
+      const option = quoted(names.option?.(mutation.args.optionId), "an option");
+      return {
+        summary: `Remove option ${option} from ${field}`,
+        what: `the removal of ${option} from ${field}`,
         subject: capitalized(`option ${option} of ${field}`),
       };
     }
-    if (mutation.name === "field.renameOption") {
-      const option = quoted(mutation.base.label, "an option");
+    case "fieldValue.apply":
+    case "fieldValue.set":
+    case "fieldValue.remove": {
+      const album = quoted(names.album(mutation.args.albumId), "an album");
+      const field = quoted(names.field?.(mutation.args.fieldId), "a field");
+      const subject = capitalized(`${field} of ${album}`);
+      if (mutation.name === "fieldValue.apply") {
+        return { summary: `Add ${field} to ${album}`, what: `${field} on ${album}`, subject };
+      }
+      if (mutation.name === "fieldValue.remove") {
+        return {
+          summary: `Remove ${field} from ${album}`,
+          what: `the removal of ${field} from ${album}`,
+          subject,
+        };
+      }
       return {
-        summary: `Rename option ${option} to ${quoted(mutation.args.label, "a new label")}`,
-        what: `the label of ${option} in ${field}`,
-        subject: capitalized(`option ${option} of ${field}`),
-      };
-    }
-    const option = quoted(names.option?.(mutation.args.optionId), "an option");
-    return {
-      summary: `Remove option ${option} from ${field}`,
-      what: `the removal of ${option} from ${field}`,
-      subject: capitalized(`option ${option} of ${field}`),
-    };
-  }
-  if (
-    mutation.name === "fieldValue.apply" ||
-    mutation.name === "fieldValue.set" ||
-    mutation.name === "fieldValue.remove"
-  ) {
-    const album = quoted(names.album(mutation.args.albumId), "an album");
-    const field = quoted(names.field?.(mutation.args.fieldId), "a field");
-    const subject = capitalized(`${field} of ${album}`);
-    if (mutation.name === "fieldValue.apply") {
-      return { summary: `Add ${field} to ${album}`, what: `${field} on ${album}`, subject };
-    }
-    if (mutation.name === "fieldValue.remove") {
-      return {
-        summary: `Remove ${field} from ${album}`,
-        what: `the removal of ${field} from ${album}`,
+        summary: `Set ${field} of ${album}`,
+        what: `the value of ${field} for ${album}`,
         subject,
       };
     }
-    return {
-      summary: `Set ${field} of ${album}`,
-      what: `the value of ${field} for ${album}`,
-      subject,
-    };
-  }
-  if (mutation.name === "container.create") {
-    const { kind, name } = mutation.args;
-    return {
-      summary: `New ${kind} '${name}'`,
-      what: kindNamed(kind, name),
-      subject: `'${name}'`,
-    };
-  }
-  if (mutation.name === "container.rename") {
-    const { kind } = names.container(mutation.args.id) ?? {};
-    const seen = `'${mutation.base.name}'`;
-    return {
-      summary: `Rename ${seen} to '${mutation.args.name}'`,
-      what: `the new name for ${kindNamed(kind, mutation.base.name)}`,
-      subject: seen,
-    };
-  }
-  if (mutation.name === "container.delete") {
-    const deleted = names.container(mutation.args.id);
-    const target = kindNamed(deleted?.kind, deleted?.name);
-    return {
-      summary: capitalized(`delete ${target}`),
-      what: `the deletion of ${target}`,
-      subject: capitalized(target),
-    };
-  }
-  if (mutation.name === "share.invite") {
-    const container = quoted(names.container(mutation.args.containerId)?.name, "a folder or list");
-    return {
-      summary: `Invite ${mutation.args.email} to ${container}`,
-      what: `the invitation to ${container}`,
-      subject: capitalized(`the invitation to ${container}`),
-    };
-  }
-  if (mutation.name === "share.setLink") {
-    const container = quoted(names.container(mutation.args.containerId)?.name, "a folder or list");
-    const turn = mutation.args.enabled ? "on" : "off";
-    return {
-      summary: `Turn ${turn} the link to ${container}`,
-      what: `the link to ${container}`,
-      subject: capitalized(`the link to ${container}`),
-    };
-  }
-  if (mutation.name === "share.resendInvitation") {
-    return {
-      summary: "Send an invitation again",
-      what: "the invitation's email",
-      subject: "The invitation's email",
-    };
-  }
-  if (mutation.name === "share.accept" || mutation.name === "share.decline") {
-    const verb = mutation.name === "share.accept" ? "Accept" : "Decline";
-    return { summary: `${verb} an invitation`, what: "the invitation", subject: "The invitation" };
-  }
-  if (mutation.name === "share.saveLink") {
-    return {
-      summary: "Add to Shared with me",
-      what: "adding to Shared with me",
-      subject: "Adding to Shared with me",
-    };
-  }
-  if (mutation.name === "share.removeReference") {
-    return {
-      summary: "Remove from Shared with me",
-      what: "removing from Shared with me",
-      subject: "Removing from Shared with me",
-    };
-  }
-  if (mutation.name === "share.leave") {
-    return { summary: "Leave a share", what: "leaving the share", subject: "Leaving the share" };
-  }
-  if (mutation.name === "share.revoke") {
-    return { summary: "Remove someone's access", what: "the removal", subject: "The removal" };
-  }
-  if (mutation.name === "account.setDisplayName") {
-    return {
-      summary: "Change your display name",
-      what: "your display name",
-      subject: "Your display name",
-    };
-  }
-  if (mutation.name === "trash.purge") {
-    const count = mutation.args.unitIds.length;
-    const items = `${count} ${count === 1 ? "item" : "items"}`;
-    return {
-      summary: `Delete ${items} from Trash permanently`,
-      what: `the permanent deletion of ${items}`,
-      subject: capitalized(items),
-    };
-  }
-  if (mutation.name === "album.delete") {
-    const title = quoted(names.album(mutation.args.id), "an album");
-    return {
-      summary: `Delete ${title} from the collection`,
-      what: `the deletion of ${title}`,
-      subject: capitalized(title),
-    };
-  }
-  if (mutation.name === "trash.recover") {
-    const name = names.trashUnit?.(mutation.args.unitId);
-    const target = quoted(name, "an item");
-    return {
-      summary: `Recover ${target} from Trash`,
-      what: `the recovery of ${target}`,
-      subject: capitalized(target),
-    };
-  }
-  if (mutation.name === "container.describe") {
-    const described = names.container(mutation.args.id);
-    const target = kindNamed(described?.kind, described?.name);
-    return {
-      summary: capitalized(
-        mutation.args.description === null
-          ? `clear the description of ${target}`
-          : `describe ${target}`,
-      ),
-      what: `the description of ${target}`,
-      subject: capitalized(`the description of ${target}`),
-    };
-  }
-  if (mutation.name === "container.move") {
-    const moved = names.container(mutation.args.id);
-    const { parentId } = mutation.args;
-    const destination =
-      parentId === null ? "Collection" : quoted(names.container(parentId)?.name, "a folder");
-    return {
-      summary: `Move ${quoted(moved?.name, `a ${moved?.kind ?? "folder or list"}`)} to ${destination}`,
-      what: `the move of ${kindNamed(moved?.kind, moved?.name)}`,
-      subject: capitalized(quoted(moved?.name, `a ${moved?.kind ?? "folder or list"}`)),
-    };
-  }
-  if (mutation.name === "view.set") {
-    const view = viewNamed(mutation.args.viewKey, names);
-    return {
-      summary: `View options for ${view}`,
-      what: `the view options for ${view}`,
-      subject: `The view options for ${view}`,
-    };
-  }
-  if (mutation.name === "defaults.set") {
-    return {
-      summary: "Default view options",
-      what: "your default view options",
-      subject: "Your default view options",
-    };
-  }
-  if (mutation.name === "defaults.setLinkTarget") {
-    return {
-      summary: "Where links open",
-      what: "where your links open",
-      subject: "Where your links open",
-    };
-  }
-  if (mutation.name === "defaults.setHiddenServices") {
-    return {
-      summary: "Your streaming services",
-      what: "your streaming services",
-      subject: "Your streaming services",
-    };
-  }
-  if (mutation.name === "link.set" || mutation.name === "link.remove") {
-    const title = quoted(names.album(mutation.args.albumId), "an album");
-    const link = `the ${serviceNames[mutation.args.service]} link`;
-    const subject = capitalized(`${link} of ${title}`);
-    if (mutation.name === "link.remove") {
+    case "container.create": {
+      const { kind, name } = mutation.args;
       return {
-        summary: `Remove ${link} from ${title}`,
-        what: `the removal of ${link} from ${title}`,
-        subject,
+        summary: `New ${kind} '${name}'`,
+        what: kindNamed(kind, name),
+        subject: `'${name}'`,
       };
     }
-    return mutation.base.url === null
-      ? { summary: `Add ${link} to ${title}`, what: `${link} for ${title}`, subject }
-      : { summary: `Replace ${link} of ${title}`, what: `the new ${link} for ${title}`, subject };
+    case "container.rename": {
+      const { kind } = names.container(mutation.args.id) ?? {};
+      const seen = `'${mutation.base.name}'`;
+      return {
+        summary: `Rename ${seen} to '${mutation.args.name}'`,
+        what: `the new name for ${kindNamed(kind, mutation.base.name)}`,
+        subject: seen,
+      };
+    }
+    case "container.delete": {
+      const deleted = names.container(mutation.args.id);
+      const target = kindNamed(deleted?.kind, deleted?.name);
+      return {
+        summary: capitalized(`delete ${target}`),
+        what: `the deletion of ${target}`,
+        subject: capitalized(target),
+      };
+    }
+    case "share.invite": {
+      const container = quoted(
+        names.container(mutation.args.containerId)?.name,
+        "a folder or list",
+      );
+      return {
+        summary: `Invite ${mutation.args.email} to ${container}`,
+        what: `the invitation to ${container}`,
+        subject: capitalized(`the invitation to ${container}`),
+      };
+    }
+    case "share.setLink": {
+      const container = quoted(
+        names.container(mutation.args.containerId)?.name,
+        "a folder or list",
+      );
+      const turn = mutation.args.enabled ? "on" : "off";
+      return {
+        summary: `Turn ${turn} the link to ${container}`,
+        what: `the link to ${container}`,
+        subject: capitalized(`the link to ${container}`),
+      };
+    }
+    case "share.resendInvitation": {
+      return {
+        summary: "Send an invitation again",
+        what: "the invitation's email",
+        subject: "The invitation's email",
+      };
+    }
+    case "share.accept":
+    case "share.decline": {
+      const verb = mutation.name === "share.accept" ? "Accept" : "Decline";
+      return {
+        summary: `${verb} an invitation`,
+        what: "the invitation",
+        subject: "The invitation",
+      };
+    }
+    case "share.saveLink": {
+      return {
+        summary: "Add to Shared with me",
+        what: "adding to Shared with me",
+        subject: "Adding to Shared with me",
+      };
+    }
+    case "share.removeReference": {
+      return {
+        summary: "Remove from Shared with me",
+        what: "removing from Shared with me",
+        subject: "Removing from Shared with me",
+      };
+    }
+    case "share.leave": {
+      return { summary: "Leave a share", what: "leaving the share", subject: "Leaving the share" };
+    }
+    case "share.revoke": {
+      return { summary: "Remove someone's access", what: "the removal", subject: "The removal" };
+    }
+    case "account.setDisplayName": {
+      return {
+        summary: "Change your display name",
+        what: "your display name",
+        subject: "Your display name",
+      };
+    }
+    case "trash.purge": {
+      const count = mutation.args.unitIds.length;
+      const items = `${count} ${count === 1 ? "item" : "items"}`;
+      return {
+        summary: `Delete ${items} from Trash permanently`,
+        what: `the permanent deletion of ${items}`,
+        subject: capitalized(items),
+      };
+    }
+    case "album.delete": {
+      const title = quoted(names.album(mutation.args.id), "an album");
+      return {
+        summary: `Delete ${title} from the collection`,
+        what: `the deletion of ${title}`,
+        subject: capitalized(title),
+      };
+    }
+    case "trash.recover": {
+      const name = names.trashUnit?.(mutation.args.unitId);
+      const target = quoted(name, "an item");
+      return {
+        summary: `Recover ${target} from Trash`,
+        what: `the recovery of ${target}`,
+        subject: capitalized(target),
+      };
+    }
+    case "container.describe": {
+      const described = names.container(mutation.args.id);
+      const target = kindNamed(described?.kind, described?.name);
+      return {
+        summary: capitalized(
+          mutation.args.description === null
+            ? `clear the description of ${target}`
+            : `describe ${target}`,
+        ),
+        what: `the description of ${target}`,
+        subject: capitalized(`the description of ${target}`),
+      };
+    }
+    case "container.move": {
+      const moved = names.container(mutation.args.id);
+      const { parentId } = mutation.args;
+      const destination =
+        parentId === null ? "Collection" : quoted(names.container(parentId)?.name, "a folder");
+      return {
+        summary: `Move ${quoted(moved?.name, `a ${moved?.kind ?? "folder or list"}`)} to ${destination}`,
+        what: `the move of ${kindNamed(moved?.kind, moved?.name)}`,
+        subject: capitalized(quoted(moved?.name, `a ${moved?.kind ?? "folder or list"}`)),
+      };
+    }
+    case "view.set": {
+      const view = viewNamed(mutation.args.viewKey, names);
+      return {
+        summary: `View options for ${view}`,
+        what: `the view options for ${view}`,
+        subject: `The view options for ${view}`,
+      };
+    }
+    case "defaults.set": {
+      return {
+        summary: "Default view options",
+        what: "your default view options",
+        subject: "Your default view options",
+      };
+    }
+    case "defaults.setLinkTarget": {
+      return {
+        summary: "Where links open",
+        what: "where your links open",
+        subject: "Where your links open",
+      };
+    }
+    case "defaults.setHiddenServices": {
+      return {
+        summary: "Your streaming services",
+        what: "your streaming services",
+        subject: "Your streaming services",
+      };
+    }
+    case "link.set":
+    case "link.remove": {
+      const title = quoted(names.album(mutation.args.albumId), "an album");
+      const link = `the ${serviceNames[mutation.args.service]} link`;
+      const subject = capitalized(`${link} of ${title}`);
+      if (mutation.name === "link.remove") {
+        return {
+          summary: `Remove ${link} from ${title}`,
+          what: `the removal of ${link} from ${title}`,
+          subject,
+        };
+      }
+      return mutation.base.url === null
+        ? { summary: `Add ${link} to ${title}`, what: `${link} for ${title}`, subject }
+        : { summary: `Replace ${link} of ${title}`, what: `the new ${link} for ${title}`, subject };
+    }
+    case "order.set": {
+      const view = viewNamed(mutation.args.viewKey, names);
+      return {
+        summary: `Arrange ${view}`,
+        what: `the order of ${view}`,
+        subject: `The order of ${view}`,
+      };
+    }
+    case "membership.add":
+    case "membership.remove": {
+      const album = quoted(names.album(mutation.args.albumId), "an album");
+      const list = quoted(names.container(mutation.args.listId)?.name, "a list");
+      if (mutation.name === "membership.add") {
+        return {
+          summary: `Add ${album} to ${list}`,
+          what: `${album} in ${list}`,
+          subject: capitalized(`${album} in ${list}`),
+        };
+      }
+      return {
+        summary: `Remove ${album} from ${list}`,
+        what: `the removal of ${album} from ${list}`,
+        subject: capitalized(`${album} in ${list}`),
+      };
+    }
+    default:
+      return mutation satisfies never;
   }
-  if (mutation.name === "order.set") {
-    const view = viewNamed(mutation.args.viewKey, names);
-    return {
-      summary: `Arrange ${view}`,
-      what: `the order of ${view}`,
-      subject: `The order of ${view}`,
-    };
-  }
-  const album = quoted(names.album(mutation.args.albumId), "an album");
-  const list = quoted(names.container(mutation.args.listId)?.name, "a list");
-  if (mutation.name === "membership.add") {
-    return {
-      summary: `Add ${album} to ${list}`,
-      what: `${album} in ${list}`,
-      subject: capitalized(`${album} in ${list}`),
-    };
-  }
-  return {
-    summary: `Remove ${album} from ${list}`,
-    what: `the removal of ${album} from ${list}`,
-    subject: capitalized(`${album} in ${list}`),
-  };
 }
-
-/**
- * What each failure means when the server gives no explanation (FR-13.1, DS-107): plain and blameless, with one
- * way forward. A code added later falls back to the general sentence (TS-09).
- */
-const codeReasons: Record<ErrorCode, string> = {
-  validation_failed: "Some of this isn't valid. Check it and try again.",
-  required_missing: "Some required information is missing. Fill it in and try again.",
-  name_conflict: "That name is already used here. Choose another name.",
-  capacity_exceeded:
-    "Your collection is full. Permanently delete albums from Trash or remove albums to add more.",
-  limit_exceeded: "This would go past a limit. Remove something first, then try again.",
-  unauthenticated: "You're signed out. Sign in again to save this change.",
-  permission_denied: "You can't change this.",
-  app_only: "This can only be changed in the Tonaris app.",
-  not_found: "This no longer exists, so it can't be changed.",
-  trashed: "This is in Trash. Recover it to change it.",
-  cycle: "A folder can't go inside itself or a folder inside it. Choose another folder.",
-  invalid_destination: "That place isn't available. Choose another folder or the top level.",
-  field_in_use: "This field is still used. Remove it from its albums first.",
-  uncertain_match: "Tonaris isn't sure this is the same album. Choose whether it is.",
-  unsupported_link:
-    "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link.",
-  provider_unavailable:
-    "Couldn't reach the music service. Try again, or enter the details manually.",
-  rate_limited: "Too many changes at once. Wait a moment, then retry.",
-  expired: "This change is too old to be retried. Check what's saved, then make it again.",
-  in_progress: "This change is still being saved. Wait a moment, then check again.",
-  recipient_not_found: "No Tonaris account uses this email. Share a link instead.",
-  display_name_required: "Add a display name first: people you share with see it.",
-  internal_error: "Tonaris couldn't save this change. Try again.",
-};
 
 const generalReason = "Tonaris couldn't save this change. Try again.";
 
@@ -407,8 +394,14 @@ const generalReason = "Tonaris couldn't save this change. Try again.";
  */
 export function reasonOf(outcome: Outcome | undefined): string {
   if (outcome?.status !== "failed") return generalReason;
-  return outcome.problem.detail || (codeReasons[outcome.code] ?? generalReason);
+  return problemSentence(outcome.problem, problemSentence(outcome.code, generalReason));
 }
+
+/** Why a write made again can't be saved: its record is gone (DS-80, DS-84). */
+export const goneReason = "It no longer exists, so it can't be saved again.";
+
+/** A count of changes: "1 change", "3 changes". */
+export const changes = (n: number) => (n === 1 ? "1 change" : `${n} changes`);
 
 /** A save state in words, beside its marker (DS-80, DS-84, DS-115). */
 export const statusLabels: Record<OutcomeStatus, string> = {
@@ -422,7 +415,16 @@ export const statusLabels: Record<OutcomeStatus, string> = {
   confirmed: "Saved",
 };
 
-const fieldLabels: Record<string, string> = {
+/** The fields a conflict names: each mutation's `base` keys (TS-21), but an arrangement's, which are item IDs. */
+type BaseField =
+  Exclude<Mutation, { name: "order.set" }> extends infer Each
+    ? Each extends { base: infer Base }
+      ? keyof Base
+      : never
+    : never;
+
+/** Conflicting fields by name; one without falls back to its key. */
+const fieldLabels: Partial<Record<string, string>> = {
   title: "Title",
   artistCredit: "Artist",
   releaseType: "Release type",
@@ -445,7 +447,7 @@ const fieldLabels: Record<string, string> = {
   folderSortDir: "Direction for folders",
   linkTarget: "Open links in",
   hiddenServices: "Streaming services",
-};
+} satisfies Partial<Record<BaseField, string>>;
 
 /** A conflicting field's name in the review (DS-80): an item's place is named by the item. */
 export function fieldLabel(field: string, names?: Names): string {
@@ -456,11 +458,8 @@ export function fieldLabel(field: string, names?: Names): string {
   return fieldLabels[field] ?? field;
 }
 
-const releaseTypeLabels: Record<string, string> = {
-  album: "Album",
-  ep: "EP",
-  compilation: "Compilation",
-};
+/** Release types in words, as their groups are named (DS-43). */
+const releaseTypeNames: Partial<Record<string, string>> = groupNames;
 
 /** The words for view options' values (DS-49). */
 const presentationValues: Record<string, string> = {
@@ -474,16 +473,8 @@ const presentationValues: Record<string, string> = {
   grid: "Grid",
 };
 
-const presentationFields = new Set([
-  "sortMode",
-  "sortDir",
-  "grouped",
-  "layout",
-  "listSortMode",
-  "listSortDir",
-  "folderSortMode",
-  "folderSortDir",
-]);
+/** A view's choices and the account defaults for views (FR-11.7). */
+const presentationFields = new Set<string>([...viewPrefsFields, ...viewDefaultsFields]);
 
 /**
  * A conflicting field's value in the review: "—" when empty, folders by name, the root as "Collection", a view
@@ -529,7 +520,7 @@ export function fieldValue(
     return names.option(value) ?? value;
   }
   if (field === "releaseType" && typeof value === "string") {
-    return releaseTypeLabels[value] ?? value;
+    return releaseTypeNames[value] ?? value;
   }
   return typeof value === "string" || typeof value === "number" ? String(value) : "—";
 }

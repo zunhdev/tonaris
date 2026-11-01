@@ -566,7 +566,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 - **Conflicts.** The `conflict` outcome carries current and attempted values. The attempt is kept in a client-side **review queue**, which survives reload through IndexedDB, until the user resolves it (FR-09.4; design: conflict review). Built in TON-30: the save states write each conflict to the account's database and delete it on `dismiss`.
   - **Failures** are kept the same way, until retried or dismissed (FR-13.2, DS-80; TON-31). The database went to version 2 for their `failures` store.
   - **Retry and Apply mine** make the change again through its collection (`resubmit.ts`). The new write is optimistic and takes its `base` from the current row, so it is judged against the current value (DS-80).
-- **Batch reports** (DS-84; TON-32, `writer.ts`). A transaction of two or more writes is a batch, reported together.
+- **Batch reports** (DS-84; TON-32, `save-states.ts` since TON-147). A transaction of two or more writes is a batch, reported together.
   - **Closing by itself.** Its report closes once every write is confirmed.
   - **Kept.** Once one isn't, the report is kept until dismissed. The account's database went to version 3 for a `batches` store, written on each change from then on.
   - **What the record holds:** the writes that have an outcome, failures and conflicts included, which are then not kept on their own. Writes still underway are the outbox's.

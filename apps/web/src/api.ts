@@ -7,6 +7,7 @@ import type { App } from "@tonaris/api";
 import { problemSchema } from "@tonaris/domain";
 
 import { apiUrl } from "./config";
+import { problemSentence } from "./features/sync/problems";
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
@@ -24,5 +25,5 @@ export const api = createApiClient(apiUrl);
 /** An API refusal's sentence (its problem's `detail`), `fallback` when it has none, or undefined without an error. */
 export function refusalOf(error: { value: unknown } | null, fallback: string): string | undefined {
   if (!error) return undefined;
-  return problemSchema.safeParse(error.value).data?.detail ?? fallback;
+  return problemSentence(problemSchema.safeParse(error.value).data, fallback);
 }

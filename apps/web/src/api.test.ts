@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import { createApiClient } from "./api";
+import { createApiClient, refusalOf } from "./api";
 
 test("the Eden client calls /v1 on the API origin with the session cookie and types the result", async () => {
   const requested: string[] = [];
@@ -51,4 +51,14 @@ test("the Eden client types a route's error statuses as problems", async () => {
   const code: string = error.value.code;
   expect(code).toBe("unauthenticated");
   expect(error.value.instance).toBe("/v1/me");
+});
+
+test("a refusal says its problem's detail, or the page's fallback", () => {
+  const problem = { type: "about:blank", title: "Gone", status: 410, code: "expired" };
+  expect(refusalOf({ value: { ...problem, detail: "This link has expired." } }, "Try again.")).toBe(
+    "This link has expired.",
+  );
+  expect(refusalOf({ value: problem }, "Try again.")).toBe("Try again.");
+  expect(refusalOf({ value: "Bad Gateway" }, "Try again.")).toBe("Try again.");
+  expect(refusalOf(null, "Try again.")).toBeUndefined();
 });

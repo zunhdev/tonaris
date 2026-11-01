@@ -3,7 +3,11 @@
 
 import { isUuid } from "@tonaris/domain";
 
-/** A route's `validateSearch` that keeps `key` when it holds an ID, and drops it and everything else otherwise. */
+/**
+ * A route's `validateSearch` that keeps `key` when it holds an ID, and drops it and everything else otherwise. Made
+ * outside `createFileRoute`'s options: inside them, beside functions such as `beforeLoad`, TypeScript infers `Key` as
+ * `never`.
+ */
 export function uuidSearch<Key extends string>(key: Key) {
   return (search: Record<string, unknown>): Partial<Record<Key, string>> => {
     const kept: Partial<Record<Key, string>> = {};
