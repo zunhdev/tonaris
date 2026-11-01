@@ -6,7 +6,7 @@
 // Answers are kept for half a minute, so going back to a destination shows at once.
 
 import { api } from "@/api";
-import { useEffect, useState } from "react";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
 
 import type { Audience, SharingImpact } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -43,40 +43,24 @@ export async function readImpact(query: ImpactQuery): Promise<SharingImpact> {
   return data;
 }
 
-type Read = { key: string } & ({ status: "read"; impact: SharingImpact } | { status: "failed" });
+type Read = { status: "read"; impact: SharingImpact } | { status: "failed" };
 
-/** Reads the preview for `query`, after it has stayed the same for `delay` ms. */
+/** Reads the preview for `query`, after it has stayed the same for `delay` ms: by its key, so only a change reads. */
 function useImpact(query: ImpactQuery | undefined, delay: number): Read | "reading" | undefined {
-  // The query by its parts, so the read starts again only when one changes.
-  const kind = query === undefined ? undefined : "move" in query ? "move" : "recover";
-  const id = query === undefined ? undefined : "move" in query ? query.move : query.recover;
-  const to = query?.to;
   const key = query === undefined ? undefined : keyOf(query);
-  const [read, setRead] = useState<Read>();
-  useEffect(() => {
-    if (kind === undefined || id === undefined) return () => {};
-    const wanted: ImpactQuery =
-      kind === "move" ? { move: id, to: to ?? null } : { recover: id, to };
-    const at = keyOf(wanted);
-    let current = true;
-    const timer = setTimeout(() => {
-      readImpact(wanted).then(
-        (impact) => {
-          if (current) setRead({ key: at, status: "read", impact });
-          return impact;
-        },
-        () => {
-          if (current) setRead({ key: at, status: "failed" });
-        },
-      );
-    }, delay);
-    return () => {
-      current = false;
-      clearTimeout(timer);
-    };
-  }, [kind, id, to, delay]);
+  const answer = useKeyedRead(
+    key,
+    (): Promise<Read | undefined> =>
+      query === undefined
+        ? Promise.resolve(undefined)
+        : readImpact(query).then(
+            (impact): Read => ({ status: "read", impact }),
+            (): Read => ({ status: "failed" }),
+          ),
+    { delayMs: delay },
+  );
   if (key === undefined) return undefined;
-  return read?.key === key ? read : "reading";
+  return answer?.key === key ? answer.value : "reading";
 }
 
 const sentence = (parts: string[]) =>

@@ -12,10 +12,11 @@ import { useCollectionData } from "@/features/collection/data";
 import { FieldCreateDialog } from "@/features/collection/field-create-dialog";
 import { fieldTypeNames } from "@/features/collection/field-types";
 import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ChevronRight, X } from "lucide-react";
-import { useEffect, useId, useState, type KeyboardEvent } from "react";
+import { useId, useState, type KeyboardEvent } from "react";
 
 import {
   fieldNameProblem,
@@ -62,22 +63,7 @@ async function loadUsage(): Promise<Map<string, Usage> | undefined> {
  * holds them, changes, so another session's change shows. Until the first read, undefined.
  */
 function useFieldUsage(signature: string): Map<string, Usage> | undefined {
-  /** The counts, and the signature they were read for. */
-  const [usage, setUsage] = useState<{ signature: string; counts: Map<string, Usage> }>();
-  useEffect(() => {
-    let current = true;
-    const timer = setTimeout(() => {
-      void loadUsage().then((counts) => {
-        if (current && counts) setUsage({ signature, counts });
-        return counts;
-      });
-    }, 100);
-    return () => {
-      current = false;
-      clearTimeout(timer);
-    };
-  }, [signature]);
-  return usage?.counts;
+  return useKeyedRead(signature, loadUsage, { delayMs: 100 })?.value;
 }
 
 /** How many albums apply each field, as this client holds them, Trash included. */

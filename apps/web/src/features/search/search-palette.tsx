@@ -30,6 +30,7 @@ import {
   type Command,
   type CommandId,
 } from "@/features/shell/shortcuts";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import type { CommandRunner, CommandTarget } from "@/features/shell/use-shortcuts";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
@@ -55,7 +56,6 @@ import {
   searchTier,
   type Album,
   type Container,
-  type SearchResults,
   type SearchTier,
   type SharedSearchAlbum,
   type SharedSearchContainer,
@@ -156,27 +156,16 @@ function useSharedSearch(text: string, wanted: boolean) {
   const offline = useConnection() === "offline";
   const q = text.trim().slice(0, 200);
   const asking = wanted && !offline && q !== "";
-  const [read, setRead] = useState<{ q: string; shared: SearchResults["shared"] | undefined }>();
-  useEffect(() => {
-    if (!asking) return () => {};
-    let current = true;
-    const timer = setTimeout(() => {
+  const read = useKeyedRead(
+    asking ? q : undefined,
+    () =>
       api.v1.search.get({ query: { q, limit: maxSearchLimit } }).then(
-        ({ data }) => {
-          if (current) setRead({ q, shared: data?.shared });
-          return data;
-        },
-        () => {
-          if (current) setRead({ q, shared: undefined });
-        },
-      );
-    }, sharedDelayMs);
-    return () => {
-      current = false;
-      clearTimeout(timer);
-    };
-  }, [asking, q]);
-  const answer = asking && read?.q === q ? read : undefined;
+        ({ data }) => ({ shared: data?.shared }),
+        () => ({ shared: undefined }),
+      ),
+    { delayMs: sharedDelayMs },
+  );
+  const answer = asking && read?.key === q ? read.value : undefined;
   return { shared: answer?.shared, settled: !asking || answer !== undefined, offline };
 }
 

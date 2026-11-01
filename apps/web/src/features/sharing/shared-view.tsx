@@ -22,6 +22,7 @@ import {
 } from "@/features/guest/share-content";
 import { useNarrowScreen } from "@/features/shell/media";
 import { PageHeader } from "@/features/shell/page-header";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -33,28 +34,18 @@ type Loaded = { snapshot: SharedSnapshot } | { snapshot: undefined; missing: tru
 
 /** The share as the person may see it now: read when shown and again on `reread`. */
 function useSharedSnapshot(rootId: string) {
-  const [loaded, setLoaded] = useState<Loaded>();
   const [revision, setRevision] = useState(0);
   const reread = useCallback(() => setRevision((count) => count + 1), []);
-  useEffect(() => {
-    let current = true;
+  const loaded = useKeyedRead(`${rootId}#${revision}`, () =>
     api.v1
       .shared({ id: rootId })
       .get()
-      .then(
-        ({ data, error }) => {
-          if (!current) return revision;
-          if (data) setLoaded({ snapshot: data });
-          // Access ended, or never was: say so. Anything else keeps what's shown, until the next read.
-          else if (error?.status === 404) setLoaded({ snapshot: undefined, missing: true });
-          return revision;
-        },
-        () => revision,
-      );
-    return () => {
-      current = false;
-    };
-  }, [rootId, revision]);
+      .then(({ data, error }): Loaded | undefined => {
+        if (data) return { snapshot: data };
+        // Access ended, or never was: say so. Anything else keeps what's shown, until the next read.
+        return error?.status === 404 ? { snapshot: undefined, missing: true } : undefined;
+      }),
+  )?.value;
   return { loaded, reread };
 }
 
