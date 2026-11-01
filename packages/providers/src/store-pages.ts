@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import { serviceNames, type ProviderCache } from "@tonaris/domain";
 
-import { clientParts, type ClientOptions } from "./client";
+import { clientParts, readBody, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
 import { PacedQueue } from "./paced-queue";
@@ -189,7 +189,7 @@ export class StorePages {
     if (!(await this.allowed("qobuz"))) return undefined;
     const answer = await this.get("qobuz", `${qobuz}/fr-fr/album/-/${albumId}`);
     if (answer.status === 200) {
-      const page = readPage ? await answer.response.text() : undefined;
+      const page = readPage ? await readBody("qobuz", answer.response, "text") : undefined;
       if (!readPage) discard(answer.response);
       return { slug: "-", ...(page === undefined ? {} : { page }) };
     }
@@ -216,10 +216,8 @@ export class StorePages {
   async tidalHints(albumId: string): Promise<Hints | undefined> {
     if (!(await this.allowed("tidal"))) return undefined;
     const page = await this.page("tidal", `${tidal}/album/${albumId}`, (location) => {
-      if (location === null) return undefined;
-      const url = new URL(location, tidal);
-      return url.origin === tidal &&
-        new RegExp(`^(/browse)?/album/${albumId}/?$`).test(url.pathname)
+      const url = onOrigin(location, tidal);
+      return url && new RegExp(`^(/browse)?/album/${albumId}/?$`).test(url.pathname)
         ? url.href
         : undefined;
     });
@@ -243,16 +241,13 @@ export class StorePages {
       discard(answer.response);
       return undefined;
     }
-    try {
-      return await answer.response.text();
-    } catch (error) {
-      throw new ProviderUnavailableError(store, `${serviceNames[store]}'s page broke off`, {
-        cause: error,
-      });
-    }
+    return readBody(store, answer.response, "text");
   }
 
-  /** One request in its host's turn, redirects read rather than followed. 404s answer; other failures throw. */
+  /**
+   * One request in its host's turn, redirects read rather than followed. 404s answer; other 4xx and 5xx answers, as
+   * every failure, throw as the store being unavailable (errors.ts).
+   */
   private async get(store: "qobuz" | "tidal", url: string): Promise<Answer> {
     await this.queues[store].turn();
     let response: Response;
@@ -263,7 +258,7 @@ export class StorePages {
         cause: error,
       });
     }
-    if (response.status >= 500 || response.status === 429 || response.status === 403) {
+    if (response.status >= 400 && response.status !== 404) {
       discard(response);
       throw new ProviderUnavailableError(
         store,
@@ -303,14 +298,25 @@ export class StorePages {
   }
 }
 
+/** A redirect's `Location`, read against `origin`, when it is a URL on that origin; a malformed one leads nowhere. */
+function onOrigin(location: string | null, origin: string): URL | undefined {
+  if (location === null) return undefined;
+  let url: URL;
+  try {
+    url = new URL(location, origin);
+  } catch {
+    return undefined;
+  }
+  return url.origin === origin ? url : undefined;
+}
+
 /** The slug and URL of a www.qobuz.com album path, `/{locale}/album/{slug}/{id}`, for the album asked about. */
 function qobuzAlbumPath(
   location: string | null,
   albumId: string,
 ): { slug: string; url: string } | undefined {
-  if (location === null) return undefined;
-  const url = new URL(location, qobuz);
-  if (url.origin !== qobuz) return undefined;
+  const url = onOrigin(location, qobuz);
+  if (!url) return undefined;
   const slug = new RegExp(`^/[a-z]{2}-[a-z]{2}/album/([^/]+)/${albumId}$`).exec(url.pathname)?.[1];
   return slug ? { slug, url: url.href } : undefined;
 }

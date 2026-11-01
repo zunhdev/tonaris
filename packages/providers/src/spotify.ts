@@ -5,7 +5,7 @@
 
 import { z } from "zod";
 
-import { clientParts, type ClientOptions } from "./client";
+import { clientParts, readBody, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import { PacedQueue, retryAfterMs } from "./paced-queue";
 import { discard, type ProviderFetch, type SafeFetchInit } from "./safe-fetch";
@@ -79,7 +79,7 @@ export class Spotify {
           `Spotify answered ${response.status} to ${call}`,
         );
       }
-      return response.json();
+      return readBody("spotify", response, "json", call);
     }
     throw new ProviderUnavailableError("spotify", `Spotify refused its token for ${call}`);
   }
@@ -103,7 +103,9 @@ export class Spotify {
         `Spotify answered ${response.status} to the token`,
       );
     }
-    const { access_token: value, expires_in: expiresIn } = tokenSchema.parse(await response.json());
+    const { access_token: value, expires_in: expiresIn } = tokenSchema.parse(
+      await readBody("spotify", response, "json", "the token"),
+    );
     this.token = { value, expiresAt: this.now() + (expiresIn - 60) * 1_000 };
     return value;
   }

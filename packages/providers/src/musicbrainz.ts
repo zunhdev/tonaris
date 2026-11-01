@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import type { ProviderCache } from "@tonaris/domain";
 
-import { clientParts, type ClientOptions } from "./client";
+import { clientParts, readBody, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import { PacedQueue, retryAfterMs } from "./paced-queue";
 import { cachedValue } from "./provider-cache";
@@ -336,20 +336,13 @@ export class MusicBrainz {
       }
       if (!response.ok) {
         discard(response);
-        throw new Error(`MusicBrainz answered ${response.status} for ${where}`);
-      }
-      try {
-        // oxlint-disable-next-line no-await-in-loop
-        return await response.json();
-      } catch (error) {
         throw new ProviderUnavailableError(
           "musicbrainz",
-          `MusicBrainz's answer for ${where} isn't JSON`,
-          {
-            cause: error,
-          },
+          `MusicBrainz answered ${response.status} for ${where}`,
         );
       }
+      // oxlint-disable-next-line no-await-in-loop
+      return await readBody("musicbrainz", response, "json", where);
     }
     throw new ProviderUnavailableError(
       "musicbrainz",

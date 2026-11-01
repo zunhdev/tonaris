@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
-import { clientParts } from "./client";
+import { brokenBody } from "../fixtures/broken-body";
+import { clientParts, readBody } from "./client";
+import { ProviderUnavailableError } from "./errors";
 import { realClock } from "./paced-queue";
 import { cachedValue, memoryCache } from "./provider-cache";
 import { safeFetch } from "./safe-fetch";
@@ -15,6 +17,30 @@ describe("clientParts", () => {
     expect(fetch).toBe(standIn);
     expect(clock.now()).toBe(7);
     expect(clock.sleep).toBe(sleepNot);
+  });
+});
+
+describe("readBody", () => {
+  test("the body as JSON or as text", async () => {
+    expect(await readBody("musicbrainz", Response.json({ id: 1 }), "json")).toEqual({ id: 1 });
+    expect(await readBody("qobuz", new Response("<html></html>"), "text")).toBe("<html></html>");
+  });
+
+  test("a body that breaks off, or isn't JSON, is the provider being unavailable", async () => {
+    const broken = await readBody("spotify", brokenBody(), "json", "Get Album").catch(
+      (caught: unknown) => caught,
+    );
+    expect(broken).toBeInstanceOf(ProviderUnavailableError);
+    expect(broken).toMatchObject({
+      provider: "spotify",
+      message: "Couldn't read Spotify's answer to Get Album",
+    });
+    const text = await readBody("tidal", brokenBody(), "text").catch((caught: unknown) => caught);
+    expect(text).toMatchObject({ provider: "tidal", message: "Couldn't read Tidal's answer" });
+    const notJson = await readBody("youtube", new Response("<html>"), "json").catch(
+      (caught: unknown) => caught,
+    );
+    expect(notJson).toBeInstanceOf(ProviderUnavailableError);
   });
 });
 

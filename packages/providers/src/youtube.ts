@@ -10,7 +10,7 @@
 
 import { z } from "zod";
 
-import { clientParts, type ClientOptions } from "./client";
+import { clientParts, readBody, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
 import { PacedQueue } from "./paced-queue";
@@ -129,29 +129,23 @@ export class YouTubeData {
         cause: error,
       });
     }
-    if (response.status === 429 || response.status >= 500) {
+    if (response.status === 400 || response.status === 403) {
+      // The reason is told when the refusal's body can be read; one that can't be only leaves it out.
+      const body = errorSchema.safeParse(await response.json().catch(() => undefined));
+      this.options.onRefused?.(read, response.status, body.data?.error.errors[0]?.reason);
+      return undefined;
+    }
+    if (response.status === 404) {
+      discard(response);
+      return undefined;
+    }
+    if (!response.ok) {
       discard(response);
       throw new ProviderUnavailableError(
         "youtube",
         `YouTube answered ${response.status} to ${read}`,
       );
     }
-    if (response.status === 400 || response.status === 403) {
-      const body = errorSchema.safeParse(await response.json().catch(() => undefined));
-      this.options.onRefused?.(read, response.status, body.data?.error.errors[0]?.reason);
-      return undefined;
-    }
-    if (!response.ok) {
-      discard(response);
-      return undefined;
-    }
-    try {
-      const body: unknown = await response.json();
-      return body;
-    } catch (error) {
-      throw new ProviderUnavailableError("youtube", `YouTube's answer to ${read} broke off`, {
-        cause: error,
-      });
-    }
+    return readBody("youtube", response, "json", read);
   }
 }

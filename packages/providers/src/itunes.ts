@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import type { ProviderCache } from "@tonaris/domain";
 
-import { clientParts, type ClientOptions } from "./client";
+import { clientParts, readBody, type ClientOptions } from "./client";
 import { ProviderUnavailableError } from "./errors";
 import { PacedQueue } from "./paced-queue";
 import { cachedValue } from "./provider-cache";
@@ -106,17 +106,18 @@ export class ItunesLookup {
     const url = new URL("https://itunes.apple.com/lookup");
     url.searchParams.set("id", id);
     url.searchParams.set("country", storefront);
-    let body: unknown;
+    let response: Response;
     try {
-      const response = await this.fetch(url.href, { headers: { accept: "application/json" } });
-      if (!response.ok) {
-        discard(response);
-        throw new Error(`iTunes Lookup answered ${response.status}`);
-      }
-      body = await response.json();
+      response = await this.fetch(url.href, { headers: { accept: "application/json" } });
     } catch (error) {
       throw new ProviderUnavailableError("itunes", "iTunes Lookup didn't answer", { cause: error });
     }
+    // An id iTunes doesn't know has no results, so every answer that isn't ok is unexpected.
+    if (!response.ok) {
+      discard(response);
+      throw new ProviderUnavailableError("itunes", `iTunes Lookup answered ${response.status}`);
+    }
+    const body = await readBody("itunes", response, "json");
     const result = lookupSchema
       .parse(body)
       .results.find((entry) => entry.wrapperType === wrapperType);

@@ -1,5 +1,11 @@
 // When a provider can't be asked (TS-27, TS-90): the providers a request can fail at, each with its name as people
 // read it, the error the clients throw, and the failure it becomes.
+//
+// One rule for every client's answers. An answer that says there is none means none: a 404, or what a client
+// documents as none (Spotify's 400 for an id it can't read; YouTube's refused reads, a 400 or 403). iTunes Lookup
+// says none with an empty result, so a 404 there is unexpected too. Anything else that isn't the answer asked for is
+// the provider being unavailable: no answer in time, a 429, a 5xx, any other 4xx, or a body that breaks off
+// (`readBody`). The provider can't answer now, so the person can try again, or enter the details by hand.
 
 import { failure, serviceNames, type Failure } from "@tonaris/domain";
 

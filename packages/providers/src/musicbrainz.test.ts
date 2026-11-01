@@ -3,6 +3,7 @@
 
 import { describe, expect, test } from "bun:test";
 
+import { brokenBody } from "../fixtures/broken-body";
 import { ProviderUnavailableError } from "./errors";
 import { MusicBrainz, providerCacheMs, type UrlTarget } from "./musicbrainz";
 import { memoryCache } from "./provider-cache";
@@ -314,13 +315,25 @@ describe("a busy MusicBrainz (TS-41)", () => {
     expect(sent).toHaveLength(5);
   });
 
-  test("other answers fail at once", async () => {
+  test("other answers fail at once, as unavailable", async () => {
     const { musicBrainz, sent } = harness(() => new Response("bad", { status: 400 }));
     const error = await musicBrainz
       .lookup("release-group", id, [])
       .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ProviderUnavailableError);
     expect(String(error)).toContain("MusicBrainz answered 400 for /ws/2/release-group/");
     expect(sent).toHaveLength(1);
+  });
+
+  test("an answer that breaks off is unavailable, naming the path, and nothing is kept", async () => {
+    const { musicBrainz, cache } = harness(() => brokenBody());
+    const error = await musicBrainz
+      .lookup("release-group", id, [])
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ProviderUnavailableError);
+    expect(error).toMatchObject({ provider: "musicbrainz" });
+    expect(String(error)).toContain("/ws/2/release-group/");
+    expect(cache.size()).toBe(0);
   });
 });
 
