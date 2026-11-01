@@ -15,7 +15,7 @@ import {
 } from "@tonaris/domain";
 
 import { albumReleaseGroup, enrichAlbum } from "./enrichment";
-import { albumProvenance } from "./provenance";
+import { provenanceOf } from "./provenance";
 import { albums, users } from "./schema";
 import { executeMutation, readChanges } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
@@ -93,7 +93,7 @@ async function saved(
 
 const sourcesOf = async (albumId: string) =>
   Object.fromEntries(
-    (await albumProvenance(t.db, albumId)).map((entry) => [entry.field, entry.source]),
+    (await provenanceOf(t.db, albumId)).map((entry) => [entry.field, entry.source]),
   );
 
 describe("a person's writes record `user` (TS-15)", () => {
@@ -141,7 +141,7 @@ describe("enrichAlbum (TS-42, FR-03.3, AC-10)", () => {
       releaseType: "album",
       artworkUrl: front,
     });
-    expect(await albumProvenance(t.db, album.id)).toContainEqual({
+    expect(await provenanceOf(t.db, album.id)).toContainEqual({
       field: "releaseType",
       source: "musicbrainz",
       sourceRef: bleachId,

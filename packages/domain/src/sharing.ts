@@ -33,6 +33,19 @@ export const shareGrantStatuses = [
 ] as const;
 export type ShareGrantStatus = (typeof shareGrantStatuses)[number];
 
+/** An open invitation's statuses: a container has one at most per person (TS-11). */
+export const openGrantStatuses = [
+  "pending",
+  "accepted",
+] as const satisfies readonly ShareGrantStatus[];
+
+/** The statuses an invitation ends in (TS-33): the ledger records each, so a restore keeps it ended (TS-113). */
+export const endedGrantStatuses = [
+  "declined",
+  "withdrawn",
+  "revoked",
+] as const satisfies readonly ShareGrantStatus[];
+
 /** An invitation email's delivery, tracked apart from the invitation (FR-07.5, TS-33). */
 export const emailStatuses = ["sending", "sent", "failed", "unknown"] as const;
 export type EmailStatus = (typeof emailStatuses)[number];

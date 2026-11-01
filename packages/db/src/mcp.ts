@@ -1,33 +1,24 @@
 // What MCP needs from storage (TS-60–TS-63): the connection behind a token, the connection list and revocation
-// for Settings (TS-61), and what the first tools read and write. Connections are Better Auth's consents (TS-30);
-// their scopes carry the mode (`mcpModeOf`). What a gated deletion or match would touch is read here for its approval;
-// the operations themselves are the app's commands (TON-83).
+// for Settings (TS-61), and the overview's counts. Connections are Better Auth's consents (TS-30); their scopes carry
+// the mode (`mcpModeOf`). What a gated deletion or match would touch is read here for its approval; the operations
+// themselves are the app's commands (TON-83), and the other tools' reads are in mcp-reads.ts and mcp-writes.ts.
 
-import { and, asc, count, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import {
-  deletionImpact,
+  deletedListsOf,
+  deletionTargetsOf,
   type AlbumDeletionTarget,
-  type ContainerKind,
   type DeletionTargets,
 } from "@tonaris/domain";
 
 import { albumsOfReleaseGroupIn } from "./album-writes";
-import type { Database, Transaction } from "./client";
+import type { Database, Executor, Transaction } from "./client";
+import { activeListsOf, inActiveList } from "./columns";
 import { recordInLedger } from "./ledger";
-import {
-  albums,
-  containers,
-  memberships,
-  oauthAccessTokens,
-  oauthClients,
-  oauthConsents,
-  oauthRefreshTokens,
-  trashUnits,
-} from "./schema";
+import { albums, containers, memberships, oauthClients, oauthConsents, trashUnits } from "./schema";
 import { impactState } from "./sharing-impact";
-
-type Executor = Database | Parameters<Parameters<Database["transaction"]>[0]>[0];
+import { endConnections } from "./teardowns";
 
 export type ConnectionRow = {
   id: string;
@@ -114,10 +105,7 @@ export function revokeConnection(
       .where(and(eq(oauthConsents.id, id), eq(oauthConsents.userId, userId)))
       .returning({ clientId: oauthConsents.clientId });
     if (!consent) return false;
-    const ofGrant = (table: typeof oauthRefreshTokens | typeof oauthAccessTokens) =>
-      and(eq(table.userId, userId), eq(table.clientId, consent.clientId));
-    await tx.delete(oauthAccessTokens).where(ofGrant(oauthAccessTokens));
-    await tx.delete(oauthRefreshTokens).where(ofGrant(oauthRefreshTokens));
+    await endConnections(tx, { userId, clientId: consent.clientId });
     await recordInLedger(tx, { type: "connection.revoked", userId, clientId: consent.clientId });
     return true;
   });
@@ -141,13 +129,9 @@ export async function collectionOverview(
     .select({
       albums: count(),
       // Unsorted: active albums in no active list (FR-01.9). It is this query, never stored (TS-13).
-      unsorted: sql<number>`count(*) filter (where ${notExists(
-        db
-          .select({ one: sql`1` })
-          .from(memberships)
-          .innerJoin(containers, eq(containers.id, memberships.listId))
-          .where(and(eq(memberships.albumId, albums.id), isNull(containers.trashedAt))),
-      )})`.mapWith(Number),
+      unsorted: sql<number>`count(*) filter (where ${not(inActiveList(db, albums.id))})`.mapWith(
+        Number,
+      ),
     })
     .from(albums)
     .where(activeAlbum);
@@ -168,74 +152,6 @@ export async function collectionOverview(
     folders: ofKind("folder"),
     trashUnits: trash?.count ?? 0,
   };
-}
-
-export type AlbumMatch = {
-  id: string;
-  title: string;
-  artistCredit: string;
-  originalYear: number | null;
-};
-
-export type ContainerRef = { id: string; kind: ContainerKind; name: string };
-
-export type ContainerListing =
-  | { kind: "root" | "folder"; container: ContainerRef | null; children: ContainerRef[] }
-  | { kind: "list"; container: ContainerRef; albums: AlbumMatch[]; totalAlbums: number }
-  | { kind: "missing" };
-
-/**
- * What `list_container` shows (TS-63): the root's or a folder's active folders and lists, or a list's active
- * albums, the first `limit` in the order they were added.
- */
-export async function listContainer(
-  db: Database,
-  { ownerId, containerId, limit }: { ownerId: string; containerId?: string; limit: number },
-): Promise<ContainerListing> {
-  const ref = { id: containers.id, kind: containers.kind, name: containers.name };
-  const active = and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt));
-  let container: ContainerRef | null = null;
-  if (containerId) {
-    const [found] = await db
-      .select(ref)
-      .from(containers)
-      .where(and(active, eq(containers.id, containerId)));
-    if (!found) return { kind: "missing" };
-    container = found;
-  }
-  if (container?.kind === "list") {
-    const inList = and(
-      eq(memberships.listId, container.id),
-      eq(albums.ownerId, ownerId),
-      isNull(albums.trashedAt),
-    );
-    const rows = await db
-      .select({
-        id: albums.id,
-        title: albums.title,
-        artistCredit: albums.artistCredit,
-        originalYear: albums.originalYear,
-      })
-      .from(memberships)
-      .innerJoin(albums, eq(albums.id, memberships.albumId))
-      .where(inList)
-      .orderBy(asc(memberships.addedAt), asc(albums.id))
-      .limit(limit);
-    const [total] = await db
-      .select({ count: count() })
-      .from(memberships)
-      .innerJoin(albums, eq(albums.id, memberships.albumId))
-      .where(inList);
-    return { kind: "list", container, albums: rows, totalAlbums: total?.count ?? 0 };
-  }
-  const children = await db
-    .select(ref)
-    .from(containers)
-    .where(
-      and(active, container ? eq(containers.parentId, container.id) : isNull(containers.parentId)),
-    )
-    .orderBy(asc(containers.kind), asc(containers.nameKey));
-  return { kind: container ? "folder" : "root", container, children };
 }
 
 /**
@@ -259,19 +175,10 @@ export async function albumDeletionTargets(
     );
   const found = lock ? await query.for("update") : await query;
   if (found.length === 0) return [];
-  const lists = await db
-    .select({ albumId: memberships.albumId, id: containers.id, name: containers.name })
-    .from(memberships)
-    .innerJoin(containers, eq(containers.id, memberships.listId))
-    .where(
-      and(
-        inArray(
-          memberships.albumId,
-          found.map((album) => album.id),
-        ),
-        isNull(containers.trashedAt),
-      ),
-    );
+  const lists = await activeListsOf(
+    db,
+    found.map((album) => album.id),
+  );
   return found.map(({ id, title, artist }) => ({
     id,
     title,
@@ -283,10 +190,9 @@ export async function albumDeletionTargets(
 }
 
 /**
- * What deleting `albumIds` and `containerIds` to Trash would do (FR-10.6, FR-07.14), for the approval: the owner's
- * active albums among them with the lists each leaves; the active folders and lists, each with what goes with it; the
- * albums left in no list, which go to Unsorted; and who no longer sees it. A container inside another one deleted goes
- * with it, so it is left out. `missing` names the IDs that are nothing active of the owner's.
+ * What deleting `albumIds` and `containerIds` to Trash would do (FR-10.6, FR-07.14), for the approval, as the domain's
+ * `deletionTargetsOf` decides from what this reads in `tx`: the owner's active albums among them with their lists, the
+ * owner's active folders and lists, every entry of the active albums in the lists that go, and the owner's sharing.
  */
 export async function deletionTargets(
   tx: Transaction,
@@ -307,75 +213,35 @@ export async function deletionTargets(
     })
     .from(containers)
     .where(and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt)));
-  const byId = new Map(places.map((place) => [place.id, place]));
-  const children = Map.groupBy(places, (place) => place.parentId);
-  const asked = new Set(containerIds.filter((id) => byId.has(id)));
-  const within = (id: string) => {
-    for (
-      let at = byId.get(id)?.parentId ?? null;
-      at !== null;
-      at = byId.get(at)?.parentId ?? null
-    ) {
-      if (asked.has(at)) return true;
-    }
-    return false;
-  };
-  const roots = [...asked].filter((id) => !within(id));
-  const subtree = (id: string) => {
-    const ids = [id];
-    for (let at = 0; at < ids.length; at += 1) {
-      ids.push(...(children.get(ids[at] ?? "") ?? []).map((child) => child.id));
-    }
-    return ids;
-  };
-  const deleted = new Set(roots.flatMap(subtree));
-  const containerTargets = roots.map((id) => {
-    const below = subtree(id).slice(1);
-    const place = byId.get(id);
-    return {
-      id,
-      kind: place?.kind ?? "list",
-      name: place?.name ?? "",
-      folders: below.filter((each) => byId.get(each)?.kind === "folder").length,
-      lists: below.filter((each) => byId.get(each)?.kind === "list").length,
-    };
-  });
-
-  // Albums in the deleted lists that are in no other active list go to Unsorted, unless they are deleted too.
-  const deletedLists = [...deleted].filter((id) => byId.get(id)?.kind === "list");
-  let unsorted = 0;
-  if (deletedLists.length > 0) {
-    const inDeleted = tx
-      .select({ albumId: memberships.albumId })
-      .from(memberships)
-      .where(inArray(memberships.listId, deletedLists));
-    const entries = await tx
-      .select({ albumId: memberships.albumId, listId: memberships.listId })
-      .from(memberships)
-      .innerJoin(albums, eq(albums.id, memberships.albumId))
-      .where(and(inArray(memberships.albumId, inDeleted), isNull(albums.trashedAt)));
-    const goingToo = new Set(albumTargets.map((album) => album.id));
-    for (const [albumId, lists] of Map.groupBy(entries, (entry) => entry.albumId)) {
-      if (goingToo.has(albumId)) continue;
-      if (lists.every((entry) => deleted.has(entry.listId) || !byId.has(entry.listId)))
-        unsorted += 1;
-    }
-  }
-
+  const deletedLists = deletedListsOf(places, containerIds);
+  const entries =
+    deletedLists.length === 0
+      ? []
+      : await tx
+          .select({ albumId: memberships.albumId, listId: memberships.listId })
+          .from(memberships)
+          .innerJoin(albums, eq(albums.id, memberships.albumId))
+          .where(
+            and(
+              inArray(
+                memberships.albumId,
+                tx
+                  .select({ albumId: memberships.albumId })
+                  .from(memberships)
+                  .where(inArray(memberships.listId, deletedLists)),
+              ),
+              isNull(albums.trashedAt),
+            ),
+          );
   const { state } = await impactState(tx, ownerId);
-  const sharing = deletionImpact(state, {
-    containerIds: roots,
-    albumListIds: albumTargets.flatMap((album) => album.lists.map((list) => list.id)),
-  });
-  const found = new Set([...albumTargets.map((album) => album.id), ...asked]);
-  return {
+  return deletionTargetsOf({
+    places,
     albums: albumTargets,
-    containers: containerTargets,
-    unsorted,
-    sharing,
-    containerIds: roots,
-    missing: [...albumIds, ...containerIds].filter((id) => !found.has(id)),
-  };
+    albumIds,
+    containerIds,
+    entries,
+    state,
+  });
 }
 
 /** The owner's saved album of `releaseGroupId`, if any, with its active lists: what a confirmed match joins (FR-02.9). */
@@ -385,12 +251,13 @@ export async function savedAlbumOfReleaseGroup(
 ): Promise<AlbumDeletionTarget | undefined> {
   const [saved] = await albumsOfReleaseGroupIn(tx, ownerId, releaseGroupId);
   if (!saved) return undefined;
-  const lists = await tx
-    .select({ id: containers.id, name: containers.name })
-    .from(memberships)
-    .innerJoin(containers, eq(containers.id, memberships.listId))
-    .where(and(eq(memberships.albumId, saved.id), isNull(containers.trashedAt)));
-  return { id: saved.id, title: saved.title, artist: saved.artistCredit, lists };
+  const lists = await activeListsOf(tx, [saved.id]);
+  return {
+    id: saved.id,
+    title: saved.title,
+    artist: saved.artistCredit,
+    lists: lists.map(({ id, name }) => ({ id, name })),
+  };
 }
 
 /** The owner's active list `id`'s name, if it is one. */

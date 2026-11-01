@@ -52,3 +52,6 @@ export const maxTextValueLength = 2_000;
 
 /** Days deleted folders, lists and albums stay recoverable in Trash, then go for good (FR-01.12, FR-14.1, FR-14.5). */
 export const trashRetentionDays = 30;
+
+/** Merge candidates asked about per capture, at most: each costs a MusicBrainz lookup at 1 a second (TS-44). */
+export const maxMergeCandidates = 5;

@@ -3,7 +3,7 @@
 
 import { and, asc, eq, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
 
-import type { Database, Transaction } from "./client";
+import type { Database, Executor } from "./client";
 import { jobs } from "./schema";
 
 export type JobRow = typeof jobs.$inferSelect;
@@ -16,7 +16,7 @@ export const deadJobRetentionMs = 30 * 24 * 60 * 60_000;
  * with: the database's `now()`, rounded to the millisecond, could put a new job a moment in the claim's future.
  */
 export async function enqueueJob(
-  db: Database | Transaction,
+  db: Executor,
   {
     id,
     kind,
@@ -91,7 +91,7 @@ export async function buryJob(
 }
 
 /** Removes the jobs that died more than 30 days before `now` (TS-91's daily prune). */
-export async function pruneDeadJobs(db: Database | Transaction, now: Date): Promise<void> {
+export async function pruneDeadJobs(db: Executor, now: Date): Promise<void> {
   await db
     .delete(jobs)
     .where(

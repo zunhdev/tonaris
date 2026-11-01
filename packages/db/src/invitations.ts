@@ -4,7 +4,12 @@
 
 import { aliasedTable, and, asc, eq, isNull } from "drizzle-orm";
 
-import type { EmailStatus, Invitation, InvitationState } from "@tonaris/domain";
+import {
+  invitationStateFor,
+  type EmailStatus,
+  type Invitation,
+  type InvitationState,
+} from "@tonaris/domain";
 
 import type { Database } from "./client";
 import { containers, shareGrants, users } from "./schema";
@@ -57,10 +62,7 @@ export async function pendingInvitations(db: Database, userId: string): Promise<
   return rows.map(invitationOf);
 }
 
-/**
- * An invitation as its email's page shows it to `userId` (DS-66): theirs while pending or accepted; someone else's
- * while pending, with nothing about it; otherwise unavailable, as a missing one is.
- */
+/** An invitation as its email's page shows it to `userId` (DS-66), as `invitationStateFor` decides. */
 export async function invitationState(
   db: Database,
   userId: string,
@@ -72,14 +74,15 @@ export async function invitationState(
     .innerJoin(containers, eq(containers.id, shareGrants.containerId))
     .innerJoin(owners, eq(owners.id, containers.ownerId))
     .where(eq(shareGrants.id, grantId));
-  if (!row || row.trashedAt !== null) return { state: "unavailable" };
-  const open = row.status === "pending" || row.status === "accepted";
-  if (row.granteeId !== userId) {
-    return open && row.status === "pending" ? { state: "wrong_account" } : { state: "unavailable" };
-  }
-  if (row.status === "pending") return { state: "pending", invitation: invitationOf(row) };
-  if (row.status === "accepted") return { state: "accepted", invitation: invitationOf(row) };
-  return { state: "unavailable" };
+  return invitationStateFor(
+    userId,
+    row && {
+      status: row.status,
+      granteeId: row.granteeId,
+      trashed: row.trashedAt !== null,
+      invitation: invitationOf(row),
+    },
+  );
 }
 
 /** What emailing a pending invitation marked for sending needs: the recipient's current address and the names. */
@@ -129,10 +132,3 @@ export async function recordInvitationEmail(
       ),
     );
 }
-
-/** How long a send may stay unanswered before it reads as unconfirmed (FR-07.5): the server may have stopped. */
-export const sendingTimeoutMs = 5 * 60_000;
-
-/** Whether a grant's `sending` is that old. */
-export const sendingStale = (updatedAt: Date, now: Date) =>
-  updatedAt.getTime() < now.getTime() - sendingTimeoutMs;

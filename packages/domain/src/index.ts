@@ -512,3 +512,13 @@ export { exportFileNames, exportFiles } from "./export-archive";
 export { ledgerEventSchema, ledgerJobKind, type LedgerEntry, type LedgerEvent } from "./ledger";
 export { redact, redactRecord, redactText } from "./telemetry";
 export type { ProviderCache } from "./provider-cache";
+
+// Rules moved from packages/db (TON-147).
+export { guestMutationRefusal, mutationIdInUse, mutationTooOld } from "./sync";
+export { codeRefusal, type CodeRefusal } from "./codes";
+export { invitationStateFor, shownEmailStatus } from "./invitations";
+export { maxMergeCandidates } from "./limits";
+export { endedGrantStatuses, openGrantStatuses } from "./sharing";
+export { chainOf, subtreeOf, treeOf, type Tree, type TreeNode } from "./container-tree";
+export { deletedListsOf, deletionTargetsOf, type DeletionPlace } from "./deletion-targets";
+export { impactOf, type ImpactQuery, type ImpactUnit } from "./sharing-preview";

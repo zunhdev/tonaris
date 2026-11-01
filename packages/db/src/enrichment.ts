@@ -1,7 +1,7 @@
 // Enrichment's writes (TS-42, TS-44): `planEnrichment()` applied to a saved album under the owner's write lock, so
 // the plan is made on the album as it is at that moment. A person's edit that commits while MusicBrainz is being
-// asked is then a populated value, and kept. Filled values reach the owner's sessions as one album change with no
-// mutation id; artwork and the release group aren't on clients' records, so filling only those logs nothing.
+// asked is then a populated value, and kept. Filled values, artwork included, reach the owner's sessions as one album
+// change with no mutation id; the release group isn't on clients' records, so filling only it logs nothing.
 
 import { and, eq } from "drizzle-orm";
 

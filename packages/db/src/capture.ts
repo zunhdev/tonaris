@@ -4,13 +4,10 @@
 
 import { and, asc, count, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 
-import { searchKey } from "@tonaris/domain";
+import { maxMergeCandidates, searchKey } from "@tonaris/domain";
 
 import type { Database } from "./client";
 import { albums, mutations } from "./schema";
-
-/** Merge candidates asked about per capture, at most: each costs a MusicBrainz lookup at 1 a second. */
-export const maxMergeCandidates = 5;
 
 /**
  * The owner's album saved as each of `releaseGroupIds`, Trash included, preferring an active one: what a `match`

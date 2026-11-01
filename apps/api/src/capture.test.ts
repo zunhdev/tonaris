@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { albumProvenance, mutations, readChanges, trashUnits } from "@tonaris/db";
+import { mutations, provenanceOf, readChanges, trashUnits } from "@tonaris/db";
 import {
   batchResultSchema,
   bootstrapSchema,
@@ -479,7 +479,7 @@ describe("an automated addition missing its year asks for it (FR-02.6, AC-08)", 
     };
     const saved = result((await send(capture(links.undatedQobuz, null, { details }))).outcome);
     const sources = Object.fromEntries(
-      (await albumProvenance(t.db, saved.albumId)).map((entry) => [entry.field, entry.source]),
+      (await provenanceOf(t.db, saved.albumId)).map((entry) => [entry.field, entry.source]),
     );
     expect(sources).toMatchObject({ title: "musicbrainz", originalYear: "user" });
     const [row] = await t.db

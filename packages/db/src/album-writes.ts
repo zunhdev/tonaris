@@ -3,14 +3,15 @@
 
 import { and, asc, eq, sql } from "drizzle-orm";
 
-import { searchKey, type CaptureTarget, type EnrichmentPlan } from "@tonaris/domain";
+import type { CaptureTarget, EnrichmentPlan } from "@tonaris/domain";
 
 import type { Transaction } from "./client";
+import { albumSearchKeys } from "./columns";
 import { writeProvenance } from "./provenance";
 import { albums } from "./schema";
 
 /** The columns of an album as capture and enrichment see it. */
-export const captureTargetColumns = {
+const captureTargetColumns = {
   id: albums.id,
   ownerId: albums.ownerId,
   title: albums.title,
@@ -26,7 +27,7 @@ export const captureTargetColumns = {
 };
 
 /** A row of `captureTargetColumns` as `CaptureTarget`. */
-export function captureTargetOf({
+function captureTargetOf({
   trashedAt,
   ...album
 }: Omit<CaptureTarget, "trashed"> & { trashedAt: Date | null }): CaptureTarget {
@@ -68,10 +69,7 @@ export async function applyPlan(
       .set({
         ...values,
         ...(releaseGroupId === undefined ? {} : { mbReleaseGroupId: releaseGroupId }),
-        ...(values.title === undefined ? {} : { searchTitleKey: searchKey(values.title) }),
-        ...(values.artistCredit === undefined
-          ? {}
-          : { searchArtistKey: searchKey(values.artistCredit) }),
+        ...albumSearchKeys(values),
       })
       .where(eq(albums.id, albumId));
   }

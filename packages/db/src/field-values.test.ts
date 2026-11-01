@@ -59,15 +59,20 @@ async function defined(type: FieldType, labels: string[] = []) {
   return { id, options: options.map((option) => option.id) };
 }
 
-const apply = (fieldId: string): Mutation => ({
+const apply = (fieldId: string, on = albumId): Mutation => ({
   mutationId: uuidv7(),
   name: "fieldValue.apply",
-  args: { albumId, fieldId },
+  args: { albumId: on, fieldId },
 });
-const set = (fieldId: string, value: FieldValueData, base: FieldValueData = null): Mutation => ({
+const set = (
+  fieldId: string,
+  value: FieldValueData,
+  base: FieldValueData = null,
+  on = albumId,
+): Mutation => ({
   mutationId: uuidv7(),
   name: "fieldValue.set",
-  args: { albumId, fieldId, value },
+  args: { albumId: on, fieldId, value },
   base: { value: base },
 });
 
@@ -131,5 +136,53 @@ describe("field values in Postgres (FR-03.7, FR-03.10)", () => {
     // Applied again, it starts empty (FR-03.8).
     await run(apply(mood.id));
     expect(await valuesNow()).toEqual([{ albumId, fieldId: mood.id, value: null }]);
+  });
+
+  test("each album's multiple choices read its own selections of that field only", async () => {
+    const mood = await defined("multiple_choice", ["Calm", "Loud", "Odd"]);
+    const era = { id: uuidv7(), options: [uuidv7(), uuidv7()] };
+    await run({
+      mutationId: uuidv7(),
+      name: "field.create",
+      args: {
+        id: era.id,
+        name: "Era",
+        type: "multiple_choice",
+        options: era.options.map((id, index) => ({ id, label: index === 0 ? "Early" : "Late" })),
+      },
+    });
+    const [calm = "", loud = "", odd = ""] = mood.options;
+    const [early = "", late = ""] = era.options;
+    const other = uuidv7();
+    await t.db.insert(albums).values({
+      id: other,
+      ownerId: anna.userId,
+      title: "Nevermind",
+      artistCredit: "Nirvana",
+      originalYear: 1991,
+      searchTitleKey: "nevermind",
+      searchArtistKey: "nirvana",
+    });
+    for (const mutation of [
+      apply(mood.id),
+      set(mood.id, [odd, calm]),
+      apply(era.id),
+      set(era.id, [late]),
+      apply(mood.id, other),
+      set(mood.id, [loud], null, other),
+      apply(era.id, other),
+      set(era.id, [late, early], null, other),
+    ]) {
+      // oxlint-disable-next-line no-await-in-loop
+      await run(mutation);
+    }
+    const values = await valuesNow();
+    const valueOf = (id: string, fieldId: string) =>
+      values.find((each) => each.albumId === id && each.fieldId === fieldId)?.value;
+    expect(values).toHaveLength(4);
+    expect(valueOf(albumId, mood.id)).toEqual([calm, odd]);
+    expect(valueOf(albumId, era.id)).toEqual([late]);
+    expect(valueOf(other, mood.id)).toEqual([loud]);
+    expect(valueOf(other, era.id)).toEqual([early, late]);
   });
 });
