@@ -6,9 +6,7 @@
 // Up to date, it shows the dot alone, and says so in its accessible name and tooltip (DS-115). The count of
 // changes needing review keeps failures and conflicts in view once their toasts are closed (DS-02).
 
-import type { BatchReport, SaveState } from "@/client/sync/writer";
-import { DecisionCard } from "@/features/capture/decision-card";
-import { captureNeed, needReason } from "@/features/capture/outcomes";
+import { needsPerson, type BatchReport, type SaveState } from "@/client/sync/save-states";
 
 import { Button } from "@tonaris/ui/components/button";
 import {
@@ -22,19 +20,17 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 import { useActivity } from "./activity";
 import { BatchOutcomeReport } from "./batch-report";
-import { describeWrite, reasonOf, statusLabels } from "./describe";
-import { namesOf, useSaveActions } from "./save-actions";
-import { SaveStateMarker } from "./save-state-marker";
+import { changes } from "./describe";
+import { useSaveActions } from "./save-actions";
+import { SaveStateItem } from "./save-state-item";
 import { useDelayed, useOpenStates, useReports } from "./save-states";
-import { useConnection, useSyncClient } from "./sync-provider";
+import { useConnection } from "./sync-provider";
 
 const dots = {
   neutral: "bg-fg-tertiary",
   warning: "bg-status-warning",
   danger: "bg-status-danger",
 };
-
-const changes = (n: number) => (n === 1 ? "1 change" : `${n} changes`);
 
 export function SyncIndicator() {
   const connection = useConnection();
@@ -47,9 +43,7 @@ export function SyncIndicator() {
   );
   const unconfirmed = open.filter((state) => state.status === "unconfirmed").length;
   // Failed, in conflict, skipped, or needing a choice: settled, but not saved.
-  const review = open.filter(
-    (state) => state.status !== "pending" && state.status !== "unconfirmed",
-  ).length;
+  const review = open.filter((state) => needsPerson(state.status)).length;
 
   let tone: keyof typeof dots = "neutral";
   let label: string | undefined;
@@ -117,6 +111,7 @@ function Activity({
   reports: readonly BatchReport[];
   connected: boolean;
 }) {
+  const actions = useSaveActions();
   const entries = [
     ...reports.map((report) => ({ since: report.since, report })),
     ...open.flatMap((state) => (state.batch === undefined ? [{ since: state.since, state }] : [])),
@@ -136,62 +131,15 @@ function Activity({
                 <BatchOutcomeReport report={entry.report} />
               </li>
             ) : (
-              <ActivityItem key={entry.state.mutation.mutationId} state={entry.state} />
+              <SaveStateItem
+                key={entry.state.mutation.mutationId}
+                state={entry.state}
+                onRetry={() => actions?.resubmit(entry.state)}
+              />
             ),
           )}
         </ul>
       )}
     </>
-  );
-}
-
-function ActivityItem({ state }: { state: SaveState }) {
-  const client = useSyncClient();
-  const actions = useSaveActions();
-  if (!client) return null;
-  const { summary } = describeWrite(state.mutation, namesOf(client));
-  const failed = state.status === "failed";
-  // A capture waiting for the person: a choice, or the album's details (DS-48).
-  const need = captureNeed(state.outcome);
-  const reason = failed ? reasonOf(state.outcome) : needReason(state.outcome);
-  return (
-    <li className="flex items-start gap-2 rounded-md py-1" data-status={state.status}>
-      <span className="mt-1">
-        <SaveStateMarker status={state.status} delayed={false} labelled={false} />
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="truncate text-fg-primary">{summary}</p>
-        <p className="text-small text-fg-secondary">
-          {statusLabels[state.status]}
-          {reason !== undefined && `: ${reason}`}
-        </p>
-        {actions && need?.need === "match" && <DecisionCard state={state} folded />}
-        {actions && (failed || need !== undefined || state.status === "conflict") && (
-          <div className="mt-1 flex gap-2">
-            {failed || need !== undefined ? (
-              <>
-                {failed && (
-                  <Button size="sm" onClick={() => actions.resubmit(state)}>
-                    Retry
-                  </Button>
-                )}
-                {actions.canEdit(state) && need?.need !== "match" && (
-                  <Button size="sm" variant="secondary" onClick={() => actions.edit(state)}>
-                    {actions.editLabel(state)}
-                  </Button>
-                )}
-                <Button size="sm" variant="ghost" onClick={() => actions.dismiss(state)}>
-                  Dismiss
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" onClick={() => actions.review(state.mutation.mutationId)}>
-                Review
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    </li>
   );
 }

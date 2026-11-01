@@ -5,20 +5,16 @@
 // appears for two or more failures, and Dismiss once the report is kept. Completed items are folded away, since a
 // batch holds up to 200. Status is told by the group's heading and each item's icon, never by color only (DS-115).
 
-import type { BatchReport, SaveState } from "@/client/sync/writer";
-import { DecisionCard } from "@/features/capture/decision-card";
-import { captureNeed } from "@/features/capture/outcomes";
+import type { BatchReport, SaveState } from "@/client/sync/save-states";
 import { ChevronRight } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { describeWrite } from "./describe";
-import { grouped, reasonFor, retryable, summarize } from "./report";
-import { namesOf, useSaveActions } from "./save-actions";
-import { SaveStateMarker } from "./save-state-marker";
-import { useSyncClient } from "./sync-provider";
+import { grouped, retryable, summarize } from "./report";
+import { useSaveActions } from "./save-actions";
+import { SaveStateItem } from "./save-state-item";
 
 const disclosure =
   "flex min-w-0 items-start gap-1 rounded-sm text-left outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-focus";
@@ -97,9 +93,9 @@ export function BatchOutcomeReport({ report }: { report: BatchReport }) {
                 </h3>
                 <ul aria-labelledby={`${id}-group-${index}`} className="flex flex-col">
                   {items.map((item) => (
-                    <ReportItem
+                    <SaveStateItem
                       key={item.mutation.mutationId}
-                      item={item}
+                      state={item}
                       report={report}
                       gone={gone.has(item.mutation.mutationId)}
                       onRetry={() => retry([item.mutation.mutationId])}
@@ -140,72 +136,10 @@ function Completed({ report, items }: { report: BatchReport; items: SaveState[] 
       {shown && (
         <ul id={id} className="flex flex-col">
           {items.map((item) => (
-            <ReportItem key={item.mutation.mutationId} item={item} report={report} gone={false} />
+            <SaveStateItem key={item.mutation.mutationId} state={item} report={report} />
           ))}
         </ul>
       )}
     </div>
-  );
-}
-
-function ReportItem({
-  item,
-  report,
-  gone,
-  onRetry,
-}: {
-  item: SaveState;
-  report: BatchReport;
-  /** Retrying it found its record gone. */
-  gone: boolean;
-  onRetry?: () => void;
-}) {
-  const client = useSyncClient();
-  const actions = useSaveActions();
-  if (!client) return null;
-  const names = namesOf(client);
-  const { summary } = describeWrite(item.mutation, names);
-  // A capture waiting for the person: a choice, or the album's details (DS-48).
-  const need = captureNeed(item.outcome);
-  const reason = gone
-    ? "It no longer exists, so it can't be saved again."
-    : reasonFor(item, report, names);
-  return (
-    <li className="flex items-start gap-2 py-1" data-status={item.status}>
-      <span className="mt-1">
-        <SaveStateMarker status={item.status} delayed={false} labelled={false} showSaved />
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="truncate text-fg-primary">{summary}</p>
-        {reason && <p className="text-small text-fg-secondary">{reason}</p>}
-        {actions && item.status === "failed" && !gone && onRetry && (
-          <div className="mt-1 flex gap-2">
-            <Button size="sm" onClick={onRetry}>
-              Retry
-            </Button>
-            {actions.canEdit(item) && (
-              <Button size="sm" variant="secondary" onClick={() => actions.edit(item)}>
-                {actions.editLabel(item)}
-              </Button>
-            )}
-          </div>
-        )}
-        {actions && need?.need === "match" && <DecisionCard state={item} folded />}
-        {actions && need?.need === "details" && (
-          <div className="mt-1 flex gap-2">
-            <Button size="sm" variant="secondary" onClick={() => actions.edit(item)}>
-              {actions.editLabel(item)}
-            </Button>
-          </div>
-        )}
-        {actions && item.status === "conflict" && (
-          <div className="mt-1 flex gap-2">
-            <Button size="sm" onClick={() => actions.review(item.mutation.mutationId)}>
-              Review
-            </Button>
-          </div>
-        )}
-      </div>
-    </li>
   );
 }
