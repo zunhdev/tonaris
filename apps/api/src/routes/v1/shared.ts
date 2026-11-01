@@ -24,6 +24,7 @@ import {
 
 import type { SessionGuard } from "../../auth/plugin";
 import { presentSnapshot, type ArtworkSigner } from "../../img/artwork";
+import { invalidationEvents, streamResponses } from "../../openapi";
 import { ProblemError } from "../../problem";
 import { invalidationStream } from "../../sse";
 import type { SyncHub } from "../../sync/hub";
@@ -94,17 +95,7 @@ export function sharedRoutes(
             "Server-sent `shared-invalidate` events (TS-23) whenever its owner saves a change, so the viewer's page reads it again; a read that fails means access ended. Comment lines keep the connection alive.",
           tags: ["sharing"],
           operationId: "streamShared",
-          responses: {
-            200: {
-              description: "`shared-invalidate` events",
-              content: {
-                "text/event-stream": {
-                  schema: { $ref: "#/components/schemas/SharedInvalidate" },
-                },
-              },
-            },
-            404: { description: "The folder or list isn't available to the person." },
-          },
+          responses: streamResponses(invalidationEvents, [401, 404, 422]),
         },
       },
       async function* ({ params, account, request, server }) {

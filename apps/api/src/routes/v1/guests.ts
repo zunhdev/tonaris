@@ -15,6 +15,7 @@ import {
 } from "@tonaris/domain";
 
 import { presentSnapshot, type ArtworkSigner } from "../../img/artwork";
+import { invalidationEvents, streamResponses } from "../../openapi";
 import { ProblemError } from "../../problem";
 import { invalidationStream } from "../../sse";
 import type { SyncHub } from "../../sync/hub";
@@ -71,17 +72,7 @@ export function guestRoutes({
             "Server-sent `shared-invalidate` events (TS-23) whenever the owner saves a change, so the guest page reads the link again; a read that fails means the link stopped working. Comment lines keep the connection alive.",
           tags: ["sharing"],
           operationId: "streamSharedLink",
-          responses: {
-            200: {
-              description: "`shared-invalidate` events",
-              content: {
-                "text/event-stream": {
-                  schema: { $ref: "#/components/schemas/SharedInvalidate" },
-                },
-              },
-            },
-            404: { description: "The link isn't available." },
-          },
+          responses: streamResponses(invalidationEvents, [404, 422]),
         },
       },
       async function* ({ params, request, server }) {

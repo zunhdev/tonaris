@@ -28,6 +28,7 @@ import {
 
 import type { SessionGuard } from "../auth/plugin";
 import { presentBootstrap, presentChange, type ArtworkSigner } from "../img/artwork";
+import { streamResponses } from "../openapi";
 import { ProblemError } from "../problem";
 import { eventStream, type StreamSource } from "../sse";
 import type { SyncEvent, SyncHub } from "./hub";
@@ -219,22 +220,18 @@ export function syncRoutes(
             "Server-sent events (TS-23): `change` events with `id` set to their `seq`, after `Last-Event-ID` (or `after` on a first connection), then live. `reset` means the cursor can't be continued: bootstrap again. Comment lines keep the connection alive.",
           tags: ["sync"],
           operationId: "streamChanges",
-          responses: {
-            200: {
+          responses: streamResponses(
+            {
               description: "`change` and `reset` events",
-              // Component references: Zod's JSON Schema type doesn't fit openapi-types' schema objects.
-              content: {
-                "text/event-stream": {
-                  schema: {
-                    oneOf: [
-                      { $ref: "#/components/schemas/Change" },
-                      { $ref: "#/components/schemas/StreamReset" },
-                    ],
-                  },
-                },
+              schema: {
+                oneOf: [
+                  { $ref: "#/components/schemas/Change" },
+                  { $ref: "#/components/schemas/StreamReset" },
+                ],
               },
             },
-          },
+            [401, 422],
+          ),
         },
       },
       async function* ({ request, server, headers, query, account, sessionId }) {

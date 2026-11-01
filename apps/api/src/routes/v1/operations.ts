@@ -38,7 +38,12 @@ export function operationsRoutes(session: SessionGuard, { db }: { db: Database }
       {
         signedIn: true,
         body: noFields,
-        response: { 401: problemSchema, 403: problemSchema, 500: problemSchema },
+        response: {
+          401: problemSchema,
+          403: problemSchema,
+          422: problemSchema,
+          500: problemSchema,
+        },
         detail: {
           summary: "Send a test error",
           description:
