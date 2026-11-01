@@ -117,7 +117,7 @@ export function valueOf(row: ValueRow & { type: FieldType }, selected: string[])
 }
 
 /** Multiple-choice selections, in their options' order (TS-16), for the albums `where` picks. */
-export function selectionsOf(tx: Transaction, where: SQL | undefined, fieldId?: string) {
+export function selectionsOf(tx: Executor, where: SQL | undefined, fieldId?: string) {
   return tx
     .select({
       albumId: albumFieldMulti.albumId,

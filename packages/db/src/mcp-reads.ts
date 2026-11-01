@@ -16,7 +16,7 @@ import type {
 } from "@tonaris/domain";
 
 import { canReadContainer, readableContainers } from "./access";
-import { readSnapshot, type Database, type Executor } from "./client";
+import { readSnapshot, type Database, type Executor, type Transaction } from "./client";
 import { albumColumns, inActiveList, serviceLinkColumns, unitsOfAccount } from "./columns";
 import { readFieldUsage } from "./field-options";
 import { fieldsOfAccount, valuesOfAlbums } from "./field-values";
@@ -30,6 +30,7 @@ import {
   positions,
   users,
 } from "./schema";
+import { collectionStore } from "./store";
 
 /** The source of each of an album's values that has one, by the API's field name (TS-15). */
 export type AlbumSources = Partial<Record<string, ProvenanceSource>>;
@@ -77,23 +78,23 @@ export type CollectionUsage = {
   fields: number;
 };
 
-const counted = async (query: Promise<{ n: number }[]>) => (await query)[0]?.n ?? 0;
-
-export async function collectionUsage(db: Database, ownerId: string): Promise<CollectionUsage> {
-  const [albumCount, containerCount, membershipCount, fieldCount] = await Promise.all([
-    counted(db.select({ n: count() }).from(albums).where(eq(albums.ownerId, ownerId))),
-    counted(db.select({ n: count() }).from(containers).where(eq(containers.ownerId, ownerId))),
-    counted(db.select({ n: count() }).from(memberships).where(eq(memberships.ownerId, ownerId))),
-    counted(
-      db.select({ n: count() }).from(fieldDefinitions).where(eq(fieldDefinitions.ownerId, ownerId)),
-    ),
-  ]);
-  return {
-    albums: albumCount,
-    containers: containerCount,
-    memberships: membershipCount,
-    fields: fieldCount,
-  };
+/** The counts the commands check the limits against, from one snapshot. */
+export function collectionUsage(db: Database, ownerId: string): Promise<CollectionUsage> {
+  return readSnapshot(db, async (tx) => {
+    const store = collectionStore(tx);
+    const [albumCount, containerCount, membershipCount, [fieldCount]] = await Promise.all([
+      store.countAlbums(ownerId),
+      store.countContainers(ownerId),
+      store.countMemberships(ownerId),
+      tx.select({ n: count() }).from(fieldDefinitions).where(eq(fieldDefinitions.ownerId, ownerId)),
+    ]);
+    return {
+      albums: albumCount,
+      containers: containerCount,
+      memberships: membershipCount,
+      fields: fieldCount?.n ?? 0,
+    };
+  });
 }
 
 export type TreeEntry = { id: string; kind: ContainerKind; name: string; parentId: string | null };
@@ -163,6 +164,86 @@ function manualOrder(
   };
 }
 
+/** A view of a container, or of the reader's root: what it shows, whose content it is, and who shares it. */
+type View = { container: ContainerInfo | null; ownerId: string; owner: SharedOwner | null };
+
+/**
+ * The view of `containerId` for `readerId`, or of their root without one: an active container of their own or one
+ * shared with them (FR-10.2, FR-07); undefined for anything else.
+ */
+async function viewOf(
+  tx: Transaction,
+  readerId: string,
+  containerId?: string,
+): Promise<View | undefined> {
+  if (!containerId) return { container: null, ownerId: readerId, owner: null };
+  const [found] = await tx
+    .select({
+      id: containers.id,
+      kind: containers.kind,
+      name: containers.name,
+      parentId: containers.parentId,
+      description: containers.description,
+      ownerId: containers.ownerId,
+      ownerName: users.displayName,
+    })
+    .from(containers)
+    .innerJoin(users, eq(users.id, containers.ownerId))
+    .where(and(eq(containers.id, containerId), isNull(containers.trashedAt)));
+  if (!found) return undefined;
+  const { ownerId, ownerName, ...container } = found;
+  if (ownerId === readerId) return { container, ownerId, owner: null };
+  const viewer = { kind: "person", userId: readerId } as const;
+  if (!(await canReadContainer(tx, viewer, found.id))) return undefined;
+  // A shared root's folder may be one the reader can't see.
+  if (container.parentId && !(await canReadContainer(tx, viewer, container.parentId))) {
+    container.parentId = null;
+  }
+  return { container, ownerId, owner: { displayName: ownerName } };
+}
+
+/** A list's active albums, joined from its entries, in the reader's manual order, then the order they joined (TS-16). */
+function listOrder(readerId: string, listId: string, ownerId: string) {
+  const order = manualOrder(readerId, listId, albums.id);
+  return {
+    join: order.join,
+    where: and(
+      eq(memberships.listId, listId),
+      eq(albums.ownerId, ownerId),
+      isNull(albums.trashedAt),
+    ),
+    by: [order.first, asc(memberships.addedAt), asc(albums.id)],
+  };
+}
+
+/** The root's or a folder's active folders and lists, in the reader's manual order, then creation (TS-16). */
+function childrenOrder(readerId: string, { container, ownerId }: View) {
+  const order = manualOrder(readerId, container?.id ?? "root", containers.id);
+  return {
+    join: order.join,
+    where: and(
+      eq(containers.ownerId, ownerId),
+      isNull(containers.trashedAt),
+      container ? eq(containers.parentId, container.id) : isNull(containers.parentId),
+    ),
+    by: [order.first, asc(containers.createdAt), asc(containers.id)],
+  };
+}
+
+/** The owner's Unsorted: active albums in no active list (FR-01.9), in their manual order, then newest first (TS-16). */
+function unsortedOrder(tx: Transaction, ownerId: string) {
+  const order = manualOrder(ownerId, "unsorted", albums.id);
+  return {
+    join: order.join,
+    where: and(
+      eq(albums.ownerId, ownerId),
+      isNull(albums.trashedAt),
+      not(inActiveList(tx, albums.id)),
+    ),
+    by: [order.first, desc(albums.createdAt), desc(albums.id)],
+  };
+}
+
 /**
  * A page of the root's or a folder's active folders and lists, or a list's active albums (TS-63), in the reader's
  * manual order, then the fallback order: creation for folders and lists, joining for a list's albums (TS-16). The
@@ -178,61 +259,26 @@ export function containerPage(
   }: { readerId: string; containerId?: string; offset: number; limit: number },
 ): Promise<ContainerPage> {
   return readSnapshot(db, async (tx): Promise<ContainerPage> => {
-    let container: ContainerInfo | null = null;
-    let ownerId = readerId;
-    let owner: SharedOwner | null = null;
-    if (containerId) {
-      const [found] = await tx
-        .select({
-          id: containers.id,
-          kind: containers.kind,
-          name: containers.name,
-          parentId: containers.parentId,
-          description: containers.description,
-          ownerId: containers.ownerId,
-          ownerName: users.displayName,
-        })
-        .from(containers)
-        .innerJoin(users, eq(users.id, containers.ownerId))
-        .where(and(eq(containers.id, containerId), isNull(containers.trashedAt)));
-      if (!found) return { kind: "missing" };
-      const { ownerId: foundOwner, ownerName, ...info } = found;
-      if (foundOwner !== readerId) {
-        const viewer = { kind: "person", userId: readerId } as const;
-        if (!(await canReadContainer(tx, viewer, found.id))) return { kind: "missing" };
-        owner = { displayName: ownerName };
-        // A shared root's folder may be one the reader can't see.
-        if (info.parentId && !(await canReadContainer(tx, viewer, info.parentId))) {
-          info.parentId = null;
-        }
-      }
-      container = info;
-      ownerId = foundOwner;
-    }
-
-    const viewKey = container?.id ?? "root";
+    const view = await viewOf(tx, readerId, containerId);
+    if (!view) return { kind: "missing" };
+    const { container, owner } = view;
     if (container?.kind === "list") {
-      const order = manualOrder(readerId, viewKey, albums.id);
-      const inList = and(
-        eq(memberships.listId, container.id),
-        eq(albums.ownerId, ownerId),
-        isNull(albums.trashedAt),
-      );
+      const order = listOrder(readerId, container.id, view.ownerId);
       const [rows, [total]] = await Promise.all([
         tx
           .select(albumColumns)
           .from(memberships)
           .innerJoin(albums, eq(albums.id, memberships.albumId))
           .leftJoin(positions, order.join)
-          .where(inList)
-          .orderBy(order.first, asc(memberships.addedAt), asc(albums.id))
+          .where(order.where)
+          .orderBy(...order.by)
           .offset(offset)
           .limit(limit),
         tx
           .select({ n: count() })
           .from(memberships)
           .innerJoin(albums, eq(albums.id, memberships.albumId))
-          .where(inList),
+          .where(order.where),
       ]);
       return {
         kind: "albums",
@@ -242,12 +288,7 @@ export function containerPage(
       };
     }
 
-    const order = manualOrder(readerId, viewKey, containers.id);
-    const inFolder = and(
-      eq(containers.ownerId, ownerId),
-      isNull(containers.trashedAt),
-      container ? eq(containers.parentId, container.id) : isNull(containers.parentId),
-    );
+    const order = childrenOrder(readerId, view);
     const [rows, [total]] = await Promise.all([
       tx
         .select({
@@ -258,44 +299,81 @@ export function containerPage(
         })
         .from(containers)
         .leftJoin(positions, order.join)
-        .where(inFolder)
-        .orderBy(order.first, asc(containers.createdAt), asc(containers.id))
+        .where(order.where)
+        .orderBy(...order.by)
         .offset(offset)
         .limit(limit),
-      tx.select({ n: count() }).from(containers).where(inFolder),
+      tx.select({ n: count() }).from(containers).where(order.where),
     ]);
     return { kind: "children", container, owner, page: { items: rows, total: total?.n ?? 0 } };
   });
 }
 
-/**
- * A page of the owner's Unsorted: active albums in no active list (FR-01.9), in their manual order, then newest first
- * (TS-16).
- */
+/** A page of the owner's Unsorted (FR-01.9), in their manual order, then newest first (TS-16). */
 export function unsortedPage(
   db: Database,
   { ownerId, offset, limit }: { ownerId: string; offset: number; limit: number },
 ): Promise<Page<SourcedAlbum>> {
   return readSnapshot(db, async (tx) => {
-    const order = manualOrder(ownerId, "unsorted", albums.id);
-    const unsorted = and(
-      eq(albums.ownerId, ownerId),
-      isNull(albums.trashedAt),
-      not(inActiveList(tx, albums.id)),
-    );
+    const order = unsortedOrder(tx, ownerId);
     const [rows, [total]] = await Promise.all([
       tx
         .select(albumColumns)
         .from(albums)
         .leftJoin(positions, order.join)
-        .where(unsorted)
-        .orderBy(order.first, desc(albums.createdAt), desc(albums.id))
+        .where(order.where)
+        .orderBy(...order.by)
         .offset(offset)
         .limit(limit),
-      tx.select({ n: count() }).from(albums).where(unsorted),
+      tx.select({ n: count() }).from(albums).where(order.where),
     ]);
     return { items: await withSources(tx, rows), total: total?.n ?? 0 };
   });
+}
+
+/**
+ * The first `limit` IDs a view holds now, in the order its pages list them (TS-16): the root's or a folder's folders
+ * and lists, a list's albums, or Unsorted. Undefined for a folder or list `readerId` can't read.
+ */
+export async function viewItemIds(
+  tx: Transaction,
+  { readerId, viewKey, limit }: { readerId: string; viewKey: string; limit: number },
+): Promise<string[] | undefined> {
+  let rows: { id: string }[];
+  if (viewKey === "unsorted") {
+    const order = unsortedOrder(tx, readerId);
+    rows = await tx
+      .select({ id: albums.id })
+      .from(albums)
+      .leftJoin(positions, order.join)
+      .where(order.where)
+      .orderBy(...order.by)
+      .limit(limit);
+    return rows.map((row) => row.id);
+  }
+  const view = await viewOf(tx, readerId, viewKey === "root" ? undefined : viewKey);
+  if (!view) return undefined;
+  if (view.container?.kind === "list") {
+    const order = listOrder(readerId, view.container.id, view.ownerId);
+    rows = await tx
+      .select({ id: albums.id })
+      .from(memberships)
+      .innerJoin(albums, eq(albums.id, memberships.albumId))
+      .leftJoin(positions, order.join)
+      .where(order.where)
+      .orderBy(...order.by)
+      .limit(limit);
+  } else {
+    const order = childrenOrder(readerId, view);
+    rows = await tx
+      .select({ id: containers.id })
+      .from(containers)
+      .leftJoin(positions, order.join)
+      .where(order.where)
+      .orderBy(...order.by)
+      .limit(limit);
+  }
+  return rows.map((row) => row.id);
 }
 
 /** A custom field's value on an album, with the options it chooses for a choice field. */

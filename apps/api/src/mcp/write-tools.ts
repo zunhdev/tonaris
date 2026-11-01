@@ -674,7 +674,11 @@ export function registerWriteTools(
       annotations: { ...writes, openWorldHint: true },
     },
     async (args) => {
-      const url = await linkBase(db, { albumId: args.albumId, service: args.service });
+      const url = await linkBase(db, {
+        ownerId: userId,
+        albumId: args.albumId,
+        service: args.service,
+      });
       return run("set_link", args, () =>
         each(
           [
@@ -704,7 +708,11 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const url = await linkBase(db, { albumId: args.albumId, service: args.service });
+      const url = await linkBase(db, {
+        ownerId: userId,
+        albumId: args.albumId,
+        service: args.service,
+      });
       return run("remove_link", args, () =>
         each(
           [
@@ -750,7 +758,11 @@ export function registerWriteTools(
       const current = await Promise.all(
         args.changes.map((change) =>
           change.action === "set" || change.action === "clear"
-            ? fieldValueBase(db, { albumId: change.albumId, fieldId: change.fieldId })
+            ? fieldValueBase(db, {
+                ownerId: userId,
+                albumId: change.albumId,
+                fieldId: change.fieldId,
+              })
             : Promise.resolve(undefined),
         ),
       );

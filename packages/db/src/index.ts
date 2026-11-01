@@ -135,6 +135,7 @@ export {
   albumBase,
   claimOperation,
   containerBase,
+  fieldBase,
   fieldValueBase,
   findOperation,
   linkBase,

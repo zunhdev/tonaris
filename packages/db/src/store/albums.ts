@@ -3,16 +3,17 @@
 
 import { and, asc, count, eq, exists, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
-import type { CollectionStore } from "@tonaris/domain";
+import type { CollectionStore, StreamingService } from "@tonaris/domain";
 
 import { albumsOfReleaseGroupIn, applyPlan, findCaptureTarget } from "../album-writes";
-import type { Transaction } from "../client";
+import type { Executor, Transaction } from "../client";
 import {
   albumColumns,
   albumSearchKeys,
   containerColumns,
   membershipColumns,
   membershipOf,
+  serviceLinkColumns,
   storedUnitColumns,
 } from "../columns";
 import { recordInLedger } from "../ledger";
@@ -27,18 +28,30 @@ import {
   trashUnits,
 } from "../schema";
 
+/** The album, whoever owns it, in Trash or not. */
+export async function findAlbumIn(db: Executor, id: string) {
+  const [row] = await db
+    .select({ ...albumColumns, ownerId: albums.ownerId, trashedAt: albums.trashedAt })
+    .from(albums)
+    .where(eq(albums.id, id));
+  if (!row) return undefined;
+  const { trashedAt, ...album } = row;
+  return { ...album, trashed: trashedAt !== null };
+}
+
+/** The album's link for `service`, if it has one. */
+export async function findServiceLinkIn(db: Executor, albumId: string, service: StreamingService) {
+  const [row] = await db
+    .select({ ...serviceLinkColumns, entityId: albumServiceLinks.entityId })
+    .from(albumServiceLinks)
+    .where(and(eq(albumServiceLinks.albumId, albumId), eq(albumServiceLinks.service, service)));
+  return row;
+}
+
 /** Albums, their entries and links, and Trash units, on `tx`. */
 export function albumStore(tx: Transaction) {
   return {
-    async findAlbum(id) {
-      const [row] = await tx
-        .select({ ...albumColumns, ownerId: albums.ownerId, trashedAt: albums.trashedAt })
-        .from(albums)
-        .where(eq(albums.id, id));
-      if (!row) return undefined;
-      const { trashedAt, ...album } = row;
-      return { ...album, trashed: trashedAt !== null };
-    },
+    findAlbum: (id) => findAlbumIn(tx, id),
     async insertAlbum({ ownerId, id, ...values }, origin) {
       await tx.insert(albums).values({
         id,
@@ -183,17 +196,7 @@ export function albumStore(tx: Transaction) {
         .where(and(eq(albums.id, albumId), eq(albums.trashUnitId, unitId)));
       await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
     },
-    async findServiceLink(albumId, service) {
-      const [row] = await tx
-        .select({
-          service: albumServiceLinks.service,
-          url: albumServiceLinks.url,
-          entityId: albumServiceLinks.entityId,
-        })
-        .from(albumServiceLinks)
-        .where(and(eq(albumServiceLinks.albumId, albumId), eq(albumServiceLinks.service, service)));
-      return row;
-    },
+    findServiceLink: (albumId, service) => findServiceLinkIn(tx, albumId, service),
     async insertServiceLink(albumId, ownerId, link) {
       await tx.insert(albumServiceLinks).values({ albumId, ownerId, ...link });
     },

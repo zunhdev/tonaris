@@ -3,9 +3,9 @@
 
 import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
 
-import { fieldValueKey, nameKey, type CollectionStore } from "@tonaris/domain";
+import { fieldValueKey, nameKey, type CollectionStore, type FieldValueData } from "@tonaris/domain";
 
-import type { Transaction } from "../client";
+import type { Executor, Transaction } from "../client";
 import {
   columnsOf,
   emptyValue,
@@ -25,6 +25,28 @@ import {
   fieldDefinitions,
   fieldOptions,
 } from "../schema";
+
+/** The album's value for the field: undefined when the field isn't applied, null when applied-empty (FR-03.7). */
+export async function findFieldValueIn(
+  db: Executor,
+  albumId: string,
+  fieldId: string,
+): Promise<FieldValueData | undefined> {
+  const [row] = await db
+    .select({ ...valueColumns, type: fieldDefinitions.type })
+    .from(albumFieldValues)
+    .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
+    .where(and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, fieldId)));
+  if (!row) return undefined;
+  const selected =
+    row.type === "multiple_choice"
+      ? await selectionsOf(db, eq(albumFieldMulti.albumId, albumId), fieldId)
+      : [];
+  return valueOf(
+    row,
+    selected.map((each) => each.optionId),
+  );
+}
 
 /** Custom fields, their options and the values albums apply, on `tx`. */
 export function fieldStore(tx: Transaction) {
@@ -52,22 +74,7 @@ export function fieldStore(tx: Transaction) {
         .where(eq(fieldDefinitions.id, id));
     },
 
-    async findFieldValue(albumId, fieldId) {
-      const [row] = await tx
-        .select({ ...valueColumns, type: fieldDefinitions.type })
-        .from(albumFieldValues)
-        .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
-        .where(and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, fieldId)));
-      if (!row) return undefined;
-      const selected =
-        row.type === "multiple_choice"
-          ? await selectionsOf(tx, eq(albumFieldMulti.albumId, albumId), fieldId)
-          : [];
-      return valueOf(
-        row,
-        selected.map((each) => each.optionId),
-      );
-    },
+    findFieldValue: (albumId, fieldId) => findFieldValueIn(tx, albumId, fieldId),
     async applyField(albumId, fieldId) {
       await tx.insert(albumFieldValues).values({ albumId, fieldId }).onConflictDoNothing();
     },

@@ -5,20 +5,23 @@ import { and, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import type { CollectionStore } from "@tonaris/domain";
 
-import type { Transaction } from "../client";
+import type { Executor, Transaction } from "../client";
 import { accountDefaultsColumns, inActiveList, viewPrefsColumns } from "../columns";
 import { accountSettings, albums, containers, memberships, positions, viewPrefs } from "../schema";
+
+/** The person's choices for the view, if they made any (FR-11.7). */
+export async function findViewPrefsIn(db: Executor, personId: string, viewKey: string) {
+  const [row] = await db
+    .select(viewPrefsColumns)
+    .from(viewPrefs)
+    .where(and(eq(viewPrefs.personId, personId), eq(viewPrefs.viewKey, viewKey)));
+  return row;
+}
 
 /** View choices, defaults and manual order, on `tx`. */
 export function viewStore(tx: Transaction) {
   return {
-    async findViewPrefs(personId, viewKey) {
-      const [row] = await tx
-        .select(viewPrefsColumns)
-        .from(viewPrefs)
-        .where(and(eq(viewPrefs.personId, personId), eq(viewPrefs.viewKey, viewKey)));
-      return row;
-    },
+    findViewPrefs: (personId, viewKey) => findViewPrefsIn(tx, personId, viewKey),
     async saveViewPrefs(personId, { viewKey, ...choices }) {
       await tx
         .insert(viewPrefs)

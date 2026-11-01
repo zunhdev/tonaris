@@ -5,27 +5,26 @@ import { and, asc, count, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import type { CollectionStore } from "@tonaris/domain";
 
-import type { Transaction } from "../client";
+import type { Executor, Transaction } from "../client";
 import { containerColumns, containerNameKeys, membershipColumns, membershipOf } from "../columns";
 import { ancestorsCte, descendantsCte } from "../hierarchy";
 import { containers, memberships } from "../schema";
 
+/** The folder or list, whoever owns it, in Trash or not. */
+export async function findContainerIn(db: Executor, id: string) {
+  const [row] = await db
+    .select({ ...containerColumns, ownerId: containers.ownerId, trashedAt: containers.trashedAt })
+    .from(containers)
+    .where(eq(containers.id, id));
+  if (!row) return undefined;
+  const { trashedAt, ...container } = row;
+  return { ...container, trashed: trashedAt !== null };
+}
+
 /** Folders, lists and their entries, on `tx`. */
 export function containerStore(tx: Transaction) {
   return {
-    async findContainer(id) {
-      const [row] = await tx
-        .select({
-          ...containerColumns,
-          ownerId: containers.ownerId,
-          trashedAt: containers.trashedAt,
-        })
-        .from(containers)
-        .where(eq(containers.id, id));
-      if (!row) return undefined;
-      const { trashedAt, ...container } = row;
-      return { ...container, trashed: trashedAt !== null };
-    },
+    findContainer: (id) => findContainerIn(tx, id),
     async containerPath(id) {
       const rows = await tx.execute<{ id: string }>(
         sql`with recursive ${ancestorsCte(id)} select id from up order by level`,
