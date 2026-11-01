@@ -189,16 +189,20 @@ export async function deleteContainer(
   args: z.infer<typeof containerDeleteArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store } = context;
+  const { store, principal } = context;
   const existing = await store.findTrashUnit(args.unitId);
   if (existing) {
-    const sameUnit =
-      existing.rootId === args.id && existing.ownerId === actingUserId(context.principal);
-    return sameUnit
+    const sameUnit = existing.rootId === args.id && existing.ownerId === actingUserId(principal);
+    if (!sameUnit) {
+      return failure("validation_failed", "This ID is already in use.", [
+        { path: "args.unitId", message: "Already in use" },
+      ]);
+    }
+    // A resend changes nothing, but only for someone who may make the change (TS-30).
+    const decision = authorizeWrite(principal, { ownerId: existing.ownerId, scope: "collection" });
+    return decision.allowed
       ? applied()
-      : failure("validation_failed", "This ID is already in use.", [
-          { path: "args.unitId", message: "Already in use" },
-        ]);
+      : failure(decision.code, "You can't change this folder or list.");
   }
   const container = await changeableContainer(args.id, context);
   if ("status" in container) return container;
@@ -265,11 +269,14 @@ export async function recoverUnit(
   args: z.infer<typeof trashRecoverArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store } = context;
+  const { store, principal } = context;
   const unit = await store.findTrashUnit(args.unitId);
-  if (!unit || unit.ownerId !== actingUserId(context.principal)) {
+  // Someone else's unit is answered as gone, so nobody can probe for other people's IDs.
+  if (!unit || unit.ownerId !== actingUserId(principal)) {
     return failure("not_found", "This is no longer in Trash.");
   }
+  const decision = authorizeWrite(principal, { ownerId: unit.ownerId, scope: "collection" });
+  if (!decision.allowed) return failure(decision.code, "You can't recover this from Trash.");
   // Expiry is enforced at 30 days, even before the hourly purge removes it (FR-01.17, FR-10.7).
   if (unit.expiresAt.getTime() <= (context.now ?? new Date()).getTime()) {
     return failure(
@@ -421,11 +428,14 @@ export async function deleteAlbum(
   const { store, principal } = context;
   const existing = await store.findTrashUnit(args.unitId);
   if (existing) {
-    return existing.rootId === args.id && existing.ownerId === actingUserId(principal)
-      ? applied()
-      : failure("validation_failed", "This ID is already in use.", [
-          { path: "args.unitId", message: "Already in use" },
-        ]);
+    if (existing.rootId !== args.id || existing.ownerId !== actingUserId(principal)) {
+      return failure("validation_failed", "This ID is already in use.", [
+        { path: "args.unitId", message: "Already in use" },
+      ]);
+    }
+    // A resend changes nothing, but only for someone who may make the change (TS-30).
+    const decision = authorizeWrite(principal, { ownerId: existing.ownerId, scope: "collection" });
+    return decision.allowed ? applied() : failure(decision.code, "You can't change this album.");
   }
   const album = await store.findAlbum(args.id);
   if (!album) return failure("not_found", "This album doesn't exist.");
