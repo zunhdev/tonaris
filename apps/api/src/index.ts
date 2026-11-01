@@ -5,52 +5,36 @@
 
 import { createDatabase, ledgerStore } from "@tonaris/db";
 
-import { createApp, maxRequestBodySize } from "./app";
-import { createAuth } from "./auth/auth";
+import { maxRequestBodySize } from "./app";
 import { syncFeedbackClient } from "./auth/feedback";
 import { apiConfig } from "./config";
-import { emailJob, emailOutbox } from "./email/outbox";
 import { emailTransport } from "./email/transport";
-import { accountDeletionJob } from "./jobs/account-deletion";
-import { ledgerJob } from "./jobs/ledger";
 import { apiSchedules, startSchedules } from "./jobs/schedules";
-import { startJobWorker } from "./jobs/worker";
 import { log, reportError, startErrorReports } from "./observability";
 import { createProviders } from "./providers";
+import { createRuntime } from "./runtime";
 import { databaseHub } from "./sync/hub";
 
 const config = apiConfig();
 // Errors go to the logs, and to Sentry when it is configured, redacted (TS-115).
 startErrorReports(config.sentryDsn, config.environment);
 const db = createDatabase();
-const hub = databaseHub(db, {
-  logError: (error) => reportError(error, "Checking stream sessions"),
-});
-const worker = startJobWorker(
-  db,
-  [
-    emailJob(db, emailTransport(config)),
-    accountDeletionJob(db, (accountId) => hub.notify(accountId)),
-    ledgerJob(ledgerStore(config.ledgerUrl)),
-  ],
-  { logError: reportError },
-);
-const email = emailOutbox(db, worker.wake);
-const auth = createAuth({ config, db, email, logError: reportError });
-// The feedback board's sign-in client, as FEEDBACK_CALLBACK_URL and FEEDBACK_CLIENT_SECRET say (TON-144).
-await syncFeedbackClient(db, config.feedback);
+// The providers take the hub to publish what they enrich (TS-42), so it is made before the rest.
+const hub = databaseHub(db, { logError: reportError });
 const providers = createProviders(config, db, hub);
-const app = createApp({
-  config,
-  auth,
+const { worker, app } = createRuntime({
   db,
-  email,
+  config,
   hub,
-  wakeJobs: worker.wake,
+  transport: emailTransport(config),
+  ledger: ledgerStore(config.ledgerUrl),
   capture: providers.capture,
   covers: providers.covers,
   logError: reportError,
-}).listen({ port: config.port, maxRequestBodySize });
+});
+// The feedback board's sign-in client, as FEEDBACK_CALLBACK_URL and FEEDBACK_CLIENT_SECRET say (TON-144).
+await syncFeedbackClient(db, config.feedback);
+app.listen({ port: config.port, maxRequestBodySize });
 const schedules = startSchedules(
   db,
   apiSchedules(providers.spotify, {

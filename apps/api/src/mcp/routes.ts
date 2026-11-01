@@ -23,6 +23,7 @@ import { mcpModeOf, mcpScopes, type McpPrincipal } from "@tonaris/domain";
 
 import { type Auth, mcpResource } from "../auth/auth";
 import type { ApiConfig } from "../config";
+import type { LogError } from "../observability";
 import type { Mutations } from "../sync/runner";
 import { createMcpLimiter, mcpLimits, type McpLimiter } from "./limits";
 import { createMcpServer } from "./server";
@@ -32,7 +33,7 @@ export type McpRoutesOptions = {
   auth: Auth;
   db: Database;
   config: Pick<ApiConfig, "apiOrigin" | "webOrigin">;
-  logError: (error: unknown, context: string) => void;
+  logError: LogError;
   /** Runs agents' writes as the app's run, and hands their changes to the same streams (X-02, X-08). */
   mutations: Mutations;
   /** The per-connection limits (TS-66); a test may pass its own clock. */

@@ -31,6 +31,7 @@ import {
 
 import { prepareCapture, prepareLink, type CaptureDeps } from "../capture";
 import { deliverInvitation } from "../invitations";
+import type { LogError } from "../observability";
 import type { SyncHub } from "./hub";
 
 /** Thrown when a mutation is claimed by another request that is still running it (TS-22). */
@@ -49,7 +50,7 @@ export type MutationRunnerDeps = {
   /** Sends invitations (TS-72), with the web app's origin for their links. */
   email: EmailPort;
   webOrigin: string;
-  logError: (error: unknown, context: string) => void;
+  logError: LogError;
 };
 
 /** Runs one mutation for `principal`, as the API does. Throws `MutationInProgressError` while a copy runs. */

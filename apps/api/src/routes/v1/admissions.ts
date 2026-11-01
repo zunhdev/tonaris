@@ -38,6 +38,7 @@ import {
   newAdmissionToken,
 } from "../../auth/admission";
 import type { SessionGuard } from "../../auth/plugin";
+import type { LogError } from "../../observability";
 import { ProblemError } from "../../problem";
 
 export type AdmissionAdminDeps = {
@@ -45,7 +46,7 @@ export type AdmissionAdminDeps = {
   /** Sends invitations (TS-72), with the web app's origin for their links. */
   email: EmailPort;
   webOrigin: string;
-  logError: (error: unknown, context: string) => void;
+  logError: LogError;
 };
 
 /** An invitation as the admin lists it, with the status that holds now. */

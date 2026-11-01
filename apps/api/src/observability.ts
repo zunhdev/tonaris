@@ -9,6 +9,9 @@ import { redact, redactRecord, redactText } from "@tonaris/domain";
 
 type Level = "info" | "error";
 
+/** Gets a failure that no request answers, with where it happened: `reportError`, or a stand-in in tests. */
+export type LogError = (error: unknown, context: string) => void;
+
 /** One JSON log line, redacted. */
 export function log(level: Level, message: string, fields: Record<string, unknown> = {}): void {
   const line = JSON.stringify(
@@ -25,10 +28,10 @@ function described(error: unknown): Record<string, unknown> {
 }
 
 /** Logs `error` as having happened in `context`, and sends it to Sentry when it is on. */
-export function reportError(error: unknown, context: string): void {
+export const reportError: LogError = (error, context) => {
   log("error", context, described(error));
   Sentry.captureException(error, { tags: { context: redactText(context) } });
-}
+};
 
 /** Switches Sentry on for `dsn`, if there is one; reports are scrubbed as above. */
 export function startErrorReports(dsn: string | undefined, environment: string): void {

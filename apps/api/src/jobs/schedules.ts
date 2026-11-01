@@ -16,6 +16,8 @@ import {
 import type { Change } from "@tonaris/domain";
 import type { Spotify } from "@tonaris/providers";
 
+import type { LogError } from "../observability";
+
 export type Schedule = {
   /** Names the advisory lock too, so it must be unique. */
   name: string;
@@ -141,7 +143,8 @@ export function runSchedule(
 export type ScheduleOptions = {
   /** How long after the start each schedule first runs, so the start isn't slowed. */
   firstAfterMs?: number;
-  logError?: (error: unknown, schedule: string) => void;
+  /** Gets a failed run, with the schedule's name. */
+  logError?: LogError;
 };
 
 /** Runs each schedule after `firstAfterMs`, then every `everyMs`. `stop()` waits for the runs in progress. */

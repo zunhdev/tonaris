@@ -14,6 +14,7 @@ import type { SSEPayload } from "elysia";
 import { activeSessionIds, headSeq, readChanges, type Database } from "@tonaris/db";
 import type { Change, StreamReset } from "@tonaris/domain";
 
+import type { LogError } from "../observability";
 import type { StreamSource } from "../sse";
 
 export type ChangeEvent = SSEPayload<Change, "change"> & { id: string; data: Change };
@@ -49,7 +50,7 @@ export type SyncHubOptions = {
   /** How often open streams' sessions are checked (TS-23). */
   sessionCheckMs?: number;
   /** Gets a failed session check; the streams stay open until the next one. */
-  logError?: (error: unknown) => void;
+  logError?: LogError;
   /** Changes read from the log at a time. */
   pageSize?: number;
   /** Changes a stream holds for a slow client before it drops them and reads the log instead. */
@@ -182,7 +183,7 @@ export function createSyncHub(options: SyncHubOptions) {
   const {
     sessions,
     sessionCheckMs = 30_000,
-    logError = (error: unknown) => console.error("Checking stream sessions failed", error),
+    logError = (error, context) => console.error(`${context} failed`, error),
     ...rest
   } = options;
   const settings: StreamSettings = { pageSize: 500, bufferLimit: 1_000, ...rest };
@@ -211,7 +212,7 @@ export function createSyncHub(options: SyncHubOptions) {
     try {
       active = await sessions.active(ids);
     } catch (error) {
-      logError(error);
+      logError(error, "Checking stream sessions");
       return;
     }
     endWhere(({ sessionId }) => sessionId !== undefined && !active.has(sessionId));

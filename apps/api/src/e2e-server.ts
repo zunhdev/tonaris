@@ -8,18 +8,14 @@ import { agreeToTerms } from "@tonaris/db";
 import { createTestDatabase } from "@tonaris/db/testing";
 import { emailKey, termsVersion } from "@tonaris/domain";
 
-import { createApp, maxRequestBodySize } from "./app";
-import { createAuth } from "./auth/auth";
+import { maxRequestBodySize } from "./app";
 import { seedCreator } from "./auth/seed-creator";
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
 import { fixtureCapture, fixtureCovers, fixtureImageFetch } from "./capture-fixtures";
 import { apiConfig } from "./config";
-import { emailJob, emailOutbox } from "./email/outbox";
 import { smtpEmail } from "./email/smtp";
-import { accountDeletionJob } from "./jobs/account-deletion";
-import { ledgerJob, memoryLedger } from "./jobs/ledger";
-import { startJobWorker } from "./jobs/worker";
-import { databaseHub } from "./sync/hub";
+import { memoryLedger } from "./jobs/ledger";
+import { createRuntime } from "./runtime";
 import { insertUser } from "./testing";
 
 const port = Number(process.env.PORT ?? 3101);
@@ -40,39 +36,25 @@ const config = apiConfig({
   API_ORIGIN: `http://localhost:${port}`,
   WEB_ORIGIN: process.env.WEB_ORIGIN ?? "http://localhost:3100",
 });
-const hub = databaseHub(database.db);
-const worker = startJobWorker(database.db, [
-  emailJob(database.db, smtpEmail(config)),
-  accountDeletionJob(database.db, (accountId) => hub.notify(accountId)),
+const { hub, worker, app } = createRuntime({
+  db: database.db,
+  config,
+  transport: smtpEmail(config),
   // The browser tests check the app, not the ledger: it is kept in memory and dropped with the schema.
-  ledgerJob(memoryLedger()),
-]);
-const email = emailOutbox(database.db, worker.wake);
-// Playwright's WebKit keeps no `Secure` cookie on http://localhost, so its run asks for plain ones (TON-94).
-const auth = createAuth({
-  config,
-  db: database.db,
-  email,
-  secureCookies: process.env.E2E_INSECURE_COOKIES !== "1",
-});
-// Every test signs in from 127.0.0.1, so the per-address limit would count the whole suite as one person.
-const limiter = createSignInLimiter({
-  perEmail: signInLimits.perEmail,
-  perIp: { ...signInLimits.perIp, max: 10_000 },
-});
-// Captures and artwork are answered from fixtures, not MusicBrainz or image hosts (TON-45, TON-48).
-const app = createApp({
-  config,
-  auth,
-  db: database.db,
-  email,
-  hub,
-  limiter,
-  wakeJobs: worker.wake,
+  ledger: memoryLedger(),
+  // Playwright's WebKit keeps no `Secure` cookie on http://localhost, so its run asks for plain ones (TON-94).
+  auth: { secureCookies: process.env.E2E_INSECURE_COOKIES !== "1" },
+  // Every test signs in from 127.0.0.1, so the per-address limit would count the whole suite as one person.
+  limiter: createSignInLimiter({
+    perEmail: signInLimits.perEmail,
+    perIp: { ...signInLimits.perIp, max: 10_000 },
+  }),
+  // Captures and artwork are answered from fixtures, not MusicBrainz or image hosts (TON-45, TON-48).
   capture: fixtureCapture(),
   imageFetch: fixtureImageFetch,
   covers: fixtureCovers,
-}).listen({ port, maxRequestBodySize });
+});
+app.listen({ port, maxRequestBodySize });
 console.log(`e2e API on ${app.server?.url.href}, schema ${database.schema}`);
 
 async function stop() {
