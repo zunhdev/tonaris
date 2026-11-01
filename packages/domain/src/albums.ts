@@ -206,10 +206,29 @@ export async function changeableAlbum(
   return album;
 }
 
-/** The album as clients see it, without the owner and Trash state. */
-function albumOf(stored: StoredAlbum): Album {
-  const { ownerId: _, trashed: __, ...album } = stored;
-  return album;
+/** The album as clients hold it, with its artwork (FR-03.4): nothing of its owner, Trash state or identity. */
+export function albumOf({
+  id,
+  title,
+  artistCredit,
+  releaseType,
+  isLive,
+  originalYear,
+  recordingYearStart,
+  recordingYearEnd,
+  artworkUrl,
+}: Album): Album {
+  return {
+    id,
+    title,
+    artistCredit,
+    releaseType,
+    isLive,
+    originalYear,
+    recordingYearStart,
+    recordingYearEnd,
+    artworkUrl,
+  };
 }
 
 /**

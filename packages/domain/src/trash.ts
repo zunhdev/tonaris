@@ -8,8 +8,7 @@
 // lists are reported, and with none it goes to Unsorted. A restore that would make a second active record of the same
 // album pauses instead, naming it, and changes nothing (FR-14.3).
 
-import { changeableAlbum } from "./albums";
-import { clientAlbum } from "./capture";
+import { albumOf, changeableAlbum } from "./albums";
 import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
@@ -564,7 +563,7 @@ async function recoverAlbumUnit(
         entity: "album",
         id: album.id,
         op: "insert",
-        data: clientAlbum(album.id, album, album.artworkUrl),
+        data: albumOf(album),
       },
       ...back.map((entry): ChangeInput => ({
         entity: "membership",

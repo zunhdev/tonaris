@@ -13,9 +13,9 @@ import {
   albumFields,
   albumFieldsSchema,
   albumCapacityProblem,
+  albumOf,
   albumProblem,
   hasAlbumSlot,
-  type Album,
   type AlbumFields,
 } from "./albums";
 import { actingOwner, isFailure } from "./command-kit";
@@ -133,19 +133,6 @@ const captured = (changes: ChangeInput[], result: CaptureResult): CommandResult 
   status: "applied",
   changes,
   result,
-});
-
-/** The album as clients hold it, with its artwork (FR-03.4). */
-export const clientAlbum = (id: string, values: AlbumFields, artworkUrl: string | null): Album => ({
-  id,
-  title: values.title,
-  artistCredit: values.artistCredit,
-  releaseType: values.releaseType,
-  isLive: values.isLive,
-  originalYear: values.originalYear,
-  recordingYearStart: values.recordingYearStart,
-  recordingYearEnd: values.recordingYearEnd,
-  artworkUrl,
 });
 
 /**
@@ -329,11 +316,11 @@ async function reuse(
         entity: "album",
         id: target.id,
         op: "update",
-        data: clientAlbum(
-          target.id,
-          { ...target, ...plan.values },
-          plan.values.artworkUrl ?? target.artworkUrl,
-        ),
+        data: albumOf({
+          ...target,
+          ...plan.values,
+          artworkUrl: plan.values.artworkUrl ?? target.artworkUrl,
+        }),
       });
     }
   }
@@ -343,11 +330,11 @@ async function reuse(
       entity: "album",
       id: target.id,
       op: "insert",
-      data: clientAlbum(
-        target.id,
-        { ...target, ...filled },
-        filled.artworkUrl === undefined ? target.artworkUrl : filled.artworkUrl,
-      ),
+      data: albumOf({
+        ...target,
+        ...filled,
+        artworkUrl: filled.artworkUrl === undefined ? target.artworkUrl : filled.artworkUrl,
+      }),
     });
   }
   const { keptLink, changes: linked } = await keepLink(target.id, ownerId, link, context);
@@ -417,7 +404,7 @@ async function create(
   // A new record needs a slot; reusing or restoring one never does (FR-15.2).
   if (!(await hasAlbumSlot(store, ownerId))) return albumCapacityProblem();
 
-  const album = clientAlbum(args.albumId, values, artworkUrl);
+  const album = albumOf({ ...values, id: args.albumId, artworkUrl });
   await store.insertAlbum({ ...album, ownerId }, origin);
   await store.insertServiceLink(args.albumId, ownerId, source.link);
   const placed = await place(args.albumId, ownerId, args.listId, true, context);
