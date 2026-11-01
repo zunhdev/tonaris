@@ -23,11 +23,9 @@ import {
   admissionInviteSchema,
   admissionsPausedSchema,
   admissionsSchema,
-  authorizeAdmissionAdmin,
-  emailKey,
   type EmailPort,
   invitationStatus,
-  type Principal,
+  parseEmailAddress,
   problemSchema,
 } from "@tonaris/domain";
 
@@ -40,6 +38,7 @@ import {
 import type { SessionGuard } from "../../auth/plugin";
 import type { LogError } from "../../observability";
 import { ProblemError } from "../../problem";
+import { noFields, refused, requireCreator } from "./common";
 
 export type AdmissionAdminDeps = {
   db: Database;
@@ -62,16 +61,7 @@ function listed(row: AdmissionInvitationRow, now = new Date()): AdmissionInvitat
   };
 }
 
-/** Admission administration is the creator's, in the app only (FR-11.6, X-03). */
-export function requireCreator(principal: Principal): void {
-  if (!authorizeAdmissionAdmin(principal).allowed) {
-    throw new ProblemError(403, "permission_denied", "Only the creator administers admissions.");
-  }
-}
-
 const invitationParams = z.object({ id: z.uuid() });
-/** An action's body: no fields, since a POST must be JSON (TS-102). */
-const noFields = z.object({}).meta({ description: "No fields." });
 const refusals = { 401: problemSchema, 403: problemSchema, 404: problemSchema, 422: problemSchema };
 
 export function admissionAdminRoutes(
@@ -104,7 +94,7 @@ export function admissionAdminRoutes(
   ): Promise<AdmissionInvitation> {
     const row = await findAdmissionInvitationById(db, id);
     if (!row) throw new ProblemError(404, "not_found", "No invitation with this ID.");
-    if (!acted) throw new ProblemError(422, "validation_failed", unavailable);
+    if (!acted) throw refused(unavailable);
     return listed(row);
   }
 
@@ -149,22 +139,14 @@ export function admissionAdminRoutes(
       },
       async ({ principal, account, body, status }) => {
         requireCreator(principal);
-        const address = emailKey(body.email);
-        if (!z.email().safeParse(address).success) {
-          throw new ProblemError(422, "validation_failed", admissionAdminRefusalDetails.notEmail);
-        }
+        const address = parseEmailAddress(body.email);
+        if (!address) throw refused(admissionAdminRefusalDetails.notEmail);
         const issued = await issueAdmissionInvitation(db, {
           email: address,
           createdBy: account.id,
           emailed: true,
         });
-        if (!issued.issued) {
-          throw new ProblemError(
-            422,
-            "validation_failed",
-            admissionAdminRefusalDetails[issued.refusal](address),
-          );
-        }
+        if (!issued.issued) throw refused(admissionAdminRefusalDetails[issued.refusal](address));
         await emailInvitation(issued.id, address, issued.token);
         const row = await findAdmissionInvitationById(db, issued.id);
         if (!row) throw new Error("The invitation just issued is gone.");

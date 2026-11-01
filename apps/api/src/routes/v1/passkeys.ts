@@ -14,7 +14,6 @@ import {
   type Database,
 } from "@tonaris/db";
 import {
-  authorizeWrite,
   defaultPasskeyName,
   type Passkey,
   passkeyName,
@@ -27,13 +26,10 @@ import {
 
 import type { SessionGuard } from "../../auth/plugin";
 import { ProblemError } from "../../problem";
+import { authorizeAccount, noContent, refused } from "./common";
 
-function authorize(principal: Principal, ownerId: string): void {
-  const decision = authorizeWrite(principal, { ownerId, scope: "account" });
-  if (!decision.allowed) {
-    throw new ProblemError(403, "permission_denied", "Your passkeys are managed in the app.");
-  }
-}
+const authorize = (principal: Principal, ownerId: string) =>
+  authorizeAccount(principal, ownerId, "Your passkeys are managed in the app.");
 
 const none = () => new ProblemError(404, "not_found", refusals.none);
 
@@ -85,7 +81,7 @@ export function passkeyRoutes(session: SessionGuard, { db }: { db: Database }) {
       async ({ principal, account, params, body }) => {
         authorize(principal, account.id);
         const named = passkeyName(body.name);
-        if (!named.ok) throw new ProblemError(422, "validation_failed", refusals[named.refusal]);
+        if (!named.ok) throw refused(refusals[named.refusal]);
         const renamed = await renamePasskey(db, {
           userId: account.id,
           id: params.id,
@@ -101,8 +97,7 @@ export function passkeyRoutes(session: SessionGuard, { db }: { db: Database }) {
         signedIn: true,
         params: z.object({ id: z.uuid() }),
         response: {
-          // Elysia sends a 204 without a body, so validation sees undefined; the document shows no content.
-          204: z.null().optional().meta({ description: "The passkey is removed." }),
+          204: noContent("The passkey is removed."),
           401: problemSchema,
           403: problemSchema,
           404: problemSchema,

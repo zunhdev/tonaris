@@ -377,3 +377,6 @@ export * from "./export-readme";
 export * from "./export-archive";
 export * from "./ledger";
 export * from "./telemetry";
+
+// TON-147: helpers the API's adapters share.
+export { parseEmailAddress } from "./accounts";

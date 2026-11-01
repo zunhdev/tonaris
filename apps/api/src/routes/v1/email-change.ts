@@ -15,14 +15,13 @@ import {
   submitEmailChangeCode,
 } from "@tonaris/db";
 import {
-  authorizeWrite,
   emailChangeCodeSchema,
   emailChangeRefusalDetails as refusals,
   emailChangeSchema,
   emailChangeStartSchema,
   emailChangeStepSchema,
-  emailKey,
   type EmailPort,
+  parseEmailAddress,
   type Principal,
   problemSchema,
 } from "@tonaris/domain";
@@ -33,6 +32,7 @@ import { codeDigits, newCode, sha256 } from "../../auth/secrets";
 import type { SignInLimiter } from "../../auth/sign-in-limits";
 import { ProblemError } from "../../problem";
 import type { SyncHub } from "../../sync/hub";
+import { authorizeAccount, noContent, noFields, refused } from "./common";
 
 export type EmailChangeDeps = {
   db: Database;
@@ -44,14 +44,9 @@ export type EmailChangeDeps = {
   hub: Pick<SyncHub, "endSessionsOf">;
 };
 
-function authorize(principal: Principal, ownerId: string): void {
-  const decision = authorizeWrite(principal, { ownerId, scope: "account" });
-  if (!decision.allowed) {
-    throw new ProblemError(403, "permission_denied", "Your sign-in email is changed in the app.");
-  }
-}
+const authorize = (principal: Principal, ownerId: string) =>
+  authorizeAccount(principal, ownerId, "Your sign-in email is changed in the app.");
 
-const refused = (detail: string) => new ProblemError(422, "validation_failed", detail);
 const noChange = () => new ProblemError(404, "not_found", refusals.none);
 
 /** Why a code didn't act, as its problem. */
@@ -62,9 +57,6 @@ const submissionRefusals = {
   wrong: () => refused(refusals.wrongCode),
   taken: () => refused(refusals.taken),
 } as const;
-
-/** An action's body: no fields, since a POST must be JSON (TS-102). */
-const noFields = z.object({}).meta({ description: "No fields." });
 
 export function emailChangeRoutes(
   session: SessionGuard,
@@ -116,8 +108,8 @@ export function emailChangeRoutes(
       },
       async ({ principal, account, body, request, server }) => {
         authorize(principal, account.id);
-        const newEmail = emailKey(body.newEmail);
-        if (!z.email().safeParse(newEmail).success) throw refused(refusals.notEmail);
+        const newEmail = parseEmailAddress(body.newEmail);
+        if (!newEmail) throw refused(refusals.notEmail);
         if (newEmail === account.email) throw refused(refusals.same);
         const wait = limiter.codeRequest(account.email, clientIp(request, server, clientIpHeader));
         if (wait !== undefined) throw rateLimited(wait);
@@ -226,8 +218,7 @@ export function emailChangeRoutes(
       {
         signedIn: true,
         response: {
-          // Elysia sends a 204 without a body, so validation sees undefined; the document shows no content.
-          204: z.null().optional().meta({ description: "Nothing is changing any more." }),
+          204: noContent("Nothing is changing any more."),
           401: problemSchema,
           403: problemSchema,
         },

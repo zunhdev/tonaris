@@ -9,6 +9,7 @@ import { connectionSchema, mcpModeOf, problemSchema } from "@tonaris/domain";
 
 import type { SessionGuard } from "../../auth/plugin";
 import { ProblemError } from "../../problem";
+import { noContent } from "./common";
 
 export function connectionRoutes(session: SessionGuard, { db }: { db: Database }) {
   return new Elysia()
@@ -44,8 +45,7 @@ export function connectionRoutes(session: SessionGuard, { db }: { db: Database }
         signedIn: true,
         params: z.object({ id: z.uuid() }),
         response: {
-          // Elysia sends a 204 without a body, so validation sees undefined; the document shows no content.
-          204: z.null().optional().meta({ description: "The connection is revoked." }),
+          204: noContent("The connection is revoked."),
           401: problemSchema,
           404: problemSchema,
           422: problemSchema,

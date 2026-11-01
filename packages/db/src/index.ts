@@ -192,3 +192,6 @@ export {
   type Claim,
   type ExecutedMutation,
 } from "./sync";
+
+// TON-147: the API's helpers.
+export { findMember } from "./email-recoveries";

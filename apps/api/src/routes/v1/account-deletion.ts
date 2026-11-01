@@ -10,7 +10,6 @@ import { beginAccountDeletion, type Database } from "@tonaris/db";
 import {
   accountDeletionConfirmSchema,
   accountDeletionRefusalDetails as refusals,
-  authorizeWrite,
   emailKey,
   problemSchema,
 } from "@tonaris/domain";
@@ -19,6 +18,7 @@ import type { SessionGuard } from "../../auth/plugin";
 import { newToken, sha256 } from "../../auth/secrets";
 import { ProblemError } from "../../problem";
 import type { SyncHub } from "../../sync/hub";
+import { authorizeAccount, refused } from "./common";
 
 export type AccountDeletionDeps = {
   db: Database;
@@ -59,13 +59,8 @@ export function accountDeletionRoutes(
       },
     },
     async ({ principal, account, body }) => {
-      const decision = authorizeWrite(principal, { ownerId: account.id, scope: "account" });
-      if (!decision.allowed) {
-        throw new ProblemError(403, "permission_denied", "Your account is deleted in the app.");
-      }
-      if (emailKey(body.email) !== account.email) {
-        throw new ProblemError(422, "validation_failed", refusals.mismatch);
-      }
+      authorizeAccount(principal, account.id, "Your account is deleted in the app.");
+      if (emailKey(body.email) !== account.email) throw refused(refusals.mismatch);
       const token = newToken();
       const started = await beginAccountDeletion(db, {
         userId: account.id,
@@ -73,7 +68,7 @@ export function accountDeletionRoutes(
         tokenHash: sha256(token),
         auditId: Bun.randomUUIDv7(),
       });
-      if (started === "creator") throw new ProblemError(422, "validation_failed", refusals.creator);
+      if (started === "creator") throw refused(refusals.creator);
       if (started !== "started")
         throw new ProblemError(401, "unauthenticated", "Sign in to continue.");
       wakeJobs();

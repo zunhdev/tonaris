@@ -8,7 +8,7 @@ import { operationsStatus, type Database } from "@tonaris/db";
 import { problemSchema } from "@tonaris/domain";
 
 import type { SessionGuard } from "../../auth/plugin";
-import { requireCreator } from "./admissions";
+import { noFields, requireCreator } from "./common";
 
 const operationsSchema = z
   .object({
@@ -37,7 +37,7 @@ export function operationsRoutes(session: SessionGuard, { db }: { db: Database }
       "/admin/operations/test-error",
       {
         signedIn: true,
-        body: z.object({}).meta({ description: "No fields." }),
+        body: noFields,
         response: { 401: problemSchema, 403: problemSchema, 500: problemSchema },
         detail: {
           summary: "Send a test error",
