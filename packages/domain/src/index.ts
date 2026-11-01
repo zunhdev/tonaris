@@ -380,3 +380,4 @@ export * from "./telemetry";
 
 // Rules moved from packages/db (TON-147).
 export { guestMutationRefusal, mutationIdInUse, mutationTooOld } from "./sync";
+export { codeRefusal, type CodeRefusal } from "./codes";

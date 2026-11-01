@@ -1,15 +1,13 @@
 // The sign-in email change's storage (FR-11.4, TS-73): one change per account, its code kept as a hash, and the
 // swap, which changes the email, ends the account's other sessions and writes the audit log in one transaction.
 
-import { timingSafeEqual } from "node:crypto";
-
-import { and, eq, ne, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { signInCode } from "@tonaris/domain";
 
 import type { Database } from "./client";
-import { auditLog, emailChanges, users } from "./schema";
-import { isUniqueViolation, swapSignInEmail } from "./sign-in-email";
+import { auditLog, emailChanges } from "./schema";
+import { checkCode, emailKeyHolder, isUniqueViolation, swapSignInEmail } from "./sign-in-email";
 
 export type EmailChangeRow = typeof emailChanges.$inferSelect;
 
@@ -31,11 +29,7 @@ export async function startEmailChange(
     now = new Date(),
   }: { userId: string; newEmailKey: string; codeHash: Buffer; now?: Date },
 ): Promise<"started" | "taken"> {
-  const [owner] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.email, newEmailKey), ne(users.id, userId)));
-  if (owner) return "taken";
+  if (await emailKeyHolder(db, newEmailKey, userId)) return "taken";
   const values = {
     newEmailKey,
     stage: "current" as const,
@@ -110,15 +104,8 @@ export async function submitEmailChangeCode(
       const mine = eq(emailChanges.userId, userId);
       const [change] = await tx.select().from(emailChanges).where(mine).for("update");
       if (!change) return { outcome: "none" };
-      if (change.expiresAt <= now) return { outcome: "expired" };
-      if (change.attempts >= signInCode.attempts) return { outcome: "locked" };
-      if (!timingSafeEqual(change.codeHash, codeHash)) {
-        await tx
-          .update(emailChanges)
-          .set({ attempts: sql`${emailChanges.attempts} + 1` })
-          .where(mine);
-        return { outcome: "wrong" };
-      }
+      const checked = await checkCode(tx, emailChanges, mine, change, { codeHash, now });
+      if (checked !== "right") return { outcome: checked };
 
       if (change.stage === "current") {
         const [advanced] = await tx

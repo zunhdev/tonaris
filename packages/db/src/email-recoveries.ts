@@ -3,11 +3,9 @@
 // session of the account, removes its passkeys, disconnects its AI connections when the creator asked, and writes the audit log, in one
 // transaction. The member list it starts from shows no collection data (FR-11.6).
 
-import { timingSafeEqual } from "node:crypto";
+import { asc, eq, isNull } from "drizzle-orm";
 
-import { and, asc, eq, isNull, ne, sql } from "drizzle-orm";
-
-import { emailRecoveryHours, signInCode } from "@tonaris/domain";
+import { emailRecoveryHours } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
 import { recordInLedger } from "./ledger";
@@ -20,7 +18,7 @@ import {
   oauthRefreshTokens,
   users,
 } from "./schema";
-import { isUniqueViolation, swapSignInEmail } from "./sign-in-email";
+import { checkCode, emailKeyHolder, isUniqueViolation, swapSignInEmail } from "./sign-in-email";
 
 export type MemberRow = {
   id: string;
@@ -82,11 +80,7 @@ export async function issueEmailRecovery(
     .where(eq(users.id, values.userId));
   if (!account) return "missing";
   if (account.email === values.newEmailKey) return "same";
-  const [owner] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.email, values.newEmailKey), ne(users.id, values.userId)));
-  if (owner) return "taken";
+  if (await emailKeyHolder(db, values.newEmailKey, values.userId)) return "taken";
   const { userId, ...change } = values;
   const fresh = {
     ...change,
@@ -145,15 +139,8 @@ export async function confirmEmailRecovery(
         .for("update");
       if (!recovery) return { outcome: "none" };
       const its = eq(emailRecoveries.userId, recovery.userId);
-      if (recovery.expiresAt <= now) return { outcome: "expired" };
-      if (recovery.attempts >= signInCode.attempts) return { outcome: "locked" };
-      if (!timingSafeEqual(recovery.codeHash, codeHash)) {
-        await tx
-          .update(emailRecoveries)
-          .set({ attempts: sql`${emailRecoveries.attempts} + 1` })
-          .where(its);
-        return { outcome: "wrong" };
-      }
+      const checked = await checkCode(tx, emailRecoveries, its, recovery, { codeHash, now });
+      if (checked !== "right") return { outcome: checked };
 
       await tx.delete(emailRecoveries).where(its);
       const swapped = await swapSignInEmail(tx, {
