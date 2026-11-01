@@ -6,6 +6,7 @@
 
 import { emailKey } from "./accounts";
 import { albumSchema } from "./albums";
+import { actingOwner, applied, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { containerFieldsSchema, containerSchema } from "./containers";
 import { fieldValueSchema } from "./field-values";
@@ -15,7 +16,7 @@ import { membershipSchema } from "./memberships";
 import { isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
-import { actingUserId, type Principal } from "./principals";
+import type { Principal } from "./principals";
 import { serviceLinkSchema } from "./service-links";
 import { z } from "./zod";
 
@@ -245,7 +246,7 @@ export async function inviteToShare(
   context: CommandContext,
 ): Promise<CommandResult> {
   const container = await shareable(containerId, context);
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   if (!(await named(context, container.ownerId))) {
     return failure("display_name_required", displayNameRequired);
   }
@@ -290,7 +291,7 @@ export async function resendInvitation(
   const grant = await context.store.findGrant(grantId);
   if (!grant) return failure("not_found", unavailable);
   const container = await shareable(grant.containerId, context);
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   if (grant.status !== "pending") return failure("not_found", unavailable);
   await context.store.setGrantEmailStatus(grantId, "sending");
   return { status: "applied", changes: [], result: { grantId, emailing: true } };
@@ -302,12 +303,16 @@ export async function resendInvitation(
  */
 async function ownInvitation(
   grantId: string,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<Failure | { userId: string; containerId: string; grantStatus: ShareGrantStatus }> {
-  const userId = actingUserId(principal);
-  if (userId === undefined) return failure("permission_denied", "Sign in to answer an invitation.");
-  const decision = authorizeWrite(principal, { ownerId: userId, scope: "sharing" });
-  if (!decision.allowed) return failure(decision.code, "Invitations are answered in the app.");
+  const userId = actingOwner(
+    context,
+    "sharing",
+    "Invitations are answered in the app.",
+    "Sign in to answer an invitation.",
+  );
+  if (isFailure(userId)) return userId;
+  const { store } = context;
   const grant = await store.findGrant(grantId);
   if (!grant || grant.granteeId !== userId) return failure("not_found", unavailable);
   const container = await store.findContainer(grant.containerId);
@@ -325,8 +330,8 @@ export async function acceptInvitation(
   context: CommandContext,
 ): Promise<CommandResult> {
   const grant = await ownInvitation(grantId, context);
-  if ("problem" in grant) return grant;
-  if (grant.grantStatus === "accepted") return { status: "applied", changes: [] };
+  if (isFailure(grant)) return grant;
+  if (grant.grantStatus === "accepted") return applied();
   // Only from pending: an owner who revoked it meanwhile wins (TON-67).
   if (
     grant.grantStatus !== "pending" ||
@@ -335,10 +340,7 @@ export async function acceptInvitation(
     return failure("not_found", unavailable);
   }
   const saved = await context.store.saveReference(grant.userId, grant.containerId);
-  return {
-    status: "applied",
-    changes: saved === "inserted" ? [referenceChange(grant.containerId, "insert")] : [],
-  };
+  return saved === "inserted" ? applied(referenceChange(grant.containerId, "insert")) : applied();
 }
 
 /** `share.decline` (FR-07.6): the recipient declines, granting nothing and taking no other access away. */
@@ -347,14 +349,14 @@ export async function declineInvitation(
   context: CommandContext,
 ): Promise<CommandResult> {
   const grant = await ownInvitation(grantId, context);
-  if ("problem" in grant) return grant;
+  if (isFailure(grant)) return grant;
   if (
     grant.grantStatus !== "pending" ||
     !(await context.store.moveGrant(grantId, "pending", "declined"))
   ) {
     return failure("not_found", unavailable);
   }
-  return { status: "applied", changes: [] };
+  return applied();
 }
 
 /**
@@ -367,7 +369,7 @@ export async function setShareLink(
   context: CommandContext,
 ): Promise<CommandResult> {
   const container = await shareable(containerId, context, { evenInTrash: !enabled });
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   const live = await context.store.findLiveLink(containerId);
   if (!enabled) {
     if (live) await context.store.revokeLink(live.id, context.now ?? new Date());
@@ -389,12 +391,16 @@ export async function setShareLink(
  */
 export async function setDisplayName(
   { displayName }: z.infer<typeof setDisplayNameArgsSchema>,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<CommandResult> {
-  const userId = actingUserId(principal);
-  if (userId === undefined) return failure("permission_denied", "Sign in to change your name.");
-  const decision = authorizeWrite(principal, { ownerId: userId, scope: "account" });
-  if (!decision.allowed) return failure(decision.code, "Your display name is changed in the app.");
+  const userId = actingOwner(
+    context,
+    "account",
+    "Your display name is changed in the app.",
+    "Sign in to change your name.",
+  );
+  if (isFailure(userId)) return userId;
+  const { store } = context;
   const name = displayName?.trim() ?? "";
   if (name === "" && (await store.activeShareCount(userId)) > 0) {
     return failure(
@@ -454,12 +460,16 @@ export type ShareSettings = z.infer<typeof shareSettingsSchema>;
  */
 export async function leaveShare(
   { containerId }: z.infer<typeof leaveArgsSchema>,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<CommandResult> {
-  const userId = actingUserId(principal);
-  if (userId === undefined) return failure("permission_denied", "Sign in to leave a share.");
-  const decision = authorizeWrite(principal, { ownerId: userId, scope: "sharing" });
-  if (!decision.allowed) return failure(decision.code, "Shares are left in the app.");
+  const userId = actingOwner(
+    context,
+    "sharing",
+    "Shares are left in the app.",
+    "Sign in to leave a share.",
+  );
+  if (isFailure(userId)) return userId;
+  const { store } = context;
   const grant = await store.findOpenGrant(containerId, userId);
   const notShared = "You don't have an invitation to this to leave.";
   if (grant?.status !== "accepted") return failure("not_found", notShared);
@@ -467,7 +477,7 @@ export async function leaveShare(
     return failure("not_found", notShared);
   }
   const dropped = await store.dropGrantReference(userId, containerId);
-  return { status: "applied", changes: dropped ? [referenceChange(containerId, "delete")] : [] };
+  return dropped ? applied(referenceChange(containerId, "delete")) : applied();
 }
 
 /**
@@ -482,12 +492,12 @@ export async function revokeGrant(
   const grant = await context.store.findGrant(grantId);
   if (!grant) return failure("not_found", unavailable);
   const container = await shareable(grant.containerId, context, { evenInTrash: true });
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   const revoked =
     (grant.status === "pending" || grant.status === "accepted") &&
     (await context.store.moveGrant(grantId, grant.status, "revoked"));
   if (!revoked) return failure("not_found", unavailable);
-  return { status: "applied", changes: [] };
+  return applied();
 }
 
 /** A pending invitation as its recipient sees it (DS-66): who shares what, and since when. */
@@ -562,24 +572,25 @@ const referenceChange = (containerId: string, op: "insert" | "update" | "delete"
  */
 export async function saveLink(
   { token }: z.infer<typeof saveLinkArgsSchema>,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<CommandResult> {
-  const userId = actingUserId(principal);
-  if (userId === undefined) return failure("permission_denied", "Sign in to keep a shared link.");
   // The person's own collection's references, not sharing management (X-03).
-  const decision = authorizeWrite(principal, { ownerId: userId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change Shared with me here.");
+  const userId = actingOwner(
+    context,
+    "collection",
+    "You can't change Shared with me here.",
+    "Sign in to keep a shared link.",
+  );
+  if (isFailure(userId)) return userId;
+  const { store } = context;
   const link = await store.findLinkByHash(await shareTokenHash(token));
   if (!link) return failure("not_found", unavailableLink);
   if (link.ownerId === userId) {
     return failure("validation_failed", "This is your own folder or list.");
   }
   const saved = await store.saveReference(userId, link.containerId, link.id);
-  if (saved === "unchanged") return { status: "applied", changes: [] };
-  return {
-    status: "applied",
-    changes: [referenceChange(link.containerId, saved === "inserted" ? "insert" : "update")],
-  };
+  if (saved === "unchanged") return applied();
+  return applied(referenceChange(link.containerId, saved === "inserted" ? "insert" : "update"));
 }
 
 /**
@@ -589,17 +600,19 @@ export async function saveLink(
  */
 export async function removeReference(
   { containerId }: z.infer<typeof removeReferenceArgsSchema>,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<CommandResult> {
-  const userId = actingUserId(principal);
-  if (userId === undefined)
-    return failure("permission_denied", "Sign in to change Shared with me.");
-  const decision = authorizeWrite(principal, { ownerId: userId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change Shared with me here.");
-  if (!(await store.removeReference(userId, containerId))) {
+  const userId = actingOwner(
+    context,
+    "collection",
+    "You can't change Shared with me here.",
+    "Sign in to change Shared with me.",
+  );
+  if (isFailure(userId)) return userId;
+  if (!(await context.store.removeReference(userId, containerId))) {
     return failure("not_found", "This isn't in your Shared with me.");
   }
-  return { status: "applied", changes: [referenceChange(containerId, "delete")] };
+  return applied(referenceChange(containerId, "delete"));
 }
 
 /** A Shared with me entry as the person sees it (DS-67): its owner, how it was shared, and whether it still works. */

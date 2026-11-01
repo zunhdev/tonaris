@@ -8,12 +8,15 @@
 import { generateKeyBetween } from "fractional-indexing";
 
 import { scopeHash } from "./approvals";
+import { applied, conflict, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import { fieldValueKey } from "./field-values";
 import {
+  fieldOf,
   fieldTypes,
   isChoiceType,
   optionLabelProblem,
+  ownField,
   type CustomField,
   type FieldOption,
   type FieldType,
@@ -22,7 +25,6 @@ import {
 import { maxFieldOptions } from "./limits";
 import { findNameConflict } from "./names";
 import { failure, type Failure } from "./outcomes";
-import { authorizeWrite } from "./policies";
 import { z } from "./zod";
 
 /** `field.changeType`'s `result` in a `confirmed` outcome: the options a change to a non-choice type discarded. */
@@ -154,30 +156,12 @@ export function optionLabelTaken(takenLabel: string): Failure {
   ]);
 }
 
-const fieldOf = ({ id, name, type, options }: CustomField): CustomField => ({
-  id,
-  name,
-  type,
-  options: options.map(({ id: optionId, label }) => ({ id: optionId, label })),
-});
-
 const fieldChange = (field: CustomField): ChangeInput => ({
   entity: "field",
   id: field.id,
   op: "update",
   data: fieldOf(field),
 });
-
-/** The field, if the principal may change it. A missing field and someone else's get the same answer. */
-async function ownField(id: string, { principal, store }: CommandContext) {
-  const field = await store.findField(id);
-  if (!field) return failure("not_found", "This field doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: field.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this field.");
-  return field;
-}
-
-const isStored = (field: StoredField | Failure): field is StoredField => "type" in field;
 
 /** A choice field, or why options can't change on it. */
 function choiceField(field: StoredField): Failure | undefined {
@@ -197,14 +181,9 @@ export async function changeFieldType(
   base: { type: FieldType },
   context: CommandContext,
 ): Promise<CommandResult> {
-  const field = await ownField(args.id, context);
-  if (!isStored(field)) return field;
-  if (field.type !== base.type) {
-    return {
-      status: "conflict",
-      conflicts: [{ field: "type", current: field.type, attempted: args.type, base: base.type }],
-    };
-  }
+  const field = ownField(await context.store.findField(args.id), context);
+  if (isFailure(field)) return field;
+  if (field.type !== base.type) return conflict("type", field.type, args.type, base.type);
   const none: FieldTypeChangeResult = { discardedOptions: [] };
   if (args.type === field.type) return { status: "applied", changes: [], result: none };
   const usage = await context.store.fieldUsage(field.id);
@@ -228,17 +207,12 @@ export async function addFieldOption(
   args: z.infer<typeof fieldAddOptionArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const field = await ownField(args.fieldId, context);
-  if (!isStored(field)) return field;
+  const field = ownField(await context.store.findField(args.fieldId), context);
+  if (isFailure(field)) return field;
   const label = args.label.trim();
   const existing = field.options.find((option) => option.id === args.id);
   if (existing) {
-    return existing.label === label
-      ? { status: "applied", changes: [] }
-      : {
-          status: "conflict",
-          conflicts: [{ field: "label", current: existing.label, attempted: label }],
-        };
+    return existing.label === label ? applied() : conflict("label", existing.label, label);
   }
   const notChoice = choiceField(field);
   if (notChoice) return notChoice;
@@ -261,10 +235,7 @@ export async function addFieldOption(
   const option = { id: args.id, label };
   const sortKey = generateKeyBetween(await context.store.lastOptionKey(field.id), null);
   await context.store.insertFieldOption(field.id, { ...option, sortKey });
-  return {
-    status: "applied",
-    changes: [fieldChange({ ...field, options: [...field.options, option] })],
-  };
+  return applied(fieldChange({ ...field, options: [...field.options, option] }));
 }
 
 /**
@@ -276,20 +247,15 @@ export async function renameFieldOption(
   base: { label: string },
   context: CommandContext,
 ): Promise<CommandResult> {
-  const field = await ownField(args.fieldId, context);
-  if (!isStored(field)) return field;
+  const field = ownField(await context.store.findField(args.fieldId), context);
+  if (isFailure(field)) return field;
   const option = field.options.find((each) => each.id === args.optionId);
   if (!option) return failure("not_found", "This option doesn't exist.");
   const label = args.label.trim();
-  if (option.label !== base.label) {
-    return {
-      status: "conflict",
-      conflicts: [{ field: "label", current: option.label, attempted: label, base: base.label }],
-    };
-  }
+  if (option.label !== base.label) return conflict("label", option.label, label, base.label);
   const problem = optionLabelProblem(label, "args.label");
   if (problem) return problem;
-  if (label === option.label) return { status: "applied", changes: [] };
+  if (label === option.label) return applied();
   const taken = findNameConflict(
     label,
     field.options.map(({ id, label: name }) => ({ id, name })),
@@ -298,17 +264,12 @@ export async function renameFieldOption(
   if (taken) return optionLabelTaken(taken.name);
 
   await context.store.renameFieldOption(option.id, label);
-  return {
-    status: "applied",
-    changes: [
-      fieldChange({
-        ...field,
-        options: field.options.map((each) =>
-          each.id === option.id ? { id: each.id, label } : each,
-        ),
-      }),
-    ],
-  };
+  return applied(
+    fieldChange({
+      ...field,
+      options: field.options.map((each) => (each.id === option.id ? { id: each.id, label } : each)),
+    }),
+  );
 }
 
 /**
@@ -321,10 +282,10 @@ export async function removeFieldOption(
   args: z.infer<typeof fieldRemoveOptionArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const field = await ownField(args.fieldId, context);
-  if (!isStored(field)) return field;
+  const field = ownField(await context.store.findField(args.fieldId), context);
+  if (isFailure(field)) return field;
   const option = field.options.find((each) => each.id === args.optionId);
-  if (!option) return { status: "applied", changes: [] };
+  if (!option) return applied();
   const { store } = context;
   const users = await store.optionUsers(field.id, option.id);
   if (users.length > 0) {
@@ -349,16 +310,13 @@ export async function removeFieldOption(
     option.id,
     users.map((user) => user.id),
   );
-  return {
-    status: "applied",
-    changes: [
-      fieldChange({ ...field, options: field.options.filter((each) => each.id !== option.id) }),
-      ...values.map((value): ChangeInput => ({
-        entity: "fieldValue",
-        id: fieldValueKey(value.albumId, value.fieldId),
-        op: "update",
-        data: value,
-      })),
-    ],
-  };
+  return applied(
+    fieldChange({ ...field, options: field.options.filter((each) => each.id !== option.id) }),
+    ...values.map((value): ChangeInput => ({
+      entity: "fieldValue",
+      id: fieldValueKey(value.albumId, value.fieldId),
+      op: "update",
+      data: value,
+    })),
+  );
 }

@@ -6,12 +6,12 @@ import {
   albumCapacityProblem,
   albumFields,
   albumProblem,
+  changeableAlbum,
   hasAlbumSlot,
   artworkUrlRefusal,
   isArtworkUrl,
   type Album,
   type AlbumCreateArgs,
-  type AlbumField,
   type AlbumFields,
 } from "./albums";
 import {
@@ -21,6 +21,15 @@ import {
   type CaptureSource,
   type CaptureTarget,
 } from "./capture";
+import {
+  actingOwner,
+  applied,
+  baseProblem,
+  conflict,
+  isFailure,
+  nothingChanged,
+  staleFields,
+} from "./command-kit";
 import {
   createContainer,
   moveContainer,
@@ -56,10 +65,9 @@ import {
 } from "./fields";
 import type { StreamingService } from "./links";
 import { addMembership, removeMembership, type Membership } from "./memberships";
-import { failure, type FieldConflict, type Outcome } from "./outcomes";
-import { authorizeWrite } from "./policies";
+import { failure, type Outcome } from "./outcomes";
 import { placeAtTop, setOrder, type Position } from "./positions";
-import { actingUserId, type Principal } from "./principals";
+import type { Principal } from "./principals";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
 import {
   acceptInvitation,
@@ -415,8 +423,6 @@ export function runCommand(mutation: Mutation, context: CommandContext): Promise
   return setDefaults(mutation.args, mutation.base, context);
 }
 
-const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
-
 /** The album as clients see it, without the owner and Trash state. */
 function albumOf(stored: StoredAlbum): Album {
   const { ownerId: _, trashed: __, ...album } = stored;
@@ -428,18 +434,10 @@ function albumOf(stored: StoredAlbum): Album {
  * create is sent again without its idempotency record, nothing is duplicated (FR-13.5): the same values are
  * already saved, and different ones are a conflict.
  */
-async function createAlbum(
-  args: AlbumCreateArgs,
-  { principal, store }: CommandContext,
-): Promise<CommandResult> {
-  const ownerId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "collection" });
-  if (!ownerId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "You can't add albums here.",
-    );
-  }
+async function createAlbum(args: AlbumCreateArgs, context: CommandContext): Promise<CommandResult> {
+  const ownerId = actingOwner(context, "collection", "You can't add albums here.");
+  if (isFailure(ownerId)) return ownerId;
+  const { store } = context;
   const problem = albumProblem(args);
   if (problem) return problem;
 
@@ -477,24 +475,12 @@ async function createAlbum(
 async function setArtwork(
   { id, artworkUrl }: { id: string; artworkUrl: string | null },
   base: { artworkUrl: string | null },
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<CommandResult> {
-  const album = await store.findAlbum(id);
-  if (!album) return failure("not_found", "This album doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this album.");
+  const album = await changeableAlbum(id, context);
+  if (isFailure(album)) return album;
   if (album.artworkUrl !== base.artworkUrl) {
-    return {
-      status: "conflict",
-      conflicts: [
-        {
-          field: "artworkUrl",
-          current: album.artworkUrl,
-          attempted: artworkUrl,
-          base: base.artworkUrl,
-        },
-      ],
-    };
+    return conflict("artworkUrl", album.artworkUrl, artworkUrl, base.artworkUrl);
   }
   if (artworkUrl !== null && !isArtworkUrl(artworkUrl)) {
     return failure("validation_failed", artworkUrlRefusal, [
@@ -502,7 +488,7 @@ async function setArtwork(
     ]);
   }
   if (artworkUrl === album.artworkUrl) return applied();
-  await store.updateAlbum(id, { artworkUrl });
+  await context.store.updateAlbum(id, { artworkUrl });
   return applied({ entity: "album", id, op: "update", data: albumOf({ ...album, artworkUrl }) });
 }
 
@@ -513,51 +499,22 @@ async function setArtwork(
 async function updateAlbum(
   { id, ...values }: Partial<AlbumFields> & { id: string },
   base: Partial<AlbumFields>,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<CommandResult> {
-  const album = await store.findAlbum(id);
-  if (!album) return failure("not_found", "This album doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this album.");
+  const album = await changeableAlbum(id, context);
+  if (isFailure(album)) return album;
 
   const changed = albumFields.filter((field) => values[field] !== undefined);
-  if (changed.length === 0) {
-    return failure("validation_failed", "The mutation changes nothing.", [
-      { path: "args", message: "Name at least one field" },
-    ]);
-  }
-  const unbased = changed.filter((field) => base[field] === undefined);
-  const extra = albumFields.filter(
-    (field) => base[field] !== undefined && !changed.includes(field),
-  );
-  if (unbased.length > 0 || extra.length > 0) {
-    return failure(
-      "validation_failed",
-      "`base` must hold the prior value of exactly the changed fields.",
-      [
-        ...unbased.map((field) => ({ path: `base.${field}`, message: "Required" })),
-        ...extra.map((field) => ({
-          path: `base.${field}`,
-          message: "Not changed by this mutation",
-        })),
-      ],
-    );
-  }
-
-  const conflicts: FieldConflict[] = changed
-    .filter((field) => album[field] !== base[field])
-    .map((field: AlbumField) => ({
-      field,
-      current: album[field],
-      attempted: values[field],
-      base: base[field],
-    }));
+  if (changed.length === 0) return nothingChanged();
+  const unbased = baseProblem(albumFields, changed, base);
+  if (unbased) return unbased;
+  const conflicts = staleFields(changed, album, values, base);
   if (conflicts.length > 0) return { status: "conflict", conflicts };
 
   const next = albumOf({ ...album, ...values, id });
   const problem = albumProblem(next);
   if (problem) return problem;
 
-  await store.updateAlbum(id, values);
+  await context.store.updateAlbum(id, values);
   return applied({ entity: "album", id, op: "update", data: next });
 }

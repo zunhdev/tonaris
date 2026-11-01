@@ -4,6 +4,7 @@
 // owner's arrangement follows (DS-51): an album entering Unsorted goes to its top, and one leaving Unsorted or a list
 // loses its place there, so a new entry lands at the end of the list.
 
+import { applied, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { maxMemberships } from "./limits";
 import { failure, type Failure } from "./outcomes";
@@ -60,7 +61,7 @@ export async function addMembership(
   context: CommandContext,
 ): Promise<CommandResult> {
   const ownerId = await entryOwner(args, context);
-  if (typeof ownerId !== "string") return ownerId;
+  if (isFailure(ownerId)) return ownerId;
   const { store } = context;
   if (await store.findMembership(args.listId, args.albumId)) {
     const result: MembershipAddResult = { alreadyInList: true };
@@ -106,11 +107,9 @@ export async function removeMembership(
   context: CommandContext,
 ): Promise<CommandResult> {
   const ownerId = await entryOwner(args, context);
-  if (typeof ownerId !== "string") return ownerId;
+  if (isFailure(ownerId)) return ownerId;
   const { store } = context;
-  if (!(await store.findMembership(args.listId, args.albumId))) {
-    return { status: "applied", changes: [] };
-  }
+  if (!(await store.findMembership(args.listId, args.albumId))) return applied();
 
   await store.deleteMembership(args.listId, args.albumId);
   const id = membershipKey(args.listId, args.albumId);
@@ -119,8 +118,5 @@ export async function removeMembership(
   const entered = (await store.inActiveList(args.albumId))
     ? []
     : [await placeAtTop(store, ownerId, "unsorted", args.albumId)];
-  return {
-    status: "applied",
-    changes: [{ entity: "membership", id, op: "delete", data: null }, ...left, ...entered],
-  };
+  return applied({ entity: "membership", id, op: "delete", data: null }, ...left, ...entered);
 }

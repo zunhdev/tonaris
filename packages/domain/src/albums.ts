@@ -2,9 +2,10 @@
 // prototype (TON-20) carries the core metadata; the artwork URL joined in TON-48 (FR-03.4), edited with its own
 // mutation, and links, provenance, memberships and Trash have their own records.
 
-import type { CollectionStore } from "./commands";
+import type { CollectionStore, CommandContext, StoredAlbum } from "./commands";
 import { maxAlbumTextLength, maxAlbums, maxLinkLength } from "./limits";
 import { failure, type Failure } from "./outcomes";
+import { authorizeWrite } from "./policies";
 import { z } from "./zod";
 
 /** Null means Unclassified (TS-45). */
@@ -178,4 +179,16 @@ export function albumCapacityProblem(): Failure {
 /** Whether the owner may save one more album: there is a slot left, Trash counting (FR-15.2). */
 export async function hasAlbumSlot(store: CollectionStore, ownerId: string): Promise<boolean> {
   return (await store.countAlbums(ownerId)) < maxAlbums;
+}
+
+/** The album `id`, in Trash or not, if the principal may change it, or why not (TS-30). */
+export async function changeableAlbum(
+  id: string,
+  { principal, store }: CommandContext,
+): Promise<StoredAlbum | Failure> {
+  const album = await store.findAlbum(id);
+  if (!album) return failure("not_found", "This album doesn't exist.");
+  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
+  if (!decision.allowed) return failure(decision.code, "You can't change this album.");
+  return album;
 }

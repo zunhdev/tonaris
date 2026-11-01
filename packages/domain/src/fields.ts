@@ -6,12 +6,12 @@
 
 import { generateNKeysBetween } from "fractional-indexing";
 
-import type { ChangeInput, CommandContext, CommandResult } from "./commands";
+import { actingOwner, applied, conflict, isFailure } from "./command-kit";
+import type { CommandContext, CommandResult } from "./commands";
 import { maxFieldOptions, maxFields, maxNameLength } from "./limits";
 import { findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
-import { actingUserId } from "./principals";
 import { z } from "./zod";
 
 /** The types a field has (FR-03.6). */
@@ -99,26 +99,30 @@ export function fieldNameTaken(takenName: string): Failure {
 }
 
 /** The field as clients see it. */
-const fieldOf = ({ id, name, type, options }: CustomField): CustomField => ({
+export const fieldOf = ({ id, name, type, options }: CustomField): CustomField => ({
   id,
   name,
   type,
   options: options.map(({ id: optionId, label }) => ({ id: optionId, label })),
 });
 
-const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
+const fieldMissing = () => failure("not_found", "This field doesn't exist.");
 
-/** The owner the principal writes fields for, or why they can't. */
-function fieldOwner({ principal }: CommandContext): string | Failure {
-  const ownerId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "collection" });
-  if (!ownerId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "You can't change custom fields here.",
-    );
-  }
-  return ownerId;
+/**
+ * `field`, as the store found it, if the principal may change it, or why not: a missing field is `not_found`, and
+ * someone else's gets the policy's code (TS-30). With `denial: "not_found"`, someone else's is answered as missing.
+ */
+export function ownField(
+  field: StoredField | undefined,
+  { principal }: CommandContext,
+  { denial }: { denial?: "not_found" } = {},
+): StoredField | Failure {
+  if (!field) return fieldMissing();
+  const decision = authorizeWrite(principal, { ownerId: field.ownerId, scope: "collection" });
+  if (decision.allowed) return field;
+  return denial === "not_found"
+    ? fieldMissing()
+    : failure(decision.code, "You can't change this field.");
 }
 
 /** The options a new field starts with, trimmed and checked; or why they can't be. */
@@ -170,14 +174,14 @@ export async function createField(
   args: FieldCreateArgs,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const ownerId = fieldOwner(context);
-  if (typeof ownerId !== "string") return ownerId;
+  const ownerId = actingOwner(context, "collection", "You can't change custom fields here.");
+  if (isFailure(ownerId)) return ownerId;
   const { store } = context;
   const name = args.name.trim();
   const problem = fieldNameProblem(name);
   if (problem) return problem;
   const options = initialOptions(args);
-  if (!Array.isArray(options)) return options;
+  if (isFailure(options)) return options;
   const field: CustomField = { id: args.id, name, type: args.type, options };
 
   const existing = await store.findField(args.id);
@@ -187,12 +191,7 @@ export async function createField(
         { path: "args.id", message: "Already in use" },
       ]);
     }
-    return sameField(existing, field)
-      ? applied()
-      : {
-          status: "conflict",
-          conflicts: [{ field: "name", current: existing.name, attempted: field.name }],
-        };
+    return sameField(existing, field) ? applied() : conflict("name", existing.name, field.name);
   }
 
   const fields = await store.fieldsOf(ownerId);
@@ -226,18 +225,11 @@ export async function renameField(
   base: { name: string },
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store, principal } = context;
-  const field = await store.findField(args.id);
-  if (!field) return failure("not_found", "This field doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: field.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this field.");
+  const { store } = context;
+  const field = ownField(await store.findField(args.id), context);
+  if (isFailure(field)) return field;
   const name = args.name.trim();
-  if (field.name !== base.name) {
-    return {
-      status: "conflict",
-      conflicts: [{ field: "name", current: field.name, attempted: name, base: base.name }],
-    };
-  }
+  if (field.name !== base.name) return conflict("name", field.name, name, base.name);
   const problem = fieldNameProblem(name);
   if (problem) return problem;
   if (name === field.name) return applied();

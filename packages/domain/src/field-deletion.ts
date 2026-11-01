@@ -4,12 +4,12 @@
 // usage and value at once, Trash included, so recovering an album never brings the field back.
 
 import { scopeHash } from "./approvals";
+import { applied, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import type { OptionUser } from "./field-options";
 import { fieldValueKey } from "./field-values";
-import { fieldTypes, type CustomField, type FieldOption } from "./fields";
+import { fieldTypes, ownField, type CustomField, type FieldOption } from "./fields";
 import { failure } from "./outcomes";
-import { authorizeWrite } from "./policies";
 import { z } from "./zod";
 
 export const fieldDeleteArgsSchema = z.object({
@@ -83,12 +83,14 @@ export async function fieldDeletion(
  */
 export async function deleteField(
   args: z.infer<typeof fieldDeleteArgsSchema>,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<CommandResult> {
-  const field = await store.findField(args.id);
-  if (!field) return { status: "applied", changes: [] };
-  const decision = authorizeWrite(principal, { ownerId: field.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure("not_found", "This field doesn't exist.");
+  const { store } = context;
+  const stored = await store.findField(args.id);
+  if (!stored) return applied();
+  // Someone else's field is answered as missing, whatever the policy's reason.
+  const field = ownField(stored, context, { denial: "not_found" });
+  if (isFailure(field)) return field;
   const users = await store.fieldUsers(field.id);
   if (args.scopeHash !== (await scopeHash(fieldDeletionScope(field, users)))) {
     return failure(
@@ -98,16 +100,13 @@ export async function deleteField(
   }
 
   await store.deleteField(field.id);
-  return {
-    status: "applied",
-    changes: [
-      { entity: "field", id: field.id, op: "delete", data: null },
-      ...users.map((user): ChangeInput => ({
-        entity: "fieldValue",
-        id: fieldValueKey(user.id, field.id),
-        op: "delete",
-        data: null,
-      })),
-    ],
-  };
+  return applied(
+    { entity: "field", id: field.id, op: "delete", data: null },
+    ...users.map((user): ChangeInput => ({
+      entity: "fieldValue",
+      id: fieldValueKey(user.id, field.id),
+      op: "delete",
+      data: null,
+    })),
+  );
 }

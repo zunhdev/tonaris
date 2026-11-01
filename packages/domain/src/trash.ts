@@ -8,8 +8,10 @@
 // lists are reported, and with none it goes to Unsorted. A restore that would make a second active record of the same
 // album pauses instead, naming it, and changes nothing (FR-14.3).
 
+import { changeableAlbum } from "./albums";
 import { trashRetentionDays } from "./approvals";
 import { clientAlbum } from "./capture";
+import { actingOwner, applied, isFailure } from "./command-kit";
 import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
 import {
   changeableContainer,
@@ -138,8 +140,6 @@ export type DestinationNeed = {
 /** A name taken where the unit returns (FR-01.16). */
 export type NameNeed = { unitId: string; name: string; parentId: string | null };
 
-const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
-
 /** The unit as clients see it, from its members as they were deleted. */
 export function trashUnitOf(
   unit: Omit<StoredTrashUnit, "tombstones">,
@@ -205,7 +205,7 @@ export async function deleteContainer(
       : failure(decision.code, "You can't change this folder or list.");
   }
   const container = await changeableContainer(args.id, context);
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   const { ownerId } = container;
 
   const members = await store.activeSubtree(container.id);
@@ -306,7 +306,7 @@ export async function recoverUnit(
     }
   }
   const path = await destinationPath(parentId, ownerId, store);
-  if (!Array.isArray(path)) return path;
+  if (isFailure(path)) return path;
   if (path.length + depthOf(root.id, members) > maxContainerDepth) return tooDeep();
   const problem = containerNameProblem(name);
   if (problem) return problem;
@@ -437,10 +437,8 @@ export async function deleteAlbum(
     const decision = authorizeWrite(principal, { ownerId: existing.ownerId, scope: "collection" });
     return decision.allowed ? applied() : failure(decision.code, "You can't change this album.");
   }
-  const album = await store.findAlbum(args.id);
-  if (!album) return failure("not_found", "This album doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this album.");
+  const album = await changeableAlbum(args.id, context);
+  if (isFailure(album)) return album;
   if (album.trashed) return failure("trashed", "This album is already in Trash.");
   const { ownerId } = album;
 
@@ -663,15 +661,9 @@ export async function purgeUnits(
   args: z.infer<typeof trashPurgeArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store, principal } = context;
-  const ownerId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "trash_purge" });
-  if (!ownerId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "Only the app can empty Trash.",
-    );
-  }
+  const ownerId = actingOwner(context, "trash_purge", "Only the app can empty Trash.");
+  if (isFailure(ownerId)) return ownerId;
+  const { store } = context;
   const result: PurgeResult = { purged: [], gone: [] };
   const changes: ChangeInput[] = [];
   for (const unitId of new Set(args.unitIds)) {

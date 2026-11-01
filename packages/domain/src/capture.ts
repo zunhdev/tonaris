@@ -18,6 +18,7 @@ import {
   type Album,
   type AlbumFields,
 } from "./albums";
+import { actingOwner, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
   blankAlbum,
@@ -34,9 +35,7 @@ import { maxLinkLength, maxMemberships } from "./limits";
 import { streamingServices, type StreamingService } from "./links";
 import { addMembership, membershipKey } from "./memberships";
 import { failure, type Outcome } from "./outcomes";
-import { authorizeWrite } from "./policies";
 import { forgetPlace, placeAtTop } from "./positions";
-import { actingUserId } from "./principals";
 import { serviceLinkKey } from "./service-links";
 import { z } from "./zod";
 
@@ -124,7 +123,8 @@ export const missingYearReason =
 
 const { artworkUrl: _artwork, releaseGroupId: _releaseGroup, ...blankFields } = blankAlbum;
 
-const applied = (changes: ChangeInput[], result: CaptureResult): CommandResult => ({
+/** The capture's changes, and what its toasts report. */
+const captured = (changes: ChangeInput[], result: CaptureResult): CommandResult => ({
   status: "applied",
   changes,
   result,
@@ -350,7 +350,7 @@ async function reuse(
   }
   const { keptLink, changes: linked } = await keepLink(target.id, ownerId, link, context);
   const placed = await place(target.id, ownerId, args.listId, restored, context);
-  return applied([...changes, ...linked, ...placed.changes], {
+  return captured([...changes, ...linked, ...placed.changes], {
     albumId: target.id,
     match: restored ? "restored" : "reused",
     alreadyInList: placed.alreadyInList,
@@ -419,7 +419,7 @@ async function create(
   await store.insertAlbum({ ...album, ownerId }, origin);
   await store.insertServiceLink(args.albumId, ownerId, source.link);
   const placed = await place(args.albumId, ownerId, args.listId, true, context);
-  return applied(
+  return captured(
     [
       { entity: "album", id: args.albumId, op: "insert", data: album },
       linkInsert(args.albumId, source.link),
@@ -443,21 +443,15 @@ export async function captureAlbum(
   source: CaptureSource | undefined,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { principal, store } = context;
+  const { store } = context;
   if (!source) {
     return failure(
       "provider_unavailable",
       "Tonaris can't look links up right now. Try again, or enter the details manually.",
     );
   }
-  const ownerId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "collection" });
-  if (!ownerId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "You can't add albums here.",
-    );
-  }
+  const ownerId = actingOwner(context, "collection", "You can't add albums here.");
+  if (isFailure(ownerId)) return ownerId;
   if (args.listId !== null) {
     const list = await store.findContainer(args.listId);
     if (!list || list.ownerId !== ownerId) return failure("not_found", "This list doesn't exist.");

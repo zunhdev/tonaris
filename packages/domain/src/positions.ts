@@ -6,9 +6,10 @@
 
 import { generateKeyBetween, generateNKeysBetween } from "fractional-indexing";
 
+import { actingOwner, applied, baseProblem, isFailure } from "./command-kit";
 import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
 import { failure } from "./outcomes";
-import { baseProblem, personOf, viewKeySchema, viewKindOf } from "./views";
+import { viewKeySchema, viewKindOf } from "./views";
 import { z } from "./zod";
 
 /** An arranged item's place in one person's view. */
@@ -54,11 +55,11 @@ export async function setOrder(
   base: Record<string, string | null>,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const personId = personOf(context, "You can't arrange this view.");
-  if (typeof personId !== "string") return personId;
+  const personId = actingOwner(context, "collection", "You can't arrange this view.");
+  if (isFailure(personId)) return personId;
   const { store } = context;
   const kind = await viewKindOf(viewKey, personId, store);
-  if (typeof kind !== "string") return kind;
+  if (isFailure(kind)) return kind;
 
   const items = Object.keys(keys);
   if (items.length === 0) {
@@ -120,7 +121,7 @@ export async function setOrder(
       changes.push({ entity: "position", id, op: before ? "update" : "insert", data: position });
     }
   }
-  return { status: "applied", changes };
+  return applied(...changes);
 }
 
 /** Puts `itemId` at the top of the person's arrangement of `viewKey` (DS-51), as the change to log. */
