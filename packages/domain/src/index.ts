@@ -382,4 +382,5 @@ export * from "./telemetry";
 export { parseEmailAddress } from "./accounts";
 export { planMoves } from "./positions";
 export { maxSearchQueryLength } from "./search";
+export { emailOutcomeSchema } from "./email";
 export { shareTokenSchema } from "./sharing";

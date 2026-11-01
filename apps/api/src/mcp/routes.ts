@@ -19,9 +19,9 @@ import { Elysia } from "elysia";
 import { errors as joseErrors, type JWTPayload } from "jose";
 
 import { type Database, findConnection, recordConnectionUse } from "@tonaris/db";
-import { mcpModeOf, mcpScopes, type McpPrincipal } from "@tonaris/domain";
+import { mcpModeOf, type McpPrincipal } from "@tonaris/domain";
 
-import { type Auth, mcpResource } from "../auth/auth";
+import { type Auth, mcpRequestedScopes, mcpResource } from "../auth/auth";
 import type { ApiConfig } from "../config";
 import type { LogError } from "../observability";
 import type { Mutations } from "../sync/runner";
@@ -39,12 +39,6 @@ export type McpRoutesOptions = {
   /** The per-connection limits (TS-66); a test may pass its own clock. */
   limiter?: McpLimiter;
 };
-
-/**
- * Clients ask for the scopes the challenge names: both modes', so consent can offer either, and `offline_access`
- * for a refresh token. ChatGPT asks for nothing else, and without it would sign in again every hour (TON-22).
- */
-const challengeScopes = [mcpScopes.read, mcpScopes.manage, "offline_access"];
 
 const unauthorized = (message: string, error?: string) =>
   new APIError(
@@ -161,7 +155,12 @@ export function mcpRoutes({
   const resource = mcpResource(config.apiOrigin);
   const verify = tokenVerifier(auth, { issuer: `${config.apiOrigin}/auth`, resource });
   const challenge = (error: unknown) => {
-    const response = createResourceServerChallenge(error, resource, { challengeScopes });
+    // Clients ask for the scopes the challenge names: both modes', so consent can offer either, and
+    // `offline_access` for a refresh token. ChatGPT asks for nothing else, and without it would sign in again every
+    // hour (TON-22).
+    const response = createResourceServerChallenge(error, resource, {
+      challengeScopes: mcpRequestedScopes,
+    });
     if (!response) throw error;
     return challengeResponse(response);
   };

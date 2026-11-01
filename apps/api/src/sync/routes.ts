@@ -5,18 +5,13 @@
 // - a capture, which asks metadata sources before the write lock, answers `409 in_progress` while it runs;
 // - GET /v1/sync/bootstrap is the account's data at a `seq`;
 // - GET /v1/sync/stream streams the changes after a cursor, as server-sent events.
-// Each accepts the session cookie today; bearer tokens for native apps and MCP arrive with TS-30 and TS-61.
+// Each takes the session cookie. A bearer token is refused: MCP's are for /mcp only (TS-62), and native apps' don't
+// exist yet (TS-30).
 
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import {
-  bootstrapSnapshot,
-  executeBatch,
-  findMutationResult,
-  mutationRunning,
-  type Database,
-} from "@tonaris/db";
+import { bootstrapSnapshot, executeBatch, type Database } from "@tonaris/db";
 import {
   batchResultSchema,
   batchSchema,
@@ -32,7 +27,7 @@ import { streamResponses } from "../openapi";
 import { ProblemError } from "../problem";
 import { eventStream, type StreamSource } from "../sse";
 import type { SyncEvent, SyncHub } from "./hub";
-import { MutationInProgressError, type Mutations } from "./runner";
+import { MutationInProgressError, mutationStatus, type Mutations } from "./runner";
 
 const cursor = z
   .string()
@@ -187,10 +182,11 @@ export function syncRoutes(
         },
       },
       async ({ params, account }) => {
-        const result = await findMutationResult(db, account.id, params.id);
-        if (result) return result;
-        if (await mutationRunning(db, account.id, params.id)) throw inProgress();
-        throw new ProblemError(404, "not_found", "No mutation with this ID was received.");
+        const status = await mutationStatus(db, account.id, params.id);
+        if (status === "running") throw inProgress();
+        if (!status)
+          throw new ProblemError(404, "not_found", "No mutation with this ID was received.");
+        return status;
       },
     )
     .get(

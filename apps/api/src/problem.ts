@@ -97,6 +97,11 @@ export type ProblemDetailsOptions = {
   logError?: LogError;
 };
 
+/** `path` with a shared link's token replaced, for logs (TS-32): `/v1/s/[token]/stream`. */
+export function withoutShareToken(path: string): string {
+  return path.replace(/^\/v1\/s\/[^/?#]+/u, "/v1/s/[token]");
+}
+
 /**
  * Maps every error, in this app and all its plugins, to a problem. Unknown routes are `not_found`, bad input
  * (schema or unparsable body) is `validation_failed`, a `ProblemError` is itself, and anything else is a generic
@@ -106,11 +111,6 @@ export type ProblemDetailsOptions = {
  * (`code: "validation"`). Such routes declare `422: problemSchema` (from @tonaris/domain) in their `response` map, which replaces
  * that type with what this plugin actually sends and documents it in OpenAPI.
  */
-/** `path` with a shared link's token replaced, for logs (TS-32): `/v1/s/[token]/stream`. */
-export function withoutShareToken(path: string): string {
-  return path.replace(/^\/v1\/s\/[^/?#]+/u, "/v1/s/[token]");
-}
-
 export function problemDetails({
   logError = (error, path) => console.error(`Unhandled error on ${path}`, error),
 }: ProblemDetailsOptions = {}) {

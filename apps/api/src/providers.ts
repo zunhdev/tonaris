@@ -1,7 +1,7 @@
 // The metadata sources the API asks (TS-41, TS-103), made once per process: MusicBrainz's 1 request a second and
 // iTunes Lookup's 20 a minute hold for every capture only while there is one client of each. `album.capture` asks
-// through `capture` (TON-44), the capture job's retries will enrich saved albums with `enrich` (TS-42), and Find
-// artwork searches with `covers` (TON-112).
+// through `capture` (TON-44), and Find artwork searches with `covers` (TON-112). `enrich` is TS-42's enrichment of a
+// saved album, for the capture job's retries: that job isn't built yet, so nothing calls it.
 
 import {
   albumReleaseGroup,
@@ -87,7 +87,6 @@ export function createProviders(
   return {
     musicBrainz,
     spotify,
-    identifier,
     capture,
     covers: (query: { title: string; artist: string }) => findCovers(musicBrainz, query),
     enrich: createEnricher({ db, musicBrainz, hub }),

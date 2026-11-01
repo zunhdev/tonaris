@@ -6,13 +6,16 @@
 // - a capture is claimed first, so a copy sent while it runs answers `409 in_progress` and nothing runs twice, held to
 //   100 an hour, and asks its providers before the lock (TS-41, ../capture.ts);
 // - a saved invitation's email is queued after the response (FR-07.5).
-// After commit, `announce` hands the changes to the account's streams (TS-23).
+// After commit, `announce` hands the changes to the account's streams (TS-23). `mutationStatus` says what came of one
+// sent earlier.
 
 import {
   capturesSince,
   claimMutation,
   executeMutation,
+  findMutationResult,
   finishMutation,
+  mutationRunning,
   releaseClaim,
   type Database,
   type ExecutedMutation,
@@ -26,6 +29,7 @@ import {
   shareTokenHash,
   type EmailPort,
   type Mutation,
+  type MutationResult,
   type Principal,
 } from "@tonaris/domain";
 
@@ -146,6 +150,20 @@ export function announcer(hub: Pick<SyncHub, "publish" | "notify">) {
     if (changes.length > 0) hub.publish(accountId, changes);
     else if (!replayed && result.outcome.status === "confirmed") hub.notify(accountId);
   };
+}
+
+/**
+ * What came of a mutation the account sent (TS-22): its stored outcome, `running` while a request still runs it, or
+ * undefined if none was received in the last 30 days. `GET /v1/mutations/{id}` and MCP's `get_operation` answer it.
+ */
+export async function mutationStatus(
+  db: Database,
+  accountId: string,
+  mutationId: string,
+): Promise<MutationResult | "running" | undefined> {
+  const result = await findMutationResult(db, accountId, mutationId);
+  if (result) return result;
+  return (await mutationRunning(db, accountId, mutationId)) ? "running" : undefined;
 }
 
 /** The path every write takes, from the app and MCP alike (X-02): run, then announce. */

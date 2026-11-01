@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { renderEmail } from "./email";
+import { emailOutcomeSchema, renderEmail, type EmailOutcome } from "./email";
 
 describe("sign-in emails (TS-70, DS-90)", () => {
   test("the code email carries the code and the link", () => {
@@ -72,5 +72,18 @@ describe("email change and recovery (TS-73, DS-93)", () => {
     expect(subject).toBe("A passkey was added to your Tonaris account");
     expect(text).toContain('A passkey named "Work laptop"');
     expect(text).toContain(link);
+  });
+});
+
+describe("email outcomes (FR-07.5, FR-11.6)", () => {
+  test("an invitation's or an admission's record, and nothing else", () => {
+    const outcomes: EmailOutcome[] = [
+      { kind: "share_grant", id: "grant-1" },
+      { kind: "admission_invitation", id: "invitation-1" },
+    ];
+    for (const outcome of outcomes) {
+      expect(emailOutcomeSchema.parse(outcome)).toEqual(outcome);
+    }
+    expect(emailOutcomeSchema.safeParse({ kind: "account", id: "x" }).success).toBe(false);
   });
 });

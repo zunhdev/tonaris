@@ -15,9 +15,7 @@ import {
   containerPage,
   fieldsWithUsage,
   findApproval,
-  findMutationResult,
   findOperation,
-  mutationRunning,
   searchCollection,
   sharedWithMe,
   trashContents,
@@ -43,6 +41,7 @@ import {
   type SearchAlbum,
 } from "@tonaris/domain";
 
+import { mutationStatus } from "../sync/runner";
 import {
   agentAlbum,
   agentValue,
@@ -533,10 +532,9 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
       }
       const steps = await Promise.all(
         batchMutationIds(operation.batchId, operation.items).map(async (mutationId) => {
-          const found = await findMutationResult(db, userId, mutationId);
-          if (found) return found.outcome;
-          const running = await mutationRunning(db, userId, mutationId);
-          return { status: running ? ("pending" as const) : ("not_run" as const) };
+          const status = await mutationStatus(db, userId, mutationId);
+          if (status === "running") return { status: "pending" as const };
+          return status ? status.outcome : { status: "not_run" as const };
         }),
       );
       return result(`The change's steps: ${steps.map((step) => step.status).join(", ")}.`, {
