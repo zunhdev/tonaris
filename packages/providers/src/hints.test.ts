@@ -68,6 +68,12 @@ describe("passes", () => {
     expect(passes(ikra, candidate({ date: "2007-01-01", firstReleaseDate: "2006" }))).toBe(false);
   });
 
+  test("hints without a year match no release, not even an undated one", () => {
+    const undated = candidate({ date: undefined, firstReleaseDate: undefined });
+    expect(passes({ ...ikra, date: "" }, undated)).toBe(false);
+    expect(passes({ ...ikra, date: "1997" }, undated)).toBe(false);
+  });
+
   test("only official albums and EPs, and singles when Apple says so", () => {
     expect(passes(ikra, candidate({ status: "Bootleg" }))).toBe(false);
     expect(passes(ikra, candidate({ primaryType: "Single" }))).toBe(false);
