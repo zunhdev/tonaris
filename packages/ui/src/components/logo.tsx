@@ -44,4 +44,4 @@ function Wordmark({ size = "brand", className }: { size?: "brand" | "page"; clas
   );
 }
 
-export { Wordmark };
+export { Logo, Wordmark };

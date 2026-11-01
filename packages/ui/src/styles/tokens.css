@@ -138,6 +138,19 @@
   --text-display: 1.75rem;
   --text-display--line-height: 2.125rem;
   --text-display--font-weight: 600;
+  /* The landing page's (TON-155, DS-120): larger than the app's, the headings fluid from phone to desktop. */
+  --text-hero: clamp(2.625rem, 1.6rem + 4.4vw, 5rem);
+  --text-hero--line-height: 1;
+  --text-hero--font-weight: 600;
+  --text-hero--letter-spacing: -0.045em;
+  --text-headline: clamp(1.875rem, 1.4rem + 2vw, 3rem);
+  --text-headline--line-height: 1.08;
+  --text-headline--font-weight: 600;
+  --text-headline--letter-spacing: -0.035em;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.75rem;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5rem;
 
   /* DS-15: 4 chips, artwork, checkboxes; 6 buttons, inputs; 8 popovers, menus, cards; 12 dialogs, palette */
   --radius-sm: 0.25rem;

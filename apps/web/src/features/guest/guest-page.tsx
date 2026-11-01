@@ -39,12 +39,18 @@ export function UnavailableShare() {
   );
 }
 
-/** The wordmark above and "Sign in" below, around a guest page. */
+/** The wordmark above, leading to the landing page (TON-155), and "Sign in" below, around a guest page. */
 function GuestFrame({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-app pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-      <header className="px-6 pt-5">
-        <Wordmark />
+      <header className="flex px-6 pt-5">
+        <Link
+          to="/welcome"
+          aria-label="Tonaris, what it is"
+          className="-mx-1.5 flex h-8 items-center rounded-md px-1.5 outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+        >
+          <Wordmark />
+        </Link>
       </header>
       {children}
       <footer className="flex gap-4 border-t border-subtle px-6 py-4 text-small">

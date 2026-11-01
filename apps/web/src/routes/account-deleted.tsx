@@ -57,7 +57,7 @@ function AccountDeleted() {
 
   if (state === "deleted") {
     return (
-      <SignInCard>
+      <SignInCard home>
         <h1 id={signInTitleId} className="text-title text-fg-primary">
           Your account has been deleted
         </h1>
@@ -67,7 +67,7 @@ function AccountDeleted() {
   }
 
   return (
-    <SignInCard>
+    <SignInCard home>
       <h1 id={signInTitleId} className="text-title text-fg-primary" aria-live="polite">
         {state === "deleting" ? "Deleting your account…" : "Couldn't finish deleting your account"}
       </h1>

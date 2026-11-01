@@ -1,56 +1,38 @@
 // The sign-in pages' frame (DS-90): the wordmark, mark and name (TON-114), above one card, with the terms and privacy
-// notice linked below it (TON-131). Each step names the page with its own heading, `signInTitleId`. The sign-in steps
-// add what Tonaris is beside the card (`promo`, TON-116): on the desktop, the promo on the left and the card on the
-// right; on a phone, the card first and the promo below.
+// notice linked below it (TON-131). Each step names the page with its own heading, `signInTitleId`. On the pages a
+// signed-out visitor reaches, the wordmark leads to the landing page (`home`, TON-155), which says what Tonaris is.
 
 import { LegalLinks } from "@/features/legal/legal-page";
+import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { Wordmark } from "@tonaris/ui/components/logo";
 
-import { Promo } from "./promo";
-
 export const signInTitleId = "sign-in-title";
 
-const cardClass =
-  "flex w-full max-w-sm flex-col gap-4 rounded-xl border border-subtle bg-panel p-6";
-
-export function SignInCard({ children, promo = false }: { children: ReactNode; promo?: boolean }) {
-  if (!promo) {
-    return (
-      <main
-        aria-labelledby={signInTitleId}
-        className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6"
-      >
-        <p>
-          <Wordmark size="page" />
-        </p>
-        <div className={cardClass}>{children}</div>
-        <LegalLinks />
-      </main>
-    );
-  }
+export function SignInCard({ children, home = false }: { children: ReactNode; home?: boolean }) {
   return (
     <main
       aria-labelledby={signInTitleId}
-      className="flex min-h-dvh items-center justify-center p-6 md:p-10"
+      className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6"
     >
-      <div className="grid w-full max-w-4xl items-center gap-10 md:grid-cols-[minmax(0,1fr)_24rem] md:gap-16">
-        {/* The page's task first, also for screen readers; on the desktop it moves to the right. */}
-        <div className="flex flex-col items-center gap-6 md:order-2">
-          <p className="md:hidden">
+      <p>
+        {home ? (
+          <Link
+            to="/welcome"
+            aria-label="Tonaris, what it is"
+            className="-mx-1.5 flex rounded-md px-1.5 py-0.5 outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+          >
             <Wordmark size="page" />
-          </p>
-          <div className={cardClass}>{children}</div>
-          <LegalLinks />
-        </div>
-        <div className="flex flex-col gap-8 md:order-1">
-          <p className="hidden md:block">
-            <Wordmark size="page" />
-          </p>
-          <Promo />
-        </div>
+          </Link>
+        ) : (
+          <Wordmark size="page" />
+        )}
+      </p>
+      <div className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-subtle bg-panel p-6">
+        {children}
       </div>
+      <LegalLinks />
     </main>
   );
 }

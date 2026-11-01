@@ -23,7 +23,7 @@ export const Route = createFileRoute("/help/recovery")({
 function RecoveryHelp() {
   const { support } = Route.useLoaderData();
   return (
-    <SignInCard>
+    <SignInCard home>
       <h1 id={signInTitleId} className="text-title text-fg-primary">
         Lost access to your email?
       </h1>
