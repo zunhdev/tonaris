@@ -1,14 +1,19 @@
 // Which pasted lines are links (DS-48, TS-40): each trimmed line that is an `http(s)` URL, a `spotify:` URI, or starts
-// with a host the services use, without its scheme. Capture reads each one and explains any it can't use, so this
-// only keeps a paste of ordinary text from becoming captures; it never decides what is supported. A paste takes
-// at most one batch's links (`maxBatchItems`, TS-25).
+// with a host the services' links or short links are on (`isLinkHost`), and then a path, without its scheme. Capture
+// reads each one and explains any it can't use, so this only keeps a paste of ordinary text from becoming captures;
+// it never decides what is supported. A paste takes at most one batch's links (`maxBatchItems`, TS-25).
 
-const schemeless =
-  /^(open\.spotify\.com|spotify\.link|spotify\.app\.link|(geo\.)?music\.apple\.com|(www\.|open\.|play\.)?qobuz\.com|(www\.|listen\.)?tidal\.com|(music\.|www\.|m\.)?youtube\.com)\//i;
+import { isLinkHost } from "@tonaris/providers/links";
+
+/** Whether `line` starts with a service's host and a path, without its scheme. */
+function isSchemeless(line: string): boolean {
+  const host = /^([^/]+)\//.exec(line)?.[1];
+  return host !== undefined && isLinkHost(host);
+}
 
 /** Whether `line`, trimmed, looks like a link. */
 export function isLinkLike(line: string): boolean {
-  return /^https?:\/\/\S+$/i.test(line) || /^spotify:\S+$/i.test(line) || schemeless.test(line);
+  return /^https?:\/\/\S+$/i.test(line) || /^spotify:\S+$/i.test(line) || isSchemeless(line);
 }
 
 /** The lines of `text` that look like links, trimmed, in order. */
