@@ -381,4 +381,5 @@ export * from "./telemetry";
 // TON-147: helpers the API's adapters share.
 export { parseEmailAddress } from "./accounts";
 export { planMoves } from "./positions";
+export { maxSearchQueryLength } from "./search";
 export { shareTokenSchema } from "./sharing";

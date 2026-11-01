@@ -34,6 +34,7 @@ import {
   maxContainers,
   maxFields,
   maxMemberships,
+  maxSearchQueryLength,
   outcomeSchema,
   releaseTypes,
   streamingServices,
@@ -48,6 +49,7 @@ import {
   badCursor,
   cursorInput,
   failed,
+  idempotencyKeyInput,
   nextCursor,
   offsetOf,
   pageOutput,
@@ -299,7 +301,7 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
       title: "Search the collection",
       description: `Finds the user's folders and lists by name, and albums by title or artist, ignoring case and accents, best first, as the app's search does; then the same in what others share with the user. Each group gives its total and at most limit matches. ${userData}`,
       inputSchema: z.object({
-        query: z.string().trim().min(1).max(200).describe("Text to find."),
+        query: z.string().trim().min(1).max(maxSearchQueryLength).describe("Text to find."),
         limit: z.number().int().min(1).max(50).default(20).describe("At most this many per group."),
       }),
       outputSchema: z.object({
@@ -508,7 +510,7 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
       description:
         "What happened to a change this connection made with this idempotencyKey: each of its steps confirmed, failed with why, a conflict, a choice it needs, still running (pending), or not run. Use it when a write's answer was lost. To finish the change, send it again with the same key and arguments: nothing already done is done twice.",
       inputSchema: z.object({
-        idempotencyKey: z.string().min(1).max(100).describe("The key the change was made with."),
+        idempotencyKey: idempotencyKeyInput.describe("The key the change was made with."),
       }),
       outputSchema: z.object({
         idempotencyKey: z.string(),

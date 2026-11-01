@@ -444,9 +444,17 @@ describe("fields and options (FR-03.17, FR-03.18)", () => {
 
   test("unused options go at once; a chosen one asks, and an option chosen since asks again", async () => {
     const { first, second, fieldId, vinyl, cd, tape, cookie, mcp } = await fieldSetup();
-    const unused = await call(mcp, "remove_options", { fieldId, optionIds: [tape] });
-    expect(ran.parse(unused.content).items).toEqual([
+    const unused = await mcp.callTool({
+      name: "remove_options",
+      arguments: { fieldId, optionIds: [tape] },
+    });
+    expect(ran.parse(unused.structuredContent).items).toEqual([
       { optionId: tape, outcome: { status: "confirmed" } },
+    ]);
+    // Summed up as every write is: "Not all done" had a step failed (answerWritten).
+    expect(unused.content).toEqual([
+      { type: "text", text: "Done: 1 confirmed." },
+      expect.anything(),
     ]);
 
     const asked = needsApproval.parse(

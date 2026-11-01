@@ -61,6 +61,9 @@ export function rankAlbums<T>(
 export const defaultSearchLimit = 8;
 export const maxSearchLimit = 100;
 
+/** Characters in a search query, in the app and through MCP (TS-50). */
+export const maxSearchQueryLength = 200;
+
 const locationSchema = z.array(z.string()).meta({
   description:
     "Where it is: the names from the top of the collection down to the folder or list holding it. Empty for the top level.",
