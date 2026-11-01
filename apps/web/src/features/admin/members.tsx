@@ -13,11 +13,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
+import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
-import { Label } from "@tonaris/ui/components/label";
+import { Textarea } from "@tonaris/ui/components/textarea";
 
 const date = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
@@ -140,7 +142,6 @@ function RecoverDialog({
   onClose: () => void;
   onSent: () => void;
 }) {
-  const id = useId();
   const newEmailRef = useRef<HTMLInputElement>(null);
   const [newEmail, setNewEmail] = useState("");
   const [reason, setReason] = useState("");
@@ -172,33 +173,30 @@ function RecoverDialog({
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-3" onSubmit={(event) => void submit(event)}>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${id}-new`}>New email address</Label>
-            <Input
-              ref={newEmailRef}
-              id={`${id}-new`}
-              type="email"
-              required
-              value={newEmail}
-              onChange={(event) => setNewEmail(event.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${id}-reason`}>Reason</Label>
-            <textarea
-              id={`${id}-reason`}
-              rows={3}
-              required
-              maxLength={maxRecoveryReasonLength}
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              aria-describedby={`${id}-reason-hint`}
-              className="rounded-md border border-strong bg-app px-2.5 py-1.5 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
-            />
-            <p id={`${id}-reason-hint`} className="text-small text-fg-tertiary">
-              How you confirmed it's theirs. It goes in the audit log.
-            </p>
-          </div>
+          <Field label="New email address">
+            {(control) => (
+              <Input
+                {...control}
+                ref={newEmailRef}
+                type="email"
+                required
+                value={newEmail}
+                onChange={(event) => setNewEmail(event.target.value)}
+              />
+            )}
+          </Field>
+          <Field label="Reason" hint="How you confirmed it's theirs. It goes in the audit log.">
+            {(control) => (
+              <Textarea
+                {...control}
+                rows={3}
+                required
+                maxLength={maxRecoveryReasonLength}
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+              />
+            )}
+          </Field>
           <label className="flex items-center gap-2 text-fg-primary">
             <input
               type="checkbox"
@@ -213,14 +211,14 @@ function RecoverDialog({
               {error}
             </p>
           )}
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button type="button" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={busy}>
               Send verification
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
