@@ -28,7 +28,7 @@ import { failure, type Failure } from "./outcomes";
 import { z } from "./zod";
 
 /** `field.changeType`'s `result` in a `confirmed` outcome: the options a change to a non-choice type discarded. */
-export const fieldTypeChangeResultSchema = z
+const fieldTypeChangeResultSchema = z
   .object({ discardedOptions: z.array(z.object({ id: z.uuid(), label: z.string() })) })
   .meta({
     description: "The options a type change discarded (FR-03.13); empty when it kept them.",

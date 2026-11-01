@@ -287,7 +287,6 @@ export {
 } from "./outcomes";
 export {
   authorizeAdmissionAdmin,
-  authorizeOwnerRead,
   authorizeWrite,
   type Decision,
   type OperationScope,

@@ -16,7 +16,6 @@ import { membershipSchema } from "./memberships";
 import { isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
-import type { Principal } from "./principals";
 import { serviceLinkSchema } from "./service-links";
 import { z } from "./zod";
 
@@ -39,13 +38,6 @@ export type EmailStatus = (typeof emailStatuses)[number];
 
 /** Who reads through sharing: a person (signed in, or an MCP connection acting for them), or a link's guest. */
 export type ShareViewer = { kind: "person"; userId: string } | { kind: "link"; linkId: string };
-
-/** How `principal` reads shared content (TS-30): an MCP connection reads what its user may (X-01). */
-export function viewerOf(principal: Principal): ShareViewer {
-  return principal.kind === "guest"
-    ? { kind: "link", linkId: principal.linkId }
-    : { kind: "person", userId: principal.userId };
-}
 
 /** What access is decided from: the hierarchy, and every grant, link and saved reference. */
 export type SharingState = {
@@ -207,9 +199,6 @@ export const grantArgsSchema = z.object({ grantId: z.uuid() });
 
 /** `share.leave`'s argument: the shared folder or list, which is what a viewer knows of a share. */
 export const leaveArgsSchema = z.object({ containerId: z.uuid() });
-
-/** What `share.setLink` reports: the live link's ID, or null once it is off. */
-export const shareSetLinkResultSchema = z.object({ linkId: z.uuid().nullable() });
 
 const recipientNotFound =
   "No Tonaris account uses this email. Invitations only work for existing members — you can share a link instead.";
