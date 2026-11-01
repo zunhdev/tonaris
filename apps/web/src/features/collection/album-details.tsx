@@ -102,7 +102,7 @@ export function AlbumDetails({ album }: { album: Album }) {
           <>
             {/* The sections' headings stay under the album's, as fields replace it. */}
             <h2 className="sr-only">{album.title}</h2>
-            <FieldEditor album={album} cell="title" className="font-medium" />
+            <FieldEditor album={album} cell="title" className="text-title font-medium" />
             <FieldEditor album={album} cell="artistCredit" />
           </>
         ) : (
