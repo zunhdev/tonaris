@@ -380,6 +380,14 @@ export type WriteTransaction = {
   isPersisted: { promise: Promise<unknown> };
 };
 
+/**
+ * Lets a write go without waiting on it where it was made: the save states report its outcome (DS-80), so a
+ * rejection is expected there, not here.
+ */
+export function sent(transaction: Pick<WriteTransaction, "isPersisted">): void {
+  transaction.isPersisted.promise.catch(() => {});
+}
+
 export type Writer = ReturnType<typeof createWriter>;
 
 export function createWriter({

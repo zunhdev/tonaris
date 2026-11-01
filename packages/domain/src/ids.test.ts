@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { uuidv7, uuidv7Time } from "./ids";
+import { isUuid, uuidv7, uuidv7Time } from "./ids";
 import { z } from "./zod";
 
 describe("UUIDv7 (TS-10)", () => {
@@ -37,5 +37,16 @@ describe("UUIDv7 (TS-10)", () => {
   test("has no time for other UUIDs or strings", () => {
     expect(uuidv7Time(crypto.randomUUID())).toBeUndefined();
     expect(uuidv7Time("not-a-uuid")).toBeUndefined();
+  });
+});
+
+describe("isUuid", () => {
+  test("takes a UUID of any version, in either case, and nothing else", () => {
+    expect(isUuid(uuidv7())).toBe(true);
+    expect(isUuid(crypto.randomUUID().toUpperCase())).toBe(true);
+    expect(isUuid("root")).toBe(false);
+    expect(isUuid(`${uuidv7()}x`)).toBe(false);
+    expect(isUuid(undefined)).toBe(false);
+    expect(isUuid(42)).toBe(false);
   });
 });
