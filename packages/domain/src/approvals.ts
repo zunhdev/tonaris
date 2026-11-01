@@ -2,6 +2,7 @@
 // what it would do; the owner approves that scope in Tonaris, and the operation runs only while its recomputed
 // scope still hashes the same. An agent's claim that the owner approved is never enough.
 
+import { containerKinds } from "./containers";
 import type { FieldDeletion } from "./field-deletion";
 import type { OptionRemoval } from "./field-options";
 import { fieldTypes, type FieldType } from "./fields";
@@ -62,7 +63,7 @@ export const approvalScopeSchema = z
       .array(
         z.object({
           id: z.uuid(),
-          kind: z.enum(["folder", "list"]),
+          kind: z.enum(containerKinds),
           name: z.string(),
           folders: z.int().meta({ description: "Folders inside it, which go with it." }),
           lists: z.int().meta({ description: "Lists inside it, which go with it." }),

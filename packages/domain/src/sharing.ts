@@ -4,11 +4,11 @@
 // cover current and future descendants (FR-07.8), follow moves (FR-07.9), and are suspended, not revoked, by Trash
 // (FR-07.10). `readableContainers` is the definition; the database's recursive CTEs are tested against it.
 
-import { emailKey } from "./accounts";
-import { albumSchema } from "./albums";
+import { emailInputSchema, emailKey } from "./accounts";
+import { syncedAlbumSchema } from "./albums";
 import { actingOwner, applied, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
-import { containerFieldsSchema, containerSchema } from "./containers";
+import { containerFieldsSchema, containerKinds, containerSchema } from "./containers";
 import { fieldValueSchema } from "./field-values";
 import { customFieldSchema } from "./fields";
 import { maxNameLength } from "./limits";
@@ -142,8 +142,9 @@ export const sharedSnapshotSchema = z
       description: "The root, with no parent, and its active folders and lists.",
     }),
     albums: z.array(
-      albumSchema.extend({
-        artworkSignature: z.string().optional().meta({
+      // The stream's album, its signature described as the published contract has it for viewers (TS-09).
+      syncedAlbumSchema.extend({
+        artworkSignature: syncedAlbumSchema.shape.artworkSignature.meta({
           description: "The API's signature of the artwork URL, for its image proxy (TS-103).",
         }),
       }),
@@ -162,12 +163,7 @@ export type SharedSnapshot = z.infer<typeof sharedSnapshotSchema>;
 export const shareInviteArgsSchema = z.object({
   grantId: z.uuid({ version: "v7" }),
   containerId: z.uuid(),
-  email: z
-    .string()
-    .trim()
-    .min(1)
-    .max(320)
-    .meta({ description: "The address to invite, as typed." }),
+  email: emailInputSchema.meta({ description: "The address to invite, as typed." }),
 });
 
 /** `share.setLink`'s arguments: on or off, and the new link's ID, used only when one is made (TS-10). */
@@ -494,7 +490,7 @@ export const invitationSchema = z
   .object({
     id: z.uuid(),
     owner: z.object({ displayName: z.string().nullable() }),
-    container: z.object({ id: z.uuid(), name: z.string(), kind: z.enum(["folder", "list"]) }),
+    container: z.object({ id: z.uuid(), name: z.string(), kind: z.enum(containerKinds) }),
     invitedAt: z.iso.datetime(),
   })
   .meta({ description: "An invitation to view a folder or list (FR-07.5)." });
@@ -613,7 +609,7 @@ export const sharedEntrySchema = z
       .string()
       .nullable()
       .meta({ description: "The folder's or list's name while available; null once it isn't." }),
-    kind: z.enum(["folder", "list"]).nullable(),
+    kind: z.enum(containerKinds).nullable(),
     via: z.object({
       invitation: z.boolean().meta({ description: "An accepted invitation gives access." }),
       link: z.boolean().meta({ description: "It was saved through a link that still works." }),

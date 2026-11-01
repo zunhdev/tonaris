@@ -60,6 +60,17 @@ export const albumSchema = albumCreateArgsSchema
   .meta({ description: "An album record (FR-01.6)." });
 export type Album = z.infer<typeof albumSchema>;
 
+/**
+ * An album as the server sends it: with `artworkSignature`, the API's signature of its artwork URL, which clients show
+ * through the image proxy (`artworkPath()`, TS-103). The API adds it; the database never stores it.
+ */
+export const syncedAlbumSchema = albumSchema.extend({
+  artworkSignature: z.string().optional().meta({
+    description: "The image proxy's signature of `artworkUrl`, when it has one (TS-103).",
+  }),
+});
+export type SyncedAlbum = z.infer<typeof syncedAlbumSchema>;
+
 /** An album as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
 export type StoredAlbum = Album & { ownerId: string; trashed: boolean };
 

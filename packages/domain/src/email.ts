@@ -3,6 +3,7 @@
 
 import { signInCode } from "./accounts";
 import { admissionInvitationDays } from "./admission";
+import { containerKinds, type ContainerKind } from "./containers";
 import { z } from "./zod";
 
 /** Each template and the data it needs. */
@@ -27,7 +28,7 @@ export type EmailTemplates = {
   "share-invitation": {
     ownerName: string;
     containerName: string;
-    kind: "folder" | "list";
+    kind: ContainerKind;
     link: string;
   };
 };
@@ -92,7 +93,7 @@ export const emailDataSchemas: { [T in EmailTemplate]: z.ZodType<EmailTemplates[
   "share-invitation": z.object({
     ownerName: z.string(),
     containerName: z.string(),
-    kind: z.enum(["folder", "list"]),
+    kind: z.enum(containerKinds),
     link: z.string(),
   }),
   "admission-invitation": z.object({ link: z.string() }),

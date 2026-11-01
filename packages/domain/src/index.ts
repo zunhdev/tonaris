@@ -17,6 +17,7 @@ export {
   emailChangeStages,
   emailChangeStartSchema,
   emailChangeStepSchema,
+  emailInputSchema,
   emailKey,
   emailRecoveryConfirmSchema,
   emailRecoveryHours,
@@ -89,6 +90,7 @@ export {
   artworkUrlRefusal,
   isArtworkUrl,
   albumSchema,
+  syncedAlbumSchema,
   albumCreateArgsSchema,
   type AlbumCreateArgs,
   releaseTypes,
@@ -96,6 +98,7 @@ export {
   type Cover,
   type AlbumField,
   type AlbumFields,
+  type SyncedAlbum,
 } from "./albums";
 export {
   albumDeletionScope,
@@ -305,8 +308,6 @@ export {
 } from "./principals";
 export {
   albumCaptureSchema,
-  syncedAlbumSchema,
-  type SyncedAlbum,
   bootstrapSchema,
   changeOps,
   changeSchema,
