@@ -123,9 +123,9 @@ const personOf = (context: CommandContext) =>
   actingOwner(context, "collection", "You can't change view options here.");
 
 /**
- * What the view `viewKey` holds, if it is the person's: the root, Unsorted, or a folder or list of theirs (sharing
- * adds the containers shared with them, M7). One in Trash is still theirs, so a choice queued meanwhile isn't lost.
- * A missing folder and someone else's get the same answer.
+ * What the view `viewKey` holds, if it is the person's: the root, Unsorted, or a folder or list of theirs or shared
+ * with them (FR-07.17). One in Trash is still theirs, so a choice queued meanwhile isn't lost. A missing folder and
+ * someone else's they can't read get the same answer.
  */
 export async function viewKindOf(
   viewKey: string,

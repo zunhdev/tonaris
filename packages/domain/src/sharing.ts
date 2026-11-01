@@ -218,7 +218,7 @@ const named = async ({ store }: CommandContext, ownerId: string) =>
 /**
  * `share.invite` (FR-07.4, FR-07.5): a pending invitation for the account that signs in with `email`. Nobody without an
  * account is invited, nor is an account or admission made for them (X-05). Someone already invited or viewing keeps
- * the invitation they have. Email and the inbox arrive with TON-66.
+ * the invitation they have. A new one is emailed once it is saved.
  */
 export async function inviteToShare(
   { grantId, containerId, email }: z.infer<typeof shareInviteArgsSchema>,

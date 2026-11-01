@@ -77,7 +77,7 @@ export type FieldUsageList = z.infer<typeof fieldUsageListSchema>;
 /** An album choosing an option, and whether it is in Trash. */
 export type OptionUser = { id: string; trashed: boolean };
 
-/** What removing an option affects (FR-03.17): its albums by ID, in Trash or not. Shared views join with M7. */
+/** What removing an option affects (FR-03.17): its albums by ID, in Trash or not. */
 export type OptionRemovalScope = {
   operation: "remove_option";
   fieldId: string;
