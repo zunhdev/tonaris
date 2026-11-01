@@ -18,18 +18,19 @@ import { Shell } from "@/features/shell/shell";
 import { SaveStateLayer } from "@/features/sync/save-state-layer";
 import { SyncProvider } from "@/features/sync/sync-provider";
 import { RecoveryProvider } from "@/features/trash/recovery";
+import { uuidSearch } from "@/search";
 import { createFileRoute, Outlet, redirect, useLocation, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// The open album inspector, on any view (DS-32, DS-46); anything but an ID is dropped.
+// Made outside the route's options: inferred inside them, beside the functions there, its key's type is lost.
+const albumSearch = uuidSearch("album");
 
 export const Route = createFileRoute("/_workspace")({
   ssr: false,
-  // The open album inspector, on any view (DS-32, DS-46); anything but an ID is dropped.
-  validateSearch: (search: Record<string, unknown>): { album?: string } =>
-    typeof search.album === "string" && uuid.test(search.album) ? { album: search.album } : {},
+  validateSearch: albumSearch,
   beforeLoad: async ({ location }) => {
     const account = await currentAccount();
     if (!account) throw redirect({ to: "/sign-in", search: { redirect: location.href } });

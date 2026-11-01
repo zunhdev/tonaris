@@ -6,18 +6,20 @@ import { createApiClient } from "@/api";
 import { serverApiUrl } from "@/config";
 import { GuestPage, UnavailableShare } from "@/features/guest/guest-page";
 import { useShareStream } from "@/features/guest/use-share-stream";
+import { uuidSearch } from "@/search";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCallback } from "react";
 
 import type { SharedSnapshot } from "@tonaris/domain";
 
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 type Loaded = { snapshot: SharedSnapshot } | { snapshot: undefined };
 
+// `?c=`, the folder or list inside the share; anything but an ID is dropped.
+// Made outside the route's options: inferred inside them, beside the functions there, its key's type is lost.
+const containerSearch = uuidSearch("c");
+
 export const Route = createFileRoute("/s/$token")({
-  validateSearch: (search: Record<string, unknown>): { c?: string } =>
-    typeof search.c === "string" && uuid.test(search.c) ? { c: search.c } : {},
+  validateSearch: containerSearch,
   loader: async ({ params }): Promise<Loaded> => {
     try {
       const { data } = await createApiClient(serverApiUrl).v1.s({ token: params.token }).get();
