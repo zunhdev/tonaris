@@ -1,8 +1,9 @@
 // The manual entry form's rules (DS-47, FR-02.4, FR-02.6): its fields as typed, what is missing or malformed, and the
 // album they make. Title, artist and the applicable year are required: the original release year, or for a live
 // album the recording year or the release year (FR-02.6). Nothing is invented: a field left empty stays empty. The
-// domain's `albumProblem` checks the built album last. A link per service is optional, and checked as the server
-// will read it (FR-06.3, TS-40). Pure, so the rules are tested without a DOM.
+// domain's `albumProblem` checks the built album last, and anything it refuses that the form's own checks don't word,
+// such as a title over its length, shows at its field in the domain's words. A link per service is optional, and
+// checked as the server will read it (FR-06.3, TS-40). Pure, so the rules are tested without a DOM.
 
 import {
   albumProblem,
@@ -115,6 +116,32 @@ export function isFormDirty(form: AlbumForm): boolean {
   );
 }
 
+/** The form field each of the album's fields is typed in, by the path the domain's problems name it with. */
+const fieldOfPath = new Map<string, FormField>([
+  ["title", "title"],
+  ["artistCredit", "artistCredit"],
+  ["originalYear", "originalYear"],
+  ["recordingYearStart", "recording"],
+  ["recordingYearEnd", "recording"],
+  ["artworkUrl", "artworkUrl"],
+]);
+
+/** The album the form makes, as typed, before any check: years that can't be read are none. */
+function albumFieldsOf(form: AlbumForm): Omit<Album, "id"> {
+  const original = parseYears(form.originalYear.trim());
+  const recording = form.isLive ? parseYears(form.recording.trim()) : undefined;
+  return {
+    title: form.title.trim(),
+    artistCredit: form.artistCredit.trim(),
+    releaseType: form.releaseType,
+    isLive: form.isLive,
+    originalYear: original?.start ?? null,
+    recordingYearStart: recording?.start ?? null,
+    recordingYearEnd: recording ? (recording.end ?? recording.start) : null,
+    artworkUrl: form.artworkUrl.trim() || null,
+  };
+}
+
 /** What is wrong with each field, by field; empty when the form can be saved. */
 export function formProblems(form: AlbumForm): Partial<Record<FormField, string>> {
   const problems: Partial<Record<FormField, string>> = {};
@@ -145,6 +172,14 @@ export function formProblems(form: AlbumForm): Partial<Record<FormField, string>
     const reason = checkLink(service, form.links[service]);
     if (reason !== undefined) problems[service] = reason;
   }
+
+  // The domain has the last word (X-05): each field it refuses shows why, unless a check above already does. A path
+  // the form has no field for shows at the first one, so a refusal is never silent.
+  const refusal = albumProblem(albumFieldsOf(form))?.problem;
+  for (const { path } of refusal?.errors ?? []) {
+    const field = fieldOfPath.get(path) ?? "title";
+    problems[field] ??= refusal?.detail ?? "Check this field.";
+  }
   return problems;
 }
 
@@ -159,18 +194,5 @@ export function linksOfForm(form: AlbumForm, albumId: string): ServiceLink[] {
 /** The album the form makes, with a new ID; undefined while it has problems. */
 export function albumOfForm(form: AlbumForm): Album | undefined {
   if (Object.keys(formProblems(form)).length > 0) return undefined;
-  const original = parseYears(form.originalYear.trim());
-  const recording = form.isLive ? parseYears(form.recording.trim()) : undefined;
-  const album: Album = {
-    id: uuidv7(),
-    title: form.title.trim(),
-    artistCredit: form.artistCredit.trim(),
-    releaseType: form.releaseType,
-    isLive: form.isLive,
-    originalYear: original?.start ?? null,
-    recordingYearStart: recording?.start ?? null,
-    recordingYearEnd: recording ? (recording.end ?? recording.start) : null,
-    artworkUrl: form.artworkUrl.trim() || null,
-  };
-  return albumProblem(album) ? undefined : album;
+  return { id: uuidv7(), ...albumFieldsOf(form) };
 }
