@@ -14,7 +14,7 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import {
   serviceLinkKey,
@@ -27,8 +27,9 @@ import {
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { useCollectionUi, useMode } from "./collection-ui";
+import { useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
+import { useInlineDraft } from "./inline-draft";
 import { checkLink } from "./link-check";
 
 /** A save the save-state layer reports if it fails; a rejection is expected there, not here. */
@@ -227,58 +228,32 @@ function LinkEditor({
   onClose: () => void;
 }) {
   const client = useSyncClient();
-  const { registerEditor } = useCollectionUi();
-  const [draft, setDraftState] = useState(link?.url ?? "");
-  const [refusal, setRefusal] = useState<string>();
-  const current = useRef(draft);
-  // Closed already, by a save or by Escape: a blur as the field goes changes nothing.
-  const done = useRef(false);
-  const input = useRef<HTMLInputElement>(null);
   const id = useId();
   const name = serviceNames[service];
-  const setDraft = (next: string) => {
-    current.current = next;
-    setDraftState(next);
-  };
-
-  /** Saves the draft, or shows why it can't be saved; whether the field closed. */
-  const commit = useRef<() => boolean>(() => true);
-  useEffect(() => {
-    const close = () => {
-      done.current = true;
-      onClose();
-      return true;
-    };
-    commit.current = () => {
-      if (done.current) return true;
-      const typed = current.current.trim();
-      if (typed === "" || typed === link?.url) return close();
-      const reason = checkLink(service, typed);
-      if (reason !== undefined) {
-        setRefusal(reason);
-        return false;
-      }
-      if (client) {
-        if (link) {
-          sent(
-            client.links.update(serviceLinkKey(album.id, service), (record) => {
-              record.url = typed;
-            }),
-          );
-        } else sent(client.links.insert({ albumId: album.id, service, url: typed }));
-      }
-      return close();
-    };
+  /** Empty, or unchanged, the field closes without sending anything. */
+  const unchanged = (typed: string) => typed === "" || typed === link?.url;
+  // A save or Escape closes the field; a blur as it goes then changes nothing.
+  const { refusal, props } = useInlineDraft<HTMLInputElement>({
+    value: link?.url ?? "",
+    check: (typed) => (unchanged(typed.trim()) ? undefined : checkLink(service, typed.trim())),
+    save: (typed) => {
+      const url = typed.trim();
+      if (unchanged(url) || !client) return;
+      if (link) {
+        sent(
+          client.links.update(serviceLinkKey(album.id, service), (record) => {
+            record.url = url;
+          }),
+        );
+      } else sent(client.links.insert({ albumId: album.id, service, url }));
+    },
+    onClose,
   });
+  const { ref } = props;
   useEffect(() => {
-    input.current?.focus();
-    input.current?.select();
-    return registerEditor(() => {
-      const closed = commit.current();
-      if (!closed) input.current?.focus();
-      return closed;
-    });
-  }, [registerEditor]);
+    ref.current?.focus();
+    ref.current?.select();
+  }, [ref]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -286,7 +261,7 @@ function LinkEditor({
         {name} link
       </label>
       <input
-        ref={input}
+        {...props}
         id={id}
         type="url"
         inputMode="url"
@@ -295,24 +270,6 @@ function LinkEditor({
         placeholder="Album or track link"
         aria-invalid={refusal !== undefined}
         aria-describedby={refusal === undefined ? undefined : `${id}-error`}
-        value={draft}
-        onChange={(event) => {
-          setDraft(event.target.value);
-          setRefusal(undefined);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit.current();
-          } else if (event.key === "Escape") {
-            // Discards the draft; the inspector stays open.
-            event.preventDefault();
-            event.stopPropagation();
-            done.current = true;
-            onClose();
-          }
-        }}
-        onBlur={() => commit.current()}
         className={cn(
           "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
           refusal !== undefined && "border-status-danger",

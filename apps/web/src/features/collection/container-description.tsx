@@ -4,11 +4,12 @@
 // cleared. Over 2,000 characters it stays with its reason (X-05).
 
 import { useSyncClient } from "@/features/sync/sync-provider";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useId } from "react";
 
 import { descriptionTooLong, maxDescriptionLength, type Container } from "@tonaris/domain";
 
-import { useCollectionUi, useMode } from "./collection-ui";
+import { useMode } from "./collection-ui";
+import { useInlineDraft } from "./inline-draft";
 
 // oxlint-disable-next-line no-misused-spread
 const tooLong = (text: string) => [...text].length > maxDescriptionLength;
@@ -26,87 +27,42 @@ export function ContainerDescription({ container }: { container: Container }) {
 
 function DescriptionEditor({ container }: { container: Container }) {
   const client = useSyncClient();
-  const { registerEditor } = useCollectionUi();
   const id = useId();
-  const [draft, setDraftState] = useState<string>();
-  const [problem, setProblem] = useState<string>();
-  const current = useRef<string | undefined>(undefined);
-  const box = useRef<HTMLTextAreaElement>(null);
-  const saved = container.description ?? "";
-  const setDraft = (next: string | undefined) => {
-    current.current = next;
-    setDraftState(next);
-  };
-
-  const commit = useRef<() => boolean>(() => true);
-  useEffect(() => {
-    commit.current = () => {
-      const typed = current.current;
-      if (typed === undefined) return true;
+  const {
+    text: shown,
+    refusal: problem,
+    props,
+  } = useInlineDraft<HTMLTextAreaElement>({
+    value: container.description ?? "",
+    check: (typed) => (tooLong(typed.trim()) ? descriptionTooLong : undefined),
+    save: (typed) => {
       const text = typed.trim();
-      if (tooLong(text)) {
-        setProblem(descriptionTooLong);
-        return false;
-      }
       const next = text === "" ? null : text;
-      if (next !== container.description && client) {
-        // The save-state layer reports a write that fails.
-        client.containers
-          .update(container.id, (row) => {
-            row.description = next;
-          })
-          .isPersisted.promise.catch(() => {});
-      }
-      setDraft(undefined);
-      setProblem(undefined);
-      return true;
-    };
+      if (next === container.description || !client) return;
+      // The save-state layer reports a write that fails.
+      client.containers
+        .update(container.id, (row) => {
+          row.description = next;
+        })
+        .isPersisted.promise.catch(() => {});
+    },
+    multiline: true,
+    // Once saved, Escape is the page's again.
+    escape: "open",
   });
-  const open = draft !== undefined;
-  useEffect(() => {
-    if (!open) return undefined;
-    return registerEditor(() => {
-      const closed = commit.current();
-      if (!closed) box.current?.focus();
-      return closed;
-    });
-  }, [open, registerEditor]);
 
-  function keys(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      commit.current();
-    } else if (event.key === "Escape" && current.current !== undefined) {
-      event.preventDefault();
-      event.stopPropagation();
-      setDraft(undefined);
-      setProblem(undefined);
-    }
-  }
-
-  const shown = draft ?? saved;
   return (
     <div className="flex shrink-0 flex-col gap-1 px-6 pt-3">
       <label htmlFor={id} className="sr-only">
         Description
       </label>
       <textarea
-        ref={box}
+        {...props}
         id={id}
-        value={shown}
         placeholder="Add a description"
         rows={Math.min(6, Math.max(1, shown.split("\n").length))}
         aria-invalid={problem !== undefined}
         aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-        onFocus={() => {
-          if (current.current === undefined) setDraft(saved);
-        }}
-        onChange={(event) => {
-          setDraft(event.target.value);
-          setProblem(undefined);
-        }}
-        onBlur={() => commit.current()}
-        onKeyDown={keys}
         className="-mx-2 max-w-3xl resize-none rounded-md border border-transparent bg-transparent px-2 py-1 text-fg-secondary outline-none placeholder:text-fg-tertiary hover:border-subtle focus-visible:border-strong focus-visible:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-invalid:border-status-danger"
       />
       {problem && (

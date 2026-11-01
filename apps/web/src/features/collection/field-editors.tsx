@@ -5,14 +5,14 @@
 // chips with × and a select of the other options. Those save as chosen. Empty is never shown as zero or No.
 
 import { CalendarDays, X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef } from "react";
 
 import { fieldValueProblem, type CustomField, type FieldValueData } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { useCollectionUi } from "./collection-ui";
+import { useInlineDraft } from "./inline-draft";
 
 /** A value as people read it (DS-26): "Empty" when applied-empty, options by label, Yes or No. */
 export function shownValue(field: CustomField, value: FieldValueData): string {
@@ -51,73 +51,28 @@ const asText = (value: FieldValueData) => (typeof value === "string" ? value : "
  * from elsewhere doesn't replace it (DS-82), and leaving Editing mode commits it (DS-45).
  */
 function TypedEditor({ field, value, onSave, label, disabled = false }: EditorProps) {
-  const { registerEditor } = useCollectionUi();
-  const [draft, setDraftState] = useState<string | undefined>(undefined);
-  const [refusal, setRefusal] = useState<string>();
-  const current = useRef<string | undefined>(undefined);
-  const latest = useRef({ value, onSave });
-  const input = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   const id = useId();
-  const setDraft = (next: string | undefined) => {
-    current.current = next;
-    setDraftState(next);
-  };
-  useEffect(() => {
-    latest.current = { value, onSave };
-  });
-  const commit = useRef<() => boolean>(() => true);
-  useEffect(() => {
-    commit.current = () => {
-      const typed = current.current;
-      if (typed === undefined) return true;
-      const problem = fieldValueProblem(field, typed);
-      if (problem) {
-        setRefusal(problem.problem.detail);
-        return false;
-      }
+  const draft = useInlineDraft<HTMLInputElement & HTMLTextAreaElement>({
+    value: asText(value),
+    check: (typed) => fieldValueProblem(field, typed)?.problem.detail,
+    save: (typed) => {
       const next = typed.trim() === "" ? null : typed.trim();
-      if (next !== latest.current.value) latest.current.onSave(next);
-      setRefusal(undefined);
-      setDraft(undefined);
-      return true;
-    };
+      if (next !== value) onSave(next);
+    },
+    // Shift+Enter adds a line to text (DS-26), and commits none of them.
+    multiline: true,
   });
-  const open = draft !== undefined;
-  useEffect(() => {
-    if (!open) return undefined;
-    return registerEditor(() => {
-      const closed = commit.current();
-      if (!closed) input.current?.focus();
-      return closed;
-    });
-  }, [open, registerEditor]);
-
-  const shown = draft ?? asText(value);
+  const { refusal } = draft;
+  const shown = draft.text;
   const shared = {
-    ref: input,
+    ...draft.props,
     id,
     "aria-label": label,
     "aria-invalid": refusal !== undefined,
     "aria-describedby": refusal === undefined ? undefined : `${id}-error`,
     disabled,
-    value: shown,
     placeholder: field.type === "date" ? "YYYY-MM-DD" : "Empty",
-    onFocus: () => {
-      if (current.current === undefined) setDraft(asText(latest.current.value));
-    },
-    onBlur: () => commit.current(),
-  };
-  const keys = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      commit.current();
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      setDraft(undefined);
-      setRefusal(undefined);
-    }
   };
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -127,11 +82,6 @@ function TypedEditor({ field, value, onSave, label, disabled = false }: EditorPr
             {...shared}
             // One line until Shift+Enter adds another (DS-26).
             rows={Math.max(1, shown.split("\n").length)}
-            onChange={(event) => {
-              setDraft(event.target.value);
-              setRefusal(undefined);
-            }}
-            onKeyDown={keys}
             className={cn(
               control,
               "min-h-8 flex-1 resize-none py-1",
@@ -142,11 +92,6 @@ function TypedEditor({ field, value, onSave, label, disabled = false }: EditorPr
           <input
             {...shared}
             inputMode={field.type === "number" ? "decimal" : undefined}
-            onChange={(event) => {
-              setDraft(event.target.value);
-              setRefusal(undefined);
-            }}
-            onKeyDown={keys}
             className={cn(control, "flex-1", refusal && "border-status-danger")}
           />
         )}
@@ -169,7 +114,7 @@ function TypedEditor({ field, value, onSave, label, disabled = false }: EditorPr
               aria-hidden
               value={asText(value)}
               onChange={(event) => {
-                if (event.target.value) latest.current.onSave(event.target.value);
+                if (event.target.value) onSave(event.target.value);
               }}
               className="pointer-events-none absolute size-0 opacity-0"
             />

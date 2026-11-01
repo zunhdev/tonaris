@@ -11,13 +11,14 @@ import { apiUrl } from "@/config";
 import { useCollectionData } from "@/features/collection/data";
 import { FieldCreateDialog } from "@/features/collection/field-create-dialog";
 import { fieldTypeNames } from "@/features/collection/field-types";
+import { useInlineDraft } from "@/features/collection/inline-draft";
 import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
 import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import { count } from "@/features/shell/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ChevronRight, X } from "lucide-react";
-import { useId, useState, type KeyboardEvent } from "react";
+import { useId, useState } from "react";
 
 import {
   fieldNameProblem,
@@ -362,38 +363,19 @@ function InlineText({
   hideLabel?: boolean;
 }) {
   const id = useId();
-  const [draft, setDraft] = useState<string>();
-  const [problem, setProblem] = useState<string>();
-
-  function commit() {
-    if (draft === undefined) return;
-    const text = draft.trim();
-    if (text === value) {
-      setDraft(undefined);
-      setProblem(undefined);
-      return;
-    }
-    const found = check(text);
-    if (found) {
-      setProblem(found);
-      return;
-    }
-    onSave(text);
-    setDraft(undefined);
-    setProblem(undefined);
-  }
-
-  function keys(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      commit();
-    } else if (event.key === "Escape" && draft !== undefined) {
-      event.preventDefault();
-      event.stopPropagation();
-      setDraft(undefined);
-      setProblem(undefined);
-    }
-  }
+  const { refusal: problem, props } = useInlineDraft<HTMLInputElement>({
+    value,
+    // Unchanged, it closes without a check.
+    check: (typed) => (typed.trim() === value ? undefined : check(typed.trim())),
+    save: (typed) => {
+      if (typed.trim() !== value) onSave(typed.trim());
+    },
+    // The saved name shows until something is typed, and Escape is the page's until then.
+    opensOn: "typing",
+    escape: "open",
+    // Settings has no Editing mode to leave.
+    register: false,
+  });
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -401,16 +383,10 @@ function InlineText({
         {label}
       </label>
       <Input
+        {...props}
         id={id}
-        value={draft ?? value}
         aria-invalid={problem !== undefined}
         aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-        onChange={(event) => {
-          setDraft(event.target.value);
-          setProblem(undefined);
-        }}
-        onBlur={commit}
-        onKeyDown={keys}
         className="max-w-sm"
       />
       {problem && (
