@@ -42,7 +42,7 @@ import { endConnections } from "./teardowns";
 export const deletedEmailKey = (userId: string) => `${userId}@deleted.invalid`;
 
 /** How long a finished deletion's progress is kept for its page (TS-74). */
-export const finishedDeletionRetentionMs = 7 * 24 * 60 * 60_000;
+const finishedDeletionRetentionMs = 7 * 24 * 60 * 60_000;
 
 /** Albums removed per transaction, so a large collection never holds one long transaction. */
 export const deletionChunkSize = 500;

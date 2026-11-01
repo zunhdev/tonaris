@@ -3,13 +3,12 @@
 // their scopes carry the mode (`mcpModeOf`). What a gated deletion or match would touch is read here for its approval;
 // the operations themselves are the app's commands (TON-83).
 
-import { and, asc, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import {
   deletedListsOf,
   deletionTargetsOf,
   type AlbumDeletionTarget,
-  type ContainerKind,
   type DeletionTargets,
 } from "@tonaris/domain";
 
@@ -153,74 +152,6 @@ export async function collectionOverview(
     folders: ofKind("folder"),
     trashUnits: trash?.count ?? 0,
   };
-}
-
-export type AlbumMatch = {
-  id: string;
-  title: string;
-  artistCredit: string;
-  originalYear: number | null;
-};
-
-export type ContainerRef = { id: string; kind: ContainerKind; name: string };
-
-export type ContainerListing =
-  | { kind: "root" | "folder"; container: ContainerRef | null; children: ContainerRef[] }
-  | { kind: "list"; container: ContainerRef; albums: AlbumMatch[]; totalAlbums: number }
-  | { kind: "missing" };
-
-/**
- * What `list_container` shows (TS-63): the root's or a folder's active folders and lists, or a list's active
- * albums, the first `limit` in the order they were added.
- */
-export async function listContainer(
-  db: Database,
-  { ownerId, containerId, limit }: { ownerId: string; containerId?: string; limit: number },
-): Promise<ContainerListing> {
-  const ref = { id: containers.id, kind: containers.kind, name: containers.name };
-  const active = and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt));
-  let container: ContainerRef | null = null;
-  if (containerId) {
-    const [found] = await db
-      .select(ref)
-      .from(containers)
-      .where(and(active, eq(containers.id, containerId)));
-    if (!found) return { kind: "missing" };
-    container = found;
-  }
-  if (container?.kind === "list") {
-    const inList = and(
-      eq(memberships.listId, container.id),
-      eq(albums.ownerId, ownerId),
-      isNull(albums.trashedAt),
-    );
-    const rows = await db
-      .select({
-        id: albums.id,
-        title: albums.title,
-        artistCredit: albums.artistCredit,
-        originalYear: albums.originalYear,
-      })
-      .from(memberships)
-      .innerJoin(albums, eq(albums.id, memberships.albumId))
-      .where(inList)
-      .orderBy(asc(memberships.addedAt), asc(albums.id))
-      .limit(limit);
-    const [total] = await db
-      .select({ count: count() })
-      .from(memberships)
-      .innerJoin(albums, eq(albums.id, memberships.albumId))
-      .where(inList);
-    return { kind: "list", container, albums: rows, totalAlbums: total?.count ?? 0 };
-  }
-  const children = await db
-    .select(ref)
-    .from(containers)
-    .where(
-      and(active, container ? eq(containers.parentId, container.id) : isNull(containers.parentId)),
-    )
-    .orderBy(asc(containers.kind), asc(containers.nameKey));
-  return { kind: container ? "folder" : "root", container, children };
 }
 
 /**

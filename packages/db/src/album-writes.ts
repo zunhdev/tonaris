@@ -11,7 +11,7 @@ import { writeProvenance } from "./provenance";
 import { albums } from "./schema";
 
 /** The columns of an album as capture and enrichment see it. */
-export const captureTargetColumns = {
+const captureTargetColumns = {
   id: albums.id,
   ownerId: albums.ownerId,
   title: albums.title,
@@ -27,7 +27,7 @@ export const captureTargetColumns = {
 };
 
 /** A row of `captureTargetColumns` as `CaptureTarget`. */
-export function captureTargetOf({
+function captureTargetOf({
   trashedAt,
   ...album
 }: Omit<CaptureTarget, "trashed"> & { trashedAt: Date | null }): CaptureTarget {

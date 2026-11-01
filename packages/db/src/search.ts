@@ -24,8 +24,7 @@ import type { Database } from "./client";
 import { albums, containers, memberships, users } from "./schema";
 
 /** `%`, `_` and `\` match literally in a LIKE pattern. */
-export const likeLiteral = (text: string) =>
-  text.replace(/[\\%_]/g, (character) => `\\${character}`);
+const likeLiteral = (text: string) => text.replace(/[\\%_]/g, (character) => `\\${character}`);
 
 const none = { total: 0, items: [] };
 const nothingShared: SearchResults["shared"] = { folders: none, lists: none, albums: none };

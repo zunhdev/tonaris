@@ -17,7 +17,7 @@ import {
 } from "@tonaris/domain";
 
 import { mergeCandidates, savedAlbumsOf } from "./capture";
-import { albumProvenance } from "./provenance";
+import { provenanceOf } from "./provenance";
 import {
   albums,
   albumServiceLinks,
@@ -174,7 +174,7 @@ describe("capture's writes", () => {
     const { albumId } = mutation.args;
     const [row] = await t.db.select().from(albums).where(eq(albums.id, albumId));
     expect(row).toMatchObject({ title: "Bleach", originalYear: 1989, mbReleaseGroupId: bleachId });
-    expect((await albumProvenance(t.db, albumId)).map((entry) => entry.source)).toEqual(
+    expect((await provenanceOf(t.db, albumId)).map((entry) => entry.source)).toEqual(
       Array(5).fill("musicbrainz"),
     );
     expect(await findLinkedAlbum(t.db, principal.userId, "spotify", spotifyLink.entityId)).toBe(

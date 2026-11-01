@@ -23,7 +23,8 @@ import {
   type Principal,
 } from "@tonaris/domain";
 
-import { collectionOverview, listContainer } from "./mcp";
+import { collectionOverview } from "./mcp";
+import { containerPage } from "./mcp-reads";
 import {
   accountSync,
   albums,
@@ -746,12 +747,13 @@ describe("Unsorted (FR-01.9, FR-01.10, TS-13)", () => {
 
     await trash(anna.userId, favorites.id);
     expect(await collectionOverview(t.db, anna.userId)).toMatchObject({ albums: 2, unsorted: 1 });
-    const stillListed = await listContainer(t.db, {
-      ownerId: anna.userId,
+    const stillListed = await containerPage(t.db, {
+      readerId: anna.userId,
       containerId: lateNight.id,
+      offset: 0,
       limit: 10,
     });
-    expect(stillListed.kind === "list" && stillListed.albums.map((each) => each.id)).toEqual([
+    expect(stillListed.kind === "albums" && stillListed.page.items.map((each) => each.id)).toEqual([
       kindOfBlue.id,
     ]);
     // The entries stay stored, so recovering the list can restore them (TS-13); clients get the effective one.

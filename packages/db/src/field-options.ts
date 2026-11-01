@@ -66,16 +66,12 @@ export async function fieldDeletionIn(
 }
 
 /** The deletion of the field, if it is `accountId`'s; undefined otherwise. */
-export async function readFieldDeletion(
+export function readFieldDeletion(
   db: Database,
   accountId: string,
   fieldId: string,
 ): Promise<FieldDeletion | undefined> {
-  return readSnapshot(db, async (tx) => {
-    const field = await findFieldIn(tx, fieldId);
-    if (!field || field.ownerId !== accountId) return undefined;
-    return fieldDeletion(field, await fieldUsersIn(tx, fieldId));
-  });
+  return readSnapshot(db, (tx) => fieldDeletionIn(tx, accountId, fieldId));
 }
 
 /** How many albums apply each of `accountId`'s fields, active and in Trash (DS-60); unused fields count zero. */
