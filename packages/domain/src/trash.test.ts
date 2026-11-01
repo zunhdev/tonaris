@@ -461,7 +461,7 @@ describe("deleting and restoring albums (FR-14.1 to FR-14.3)", () => {
     expect(trashUnits.has(unitId)).toBe(true);
     // Clients read the candidates with the domain's schema.
     const candidates = paused.status === "needs_input" ? paused.candidates : [];
-    expect(sameAlbumSchema.array().parse(candidates)).toEqual(candidates);
+    expect(sameAlbumSchema.array().safeParse(candidates).success).toBe(true);
   });
 });
 

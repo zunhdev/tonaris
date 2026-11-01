@@ -292,10 +292,11 @@ describe("option labels and limits (FR-03.14, X-06, TS-18)", () => {
   });
 });
 
+const pathsOf = (problems: ReturnType<typeof fieldDefinitionProblems>) =>
+  problems.map((problem) => problem.problem.errors?.[0]?.path);
+
 describe("checking a new field before sending (FR-03.6, FR-03.9, FR-03.10)", () => {
   const fields = [{ id: "f1", name: "Rating" }];
-  const pathsOf = (problems: ReturnType<typeof fieldDefinitionProblems>) =>
-    problems.map((problem) => problem.problem.errors?.[0]?.path);
 
   test("a good definition has no problems", () => {
     expect(
