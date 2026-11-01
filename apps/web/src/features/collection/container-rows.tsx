@@ -8,6 +8,7 @@
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
+import { isUnderway } from "@/client/sync/save-states";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -219,7 +220,7 @@ function ContainerRow({
       ref={rowRef}
       role="row"
       aria-rowindex={index + 2}
-      aria-busy={status === "pending" || status === "unconfirmed" ? true : undefined}
+      aria-busy={isUnderway(status) || undefined}
       // M moves the folder or list whose row has focus.
       onFocus={() => setFocusedRow(container.id)}
       onBlur={() => setFocusedRow(undefined)}

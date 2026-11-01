@@ -5,6 +5,7 @@
 // outbox.
 
 import { defaultsKey } from "@/client/sync/views";
+import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 
 import {
@@ -16,11 +17,6 @@ import {
 
 import { useCollectionData } from "./data";
 import { defaultsFrom, presentationOf, type Presentation, type ViewKind } from "./presentation";
-
-/** The new writes report their own outcomes in the save states; a rejection is expected there, not here. */
-const sent = (transaction: { isPersisted: { promise: Promise<unknown> } }) => {
-  transaction.isPersisted.promise.catch(() => {});
-};
 
 export type ViewPresentation<Mode = ListSortMode | FolderSortMode> = {
   presentation: Presentation<Mode>;

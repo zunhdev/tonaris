@@ -11,6 +11,7 @@
 // whom (DS-69, FR-07.14); choosing a destination previews it for the one chosen, and an Undo doesn't ask.
 
 import type { Deleted, RecoveryChoice } from "@/client/sync/trash";
+import { sent } from "@/client/sync/writer";
 import { useCollectionData } from "@/features/collection/data";
 import { nameRefusal } from "@/features/collection/editing";
 import { PlaceList } from "@/features/collection/place-list";
@@ -254,9 +255,7 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
                 action: "Move to Trash and restore",
                 onConfirm: () => {
                   if (!client) return;
-                  client.trash
-                    .deleteAlbum(prompt.active.albumId)
-                    .transaction.isPersisted.promise.catch(() => {});
+                  sent(client.trash.deleteAlbum(prompt.active.albumId).transaction);
                   // Sent after the deletion, which the server applies first.
                   send(prompt.target, {});
                 },

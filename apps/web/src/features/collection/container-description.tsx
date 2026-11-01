@@ -3,6 +3,7 @@
 // it saves, Shift+Enter adds a line, Escape reverts, and leaving Editing mode saves it too (DS-45). Emptied, it is
 // cleared. Over 2,000 characters it stays with its reason (X-05).
 
+import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 
 import { descriptionTooLong, maxDescriptionLength, type Container } from "@tonaris/domain";
@@ -38,12 +39,11 @@ function DescriptionEditor({ container }: { container: Container }) {
       const text = typed.trim();
       const next = text === "" ? null : text;
       if (next === container.description || !client) return;
-      // The save-state layer reports a write that fails.
-      client.containers
-        .update(container.id, (row) => {
+      sent(
+        client.containers.update(container.id, (row) => {
           row.description = next;
-        })
-        .isPersisted.promise.catch(() => {});
+        }),
+      );
     },
     multiline: true,
     // Once saved, Escape is the page's again.

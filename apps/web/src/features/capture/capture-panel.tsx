@@ -2,7 +2,7 @@
 // "Adding 12 · 8 done · 2 need you · 1 failed", and opens the batch's report in Activity, where each item has its
 // actions (DS-84). Once nothing is underway it goes: the report, and its toast if anything wasn't saved, carry on.
 
-import type { BatchReport } from "@/client/sync/writer";
+import type { BatchReport } from "@/client/sync/save-states";
 import { useActivity } from "@/features/sync/activity";
 import { underway } from "@/features/sync/report";
 import { useReports } from "@/features/sync/save-states";

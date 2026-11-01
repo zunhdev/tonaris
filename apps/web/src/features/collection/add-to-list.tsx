@@ -2,6 +2,7 @@
 // inspector's "+ Add to list". Choosing one puts the album in it (FR-01.6), announced (DS-83). Adding is an edit:
 // whatever opens it switches to Editing first, and it waits while offline (DS-81).
 
+import { sent } from "@/client/sync/writer";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ListMusic } from "lucide-react";
@@ -44,10 +45,7 @@ export function AddToListDialog() {
 
   function add(listId: string, name: string) {
     if (!client || !album) return;
-    client.memberships
-      .insert({ listId, albumId: album.id, addedAt: now() })
-      // The save-state layer reports an entry that isn't saved.
-      .isPersisted.promise.catch(() => {});
+    sent(client.memberships.insert({ listId, albumId: album.id, addedAt: now() }));
     announce(`Added ${album.title} to ${name}`);
     endAddToList();
   }

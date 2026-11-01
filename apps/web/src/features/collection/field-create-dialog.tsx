@@ -4,6 +4,7 @@
 // Saving defines the field; the caller can then apply it, as "+ Add field" → "Create field…" does (DS-46). Settings →
 // Custom fields reuses it (TON-53).
 
+import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { Plus, X } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
@@ -113,7 +114,7 @@ export function FieldCreateDialog({
         ? filled.map((option) => ({ id: option.id, label: option.label.trim() }))
         : [],
     };
-    client.fields.insert(field).isPersisted.promise.catch(() => {});
+    sent(client.fields.insert(field));
     onCreated?.(field.id);
     onClose();
   }

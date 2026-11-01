@@ -12,9 +12,6 @@ import type { Outbox } from "./outbox";
 import type { OutboxEntry, OutboxItem } from "./persistence";
 import type { SaveStates } from "./save-states";
 
-// Where features/** still imports them from, until they import save-states.ts (TON-147).
-export type { BatchReport, SaveState } from "./save-states";
-
 /** Thrown from a collection handler when the server didn't apply a write; TanStack DB rolls back. */
 export class MutationRejected extends Error {
   constructor(readonly outcome: Exclude<Outcome, { status: "confirmed" }>) {

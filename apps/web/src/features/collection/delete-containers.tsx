@@ -3,6 +3,7 @@
 // first names, that albums stay in their other lists or in Unsorted, and that Trash keeps it for 30 days. A page
 // showing what went goes to the nearest folder still there, or the collection.
 
+import { sent } from "@/client/sync/writer";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -66,7 +67,7 @@ export function useDeleteContainer(): (id: string) => void {
     }
     leaveGoing(container);
     const { transaction, deleted } = client.trash.deleteContainers([id]);
-    transaction.isPersisted.promise.catch(() => {});
+    sent(transaction);
     announce(`Moved ${container.name} to Trash`);
     notify?.undo({
       title: "1 list moved to Trash",
@@ -124,9 +125,7 @@ export function DeleteFolderDialog() {
           onConfirm: () => {
             if (!client) return;
             leaveGoing(folder);
-            client.trash
-              .deleteContainers([folder.id])
-              .transaction.isPersisted.promise.catch(() => {});
+            sent(client.trash.deleteContainers([folder.id]).transaction);
             announce(`Moved ${folder.name} to Trash`);
           },
         }
@@ -171,7 +170,7 @@ export function DeleteAlbumDialog() {
             if (!client) return;
             // The inspector showing it closes.
             void navigate({ to: ".", search: (previous) => ({ ...previous, album: undefined }) });
-            client.trash.deleteAlbum(album.id).transaction.isPersisted.promise.catch(() => {});
+            sent(client.trash.deleteAlbum(album.id).transaction);
             announce(`Moved ${album.title} to Trash`);
             notify?.info(`'${album.title}' moved to Trash`);
           },

@@ -5,6 +5,7 @@
 // opened by Edit on a failed write dismisses that failure once it saves. Leaving Editing mode commits it as leaving
 // the field does, and a refused name keeps the mode (DS-45).
 
+import { sent } from "@/client/sync/writer";
 import { useSaveActions } from "@/features/sync/save-actions";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useEffect, useId, useRef, useState } from "react";
@@ -168,9 +169,4 @@ export function NameEditor({
       )}
     </div>
   );
-}
-
-/** The write reports its own outcome in the save states; a rejection is expected there, not here. */
-function sent(transaction: { isPersisted: { promise: Promise<unknown> } }): void {
-  transaction.isPersisted.promise.catch(() => {});
 }

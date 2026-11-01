@@ -3,7 +3,7 @@
 // found, and saving completes the capture, which keeps the link and the sources of the values left as offered
 // (TS-15). A failed capture opens it with the pasted link in its service's field, so the album is added with it.
 
-import type { SaveState } from "@/client/sync/writer";
+import type { SaveState } from "@/client/sync/save-states";
 import { emptyForm, type AlbumForm } from "@/features/collection/album-form";
 import type { NewAlbumDraft } from "@/features/collection/collection-ui";
 import { reasonOf } from "@/features/sync/describe";

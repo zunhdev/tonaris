@@ -7,6 +7,7 @@
 // Every control is a native button, input or select, so the page works by keyboard alone.
 
 import { api } from "@/api";
+import { sent } from "@/client/sync/writer";
 import { apiUrl } from "@/config";
 import { useCollectionData } from "@/features/collection/data";
 import { FieldCreateDialog } from "@/features/collection/field-create-dialog";
@@ -95,11 +96,6 @@ async function readRemoval(fieldId: string, optionId: string) {
     return undefined;
   }
 }
-
-/** A save the save-state layer reports if it fails. */
-const sent = (transaction: { isPersisted: { promise: Promise<unknown> } }) => {
-  transaction.isPersisted.promise.catch(() => {});
-};
 
 export function CustomFieldsSettings() {
   const { fields, ready } = useCollectionData();

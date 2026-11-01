@@ -6,6 +6,7 @@
 // its save state (DS-80). A link capture kept instead of a pasted one shows the pasted one, for an explicit Replace
 // (FR-06.4, TON-45).
 
+import { sent } from "@/client/sync/writer";
 import { useCapture, type KeptLink } from "@/features/capture/capture-context";
 import { ServiceAnchor } from "@/features/open/service-anchor";
 import { useAnnounce } from "@/features/sync/announcer";
@@ -32,11 +33,6 @@ import { useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useInlineDraft } from "./inline-draft";
 import { checkLink } from "./link-check";
-
-/** A save the save-state layer reports if it fails; a rejection is expected there, not here. */
-const sent = (transaction: { isPersisted: { promise: Promise<unknown> } }) => {
-  transaction.isPersisted.promise.catch(() => {});
-};
 
 /** A link as people read it: its host and path, without the scheme. */
 function shownUrl(url: string): string {

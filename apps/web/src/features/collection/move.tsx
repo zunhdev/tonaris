@@ -4,6 +4,7 @@
 // (DS-81), and the domain checks names and depth, reporting a refusal as any write (DS-107). The moved item arrives
 // last in its destination's arrangement (DS-51), the destination opens in the tree, and the move is announced.
 
+import { sent } from "@/client/sync/writer";
 import { SharingImpactPreview } from "@/features/sharing/sharing-impact";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
@@ -33,12 +34,11 @@ export function useMoveContainer(): (id: string, parentId: string | null) => boo
     (id, parentId) => {
       const item = tree.byId.get(id);
       if (!client || offline || !item || !canMoveInto(tree, id, parentId)) return false;
-      client.containers
-        .update(id, (draft) => {
+      sent(
+        client.containers.update(id, (draft) => {
           draft.parentId = parentId;
-        })
-        // The save-state layer reports a move that isn't saved.
-        .isPersisted.promise.catch(() => {});
+        }),
+      );
       if (parentId !== null)
         expand([...ancestorsOf(tree, parentId).map((folder) => folder.id), parentId]);
       const destination =

@@ -6,6 +6,7 @@
 // on a failed save reopens it as it was entered. Opened from a capture, it says why, and either completes the capture
 // with the album's details, the link kept, or adds the album with the pasted link in its field (DS-48).
 
+import { sent } from "@/client/sync/writer";
 import { shownLink } from "@/features/capture/outcomes";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useAnnounce } from "@/features/sync/announcer";
@@ -142,7 +143,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       onDone();
       return;
     }
-    client.albums.insert(album).isPersisted.promise.catch(() => {});
+    sent(client.albums.insert(album));
     // The links go after the album, in one transaction; the server reads each (TS-40).
     const links = linksOfForm(form, album.id);
     // Its custom fields follow it, applied with their values (FR-03.7).
@@ -151,12 +152,10 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       fieldId,
       value,
     }));
-    if (values.length > 0) client.fieldValues.insert(values).isPersisted.promise.catch(() => {});
-    if (links.length > 0) client.links.insert(links).isPersisted.promise.catch(() => {});
+    if (values.length > 0) sent(client.fieldValues.insert(values));
+    if (links.length > 0) sent(client.links.insert(links));
     if (form.listId !== null) {
-      client.memberships
-        .insert({ listId: form.listId, albumId: album.id, addedAt: now() })
-        .isPersisted.promise.catch(() => {});
+      sent(client.memberships.insert({ listId: form.listId, albumId: album.id, addedAt: now() }));
     }
     // The failed writes it makes again go, with their toasts.
     for (const id of draft.replaces ?? []) {

@@ -5,6 +5,7 @@
 // rules first, so a refused value stays with its reason and nothing is sent (FR-02.6, X-05). Open fields commit when
 // Editing mode is left. A change from elsewhere never overwrites a field being edited (DS-82).
 
+import { sent } from "@/client/sync/writer";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -56,11 +57,6 @@ function sortHint(album: Album): string {
     ? "Sorts by its release year, as the recording year is unknown."
     : "Sorts by its recording year.";
 }
-
-/** A save the save-state layer reports if it fails; a rejection is expected there, not here. */
-const sent = (transaction: { isPersisted: { promise: Promise<unknown> } }) => {
-  transaction.isPersisted.promise.catch(() => {});
-};
 
 export function AlbumDetails({ album }: { album: Album }) {
   const { startDeleteAlbum } = useCollectionUi();

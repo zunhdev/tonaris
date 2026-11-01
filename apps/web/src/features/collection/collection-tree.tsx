@@ -8,6 +8,7 @@
 // me opens to the folders and lists shared with the person, each opening to what's inside it in the person's own sort,
 // live while open; they open the shared view (TON-130).
 
+import { isUnderway } from "@/client/sync/save-states";
 import { usePendingApprovals } from "@/features/connections/pending-approvals";
 import { usePendingInvitations } from "@/features/sharing/pending-invitations";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
@@ -629,7 +630,7 @@ function ContainerRow({
     "aria-setsize": row.setSize,
     "aria-expanded": isFolder ? expanded : undefined,
     "aria-selected": selected,
-    "aria-busy": status === "pending" || status === "unconfirmed" ? true : undefined,
+    "aria-busy": isUnderway(status) || undefined,
     tabIndex: tabbable ? 0 : -1,
     className: cn(
       rowClass,
