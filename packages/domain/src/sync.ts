@@ -15,9 +15,10 @@ import {
 } from "./field-options";
 import { fieldValueDataSchema, fieldValueSchema } from "./field-values";
 import { customFieldSchema, fieldCreateArgsSchema, fieldTypes } from "./fields";
+import { uuidv7Time } from "./ids";
 import { streamingServices } from "./links";
 import { membershipSchema } from "./memberships";
-import { outcomeSchema } from "./outcomes";
+import { failure, outcomeSchema, type Failure } from "./outcomes";
 import { positionSchema } from "./positions";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
 import {
@@ -52,6 +53,33 @@ import { z } from "./zod";
  * is `expired`, and a stream cursor older than the log gets `reset`.
  */
 export const syncRetentionMs = 30 * 86_400_000;
+
+/** A guest's mutation, refused before it runs: a link's guests only read (FR-07.11, TS-20). */
+export const guestMutationRefusal: Failure = failure(
+  "permission_denied",
+  "Guests can't change anything.",
+);
+
+/** A mutation ID another mutation holds: another account's, or one not claimed by this request (TS-22). */
+export const mutationIdInUse: Failure = failure(
+  "validation_failed",
+  "This mutation ID is already in use.",
+  [{ path: "mutationId", message: "Already in use" }],
+);
+
+/**
+ * `expired` for a mutation too old to be retried (TS-22): made before the retention window, so its record may be
+ * gone and it can't be told from a new one. Its time is the one in its UUIDv7, from the client's clock; an ID
+ * without one counts as made `now`.
+ */
+export function mutationTooOld(mutationId: string, now: Date): Failure | undefined {
+  const madeAt = uuidv7Time(mutationId) ?? now.getTime();
+  if (madeAt >= now.getTime() - syncRetentionMs) return undefined;
+  return failure(
+    "expired",
+    "This change is too old to be retried. Check the saved state and make it again.",
+  );
+}
 
 const mutationId = z.uuid({ version: "v7" }).meta({
   description: "Made once per intent by the client, and sent again on every retry (TS-22).",

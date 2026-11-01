@@ -8,13 +8,15 @@ import {
   actingUserId,
   appAccountDefaults,
   changeSchema,
+  guestMutationRefusal,
+  mutationIdInUse,
+  mutationTooOld,
   outcomeSchema,
+  purgeUnit,
   runBatch,
   runCommand,
   syncRetentionMs,
-  uuidv7Time,
-  failure,
-  purgeUnit,
+  type AccountDefaults,
   type Album,
   type Batch,
   type BatchResult,
@@ -23,6 +25,7 @@ import {
   type Change,
   type ChangeInput,
   type Container,
+  type Failure,
   type Mutation,
   type MutationResult,
   type Outcome,
@@ -30,7 +33,6 @@ import {
   type PreparedLink,
   type Principal,
   type ServiceLink,
-  type AccountDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
 
@@ -120,6 +122,46 @@ function principalLabel(principal: Principal): string {
   return `user:${principal.client}`;
 }
 
+/** A mutation's row: whose it is, its outcome once it has one, and when it was received or last claimed. */
+type StoredMutation = { accountId: string; result: unknown; receivedAt: Date };
+
+/** The row stored under the mutation ID `id`, if any (TS-22). */
+async function storedMutation(tx: Transaction, id: string): Promise<StoredMutation | undefined> {
+  const [stored] = await tx
+    .select({
+      accountId: mutations.accountId,
+      result: mutations.result,
+      receivedAt: mutations.receivedAt,
+    })
+    .from(mutations)
+    .where(eq(mutations.id, id));
+  return stored;
+}
+
+/**
+ * What running and claiming a mutation start with (TS-20 steps 2–3): a guest's is `refused`; anyone else's runs `then`
+ * in one transaction under the write lock of the account it acts for, with its `seq` and the mutation's stored row.
+ */
+function underLock<T>(
+  db: Executor,
+  principal: Principal,
+  mutationId: string,
+  refused: (failure: Failure) => T,
+  then: (locked: {
+    tx: Transaction;
+    accountId: string;
+    seq: number;
+    stored: StoredMutation | undefined;
+  }) => Promise<T>,
+): Promise<T> {
+  const accountId = actingUserId(principal);
+  if (!accountId) return Promise.resolve(refused(guestMutationRefusal));
+  return db.transaction(async (tx) => {
+    const seq = await lockAccount(tx, accountId);
+    return then({ tx, accountId, seq, stored: await storedMutation(tx, mutationId) });
+  });
+}
+
 export type ExecutedMutation = {
   result: MutationResult;
   /** The changes it committed, in `seq` order, for the stream. Empty for rejections and replays. */
@@ -162,35 +204,20 @@ export async function executeMutation(
     shareLink?: { hash: Uint8Array };
   } = {},
 ): Promise<ExecutedMutation> {
-  const accountId = actingUserId(principal);
   const { mutationId } = mutation;
   const answer = (outcome: Outcome, changes: Change[] = [], replayed = false) => ({
     result: { mutationId, outcome },
     changes,
     replayed,
   });
-  if (!accountId) return answer(failure("permission_denied", "Guests can't change anything."));
 
-  return db.transaction(async (tx) => {
-    const seq = await lockAccount(tx, accountId);
-
-    const [stored] = await tx
-      .select({ accountId: mutations.accountId, result: mutations.result })
-      .from(mutations)
-      .where(eq(mutations.id, mutationId));
+  return underLock(db, principal, mutationId, answer, async ({ tx, accountId, seq, stored }) => {
     if (stored?.result && stored.accountId === accountId) {
       return answer(outcomeSchema.parse(stored.result), [], true);
     }
-    if (stored && (stored.accountId !== accountId || !claimed)) return answer(idInUse);
-    const madeAt = uuidv7Time(mutationId) ?? now.getTime();
-    if (madeAt < now.getTime() - syncRetentionMs) {
-      return answer(
-        failure(
-          "expired",
-          "This change is too old to be retried. Check the saved state and make it again.",
-        ),
-      );
-    }
+    if (stored && (stored.accountId !== accountId || !claimed)) return answer(mutationIdInUse);
+    const tooOld = mutationTooOld(mutationId, now);
+    if (tooOld) return answer(tooOld);
 
     const result = await runCommand(mutation, {
       principal,
@@ -213,10 +240,6 @@ export async function executeMutation(
     return answer(outcome, changes);
   });
 }
-
-const idInUse = failure("validation_failed", "This mutation ID is already in use.", [
-  { path: "mutationId", message: "Already in use" },
-]);
 
 /** Stores `outcome` under the mutation's ID, completing its claim if it has one. */
 async function recordOutcome(
@@ -268,26 +291,15 @@ export async function claimMutation(
   mutation: Mutation,
   now: Date = new Date(),
 ): Promise<Claim> {
-  const accountId = actingUserId(principal);
   const { mutationId } = mutation;
   const answered = (outcome: Outcome, replayed = false): Claim => ({
     status: "answered",
     executed: { result: { mutationId, outcome }, changes: [], replayed },
   });
-  if (!accountId) return answered(failure("permission_denied", "Guests can't change anything."));
 
-  return db.transaction(async (tx) => {
-    await lockAccount(tx, accountId);
-    const [stored] = await tx
-      .select({
-        accountId: mutations.accountId,
-        result: mutations.result,
-        receivedAt: mutations.receivedAt,
-      })
-      .from(mutations)
-      .where(eq(mutations.id, mutationId));
+  return underLock(db, principal, mutationId, answered, async ({ tx, accountId, stored }) => {
     if (stored) {
-      if (stored.accountId !== accountId) return answered(idInUse);
+      if (stored.accountId !== accountId) return answered(mutationIdInUse);
       if (stored.result) return answered(outcomeSchema.parse(stored.result), true);
       if (stored.receivedAt.getTime() > now.getTime() - claimTimeoutMs) {
         return { status: "in_progress" };
@@ -295,15 +307,8 @@ export async function claimMutation(
       await tx.update(mutations).set({ receivedAt: now }).where(eq(mutations.id, mutationId));
       return { status: "claimed" };
     }
-    const madeAt = uuidv7Time(mutationId) ?? now.getTime();
-    if (madeAt < now.getTime() - syncRetentionMs) {
-      return answered(
-        failure(
-          "expired",
-          "This change is too old to be retried. Check the saved state and make it again.",
-        ),
-      );
-    }
+    const tooOld = mutationTooOld(mutationId, now);
+    if (tooOld) return answered(tooOld);
     await tx.insert(mutations).values({
       id: mutationId,
       accountId,
