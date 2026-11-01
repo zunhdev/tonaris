@@ -158,12 +158,13 @@ async function usedFields(
     .from(fieldOptions)
     .where(inArray(fieldOptions.fieldId, fieldIds))
     .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
+  const byField = Map.groupBy(options, (option) => option.fieldId);
   return definitions.map(({ id, name, type }) => ({
     id,
     name,
     type,
-    options: options
-      .filter((option) => option.fieldId === id && chosen.has(option.id))
+    options: (byField.get(id) ?? [])
+      .filter((option) => chosen.has(option.id))
       .map((option) => ({ id: option.id, label: option.label })),
   }));
 }

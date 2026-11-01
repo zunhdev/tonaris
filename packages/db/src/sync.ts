@@ -33,6 +33,7 @@ import {
   maxContainerDepth,
   purgeUnit,
   trashUnitOf,
+  fieldValueKey,
   nameKey,
   searchKey,
   type Album,
@@ -202,13 +203,12 @@ export async function fieldsOfAccount(tx: Transaction, accountId: string): Promi
       ),
     )
     .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
+  const byField = Map.groupBy(options, (option) => option.fieldId);
   return definitions.map((definition) => ({
     id: definition.id,
     name: definition.name,
     type: definition.type,
-    options: options
-      .filter((option) => option.fieldId === definition.id)
-      .map(({ id, label }) => ({ id, label })),
+    options: (byField.get(definition.id) ?? []).map(({ id, label }) => ({ id, label })),
   }));
 }
 
@@ -272,6 +272,20 @@ function selectionsOf(tx: Transaction, where: SQL | undefined, fieldId?: string)
     .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
 }
 
+/** Selections grouped once by album and field (`fieldValueKey`), each group still in its options' order. */
+function selectedBy(
+  selections: readonly { albumId: string; fieldId: string; optionId: string }[],
+): Map<string, string[]> {
+  const selected = new Map<string, string[]>();
+  for (const { albumId, fieldId, optionId } of selections) {
+    const key = fieldValueKey(albumId, fieldId);
+    const chosen = selected.get(key);
+    if (chosen) chosen.push(optionId);
+    else selected.set(key, [optionId]);
+  }
+  return selected;
+}
+
 /** The account's Trash units as clients hold them, oldest first: each with its root's name and its members (FR-01.12). */
 export async function unitsOfAccount(tx: Transaction, accountId: string): Promise<TrashUnit[]> {
   const units = await tx
@@ -311,14 +325,15 @@ export async function unitsOfAccount(tx: Transaction, accountId: string): Promis
         units.filter((unit) => unit.kind === "album").map((unit) => unit.rootId),
       ),
     );
+  const byUnit = Map.groupBy(members, (member) => member.unitId);
+  const byAlbum = new Map(titles.map((album) => [album.id, album]));
   return units.map((unit) => {
-    const own = members.filter((member) => member.unitId === unit.id);
+    const own = byUnit.get(unit.id) ?? [];
+    const album = unit.kind === "album" ? byAlbum.get(unit.rootId) : undefined;
     const name =
       unit.kind === "album"
-        ? (titles.find((album) => album.id === unit.rootId)?.title ?? "")
+        ? (album?.title ?? "")
         : (own.find((member) => member.id === unit.rootId)?.name ?? "");
-    const album =
-      unit.kind === "album" ? titles.find((each) => each.id === unit.rootId) : undefined;
     return trashUnitOf(unit, name, own, album?.artist ?? null);
   });
 }
@@ -374,19 +389,16 @@ async function valuesWhere(tx: Transaction, albumWhere: SQL): Promise<FieldValue
     .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
     .where(albumWhere)
     .orderBy(asc(albumFieldValues.albumId), asc(albumFieldValues.fieldId));
-  const selections = await selectionsOf(
-    tx,
-    inArray(albumFieldMulti.albumId, tx.select({ id: albums.id }).from(albums).where(albumWhere)),
+  const selected = selectedBy(
+    await selectionsOf(
+      tx,
+      inArray(albumFieldMulti.albumId, tx.select({ id: albums.id }).from(albums).where(albumWhere)),
+    ),
   );
   return rows.map((row) => ({
     albumId: row.albumId,
     fieldId: row.fieldId,
-    value: valueOf(
-      row,
-      selections
-        .filter((each) => each.albumId === row.albumId && each.fieldId === row.fieldId)
-        .map((each) => each.optionId),
-    ),
+    value: valueOf(row, selected.get(fieldValueKey(row.albumId, row.fieldId)) ?? []),
   }));
 }
 
@@ -401,7 +413,7 @@ export const membershipOf = (row: Omit<Membership, "addedAt"> & { addedAt: Date 
  * (TS-12), and so is the provenance of a person's album values (TS-15). The hierarchy is walked with recursive
  * CTEs (TS-31), cut off past the depth limit so that even a cycle in damaged data can't run away.
  */
-function collectionStore(tx: Transaction): CollectionStore {
+export function collectionStore(tx: Transaction): CollectionStore {
   return {
     async findAlbum(id) {
       const [row] = await tx
@@ -590,19 +602,7 @@ function collectionStore(tx: Transaction): CollectionStore {
     },
 
     findField: (id) => findFieldIn(tx, id),
-    async fieldsOf(ownerId) {
-      const rows = await tx
-        .select({ id: fieldDefinitions.id })
-        .from(fieldDefinitions)
-        .where(eq(fieldDefinitions.ownerId, ownerId))
-        .orderBy(asc(fieldDefinitions.id));
-      const found = await Promise.all(rows.map((row) => findFieldIn(tx, row.id)));
-      return found.flatMap((field) => {
-        if (!field) return [];
-        const { ownerId: _, ...rest } = field;
-        return [rest];
-      });
-    },
+    fieldsOf: (ownerId) => fieldsOfAccount(tx, ownerId),
     async insertField({ id, ownerId, name, type }, options) {
       await tx.insert(fieldDefinitions).values({ id, ownerId, name, nameKey: nameKey(name), type });
       if (options.length > 0) {
@@ -730,18 +730,13 @@ function collectionStore(tx: Transaction): CollectionStore {
         .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
         .where(where)
         .orderBy(asc(albumFieldValues.albumId));
-      const selections = await selectionsOf(
-        tx,
-        inArray(albumFieldMulti.albumId, albumIds),
-        fieldId,
+      const selected = selectedBy(
+        await selectionsOf(tx, inArray(albumFieldMulti.albumId, albumIds), fieldId),
       );
       return rows.map((row) => ({
         albumId: row.albumId,
         fieldId,
-        value: valueOf(
-          row,
-          selections.filter((each) => each.albumId === row.albumId).map((each) => each.optionId),
-        ),
+        value: valueOf(row, selected.get(fieldValueKey(row.albumId, fieldId)) ?? []),
       }));
     },
 

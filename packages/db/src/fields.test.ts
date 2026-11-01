@@ -8,8 +8,10 @@ import { eq } from "drizzle-orm";
 
 import { uuidv7, type Mutation, type Principal } from "@tonaris/domain";
 
+import { createDatabase } from "./client";
+import { testDatabaseUrl } from "./config";
 import { albumFieldValues, albums, fieldDefinitions, trashUnits, users } from "./schema";
-import { bootstrapSnapshot, executeMutation } from "./sync";
+import { bootstrapSnapshot, collectionStore, executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
@@ -66,6 +68,39 @@ describe("field definitions (FR-03.6, FR-03.9)", () => {
     const theirs = await executeMutation(t.db, ben, create("Rating", "number"));
     expect(theirs.result.outcome.status).toBe("confirmed");
     expect((await bootstrapSnapshot(t.db, anna.userId)).fields).toHaveLength(1);
+  });
+});
+
+describe("the store's fields (FR-03.6, FR-03.9)", () => {
+  test("an owner's fields come as the bootstrap has them, in as many queries however many there are", async () => {
+    const anna = await newPrincipal();
+    let queries = 0;
+    const counted = createDatabase(testDatabaseUrl(), {
+      max: 1,
+      connection: { search_path: t.schema },
+      debug: () => {
+        queries += 1;
+      },
+    });
+    const read = async () => {
+      queries = 0;
+      const fields = await counted.transaction((tx) => collectionStore(tx).fieldsOf(anna.userId));
+      return { fields, queries };
+    };
+    try {
+      // The connection's first query sets it up.
+      await read();
+      await executeMutation(t.db, anna, create("Mood", "multiple_choice", ["Loud", "Calm"]));
+      const one = await read();
+      await executeMutation(t.db, anna, create("Era", "single_choice", ["Late", "Early"]));
+      await executeMutation(t.db, anna, create("Rating", "number"));
+      const three = await read();
+      expect(three.queries).toBe(one.queries);
+      expect(three.fields).toHaveLength(3);
+      expect(three.fields).toEqual((await bootstrapSnapshot(t.db, anna.userId)).fields);
+    } finally {
+      await counted.$client.end();
+    }
   });
 });
 
