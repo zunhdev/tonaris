@@ -17,7 +17,7 @@ import { CodeField } from "@/features/account/code-field";
 import { forgetSignIn, rememberSignIn } from "@/features/account/pending-sign-in";
 import { currentAccount, forgetAccount } from "@/features/account/session";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
-import { failureOf, sendNow } from "@/features/sharing/send";
+import { useSend } from "@/features/sharing/send";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 
@@ -222,8 +222,7 @@ function Agreement() {
 /** The optional display name (FR-11.3): shown to people the member shares with, and never taken from the email. */
 function NameStep({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
-  const [error, setError] = useState<string>();
-  const [busy, setBusy] = useState(false);
+  const { run, busy, error, setError } = useSend();
 
   async function save(event: FormEvent) {
     event.preventDefault();
@@ -231,25 +230,9 @@ function NameStep({ onDone }: { onDone: () => void }) {
       setError("Enter a name, or skip this for now.");
       return;
     }
-    setBusy(true);
-    setError(undefined);
-    try {
-      const outcome = await sendNow({
-        name: "account.setDisplayName",
-        args: { displayName: name },
-      });
-      const reason = failureOf(outcome);
-      if (reason) {
-        setError(reason);
-        return;
-      }
-      forgetAccount();
-      onDone();
-    } catch {
-      setError("Couldn't reach Tonaris. Try again.");
-    } finally {
-      setBusy(false);
-    }
+    if (await run({ name: "account.setDisplayName", args: { displayName: name } })) return;
+    forgetAccount();
+    onDone();
   }
 
   return (

@@ -7,6 +7,7 @@ import { api } from "@/api";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
 import { fieldTypeNames } from "@/features/collection/field-types";
 import { refreshPendingApprovals } from "@/features/connections/pending-approvals";
+import { count } from "@/features/shell/words";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useId, useState } from "react";
@@ -26,8 +27,6 @@ type Load =
   | { kind: "other-account" }
   | { kind: "missing" }
   | { kind: "unreachable" };
-
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** "12 albums, 2 in Trash". */
 const albumsAffected = ({ albums, inTrash }: { albums: number; inTrash: number }) =>

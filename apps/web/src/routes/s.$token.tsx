@@ -6,6 +6,7 @@ import { createApiClient } from "@/api";
 import { serverApiUrl } from "@/config";
 import { GuestPage, UnavailableShare } from "@/features/guest/guest-page";
 import { useShareStream } from "@/features/sharing/use-share-stream";
+import { count } from "@/features/shell/words";
 import { uuidSearch } from "@/search";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCallback } from "react";
@@ -37,8 +38,7 @@ export const Route = createFileRoute("/s/$token")({
       };
     }
     const owner = snapshot.owner.displayName ?? "a Tonaris member";
-    const count = snapshot.albums.length;
-    const description = `Shared by ${owner} · ${count} ${count === 1 ? "album" : "albums"}`;
+    const description = `Shared by ${owner} · ${count(snapshot.albums.length, "album", "albums")}`;
     // Text only: no artwork in previews (DS-72).
     return {
       meta: [

@@ -3,7 +3,7 @@
 // while they share, the server refuses (AC-38), and the field goes back to the saved name with the reason.
 
 import { forgetAccount } from "@/features/account/session";
-import { failureOf, sendNow } from "@/features/sharing/send";
+import { useSend } from "@/features/sharing/send";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useId, useState } from "react";
 
@@ -23,34 +23,20 @@ function Profile() {
   const id = useId();
   const savedName = account.displayName ?? "";
   const [name, setName] = useState(savedName);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+  const { run, busy, error, setError } = useSend();
   const [saved, setSaved] = useState(false);
 
   async function save() {
     if (busy || name.trim() === savedName) return;
-    setBusy(true);
-    setError(undefined);
     setSaved(false);
-    try {
-      const reason = failureOf(
-        await sendNow({ name: "account.setDisplayName", args: { displayName: name } }),
-      );
-      if (reason) {
-        setError(reason);
-        setName(savedName);
-        return;
-      }
-      setSaved(true);
-      // The account menu shows the new name at once.
-      forgetAccount();
-      await router.invalidate();
-    } catch {
-      setError("Couldn't reach Tonaris. Try again.");
+    if (await run({ name: "account.setDisplayName", args: { displayName: name } })) {
       setName(savedName);
-    } finally {
-      setBusy(false);
+      return;
     }
+    setSaved(true);
+    // The account menu shows the new name at once.
+    forgetAccount();
+    await router.invalidate();
   }
 
   function submit(event: FormEvent) {
