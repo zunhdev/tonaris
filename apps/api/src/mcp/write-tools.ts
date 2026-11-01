@@ -12,14 +12,13 @@ import { z } from "zod";
 import {
   albumBase,
   containerBase,
+  fieldBase,
   fieldValueBase,
-  findFieldIn,
   linkBase,
   sharingImpact,
   viewPrefsBase,
   viewSequence,
   type Database,
-  type ImpactQuery,
 } from "@tonaris/db";
 import {
   albumFields,
@@ -40,6 +39,7 @@ import {
   viewLayouts,
   type AlbumFields,
   type Audience,
+  type ImpactQuery,
   type McpPrincipal,
   viewPrefsFields,
 } from "@tonaris/domain";
@@ -818,7 +818,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const field = await ownField(args.fieldId);
+      const field = await fieldBase(db, { ownerId: userId, fieldId: args.fieldId });
       const base = args.base ?? { name: field?.name ?? "" };
       return run("rename_field", args, () =>
         each(
@@ -840,7 +840,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const field = await ownField(args.fieldId);
+      const field = await fieldBase(db, { ownerId: userId, fieldId: args.fieldId });
       return run("change_field_type", args, () =>
         each(
           [
@@ -901,7 +901,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const field = await ownField(args.fieldId);
+      const field = await fieldBase(db, { ownerId: userId, fieldId: args.fieldId });
       const option = field?.options.find((candidate) => candidate.id === args.optionId);
       const base = args.base ?? { label: option?.label ?? "" };
       return run("rename_option", args, () =>
@@ -1022,12 +1022,6 @@ export function registerWriteTools(
         ),
       ),
   );
-
-  /** The person's own field with this ID, for a change's base. */
-  async function ownField(fieldId: string) {
-    const field = await findFieldIn(db, fieldId);
-    return field?.ownerId === userId ? field : undefined;
-  }
 }
 
 /** An album's values a hand-entered album leaves out: unknown (FR-03.1). */

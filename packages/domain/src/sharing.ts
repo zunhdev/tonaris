@@ -191,7 +191,7 @@ export const setDisplayNameArgsSchema = z.object({
 /** What `share.invite` reports: the person's invitation, new or the one they had (FR-07.5). */
 export const shareInviteResultSchema = z.object({
   grantId: z.uuid(),
-  status: z.enum(["pending", "accepted"]),
+  status: z.enum(openGrantStatuses),
   emailing: z
     .boolean()
     .meta({ description: "Whether an email goes out now: for a new invitation." }),
@@ -422,7 +422,7 @@ export const shareSettingsSchema = z
             .string()
             .nullable()
             .meta({ description: "The person's display name, if they set one." }),
-          status: z.enum(["pending", "accepted"]),
+          status: z.enum(openGrantStatuses),
           emailStatus: z.enum(emailStatuses).nullable(),
         }),
       )

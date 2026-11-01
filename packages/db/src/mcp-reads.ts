@@ -5,14 +5,15 @@
 
 import { and, asc, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
-import type {
-  Album,
-  ContainerKind,
-  CustomField,
-  FieldValueData,
-  ProvenanceSource,
-  StreamingService,
-  TrashUnit,
+import {
+  sortFields,
+  type Album,
+  type ContainerKind,
+  type CustomField,
+  type FieldValueData,
+  type ProvenanceSource,
+  type StreamingService,
+  type TrashUnit,
 } from "@tonaris/domain";
 
 import { canReadContainer, readableContainers } from "./access";
@@ -491,7 +492,7 @@ export function albumDetail(
       inTrash: trashedAt !== null,
       lists,
       links,
-      fields: fields.toSorted((a, b) => a.name.localeCompare(b.name)),
+      fields: sortFields(fields),
     };
   });
 }
