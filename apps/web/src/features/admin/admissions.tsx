@@ -1,13 +1,8 @@
 // Admin → Admissions (DS-100, FR-11.6): the creator's switch for accepting new members, inviting by email, and
-// every invitation with its status, dates and email delivery, apart, with Resend and Revoke. A desktop page for
-// the creator only; anyone else finds no page here.
+// every invitation with its status, dates and email delivery, apart, with Resend and Revoke.
 
 import { api, refusalOf } from "@/api";
-import { AdminNav } from "@/features/admin/admin-nav";
-import { useNarrowScreen } from "@/features/collection/collection-ui";
-import { DesktopOnly } from "@/features/shell/desktop-only";
-import { PageHeader } from "@/features/shell/page-header";
-import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useId, useState } from "react";
 
 import {
@@ -18,19 +13,6 @@ import {
 import { Button } from "@tonaris/ui/components/button";
 import { Input } from "@tonaris/ui/components/input";
 import { Switch } from "@tonaris/ui/components/switch";
-
-export const Route = createFileRoute("/_workspace/admin/admissions")({
-  head: () => ({ meta: [{ title: "Admissions · Tonaris" }] }),
-  beforeLoad: ({ context }) => {
-    if (context.account.role !== "creator") throw notFound();
-  },
-  loader: async () => {
-    const { data, status } = await api.v1.admin.admissions.get();
-    if (!data) throw new Error(`Couldn't load admissions (HTTP ${status}).`);
-    return data;
-  },
-  component: AdmissionsPage,
-});
 
 const statusNames: Record<AdmissionInvitationStatus, string> = {
   available: "Available",
@@ -48,9 +30,7 @@ const deliveryNames: Record<NonNullable<AdmissionInvitation["emailStatus"]>, str
 
 const date = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
-function AdmissionsPage() {
-  const narrow = useNarrowScreen();
-  const admissions = Route.useLoaderData();
+export function AdminAdmissions({ admissions }: { admissions: Admissions }) {
   const router = useRouter();
   const sending = admissions.invitations.some((invitation) => invitation.emailStatus === "sending");
 
@@ -63,19 +43,11 @@ function AdmissionsPage() {
 
   const reload = () => void router.invalidate();
   return (
-    <>
-      <PageHeader title="Admissions" back={{ to: "/c", label: "Collection" }} />
-      <AdminNav />
-      {narrow ? (
-        <DesktopOnly what="Admin" />
-      ) : (
-        <div className="flex max-w-5xl flex-col gap-6 p-6">
-          <Accepting paused={admissions.paused} onChanged={reload} />
-          <InviteForm onInvited={reload} />
-          <Invitations invitations={admissions.invitations} onChanged={reload} />
-        </div>
-      )}
-    </>
+    <div className="flex max-w-5xl flex-col gap-6 p-6">
+      <Accepting paused={admissions.paused} onChanged={reload} />
+      <InviteForm onInvited={reload} />
+      <Invitations invitations={admissions.invitations} onChanged={reload} />
+    </div>
   );
 }
 

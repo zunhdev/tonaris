@@ -3,7 +3,7 @@
 // current value. Nothing is applied until they choose; closing it leaves the conflict in Activity. When and by whom
 // the current value was saved would show here if known, but the conflict outcome carries neither.
 
-import type { SaveState } from "@/client/sync/writer";
+import type { SaveState } from "@/client/sync/save-states";
 import { useRef, useState } from "react";
 
 import {

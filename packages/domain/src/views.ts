@@ -164,6 +164,11 @@ export function personOf(
 /** What a view holds: albums for a list and Unsorted, folders and lists for a folder and the root. */
 export type ViewItems = "albums" | "containers";
 
+/** The folder or list a view is, by ID; undefined for the root and Unsorted, which are no record. */
+export function containerOfView(viewKey: string): string | undefined {
+  return viewKey === "root" || viewKey === "unsorted" ? undefined : viewKey;
+}
+
 /**
  * What the view `viewKey` holds, if it is the person's: the root, Unsorted, or a folder or list of theirs (sharing
  * adds the containers shared with them, M7). One in Trash is still theirs, so a choice queued meanwhile isn't lost.
@@ -305,6 +310,14 @@ export async function setDefaults(
 const inOrder = (services: readonly StreamingService[]): StreamingService[] =>
   streamingServices.filter((service) => services.includes(service));
 
+/** Whether two lists name the same services, whatever their order: as `setHiddenServices` compares them. */
+export function sameServices(
+  a: readonly StreamingService[],
+  b: readonly StreamingService[],
+): boolean {
+  return inOrder(a).join(",") === inOrder(b).join(",");
+}
+
 /**
  * Sets the streaming services a person turned off (TON-138): the album panel and the New album form leave out their
  * empty link fields, on every device, while saved links still show. `base` holds the prior list (TS-21).
@@ -319,8 +332,7 @@ export async function setHiddenServices(
   const { store } = context;
 
   const current = (await store.findDefaults(personId)) ?? appAccountDefaults;
-  const before = inOrder(current.hiddenServices).join(",");
-  if (before !== inOrder(base.hiddenServices).join(",")) {
+  if (!sameServices(current.hiddenServices, base.hiddenServices)) {
     return {
       status: "conflict",
       conflicts: [
@@ -334,7 +346,9 @@ export async function setHiddenServices(
     };
   }
   const hiddenServices = inOrder(values.hiddenServices);
-  if (hiddenServices.join(",") === before) return { status: "applied", changes: [] };
+  if (sameServices(hiddenServices, current.hiddenServices)) {
+    return { status: "applied", changes: [] };
+  }
   const next = { ...current, hiddenServices };
   await store.saveDefaults(personId, next);
   return {

@@ -377,3 +377,7 @@ export * from "./export-readme";
 export * from "./export-archive";
 export * from "./ledger";
 export * from "./telemetry";
+// Used by the web client too (TON-147): the outcomes it keeps, IDs in URLs, view keys and services turned off.
+export { isUuid } from "./ids";
+export { conflictOutcomeSchema, failedOutcomeSchema, needsInputOutcomeSchema } from "./outcomes";
+export { containerOfView, sameServices } from "./views";

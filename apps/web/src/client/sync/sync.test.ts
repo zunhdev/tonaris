@@ -4,7 +4,7 @@
 // writes reconciled without duplicates, also by the next tab, streams that resume or start over, and tabs sharing
 // one stream. The browser's own storage, locks and channel are covered by the e2e suite.
 
-import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, afterEach, beforeAll, describe, expect, spyOn, test } from "bun:test";
 
 import {
   batchSchema,
@@ -22,15 +22,16 @@ import {
 import type { SyncClient, SyncClientOptions } from "./client";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
 import { resubmit, resubmitAll } from "./resubmit";
+import type { SaveState } from "./save-states";
 import { memoryBrowser } from "./tabs";
 import { sessionFetch, startApiServer, testClient, until, type TestServer } from "./testing";
-import { MutationRejected, type SaveState } from "./writer";
+import { MutationRejected } from "./writer";
 
 let server: TestServer;
 const open: SyncClient[] = [];
 
 beforeAll(async () => {
-  server = await startApiServer(46);
+  server = await startApiServer(47);
 }, 30_000);
 
 afterAll(async () => {
@@ -1310,6 +1311,22 @@ describe("captures (TON-45, TS-22)", () => {
       "the retried album",
     );
     await until(() => capturesOf(web).length === 0, 3_000, "the capture to be saved");
+  });
+
+  test("resume() sends an unanswered capture at once, not after its backoff (TON-137, TON-147)", async () => {
+    const web = await openClient(46, 0, { backoff: { minMs: 600_000, maxMs: 600_000 } });
+    // Half the cap: five minutes, which the test never waits out.
+    const random = spyOn(Math, "random").mockReturnValue(0.5);
+    try {
+      web.network.faults.failSends = 1;
+      const [capture] = web.captures.send([{ link: links.bleach, listId: null }]);
+      const status = () => (capture ? web.states.get(capture.mutationId)?.status : undefined);
+      await until(() => status() === "unconfirmed", 3_000, "the unanswered capture");
+      web.resume();
+      await until(() => status() === "confirmed", 10_000, "the capture sent again");
+    } finally {
+      random.mockRestore();
+    }
   });
 });
 

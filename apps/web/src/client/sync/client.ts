@@ -17,10 +17,11 @@ import { createOutbox } from "./outbox";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
 import { createArrange, createPositionCollection } from "./positions";
 import { createReferenceCollection } from "./references";
+import { createSaveStates } from "./save-states";
 import { entrySender } from "./transport";
 import { createTrash, createTrashUnitCollection } from "./trash";
 import { createDefaultsCollection, createViewCollection } from "./views";
-import { createSaveStates, createWriter } from "./writer";
+import { createWriter } from "./writer";
 
 export type SyncClientOptions = SyncEngineOptions & {
   /** How long a mutation request may take before it counts as unanswered. */
@@ -77,12 +78,14 @@ export function createSyncClient({
     await outbox.adopt();
     await captureOutbox.adopt();
   };
+  /** Sends what went unanswered at once, in both lanes, rather than after its backoff. */
+  const wake = () => {
+    outbox.wake();
+    captureOutbox.wake();
+  };
   // A connection that is back is the moment to retry what went unanswered.
   engine.onStatus((status) => {
-    if (status === "live") {
-      outbox.wake();
-      captureOutbox.wake();
-    }
+    if (status === "live") wake();
   });
   // The leader keeps looking for writes that tabs closed meanwhile left behind.
   let adopting: ReturnType<typeof setInterval> | undefined;
@@ -158,6 +161,14 @@ export function createSyncClient({
       engine.start();
     },
     stop,
+    /**
+     * Connects and resends at once, in both lanes, rather than after the current delay: for when the browser is
+     * back online, or the page back on screen after a phone froze it (TON-137).
+     */
+    resume(): void {
+      engine.reconnect();
+      wake();
+    },
     /** The writes not yet answered: what signing out would discard. */
     get unsent(): number {
       return outbox.queued.length + captureOutbox.queued.length;

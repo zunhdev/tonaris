@@ -3,59 +3,40 @@
 // last saw, and removing one is `link.remove` (TS-21). The optimistic row holds the text as typed; the server reads it
 // (TS-40), and the stream brings the canonical URL.
 
-import { serviceLinkKey, uuidv7, type Mutation, type ServiceLink } from "@tonaris/domain";
+import { serviceLinkKey, type ServiceLink } from "@tonaris/domain";
 
 import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
+import { envelope } from "./writes";
 
 const keyOf = (link: ServiceLink) => serviceLinkKey(link.albumId, link.service);
 
 /** The write that sets `link`, over `base`: the URL the client last saw, or null for none. */
-function setWrite(link: ServiceLink, base: string | null) {
-  const mutation: Mutation = {
-    mutationId: uuidv7(),
-    name: "link.set",
-    args: { albumId: link.albumId, service: link.service, url: link.url },
-    base: { url: base },
-  };
-  return { key: keyOf(link), mutation };
-}
+const setWrite = ({ albumId, service, url }: ServiceLink, base: string | null) => [
+  envelope("link.set", { albumId, service, url }, { url: base }),
+];
 
 export function createLinkCollection({ engine, writer }: { engine: SyncEngine; writer: Writer }) {
-  return snapshotCollection<ServiceLink>(
+  return snapshotCollection({
     engine,
-    "links",
-    (snapshot) => snapshot.links,
-    keyOf,
-    (change) => (change.entity === "link" ? { key: change.id, row: change.data } : undefined),
-    {
+    id: "links",
+    entity: "link",
+    rows: (snapshot) => snapshot.links,
+    getKey: keyOf,
+    handlers: {
       onInsert: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.map((pending) => setWrite(pending.modified, null)),
-        ),
+        writer.persistEach(transaction, ({ modified }) => setWrite(modified, null)),
       onUpdate: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.map((pending) => setWrite(pending.modified, pending.original.url)),
+        writer.persistEach(transaction, ({ original, modified }) =>
+          setWrite(modified, original.url),
         ),
       onDelete: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.map((pending) => {
-            const { albumId, service, url } = pending.original;
-            const mutation: Mutation = {
-              mutationId: uuidv7(),
-              name: "link.remove",
-              args: { albumId, service },
-              base: { url },
-            };
-            return { key: pending.key, mutation };
-          }),
-        ),
+        writer.persistEach(transaction, ({ original: { albumId, service, url } }) => [
+          envelope("link.remove", { albumId, service }, { url }),
+        ]),
     },
-  );
+  });
 }
 
 export type LinkCollection = ReturnType<typeof createLinkCollection>;

@@ -5,6 +5,7 @@
 
 import { api } from "@/api";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
+import { fieldTypeNames } from "@/features/collection/field-types";
 import { refreshPendingApprovals } from "@/features/connections/pending-approvals";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
@@ -27,15 +28,6 @@ type Load =
   | { kind: "unreachable" };
 
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-
-const fieldTypeNames: Record<NonNullable<ApprovalScope["field"]>["type"], string> = {
-  text: "Text",
-  number: "Number",
-  date: "Date",
-  yes_no: "Yes/no",
-  single_choice: "Single choice",
-  multiple_choice: "Multiple choice",
-};
 
 /** "12 albums, 2 in Trash". */
 const albumsAffected = ({ albums, inTrash }: { albums: number; inTrash: number }) =>

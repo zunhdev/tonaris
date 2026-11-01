@@ -1,9 +1,9 @@
 // `/join/:token` (DS-91): an admission invitation's landing. It shows the address the invitation is bound to;
 // Continue emails a code there, and the code, typed or through the email's link, creates the account and signs
-// in. Then an optional display name, and the collection's first run. Continuing agrees to the terms and the privacy
-// notice, as the page says, and the API records it (TON-131). An invitation that can't be used gets its one sentence
-// and nothing else. Client-rendered: the lookup and the link's code need the browser (TS-71). The
-// URL carries the token, so the page sends no Referer (security/headers.ts).
+// in (features/account/code-entry.ts). Then an optional display name, and the collection's first run. Continuing
+// agrees to the terms and the privacy notice, as the page says, and the API records it (TON-131). An invitation that
+// can't be used gets its one sentence and nothing else. Client-rendered: the lookup and the link's code need the
+// browser (TS-71). The URL carries the token, so the page sends no Referer (security/headers.ts).
 
 import {
   type AuthFailure,
@@ -12,15 +12,16 @@ import {
   lookUpInvitation,
   requestJoinCode,
 } from "@/features/account/auth-client";
-import { CodeField, useResendCountdown } from "@/features/account/code-field";
-import { forgetSignIn, pendingSignIn, rememberSignIn } from "@/features/account/pending-sign-in";
+import { resendLabel, useEmailedCode } from "@/features/account/code-entry";
+import { CodeField } from "@/features/account/code-field";
+import { forgetSignIn, rememberSignIn } from "@/features/account/pending-sign-in";
 import { currentAccount, forgetAccount } from "@/features/account/session";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
 import { failureOf, sendNow } from "@/features/sharing/send";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useState } from "react";
 
-import { maxNameLength, signInCode } from "@tonaris/domain";
+import { maxNameLength } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Input } from "@tonaris/ui/components/input";
 import { Label } from "@tonaris/ui/components/label";
@@ -32,17 +33,8 @@ export const Route = createFileRoute("/join/$token")({
   component: JoinPage,
 });
 
-/** A link's code that no longer works: the page offers a new code instead of the code field. */
-const spentLink = new Set<AuthFailure["reason"]>(["wrong_code", "expired", "too_many_attempts"]);
-
-type Step =
-  | { kind: "invited" }
-  | { kind: "code" }
-  | { kind: "confirm"; code: string }
-  | { kind: "joining" }
-  | { kind: "link-spent" }
-  | { kind: "name" }
-  | { kind: "refused"; sentence: string };
+/** Joining's steps besides the code's: the invitation, the display name, and an invitation that can't be used. */
+type JoinStep = { kind: "invited" } | { kind: "name" } | { kind: "refused"; sentence: string };
 
 function JoinPage() {
   const invitation = Route.useLoaderData();
@@ -66,100 +58,33 @@ function Refused({ sentence }: { sentence: string }) {
   );
 }
 
+/** A refusal the API explains ends the join with its sentence. */
+const refusedStep = (failure: AuthFailure): JoinStep | undefined =>
+  failure.reason === "refused" ? { kind: "refused", sentence: failure.detail } : undefined;
+
 function Join({ email }: { email: string }) {
   const { token } = Route.useParams();
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>({ kind: "invited" });
-  const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-  const [notice, setNotice] = useState<string>();
-  const codeInput = useRef<HTMLInputElement>(null);
-  // The link's code once handled, so neither a second effect run nor a repeated event submits it twice.
-  const handledLinkCode = useRef<string>(undefined);
-  const { resendIn, restart } = useResendCountdown(email);
-
-  async function sendCode(again: boolean) {
-    setBusy(true);
-    setError(undefined);
-    setNotice(undefined);
-    const result = await requestJoinCode(token);
-    setBusy(false);
-    if (!result.ok) {
-      if (result.reason === "refused") setStep({ kind: "refused", sentence: result.detail });
-      else setError(authFailureMessage(result));
-      return;
-    }
-    // So the email's link joins at once in this browser, as sign-in's does.
-    rememberSignIn(email, "/c");
-    restart();
-    setCode("");
-    setStep({ kind: "code" });
-    if (again) setNotice(`We sent a new code to ${email}.`);
-  }
-
-  async function submit(value: string, fromLink: boolean) {
-    setBusy(true);
-    setError(undefined);
-    setNotice(undefined);
-    const result = await joinWithCode(token, value);
-    if (result.ok) {
+  const entry = useEmailedCode<JoinStep>({
+    email,
+    initial: { kind: "invited" },
+    attempt: (code) => joinWithCode(token, code),
+    succeeded: async () => {
       forgetSignIn();
       forgetAccount();
       // Someone who already had an account and a name signs in through the invitation; they go straight on.
       const account = await currentAccount().catch(() => undefined);
-      setBusy(false);
-      if (account?.displayName) await navigate({ to: "/c" });
-      else setStep({ kind: "name" });
-      return;
-    }
-    setBusy(false);
-    if (result.reason === "refused") {
-      setStep({ kind: "refused", sentence: result.detail });
-      return;
-    }
-    if (fromLink && spentLink.has(result.reason)) {
-      setStep({ kind: "link-spent" });
-      return;
-    }
-    setStep({ kind: "code" });
-    setCode("");
-    setError(authFailureMessage(result));
-    codeInput.current?.focus();
-  }
-
-  // The code email's link: take the code out of the URL, then join or ask first. It may open a new page, or
-  // change only the fragment of this one.
-  useEffect(() => {
-    function openLink() {
-      const linkCode = new URLSearchParams(window.location.hash.slice(1)).get("code");
-      if (!linkCode || linkCode === handledLinkCode.current) return;
-      handledLinkCode.current = linkCode;
-      void navigate({ to: "/join/$token", params: { token }, replace: true });
-      if (pendingSignIn(email)) {
-        setStep({ kind: "joining" });
-        void submit(linkCode, true);
-      } else {
-        setStep({ kind: "confirm", code: linkCode });
-      }
-    }
-    openLink();
-    window.addEventListener("hashchange", openLink);
-    return () => window.removeEventListener("hashchange", openLink);
-    // `submit` and `navigate` read the current invitation; the listener is set up once.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function onCodeChange(digits: string) {
-    setCode(digits);
-    if (digits.length === signInCode.length && !busy) void submit(digits, false);
-  }
-
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (code.length === signInCode.length) void submit(code, false);
-    else setError(`Enter the ${signInCode.length}-digit code from the email.`);
-  }
+      if (!account?.displayName) return { kind: "name" };
+      await navigate({ to: "/c" });
+      return undefined;
+    },
+    ended: refusedStep,
+    request: () => requestJoinCode(token),
+    // So the email's link joins at once in this browser, as sign-in's does.
+    requested: () => rememberSignIn(email, "/c"),
+    clearLink: () => void navigate({ to: "/join/$token", params: { token }, replace: true }),
+  });
+  const { step, busy, error } = entry;
 
   const errorLine = error && (
     <p id="join-error" role="alert" className="text-status-danger">
@@ -171,7 +96,7 @@ function Join({ email }: { email: string }) {
 
   if (step.kind === "name") return <NameStep onDone={() => void navigate({ to: "/c" })} />;
 
-  if (step.kind === "joining") {
+  if (step.kind === "using-link") {
     return (
       <h1 id={signInTitleId} className="text-title text-fg-primary" aria-live="polite">
         Creating your account…
@@ -193,11 +118,11 @@ function Join({ email }: { email: string }) {
             variant="primary"
             size="lg"
             disabled={busy}
-            onClick={() => void submit(step.code, true)}
+            onClick={() => entry.confirmLink(step.code)}
           >
             Join
           </Button>
-          <Button size="lg" disabled={busy} onClick={() => setStep({ kind: "invited" })}>
+          <Button size="lg" disabled={busy} onClick={() => entry.setStep({ kind: "invited" })}>
             Cancel
           </Button>
         </div>
@@ -213,7 +138,7 @@ function Join({ email }: { email: string }) {
           This link has expired or was already used
         </h1>
         {errorLine}
-        <Button variant="primary" size="lg" disabled={busy} onClick={() => void sendCode(true)}>
+        <Button variant="primary" size="lg" disabled={busy} onClick={() => void entry.sendCode()}>
           Send a new code
         </Button>
       </>
@@ -230,7 +155,12 @@ function Join({ email }: { email: string }) {
           This invitation is for {email}. Continue, and we'll email a code to that address.
         </p>
         {errorLine}
-        <Button variant="primary" size="lg" disabled={busy} onClick={() => void sendCode(false)}>
+        <Button
+          variant="primary"
+          size="lg"
+          disabled={busy}
+          onClick={() => void entry.sendCode({ notify: false })}
+        >
           Continue
         </Button>
         <Agreement />
@@ -243,26 +173,26 @@ function Join({ email }: { email: string }) {
       <h1 id={signInTitleId} className="text-title [overflow-wrap:anywhere] text-fg-primary">
         Check {email}
       </h1>
-      <form className="flex flex-col gap-3" onSubmit={onSubmit}>
+      <form className="flex flex-col gap-3" onSubmit={entry.onSubmit}>
         <CodeField
-          value={code}
-          onChange={onCodeChange}
+          value={entry.code}
+          onChange={entry.onCodeChange}
           hint="Or open the link in the email to join on that device."
           error={error}
-          inputRef={codeInput}
+          inputRef={entry.codeInput}
         />
         <Button type="submit" variant="primary" size="lg" disabled={busy}>
           Join
         </Button>
       </form>
-      <output className="text-fg-secondary empty:hidden">{notice}</output>
+      <output className="text-fg-secondary empty:hidden">{entry.notice}</output>
       <Button
         variant="ghost"
         className="self-start"
-        disabled={busy || resendIn > 0}
-        onClick={() => void sendCode(true)}
+        disabled={busy || entry.resendIn > 0}
+        onClick={() => void entry.sendCode()}
       >
-        {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
+        {resendLabel(entry.resendIn)}
       </Button>
     </>
   );

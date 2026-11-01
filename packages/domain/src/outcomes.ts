@@ -138,7 +138,30 @@ export const skipReasons = [
  */
 export const inputNeeds = ["destination", "name", "match", "details"] as const;
 
-/** What the server reports for one mutation or batch item. */
+/** Rejected; nothing changed (X-05). */
+export const failedOutcomeSchema = z.object({
+  status: z.literal("failed"),
+  code: errorCodeSchema,
+  problem: problemSchema,
+});
+
+/** Field-level CAS mismatch; nothing changed (TS-21). */
+export const conflictOutcomeSchema = z.object({
+  status: z.literal("conflict"),
+  conflicts: z.array(fieldConflictSchema).min(1),
+});
+
+/** A choice is required; resubmit as a new mutation carrying it (TS-26). */
+export const needsInputOutcomeSchema = z.object({
+  status: z.literal("needs_input"),
+  need: z.enum(inputNeeds),
+  candidates: z.array(z.unknown()),
+});
+
+/**
+ * What the server reports for one mutation or batch item. Clients keep failures, conflicts and choices to make for
+ * the person through the members above, so a kept outcome never drops a field added later (TS-24).
+ */
 export const outcomeSchema = z.discriminatedUnion("status", [
   /** Committed at this `seq`; the client waits for the stream to reach it (TS-24). */
   z.object({
@@ -149,16 +172,9 @@ export const outcomeSchema = z.discriminatedUnion("status", [
         "What the mutation reports. `membership.add` gives `{alreadyInList: boolean}`, true when the album was already in the list (FR-01.7); `album.capture` gives a `CaptureResult`; the others give null.",
     }),
   }),
-  /** Rejected; nothing changed (X-05). */
-  z.object({ status: z.literal("failed"), code: errorCodeSchema, problem: problemSchema }),
-  /** Field-level CAS mismatch; nothing changed (TS-21). */
-  z.object({ status: z.literal("conflict"), conflicts: z.array(fieldConflictSchema).min(1) }),
-  /** A choice is required; resubmit as a new mutation carrying it (TS-26). */
-  z.object({
-    status: z.literal("needs_input"),
-    need: z.enum(inputNeeds),
-    candidates: z.array(z.unknown()),
-  }),
+  failedOutcomeSchema,
+  conflictOutcomeSchema,
+  needsInputOutcomeSchema,
   /** An MCP gated operation waits for the owner's approval (TS-64). */
   z.object({ status: z.literal("needs_approval"), approvalId: z.string() }),
   /** A batch item whose prerequisite did not succeed was not run (TS-25). */

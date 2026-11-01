@@ -19,7 +19,8 @@ import type { TabCoordinator } from "./tabs";
 export type Sent = { answered: Outcome[] } | { unanswered: unknown };
 
 /** `pending` while queued or in flight; `unconfirmed` once a send went unanswered, or after adoption. */
-export type QueuedState = "pending" | "unconfirmed";
+export const queuedStates = ["pending", "unconfirmed"] as const;
+export type QueuedState = (typeof queuedStates)[number];
 
 export type OutboxOptions = {
   send: (entry: OutboxEntry) => Promise<Sent>;

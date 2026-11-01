@@ -5,11 +5,12 @@
 // chosen option's removal carries the hash its confirmation showed, as `metadata.confirmed[optionId]` (TS-14).
 // Deleting a field is `field.delete`, always with its confirmed hash, as `metadata.confirmed[fieldId]` (FR-03.18).
 
-import { isChoiceType, uuidv7, type CustomField, type Mutation } from "@tonaris/domain";
+import { isChoiceType, type CustomField, type Mutation } from "@tonaris/domain";
 
 import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
+import { envelope } from "./writes";
 
 /**
  * An update's or delete's metadata: confirmed scope hashes (TS-14), by the ID of each option removed (FR-03.17) or
@@ -37,20 +38,10 @@ export function fieldWrites(
   const { id } = original;
   const writes: Mutation[] = [];
   if (modified.name !== original.name) {
-    writes.push({
-      mutationId: uuidv7(),
-      name: "field.rename",
-      args: { id, name: modified.name },
-      base: { name: original.name },
-    });
+    writes.push(envelope("field.rename", { id, name: modified.name }, { name: original.name }));
   }
   if (modified.type !== original.type) {
-    writes.push({
-      mutationId: uuidv7(),
-      name: "field.changeType",
-      args: { id, type: modified.type },
-      base: { type: original.type },
-    });
+    writes.push(envelope("field.changeType", { id, type: modified.type }, { type: original.type }));
   }
   // A change to a non-choice type discards the options on the server; there is nothing more to send (FR-03.13).
   if (isChoiceType(original.type) && !isChoiceType(modified.type)) return writes;
@@ -60,87 +51,63 @@ export function fieldWrites(
   for (const option of original.options) {
     if (after.has(option.id)) continue;
     const scopeHash = confirmed[option.id];
-    writes.push({
-      mutationId: uuidv7(),
-      name: "field.removeOption",
-      args: { fieldId: id, optionId: option.id, ...(scopeHash === undefined ? {} : { scopeHash }) },
-    });
+    writes.push(
+      envelope("field.removeOption", {
+        fieldId: id,
+        optionId: option.id,
+        ...(scopeHash === undefined ? {} : { scopeHash }),
+      }),
+    );
   }
   for (const option of modified.options) {
     const was = before.get(option.id);
     if (was && was.label !== option.label) {
-      writes.push({
-        mutationId: uuidv7(),
-        name: "field.renameOption",
-        args: { fieldId: id, optionId: option.id, label: option.label },
-        base: { label: was.label },
-      });
+      writes.push(
+        envelope(
+          "field.renameOption",
+          { fieldId: id, optionId: option.id, label: option.label },
+          { label: was.label },
+        ),
+      );
     }
   }
   for (const option of modified.options) {
     if (before.has(option.id)) continue;
-    writes.push({
-      mutationId: uuidv7(),
-      name: "field.addOption",
-      args: { fieldId: id, id: option.id, label: option.label },
-    });
+    writes.push(envelope("field.addOption", { fieldId: id, id: option.id, label: option.label }));
   }
   return writes;
 }
 
 export function createFieldCollection({ engine, writer }: { engine: SyncEngine; writer: Writer }) {
-  return snapshotCollection<CustomField>(
+  return snapshotCollection({
     engine,
-    "fields",
-    (snapshot) => snapshot.fields,
-    (field) => field.id,
-    (change) => (change.entity === "field" ? { key: change.id, row: change.data } : undefined),
-    {
+    id: "fields",
+    entity: "field",
+    rows: (snapshot) => snapshot.fields,
+    getKey: (field) => field.id,
+    handlers: {
       onInsert: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.map((pending) => {
-            const { id, name, type, options } = pending.modified;
-            const mutation: Mutation = {
-              mutationId: uuidv7(),
-              name: "field.create",
-              args: {
-                id,
-                name,
-                type,
-                options: options.map(({ id: optionId, label }) => ({ id: optionId, label })),
-              },
-            };
-            return { key: pending.key, mutation };
+        writer.persistEach(transaction, ({ modified: { id, name, type, options } }) => [
+          envelope("field.create", {
+            id,
+            name,
+            type,
+            options: options.map(({ id: optionId, label }) => ({ id: optionId, label })),
           }),
-        ),
+        ]),
       onUpdate: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.flatMap((pending) =>
-            fieldWrites(pending.original, pending.modified, pending.metadata).map((mutation) => ({
-              key: pending.key,
-              mutation,
-            })),
-          ),
+        writer.persistEach(transaction, ({ original, modified, metadata }) =>
+          fieldWrites(original, modified, metadata),
         ),
       onDelete: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.map((pending) => {
-            const mutation: Mutation = {
-              mutationId: uuidv7(),
-              name: "field.delete",
-              args: {
-                id: pending.original.id,
-                scopeHash: confirmedOf(pending.metadata)[pending.original.id] ?? "",
-              },
-            };
-            return { key: pending.key, mutation };
+        writer.persistEach(transaction, ({ original, metadata }) => [
+          envelope("field.delete", {
+            id: original.id,
+            scopeHash: confirmedOf(metadata)[original.id] ?? "",
           }),
-        ),
+        ]),
     },
-  );
+  });
 }
 
 export type FieldCollection = ReturnType<typeof createFieldCollection>;

@@ -163,7 +163,7 @@ test("a conflict is reviewed: Apply mine saves the attempt, Keep current the new
   await live(page);
   const panel = await openActivity(page);
   await expect(panel.getByRole("listitem")).toHaveText([
-    "Rename 'Favorites' to 'Mine'Changed elsewhereReview",
+    "Rename 'Favorites' to 'Mine'Changed elsewhere: Changed elsewhere. Review both versions to choose.Review",
   ]);
   await panel.getByRole("button", { name: "Review" }).click();
   const again = page.getByRole("alertdialog", {

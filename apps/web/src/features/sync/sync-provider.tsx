@@ -61,11 +61,8 @@ export function SyncProvider({ account, children }: { account: Account; children
       void router.navigate({ to: "/sign-in" });
     });
     // Back online, or back on screen after the phone froze the page (TON-137), connect and resend at once rather
-    // than after the current delay.
-    const online = () => {
-      created.engine.reconnect();
-      created.outbox.wake();
-    };
+    // than after the current delay: captures too, which would otherwise wait out a backoff of up to 30 s.
+    const online = () => created.resume();
     const shown = () => {
       if (!document.hidden) online();
     };

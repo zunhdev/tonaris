@@ -4,23 +4,25 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { appAccountDefaults } from "@tonaris/domain";
+import { appAccountDefaults, type AccountDefaults } from "@tonaris/domain";
 
 import { defaultsWrites } from "./views";
 
 /** The writes, without their mutation IDs. */
-const sent = (next: Parameters<typeof defaultsWrites>[1]) =>
-  defaultsWrites(appAccountDefaults, next).map(({ key, mutation }) => {
+const sent = (
+  next: Parameters<typeof defaultsWrites>[1],
+  before: Parameters<typeof defaultsWrites>[0] = appAccountDefaults,
+) =>
+  defaultsWrites(before, next).map((mutation) => {
     const { mutationId: _, ...write } = mutation;
-    return Object.assign(write, { key });
+    return write;
   });
 
 describe("defaultsWrites", () => {
   test("view options and the link setting are separate writes", () => {
     expect(sent({ layout: "grid", linkTarget: "app" })).toEqual([
-      { key: "defaults", name: "defaults.set", args: { layout: "grid" }, base: { layout: "rows" } },
+      { name: "defaults.set", args: { layout: "grid" }, base: { layout: "rows" } },
       {
-        key: "defaults",
         name: "defaults.setLinkTarget",
         args: { linkTarget: "app" },
         base: { linkTarget: "web" },
@@ -38,12 +40,16 @@ describe("defaultsWrites", () => {
   test("the services turned off are their own write, sent only when the list changes (TON-138)", () => {
     expect(sent({ hiddenServices: ["qobuz"] })).toEqual([
       {
-        key: "defaults",
         name: "defaults.setHiddenServices",
         args: { hiddenServices: ["qobuz"] },
         base: { hiddenServices: [] },
       },
     ]);
     expect(sent({ hiddenServices: [] })).toEqual([]);
+  });
+
+  test("the same services in another order are no change, as the server compares them (TON-147)", () => {
+    const before: AccountDefaults = { ...appAccountDefaults, hiddenServices: ["spotify", "qobuz"] };
+    expect(sent({ hiddenServices: ["qobuz", "spotify"] }, before)).toEqual([]);
   });
 });

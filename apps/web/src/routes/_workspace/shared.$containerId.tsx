@@ -2,13 +2,15 @@
 // inside the share, as on guest pages.
 
 import { SharedView } from "@/features/sharing/shared-view";
+import { uuidSearch } from "@/search";
 import { createFileRoute } from "@tanstack/react-router";
 
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// `?c=`, the folder or list inside the share; anything but an ID is dropped.
+// Made outside the route's options: inferred inside them, beside the functions there, its key's type is lost.
+const containerSearch = uuidSearch("c");
 
 export const Route = createFileRoute("/_workspace/shared/$containerId")({
-  validateSearch: (search: Record<string, unknown>): { c?: string } =>
-    typeof search.c === "string" && uuid.test(search.c) ? { c: search.c } : {},
+  validateSearch: containerSearch,
   component: SharedPage,
 });
 

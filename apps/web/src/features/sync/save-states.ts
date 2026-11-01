@@ -2,7 +2,7 @@
 // Rows use `useSaveState` for their marker and `aria-busy` (DS-83) and `useLiveHighlight` for changes made
 // elsewhere (DS-82); the album rows, the sidebar tree and the inspector wire them in (TON-33, TON-34, TON-38).
 
-import type { BatchReport, SaveState } from "@/client/sync/writer";
+import { markerStatuses, type BatchReport, type SaveState } from "@/client/sync/save-states";
 import {
   useCallback,
   useEffect,
@@ -41,17 +41,6 @@ export function useReports(): readonly BatchReport[] {
   return useSyncExternalStore(subscribe, snapshot);
 }
 
-/** The states a marker shows, most pressing first. */
-const shown: OutcomeStatus[] = [
-  "conflict",
-  "needs_input",
-  "needs_approval",
-  "failed",
-  "skipped",
-  "unconfirmed",
-  "pending",
-];
-
 /**
  * The save state a record's marker shows, if any: a conflict or a choice to make, a failure or a skip, then
  * unconfirmed and pending writes.
@@ -60,7 +49,7 @@ export function useSaveState(key: string): OutcomeStatus | undefined {
   const open = useOpenStates();
   return useMemo(() => {
     const mine = new Set(open.filter((state) => state.key === key).map((state) => state.status));
-    return shown.find((status) => mine.has(status));
+    return markerStatuses.find((status) => mine.has(status));
   }, [open, key]);
 }
 

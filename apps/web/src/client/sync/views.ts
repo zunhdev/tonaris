@@ -6,13 +6,12 @@
 // shows the state of its view options.
 
 import {
-  uuidv7,
+  sameServices,
   unsetView,
   viewDefaultsFields,
   viewPrefsFields,
   type AccountDefaults,
   type Mutation,
-  type ViewDefaults,
   type ViewPrefs,
   type ViewPrefsFields,
 } from "@tonaris/domain";
@@ -20,9 +19,10 @@ import {
 import type { SyncEngine } from "./engine";
 import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
+import { diffFields, envelope, pick } from "./writes";
 
 /** Where the save states keep a view's choices: never a folder's or list's own key. */
-export const viewStateKey = (viewKey: string) => `view:${viewKey}`;
+const viewStateKey = ({ key }: { key: string }) => `view:${key}`;
 
 /** The defaults' one row, and its save-state key. */
 export const defaultsKey = "defaults";
@@ -31,121 +31,83 @@ export const defaultsKey = "defaults";
  * The `view.set` that takes a view's choices from `before` to `next`, or none if they are the same. The sort is one
  * choice, so its mode and direction go together even when only one changed.
  */
-export function viewWrite(
-  before: ViewPrefs,
-  next: Partial<ViewPrefsFields>,
-): { key: string; mutation: Mutation } | undefined {
-  const changed = viewPrefsFields.filter(
-    (field) => next[field] !== undefined && next[field] !== before[field],
-  );
-  if (changed.includes("sortMode") !== changed.includes("sortDir")) {
-    changed.push(changed.includes("sortMode") ? "sortDir" : "sortMode");
+function viewWrite(before: ViewPrefs, next: Partial<ViewPrefsFields>): Mutation[] {
+  const changed = diffFields(viewPrefsFields, before, next);
+  if (!changed) return [];
+  const { args, base } = changed;
+  if ((args.sortMode === undefined) !== (args.sortDir === undefined)) {
+    // Null clears a choice, so the half left out keeps its value.
+    const other = args.sortMode === undefined ? "sortMode" : "sortDir";
+    Object.assign(args, { [other]: before[other] });
+    Object.assign(base, { [other]: before[other] });
   }
-  if (changed.length === 0) return undefined;
-  const args: Partial<ViewPrefsFields> = {};
-  const base: Partial<ViewPrefsFields> = {};
-  for (const field of changed) {
-    // Null clears a choice, so only a field left out keeps its value.
-    Object.assign(args, { [field]: next[field] === undefined ? before[field] : next[field] });
-    Object.assign(base, { [field]: before[field] });
-  }
-  return {
-    key: viewStateKey(before.viewKey),
-    mutation: {
-      mutationId: uuidv7(),
-      name: "view.set",
-      args: { ...args, viewKey: before.viewKey },
-      base,
-    },
-  };
-}
-
-/** A view's choices only, whatever else the draft carried. */
-function viewOf({ viewKey, sortMode, sortDir, grouped, layout }: ViewPrefs): ViewPrefs {
-  return { viewKey, sortMode, sortDir, grouped, layout };
+  return [envelope("view.set", { ...args, viewKey: before.viewKey }, base)];
 }
 
 export function createViewCollection({ engine, writer }: { engine: SyncEngine; writer: Writer }) {
-  return snapshotCollection<ViewPrefs>(
+  return snapshotCollection({
     engine,
-    "views",
-    (s) => s.views,
-    (view) => view.viewKey,
-    (change) => (change.entity === "view" ? { key: change.id, row: change.data } : undefined),
-    {
+    id: "views",
+    entity: "view",
+    rows: (s) => s.views,
+    getKey: (view) => view.viewKey,
+    handlers: {
+      // A view's choices only, whatever else the draft carried.
       onInsert: ({ transaction }) =>
-        writer.persist(
+        writer.persistEach(
           transaction,
-          transaction.mutations.flatMap(
-            (pending) => viewWrite(unsetView(pending.key), viewOf(pending.modified)) ?? [],
-          ),
+          ({ key, modified }) => viewWrite(unsetView(key), pick(modified, viewPrefsFields)),
+          viewStateKey,
         ),
       onUpdate: ({ transaction }) =>
-        writer.persist(
+        writer.persistEach(
           transaction,
-          transaction.mutations.flatMap(
-            (pending) => viewWrite(viewOf(pending.original), pending.changes) ?? [],
-          ),
+          ({ original, changes }) => viewWrite(original, changes),
+          viewStateKey,
         ),
       // Forgetting a view clears each choice back to the defaults.
       onDelete: ({ transaction }) =>
-        writer.persist(
+        writer.persistEach(
           transaction,
-          transaction.mutations.flatMap(
-            (pending) => viewWrite(viewOf(pending.original), unsetView(pending.key)) ?? [],
-          ),
+          ({ key, original }) => viewWrite(original, unsetView(key)),
+          viewStateKey,
         ),
     },
-  );
+  });
 }
 
 /**
  * The writes that take the defaults from `before` to `next`: a `defaults.set` for the view options, a
  * `defaults.setLinkTarget` for the link setting, and a `defaults.setHiddenServices` for the services turned off
- * (TON-138); none if they are the same.
+ * (TON-138); none if they are the same. The services are compared as the server compares them, in any order.
  */
 export function defaultsWrites(
   before: AccountDefaults,
   next: Partial<AccountDefaults>,
-): { key: string; mutation: Mutation }[] {
-  const writes: { key: string; mutation: Mutation }[] = [];
-  const args: Partial<ViewDefaults> = {};
-  const base: Partial<ViewDefaults> = {};
-  for (const field of viewDefaultsFields) {
-    if (next[field] === undefined || next[field] === before[field]) continue;
-    Object.assign(args, { [field]: next[field] });
-    Object.assign(base, { [field]: before[field] });
-  }
-  if (Object.keys(args).length > 0) {
-    writes.push({
-      key: defaultsKey,
-      mutation: { mutationId: uuidv7(), name: "defaults.set", args, base },
-    });
-  }
+): Mutation[] {
+  const writes: Mutation[] = [];
+  const presentation = diffFields(viewDefaultsFields, before, next);
+  if (presentation) writes.push(envelope("defaults.set", presentation.args, presentation.base));
   if (next.linkTarget !== undefined && next.linkTarget !== before.linkTarget) {
-    writes.push({
-      key: defaultsKey,
-      mutation: {
-        mutationId: uuidv7(),
-        name: "defaults.setLinkTarget",
-        args: { linkTarget: next.linkTarget },
-        base: { linkTarget: before.linkTarget },
-      },
-    });
+    writes.push(
+      envelope(
+        "defaults.setLinkTarget",
+        { linkTarget: next.linkTarget },
+        { linkTarget: before.linkTarget },
+      ),
+    );
   }
   if (
     next.hiddenServices !== undefined &&
-    next.hiddenServices.join(",") !== before.hiddenServices.join(",")
+    !sameServices(next.hiddenServices, before.hiddenServices)
   ) {
-    writes.push({
-      key: defaultsKey,
-      mutation: {
-        mutationId: uuidv7(),
-        name: "defaults.setHiddenServices",
-        args: { hiddenServices: next.hiddenServices },
-        base: { hiddenServices: before.hiddenServices },
-      },
-    });
+    writes.push(
+      envelope(
+        "defaults.setHiddenServices",
+        { hiddenServices: next.hiddenServices },
+        { hiddenServices: before.hiddenServices },
+      ),
+    );
   }
   return writes;
 }
@@ -157,20 +119,19 @@ export function createDefaultsCollection({
   engine: SyncEngine;
   writer: Writer;
 }) {
-  return snapshotCollection<AccountDefaults>(
+  return snapshotCollection({
     engine,
-    "defaults",
-    (s) => [s.defaults],
-    () => defaultsKey,
-    (change) => (change.entity === "defaults" ? { key: defaultsKey, row: change.data } : undefined),
-    {
+    id: "defaults",
+    entity: "defaults",
+    rows: (s) => [s.defaults],
+    getKey: () => defaultsKey,
+    // A change names the account; the collection holds its one row.
+    keyOfChange: () => defaultsKey,
+    handlers: {
       onUpdate: ({ transaction }) =>
-        writer.persist(
-          transaction,
-          transaction.mutations.flatMap((pending) =>
-            defaultsWrites(pending.original, pending.changes),
-          ),
+        writer.persistEach(transaction, ({ original, changes }) =>
+          defaultsWrites(original, changes),
         ),
     },
-  );
+  });
 }

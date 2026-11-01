@@ -9,7 +9,8 @@ import { uuidv7, type CaptureArgs, type Mutation, type Outcome } from "@tonaris/
 import type { SyncEngine } from "./engine";
 import type { Outbox } from "./outbox";
 import type { OutboxEntry, OutboxItem } from "./persistence";
-import type { SaveState, SaveStates } from "./writer";
+import type { SaveState, SaveStates } from "./save-states";
+import { envelope } from "./writes";
 
 /** What a capture is asked with; `albumId` is made when not given, as for a new album (TS-10). */
 export type CaptureRequest = Omit<CaptureArgs, "albumId"> & { albumId?: string };
@@ -40,7 +41,7 @@ export function createCaptures({
   function send(requests: readonly CaptureRequest[]): Mutation[] {
     const batch = states.batchFor(requests.length);
     const items: OutboxItem[] = requests.map(({ albumId = uuidv7(), ...rest }) => ({
-      mutation: { mutationId: uuidv7(), name: "album.capture", args: { albumId, ...rest } },
+      mutation: envelope("album.capture", { albumId, ...rest }),
       key: albumId,
     }));
     for (const { mutation, key } of items) states.track(mutation, key, "pending", batch);
