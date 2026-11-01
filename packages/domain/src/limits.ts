@@ -46,3 +46,6 @@ export const maxFields = 50;
 
 /** Options per choice field (TS-18). */
 export const maxFieldOptions = 100;
+
+/** Merge candidates asked about per capture, at most: each costs a MusicBrainz lookup at 1 a second (TS-44). */
+export const maxMergeCandidates = 5;

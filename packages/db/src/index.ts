@@ -62,7 +62,7 @@ export {
   type ApprovalRow,
   type ApprovalUse,
 } from "./approvals";
-export { capturesSince, maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";
+export { capturesSince, mergeCandidates, savedAlbumsOf } from "./capture";
 export { createDatabase, type Database, type Transaction } from "./client";
 export {
   fieldDeletionIn,

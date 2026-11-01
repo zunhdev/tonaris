@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
 
 import {
+  maxMergeCandidates,
   trashRetentionDays,
   uuidv7,
   type CaptureSource,
@@ -15,7 +16,7 @@ import {
   type Principal,
 } from "@tonaris/domain";
 
-import { maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";
+import { mergeCandidates, savedAlbumsOf } from "./capture";
 import { albumProvenance } from "./provenance";
 import {
   albums,

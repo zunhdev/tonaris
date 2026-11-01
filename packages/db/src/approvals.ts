@@ -3,7 +3,7 @@
 
 import { and, asc, eq, gt, or } from "drizzle-orm";
 
-import type { ApprovalOperation, ApprovalScope } from "@tonaris/domain";
+import { approvalState, type ApprovalOperation, type ApprovalScope } from "@tonaris/domain";
 
 import type { Database, Transaction } from "./client";
 import { approvals, oauthClients, oauthConsents } from "./schema";
@@ -108,9 +108,7 @@ export async function useApproval(
     .select({ status: approvals.status, expiresAt: approvals.expiresAt })
     .from(approvals)
     .where(and(eq(approvals.id, id), eq(approvals.grantId, grantId)));
-  return approval?.status === "approved" && approval.expiresAt.getTime() > now.getTime()
-    ? "scope_changed"
-    : "not_usable";
+  return approval && approvalState(approval, now) === "approved" ? "scope_changed" : "not_usable";
 }
 
 /** The account's approvals waiting for a decision, oldest first, for Settings and the app's badge (DS-86). */

@@ -7,6 +7,7 @@ import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   isChoiceType,
   shareTokenHash,
+  shownEmailStatus,
   type ContainerFields,
   type CustomField,
   type ServiceLink,
@@ -27,7 +28,6 @@ import {
 } from "./columns";
 import { valuesOfAlbums } from "./field-values";
 import { ancestorsCte, descendantsCte } from "./hierarchy";
-import { sendingStale } from "./invitations";
 import {
   albums,
   albumServiceLinks,
@@ -220,10 +220,7 @@ export function shareSettings(
                 ...each,
                 status: each.status,
                 // A send that never reported back is unconfirmed: the server may have stopped (FR-07.5).
-                emailStatus:
-                  emailStatus === "sending" && sendingStale(updatedAt, now)
-                    ? "unknown"
-                    : emailStatus,
+                emailStatus: shownEmailStatus(emailStatus, updatedAt, now),
               },
             ]
           : [],
