@@ -81,6 +81,36 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
   await expect(page.getByRole("radio", { name: "Mine" })).toBeChecked();
   expect(await axe(page)).toEqual([]);
 
+  // The account menu is wide enough for its items, each one line and a 44 px target, inside the screen (TON-152).
+  await page.getByRole("button", { name: /^Account: / }).click();
+  const items = page.getByRole("menu").getByRole("menuitem");
+  await expect(items).toHaveText([
+    "Settings",
+    "Feedback and ideas",
+    "Terms of use",
+    "Privacy notice",
+    "Sign out",
+  ]);
+  // Once its opening zoom is over.
+  const boxes = async () =>
+    Promise.all((await items.all()).map(async (item) => (await item.boundingBox())!));
+  await expect
+    .poll(async () => (await boxes()).map((box) => Math.round(box.height)))
+    .toEqual([44, 44, 44, 44, 44]);
+  const width = page.viewportSize()?.width ?? 0;
+  for (const box of await boxes()) expect(box.x + box.width).toBeLessThanOrEqual(width);
+  // One line of `text.base` (22 px), not two.
+  const labels = await items.evaluateAll((elements) =>
+    elements.map((element) => {
+      const text = document.createRange();
+      text.selectNode([...element.childNodes].find((node) => node.nodeType === Node.TEXT_NODE)!);
+      return text.getBoundingClientRect().height;
+    }),
+  );
+  for (const height of labels) expect(height).toBeLessThan(30);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+
   await page.getByRole("link", { name: "Metal" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Metal" })).toBeVisible();
   await page.getByRole("link", { name: "Doom" }).click();

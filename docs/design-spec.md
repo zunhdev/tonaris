@@ -1898,6 +1898,8 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 
 *Fixed in TON-139* (from the creator's manual testing, 31 October 2026): **pull to refresh in an iPhone Home Screen app.** iOS gives such apps no toolbar and no pull to refresh of their own, so pulling down did nothing, while Android's installed app reloads. Now, in that app only (`navigator.standalone`), a finger pulling down from the top of a view brings a round spinner after it, below the top bar, turning as it comes. Letting go once it has come 64 px (a pull of 128 px) reloads the page, with the spinner turning; less springs it back. A touch in a dialog, the album sheet or a field, or on a view scrolled away from its top, pulls nothing. Safari and Android keep their own.
 
+*Fixed in TON-152* (from the creator's manual testing, 1 November 2026): **the phone's account menu is 224 px wide, with 44 px items.** A menu takes its trigger's width unless it sets its own, and the top bar's Account button is 44 px, so the menu was at its 128 px minimum: "Feedback and ideas", "Terms of use" and "Privacy notice" wrapped onto two lines and ran into the items below. Each item is now one line and a 44 px target. A phone test checks both.
+
 *As built in TON-115:* **installable.** `/manifest.webmanifest` names the app "Tonaris", starts at `/c`, displays `standalone`, and gives `bg.app`'s color as its background and theme, with TON-114's icons: 192 and 512 px, and a maskable 512 px.
 - **Android Chrome** offers "Install app" in its menu, and the installed app opens without browser chrome.
 - **iOS** uses the square `apple-touch-icon` for Add to Home Screen, and `apple-mobile-web-app-capable` opens it full screen, with a black status bar above the top bar.
