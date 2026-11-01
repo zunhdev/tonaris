@@ -9,6 +9,7 @@
 // that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
+import { isUnderway } from "@/client/sync/save-states";
 import { ServiceNames } from "@/features/open/service-names";
 import { useShell } from "@/features/shell/shell-context";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -64,7 +65,6 @@ export function AlbumCards({
 }: {
   sections: readonly Section<Album>[];
   label: string;
-  viewKey: string;
   collapsed: ReadonlySet<ReleaseGroup>;
   onToggle: (group: ReleaseGroup) => void;
   /** Cards are rearranged by keyboard; the drag handle is a row's (DS-21). */
@@ -234,7 +234,7 @@ function AlbumCard({
       ref={ref}
       role="gridcell"
       aria-colindex={col + 1}
-      aria-busy={status === "pending" || status === "unconfirmed" ? true : undefined}
+      aria-busy={isUnderway(status) || undefined}
       className="flex flex-col gap-1 rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
       style={{ width, height: width + textHeight }}
       {...cell}

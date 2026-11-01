@@ -93,8 +93,16 @@ describe("both addresses, in order (FR-11.4)", () => {
 
   test("the swap keeps the account, ends its other sessions, and records it", async () => {
     const elsewhere = await t.signIn(current);
+    const [hereStream, elsewhereStream] = await Promise.all([
+      t.openStream(anna.cookie),
+      t.openStream(elsewhere.cookie),
+    ]);
     const done = await changeTo();
     expect(emailChangeStepSchema.parse(await done.json())).toEqual({ stage: "done", email: next });
+    // The other session's stream ends at once, not at the next session check (TS-23); this one's stays.
+    expect(await elsewhereStream.endsWithin(1_000)).toBe(true);
+    expect(await hereStream.endsWithin(50)).toBe(false);
+    await hereStream.close();
 
     // This browser stays signed in, as the same account at the new address; the other session is gone.
     const here = accountSchema.parse(await (await me(anna.cookie)).json());

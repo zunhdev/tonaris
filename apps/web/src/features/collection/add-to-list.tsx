@@ -2,6 +2,7 @@
 // inspector's "+ Add to list". Choosing one puts the album in it (FR-01.6), announced (DS-83). Adding is an edit:
 // whatever opens it switches to Editing first, and it waits while offline (DS-81).
 
+import { sent } from "@/client/sync/writer";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ListMusic } from "lucide-react";
@@ -26,31 +27,25 @@ export function AddToListDialog() {
   const client = useSyncClient();
   const announce = useAnnounce();
   const { addingToList, endAddToList } = useCollectionUi();
-  const { tree, albumsById, entriesByList } = useCollectionData();
+  const { tree, albumsById, listsByAlbum } = useCollectionData();
   const list = useRef<HTMLUListElement>(null);
   const album = addingToList === undefined ? undefined : albumsById.get(addingToList);
 
   const choices = useMemo(() => {
     if (!album) return [];
+    const inLists = new Set(listsByAlbum.get(album.id));
     return [...tree.byId.values()]
-      .filter(
-        (container) =>
-          container.kind === "list" &&
-          !(entriesByList.get(container.id) ?? []).some((entry) => entry.albumId === album.id),
-      )
+      .filter((container) => container.kind === "list" && !inLists.has(container.id))
       .map((container) => ({
         list: container,
         path: [...ancestorsOf(tree, container.id).map((folder) => folder.name), container.name],
       }))
       .toSorted((a, b) => a.path.join(" › ").localeCompare(b.path.join(" › ")));
-  }, [album, tree, entriesByList]);
+  }, [album, tree, listsByAlbum]);
 
   function add(listId: string, name: string) {
     if (!client || !album) return;
-    client.memberships
-      .insert({ listId, albumId: album.id, addedAt: now() })
-      // The save-state layer reports an entry that isn't saved.
-      .isPersisted.promise.catch(() => {});
+    sent(client.memberships.insert({ listId, albumId: album.id, addedAt: now() }));
     announce(`Added ${album.title} to ${name}`);
     endAddToList();
   }

@@ -13,11 +13,12 @@ import {
   albumFields,
   albumFieldsSchema,
   albumCapacityProblem,
+  albumOf,
   albumProblem,
   hasAlbumSlot,
-  type Album,
   type AlbumFields,
 } from "./albums";
+import { actingOwner, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
   blankAlbum,
@@ -32,11 +33,14 @@ import {
 } from "./enrichment";
 import { maxLinkLength, maxMemberships } from "./limits";
 import { streamingServices, type StreamingService } from "./links";
-import { addMembership, membershipKey } from "./memberships";
+import {
+  addMembership,
+  changeableList,
+  membershipKey,
+  membershipLimitProblem,
+} from "./memberships";
 import { failure, type Outcome } from "./outcomes";
-import { authorizeWrite } from "./policies";
 import { forgetPlace, placeAtTop } from "./positions";
-import { actingUserId } from "./principals";
 import { serviceLinkKey } from "./service-links";
 import { z } from "./zod";
 
@@ -124,23 +128,11 @@ export const missingYearReason =
 
 const { artworkUrl: _artwork, releaseGroupId: _releaseGroup, ...blankFields } = blankAlbum;
 
-const applied = (changes: ChangeInput[], result: CaptureResult): CommandResult => ({
+/** The capture's changes, and what its toasts report. */
+const captured = (changes: ChangeInput[], result: CaptureResult): CommandResult => ({
   status: "applied",
   changes,
   result,
-});
-
-/** The album as clients hold it, with its artwork (FR-03.4). */
-export const clientAlbum = (id: string, values: AlbumFields, artworkUrl: string | null): Album => ({
-  id,
-  title: values.title,
-  artistCredit: values.artistCredit,
-  releaseType: values.releaseType,
-  isLive: values.isLive,
-  originalYear: values.originalYear,
-  recordingYearStart: values.recordingYearStart,
-  recordingYearEnd: values.recordingYearEnd,
-  artworkUrl,
 });
 
 /**
@@ -278,10 +270,7 @@ async function entryLimit(
   if (listId === null) return undefined;
   if (albumId !== undefined && (await store.findMembership(listId, albumId))) return undefined;
   if ((await store.countMemberships(ownerId)) < maxMemberships) return undefined;
-  return failure(
-    "limit_exceeded",
-    `You've reached ${maxMemberships.toLocaleString("en")} list entries (including Trash). Remove albums from lists, or permanently delete lists from Trash, to add more.`,
-  );
+  return membershipLimitProblem();
 }
 
 /** Whether the plan fills a value clients hold: the artwork too (TON-48). */
@@ -327,11 +316,11 @@ async function reuse(
         entity: "album",
         id: target.id,
         op: "update",
-        data: clientAlbum(
-          target.id,
-          { ...target, ...plan.values },
-          plan.values.artworkUrl ?? target.artworkUrl,
-        ),
+        data: albumOf({
+          ...target,
+          ...plan.values,
+          artworkUrl: plan.values.artworkUrl ?? target.artworkUrl,
+        }),
       });
     }
   }
@@ -341,16 +330,16 @@ async function reuse(
       entity: "album",
       id: target.id,
       op: "insert",
-      data: clientAlbum(
-        target.id,
-        { ...target, ...filled },
-        filled.artworkUrl === undefined ? target.artworkUrl : filled.artworkUrl,
-      ),
+      data: albumOf({
+        ...target,
+        ...filled,
+        artworkUrl: filled.artworkUrl === undefined ? target.artworkUrl : filled.artworkUrl,
+      }),
     });
   }
   const { keptLink, changes: linked } = await keepLink(target.id, ownerId, link, context);
   const placed = await place(target.id, ownerId, args.listId, restored, context);
-  return applied([...changes, ...linked, ...placed.changes], {
+  return captured([...changes, ...linked, ...placed.changes], {
     albumId: target.id,
     match: restored ? "restored" : "reused",
     alreadyInList: placed.alreadyInList,
@@ -415,11 +404,11 @@ async function create(
   // A new record needs a slot; reusing or restoring one never does (FR-15.2).
   if (!(await hasAlbumSlot(store, ownerId))) return albumCapacityProblem();
 
-  const album = clientAlbum(args.albumId, values, artworkUrl);
+  const album = albumOf({ ...values, id: args.albumId, artworkUrl });
   await store.insertAlbum({ ...album, ownerId }, origin);
   await store.insertServiceLink(args.albumId, ownerId, source.link);
   const placed = await place(args.albumId, ownerId, args.listId, true, context);
-  return applied(
+  return captured(
     [
       { entity: "album", id: args.albumId, op: "insert", data: album },
       linkInsert(args.albumId, source.link),
@@ -443,30 +432,17 @@ export async function captureAlbum(
   source: CaptureSource | undefined,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { principal, store } = context;
   if (!source) {
     return failure(
       "provider_unavailable",
       "Tonaris can't look links up right now. Try again, or enter the details manually.",
     );
   }
-  const ownerId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "collection" });
-  if (!ownerId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "You can't add albums here.",
-    );
-  }
+  const ownerId = actingOwner(context, "collection", "You can't add albums here.");
+  if (isFailure(ownerId)) return ownerId;
   if (args.listId !== null) {
-    const list = await store.findContainer(args.listId);
-    if (!list || list.ownerId !== ownerId) return failure("not_found", "This list doesn't exist.");
-    if (list.kind !== "list") {
-      return failure("invalid_destination", "Folders don't hold albums. Choose a list.");
-    }
-    if (list.trashed) {
-      return failure("trashed", "This list is in Trash. Recover it to add albums to it.");
-    }
+    const list = await changeableList(args.listId, context);
+    if (isFailure(list)) return list;
   }
 
   const match = await matchOf(ownerId, source, context);

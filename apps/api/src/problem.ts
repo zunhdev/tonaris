@@ -6,6 +6,8 @@ import { Elysia, NotFound, ParseError, StatusMapBack, ValidationError } from "el
 
 import type { ErrorCode, Problem } from "@tonaris/domain";
 
+import type { LogError } from "./observability";
+
 /** The codes the HTTP layer produces itself; commands report the rest of the TS-27 vocabulary. */
 export type HttpProblemCode = Extract<
   ErrorCode,
@@ -91,9 +93,14 @@ function invalidParams(error: ValidationError): InvalidParam[] {
 }
 
 export type ProblemDetailsOptions = {
-  /** Receives every unexpected error before it becomes a bare 500 (default: `console.error`). */
-  logError?: (error: unknown, path: string) => void;
+  /** Receives every unexpected error before it becomes a bare 500, with its path (default: `console.error`). */
+  logError?: LogError;
 };
+
+/** `path` with a shared link's token replaced, for logs (TS-32): `/v1/s/[token]/stream`. */
+export function withoutShareToken(path: string): string {
+  return path.replace(/^\/v1\/s\/[^/?#]+/u, "/v1/s/[token]");
+}
 
 /**
  * Maps every error, in this app and all its plugins, to a problem. Unknown routes are `not_found`, bad input
@@ -104,11 +111,6 @@ export type ProblemDetailsOptions = {
  * (`code: "validation"`). Such routes declare `422: problemSchema` (from @tonaris/domain) in their `response` map, which replaces
  * that type with what this plugin actually sends and documents it in OpenAPI.
  */
-/** `path` with a shared link's token replaced, for logs (TS-32): `/v1/s/[token]/stream`. */
-export function withoutShareToken(path: string): string {
-  return path.replace(/^\/v1\/s\/[^/?#]+/u, "/v1/s/[token]");
-}
-
 export function problemDetails({
   logError = (error, path) => console.error(`Unhandled error on ${path}`, error),
 }: ProblemDetailsOptions = {}) {

@@ -3,17 +3,19 @@
 // in 200ms (DS-17) and only fades under reduced motion. Focus stays inside until it closes.
 
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
-import { cn } from "cn";
 import type * as React from "react";
 
 import { Button } from "@tonaris/ui/components/button";
+import {
+  dialogDescriptionClass,
+  dialogSurfaceClass,
+  dialogTitleClass,
+  scrimClass,
+} from "@tonaris/ui/lib/floating";
+import { cn } from "@tonaris/ui/lib/utils";
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
-}
-
-function AlertDialogTrigger({ ...props }: AlertDialogPrimitive.Trigger.Props) {
-  return <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />;
 }
 
 function AlertDialogContent({ className, ...props }: AlertDialogPrimitive.Popup.Props) {
@@ -21,14 +23,11 @@ function AlertDialogContent({ className, ...props }: AlertDialogPrimitive.Popup.
     <AlertDialogPrimitive.Portal data-slot="alert-dialog-portal">
       <AlertDialogPrimitive.Backdrop
         data-slot="alert-dialog-overlay"
-        className="fixed inset-0 isolate z-60 bg-scrim duration-200 ease-enter data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+        className={cn(scrimClass, "z-60")}
       />
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
-        className={cn(
-          "fixed top-1/2 left-1/2 z-60 grid w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-raised p-5 text-fg-primary shadow-floating duration-200 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95",
-          className,
-        )}
+        className={cn(dialogSurfaceClass, "max-w-md", className)}
         {...props}
       />
     </AlertDialogPrimitive.Portal>
@@ -62,7 +61,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn("text-title text-fg-primary", className)}
+      className={cn(dialogTitleClass, className)}
       {...props}
     />
   );
@@ -75,7 +74,7 @@ function AlertDialogDescription({
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
-      className={cn("text-base text-fg-secondary", className)}
+      className={cn(dialogDescriptionClass, className)}
       {...props}
     />
   );
@@ -114,5 +113,4 @@ export {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 };

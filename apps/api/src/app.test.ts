@@ -136,6 +136,32 @@ describe("OpenAPI", () => {
     });
   });
 
+  test("a stream documents its events, and the problems it answers before it starts (TS-23)", async () => {
+    const served: unknown = await (await app.handle("/v1/openapi.json")).json();
+    const { paths } = z
+      .object({ paths: z.record(z.string(), z.record(z.string(), z.unknown())) })
+      .parse(served);
+    const problem = {
+      content: { "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } } },
+    };
+    const streams = {
+      "/v1/sync/stream": [401, 422],
+      "/v1/shared/{id}/stream": [401, 404, 422],
+      "/v1/s/{token}/stream": [404, 422],
+    };
+    for (const [path, statuses] of Object.entries(streams)) {
+      expect({ path, get: paths[path]?.get }).toMatchObject({
+        path,
+        get: {
+          responses: {
+            200: { content: { "text/event-stream": {} } },
+            ...Object.fromEntries(statuses.map((status) => [status, problem])),
+          },
+        },
+      });
+    }
+  });
+
   test("keeps null in a nullable enum", async () => {
     const served: unknown = await (await app.handle("/v1/openapi.json")).json();
     const { paths } = z

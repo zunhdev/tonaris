@@ -7,7 +7,7 @@ import { providerCache, providerCacheStore } from "@tonaris/db";
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { createSafeFetch, MusicBrainz, providerCacheMs } from "@tonaris/providers";
 
-import { pruneProviderCacheSchedule, runSchedule } from "./schedules";
+import { pruneProviderCacheSchedule, runSchedule } from "./jobs/schedules";
 
 let t: TestDatabase;
 

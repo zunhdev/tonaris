@@ -1,10 +1,23 @@
-// The in-memory store the Bun tests use in place of IndexedDB, which the browser tests cover (TS-22, TS-24).
+// The in-memory store the Bun tests use in place of IndexedDB, which the browser tests cover (TS-22, TS-24), and the
+// shapes of the records IndexedDB keeps.
 
 import { describe, expect, test } from "bun:test";
 
-import { failure as failed, uuidv7, type Mutation } from "@tonaris/domain";
+import {
+  conflictOutcomeSchema,
+  failedOutcomeSchema,
+  failure as failed,
+  needsInputOutcomeSchema,
+  uuidv7,
+  type Mutation,
+} from "@tonaris/domain";
 
-import { memoryPersistence, type OutboxEntry } from "./persistence";
+import {
+  memoryPersistence,
+  storedConflictSchema,
+  storedFailureSchema,
+  type OutboxEntry,
+} from "./persistence";
 
 const mutation = (): Mutation => ({
   mutationId: uuidv7(),
@@ -96,5 +109,20 @@ describe("memoryPersistence", () => {
     expect(await store.entries()).toEqual([]);
     expect(await store.failures()).toEqual([]);
     expect(await store.batches()).toEqual([]);
+  });
+});
+
+describe("the records IndexedDB keeps (TON-147)", () => {
+  test("hold each outcome as the domain reads it, so a field it adds survives a reload", () => {
+    const outcome = failed("validation_failed", "Check the title.", [
+      { path: "args.title", message: "Required" },
+    ]);
+    const full = { ...outcome, problem: { ...outcome.problem, instance: "/v1/mutations" } };
+    expect(storedFailureSchema.parse({ ...rejected(), outcome: full }).outcome).toEqual(full);
+    expect(storedFailureSchema.shape.outcome.options).toEqual([
+      failedOutcomeSchema,
+      needsInputOutcomeSchema,
+    ]);
+    expect(storedConflictSchema.shape.outcome).toBe(conflictOutcomeSchema);
   });
 });

@@ -12,9 +12,9 @@ import {
   type OptionRemoval,
 } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import { readSnapshot, type Database, type Executor, type Transaction } from "./client";
+import { fieldUsersIn, findFieldIn, optionUsersIn } from "./field-values";
 import { albumFieldValues, albums, fieldDefinitions } from "./schema";
-import { fieldUsersIn, findFieldIn, optionUsersIn } from "./sync";
 
 /** The removal of the option, if it is an option of `accountId`'s field; undefined otherwise. */
 export async function readOptionRemoval(
@@ -23,9 +23,9 @@ export async function readOptionRemoval(
   fieldId: string,
   optionId: string,
 ): Promise<OptionRemoval | undefined> {
-  return db.transaction(
+  return readSnapshot(
+    db,
     async (tx) => (await optionRemovalsIn(tx, accountId, fieldId, [optionId]))?.removals[0],
-    { isolationLevel: "repeatable read", accessMode: "read only" },
   );
 }
 
@@ -66,23 +66,16 @@ export async function fieldDeletionIn(
 }
 
 /** The deletion of the field, if it is `accountId`'s; undefined otherwise. */
-export async function readFieldDeletion(
+export function readFieldDeletion(
   db: Database,
   accountId: string,
   fieldId: string,
 ): Promise<FieldDeletion | undefined> {
-  return db.transaction(
-    async (tx) => {
-      const field = await findFieldIn(tx, fieldId);
-      if (!field || field.ownerId !== accountId) return undefined;
-      return fieldDeletion(field, await fieldUsersIn(tx, fieldId));
-    },
-    { isolationLevel: "repeatable read", accessMode: "read only" },
-  );
+  return readSnapshot(db, (tx) => fieldDeletionIn(tx, accountId, fieldId));
 }
 
 /** How many albums apply each of `accountId`'s fields, active and in Trash (DS-60); unused fields count zero. */
-export async function readFieldUsage(db: Database, accountId: string): Promise<FieldUsageList> {
+export async function readFieldUsage(db: Executor, accountId: string): Promise<FieldUsageList> {
   const trashed = sql<boolean>`${albums.trashedAt} is not null`;
   const [fields, rows] = await Promise.all([
     db

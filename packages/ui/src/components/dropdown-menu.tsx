@@ -3,9 +3,11 @@
 // it opens in 150ms (DS-17) and only fades under reduced motion.
 
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
-import { cn } from "cn";
 import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import type * as React from "react";
+
+import { floatingLayerClass } from "@tonaris/ui/lib/floating";
+import { cn } from "@tonaris/ui/lib/utils";
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
@@ -33,16 +35,13 @@ function DropdownMenuContent({
     MenuPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "anchor"
   > & {
-    /**
-     * Opened from inside a dialog: on the dialog's layer (DS-18, 60), where its portal, added after the dialog's,
-     * stacks above it. On the dropdown layer (40) it would sit under the dialog, out of reach.
-     */
+    /** Opened from inside a dialog: on the dialog's layer (DS-18, 60), above it (`floatingLayerClass`). */
     inDialog?: boolean;
   }) {
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
-        className={cn("isolate outline-none", inDialog ? "z-60" : "z-40")}
+        className={floatingLayerClass(inDialog)}
         align={align}
         alignOffset={alignOffset}
         side={side}

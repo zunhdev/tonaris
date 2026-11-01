@@ -17,7 +17,7 @@ export type SearchIndex = {
   lists: ContainerEntry[];
   albums: AlbumEntry[];
   tree: Tree;
-  /** The lists each album is in. */
+  /** The lists each album is in, by ID; one no longer in the tree is skipped where it's read. */
   listsByAlbum: ReadonlyMap<string, readonly string[]>;
 };
 
@@ -42,8 +42,8 @@ function keysOf(album: Album): { title: string; artist: string } {
 export function buildSearchIndex({
   tree,
   albumsById,
-  entriesByList,
-}: Pick<CollectionData, "tree" | "albumsById" | "entriesByList">): SearchIndex {
+  listsByAlbum,
+}: Pick<CollectionData, "tree" | "albumsById" | "listsByAlbum">): SearchIndex {
   const folders: ContainerEntry[] = [];
   const lists: ContainerEntry[] = [];
   for (const container of tree.byId.values()) {
@@ -56,15 +56,6 @@ export function buildSearchIndex({
   for (const album of albumsById.values()) {
     const { title, artist } = keysOf(album);
     albums.push({ album, title, artist });
-  }
-  const listsByAlbum = new Map<string, string[]>();
-  for (const [listId, entries] of entriesByList) {
-    if (!tree.byId.has(listId)) continue;
-    for (const { albumId } of entries) {
-      const inLists = listsByAlbum.get(albumId);
-      if (inLists) inLists.push(listId);
-      else listsByAlbum.set(albumId, [listId]);
-    }
   }
   return { folders, lists, albums, tree, listsByAlbum };
 }

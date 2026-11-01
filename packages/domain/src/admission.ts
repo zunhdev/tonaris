@@ -1,6 +1,7 @@
 // Admission (FR-11.2, FR-11.6, TS-71): accounts are created only from the creator's invitations. Each invitation
 // is bound to one email key, works once, and expires after 14 days; while admissions are paused, none works.
 
+import { emailInputSchema } from "./accounts";
 import { emailStatuses } from "./sharing";
 import { z } from "./zod";
 
@@ -88,12 +89,7 @@ export type Admissions = z.infer<typeof admissionsSchema>;
 
 /** Invites one address. */
 export const admissionInviteSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1)
-    .max(320)
-    .meta({ description: "The address to invite, as typed." }),
+  email: emailInputSchema.meta({ description: "The address to invite, as typed." }),
 });
 
 /** Pauses or resumes admissions. */

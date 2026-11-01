@@ -13,7 +13,7 @@ import {
 } from "react";
 
 import { isTextField } from "../shell/shortcuts";
-import { nextCell, type Cell, type GridShape } from "./grid-keys";
+import { directionOf, nextCell, type Cell, type GridShape } from "./grid-keys";
 import type { Direction } from "./order";
 
 /** How a grid rearranges its items by keyboard: the item at a cell, an item's cell, and the move itself. */
@@ -125,10 +125,9 @@ export function useGridFocus({
   function onKeyDown(event: KeyboardEvent<HTMLElement>) {
     // Keys typed into a cell's editor are the editor's: letters, arrows, Home and End.
     if (event.defaultPrevented || isTextField(event.target)) return;
-    if (rearrange && event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+    const to = rearrange && directionOf(event);
+    if (rearrange && to) {
       event.preventDefault();
-      const up = event.key === "ArrowUp";
-      const to: Direction = event.shiftKey ? (up ? "top" : "bottom") : up ? "up" : "down";
       // The focused cell's own address: after a move it is drawn at its new row before the roving focus catches up.
       const from = cellAt(event.target) ?? current;
       const id = rearrange.itemAt(from);

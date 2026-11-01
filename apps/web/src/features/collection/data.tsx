@@ -4,14 +4,17 @@
 // so the tree and the view share one pass over the data. The tree orders each level as its folder's view is sorted,
 // and the top level as the root is (decided 23 October 2026), manual order included.
 
+import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
 
 import {
   appAccountDefaults,
+  sortFields,
   unsetView,
   type Album,
+  type Container,
   type CustomField,
   type FieldValue,
   type Membership,
@@ -35,6 +38,8 @@ export type CollectionData = {
   albumsById: ReadonlyMap<string, Album>;
   /** Each list's entries. */
   entriesByList: ReadonlyMap<string, readonly Membership[]>;
+  /** The IDs of the lists each album is in. */
+  listsByAlbum: ReadonlyMap<string, readonly string[]>;
   /** The albums in no list (FR-01.9). */
   unsortedAlbums: readonly Album[];
   /** Each album's links to the streaming services (FR-06.2). */
@@ -61,6 +66,7 @@ const empty: CollectionData = {
   albums: 0,
   albumsById: new Map(),
   entriesByList: new Map(),
+  listsByAlbum: new Map(),
   unsortedAlbums: [],
   linksByAlbum: new Map(),
   fields: [],
@@ -110,21 +116,23 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
     const entries = membershipData ?? [];
     const owned = albumData ?? [];
     const entriesByList = new Map<string, Membership[]>();
-    const listed = new Set<string>();
+    const listsByAlbum = new Map<string, string[]>();
     for (const entry of entries) {
       const inList = entriesByList.get(entry.listId);
       if (inList) inList.push(entry);
       else entriesByList.set(entry.listId, [entry]);
-      listed.add(entry.albumId);
+      const ofAlbum = listsByAlbum.get(entry.albumId);
+      if (ofAlbum) ofAlbum.push(entry.listId);
+      else listsByAlbum.set(entry.albumId, [entry.listId]);
     }
-    const unsortedAlbums = owned.filter((album) => !listed.has(album.id));
+    const unsortedAlbums = owned.filter((album) => !listsByAlbum.has(album.id));
     const linksByAlbum = new Map<string, ServiceLink[]>();
     for (const link of linkData ?? []) {
       const ofAlbum = linksByAlbum.get(link.albumId);
       if (ofAlbum) ofAlbum.push(link);
       else linksByAlbum.set(link.albumId, [link]);
     }
-    const fields = (fieldData ?? []).toSorted((a, b) => a.name.localeCompare(b.name));
+    const fields = sortFields(fieldData ?? []);
     const valuesByAlbum = new Map<string, FieldValue[]>();
     for (const row of valueData ?? []) {
       const ofAlbum = valuesByAlbum.get(row.albumId);
@@ -139,15 +147,9 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       if (inView) inView.set(itemId, key);
       else keys.set(viewKey, new Map([[itemId, key]]));
     }
-    const tree = buildTree(containerData ?? [], (siblings, parentId) => {
-      const viewKey = parentId ?? "root";
-      const { sortMode: mode, sortDir: dir } = presentationOf(
-        "containers",
-        views.get(viewKey),
-        defaults,
-      );
-      return sortContainers(siblings, { mode, dir }, keys.get(viewKey));
-    });
+    const tree = buildTree(containerData ?? [], (siblings, parentId) =>
+      sortForView(siblings, parentId ?? "root", { views, defaults, keys }),
+    );
     return {
       tree,
       counts: new Map([...entriesByList].map(([listId, inList]) => [listId, inList.length])),
@@ -155,6 +157,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
       albums: owned.length,
       albumsById: new Map(owned.map((album) => [album.id, album])),
       entriesByList,
+      listsByAlbum,
       unsortedAlbums,
       linksByAlbum,
       fields,
@@ -188,6 +191,23 @@ export function useCollectionData(): CollectionData {
 }
 
 /**
+ * The folders and lists of the view `viewKey` in its sort (FR-05.1): the person's choice for it, or their default for
+ * folders, manual order as they arranged it (TS-16).
+ */
+export function sortForView<T extends Pick<Container, "id" | "kind" | "name">>(
+  siblings: readonly T[],
+  viewKey: string,
+  { views, defaults, keys }: Pick<CollectionData, "views" | "defaults" | "keys">,
+): T[] {
+  const { sortMode: mode, sortDir: dir } = presentationOf(
+    "containers",
+    views.get(viewKey),
+    defaults,
+  );
+  return sortContainers(siblings, { mode, dir }, keys.get(viewKey));
+}
+
+/**
  * Saves to the account, once the collection has loaded, the Grid layouts this device kept for lists and Unsorted
  * before layouts were synced (TON-34; FR-11.8). A view that is gone, or that has a layout of its own by now, keeps
  * what it has. The device then forgets them.
@@ -208,7 +228,7 @@ function useDeviceLayoutsSaved({ ready, tree, views }: CollectionData): void {
             draft.layout = "grid";
           })
         : client.views.insert({ ...unsetView(viewKey), layout: "grid" });
-      write.isPersisted.promise.catch(() => {});
+      sent(write);
     }
   }, [client, ready, accountId, tree, views]);
 }

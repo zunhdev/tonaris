@@ -24,8 +24,6 @@ export const Route = createFileRoute("/oauth/consent")({
   component: Consent,
 });
 
-const modes = modeText;
-
 function Consent() {
   const { account } = Route.useRouteContext();
   const search = window.location.search;
@@ -97,9 +95,9 @@ function Consent() {
                   onChange={() => setMode(value)}
                   className="row-span-2 mt-0.5 accent-accent-fill"
                 />
-                <span className="text-fg-primary">{modes[value].title}</span>
+                <span className="text-fg-primary">{modeText[value].title}</span>
                 <span className="col-start-2 text-small text-fg-secondary">
-                  {modes[value].description}
+                  {modeText[value].description}
                 </span>
               </label>
             ))}

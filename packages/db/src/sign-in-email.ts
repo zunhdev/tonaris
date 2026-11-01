@@ -1,11 +1,50 @@
 // Moving an account's sign-in to a new address (TS-73): the swap that both the self-service change (FR-11.4) and
-// the creator's recovery (FR-11.5) end in. It runs on the caller's transaction, which writes the audit log too.
+// the creator's recovery (FR-11.5) end in, the check of their emailed codes, and whether another account holds an
+// address. The swap and the check run on the caller's transaction, which writes the audit log too.
 
-import { and, eq, ne } from "drizzle-orm";
+import { timingSafeEqual } from "node:crypto";
+
+import { and, eq, ne, sql, type SQL } from "drizzle-orm";
 import postgres from "postgres";
 
-import type { Transaction } from "./client";
-import { sessions, users } from "./schema";
+import { codeRefusal, type CodeRefusal } from "@tonaris/domain";
+
+import type { Executor, Transaction } from "./client";
+import { emailChanges, emailRecoveries, sessions, users } from "./schema";
+
+/** The account other than `userId` whose sign-in email key is `key`, if any. */
+export async function emailKeyHolder(
+  db: Executor,
+  key: string,
+  userId: string,
+): Promise<string | undefined> {
+  const [holder] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.email, key), ne(users.id, userId)));
+  return holder?.id;
+}
+
+/**
+ * Tries `codeHash` against a stored code, under the lock the caller holds on its row `where` (TS-70): refused while
+ * `codeRefusal` says so, "wrong" when it differs, which counts an attempt and commits, and otherwise "right".
+ */
+export async function checkCode(
+  tx: Transaction,
+  table: typeof emailChanges | typeof emailRecoveries,
+  where: SQL,
+  stored: { codeHash: Buffer; expiresAt: Date; attempts: number },
+  { codeHash, now }: { codeHash: Buffer; now: Date },
+): Promise<CodeRefusal | "wrong" | "right"> {
+  const refusal = codeRefusal(stored, now);
+  if (refusal) return refusal;
+  if (timingSafeEqual(stored.codeHash, codeHash)) return "right";
+  await tx
+    .update(table)
+    .set({ attempts: sql`${table.attempts} + 1` })
+    .where(where);
+  return "wrong";
+}
 
 /**
  * Moves `userId` to `newEmailKey`, verified, unless another account holds that key, and ends the account's
@@ -25,11 +64,7 @@ export async function swapSignInEmail(
     .from(users)
     .where(eq(users.id, userId))
     .for("update");
-  const [owner] = await tx
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.email, newEmailKey), ne(users.id, userId)));
-  if (!account || owner) return "taken";
+  if (!account || (await emailKeyHolder(tx, newEmailKey, userId))) return "taken";
 
   await tx
     .update(users)

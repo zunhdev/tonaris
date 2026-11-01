@@ -10,7 +10,6 @@ export function checkLink(service: StreamingService, text: string): string | und
   if (text.trim() === "") return undefined;
   const parsed = parseLink(text);
   if (parsed.status === "failed") return parsed.failure.problem.detail;
-  // Short links are Spotify's only (TS-40).
-  const found = parsed.status === "short" ? "spotify" : parsed.link.service;
+  const found = parsed.status === "short" ? parsed.service : parsed.link.service;
   return found === service ? undefined : wrongServiceReason(found, service);
 }

@@ -7,6 +7,7 @@ import {
   createShortcutMatcher,
   frequentCommands,
   isTextField,
+  shortcutLabel,
   shortcutReference,
   type KeyPress,
 } from "./shortcuts";
@@ -99,6 +100,13 @@ describe("the reference and the palette (DS-78)", () => {
       expect(ids.has(String(match(press(key))))).toBe(true);
     }
     expect(ids.has(String(match(press("Backspace", 0, { metaKey: true }))))).toBe(true);
+  });
+});
+
+describe("a menu's shortcuts (TON-117)", () => {
+  test("are the commands' keys, run together", () => {
+    const menu = ["new-list", "new-folder", "rename", "move", "share", "delete"] as const;
+    expect(menu.map((id) => shortcutLabel(id))).toEqual(["N", "⇧N", "F2", "M", "⇧S", "⌫"]);
   });
 });
 

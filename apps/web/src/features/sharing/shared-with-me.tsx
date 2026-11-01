@@ -14,7 +14,7 @@ import type { SharedEntry } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { failureOf, sendNow } from "./send";
+import { useSend, type Unsent } from "./send";
 import { useSharedEntries } from "./shared-entries";
 
 export function SharedWithMeView() {
@@ -51,21 +51,13 @@ export function SharedWithMeView() {
 function SharedRow({ entry, onChanged }: { entry: SharedEntry; onChanged: () => void }) {
   const offline = useConnection() === "offline";
   const [confirming, setConfirming] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+  const { run: send, busy, error } = useSend();
   const name = entry.name ?? "A shared folder or list";
   const owner = entry.owner.displayName ?? "Its owner";
-  const run = async (mutation: Parameters<typeof sendNow>[0]) => {
-    setBusy(true);
-    try {
-      setError(failureOf(await sendNow(mutation)));
-    } catch {
-      setError("Couldn't reach Tonaris. Try again.");
-    } finally {
-      setBusy(false);
-      setConfirming(false);
-      onChanged();
-    }
+  const run = async (mutation: Unsent) => {
+    await send(mutation);
+    setConfirming(false);
+    onChanged();
   };
   const remove = () =>
     void run({ name: "share.removeReference", args: { containerId: entry.containerId } });

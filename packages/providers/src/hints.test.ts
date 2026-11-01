@@ -68,6 +68,12 @@ describe("passes", () => {
     expect(passes(ikra, candidate({ date: "2007-01-01", firstReleaseDate: "2006" }))).toBe(false);
   });
 
+  test("hints without a year match no release, not even an undated one", () => {
+    const undated = candidate({ date: undefined, firstReleaseDate: undefined });
+    expect(passes({ ...ikra, date: "" }, undated)).toBe(false);
+    expect(passes({ ...ikra, date: "1997" }, undated)).toBe(false);
+  });
+
   test("only official albums and EPs, and singles when Apple says so", () => {
     expect(passes(ikra, candidate({ status: "Bootleg" }))).toBe(false);
     expect(passes(ikra, candidate({ primaryType: "Single" }))).toBe(false);
@@ -91,10 +97,10 @@ describe("passes", () => {
 });
 
 describe("decide", () => {
-  test("one album, whichever of its releases pass", () => {
+  test("one album, whichever of its releases pass, with its title", () => {
     expect(decide(ikra, [candidate({}), candidate({ releaseId: "r2" })])).toEqual({
       kind: "one",
-      releaseGroupId: "g1",
+      album: { releaseGroupId: "g1", title: "Икра" },
     });
   });
 
@@ -111,6 +117,7 @@ describe("decide", () => {
         { releaseGroupId: "g2", title: "Икра (2)" },
       ],
     });
-    expect(decide(ikra, [])).toEqual({ kind: "none" });
+    expect(decide(ikra, [])).toBeUndefined();
+    expect(decide(ikra, [candidate({ status: "Bootleg" })])).toBeUndefined();
   });
 });

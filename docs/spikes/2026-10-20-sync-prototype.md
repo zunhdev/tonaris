@@ -110,7 +110,7 @@ These refine the tech spec. TS-10, TS-20, TS-22, TS-23, TS-24, TS-28 and the sta
 
 ## Timings
 
-[`bench.ts`](../../apps/web/src/client/sync/bench.ts) runs two clients of one account against the local API and Postgres, in Bun, on the creator's Mac (Apple M4 Max, macOS 27.2, Bun 1.4.3). It makes 200 sequential title edits, then adds 5,000 albums and bootstraps a fresh client. Three runs agreed within 0.4 ms; the table shows the highest of the three for each figure.
+`apps/web/src/client/sync/bench.ts` ran two clients of one account against the local API and Postgres, in Bun, on the creator's Mac (Apple M4 Max, macOS 27.2, Bun 1.4.3). It made 200 sequential title edits, then added 5,000 albums and bootstrapped a fresh client. The script was removed after the spike and is kept in the git history (TON-147). Three runs agreed within 0.4 ms; the table shows the highest of the three for each figure.
 
 | Measure | p50 | p95 | max |
 | --- | --- | --- | --- |
@@ -124,7 +124,7 @@ On loopback the stream event and the HTTP answer leave the server together, so c
 
 A fourth run, while the machine was busy (load average 9), had p95 28 ms and max 98 ms. Adding 5,000 albums, 25 at a time, took 6.4–9.7 s.
 
-These are a floor for one machine, without a browser or React rendering. TON-21 measures the Q-01 targets on the reference devices and workload; the script is a starting point for it.
+These are a floor for one machine, without a browser or React rendering. TON-21 measures the Q-01 targets on the reference devices and workload; the script, in the git history, is a starting point for it.
 
 ## Not covered here
 
@@ -141,7 +141,6 @@ bun test packages/domain/src/commands.test.ts packages/db/src/sync.test.ts   # d
 bun test apps/api/src/sync                                                   # hub and conformance suite
 bun test apps/web/src/client/sync                                            # client, against the API in a child process
 bun run --cwd apps/web test:e2e e2e/sync.e2e.ts                              # the protocol from Chromium
-bun apps/web/src/client/sync/bench.ts                                        # timings, about 10 s; --edits, --albums
 ```
 
-The client tests and the bench start the API with [`apps/api/src/test-server.ts`](../../apps/api/src/test-server.ts) on a fresh test schema, so they need the local Postgres.
+The client tests start the API with [`apps/api/src/test-server.ts`](../../apps/api/src/test-server.ts) on a fresh test schema, so they need the local Postgres.

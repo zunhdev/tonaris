@@ -5,7 +5,7 @@
 // offers Enter manually; one fitting several albums shows the decision card. The rows are this browser's captures,
 // kept across reloads like any write.
 
-import type { SaveState } from "@/client/sync/writer";
+import { isUnderway, type SaveState } from "@/client/sync/save-states";
 import { reasonOf } from "@/features/sync/describe";
 import { useSaveActions } from "@/features/sync/save-actions";
 import { useOpenStates } from "@/features/sync/save-states";
@@ -57,7 +57,7 @@ function CaptureRow({ state }: { state: SaveState }) {
   const offline = useConnection() === "offline";
   if (state.mutation.name !== "album.capture") return null;
   const { link } = state.mutation.args;
-  const underway = state.status === "pending" || state.status === "unconfirmed";
+  const underway = isUnderway(state.status);
   const failed = state.status === "failed";
   const need = captureNeed(state.outcome);
   const reason = failed ? reasonOf(state.outcome) : needReason(state.outcome);

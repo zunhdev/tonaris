@@ -28,6 +28,7 @@ import {
 } from "@tonaris/domain";
 
 import type { ApiConfig } from "../config";
+import type { LogError } from "../observability";
 import { ProblemError } from "../problem";
 import type { Auth } from "./auth";
 import { clientIp, rateLimited } from "./plugin";
@@ -135,7 +136,7 @@ export type AdmissionRoutesOptions = {
   config: ApiConfig;
   email: EmailPort;
   limiter: SignInLimiter;
-  logError: (error: unknown, context: string) => void;
+  logError: LogError;
 };
 
 /**

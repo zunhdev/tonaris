@@ -10,20 +10,18 @@
 
 import { z } from "zod";
 
+import { clientParts, readBody, type ClientOptions } from "./client";
+import { ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
-import { PacedQueue, realClock } from "./paced-queue";
-import { ProviderUnavailableError } from "./provider-cache";
-import { safeFetch, type SafeFetchInit } from "./safe-fetch";
+import { PacedQueue } from "./paced-queue";
+import { discard, type ProviderFetch } from "./safe-fetch";
 
 const api = "https://www.googleapis.com/youtube/v3";
 /** Reads start at least this far apart: the spike saw no throttling at this pace. */
 export const youtubeIntervalMs = 250;
 
-export type YouTubeDataOptions = {
+export type YouTubeDataOptions = ClientOptions & {
   apiKey: string;
-  fetch?: (url: string, init: SafeFetchInit) => Promise<Response>;
-  now?: () => number;
-  sleep?: (ms: number) => Promise<void>;
   /** Told of a refused read (a 400 or 403: a used-up quota, a bad key), with the API's reason and never the key. */
   onRefused?: (read: Read, status: number, reason: string | undefined) => void;
 };
@@ -79,14 +77,14 @@ export function descriptionDate(description: string): string | undefined {
 
 export class YouTubeData {
   private readonly options: YouTubeDataOptions;
-  private readonly fetch: NonNullable<YouTubeDataOptions["fetch"]>;
+  private readonly fetch: ProviderFetch;
   private readonly queue: PacedQueue;
 
   constructor(options: YouTubeDataOptions) {
-    const { fetch = safeFetch, now = realClock.now, sleep = realClock.sleep } = options;
+    const { fetch, clock } = clientParts(options);
     this.options = options;
     this.fetch = fetch;
-    this.queue = new PacedQueue(youtubeIntervalMs, { now, sleep });
+    this.queue = new PacedQueue(youtubeIntervalMs, clock);
   }
 
   /**
@@ -131,29 +129,23 @@ export class YouTubeData {
         cause: error,
       });
     }
-    if (response.status === 429 || response.status >= 500) {
-      void response.body?.cancel().catch(() => {});
+    if (response.status === 400 || response.status === 403) {
+      // The reason is told when the refusal's body can be read; one that can't be only leaves it out.
+      const body = errorSchema.safeParse(await response.json().catch(() => undefined));
+      this.options.onRefused?.(read, response.status, body.data?.error.errors[0]?.reason);
+      return undefined;
+    }
+    if (response.status === 404) {
+      discard(response);
+      return undefined;
+    }
+    if (!response.ok) {
+      discard(response);
       throw new ProviderUnavailableError(
         "youtube",
         `YouTube answered ${response.status} to ${read}`,
       );
     }
-    if (response.status === 400 || response.status === 403) {
-      const body = errorSchema.safeParse(await response.json().catch(() => undefined));
-      this.options.onRefused?.(read, response.status, body.data?.error.errors[0]?.reason);
-      return undefined;
-    }
-    if (!response.ok) {
-      void response.body?.cancel().catch(() => {});
-      return undefined;
-    }
-    try {
-      const body: unknown = await response.json();
-      return body;
-    } catch (error) {
-      throw new ProviderUnavailableError("youtube", `YouTube's answer to ${read} broke off`, {
-        cause: error,
-      });
-    }
+    return readBody("youtube", response, "json", read);
   }
 }

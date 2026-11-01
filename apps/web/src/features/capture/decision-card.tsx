@@ -4,7 +4,7 @@
 // entry, which saves it unidentified with the link; "Decide later" folds the card, leaving the capture pending while
 // the rest goes on. Nothing is applied until the person chooses.
 
-import type { SaveState } from "@/client/sync/writer";
+import type { SaveState } from "@/client/sync/save-states";
 import { cellText } from "@/features/collection/album-edit";
 import { useCollectionData } from "@/features/collection/data";
 import { useAnnounce } from "@/features/sync/announcer";

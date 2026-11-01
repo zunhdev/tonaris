@@ -1,8 +1,6 @@
 // The creator bootstrap (TS-71): `bun run seed:creator` creates the creator's account from CREATOR_EMAIL, the only
 // way to the creator role. It is idempotent, so the host's pre-deploy step can run it on every deploy (TS-110).
 
-import { z } from "zod";
-
 import {
   createDatabase,
   databaseUrl,
@@ -11,7 +9,7 @@ import {
   findUserByEmail,
   insertCreator,
 } from "@tonaris/db";
-import { emailKey } from "@tonaris/domain";
+import { parseEmailAddress } from "@tonaris/domain";
 
 /** A refusal with an explanation for whoever runs the command. */
 export class SeedError extends Error {}
@@ -25,8 +23,8 @@ export async function seedCreator(
   if (!creatorEmail?.trim()) {
     throw new SeedError("Set CREATOR_EMAIL to the creator's email address.");
   }
-  const email = emailKey(creatorEmail);
-  if (!z.email().safeParse(email).success) {
+  const email = parseEmailAddress(creatorEmail);
+  if (!email) {
     throw new SeedError(`CREATOR_EMAIL is not an email address: "${creatorEmail}".`);
   }
 

@@ -15,8 +15,8 @@ import {
   shareGrantStatuses,
   shareToken,
   shareTokenHash,
+  shareTokenSchema,
   sourcesOf,
-  viewerOf,
   type ShareViewer,
   type SharingState,
 } from "./sharing";
@@ -53,18 +53,13 @@ describe("link tokens (TS-32)", () => {
     expect(hash).toHaveLength(32);
     expect(await shareTokenHash(token)).toEqual(hash);
   });
-});
 
-describe("viewers (TS-30)", () => {
-  test("people and their MCP connections read as the person; guests through their link", () => {
-    expect(viewerOf({ kind: "user", userId: anna, role: "user", client: "web" })).toEqual(
-      annaViews,
-    );
-    expect(viewerOf({ kind: "mcp", userId: anna, grantId: uuidv7(), mode: "read_only" })).toEqual(
-      annaViews,
-    );
-    const linkId = uuidv7();
-    expect(viewerOf({ kind: "guest", linkId, rootId: uuidv7() })).toEqual({ kind: "link", linkId });
+  test("shareTokenSchema takes exactly a token's shape", async () => {
+    const token = await shareToken("secret", uuidv7());
+    expect(shareTokenSchema.safeParse(token).success).toBe(true);
+    for (const other of [token.slice(1), `${token}a`, `${token.slice(1)}=`, `${token.slice(1)}/`]) {
+      expect(shareTokenSchema.safeParse(other).success).toBe(false);
+    }
   });
 });
 

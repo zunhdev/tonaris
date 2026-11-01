@@ -13,6 +13,7 @@ import {
 } from "@tonaris/domain";
 
 import { ProblemError } from "../problem";
+import type { SyncHub } from "../sync/hub";
 import { clientIp, rateLimited } from "./plugin";
 import { codeDigits, sha256 } from "./secrets";
 import type { SignInLimiter } from "./sign-in-limits";
@@ -35,10 +36,13 @@ export function recoveryRoutes({
   db,
   limiter,
   clientIpHeader,
+  hub,
 }: {
   db: Database;
   limiter: SignInLimiter;
   clientIpHeader: string | undefined;
+  /** Ends the account's change streams at once, with its sessions (TS-23). */
+  hub: Pick<SyncHub, "endSessionsOf">;
 }) {
   return new Elysia().post(
     "/auth/recovery/confirm",
@@ -55,7 +59,10 @@ export function recoveryRoutes({
         codeHash: sha256(codeDigits(body.code)),
         auditId: Bun.randomUUIDv7(),
       });
-      if (confirmed.outcome === "recovered") return { email: confirmed.to };
+      if (confirmed.outcome === "recovered") {
+        hub.endSessionsOf(confirmed.userId);
+        return { email: confirmed.to };
+      }
       throw confirmationRefusals[confirmed.outcome]();
     },
   );

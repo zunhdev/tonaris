@@ -22,14 +22,25 @@ import {
   fieldDeletionApprovalScope,
   itemsDeletionScope,
   matchScope,
+  maxBatchItems,
+  maxFieldOptions,
   optionsRemovalScope,
   type ApprovalScope,
   type McpPrincipal,
 } from "@tonaris/domain";
 
-import { gated, type GatedAnswer, type GatedRequest } from "./approvals";
-import { failed, result } from "./results";
-import { agentOutcome, countsOf } from "./write-tools";
+import { gated, readScope, type GatedAnswer, type GatedRequest } from "./approvals";
+import {
+  agentOutcome,
+  answerWritten,
+  failed,
+  idempotencyKeyInput,
+  idsInput,
+  keyReused,
+  result,
+  tooMany,
+  uuidInput as uuid,
+} from "./results";
 import type { McpWriter, PlannedItem } from "./writes";
 
 const gatedHints = {
@@ -39,18 +50,13 @@ const gatedHints = {
   openWorldHint: false,
 } as const;
 
-const uuid = z.uuid();
-
 const approvalId = uuid
   .optional()
   .describe(
     "The approvalId from this tool's earlier needs_approval answer, once the owner approved it in Tonaris.",
   );
 
-const idempotencyKey = z
-  .string()
-  .min(1)
-  .max(100)
+const idempotencyKey = idempotencyKeyInput
   .optional()
   .describe(
     "As for the other writes: send the same key again to retry the approved change safely.",
@@ -97,16 +103,7 @@ export function registerGatedTools(
       return result("The owner declined. Nothing changed.", answered);
     }
     if (answered.status === "failed") return failed(answered.code, answered.message);
-    const named = approved ? targets(approved) : [];
-    const items = answered.items.map((item, index) => ({
-      ...named[index],
-      outcome: agentOutcome(item.outcome, answered.items),
-    }));
-    const done = items.every((item) => item.outcome.status === "confirmed");
-    return result(
-      `${done ? "Done" : "Not all done"}: ${countsOf(items.map((item) => item.outcome))}.`,
-      { status: "ran", idempotencyKey: answered.idempotencyKey, items },
-    );
+    return answerWritten(answered, approved ? targets(approved) : [], { status: "ran" });
   }
 
   server.registerTool(
@@ -115,8 +112,12 @@ export function registerGatedTools(
       title: "Delete to Trash",
       description: `Moves folders (with everything inside them), lists and albums to Trash, where they can be recovered for 30 days. Albums in deleted lists stay in the collection, in their other lists or Unsorted; a deleted album leaves every list. Whoever the content is shared with no longer sees it. ${roundTrip}`,
       inputSchema: z.object({
-        containerIds: z.array(uuid).max(200).optional().describe("Folders and lists to delete."),
-        albumIds: z.array(uuid).max(200).optional().describe("Albums to delete."),
+        containerIds: z
+          .array(uuid)
+          .max(maxBatchItems)
+          .optional()
+          .describe("Folders and lists to delete."),
+        albumIds: z.array(uuid).max(maxBatchItems).optional().describe("Albums to delete."),
         approvalId,
         idempotencyKey,
       }),
@@ -128,8 +129,8 @@ export function registerGatedTools(
       if (containerIds.length + albumIds.length === 0) {
         return failed("validation_failed", "Name the folders, lists or albums to delete.");
       }
-      if (containerIds.length + albumIds.length > 200) {
-        return failed("validation_failed", "That is more than 200 items in one call. Split it.");
+      if (containerIds.length + albumIds.length > maxBatchItems) {
+        return tooMany(maxBatchItems, "items");
       }
       return answer(
         {
@@ -205,7 +206,7 @@ export function registerGatedTools(
       description: `Removes options from a single- or multiple-choice field. Options no album chooses are removed at once. If any is chosen, in Trash too, removing them clears them from those albums, so the whole removal needs approval: ${roundTrip}`,
       inputSchema: z.object({
         fieldId: uuid,
-        optionIds: z.array(uuid).min(1).max(100),
+        optionIds: idsInput(maxFieldOptions),
         approvalId,
         idempotencyKey,
       }),
@@ -213,10 +214,7 @@ export function registerGatedTools(
     },
     async (args) => {
       if (!args.approvalId) {
-        const scope = await db.transaction((tx) => removalScope(tx, args.fieldId, args.optionIds), {
-          isolationLevel: "repeatable read",
-          accessMode: "read only",
-        });
+        const scope = await readScope(db, (tx) => removalScope(tx, args.fieldId, args.optionIds));
         if (!scope) return failed("not_found", "These aren't all options of one of your fields.");
         // Unused options are an ordinary change (FR-10.4); one becoming used meanwhile fails as field_in_use.
         if ((scope.field?.albums ?? 0) + (scope.field?.inTrash ?? 0) === 0) {
@@ -230,21 +228,12 @@ export function registerGatedTools(
                 args: { fieldId: args.fieldId, optionId },
               })),
           });
-          if (written.status === "key_reused") {
-            return failed(
-              "validation_failed",
-              "This idempotencyKey was already used for a different change.",
-            );
-          }
-          const items = written.items.map((item, index) => ({
-            optionId: args.optionIds[index],
-            outcome: agentOutcome(item.outcome, written.items),
-          }));
-          return result(`Done: ${countsOf(items.map((item) => item.outcome))}.`, {
-            status: "ran",
-            idempotencyKey: written.idempotencyKey,
-            items,
-          });
+          if (written.status === "key_reused") return keyReused();
+          return answerWritten(
+            written,
+            args.optionIds.map((optionId) => ({ optionId })),
+            { status: "ran" },
+          );
         }
       }
       return answer(

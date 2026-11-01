@@ -13,7 +13,7 @@ The clients reach the API over the internet, so both services run behind one clo
 1. `bun run db:migrate`, `bun run seed:workload` (once), and `bun run build`.
 2. `bun tooling/src/mcp-verification/fixtures.ts`. It prints the fixtures' IDs and the prompts. Run it again between clients: it resets everything.
 3. `cloudflared tunnel --url http://localhost:8787`. It prints `https://<name>.trycloudflare.com`, which is `$T` below.
-4. `bun tooling/src/spikes/g3-mcp/tunnel-proxy.ts`, which logs every MCP call with its tool.
+4. `bun tooling/src/mcp-verification/tunnel-proxy.ts`, which logs every MCP call with its tool.
 5. In `apps/api`: `API_ORIGIN=$T WEB_ORIGIN=$T CLIENT_IP_HEADER=cf-connecting-ip bun dist/bin/server.js`.
 6. In `apps/web`: `API_URL=$T bun run start`.
 7. Sign in at `$T` as `workload@tonaris.test`; codes go to Mailpit (http://localhost:8025). Open Settings → Connections and follow the client's steps there, with `$T/mcp` as the server URL.

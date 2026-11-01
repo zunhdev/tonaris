@@ -34,7 +34,7 @@ import {
   trashUnits,
   users,
 } from "./schema";
-import { findShareLink, sharedSnapshot } from "./sharing";
+import { findShareLink, linkReferenceState, sharedSnapshot } from "./sharing";
 import { executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
@@ -285,6 +285,23 @@ describe("links (TS-32)", () => {
     await t.db.update(shareLinks).set({ revokedAt: new Date() }).where(eq(shareLinks.id, id));
     expect(await findShareLink(t.db, token)).toBeUndefined();
     expect(await findShareLink(t.db, await shareToken(secret, uuidv7()))).toBeUndefined();
+  });
+
+  test("a link to a list in Trash, or inside a folder in Trash, opens nothing, for its page or its reference", async () => {
+    const owner = await newPrincipal();
+    const anna = await newPrincipal();
+    const metal = await made(owner, "folder", "Metal");
+    const doom = await made(owner, "list", "Doom", metal.id);
+    const live = await link(doom.id);
+    expect(await linkReferenceState(t.db, anna.userId, live.token)).toEqual({
+      saved: false,
+      own: false,
+    });
+
+    await run(owner, { name: "container.delete", args: { id: metal.id, unitId: uuidv7() } });
+    expect(await findShareLink(t.db, live.token)).toBeUndefined();
+    expect(await linkReferenceState(t.db, anna.userId, live.token)).toBeUndefined();
+    expect(await linkReferenceState(t.db, owner.userId, live.token)).toBeUndefined();
   });
 });
 

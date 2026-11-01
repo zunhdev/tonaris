@@ -6,6 +6,7 @@
 // its save state (DS-80). A link capture kept instead of a pasted one shows the pasted one, for an explicit Replace
 // (FR-06.4, TON-45).
 
+import { sent } from "@/client/sync/writer";
 import { useCapture, type KeptLink } from "@/features/capture/capture-context";
 import { ServiceAnchor } from "@/features/open/service-anchor";
 import { useAnnounce } from "@/features/sync/announcer";
@@ -14,7 +15,7 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   serviceLinkKey,
@@ -25,16 +26,13 @@ import {
   type StreamingService,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
-import { cn } from "@tonaris/ui/lib/utils";
+import { Field } from "@tonaris/ui/components/field";
+import { Input } from "@tonaris/ui/components/input";
 
-import { useCollectionUi, useMode } from "./collection-ui";
+import { useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
+import { useInlineDraft } from "./inline-draft";
 import { checkLink } from "./link-check";
-
-/** A save the save-state layer reports if it fails; a rejection is expected there, not here. */
-const sent = (transaction: { isPersisted: { promise: Promise<unknown> } }) => {
-  transaction.isPersisted.promise.catch(() => {});
-};
 
 /** A link as people read it: its host and path, without the scheme. */
 function shownUrl(url: string): string {
@@ -227,102 +225,45 @@ function LinkEditor({
   onClose: () => void;
 }) {
   const client = useSyncClient();
-  const { registerEditor } = useCollectionUi();
-  const [draft, setDraftState] = useState(link?.url ?? "");
-  const [refusal, setRefusal] = useState<string>();
-  const current = useRef(draft);
-  // Closed already, by a save or by Escape: a blur as the field goes changes nothing.
-  const done = useRef(false);
-  const input = useRef<HTMLInputElement>(null);
-  const id = useId();
   const name = serviceNames[service];
-  const setDraft = (next: string) => {
-    current.current = next;
-    setDraftState(next);
-  };
-
-  /** Saves the draft, or shows why it can't be saved; whether the field closed. */
-  const commit = useRef<() => boolean>(() => true);
-  useEffect(() => {
-    const close = () => {
-      done.current = true;
-      onClose();
-      return true;
-    };
-    commit.current = () => {
-      if (done.current) return true;
-      const typed = current.current.trim();
-      if (typed === "" || typed === link?.url) return close();
-      const reason = checkLink(service, typed);
-      if (reason !== undefined) {
-        setRefusal(reason);
-        return false;
-      }
-      if (client) {
-        if (link) {
-          sent(
-            client.links.update(serviceLinkKey(album.id, service), (record) => {
-              record.url = typed;
-            }),
-          );
-        } else sent(client.links.insert({ albumId: album.id, service, url: typed }));
-      }
-      return close();
-    };
+  /** Empty, or unchanged, the field closes without sending anything. */
+  const unchanged = (typed: string) => typed === "" || typed === link?.url;
+  // A save or Escape closes the field; a blur as it goes then changes nothing.
+  const { refusal, props } = useInlineDraft<HTMLInputElement>({
+    value: link?.url ?? "",
+    check: (typed) => (unchanged(typed.trim()) ? undefined : checkLink(service, typed.trim())),
+    save: (typed) => {
+      const url = typed.trim();
+      if (unchanged(url) || !client) return;
+      if (link) {
+        sent(
+          client.links.update(serviceLinkKey(album.id, service), (record) => {
+            record.url = url;
+          }),
+        );
+      } else sent(client.links.insert({ albumId: album.id, service, url }));
+    },
+    onClose,
   });
+  const { ref } = props;
   useEffect(() => {
-    input.current?.focus();
-    input.current?.select();
-    return registerEditor(() => {
-      const closed = commit.current();
-      if (!closed) input.current?.focus();
-      return closed;
-    });
-  }, [registerEditor]);
+    ref.current?.focus();
+    ref.current?.select();
+  }, [ref]);
 
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-small text-fg-secondary">
-        {name} link
-      </label>
-      <input
-        ref={input}
-        id={id}
-        type="url"
-        inputMode="url"
-        autoComplete="off"
-        spellCheck={false}
-        placeholder="Album or track link"
-        aria-invalid={refusal !== undefined}
-        aria-describedby={refusal === undefined ? undefined : `${id}-error`}
-        value={draft}
-        onChange={(event) => {
-          setDraft(event.target.value);
-          setRefusal(undefined);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit.current();
-          } else if (event.key === "Escape") {
-            // Discards the draft; the inspector stays open.
-            event.preventDefault();
-            event.stopPropagation();
-            done.current = true;
-            onClose();
-          }
-        }}
-        onBlur={() => commit.current()}
-        className={cn(
-          "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none hover:border-strong focus-visible:border-strong focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-          refusal !== undefined && "border-status-danger",
-        )}
-      />
-      {refusal !== undefined && (
-        <p id={`${id}-error`} className="text-small text-status-danger">
-          {refusal}
-        </p>
+    <Field label={`${name} link`} problem={refusal} className="gap-1">
+      {(control) => (
+        <Input
+          {...props}
+          {...control}
+          type="url"
+          inputMode="url"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Album or track link"
+        />
       )}
-    </div>
+    </Field>
   );
 }

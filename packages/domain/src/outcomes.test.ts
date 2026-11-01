@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  conflictOutcomeSchema,
   errorCodes,
+  failedOutcomeSchema,
+  needsInputOutcomeSchema,
   type Outcome,
   outcomeSchema,
   outcomeStatuses,
@@ -57,5 +60,14 @@ describe("outcome vocabulary (TS-27)", () => {
     expect(outcomeSchema.safeParse({ status: "unconfirmed" }).success).toBe(false);
     expect(outcomeSchema.safeParse({ status: "conflict", conflicts: [] }).success).toBe(false);
     expect(problemSchema.safeParse({ ...problem, code: "oops" }).success).toBe(false);
+  });
+});
+
+describe("the outcomes clients keep (TON-147)", () => {
+  test("are members of the outcome schema itself, so what it reads they read too", () => {
+    const members = outcomeSchema.options;
+    expect(members).toContain(failedOutcomeSchema);
+    expect(members).toContain(conflictOutcomeSchema);
+    expect(members).toContain(needsInputOutcomeSchema);
   });
 });

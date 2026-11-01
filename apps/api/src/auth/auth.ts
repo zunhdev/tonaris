@@ -41,6 +41,7 @@ import {
 } from "@tonaris/domain";
 
 import type { ApiConfig } from "../config";
+import type { LogError } from "../observability";
 import { feedbackScopes, feedbackUserInfoClaims } from "./feedback";
 import { recordingTransactions } from "./transaction";
 
@@ -103,7 +104,7 @@ export type AuthOptions = {
   db: Database | "in-memory";
   email: EmailPort;
   /** Receives failures of work done after the response, such as sending email (default: `console.error`). */
-  logError?: (error: unknown, context: string) => void;
+  logError?: LogError;
   /**
    * `Secure` cookies with the `__Secure-` prefix (default). Only the browser tests' WebKit run turns it off:
    * Playwright's WebKit keeps no `Secure` cookie on `http://localhost` (TON-94). Every served API keeps it on.

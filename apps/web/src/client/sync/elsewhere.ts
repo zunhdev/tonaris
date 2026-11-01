@@ -4,7 +4,7 @@
 // a reset replaces the data rather than changing it, so it highlights nothing.
 
 import type { SyncEngine } from "./engine";
-import type { SaveStates } from "./writer";
+import type { SaveStates } from "./save-states";
 
 export type ChangesElsewhere = ReturnType<typeof createChangesElsewhere>;
 

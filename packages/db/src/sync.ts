@@ -1,40 +1,22 @@
 // The sync protocol's storage (TS-20–TS-24): running a mutation under the owner's write lock, reading the
-// change log after a cursor, and the bootstrap snapshot. Commands come from packages/domain; this module
-// gives them a store on the transaction and records what they did.
+// change log after a cursor, and the bootstrap snapshot, with the daily pruning and the hourly Trash expiry (TS-91).
+// Commands come from packages/domain and run on the store in store/; this module records what they did.
 
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  exists,
-  gt,
-  inArray,
-  isNotNull,
-  isNull,
-  lt,
-  lte,
-  notExists,
-  sql,
-  type SQL,
-} from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, lt, lte } from "drizzle-orm";
 
 import {
   actingUserId,
   appAccountDefaults,
   changeSchema,
+  guestMutationRefusal,
+  mutationIdInUse,
+  mutationTooOld,
   outcomeSchema,
+  purgeUnit,
   runBatch,
   runCommand,
   syncRetentionMs,
-  uuidv7Time,
-  failure,
-  maxContainerDepth,
-  purgeUnit,
-  trashUnitOf,
-  nameKey,
-  searchKey,
+  type AccountDefaults,
   type Album,
   type Batch,
   type BatchResult,
@@ -42,15 +24,8 @@ import {
   type CaptureSource,
   type Change,
   type ChangeInput,
-  type CollectionStore,
   type Container,
-  type CustomField,
-  type FieldType,
-  type FieldValue,
-  type FieldValueData,
-  type OptionUser,
-  type TrashUnit,
-  type Membership,
+  type Failure,
   type Mutation,
   type MutationResult,
   type Outcome,
@@ -58,25 +33,28 @@ import {
   type PreparedLink,
   type Principal,
   type ServiceLink,
-  type StoredField,
-  type AccountDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
 
-import { canReadContainer } from "./access";
-import { albumsOfReleaseGroupIn, applyPlan, findCaptureTarget } from "./album-writes";
-import type { Database, Transaction } from "./client";
-import { recordInLedger } from "./ledger";
-import { recordUserValues, userEntries, writeProvenance } from "./provenance";
+import { readSnapshot, type Database, type Executor, type Transaction } from "./client";
+import {
+  accountDefaultsColumns,
+  albumColumns,
+  containerColumns,
+  membershipColumns,
+  membershipOf,
+  positionColumns,
+  unitsOfAccount,
+  viewPrefsColumns,
+  serviceLinkColumns,
+  storedUnitColumns,
+} from "./columns";
+import { fieldsOfAccount, valuesOfAccount } from "./field-values";
 import {
   accountSettings,
   accountSync,
   approvals,
-  albumFieldMulti,
-  albumFieldValues,
   albumServiceLinks,
-  fieldDefinitions,
-  fieldOptions,
   albums,
   changeLog,
   mcpOperations,
@@ -85,1100 +63,10 @@ import {
   mutations,
   positions,
   savedReferences,
-  shareGrants,
-  shareLinks,
   trashUnits,
-  users,
   viewPrefs,
 } from "./schema";
-
-/** An album's columns as clients hold it (TS-11). */
-export const albumColumns = {
-  id: albums.id,
-  title: albums.title,
-  artistCredit: albums.artistCredit,
-  releaseType: albums.releaseType,
-  isLive: albums.isLive,
-  originalYear: albums.originalYear,
-  recordingYearStart: albums.recordingYearStart,
-  recordingYearEnd: albums.recordingYearEnd,
-  artworkUrl: albums.artworkUrl,
-};
-
-export const containerColumns = {
-  id: containers.id,
-  kind: containers.kind,
-  parentId: containers.parentId,
-  name: containers.name,
-  description: containers.description,
-};
-
-export const membershipColumns = {
-  listId: memberships.listId,
-  albumId: memberships.albumId,
-  addedAt: memberships.addedAt,
-};
-
-export const viewPrefsColumns = {
-  viewKey: viewPrefs.viewKey,
-  sortMode: viewPrefs.sortMode,
-  sortDir: viewPrefs.sortDir,
-  grouped: viewPrefs.grouped,
-  layout: viewPrefs.layout,
-};
-
-export const defaultsColumns = {
-  listSortMode: accountSettings.listSortMode,
-  listSortDir: accountSettings.listSortDir,
-  folderSortMode: accountSettings.folderSortMode,
-  folderSortDir: accountSettings.folderSortDir,
-  grouped: accountSettings.grouped,
-  layout: accountSettings.layout,
-};
-
-/**
- * The account defaults with the link setting and the services turned off, as the person's sessions see them; the
- * export leaves them out.
- */
-export const accountDefaultsColumns = {
-  ...defaultsColumns,
-  linkTarget: accountSettings.linkTarget,
-  hiddenServices: accountSettings.hiddenServices,
-};
-
-export const positionColumns = {
-  viewKey: positions.viewKey,
-  itemId: positions.itemId,
-  key: positions.key,
-};
-
-/** An entry of an active list: the album is in Unsorted while it has none (FR-01.9, TS-13). */
-function activeEntryOf(tx: Transaction, albumId: typeof albums.id | string) {
-  return tx
-    .select({ one: sql`1` })
-    .from(memberships)
-    .innerJoin(containers, eq(containers.id, memberships.listId))
-    .where(and(eq(memberships.albumId, albumId), isNull(containers.trashedAt)));
-}
-
-/** A field with its owner and its options in order: keys compare bytewise (TS-16). */
-export async function findFieldIn(
-  tx: Transaction | Database,
-  id: string,
-): Promise<StoredField | undefined> {
-  const [row] = await tx
-    .select({
-      id: fieldDefinitions.id,
-      ownerId: fieldDefinitions.ownerId,
-      name: fieldDefinitions.name,
-      type: fieldDefinitions.type,
-    })
-    .from(fieldDefinitions)
-    .where(eq(fieldDefinitions.id, id));
-  if (!row) return undefined;
-  const options = await tx
-    .select({ id: fieldOptions.id, label: fieldOptions.label })
-    .from(fieldOptions)
-    .where(eq(fieldOptions.fieldId, id))
-    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
-  return { ...row, options };
-}
-
-/** The account's custom fields, each with its options in order, as clients hold them (FR-03.6). */
-export async function fieldsOfAccount(tx: Transaction, accountId: string): Promise<CustomField[]> {
-  const definitions = await tx
-    .select({ id: fieldDefinitions.id, name: fieldDefinitions.name, type: fieldDefinitions.type })
-    .from(fieldDefinitions)
-    .where(eq(fieldDefinitions.ownerId, accountId))
-    .orderBy(asc(fieldDefinitions.id));
-  if (definitions.length === 0) return [];
-  const options = await tx
-    .select({ id: fieldOptions.id, fieldId: fieldOptions.fieldId, label: fieldOptions.label })
-    .from(fieldOptions)
-    .where(
-      inArray(
-        fieldOptions.fieldId,
-        definitions.map((definition) => definition.id),
-      ),
-    )
-    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
-  return definitions.map((definition) => ({
-    id: definition.id,
-    name: definition.name,
-    type: definition.type,
-    options: options
-      .filter((option) => option.fieldId === definition.id)
-      .map(({ id, label }) => ({ id, label })),
-  }));
-}
-
-/** The columns a value is stored in (TS-11). */
-const valueColumns = {
-  albumId: albumFieldValues.albumId,
-  fieldId: albumFieldValues.fieldId,
-  textValue: albumFieldValues.textValue,
-  numberValue: albumFieldValues.numberValue,
-  dateValue: albumFieldValues.dateValue,
-  boolValue: albumFieldValues.boolValue,
-  optionId: albumFieldValues.optionId,
-};
-
-const emptyValue = {
-  textValue: null,
-  numberValue: null,
-  dateValue: null,
-  boolValue: null,
-  optionId: null,
-};
-
-type ValueRow = typeof emptyValue extends infer T
-  ? { [K in keyof T]: K extends "boolValue" ? boolean | null : string | null }
-  : never;
-
-/** The column a value of `type` goes in (TS-11); a multiple choice keeps its selections in `album_field_multi`. */
-function columnsOf(type: FieldType, value: FieldValueData): Partial<ValueRow> {
-  if (value === null || Array.isArray(value)) return {};
-  if (type === "yes_no") return typeof value === "boolean" ? { boolValue: value } : {};
-  if (typeof value !== "string") return {};
-  if (type === "text") return { textValue: value };
-  if (type === "number") return { numberValue: value };
-  if (type === "date") return { dateValue: value };
-  return { optionId: value };
-}
-
-/** A stored value as clients hold it: null when applied-empty (FR-03.7). */
-function valueOf(row: ValueRow & { type: FieldType }, selected: string[]): FieldValueData {
-  const { type } = row;
-  if (type === "text") return row.textValue;
-  if (type === "number") return row.numberValue;
-  if (type === "date") return row.dateValue;
-  if (type === "yes_no") return row.boolValue;
-  if (type === "single_choice") return row.optionId;
-  // A multiple choice keeps its selections in `album_field_multi`.
-  return selected.length > 0 ? selected : null;
-}
-
-/** Multiple-choice selections, in their options' order (TS-16), for the albums `where` picks. */
-function selectionsOf(tx: Transaction, where: SQL | undefined, fieldId?: string) {
-  return tx
-    .select({
-      albumId: albumFieldMulti.albumId,
-      fieldId: albumFieldMulti.fieldId,
-      optionId: albumFieldMulti.optionId,
-    })
-    .from(albumFieldMulti)
-    .innerJoin(fieldOptions, eq(fieldOptions.id, albumFieldMulti.optionId))
-    .where(fieldId === undefined ? where : and(where, eq(albumFieldMulti.fieldId, fieldId)))
-    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
-}
-
-/** The account's Trash units as clients hold them, oldest first: each with its root's name and its members (FR-01.12). */
-export async function unitsOfAccount(tx: Transaction, accountId: string): Promise<TrashUnit[]> {
-  const units = await tx
-    .select({
-      id: trashUnits.id,
-      ownerId: trashUnits.ownerId,
-      kind: trashUnits.kind,
-      rootId: trashUnits.rootId,
-      deletedAt: trashUnits.deletedAt,
-      expiresAt: trashUnits.expiresAt,
-    })
-    .from(trashUnits)
-    .where(eq(trashUnits.ownerId, accountId))
-    .orderBy(asc(trashUnits.deletedAt), asc(trashUnits.id));
-  if (units.length === 0) return [];
-  const members = await tx
-    .select({
-      id: containers.id,
-      kind: containers.kind,
-      name: containers.name,
-      parentId: containers.parentId,
-      unitId: containers.trashUnitId,
-    })
-    .from(containers)
-    .where(
-      inArray(
-        containers.trashUnitId,
-        units.map((unit) => unit.id),
-      ),
-    );
-  const titles = await tx
-    .select({ id: albums.id, title: albums.title, artist: albums.artistCredit })
-    .from(albums)
-    .where(
-      inArray(
-        albums.id,
-        units.filter((unit) => unit.kind === "album").map((unit) => unit.rootId),
-      ),
-    );
-  return units.map((unit) => {
-    const own = members.filter((member) => member.unitId === unit.id);
-    const name =
-      unit.kind === "album"
-        ? (titles.find((album) => album.id === unit.rootId)?.title ?? "")
-        : (own.find((member) => member.id === unit.rootId)?.name ?? "");
-    const album =
-      unit.kind === "album" ? titles.find((each) => each.id === unit.rootId) : undefined;
-    return trashUnitOf(unit, name, own, album?.artist ?? null);
-  });
-}
-
-/** The albums applying the field, even empty, in Trash or not (FR-03.18). */
-export function fieldUsersIn(tx: Transaction | Database, fieldId: string): Promise<OptionUser[]> {
-  return tx
-    .select({ id: albums.id, trashed: sql<boolean>`${albums.trashedAt} is not null` })
-    .from(albumFieldValues)
-    .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
-    .where(eq(albumFieldValues.fieldId, fieldId));
-}
-
-/** The albums choosing the option, single or multiple choice, in Trash or not (FR-03.17). */
-export async function optionUsersIn(
-  tx: Transaction | Database,
-  fieldId: string,
-  optionId: string,
-): Promise<OptionUser[]> {
-  const trashed = sql<boolean>`${albums.trashedAt} is not null`;
-  const single = await tx
-    .select({ id: albums.id, trashed })
-    .from(albumFieldValues)
-    .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
-    .where(and(eq(albumFieldValues.fieldId, fieldId), eq(albumFieldValues.optionId, optionId)));
-  const multiple = await tx
-    .select({ id: albums.id, trashed })
-    .from(albumFieldMulti)
-    .innerJoin(albums, eq(albums.id, albumFieldMulti.albumId))
-    .where(and(eq(albumFieldMulti.fieldId, fieldId), eq(albumFieldMulti.optionId, optionId)));
-  return [...single, ...multiple];
-}
-
-/** The fields the account's albums apply, with their values, Trash included (FR-03.7). */
-export function valuesOfAccount(tx: Transaction, accountId: string): Promise<FieldValue[]> {
-  return valuesWhere(tx, eq(albums.ownerId, accountId));
-}
-
-/** The field values of the albums `ids`, for a shared snapshot (TON-64). */
-export async function valuesOfAlbums(
-  tx: Transaction,
-  ids: readonly string[],
-): Promise<FieldValue[]> {
-  return ids.length === 0 ? [] : valuesWhere(tx, inArray(albums.id, [...ids]));
-}
-
-/** The field values of the albums `albumWhere` picks, as clients hold them (FR-03.7). */
-async function valuesWhere(tx: Transaction, albumWhere: SQL): Promise<FieldValue[]> {
-  const rows = await tx
-    .select({ ...valueColumns, type: fieldDefinitions.type })
-    .from(albumFieldValues)
-    .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
-    .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
-    .where(albumWhere)
-    .orderBy(asc(albumFieldValues.albumId), asc(albumFieldValues.fieldId));
-  const selections = await selectionsOf(
-    tx,
-    inArray(albumFieldMulti.albumId, tx.select({ id: albums.id }).from(albums).where(albumWhere)),
-  );
-  return rows.map((row) => ({
-    albumId: row.albumId,
-    fieldId: row.fieldId,
-    value: valueOf(
-      row,
-      selections
-        .filter((each) => each.albumId === row.albumId && each.fieldId === row.fieldId)
-        .map((each) => each.optionId),
-    ),
-  }));
-}
-
-/** An entry as clients see it, with `addedAt` as the ISO string the protocol carries. */
-export const membershipOf = (row: Omit<Membership, "addedAt"> & { addedAt: Date }): Membership => ({
-  ...row,
-  addedAt: row.addedAt.toISOString(),
-});
-
-/**
- * The domain's store on one transaction. Search and name keys are derived here, so every write keeps them
- * (TS-12), and so is the provenance of a person's album values (TS-15). The hierarchy is walked with recursive
- * CTEs (TS-31), cut off past the depth limit so that even a cycle in damaged data can't run away.
- */
-function collectionStore(tx: Transaction): CollectionStore {
-  return {
-    async findAlbum(id) {
-      const [row] = await tx
-        .select({ ...albumColumns, ownerId: albums.ownerId, trashedAt: albums.trashedAt })
-        .from(albums)
-        .where(eq(albums.id, id));
-      if (!row) return undefined;
-      const { trashedAt, ...album } = row;
-      return { ...album, trashed: trashedAt !== null };
-    },
-    async insertAlbum({ ownerId, id, ...values }, origin) {
-      await tx.insert(albums).values({
-        id,
-        ownerId,
-        ...values,
-        ...(origin ? { mbReleaseGroupId: origin.releaseGroupId } : {}),
-        searchTitleKey: searchKey(values.title),
-        searchArtistKey: searchKey(values.artistCredit),
-      });
-      // A new album has no rows to clear.
-      await writeProvenance(tx, id, origin ? origin.provenance : userEntries(values));
-    },
-    async updateAlbum(id, values) {
-      await tx
-        .update(albums)
-        .set({
-          ...values,
-          ...(values.title === undefined ? {} : { searchTitleKey: searchKey(values.title) }),
-          ...(values.artistCredit === undefined
-            ? {}
-            : { searchArtistKey: searchKey(values.artistCredit) }),
-        })
-        .where(eq(albums.id, id));
-      await recordUserValues(tx, id, values);
-    },
-    findCaptureTarget: (id) => findCaptureTarget(tx, id),
-    albumsOfReleaseGroup: (ownerId, releaseGroupId) =>
-      albumsOfReleaseGroupIn(tx, ownerId, releaseGroupId),
-    fillAlbum: (id, plan) => applyPlan(tx, id, plan),
-    async reactivateAlbum(id) {
-      const [album] = await tx
-        .select({ trashUnitId: albums.trashUnitId })
-        .from(albums)
-        .where(eq(albums.id, id));
-      await tx.update(albums).set({ trashedAt: null, trashUnitId: null }).where(eq(albums.id, id));
-      // An album's own unit holds only it (TS-13), so it goes with the album's return.
-      if (album?.trashUnitId) {
-        await tx
-          .delete(trashUnits)
-          .where(
-            and(
-              eq(trashUnits.id, album.trashUnitId),
-              eq(trashUnits.kind, "album"),
-              eq(trashUnits.rootId, id),
-            ),
-          );
-      }
-      const left = await tx
-        .delete(memberships)
-        .where(
-          and(
-            eq(memberships.albumId, id),
-            exists(
-              tx
-                .select({ one: sql`1` })
-                .from(containers)
-                .where(and(eq(containers.id, memberships.listId), isNull(containers.trashedAt))),
-            ),
-          ),
-        )
-        .returning({ listId: memberships.listId });
-      return { left: left.map((row) => row.listId), unitId: album?.trashUnitId ?? null };
-    },
-    async countAlbums(ownerId) {
-      const [row] = await tx
-        .select({ count: count() })
-        .from(albums)
-        .where(eq(albums.ownerId, ownerId));
-      return row?.count ?? 0;
-    },
-    async entriesOfAlbum(albumId) {
-      const rows = await tx
-        .select(membershipColumns)
-        .from(memberships)
-        .where(eq(memberships.albumId, albumId))
-        .orderBy(asc(memberships.listId));
-      return rows.map(membershipOf);
-    },
-    async trashAlbum(unit, albumId) {
-      await tx.insert(trashUnits).values(unit);
-      await tx
-        .update(albums)
-        .set({ trashedAt: unit.deletedAt, trashUnitId: unit.id })
-        .where(eq(albums.id, albumId));
-    },
-    async albumUnit(albumId) {
-      const [row] = await tx
-        .select({ unitId: albums.trashUnitId })
-        .from(albums)
-        .where(eq(albums.id, albumId));
-      return row?.unitId ?? undefined;
-    },
-    async unitsReferencingAlbum(albumId) {
-      const rows = await tx
-        .selectDistinct({ unitId: containers.trashUnitId })
-        .from(memberships)
-        .innerJoin(containers, eq(containers.id, memberships.listId))
-        .where(and(eq(memberships.albumId, albumId), isNotNull(containers.trashUnitId)));
-      return rows.flatMap((row) => (row.unitId ? [row.unitId] : []));
-    },
-    async addTombstone(unitId, tombstone) {
-      await tx
-        .update(trashUnits)
-        .set({ tombstones: sql`${trashUnits.tombstones} || ${JSON.stringify([tombstone])}::jsonb` })
-        .where(eq(trashUnits.id, unitId));
-    },
-    async purgeContainers(unitId, ids) {
-      // Their entries cascade (TS-11); albums stay where else they are (FR-01.17).
-      if (ids.length > 0) await tx.delete(containers).where(inArray(containers.id, ids));
-      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
-      await recordInLedger(tx, {
-        type: "trash.purged",
-        unitId,
-        containerIds: [...ids],
-        albumIds: [],
-      });
-    },
-    async purgeAlbum(unitId, albumId) {
-      const links = await tx
-        .select({ service: albumServiceLinks.service })
-        .from(albumServiceLinks)
-        .where(eq(albumServiceLinks.albumId, albumId));
-      const values = await tx
-        .select({ fieldId: albumFieldValues.fieldId })
-        .from(albumFieldValues)
-        .where(eq(albumFieldValues.albumId, albumId));
-      // Its entries, links, values and provenance cascade (TS-11); its places don't refer to it by key.
-      await tx.delete(positions).where(eq(positions.itemId, albumId));
-      await tx.delete(albums).where(eq(albums.id, albumId));
-      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
-      await recordInLedger(tx, {
-        type: "trash.purged",
-        unitId,
-        containerIds: [],
-        albumIds: [albumId],
-      });
-      return {
-        services: links.map((link) => link.service),
-        fieldIds: values.map((value) => value.fieldId),
-      };
-    },
-    async recoverAlbum(unitId, albumId) {
-      await tx
-        .update(albums)
-        .set({ trashedAt: null, trashUnitId: null })
-        .where(and(eq(albums.id, albumId), eq(albums.trashUnitId, unitId)));
-      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
-    },
-    async findServiceLink(albumId, service) {
-      const [row] = await tx
-        .select({
-          service: albumServiceLinks.service,
-          url: albumServiceLinks.url,
-          entityId: albumServiceLinks.entityId,
-        })
-        .from(albumServiceLinks)
-        .where(and(eq(albumServiceLinks.albumId, albumId), eq(albumServiceLinks.service, service)));
-      return row;
-    },
-    async insertServiceLink(albumId, ownerId, link) {
-      await tx.insert(albumServiceLinks).values({ albumId, ownerId, ...link });
-    },
-    async saveServiceLink(albumId, ownerId, link) {
-      await tx
-        .insert(albumServiceLinks)
-        .values({ albumId, ownerId, ...link })
-        .onConflictDoUpdate({
-          target: [albumServiceLinks.albumId, albumServiceLinks.service],
-          set: { url: link.url, entityId: link.entityId, updatedAt: sql`now()` },
-        });
-    },
-    async deleteServiceLink(albumId, service) {
-      await tx
-        .delete(albumServiceLinks)
-        .where(and(eq(albumServiceLinks.albumId, albumId), eq(albumServiceLinks.service, service)));
-    },
-
-    findField: (id) => findFieldIn(tx, id),
-    async fieldsOf(ownerId) {
-      const rows = await tx
-        .select({ id: fieldDefinitions.id })
-        .from(fieldDefinitions)
-        .where(eq(fieldDefinitions.ownerId, ownerId))
-        .orderBy(asc(fieldDefinitions.id));
-      const found = await Promise.all(rows.map((row) => findFieldIn(tx, row.id)));
-      return found.flatMap((field) => {
-        if (!field) return [];
-        const { ownerId: _, ...rest } = field;
-        return [rest];
-      });
-    },
-    async insertField({ id, ownerId, name, type }, options) {
-      await tx.insert(fieldDefinitions).values({ id, ownerId, name, nameKey: nameKey(name), type });
-      if (options.length > 0) {
-        await tx.insert(fieldOptions).values(
-          options.map((option) => ({
-            id: option.id,
-            fieldId: id,
-            label: option.label,
-            labelKey: nameKey(option.label),
-            sortKey: option.sortKey,
-          })),
-        );
-      }
-    },
-    async renameField(id, name) {
-      await tx
-        .update(fieldDefinitions)
-        .set({ name, nameKey: nameKey(name) })
-        .where(eq(fieldDefinitions.id, id));
-    },
-
-    async findFieldValue(albumId, fieldId) {
-      const [row] = await tx
-        .select({ ...valueColumns, type: fieldDefinitions.type })
-        .from(albumFieldValues)
-        .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
-        .where(and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, fieldId)));
-      if (!row) return undefined;
-      const selected =
-        row.type === "multiple_choice"
-          ? await selectionsOf(tx, eq(albumFieldMulti.albumId, albumId), fieldId)
-          : [];
-      return valueOf(
-        row,
-        selected.map((each) => each.optionId),
-      );
-    },
-    async applyField(albumId, fieldId) {
-      await tx.insert(albumFieldValues).values({ albumId, fieldId }).onConflictDoNothing();
-    },
-    async setFieldValue(albumId, field, value) {
-      const at = and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, field.id));
-      await tx
-        .update(albumFieldValues)
-        .set({ ...emptyValue, ...columnsOf(field.type, value) })
-        .where(at);
-      if (field.type !== "multiple_choice") return;
-      await tx
-        .delete(albumFieldMulti)
-        .where(and(eq(albumFieldMulti.albumId, albumId), eq(albumFieldMulti.fieldId, field.id)));
-      if (Array.isArray(value) && value.length > 0) {
-        await tx
-          .insert(albumFieldMulti)
-          .values(value.map((optionId) => ({ albumId, fieldId: field.id, optionId })));
-      }
-    },
-    async removeField(albumId, fieldId) {
-      // Its multiple-choice selections cascade (TS-11).
-      await tx
-        .delete(albumFieldValues)
-        .where(and(eq(albumFieldValues.albumId, albumId), eq(albumFieldValues.fieldId, fieldId)));
-    },
-    async fieldUsage(fieldId) {
-      // An album in Trash keeps its rows (TS-13), so it counts (TS-14).
-      const rows = await tx
-        .select({ trashed: sql<boolean>`${albums.trashedAt} is not null`, n: count() })
-        .from(albumFieldValues)
-        .innerJoin(albums, eq(albums.id, albumFieldValues.albumId))
-        .where(eq(albumFieldValues.fieldId, fieldId))
-        .groupBy(sql`1`);
-      return {
-        active: rows.find((row) => !row.trashed)?.n ?? 0,
-        trashed: rows.find((row) => row.trashed)?.n ?? 0,
-      };
-    },
-    optionUsers: (fieldId, optionId) => optionUsersIn(tx, fieldId, optionId),
-    fieldUsers: (fieldId) => fieldUsersIn(tx, fieldId),
-    async deleteField(fieldId) {
-      // Its options, and every album's usage and selections, cascade (TS-11), in Trash too (TS-13).
-      await tx.delete(fieldDefinitions).where(eq(fieldDefinitions.id, fieldId));
-    },
-    async optionField(optionId) {
-      const [row] = await tx
-        .select({ fieldId: fieldOptions.fieldId })
-        .from(fieldOptions)
-        .where(eq(fieldOptions.id, optionId));
-      return row?.fieldId;
-    },
-    async lastOptionKey(fieldId) {
-      const [row] = await tx
-        .select({ sortKey: fieldOptions.sortKey })
-        .from(fieldOptions)
-        .where(eq(fieldOptions.fieldId, fieldId))
-        .orderBy(sql`${fieldOptions.sortKey} collate "C" desc`)
-        .limit(1);
-      return row?.sortKey ?? null;
-    },
-    async changeFieldType(fieldId, type, discardOptions) {
-      await tx.update(fieldDefinitions).set({ type }).where(eq(fieldDefinitions.id, fieldId));
-      if (discardOptions) await tx.delete(fieldOptions).where(eq(fieldOptions.fieldId, fieldId));
-    },
-    async insertFieldOption(fieldId, { id, label, sortKey }) {
-      await tx
-        .insert(fieldOptions)
-        .values({ id, fieldId, label, labelKey: nameKey(label), sortKey });
-    },
-    async renameFieldOption(optionId, label) {
-      await tx
-        .update(fieldOptions)
-        .set({ label, labelKey: nameKey(label) })
-        .where(eq(fieldOptions.id, optionId));
-    },
-    async removeFieldOption(fieldId, optionId, albumIds) {
-      // The foreign keys clear it: a single choice's `option_id` becomes null, and a multiple choice's selection
-      // goes, its row staying applied (TS-11, FR-03.17).
-      await tx.delete(fieldOptions).where(eq(fieldOptions.id, optionId));
-      if (albumIds.length === 0) return [];
-      const where = and(
-        inArray(albumFieldValues.albumId, albumIds),
-        eq(albumFieldValues.fieldId, fieldId),
-      );
-      const rows = await tx
-        .select({ ...valueColumns, type: fieldDefinitions.type })
-        .from(albumFieldValues)
-        .innerJoin(fieldDefinitions, eq(fieldDefinitions.id, albumFieldValues.fieldId))
-        .where(where)
-        .orderBy(asc(albumFieldValues.albumId));
-      const selections = await selectionsOf(
-        tx,
-        inArray(albumFieldMulti.albumId, albumIds),
-        fieldId,
-      );
-      return rows.map((row) => ({
-        albumId: row.albumId,
-        fieldId,
-        value: valueOf(
-          row,
-          selections.filter((each) => each.albumId === row.albumId).map((each) => each.optionId),
-        ),
-      }));
-    },
-
-    async findContainer(id) {
-      const [row] = await tx
-        .select({
-          ...containerColumns,
-          ownerId: containers.ownerId,
-          trashedAt: containers.trashedAt,
-        })
-        .from(containers)
-        .where(eq(containers.id, id));
-      if (!row) return undefined;
-      const { trashedAt, ...container } = row;
-      return { ...container, trashed: trashedAt !== null };
-    },
-    async containerPath(id) {
-      const rows = await tx.execute<{ id: string }>(sql`
-        with recursive path (id, parent_id, level) as (
-          select id, parent_id, 1 from ${containers} where id = ${id}
-          union all
-          select c.id, c.parent_id, path.level + 1
-          from ${containers} c join path on c.id = path.parent_id
-          where path.level <= ${maxContainerDepth}
-        )
-        select id from path order by level`);
-      return rows.map((row) => row.id);
-    },
-    async subtreeDepth(id) {
-      const [row] = await tx.execute<{ depth: number | null }>(sql`
-        with recursive tree (id, level) as (
-          select id, 1 from ${containers} where id = ${id} and trashed_at is null
-          union all
-          select c.id, tree.level + 1
-          from ${containers} c join tree on c.parent_id = tree.id
-          where c.trashed_at is null and tree.level <= ${maxContainerDepth}
-        )
-        select max(level)::int as depth from tree`);
-      return row?.depth ?? 0;
-    },
-    activeChildren(ownerId, parentId) {
-      return tx
-        .select(containerColumns)
-        .from(containers)
-        .where(
-          and(
-            eq(containers.ownerId, ownerId),
-            parentId === null ? isNull(containers.parentId) : eq(containers.parentId, parentId),
-            isNull(containers.trashedAt),
-          ),
-        );
-    },
-    async countContainers(ownerId) {
-      const [row] = await tx
-        .select({ count: count() })
-        .from(containers)
-        .where(eq(containers.ownerId, ownerId));
-      return row?.count ?? 0;
-    },
-    async insertContainer(container) {
-      await tx.insert(containers).values({
-        ...container,
-        nameKey: nameKey(container.name),
-        searchNameKey: searchKey(container.name),
-      });
-    },
-    async updateContainer(id, values) {
-      await tx
-        .update(containers)
-        .set({
-          ...values,
-          ...(values.name === undefined
-            ? {}
-            : { nameKey: nameKey(values.name), searchNameKey: searchKey(values.name) }),
-        })
-        .where(eq(containers.id, id));
-    },
-
-    async findMembership(listId, albumId) {
-      const [row] = await tx
-        .select(membershipColumns)
-        .from(memberships)
-        .where(and(eq(memberships.listId, listId), eq(memberships.albumId, albumId)));
-      return row && membershipOf(row);
-    },
-    async countMemberships(ownerId) {
-      const [row] = await tx
-        .select({ count: count() })
-        .from(memberships)
-        .where(eq(memberships.ownerId, ownerId));
-      return row?.count ?? 0;
-    },
-    async activeSubtree(id) {
-      const rows = await tx.execute<{ id: string }>(sql`
-        with recursive tree (id, level) as (
-          select id, 1 from ${containers} where id = ${id} and trashed_at is null
-          union all
-          select c.id, tree.level + 1
-          from ${containers} c join tree on c.parent_id = tree.id
-          where c.trashed_at is null and tree.level <= ${maxContainerDepth}
-        )
-        select id from tree order by level, id
-      `);
-      const ids = rows.map((row) => row.id);
-      if (ids.length === 0) return [];
-      const found = await tx
-        .select(containerColumns)
-        .from(containers)
-        .where(inArray(containers.id, ids));
-      return ids.flatMap((each) => found.filter((row) => row.id === each));
-    },
-    async listEntries(listIds) {
-      if (listIds.length === 0) return [];
-      const rows = await tx
-        .select(membershipColumns)
-        .from(memberships)
-        .where(inArray(memberships.listId, listIds))
-        .orderBy(asc(memberships.listId), asc(memberships.albumId));
-      return rows.map(membershipOf);
-    },
-    async findTrashUnit(id) {
-      const [unit] = await tx
-        .select({
-          id: trashUnits.id,
-          ownerId: trashUnits.ownerId,
-          kind: trashUnits.kind,
-          rootId: trashUnits.rootId,
-          deletedAt: trashUnits.deletedAt,
-          expiresAt: trashUnits.expiresAt,
-          tombstones: trashUnits.tombstones,
-        })
-        .from(trashUnits)
-        .where(eq(trashUnits.id, id));
-      return unit;
-    },
-    async unitContainers(unitId) {
-      return tx
-        .select(containerColumns)
-        .from(containers)
-        .where(eq(containers.trashUnitId, unitId))
-        .orderBy(asc(containers.id));
-    },
-    async trashContainers(unit, ids) {
-      await tx.insert(trashUnits).values(unit);
-      if (ids.length === 0) return;
-      await tx
-        .update(containers)
-        .set({ trashedAt: unit.deletedAt, trashUnitId: unit.id })
-        .where(inArray(containers.id, ids));
-    },
-    async recoverContainers(unitId, ids) {
-      if (ids.length > 0) {
-        await tx
-          .update(containers)
-          .set({ trashedAt: null, trashUnitId: null })
-          .where(and(inArray(containers.id, ids), eq(containers.trashUnitId, unitId)));
-      }
-      await tx.delete(trashUnits).where(eq(trashUnits.id, unitId));
-    },
-    async insertMembership({ addedAt, ...membership }) {
-      await tx.insert(memberships).values({ ...membership, addedAt: new Date(addedAt) });
-    },
-    async deleteMembership(listId, albumId) {
-      await tx
-        .delete(memberships)
-        .where(and(eq(memberships.listId, listId), eq(memberships.albumId, albumId)));
-    },
-
-    async findViewPrefs(personId, viewKey) {
-      const [row] = await tx
-        .select(viewPrefsColumns)
-        .from(viewPrefs)
-        .where(and(eq(viewPrefs.personId, personId), eq(viewPrefs.viewKey, viewKey)));
-      return row;
-    },
-    async saveViewPrefs(personId, { viewKey, ...choices }) {
-      await tx
-        .insert(viewPrefs)
-        .values({ personId, viewKey, ...choices })
-        .onConflictDoUpdate({ target: [viewPrefs.personId, viewPrefs.viewKey], set: choices });
-    },
-    async deleteViewPrefs(personId, viewKey) {
-      await tx
-        .delete(viewPrefs)
-        .where(and(eq(viewPrefs.personId, personId), eq(viewPrefs.viewKey, viewKey)));
-    },
-    async findDefaults(personId) {
-      const [row] = await tx
-        .select(accountDefaultsColumns)
-        .from(accountSettings)
-        .where(eq(accountSettings.accountId, personId));
-      return row;
-    },
-    async saveDefaults(personId, defaults) {
-      await tx
-        .insert(accountSettings)
-        .values({ accountId: personId, ...defaults })
-        .onConflictDoUpdate({ target: accountSettings.accountId, set: defaults });
-    },
-
-    async findPositions(personId, viewKey, itemIds) {
-      if (itemIds.length === 0) return new Map();
-      const rows = await tx
-        .select({ itemId: positions.itemId, key: positions.key })
-        .from(positions)
-        .where(
-          and(
-            eq(positions.personId, personId),
-            eq(positions.viewKey, viewKey),
-            inArray(positions.itemId, [...itemIds]),
-          ),
-        );
-      return new Map(rows.map((row) => [row.itemId, row.key]));
-    },
-    async savePosition(personId, { viewKey, itemId, key }) {
-      await tx
-        .insert(positions)
-        .values({ personId, viewKey, itemId, key })
-        .onConflictDoUpdate({
-          target: [positions.personId, positions.viewKey, positions.itemId],
-          set: { key },
-        });
-    },
-    async deletePosition(personId, viewKey, itemId) {
-      const deleted = await tx
-        .delete(positions)
-        .where(
-          and(
-            eq(positions.personId, personId),
-            eq(positions.viewKey, viewKey),
-            eq(positions.itemId, itemId),
-          ),
-        )
-        .returning({ itemId: positions.itemId });
-      return deleted.length > 0;
-    },
-    async firstKey(personId, viewKey) {
-      // Keys compare bytewise, never by the database's locale (TS-16).
-      const [row] = await tx
-        .select({ key: positions.key })
-        .from(positions)
-        .where(and(eq(positions.personId, personId), eq(positions.viewKey, viewKey)))
-        .orderBy(sql`${positions.key} collate "C"`)
-        .limit(1);
-      return row?.key;
-    },
-    canReadShared(personId, containerId) {
-      return canReadContainer(tx, { kind: "person", userId: personId }, containerId);
-    },
-    async viewItems(personId, viewKey, kind) {
-      let rows: { id: string }[];
-      if (kind === "containers") {
-        rows = await tx
-          .select({ id: containers.id })
-          .from(containers)
-          .where(
-            and(
-              // The root is the person's; a folder's children are its owner's, who may be someone sharing it.
-              viewKey === "root"
-                ? and(eq(containers.ownerId, personId), isNull(containers.parentId))
-                : eq(containers.parentId, viewKey),
-              isNull(containers.trashedAt),
-            ),
-          );
-      } else if (viewKey === "unsorted") {
-        rows = await tx
-          .select({ id: albums.id })
-          .from(albums)
-          .where(
-            and(
-              eq(albums.ownerId, personId),
-              isNull(albums.trashedAt),
-              notExists(activeEntryOf(tx, albums.id)),
-            ),
-          );
-      } else {
-        rows = await tx
-          .select({ id: memberships.albumId })
-          .from(memberships)
-          .innerJoin(albums, eq(albums.id, memberships.albumId))
-          .where(and(eq(memberships.listId, viewKey), isNull(albums.trashedAt)));
-      }
-      return new Set(rows.map((row) => row.id));
-    },
-    async inActiveList(albumId) {
-      return (await activeEntryOf(tx, albumId).limit(1)).length > 0;
-    },
-
-    async findAccountByEmail(key) {
-      const [account] = await tx.select({ id: users.id }).from(users).where(eq(users.email, key));
-      return account;
-    },
-    async displayNameOf(userId) {
-      const [account] = await tx
-        .select({ displayName: users.displayName })
-        .from(users)
-        .where(eq(users.id, userId));
-      return account?.displayName ?? null;
-    },
-    async setDisplayName(userId, displayName) {
-      await tx.update(users).set({ displayName }).where(eq(users.id, userId));
-    },
-    async activeShareCount(ownerId) {
-      const owned = tx
-        .select({ id: containers.id })
-        .from(containers)
-        .where(eq(containers.ownerId, ownerId));
-      const [grants] = await tx
-        .select({ count: count() })
-        .from(shareGrants)
-        .where(
-          and(
-            inArray(shareGrants.containerId, owned),
-            inArray(shareGrants.status, ["pending", "accepted"]),
-          ),
-        );
-      const [links] = await tx
-        .select({ count: count() })
-        .from(shareLinks)
-        .where(and(inArray(shareLinks.containerId, owned), isNull(shareLinks.revokedAt)));
-      return (grants?.count ?? 0) + (links?.count ?? 0);
-    },
-    async findOpenGrant(containerId, granteeId) {
-      const [grant] = await tx
-        .select({ id: shareGrants.id, status: shareGrants.status })
-        .from(shareGrants)
-        .where(
-          and(
-            eq(shareGrants.containerId, containerId),
-            eq(shareGrants.granteeId, granteeId),
-            inArray(shareGrants.status, ["pending", "accepted"]),
-          ),
-        );
-      return grant;
-    },
-    async insertGrant(grant) {
-      await tx.insert(shareGrants).values(grant);
-    },
-    async findGrant(id) {
-      const [grant] = await tx
-        .select({
-          id: shareGrants.id,
-          status: shareGrants.status,
-          containerId: shareGrants.containerId,
-          granteeId: shareGrants.granteeId,
-        })
-        .from(shareGrants)
-        .where(eq(shareGrants.id, id));
-      return grant;
-    },
-    async moveGrant(id, from, to) {
-      const moved = await tx
-        .update(shareGrants)
-        .set({ status: to })
-        .where(and(eq(shareGrants.id, id), eq(shareGrants.status, from)))
-        .returning({ id: shareGrants.id });
-      // An ended grant stays ended after a restore (TS-113).
-      if (moved.length > 0 && (to === "declined" || to === "withdrawn" || to === "revoked"))
-        await recordInLedger(tx, { type: "shareGrant.ended", grantId: id, status: to });
-      return moved.length > 0;
-    },
-    async setGrantEmailStatus(id, status) {
-      await tx.update(shareGrants).set({ emailStatus: status }).where(eq(shareGrants.id, id));
-    },
-    async dropGrantReference(viewerId, containerId) {
-      const dropped = await tx
-        .delete(savedReferences)
-        .where(
-          and(
-            eq(savedReferences.viewerId, viewerId),
-            eq(savedReferences.containerId, containerId),
-            isNull(savedReferences.linkId),
-          ),
-        )
-        .returning({ containerId: savedReferences.containerId });
-      return dropped.length > 0;
-    },
-    async saveReference(viewerId, containerId, linkId) {
-      const where = and(
-        eq(savedReferences.viewerId, viewerId),
-        eq(savedReferences.containerId, containerId),
-      );
-      const [existing] = await tx
-        .select({ linkId: savedReferences.linkId })
-        .from(savedReferences)
-        .where(where);
-      if (!existing) {
-        await tx.insert(savedReferences).values({ viewerId, containerId, linkId: linkId ?? null });
-        return "inserted";
-      }
-      if (linkId === undefined || existing.linkId === linkId) return "unchanged";
-      await tx.update(savedReferences).set({ linkId }).where(where);
-      return "updated";
-    },
-    async removeReference(viewerId, containerId) {
-      const removed = await tx
-        .delete(savedReferences)
-        .where(
-          and(eq(savedReferences.viewerId, viewerId), eq(savedReferences.containerId, containerId)),
-        )
-        .returning({ containerId: savedReferences.containerId });
-      return removed.length > 0;
-    },
-    async findLinkByHash(hash) {
-      const [link] = await tx
-        .select({
-          id: shareLinks.id,
-          containerId: shareLinks.containerId,
-          ownerId: containers.ownerId,
-        })
-        .from(shareLinks)
-        .innerJoin(containers, eq(containers.id, shareLinks.containerId))
-        .where(
-          and(
-            eq(shareLinks.tokenHash, Buffer.from(hash)),
-            isNull(shareLinks.revokedAt),
-            isNull(containers.trashedAt),
-          ),
-        );
-      return link;
-    },
-    async findLiveLink(containerId) {
-      const [link] = await tx
-        .select({ id: shareLinks.id })
-        .from(shareLinks)
-        .where(and(eq(shareLinks.containerId, containerId), isNull(shareLinks.revokedAt)));
-      return link;
-    },
-    async insertLink({ id, containerId, tokenHash }) {
-      await tx.insert(shareLinks).values({ id, containerId, tokenHash: Buffer.from(tokenHash) });
-    },
-    async revokeLink(id, at) {
-      await tx.update(shareLinks).set({ revokedAt: at }).where(eq(shareLinks.id, id));
-      await recordInLedger(tx, { type: "shareLink.revoked", linkId: id }, at);
-    },
-  };
-}
+import { collectionStore } from "./store";
 
 /**
  * Takes the account's write lock (TS-20): its `account_sync` row, for the rest of the transaction. Every write of
@@ -1234,6 +122,46 @@ function principalLabel(principal: Principal): string {
   return `user:${principal.client}`;
 }
 
+/** A mutation's row: whose it is, its outcome once it has one, and when it was received or last claimed. */
+type StoredMutation = { accountId: string; result: unknown; receivedAt: Date };
+
+/** The row stored under the mutation ID `id`, if any (TS-22). */
+async function storedMutation(tx: Transaction, id: string): Promise<StoredMutation | undefined> {
+  const [stored] = await tx
+    .select({
+      accountId: mutations.accountId,
+      result: mutations.result,
+      receivedAt: mutations.receivedAt,
+    })
+    .from(mutations)
+    .where(eq(mutations.id, id));
+  return stored;
+}
+
+/**
+ * What running and claiming a mutation start with (TS-20 steps 2–3): a guest's is `refused`; anyone else's runs `then`
+ * in one transaction under the write lock of the account it acts for, with its `seq` and the mutation's stored row.
+ */
+function underLock<T>(
+  db: Executor,
+  principal: Principal,
+  mutationId: string,
+  refused: (failure: Failure) => T,
+  then: (locked: {
+    tx: Transaction;
+    accountId: string;
+    seq: number;
+    stored: StoredMutation | undefined;
+  }) => Promise<T>,
+): Promise<T> {
+  const accountId = actingUserId(principal);
+  if (!accountId) return Promise.resolve(refused(guestMutationRefusal));
+  return db.transaction(async (tx) => {
+    const seq = await lockAccount(tx, accountId);
+    return then({ tx, accountId, seq, stored: await storedMutation(tx, mutationId) });
+  });
+}
+
 export type ExecutedMutation = {
   result: MutationResult;
   /** The changes it committed, in `seq` order, for the stream. Empty for rejections and replays. */
@@ -1260,7 +188,7 @@ export type ExecutedMutation = {
  * `link.set`'s URL.
  */
 export async function executeMutation(
-  db: Database | Transaction,
+  db: Executor,
   principal: Principal,
   mutation: Mutation,
   now: Date = new Date(),
@@ -1276,35 +204,20 @@ export async function executeMutation(
     shareLink?: { hash: Uint8Array };
   } = {},
 ): Promise<ExecutedMutation> {
-  const accountId = actingUserId(principal);
   const { mutationId } = mutation;
   const answer = (outcome: Outcome, changes: Change[] = [], replayed = false) => ({
     result: { mutationId, outcome },
     changes,
     replayed,
   });
-  if (!accountId) return answer(failure("permission_denied", "Guests can't change anything."));
 
-  return db.transaction(async (tx) => {
-    const seq = await lockAccount(tx, accountId);
-
-    const [stored] = await tx
-      .select({ accountId: mutations.accountId, result: mutations.result })
-      .from(mutations)
-      .where(eq(mutations.id, mutationId));
+  return underLock(db, principal, mutationId, answer, async ({ tx, accountId, seq, stored }) => {
     if (stored?.result && stored.accountId === accountId) {
       return answer(outcomeSchema.parse(stored.result), [], true);
     }
-    if (stored && (stored.accountId !== accountId || !claimed)) return answer(idInUse);
-    const madeAt = uuidv7Time(mutationId) ?? now.getTime();
-    if (madeAt < now.getTime() - syncRetentionMs) {
-      return answer(
-        failure(
-          "expired",
-          "This change is too old to be retried. Check the saved state and make it again.",
-        ),
-      );
-    }
+    if (stored && (stored.accountId !== accountId || !claimed)) return answer(mutationIdInUse);
+    const tooOld = mutationTooOld(mutationId, now);
+    if (tooOld) return answer(tooOld);
 
     const result = await runCommand(mutation, {
       principal,
@@ -1327,10 +240,6 @@ export async function executeMutation(
     return answer(outcome, changes);
   });
 }
-
-const idInUse = failure("validation_failed", "This mutation ID is already in use.", [
-  { path: "mutationId", message: "Already in use" },
-]);
 
 /** Stores `outcome` under the mutation's ID, completing its claim if it has one. */
 async function recordOutcome(
@@ -1382,26 +291,15 @@ export async function claimMutation(
   mutation: Mutation,
   now: Date = new Date(),
 ): Promise<Claim> {
-  const accountId = actingUserId(principal);
   const { mutationId } = mutation;
   const answered = (outcome: Outcome, replayed = false): Claim => ({
     status: "answered",
     executed: { result: { mutationId, outcome }, changes: [], replayed },
   });
-  if (!accountId) return answered(failure("permission_denied", "Guests can't change anything."));
 
-  return db.transaction(async (tx) => {
-    await lockAccount(tx, accountId);
-    const [stored] = await tx
-      .select({
-        accountId: mutations.accountId,
-        result: mutations.result,
-        receivedAt: mutations.receivedAt,
-      })
-      .from(mutations)
-      .where(eq(mutations.id, mutationId));
+  return underLock(db, principal, mutationId, answered, async ({ tx, accountId, stored }) => {
     if (stored) {
-      if (stored.accountId !== accountId) return answered(idInUse);
+      if (stored.accountId !== accountId) return answered(mutationIdInUse);
       if (stored.result) return answered(outcomeSchema.parse(stored.result), true);
       if (stored.receivedAt.getTime() > now.getTime() - claimTimeoutMs) {
         return { status: "in_progress" };
@@ -1409,15 +307,8 @@ export async function claimMutation(
       await tx.update(mutations).set({ receivedAt: now }).where(eq(mutations.id, mutationId));
       return { status: "claimed" };
     }
-    const madeAt = uuidv7Time(mutationId) ?? now.getTime();
-    if (madeAt < now.getTime() - syncRetentionMs) {
-      return answered(
-        failure(
-          "expired",
-          "This change is too old to be retried. Check the saved state and make it again.",
-        ),
-      );
-    }
+    const tooOld = mutationTooOld(mutationId, now);
+    if (tooOld) return answered(tooOld);
     await tx.insert(mutations).values({
       id: mutationId,
       accountId,
@@ -1492,7 +383,7 @@ export async function mutationRunning(
  * `execute` replaces `executeMutation` per item, as the API's does to run captures with their providers.
  */
 export function executeBatch(
-  db: Database | Transaction,
+  db: Executor,
   principal: Principal,
   batch: Batch,
   {
@@ -1566,84 +457,77 @@ export async function readChanges(
  * hold active content, and Trash comes as units (TS-13). Links and field values of albums in Trash still come.
  */
 export function bootstrapSnapshot(db: Database, accountId: string): Promise<Bootstrap> {
-  return db.transaction(
-    async (tx) => {
-      const [sync] = await tx
-        .select({ seq: accountSync.seq })
-        .from(accountSync)
-        .where(eq(accountSync.accountId, accountId));
-      const owned: Album[] = await tx
-        .select(albumColumns)
-        .from(albums)
-        .where(and(eq(albums.ownerId, accountId), isNull(albums.trashedAt)))
-        .orderBy(asc(albums.id));
-      const folders: Container[] = await tx
-        .select(containerColumns)
-        .from(containers)
-        .where(and(eq(containers.ownerId, accountId), isNull(containers.trashedAt)))
-        .orderBy(asc(containers.id));
-      // Only an entry of an active list and an active album is effective (TS-13).
-      const entries = await tx
-        .select(membershipColumns)
-        .from(memberships)
-        .innerJoin(containers, eq(containers.id, memberships.listId))
-        .innerJoin(albums, eq(albums.id, memberships.albumId))
-        .where(
-          and(
-            eq(memberships.ownerId, accountId),
-            isNull(containers.trashedAt),
-            isNull(albums.trashedAt),
-          ),
-        )
-        .orderBy(asc(memberships.listId), asc(memberships.albumId));
-      const trash = await unitsOfAccount(tx, accountId);
-      const fields = await fieldsOfAccount(tx, accountId);
-      const fieldValues = await valuesOfAccount(tx, accountId);
-      const links: ServiceLink[] = await tx
-        .select({
-          albumId: albumServiceLinks.albumId,
-          service: albumServiceLinks.service,
-          url: albumServiceLinks.url,
-        })
-        .from(albumServiceLinks)
-        .where(eq(albumServiceLinks.ownerId, accountId))
-        .orderBy(asc(albumServiceLinks.albumId), asc(albumServiceLinks.service));
-      const views: ViewPrefs[] = await tx
-        .select(viewPrefsColumns)
-        .from(viewPrefs)
-        .where(eq(viewPrefs.personId, accountId))
-        .orderBy(asc(viewPrefs.viewKey));
-      const arranged: Position[] = await tx
-        .select(positionColumns)
-        .from(positions)
-        .where(eq(positions.personId, accountId))
-        .orderBy(asc(positions.viewKey), asc(positions.itemId));
-      const [defaults]: AccountDefaults[] = await tx
-        .select(accountDefaultsColumns)
-        .from(accountSettings)
-        .where(eq(accountSettings.accountId, accountId));
-      const references = await tx
-        .select({ containerId: savedReferences.containerId })
-        .from(savedReferences)
-        .where(eq(savedReferences.viewerId, accountId))
-        .orderBy(desc(savedReferences.createdAt), asc(savedReferences.containerId));
-      return {
-        seq: sync?.seq ?? 0,
-        albums: owned,
-        containers: folders,
-        memberships: entries.map(membershipOf),
-        links,
-        fields,
-        fieldValues,
-        views,
-        positions: arranged,
-        defaults: defaults ?? appAccountDefaults,
-        trashUnits: trash,
-        references,
-      };
-    },
-    { isolationLevel: "repeatable read", accessMode: "read only" },
-  );
+  return readSnapshot(db, async (tx) => {
+    const [sync] = await tx
+      .select({ seq: accountSync.seq })
+      .from(accountSync)
+      .where(eq(accountSync.accountId, accountId));
+    const owned: Album[] = await tx
+      .select(albumColumns)
+      .from(albums)
+      .where(and(eq(albums.ownerId, accountId), isNull(albums.trashedAt)))
+      .orderBy(asc(albums.id));
+    const folders: Container[] = await tx
+      .select(containerColumns)
+      .from(containers)
+      .where(and(eq(containers.ownerId, accountId), isNull(containers.trashedAt)))
+      .orderBy(asc(containers.id));
+    // Only an entry of an active list and an active album is effective (TS-13).
+    const entries = await tx
+      .select(membershipColumns)
+      .from(memberships)
+      .innerJoin(containers, eq(containers.id, memberships.listId))
+      .innerJoin(albums, eq(albums.id, memberships.albumId))
+      .where(
+        and(
+          eq(memberships.ownerId, accountId),
+          isNull(containers.trashedAt),
+          isNull(albums.trashedAt),
+        ),
+      )
+      .orderBy(asc(memberships.listId), asc(memberships.albumId));
+    const trash = await unitsOfAccount(tx, accountId);
+    const fields = await fieldsOfAccount(tx, accountId);
+    const fieldValues = await valuesOfAccount(tx, accountId);
+    const links: ServiceLink[] = await tx
+      .select({ albumId: albumServiceLinks.albumId, ...serviceLinkColumns })
+      .from(albumServiceLinks)
+      .where(eq(albumServiceLinks.ownerId, accountId))
+      .orderBy(asc(albumServiceLinks.albumId), asc(albumServiceLinks.service));
+    const views: ViewPrefs[] = await tx
+      .select(viewPrefsColumns)
+      .from(viewPrefs)
+      .where(eq(viewPrefs.personId, accountId))
+      .orderBy(asc(viewPrefs.viewKey));
+    const arranged: Position[] = await tx
+      .select(positionColumns)
+      .from(positions)
+      .where(eq(positions.personId, accountId))
+      .orderBy(asc(positions.viewKey), asc(positions.itemId));
+    const [defaults]: AccountDefaults[] = await tx
+      .select(accountDefaultsColumns)
+      .from(accountSettings)
+      .where(eq(accountSettings.accountId, accountId));
+    const references = await tx
+      .select({ containerId: savedReferences.containerId })
+      .from(savedReferences)
+      .where(eq(savedReferences.viewerId, accountId))
+      .orderBy(desc(savedReferences.createdAt), asc(savedReferences.containerId));
+    return {
+      seq: sync?.seq ?? 0,
+      albums: owned,
+      containers: folders,
+      memberships: entries.map(membershipOf),
+      links,
+      fields,
+      fieldValues,
+      views,
+      positions: arranged,
+      defaults: defaults ?? appAccountDefaults,
+      trashUnits: trash,
+      references,
+    };
+  });
 }
 
 /**
@@ -1651,10 +535,7 @@ export function bootstrapSnapshot(db: Database, accountId: string): Promise<Boot
  * cursor before the remaining log is then answered with `reset`, and a replay of a removed mutation is `expired`.
  * The daily schedule runs it in its own transaction (TS-91).
  */
-export async function pruneSyncHistory(
-  db: Database | Transaction,
-  now: Date = new Date(),
-): Promise<void> {
+export async function pruneSyncHistory(db: Executor, now: Date = new Date()): Promise<void> {
   const before = new Date(now.getTime() - syncRetentionMs);
   await db.delete(changeLog).where(lt(changeLog.createdAt, before));
   await db.delete(mutations).where(lt(mutations.receivedAt, before));
@@ -1684,15 +565,7 @@ export async function purgeExpiredTrash(
       const seq = await lockAccount(tx, ownerId);
       const store = collectionStore(tx);
       const units = await tx
-        .select({
-          id: trashUnits.id,
-          ownerId: trashUnits.ownerId,
-          kind: trashUnits.kind,
-          rootId: trashUnits.rootId,
-          deletedAt: trashUnits.deletedAt,
-          expiresAt: trashUnits.expiresAt,
-          tombstones: trashUnits.tombstones,
-        })
+        .select(storedUnitColumns)
         .from(trashUnits)
         .where(and(eq(trashUnits.ownerId, ownerId), lte(trashUnits.expiresAt, now)))
         .orderBy(asc(trashUnits.expiresAt), asc(trashUnits.id));

@@ -4,19 +4,17 @@
 // Saving defines the field; the caller can then apply it, as "+ Add field" → "Create field…" does (DS-46). Settings →
 // Custom fields reuses it (TON-53).
 
+import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { Plus, X } from "lucide-react";
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import {
-  fieldNameProblem,
-  fieldNameTaken,
+  fieldDefinitionProblems,
+  fieldLimitProblem,
   fieldTypes,
-  findNameConflict,
   isChoiceType,
   maxFieldOptions,
-  maxFields,
-  optionLabelProblem,
   uuidv7,
   type CustomField,
   type FieldType,
@@ -26,20 +24,23 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
-import { cn } from "@tonaris/ui/lib/utils";
+import { Field } from "@tonaris/ui/components/field";
+import { Input } from "@tonaris/ui/components/input";
+import { Select } from "@tonaris/ui/components/select";
 
 import { useCollectionData } from "./data";
 import { fieldTypeNames } from "./field-types";
 
-const control =
-  "h-8 min-w-0 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid";
-
 type DraftOption = { id: string; label: string };
 
-/** What is wrong with a new field, if anything: its name, or an option by index. */
+/**
+ * What is wrong with a new field, if anything, in the domain's words (`fieldDefinitionProblems`): its name, an
+ * option by its row, or the form, at the account's limit of fields or with no place of its own.
+ */
 export function newFieldProblems(
   name: string,
   type: FieldType,
@@ -49,27 +50,28 @@ export function newFieldProblems(
   const problems: { name?: string; options: Record<number, string>; form?: string } = {
     options: {},
   };
-  const trimmed = name.trim();
-  const nameProblem = fieldNameProblem(trimmed);
-  const taken = findNameConflict(trimmed, fields);
-  if (nameProblem) problems.name = nameProblem.problem.detail;
-  else if (taken) problems.name = fieldNameTaken(taken.name).problem.detail;
-  if (fields.length >= maxFields) {
-    problems.form = `You've reached ${maxFields} custom fields. Delete one to add another.`;
+  // A row left empty is no option; the others keep their rows' indexes.
+  const rows = options.flatMap((option, index) =>
+    option.label.trim() === "" ? [] : [{ option, index }],
+  );
+  const found = fieldDefinitionProblems(
+    name,
+    type,
+    rows.map(({ option }) => option),
+    fields,
+  );
+  for (const { problem } of found) {
+    const path = problem.errors?.[0]?.path;
+    const row = /^args\.options\.(\d+)\.label$/.exec(path ?? "")?.[1];
+    const detail = problem.detail ?? "";
+    if (path === "args.name") problems.name ??= detail;
+    else if (row !== undefined) {
+      const index = rows[Number(row)]?.index;
+      if (index !== undefined) problems.options[index] ??= detail;
+    } else problems.form ??= detail;
   }
-  if (!isChoiceType(type)) return problems;
-  const seen: { id: string; name: string }[] = [];
-  for (const [index, option] of options.entries()) {
-    const label = option.label.trim();
-    // A row left empty is no option.
-    if (label === "") continue;
-    const problem = optionLabelProblem(label, `options.${index}`);
-    if (problem) problems.options[index] = problem.problem.detail ?? "";
-    else if (findNameConflict(label, seen)) {
-      problems.options[index] = "Each option needs its own label.";
-    }
-    seen.push({ id: option.id, name: label });
-  }
+  const limit = fieldLimitProblem(fields.length);
+  if (limit) problems.form = limit.problem.detail;
   return problems;
 }
 
@@ -88,7 +90,6 @@ export function FieldCreateDialog({
   const [options, setOptions] = useState<DraftOption[]>([{ id: uuidv7(), label: "" }]);
   const [submitted, setSubmitted] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
-  const id = useId();
   const choice = isChoiceType(type);
   // Option rows left empty are left out: a choice field may start without options.
   const filled = options.filter((option) => option.label.trim() !== "");
@@ -114,7 +115,7 @@ export function FieldCreateDialog({
         ? filled.map((option) => ({ id: option.id, label: option.label.trim() }))
         : [],
     };
-    client.fields.insert(field).isPersisted.promise.catch(() => {});
+    sent(client.fields.insert(field));
     onCreated?.(field.id);
     onClose();
   }
@@ -142,52 +143,41 @@ export function FieldCreateDialog({
               {shown.form}
             </p>
           )}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-name`} className="text-small text-fg-secondary">
-              Name
-            </label>
-            <input
-              ref={nameRef}
-              id={`${id}-name`}
-              value={name}
-              aria-invalid={shown.name !== undefined}
-              aria-describedby={shown.name === undefined ? undefined : `${id}-name-problem`}
-              onChange={(event) => setName(event.target.value)}
-              className={cn(control, shown.name && "border-status-danger")}
-            />
-            {shown.name && (
-              <p id={`${id}-name-problem`} className="text-small text-status-danger">
-                {shown.name}
-              </p>
+          <Field label="Name" problem={shown.name}>
+            {(control) => (
+              <Input
+                {...control}
+                ref={nameRef}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
             )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-type`} className="text-small text-fg-secondary">
-              Type
-            </label>
-            <select
-              id={`${id}-type`}
-              value={type}
-              onChange={(event) => {
-                const chosen = fieldTypes.find((each) => each === event.target.value);
-                if (chosen) setType(chosen);
-              }}
-              className={control}
-            >
-              {fieldTypes.map((each) => (
-                <option key={each} value={each}>
-                  {fieldTypeNames[each]}
-                </option>
-              ))}
-            </select>
-          </div>
+          </Field>
+          <Field label="Type">
+            {(control) => (
+              <Select
+                {...control}
+                value={type}
+                onChange={(event) => {
+                  const chosen = fieldTypes.find((each) => each === event.target.value);
+                  if (chosen) setType(chosen);
+                }}
+              >
+                {fieldTypes.map((each) => (
+                  <option key={each} value={each}>
+                    {fieldTypeNames[each]}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
           {choice && (
             <fieldset className="flex flex-col gap-1.5">
               <legend className="mb-1.5 text-small text-fg-secondary">Options</legend>
               {options.map((option, index) => (
                 <div key={option.id} className="flex flex-col gap-1">
                   <div className="flex items-center gap-1">
-                    <input
+                    <Input
                       aria-label={`Option ${index + 1}`}
                       value={option.label}
                       aria-invalid={shown.options[index] !== undefined}
@@ -200,11 +190,7 @@ export function FieldCreateDialog({
                           ),
                         )
                       }
-                      className={cn(
-                        control,
-                        "flex-1",
-                        shown.options[index] && "border-status-danger",
-                      )}
+                      className="flex-1"
                     />
                     <Button
                       type="button"
@@ -235,14 +221,14 @@ export function FieldCreateDialog({
               )}
             </fieldset>
           )}
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button type="button" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" aria-keyshortcuts="Meta+Enter">
               Create field
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

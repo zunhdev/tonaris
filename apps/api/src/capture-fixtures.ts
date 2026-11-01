@@ -18,8 +18,8 @@ import {
   type ParsedLink,
 } from "@tonaris/providers";
 
-import type { ImageFetch } from "./artwork";
 import type { CaptureDeps } from "./capture";
+import type { ImageFetch } from "./img/artwork";
 import type { CoverFinder } from "./routes/v1/covers";
 
 const ids = {

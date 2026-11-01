@@ -3,7 +3,7 @@
 
 import type { SyncClient } from "@/client/sync/client";
 import type { Resubmitted } from "@/client/sync/resubmit";
-import type { BatchReport, SaveState } from "@/client/sync/writer";
+import type { BatchReport, SaveState } from "@/client/sync/save-states";
 import { createContext, useContext } from "react";
 
 import type { Names } from "./describe";

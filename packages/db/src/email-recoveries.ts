@@ -1,26 +1,18 @@
 // The creator's recovery of a sign-in email (FR-11.5, TS-73): one per account, waiting for the new address to
 // confirm it with the link's token and code, both kept only as hashes. Confirming swaps the email, ends every
-// session of the account, removes its passkeys, disconnects its AI connections when the creator asked, and writes the audit log, in one
-// transaction. The member list it starts from shows no collection data (FR-11.6).
+// session of the account, removes its passkeys, disconnects its AI connections when the creator asked, and writes
+// the audit log, in one transaction. The member list it starts from shows no collection data (FR-11.6).
 
-import { timingSafeEqual } from "node:crypto";
+import { and, asc, eq, isNull, type SQL } from "drizzle-orm";
 
-import { and, asc, eq, isNull, ne, sql } from "drizzle-orm";
+import { emailRecoveryHours } from "@tonaris/domain";
 
-import { emailRecoveryHours, signInCode } from "@tonaris/domain";
-
-import type { Database, Transaction } from "./client";
+import type { Database } from "./client";
 import { recordInLedger } from "./ledger";
 import { removeAllPasskeys } from "./passkeys";
-import {
-  auditLog,
-  emailRecoveries,
-  oauthAccessTokens,
-  oauthConsents,
-  oauthRefreshTokens,
-  users,
-} from "./schema";
-import { isUniqueViolation, swapSignInEmail } from "./sign-in-email";
+import { auditLog, emailRecoveries, users } from "./schema";
+import { checkCode, emailKeyHolder, isUniqueViolation, swapSignInEmail } from "./sign-in-email";
+import { endConnections } from "./teardowns";
 
 export type MemberRow = {
   id: string;
@@ -33,6 +25,16 @@ export type MemberRow = {
 
 /** Every account, oldest first: its email, display name and join date, and nothing of its collection. */
 export async function listMembers(db: Database): Promise<MemberRow[]> {
+  return memberRows(db);
+}
+
+/** The account `id` as `listMembers` lists it, or undefined if there is none. */
+export async function findMember(db: Database, id: string): Promise<MemberRow | undefined> {
+  const [member] = await memberRows(db, eq(users.id, id));
+  return member;
+}
+
+async function memberRows(db: Database, where?: SQL): Promise<MemberRow[]> {
   const rows = await db
     .select({
       id: users.id,
@@ -45,7 +47,7 @@ export async function listMembers(db: Database): Promise<MemberRow[]> {
     .from(users)
     .leftJoin(emailRecoveries, eq(emailRecoveries.userId, users.id))
     // An account being deleted holds a placeholder address until it goes (TS-74).
-    .where(isNull(users.deletingAt))
+    .where(and(isNull(users.deletingAt), where))
     .orderBy(asc(users.createdAt), asc(users.id));
   return rows.map(({ id, email, displayName, joinedAt, newEmailKey, requestedAt }) => ({
     id,
@@ -82,11 +84,7 @@ export async function issueEmailRecovery(
     .where(eq(users.id, values.userId));
   if (!account) return "missing";
   if (account.email === values.newEmailKey) return "same";
-  const [owner] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.email, values.newEmailKey), ne(users.id, values.userId)));
-  if (owner) return "taken";
+  if (await emailKeyHolder(db, values.newEmailKey, values.userId)) return "taken";
   const { userId, ...change } = values;
   const fresh = {
     ...change,
@@ -114,14 +112,6 @@ export type EmailRecoveryConfirmation =
   | { outcome: "none" | "expired" | "locked" | "wrong" | "taken" }
   | { outcome: "recovered"; userId: string; from: string; to: string };
 
-/** Ends every AI connection of `userId`: consents and the tokens they gave (TS-61). */
-async function disconnectAll(tx: Transaction, userId: string): Promise<void> {
-  await tx.delete(oauthAccessTokens).where(eq(oauthAccessTokens.userId, userId));
-  await tx.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.userId, userId));
-  await tx.delete(oauthConsents).where(eq(oauthConsents.userId, userId));
-  await recordInLedger(tx, { type: "connection.revoked", userId, clientId: null });
-}
-
 /**
  * Confirms the recovery behind `tokenHash` with its code, under its row's lock. A wrong code counts an attempt,
  * which commits. A right one swaps in this transaction (`swapSignInEmail`, keeping no session), disconnects AI
@@ -145,15 +135,8 @@ export async function confirmEmailRecovery(
         .for("update");
       if (!recovery) return { outcome: "none" };
       const its = eq(emailRecoveries.userId, recovery.userId);
-      if (recovery.expiresAt <= now) return { outcome: "expired" };
-      if (recovery.attempts >= signInCode.attempts) return { outcome: "locked" };
-      if (!timingSafeEqual(recovery.codeHash, codeHash)) {
-        await tx
-          .update(emailRecoveries)
-          .set({ attempts: sql`${emailRecoveries.attempts} + 1` })
-          .where(its);
-        return { outcome: "wrong" };
-      }
+      const checked = await checkCode(tx, emailRecoveries, its, recovery, { codeHash, now });
+      if (checked !== "right") return { outcome: checked };
 
       await tx.delete(emailRecoveries).where(its);
       const swapped = await swapSignInEmail(tx, {
@@ -163,7 +146,14 @@ export async function confirmEmailRecovery(
       if (swapped === "taken") return { outcome: "taken" };
       // Someone who took the old address over could have added a passkey (TON-143).
       await removeAllPasskeys(tx, recovery.userId);
-      if (recovery.disconnectConnections) await disconnectAll(tx, recovery.userId);
+      if (recovery.disconnectConnections) {
+        await endConnections(tx, { userId: recovery.userId, clientId: null });
+        await recordInLedger(tx, {
+          type: "connection.revoked",
+          userId: recovery.userId,
+          clientId: null,
+        });
+      }
       await tx.insert(auditLog).values({
         id: auditId,
         actor: recovery.requestedBy,

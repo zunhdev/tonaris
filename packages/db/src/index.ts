@@ -12,8 +12,6 @@ export {
 export {
   beginAccountDeletion,
   deleteAccountData,
-  deletedEmailKey,
-  deletionChunkSize,
   findAccountDeletion,
   finishAccountDeletion,
   pruneAccountDeletions,
@@ -62,7 +60,7 @@ export {
   type ApprovalRow,
   type ApprovalUse,
 } from "./approvals";
-export { capturesSince, maxMergeCandidates, mergeCandidates, savedAlbumsOf } from "./capture";
+export { capturesSince, mergeCandidates, savedAlbumsOf } from "./capture";
 export { createDatabase, type Database, type Transaction } from "./client";
 export {
   fieldDeletionIn,
@@ -77,37 +75,26 @@ export {
   saveFirstPartyClient,
   type FirstPartyClient,
 } from "./first-party-clients";
-export { ledgerStore, recordInLedger, type LedgerStore } from "./ledger";
-export {
-  listPasskeys,
-  removeAllPasskeys,
-  removePasskey,
-  renamePasskey,
-  type PasskeyRow,
-} from "./passkeys";
-export { replayLedger, type ReplayReport } from "./ledger-replay";
+export { ledgerStore, type LedgerStore } from "./ledger";
+export { listPasskeys, removePasskey, renamePasskey, type PasskeyRow } from "./passkeys";
+export type { ReplayReport } from "./ledger-replay";
 export { reconcileRestored, type ReconcileReport } from "./reconcile";
 export { operationsStatus, type OperationsStatus } from "./operations";
-export { findFieldIn, lockAccount, purgeExpiredTrash } from "./sync";
+export { findFieldIn } from "./field-values";
+export { lockAccount, purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
 export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
 export {
-  albumDeletionTargets,
   collectionOverview,
-  connectionUseInterval,
   findConnection,
   listConnections,
-  listContainer,
   recordConnectionUse,
   revokeConnection,
   deletionTargets,
   savedAlbumOfReleaseGroup,
   activeListName,
-  type AlbumMatch,
   type CollectionOverview,
   type ConnectionRow,
-  type ContainerListing,
-  type ContainerRef,
 } from "./mcp";
 export {
   albumDetail,
@@ -134,6 +121,7 @@ export {
   albumBase,
   claimOperation,
   containerBase,
+  fieldBase,
   fieldValueBase,
   findOperation,
   linkBase,
@@ -144,7 +132,6 @@ export {
 export {
   buryJob,
   claimJob,
-  deadJobRetentionMs,
   enqueueJob,
   finishJob,
   pruneDeadJobs,
@@ -152,8 +139,8 @@ export {
   type JobRow,
 } from "./jobs";
 export { runExclusively } from "./locks";
-export { migrateDatabase, migrationsFolder } from "./migrations";
-export { albumProvenance } from "./provenance";
+export { migrateDatabase } from "./migrations";
+export { provenanceOf } from "./provenance";
 export { providerCacheStore, pruneProviderCache } from "./provider-cache";
 export {
   invitationState,
@@ -161,7 +148,6 @@ export {
   pendingInvitations,
   recordInvitationEmail,
 } from "./invitations";
-export { fillSearchKeys } from "./migrations";
 export { searchCollection } from "./search";
 export { canReadContainer, readableContainers } from "./access";
 export { sharingImpact, type ImpactQuery } from "./sharing-impact";
@@ -179,7 +165,6 @@ export * from "./schema";
 export {
   bootstrapSnapshot,
   claimMutation,
-  claimTimeoutMs,
   executeBatch,
   executeMutation,
   findMutationResult,
@@ -192,3 +177,6 @@ export {
   type Claim,
   type ExecutedMutation,
 } from "./sync";
+
+// TON-147: the API's helpers.
+export { findMember } from "./email-recoveries";

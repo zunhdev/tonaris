@@ -27,6 +27,34 @@ export const problemResponse = {
   },
 };
 
+/** A stream's events as its `200` documents them; the schema refers to components (TS-23). */
+type StreamEvents = {
+  description: string;
+  // Component references: Zod's JSON Schema type doesn't fit openapi-types' schema objects.
+  schema: { $ref: string } | { oneOf: { $ref: string }[] };
+};
+
+/** The `shared-invalidate` events that guests and viewers of a share follow (TS-23). */
+export const invalidationEvents: StreamEvents = {
+  description: "`shared-invalidate` events",
+  schema: { $ref: "#/components/schemas/SharedInvalidate" },
+};
+
+/**
+ * A stream route's `detail.responses` (TS-23): its `text/event-stream` events, and a problem for each status it may
+ * answer before the stream starts. A stream declares no `response` map: on a generator route, that breaks Eden's
+ * types and validates nothing.
+ */
+export function streamResponses(events: StreamEvents, problems: readonly number[]) {
+  return {
+    200: {
+      description: events.description,
+      content: { "text/event-stream": { schema: events.schema } },
+    },
+    ...Object.fromEntries(problems.map((status) => [status, problemResponse])),
+  };
+}
+
 function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   const { $schema: _, ...rest } = z.toJSONSchema(schema, { target: "draft-2020-12", io: "output" });
   return rest;

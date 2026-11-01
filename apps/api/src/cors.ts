@@ -1,5 +1,5 @@
 // CORS (TS-102): credentialed requests only from the web app's exact origin, preflights cached for 10 minutes.
-// Native apps and MCP send bearer tokens and need none (TS-08). CSRF origin checks follow in TON-10.
+// Native apps and MCP send bearer tokens and need none (TS-08). The CSRF origin checks are in security.ts.
 
 import { cors } from "@elysia/cors";
 

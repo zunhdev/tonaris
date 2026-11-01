@@ -4,8 +4,8 @@
 // link setting says: the service's page, whose universal links hand it to an installed app on a phone, or the app
 // itself (TON-104).
 
-import { useNarrowScreen } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
+import { useNarrowScreen } from "@/features/shell/media";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ExternalLink } from "lucide-react";

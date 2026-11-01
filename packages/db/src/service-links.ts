@@ -1,5 +1,5 @@
-// Albums by their service links (TS-11, TS-41 step 1). Capture writes links (TON-44), and editing them comes with
-// TON-46; `entity_id` holds `linkEntityId()` of the link, so a link is found again whatever form it was pasted in.
+// Albums by their service links (TS-11, TS-41 step 1). Capture and link edits write links (TON-44, TON-46);
+// `entity_id` holds `linkEntityId()` of the link, so a link is found again whatever form it was pasted in.
 
 import { and, asc, eq, sql } from "drizzle-orm";
 

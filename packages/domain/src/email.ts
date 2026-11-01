@@ -3,6 +3,7 @@
 
 import { signInCode } from "./accounts";
 import { admissionInvitationDays } from "./admission";
+import { containerKinds, type ContainerKind } from "./containers";
 import { z } from "./zod";
 
 /** Each template and the data it needs. */
@@ -27,7 +28,7 @@ export type EmailTemplates = {
   "share-invitation": {
     ownerName: string;
     containerName: string;
-    kind: "folder" | "list";
+    kind: ContainerKind;
     link: string;
   };
 };
@@ -35,10 +36,12 @@ export type EmailTemplate = keyof EmailTemplates;
 
 export type RenderedEmail = { subject: string; text: string };
 
-/** The record whose `email_status` says how its email went (FR-07.5, FR-11.6). */
-export type EmailOutcome =
-  | { kind: "share_grant"; id: string }
-  | { kind: "admission_invitation"; id: string };
+/** The record whose `email_status` says how its email went (FR-07.5, FR-11.6), as an email's job carries it. */
+export const emailOutcomeSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("share_grant"), id: z.string() }),
+  z.object({ kind: z.literal("admission_invitation"), id: z.string() }),
+]);
+export type EmailOutcome = z.infer<typeof emailOutcomeSchema>;
 
 export type EmailOptions = {
   /** Where the outcome is recorded: sent, failed, or unknown when it couldn't be confirmed. */
@@ -92,7 +95,7 @@ export const emailDataSchemas: { [T in EmailTemplate]: z.ZodType<EmailTemplates[
   "share-invitation": z.object({
     ownerName: z.string(),
     containerName: z.string(),
-    kind: z.enum(["folder", "list"]),
+    kind: z.enum(containerKinds),
     link: z.string(),
   }),
   "admission-invitation": z.object({ link: z.string() }),

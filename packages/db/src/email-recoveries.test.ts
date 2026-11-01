@@ -10,6 +10,7 @@ import {
   cancelEmailRecovery,
   confirmEmailRecovery,
   issueEmailRecovery,
+  findMember,
   listMembers,
 } from "./email-recoveries";
 import {
@@ -102,6 +103,12 @@ describe("listMembers", () => {
         recovery: { newEmailKey: "anna@new.example", requestedAt: expect.any(Date) },
       },
     ]);
+  });
+
+  test("findMember reads one account as the list shows it, and nothing for an unknown one", async () => {
+    await issue();
+    expect(await findMember(t.db, anna)).toEqual((await listMembers(t.db))[1]);
+    expect(await findMember(t.db, Bun.randomUUIDv7())).toBeUndefined();
   });
 });
 

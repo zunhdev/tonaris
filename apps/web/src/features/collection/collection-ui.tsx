@@ -22,7 +22,8 @@ import {
 import type { ContainerKind } from "@tonaris/domain";
 
 import { editMode, expandedFolders, type Mode } from "../shell/device";
-import { emptyForm, type AlbumForm } from "./album-form";
+import { useNarrowScreen } from "../shell/media";
+import type { AlbumForm } from "./album-form";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
 import { ancestorsOf, buildTree } from "./tree";
 
@@ -245,20 +246,6 @@ export function useViewContainerId(): string | undefined {
 }
 
 /**
- * Opens the manual entry form (DS-47), going to the list on view, if one is, switching to Editing first, since adding
- * is an edit (DS-45).
- */
-export function useStartNewAlbum(): () => void {
-  const { enterEditing } = useMode();
-  const { startNewAlbum } = useCollectionUi();
-  const listId = useParams({ strict: false }).listId ?? null;
-  return useCallback(() => {
-    enterEditing();
-    startNewAlbum({ form: emptyForm(listId) });
-  }, [enterEditing, startNewAlbum, listId]);
-}
-
-/**
  * Starts an editor: shows the sidebar and expands the folders down to where it appears. A create goes into the
  * folder that `placeFor` names when no parent is given.
  */
@@ -294,20 +281,6 @@ export function useStartEditor(): (editor: Editor | { mode: "new"; kind: Contain
       ui.editing.start(editor);
     },
     [client, ui, viewId, enterEditing],
-  );
-}
-
-const narrowQuery = "(max-width: 767px)";
-
-/** Whether the screen is narrower than the desktop app (DS-110): there the app is for browsing. */
-export function useNarrowScreen(): boolean {
-  return useSyncExternalStore(
-    (listener) => {
-      const query = globalThis.matchMedia?.(narrowQuery);
-      query?.addEventListener("change", listener);
-      return () => query?.removeEventListener("change", listener);
-    },
-    () => globalThis.matchMedia?.(narrowQuery).matches ?? false,
   );
 }
 

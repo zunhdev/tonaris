@@ -5,7 +5,7 @@ import { and, desc, eq, gt, lte } from "drizzle-orm";
 
 import { invitationStatus, type AdmissionRefusal, type EmailStatus } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import type { Database, Executor, Transaction } from "./client";
 import { recordInLedger } from "./ledger";
 import { admissionInvitations, serviceState, users } from "./schema";
 
@@ -134,10 +134,7 @@ export async function revokeAdmissionInvitation(
 }
 
 /** Records the invitations past their 14 days as expired: the daily job (TS-91). Use already checks expiry. */
-export async function expireAdmissionInvitations(
-  db: Database | Transaction,
-  now: Date,
-): Promise<void> {
+export async function expireAdmissionInvitations(db: Executor, now: Date): Promise<void> {
   await db
     .update(admissionInvitations)
     .set({ status: "expired" })

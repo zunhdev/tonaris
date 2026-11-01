@@ -1,24 +1,31 @@
 // The collection views (DS-30, DS-32, DS-40, DS-49, DS-105; FR-01.3, FR-05): each view's header (breadcrumbs, its
 // name as the heading and in the page title, and View options) over what it holds, or its empty state with one way
 // forward. Folders and the root show their folders and lists as rows, in the view's sort; lists and Unsorted their
-// albums as rows or cards, sorted and grouped as the person chose (FR-05.1, FR-05.7). Manual order is DS-44's
-// fallback until TON-36: a list's albums in the order they were added, Unsorted's newest first (DS-51). A folder link
-// that names a list leads to the list, and the other way round; a folder or list that doesn't exist says so, once
-// the collection has loaded.
+// albums as rows or cards, sorted and grouped as the person chose (FR-05.1, FR-05.7). Manual order is the person's
+// arrangement (TS-16, TON-36), then DS-44's fallback for the rest: a list's albums in the order they were added,
+// Unsorted's newest first (DS-51). A folder link that names a list leads to the list, and the other way round; a
+// folder or list that doesn't exist says so, once the collection has loaded.
 
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
 import { PhoneShared } from "@/features/sharing/phone-shared";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { phoneRootTab } from "@/features/shell/device";
-import { PageHeader } from "@/features/shell/page-header";
+import { PageHeader, useDocumentTitle } from "@/features/shell/page-header";
 import { useShell } from "@/features/shell/shell-context";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Inbox, Pencil, Plus, Share2, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
-import type { Album, Container, ContainerKind, Membership } from "@tonaris/domain";
+import {
+  entryOrder,
+  unsortedOrder,
+  type Album,
+  type Container,
+  type ContainerKind,
+  type Membership,
+} from "@tonaris/domain";
 import { Button, buttonVariants } from "@tonaris/ui/components/button";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 import {
@@ -28,10 +35,12 @@ import {
   TooltipTrigger,
 } from "@tonaris/ui/components/tooltip";
 
+import { useNarrowScreen } from "../shell/media";
 import { AlbumCards } from "./album-cards";
 import { AlbumDetails } from "./album-details";
 import { AlbumRows } from "./album-rows";
-import { useCollectionUi, useMode, useNarrowScreen, useStartEditor } from "./collection-ui";
+import { useAlbumArrangement, useContainerArrangement } from "./arrangement";
+import { useCollectionUi, useMode, useStartEditor } from "./collection-ui";
 import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
@@ -39,18 +48,9 @@ import { useDeleteContainer } from "./delete-containers";
 import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
 import { ModeSwitch } from "./mode-switch";
-import { sections, sortAlbums, type Direction } from "./order";
 import { ancestorsOf } from "./tree";
-import { usePresentation } from "./use-presentation";
-import { useRearrange, type ViewMoves } from "./use-rearrange";
+import type { ViewMoves } from "./use-rearrange";
 import { ViewOptions } from "./view-options";
-
-/** Names the page "{title} · Tonaris": the view's name is only in the client store, so the route can't. */
-function useDocumentTitle(title: string): void {
-  useEffect(() => {
-    document.title = `${title} · Tonaris`;
-  }, [title]);
-}
 
 function Body({ children }: { children: ReactNode }) {
   return (
@@ -61,8 +61,8 @@ function Body({ children }: { children: ReactNode }) {
 }
 
 /**
- * A folder's or the root's folders and lists, as rows (DS-41), in the order the tree already holds them: the view's
- * sort. Sorted by creation date, the rows show when each was created.
+ * A folder's or the root's folders and lists, as rows (DS-41), in the view's sort, as the tree holds them too. Sorted by
+ * creation date, the rows show when each was created.
  */
 function ContainersBody({
   containers,
@@ -74,27 +74,21 @@ function ContainersBody({
   viewKey: string;
 }) {
   const { tree, counts } = useCollectionData();
-  const { presentation, choose } = usePresentation(viewKey, "containers");
+  const {
+    presentation,
+    shown,
+    manual,
+    moves: arranged,
+  } = useContainerArrangement(containers, viewKey);
   const { editing } = useMode();
-  const rearrange = useRearrange(viewKey, {
-    manual: presentation.sortMode === "manual",
-    toManual: () => choose({ sortMode: "manual" }),
-  });
-  // The tree holds them in the view's order already: under Manual, the arrangement.
-  const moves = useMemo<ViewMoves>(() => {
-    const sequence = containers.map((container) => container.id);
-    const nameOf = (id: string) => tree.byId.get(id)?.name ?? "the folder or list";
-    return {
-      manual: rearrange.manual,
-      handles: rearrange.manual && editing,
-      move: (id: string, to: Direction) => rearrange.move(sequence, sequence, id, to, nameOf(id)),
-      drop: (id, place) => rearrange.drop(sequence, sequence, id, place, nameOf(id)),
-    };
-  }, [containers, tree, rearrange, editing]);
+  const moves = useMemo<ViewMoves>(
+    () => ({ manual, handles: manual && editing, ...arranged }),
+    [manual, editing, arranged],
+  );
   useDropHandler(viewKey, moves.drop);
   return (
     <ContainerRows
-      containers={containers}
+      containers={shown}
       label={label}
       viewKey={viewKey}
       albumCounts={counts}
@@ -105,23 +99,17 @@ function ContainersBody({
   );
 }
 
-/** A list's albums in the order they were added, oldest first: its manual order until TON-36 (DS-44). */
+/** A list's albums in the order they were added, oldest first: the fallback manual order arranges (DS-44). */
 function addedOrder(
   entries: readonly Membership[],
   albumsById: ReadonlyMap<string, Album>,
 ): Album[] {
-  return entries
-    .toSorted(
-      (a, b) =>
-        (a.addedAt < b.addedAt ? -1 : a.addedAt > b.addedAt ? 1 : 0) ||
-        (a.albumId < b.albumId ? -1 : a.albumId > b.albumId ? 1 : 0),
-    )
-    .flatMap((entry) => albumsById.get(entry.albumId) ?? []);
+  return entries.toSorted(entryOrder).flatMap((entry) => albumsById.get(entry.albumId) ?? []);
 }
 
-/** Unsorted's albums newest first, an inbox: its manual order until TON-36 (DS-51). Their UUIDv7 IDs hold when. */
+/** Unsorted's albums newest first, an inbox: the fallback manual order arranges (DS-51). */
 function newestFirst(albums: readonly Album[]): Album[] {
-  return albums.toSorted((a, b) => (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
+  return albums.toSorted(unsortedOrder);
 }
 
 /**
@@ -138,46 +126,16 @@ function AlbumsBody({
   label: string;
   viewKey: string;
 }) {
-  const { keys } = useCollectionData();
-  const { presentation, choose } = usePresentation(viewKey, "albums");
+  const { presentation, sections, manual, moves: arranged } = useAlbumArrangement(albums, viewKey);
   const { editing } = useMode();
-  const { sortMode, sortDir, grouped, layout } = presentation;
-  const viewKeys = keys.get(viewKey);
-  const manualOrder = useMemo(
-    () => sortAlbums(albums, { mode: "manual", dir: sortDir }, viewKeys),
-    [albums, sortDir, viewKeys],
+  const moves = useMemo<ViewMoves>(
+    () => ({ manual, handles: manual && editing, ...arranged }),
+    [manual, editing, arranged],
   );
-  const shown = useMemo(
-    () =>
-      sections(
-        sortMode === "manual" ? manualOrder : sortAlbums(albums, { mode: sortMode, dir: sortDir }),
-        grouped,
-      ),
-    [albums, manualOrder, sortMode, sortDir, grouped],
-  );
-  const rearrange = useRearrange(viewKey, {
-    manual: sortMode === "manual",
-    toManual: () => choose({ sortMode: "manual" }),
-  });
-  const moves = useMemo<ViewMoves>(() => {
-    const sequence = manualOrder.map((album) => album.id);
-    // Grouped, an album moves among its group's albums, in the one arrangement (FR-05.8).
-    const groupOf = (id: string) =>
-      (shown.find((section) => section.albums.some((album) => album.id === id))?.albums ?? []).map(
-        (album) => album.id,
-      );
-    const nameOf = (id: string) =>
-      manualOrder.find((album) => album.id === id)?.title ?? "the album";
-    return {
-      manual: rearrange.manual,
-      handles: rearrange.manual && editing,
-      move: (id, to) => rearrange.move(sequence, groupOf(id), id, to, nameOf(id)),
-      drop: (id, place) => rearrange.drop(sequence, groupOf(id), id, place, nameOf(id)),
-    };
-  }, [manualOrder, shown, rearrange, editing]);
   useDropHandler(viewKey, moves.drop);
   const [collapsed, toggle] = useCollapsedGroups(viewKey);
-  const props = { sections: shown, label, viewKey, collapsed, onToggle: toggle, moves };
+  const { layout } = presentation;
+  const props = { sections, label, viewKey, collapsed, onToggle: toggle, moves };
   return layout === "grid" ? <AlbumCards {...props} /> : <AlbumRows {...props} />;
 }
 
@@ -543,8 +501,6 @@ export function UnsortedView() {
   );
 }
 
-/** Shared with me, until sharing arrives (M7). */
-/** Trash, until deleting arrives (M5): nothing can be in it yet. */
 /** An album on its own page (DS-32): `/a/{albumId}`, its details as the inspector shows them. */
 export function AlbumView({ id }: { id: string }) {
   const { ready, albumsById } = useCollectionData();

@@ -15,6 +15,8 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WorkspaceIndexRouteImport } from './routes/_workspace/index'
+import { Route as WorkspaceAdminRouteImport } from './routes/_workspace/_admin'
+import { Route as WorkspaceSettingsRouteImport } from './routes/_workspace/_settings'
 import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
 import { Route as WorkspaceTrashRouteImport } from './routes/_workspace/trash'
 import { Route as WorkspaceUnsortedRouteImport } from './routes/_workspace/unsorted'
@@ -28,21 +30,21 @@ import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as SignInIndexRouteImport } from './routes/sign-in.index'
 import { Route as SignInVerifyRouteImport } from './routes/sign-in.verify'
 import { Route as WorkspaceAAlbumIdRouteImport } from './routes/_workspace/a.$albumId'
-import { Route as WorkspaceAdminAdmissionsRouteImport } from './routes/_workspace/admin.admissions'
-import { Route as WorkspaceAdminMembersRouteImport } from './routes/_workspace/admin.members'
-import { Route as WorkspaceAdminOperationsRouteImport } from './routes/_workspace/admin.operations'
 import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$folderId'
 import { Route as WorkspaceInvitationsIndexRouteImport } from './routes/_workspace/invitations.index'
 import { Route as WorkspaceInvitationsIdRouteImport } from './routes/_workspace/invitations.$id'
 import { Route as WorkspaceLListIdRouteImport } from './routes/_workspace/l.$listId'
-import { Route as WorkspaceSettingsAccountRouteImport } from './routes/_workspace/settings.account'
-import { Route as WorkspaceSettingsConnectionsRouteImport } from './routes/_workspace/settings.connections'
-import { Route as WorkspaceSettingsCustomFieldsRouteImport } from './routes/_workspace/settings.custom-fields'
-import { Route as WorkspaceSettingsDataRouteImport } from './routes/_workspace/settings.data'
-import { Route as WorkspaceSettingsPreferencesRouteImport } from './routes/_workspace/settings.preferences'
-import { Route as WorkspaceSettingsProfileRouteImport } from './routes/_workspace/settings.profile'
 import { Route as WorkspaceSharedIndexRouteImport } from './routes/_workspace/shared.index'
 import { Route as WorkspaceSharedContainerIdRouteImport } from './routes/_workspace/shared.$containerId'
+import { Route as WorkspaceAdminAdminAdmissionsRouteImport } from './routes/_workspace/_admin/admin.admissions'
+import { Route as WorkspaceAdminAdminMembersRouteImport } from './routes/_workspace/_admin/admin.members'
+import { Route as WorkspaceAdminAdminOperationsRouteImport } from './routes/_workspace/_admin/admin.operations'
+import { Route as WorkspaceSettingsSettingsAccountRouteImport } from './routes/_workspace/_settings/settings.account'
+import { Route as WorkspaceSettingsSettingsConnectionsRouteImport } from './routes/_workspace/_settings/settings.connections'
+import { Route as WorkspaceSettingsSettingsCustomFieldsRouteImport } from './routes/_workspace/_settings/settings.custom-fields'
+import { Route as WorkspaceSettingsSettingsDataRouteImport } from './routes/_workspace/_settings/settings.data'
+import { Route as WorkspaceSettingsSettingsPreferencesRouteImport } from './routes/_workspace/_settings/settings.preferences'
+import { Route as WorkspaceSettingsSettingsProfileRouteImport } from './routes/_workspace/_settings/settings.profile'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: '/_workspace',
@@ -71,6 +73,14 @@ const TermsRoute = TermsRouteImport.update({
 const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceAdminRoute = WorkspaceAdminRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceSettingsRoute = WorkspaceSettingsRouteImport.update({
+  id: '/_settings',
   getParentRoute: () => WorkspaceRoute,
 } as any)
 const WorkspaceCRoute = WorkspaceCRouteImport.update({
@@ -138,23 +148,6 @@ const WorkspaceAAlbumIdRoute = WorkspaceAAlbumIdRouteImport.update({
   path: '/a/$albumId',
   getParentRoute: () => WorkspaceRoute,
 } as any)
-const WorkspaceAdminAdmissionsRoute =
-  WorkspaceAdminAdmissionsRouteImport.update({
-    id: '/admin/admissions',
-    path: '/admin/admissions',
-    getParentRoute: () => WorkspaceRoute,
-  } as any)
-const WorkspaceAdminMembersRoute = WorkspaceAdminMembersRouteImport.update({
-  id: '/admin/members',
-  path: '/admin/members',
-  getParentRoute: () => WorkspaceRoute,
-} as any)
-const WorkspaceAdminOperationsRoute =
-  WorkspaceAdminOperationsRouteImport.update({
-    id: '/admin/operations',
-    path: '/admin/operations',
-    getParentRoute: () => WorkspaceRoute,
-  } as any)
 const WorkspaceFFolderIdRoute = WorkspaceFFolderIdRouteImport.update({
   id: '/f/$folderId',
   path: '/f/$folderId',
@@ -176,41 +169,6 @@ const WorkspaceLListIdRoute = WorkspaceLListIdRouteImport.update({
   path: '/l/$listId',
   getParentRoute: () => WorkspaceRoute,
 } as any)
-const WorkspaceSettingsAccountRoute =
-  WorkspaceSettingsAccountRouteImport.update({
-    id: '/settings/account',
-    path: '/settings/account',
-    getParentRoute: () => WorkspaceRoute,
-  } as any)
-const WorkspaceSettingsConnectionsRoute =
-  WorkspaceSettingsConnectionsRouteImport.update({
-    id: '/settings/connections',
-    path: '/settings/connections',
-    getParentRoute: () => WorkspaceRoute,
-  } as any)
-const WorkspaceSettingsCustomFieldsRoute =
-  WorkspaceSettingsCustomFieldsRouteImport.update({
-    id: '/settings/custom-fields',
-    path: '/settings/custom-fields',
-    getParentRoute: () => WorkspaceRoute,
-  } as any)
-const WorkspaceSettingsDataRoute = WorkspaceSettingsDataRouteImport.update({
-  id: '/settings/data',
-  path: '/settings/data',
-  getParentRoute: () => WorkspaceRoute,
-} as any)
-const WorkspaceSettingsPreferencesRoute =
-  WorkspaceSettingsPreferencesRouteImport.update({
-    id: '/settings/preferences',
-    path: '/settings/preferences',
-    getParentRoute: () => WorkspaceRoute,
-  } as any)
-const WorkspaceSettingsProfileRoute =
-  WorkspaceSettingsProfileRouteImport.update({
-    id: '/settings/profile',
-    path: '/settings/profile',
-    getParentRoute: () => WorkspaceRoute,
-  } as any)
 const WorkspaceSharedIndexRoute = WorkspaceSharedIndexRouteImport.update({
   id: '/shared/',
   path: '/shared/',
@@ -221,6 +179,60 @@ const WorkspaceSharedContainerIdRoute =
     id: '/shared/$containerId',
     path: '/shared/$containerId',
     getParentRoute: () => WorkspaceRoute,
+  } as any)
+const WorkspaceAdminAdminAdmissionsRoute =
+  WorkspaceAdminAdminAdmissionsRouteImport.update({
+    id: '/admin/admissions',
+    path: '/admin/admissions',
+    getParentRoute: () => WorkspaceAdminRoute,
+  } as any)
+const WorkspaceAdminAdminMembersRoute =
+  WorkspaceAdminAdminMembersRouteImport.update({
+    id: '/admin/members',
+    path: '/admin/members',
+    getParentRoute: () => WorkspaceAdminRoute,
+  } as any)
+const WorkspaceAdminAdminOperationsRoute =
+  WorkspaceAdminAdminOperationsRouteImport.update({
+    id: '/admin/operations',
+    path: '/admin/operations',
+    getParentRoute: () => WorkspaceAdminRoute,
+  } as any)
+const WorkspaceSettingsSettingsAccountRoute =
+  WorkspaceSettingsSettingsAccountRouteImport.update({
+    id: '/settings/account',
+    path: '/settings/account',
+    getParentRoute: () => WorkspaceSettingsRoute,
+  } as any)
+const WorkspaceSettingsSettingsConnectionsRoute =
+  WorkspaceSettingsSettingsConnectionsRouteImport.update({
+    id: '/settings/connections',
+    path: '/settings/connections',
+    getParentRoute: () => WorkspaceSettingsRoute,
+  } as any)
+const WorkspaceSettingsSettingsCustomFieldsRoute =
+  WorkspaceSettingsSettingsCustomFieldsRouteImport.update({
+    id: '/settings/custom-fields',
+    path: '/settings/custom-fields',
+    getParentRoute: () => WorkspaceSettingsRoute,
+  } as any)
+const WorkspaceSettingsSettingsDataRoute =
+  WorkspaceSettingsSettingsDataRouteImport.update({
+    id: '/settings/data',
+    path: '/settings/data',
+    getParentRoute: () => WorkspaceSettingsRoute,
+  } as any)
+const WorkspaceSettingsSettingsPreferencesRoute =
+  WorkspaceSettingsSettingsPreferencesRouteImport.update({
+    id: '/settings/preferences',
+    path: '/settings/preferences',
+    getParentRoute: () => WorkspaceSettingsRoute,
+  } as any)
+const WorkspaceSettingsSettingsProfileRoute =
+  WorkspaceSettingsSettingsProfileRouteImport.update({
+    id: '/settings/profile',
+    path: '/settings/profile',
+    getParentRoute: () => WorkspaceSettingsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -242,26 +254,27 @@ export interface FileRoutesByFullPath {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/sign-in/': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
-  '/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
-  '/admin/members': typeof WorkspaceAdminMembersRoute
-  '/admin/operations': typeof WorkspaceAdminOperationsRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
-  '/settings/account': typeof WorkspaceSettingsAccountRoute
-  '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
-  '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
-  '/settings/data': typeof WorkspaceSettingsDataRoute
-  '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
-  '/settings/profile': typeof WorkspaceSettingsProfileRoute
   '/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/invitations/': typeof WorkspaceInvitationsIndexRoute
   '/shared/': typeof WorkspaceSharedIndexRoute
+  '/admin/admissions': typeof WorkspaceAdminAdminAdmissionsRoute
+  '/admin/members': typeof WorkspaceAdminAdminMembersRoute
+  '/admin/operations': typeof WorkspaceAdminAdminOperationsRoute
+  '/settings/account': typeof WorkspaceSettingsSettingsAccountRoute
+  '/settings/connections': typeof WorkspaceSettingsSettingsConnectionsRoute
+  '/settings/custom-fields': typeof WorkspaceSettingsSettingsCustomFieldsRoute
+  '/settings/data': typeof WorkspaceSettingsSettingsDataRoute
+  '/settings/preferences': typeof WorkspaceSettingsSettingsPreferencesRoute
+  '/settings/profile': typeof WorkspaceSettingsSettingsProfileRoute
 }
 export interface FileRoutesByTo {
   '/account-deleted': typeof AccountDeletedRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/': typeof WorkspaceIndexRoute
   '/c': typeof WorkspaceCRoute
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
@@ -273,24 +286,23 @@ export interface FileRoutesByTo {
   '/recover/$token': typeof RecoverTokenRoute
   '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
-  '/': typeof WorkspaceIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
-  '/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
-  '/admin/members': typeof WorkspaceAdminMembersRoute
-  '/admin/operations': typeof WorkspaceAdminOperationsRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
-  '/settings/account': typeof WorkspaceSettingsAccountRoute
-  '/settings/connections': typeof WorkspaceSettingsConnectionsRoute
-  '/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
-  '/settings/data': typeof WorkspaceSettingsDataRoute
-  '/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
-  '/settings/profile': typeof WorkspaceSettingsProfileRoute
   '/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/invitations': typeof WorkspaceInvitationsIndexRoute
   '/shared': typeof WorkspaceSharedIndexRoute
+  '/admin/admissions': typeof WorkspaceAdminAdminAdmissionsRoute
+  '/admin/members': typeof WorkspaceAdminAdminMembersRoute
+  '/admin/operations': typeof WorkspaceAdminAdminOperationsRoute
+  '/settings/account': typeof WorkspaceSettingsSettingsAccountRoute
+  '/settings/connections': typeof WorkspaceSettingsSettingsConnectionsRoute
+  '/settings/custom-fields': typeof WorkspaceSettingsSettingsCustomFieldsRoute
+  '/settings/data': typeof WorkspaceSettingsSettingsDataRoute
+  '/settings/preferences': typeof WorkspaceSettingsSettingsPreferencesRoute
+  '/settings/profile': typeof WorkspaceSettingsSettingsProfileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -299,6 +311,8 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRouteWithChildren
   '/terms': typeof TermsRoute
+  '/_workspace/_admin': typeof WorkspaceAdminRouteWithChildren
+  '/_workspace/_settings': typeof WorkspaceSettingsRouteWithChildren
   '/_workspace/c': typeof WorkspaceCRoute
   '/_workspace/trash': typeof WorkspaceTrashRoute
   '/_workspace/unsorted': typeof WorkspaceUnsortedRoute
@@ -313,21 +327,21 @@ export interface FileRoutesById {
   '/_workspace/': typeof WorkspaceIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/_workspace/a/$albumId': typeof WorkspaceAAlbumIdRoute
-  '/_workspace/admin/admissions': typeof WorkspaceAdminAdmissionsRoute
-  '/_workspace/admin/members': typeof WorkspaceAdminMembersRoute
-  '/_workspace/admin/operations': typeof WorkspaceAdminOperationsRoute
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
-  '/_workspace/settings/account': typeof WorkspaceSettingsAccountRoute
-  '/_workspace/settings/connections': typeof WorkspaceSettingsConnectionsRoute
-  '/_workspace/settings/custom-fields': typeof WorkspaceSettingsCustomFieldsRoute
-  '/_workspace/settings/data': typeof WorkspaceSettingsDataRoute
-  '/_workspace/settings/preferences': typeof WorkspaceSettingsPreferencesRoute
-  '/_workspace/settings/profile': typeof WorkspaceSettingsProfileRoute
   '/_workspace/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/_workspace/invitations/': typeof WorkspaceInvitationsIndexRoute
   '/_workspace/shared/': typeof WorkspaceSharedIndexRoute
+  '/_workspace/_admin/admin/admissions': typeof WorkspaceAdminAdminAdmissionsRoute
+  '/_workspace/_admin/admin/members': typeof WorkspaceAdminAdminMembersRoute
+  '/_workspace/_admin/admin/operations': typeof WorkspaceAdminAdminOperationsRoute
+  '/_workspace/_settings/settings/account': typeof WorkspaceSettingsSettingsAccountRoute
+  '/_workspace/_settings/settings/connections': typeof WorkspaceSettingsSettingsConnectionsRoute
+  '/_workspace/_settings/settings/custom-fields': typeof WorkspaceSettingsSettingsCustomFieldsRoute
+  '/_workspace/_settings/settings/data': typeof WorkspaceSettingsSettingsDataRoute
+  '/_workspace/_settings/settings/preferences': typeof WorkspaceSettingsSettingsPreferencesRoute
+  '/_workspace/_settings/settings/profile': typeof WorkspaceSettingsSettingsProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -350,26 +364,27 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/sign-in/'
     | '/a/$albumId'
-    | '/admin/admissions'
-    | '/admin/members'
-    | '/admin/operations'
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
+    | '/shared/$containerId'
+    | '/invitations/'
+    | '/shared/'
+    | '/admin/admissions'
+    | '/admin/members'
+    | '/admin/operations'
     | '/settings/account'
     | '/settings/connections'
     | '/settings/custom-fields'
     | '/settings/data'
     | '/settings/preferences'
     | '/settings/profile'
-    | '/shared/$containerId'
-    | '/invitations/'
-    | '/shared/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/account-deleted'
     | '/privacy'
     | '/terms'
+    | '/'
     | '/c'
     | '/trash'
     | '/unsorted'
@@ -381,24 +396,23 @@ export interface FileRouteTypes {
     | '/recover/$token'
     | '/s/$token'
     | '/sign-in/verify'
-    | '/'
     | '/sign-in'
     | '/a/$albumId'
-    | '/admin/admissions'
-    | '/admin/members'
-    | '/admin/operations'
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
+    | '/shared/$containerId'
+    | '/invitations'
+    | '/shared'
+    | '/admin/admissions'
+    | '/admin/members'
+    | '/admin/operations'
     | '/settings/account'
     | '/settings/connections'
     | '/settings/custom-fields'
     | '/settings/data'
     | '/settings/preferences'
     | '/settings/profile'
-    | '/shared/$containerId'
-    | '/invitations'
-    | '/shared'
   id:
     | '__root__'
     | '/_workspace'
@@ -406,6 +420,8 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/sign-in'
     | '/terms'
+    | '/_workspace/_admin'
+    | '/_workspace/_settings'
     | '/_workspace/c'
     | '/_workspace/trash'
     | '/_workspace/unsorted'
@@ -420,21 +436,21 @@ export interface FileRouteTypes {
     | '/_workspace/'
     | '/sign-in/'
     | '/_workspace/a/$albumId'
-    | '/_workspace/admin/admissions'
-    | '/_workspace/admin/members'
-    | '/_workspace/admin/operations'
     | '/_workspace/f/$folderId'
     | '/_workspace/invitations/$id'
     | '/_workspace/l/$listId'
-    | '/_workspace/settings/account'
-    | '/_workspace/settings/connections'
-    | '/_workspace/settings/custom-fields'
-    | '/_workspace/settings/data'
-    | '/_workspace/settings/preferences'
-    | '/_workspace/settings/profile'
     | '/_workspace/shared/$containerId'
     | '/_workspace/invitations/'
     | '/_workspace/shared/'
+    | '/_workspace/_admin/admin/admissions'
+    | '/_workspace/_admin/admin/members'
+    | '/_workspace/_admin/admin/operations'
+    | '/_workspace/_settings/settings/account'
+    | '/_workspace/_settings/settings/connections'
+    | '/_workspace/_settings/settings/custom-fields'
+    | '/_workspace/_settings/settings/data'
+    | '/_workspace/_settings/settings/preferences'
+    | '/_workspace/_settings/settings/profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -494,6 +510,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof WorkspaceIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/_admin': {
+      id: '/_workspace/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof WorkspaceAdminRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/_settings': {
+      id: '/_workspace/_settings'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof WorkspaceSettingsRouteImport
       parentRoute: typeof WorkspaceRoute
     }
     '/_workspace/c': {
@@ -587,27 +617,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceAAlbumIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
-    '/_workspace/admin/admissions': {
-      id: '/_workspace/admin/admissions'
-      path: '/admin/admissions'
-      fullPath: '/admin/admissions'
-      preLoaderRoute: typeof WorkspaceAdminAdmissionsRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
-    '/_workspace/admin/members': {
-      id: '/_workspace/admin/members'
-      path: '/admin/members'
-      fullPath: '/admin/members'
-      preLoaderRoute: typeof WorkspaceAdminMembersRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
-    '/_workspace/admin/operations': {
-      id: '/_workspace/admin/operations'
-      path: '/admin/operations'
-      fullPath: '/admin/operations'
-      preLoaderRoute: typeof WorkspaceAdminOperationsRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
     '/_workspace/f/$folderId': {
       id: '/_workspace/f/$folderId'
       path: '/f/$folderId'
@@ -636,48 +645,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceLListIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
-    '/_workspace/settings/account': {
-      id: '/_workspace/settings/account'
-      path: '/settings/account'
-      fullPath: '/settings/account'
-      preLoaderRoute: typeof WorkspaceSettingsAccountRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
-    '/_workspace/settings/connections': {
-      id: '/_workspace/settings/connections'
-      path: '/settings/connections'
-      fullPath: '/settings/connections'
-      preLoaderRoute: typeof WorkspaceSettingsConnectionsRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
-    '/_workspace/settings/custom-fields': {
-      id: '/_workspace/settings/custom-fields'
-      path: '/settings/custom-fields'
-      fullPath: '/settings/custom-fields'
-      preLoaderRoute: typeof WorkspaceSettingsCustomFieldsRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
-    '/_workspace/settings/data': {
-      id: '/_workspace/settings/data'
-      path: '/settings/data'
-      fullPath: '/settings/data'
-      preLoaderRoute: typeof WorkspaceSettingsDataRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
-    '/_workspace/settings/preferences': {
-      id: '/_workspace/settings/preferences'
-      path: '/settings/preferences'
-      fullPath: '/settings/preferences'
-      preLoaderRoute: typeof WorkspaceSettingsPreferencesRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
-    '/_workspace/settings/profile': {
-      id: '/_workspace/settings/profile'
-      path: '/settings/profile'
-      fullPath: '/settings/profile'
-      preLoaderRoute: typeof WorkspaceSettingsProfileRouteImport
-      parentRoute: typeof WorkspaceRoute
-    }
     '/_workspace/shared/': {
       id: '/_workspace/shared/'
       path: '/shared'
@@ -692,50 +659,139 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceSharedContainerIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/_admin/admin/admissions': {
+      id: '/_workspace/_admin/admin/admissions'
+      path: '/admin/admissions'
+      fullPath: '/admin/admissions'
+      preLoaderRoute: typeof WorkspaceAdminAdminAdmissionsRouteImport
+      parentRoute: typeof WorkspaceAdminRoute
+    }
+    '/_workspace/_admin/admin/members': {
+      id: '/_workspace/_admin/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof WorkspaceAdminAdminMembersRouteImport
+      parentRoute: typeof WorkspaceAdminRoute
+    }
+    '/_workspace/_admin/admin/operations': {
+      id: '/_workspace/_admin/admin/operations'
+      path: '/admin/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof WorkspaceAdminAdminOperationsRouteImport
+      parentRoute: typeof WorkspaceAdminRoute
+    }
+    '/_workspace/_settings/settings/account': {
+      id: '/_workspace/_settings/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof WorkspaceSettingsSettingsAccountRouteImport
+      parentRoute: typeof WorkspaceSettingsRoute
+    }
+    '/_workspace/_settings/settings/connections': {
+      id: '/_workspace/_settings/settings/connections'
+      path: '/settings/connections'
+      fullPath: '/settings/connections'
+      preLoaderRoute: typeof WorkspaceSettingsSettingsConnectionsRouteImport
+      parentRoute: typeof WorkspaceSettingsRoute
+    }
+    '/_workspace/_settings/settings/custom-fields': {
+      id: '/_workspace/_settings/settings/custom-fields'
+      path: '/settings/custom-fields'
+      fullPath: '/settings/custom-fields'
+      preLoaderRoute: typeof WorkspaceSettingsSettingsCustomFieldsRouteImport
+      parentRoute: typeof WorkspaceSettingsRoute
+    }
+    '/_workspace/_settings/settings/data': {
+      id: '/_workspace/_settings/settings/data'
+      path: '/settings/data'
+      fullPath: '/settings/data'
+      preLoaderRoute: typeof WorkspaceSettingsSettingsDataRouteImport
+      parentRoute: typeof WorkspaceSettingsRoute
+    }
+    '/_workspace/_settings/settings/preferences': {
+      id: '/_workspace/_settings/settings/preferences'
+      path: '/settings/preferences'
+      fullPath: '/settings/preferences'
+      preLoaderRoute: typeof WorkspaceSettingsSettingsPreferencesRouteImport
+      parentRoute: typeof WorkspaceSettingsRoute
+    }
+    '/_workspace/_settings/settings/profile': {
+      id: '/_workspace/_settings/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof WorkspaceSettingsSettingsProfileRouteImport
+      parentRoute: typeof WorkspaceSettingsRoute
+    }
   }
 }
 
+interface WorkspaceAdminRouteChildren {
+  WorkspaceAdminAdminAdmissionsRoute: typeof WorkspaceAdminAdminAdmissionsRoute
+  WorkspaceAdminAdminMembersRoute: typeof WorkspaceAdminAdminMembersRoute
+  WorkspaceAdminAdminOperationsRoute: typeof WorkspaceAdminAdminOperationsRoute
+}
+
+const WorkspaceAdminRouteChildren: WorkspaceAdminRouteChildren = {
+  WorkspaceAdminAdminAdmissionsRoute: WorkspaceAdminAdminAdmissionsRoute,
+  WorkspaceAdminAdminMembersRoute: WorkspaceAdminAdminMembersRoute,
+  WorkspaceAdminAdminOperationsRoute: WorkspaceAdminAdminOperationsRoute,
+}
+
+const WorkspaceAdminRouteWithChildren = WorkspaceAdminRoute._addFileChildren(
+  WorkspaceAdminRouteChildren,
+)
+
+interface WorkspaceSettingsRouteChildren {
+  WorkspaceSettingsSettingsAccountRoute: typeof WorkspaceSettingsSettingsAccountRoute
+  WorkspaceSettingsSettingsConnectionsRoute: typeof WorkspaceSettingsSettingsConnectionsRoute
+  WorkspaceSettingsSettingsCustomFieldsRoute: typeof WorkspaceSettingsSettingsCustomFieldsRoute
+  WorkspaceSettingsSettingsDataRoute: typeof WorkspaceSettingsSettingsDataRoute
+  WorkspaceSettingsSettingsPreferencesRoute: typeof WorkspaceSettingsSettingsPreferencesRoute
+  WorkspaceSettingsSettingsProfileRoute: typeof WorkspaceSettingsSettingsProfileRoute
+}
+
+const WorkspaceSettingsRouteChildren: WorkspaceSettingsRouteChildren = {
+  WorkspaceSettingsSettingsAccountRoute: WorkspaceSettingsSettingsAccountRoute,
+  WorkspaceSettingsSettingsConnectionsRoute:
+    WorkspaceSettingsSettingsConnectionsRoute,
+  WorkspaceSettingsSettingsCustomFieldsRoute:
+    WorkspaceSettingsSettingsCustomFieldsRoute,
+  WorkspaceSettingsSettingsDataRoute: WorkspaceSettingsSettingsDataRoute,
+  WorkspaceSettingsSettingsPreferencesRoute:
+    WorkspaceSettingsSettingsPreferencesRoute,
+  WorkspaceSettingsSettingsProfileRoute: WorkspaceSettingsSettingsProfileRoute,
+}
+
+const WorkspaceSettingsRouteWithChildren =
+  WorkspaceSettingsRoute._addFileChildren(WorkspaceSettingsRouteChildren)
+
 interface WorkspaceRouteChildren {
+  WorkspaceAdminRoute: typeof WorkspaceAdminRouteWithChildren
+  WorkspaceSettingsRoute: typeof WorkspaceSettingsRouteWithChildren
   WorkspaceCRoute: typeof WorkspaceCRoute
   WorkspaceTrashRoute: typeof WorkspaceTrashRoute
   WorkspaceUnsortedRoute: typeof WorkspaceUnsortedRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   WorkspaceAAlbumIdRoute: typeof WorkspaceAAlbumIdRoute
-  WorkspaceAdminAdmissionsRoute: typeof WorkspaceAdminAdmissionsRoute
-  WorkspaceAdminMembersRoute: typeof WorkspaceAdminMembersRoute
-  WorkspaceAdminOperationsRoute: typeof WorkspaceAdminOperationsRoute
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceInvitationsIdRoute: typeof WorkspaceInvitationsIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
-  WorkspaceSettingsAccountRoute: typeof WorkspaceSettingsAccountRoute
-  WorkspaceSettingsConnectionsRoute: typeof WorkspaceSettingsConnectionsRoute
-  WorkspaceSettingsCustomFieldsRoute: typeof WorkspaceSettingsCustomFieldsRoute
-  WorkspaceSettingsDataRoute: typeof WorkspaceSettingsDataRoute
-  WorkspaceSettingsPreferencesRoute: typeof WorkspaceSettingsPreferencesRoute
-  WorkspaceSettingsProfileRoute: typeof WorkspaceSettingsProfileRoute
   WorkspaceSharedContainerIdRoute: typeof WorkspaceSharedContainerIdRoute
   WorkspaceInvitationsIndexRoute: typeof WorkspaceInvitationsIndexRoute
   WorkspaceSharedIndexRoute: typeof WorkspaceSharedIndexRoute
 }
 
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
+  WorkspaceAdminRoute: WorkspaceAdminRouteWithChildren,
+  WorkspaceSettingsRoute: WorkspaceSettingsRouteWithChildren,
   WorkspaceCRoute: WorkspaceCRoute,
   WorkspaceTrashRoute: WorkspaceTrashRoute,
   WorkspaceUnsortedRoute: WorkspaceUnsortedRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
   WorkspaceAAlbumIdRoute: WorkspaceAAlbumIdRoute,
-  WorkspaceAdminAdmissionsRoute: WorkspaceAdminAdmissionsRoute,
-  WorkspaceAdminMembersRoute: WorkspaceAdminMembersRoute,
-  WorkspaceAdminOperationsRoute: WorkspaceAdminOperationsRoute,
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceInvitationsIdRoute: WorkspaceInvitationsIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,
-  WorkspaceSettingsAccountRoute: WorkspaceSettingsAccountRoute,
-  WorkspaceSettingsConnectionsRoute: WorkspaceSettingsConnectionsRoute,
-  WorkspaceSettingsCustomFieldsRoute: WorkspaceSettingsCustomFieldsRoute,
-  WorkspaceSettingsDataRoute: WorkspaceSettingsDataRoute,
-  WorkspaceSettingsPreferencesRoute: WorkspaceSettingsPreferencesRoute,
-  WorkspaceSettingsProfileRoute: WorkspaceSettingsProfileRoute,
   WorkspaceSharedContainerIdRoute: WorkspaceSharedContainerIdRoute,
   WorkspaceInvitationsIndexRoute: WorkspaceInvitationsIndexRoute,
   WorkspaceSharedIndexRoute: WorkspaceSharedIndexRoute,

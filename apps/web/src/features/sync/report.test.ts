@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import type { BatchReport, SaveState } from "@/client/sync/writer";
+import type { BatchReport, SaveState } from "@/client/sync/save-states";
 
 import {
   failure,
@@ -14,7 +14,7 @@ import {
 } from "@tonaris/domain";
 
 import type { Names } from "./describe";
-import { grouped, reasonFor, retryTargets, summarize, unsaved, underway } from "./report";
+import { grouped, reasonForState, retryTargets, summarize, unsaved, underway } from "./report";
 
 const create = (name: string, kind: Container["kind"] = "list", parentId: string | null = null) =>
   ({
@@ -103,13 +103,31 @@ describe("batch reports (DS-84)", () => {
       item(inside, skippedFor(folder)),
       item(deeper, skippedFor(inside, "skipped")),
     );
-    const [failed, skipped, chained] = parts.items.map((each) => reasonFor(each, parts, names));
+    const [failed, skipped, chained] = parts.items.map((each) =>
+      reasonForState(each, names, parts),
+    );
     expect(failed).toBe("'Later' already exists at the top level. Choose another name.");
     expect(skipped).toBe(
       "Waits for the folder 'Later', which couldn't be saved. Retry it to save this too.",
     );
     expect(chained).toBe("Waits for the list 'Doom', which was skipped too.");
-    expect(reasonFor(item(create("Soon"), confirmed), parts, names)).toBeUndefined();
+    expect(reasonForState(item(create("Soon"), confirmed), names, parts)).toBeUndefined();
+  });
+
+  test("outside a report, a write that waits for the person says why too, as Activity shows it (TON-147)", () => {
+    const conflict = {
+      status: "conflict" as const,
+      conflicts: [{ field: "name", current: "Soon", attempted: "Later", base: "Now" }],
+    };
+    expect(reasonForState(item(create("Later"), conflict), names)).toBe(
+      "Changed elsewhere. Review both versions to choose.",
+    );
+    expect(
+      reasonForState(item(create("Later"), { status: "needs_approval", approvalId: "a" }), names),
+    ).toBe("Waits for your approval.");
+    expect(reasonForState(item(create("Later"), taken), names)).toBe(
+      "'Later' already exists at the top level. Choose another name.",
+    );
   });
 
   test("retrying a failure takes the skips that waited for it, through chains, and never what saved", () => {

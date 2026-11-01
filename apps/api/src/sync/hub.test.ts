@@ -258,17 +258,22 @@ describe("streams and their sessions (TS-23)", () => {
     hub.close();
   });
 
-  test("endSessions ends a session's streams at once", async () => {
+  test("endSessionsOf ends the account's streams at once, but the kept session's", async () => {
     const memory = memoryLog();
     const hub = createSyncHub({ log: memory.log });
     const first = hub.subscribe(accountId, 0, "web");
-    hub.subscribe(accountId, 0, "web");
-    const other = hub.subscribe(accountId, 0, "phone");
+    hub.subscribe(accountId, 0, "phone");
+    const kept = hub.subscribe(accountId, 0, "laptop");
+    const otherAccount = hub.subscribe("ben", 0, "ben-web");
     const waiting = first.next();
-    hub.endSessions(["web"]);
+    hub.endSessionsOf(accountId, "laptop");
     expect(await waiting).toEqual({ done: true, value: undefined });
+    expect(hub.size).toBe(2);
+
+    hub.endSessionsOf(accountId);
     expect(hub.size).toBe(1);
-    other.end();
+    kept.end();
+    otherAccount.end();
   });
 
   test("check only while streams are open", async () => {

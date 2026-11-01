@@ -6,6 +6,7 @@
 // on a failed save reopens it as it was entered. Opened from a capture, it says why, and either completes the capture
 // with the album's details, the link kept, or adds the album with the pasted link in its field (DS-48).
 
+import { sent } from "@/client/sync/writer";
 import { shownLink } from "@/features/capture/outcomes";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useAnnounce } from "@/features/sync/announcer";
@@ -29,15 +30,20 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
-import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
+import { Field } from "@tonaris/ui/components/field";
+import { Input } from "@tonaris/ui/components/input";
+import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
+import { Select } from "@tonaris/ui/components/select";
 import { Switch } from "@tonaris/ui/components/switch";
-import { cn } from "@tonaris/ui/lib/utils";
 
+import { releaseTypeOptions } from "./album-edit";
 import {
   albumOfForm,
+  formFieldNames,
   formProblems,
   isFormDirty,
   linksOfForm,
@@ -50,13 +56,6 @@ import { FindArtwork } from "./find-artwork";
 import { FormFields } from "./form-fields";
 import { useListOptions } from "./list-options";
 
-const releaseTypeOptions: readonly SegmentedOption<"album" | "ep" | "compilation" | "unknown">[] = [
-  { value: "album", label: "Album" },
-  { value: "ep", label: "EP" },
-  { value: "compilation", label: "Compilation" },
-  { value: "unknown", label: "Unknown" },
-];
-
 const formFields: readonly FormField[] = [
   "title",
   "artistCredit",
@@ -65,19 +64,6 @@ const formFields: readonly FormField[] = [
   "artworkUrl",
   ...streamingServices,
 ];
-
-const fieldNames: Record<FormField, string> = {
-  title: "Title",
-  artistCredit: "Artist",
-  originalYear: "Original release year",
-  recording: "Recording year or range",
-  artworkUrl: "Artwork URL",
-  spotify: "Spotify link",
-  "apple-music": "Apple Music link",
-  qobuz: "Qobuz link",
-  tidal: "Tidal link",
-  "youtube-music": "YouTube Music link",
-};
 
 /** The time an entry is made; the server records its own (TON-27). */
 const now = () => new Date().toISOString();
@@ -157,7 +143,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       onDone();
       return;
     }
-    client.albums.insert(album).isPersisted.promise.catch(() => {});
+    sent(client.albums.insert(album));
     // The links go after the album, in one transaction; the server reads each (TS-40).
     const links = linksOfForm(form, album.id);
     // Its custom fields follow it, applied with their values (FR-03.7).
@@ -166,12 +152,10 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       fieldId,
       value,
     }));
-    if (values.length > 0) client.fieldValues.insert(values).isPersisted.promise.catch(() => {});
-    if (links.length > 0) client.links.insert(links).isPersisted.promise.catch(() => {});
+    if (values.length > 0) sent(client.fieldValues.insert(values));
+    if (links.length > 0) sent(client.links.insert(links));
     if (form.listId !== null) {
-      client.memberships
-        .insert({ listId: form.listId, albumId: album.id, addedAt: now() })
-        .isPersisted.promise.catch(() => {});
+      sent(client.memberships.insert({ listId: form.listId, albumId: album.id, addedAt: now() }));
     }
     // The failed writes it makes again go, with their toasts.
     for (const id of draft.replaces ?? []) {
@@ -230,7 +214,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                   {problemCount === 1 ? "Check 1 field:" : `Check ${problemCount} fields:`}{" "}
                   {formFields
                     .filter((field) => problems[field])
-                    .map((field) => fieldNames[field])
+                    .map((field) => formFieldNames[field])
                     .join(", ")}
                   .
                 </p>
@@ -258,10 +242,10 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
             />
 
             <div className="flex items-end gap-4">
-              <Labelled label="Release type" className="flex-1">
-                {(id) => (
+              <Field group label="Release type" className="flex-1">
+                {(_, labelId) => (
                   <SegmentedControl
-                    aria-labelledby={id}
+                    aria-labelledby={labelId}
                     options={releaseTypeOptions}
                     value={form.releaseType ?? "unknown"}
                     onValueChange={(value) =>
@@ -269,17 +253,17 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                     }
                   />
                 )}
-              </Labelled>
-              <Labelled label="Live">
-                {(id) => (
+              </Field>
+              <Field group label="Live">
+                {(_, labelId) => (
                   <Switch
-                    aria-labelledby={id}
+                    aria-labelledby={labelId}
                     checked={form.isLive}
                     onCheckedChange={(isLive) => set({ isLive })}
                     className="mb-1.5"
                   />
                 )}
-              </Labelled>
+              </Field>
             </div>
 
             <p className="text-small text-fg-tertiary">
@@ -337,7 +321,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                 <TextField
                   key={service}
                   name={service}
-                  label={fieldNames[service]}
+                  label={formFieldNames[service]}
                   type="url"
                   placeholder="Album or track link"
                   value={form.links[service]}
@@ -351,13 +335,12 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
               <FormFields applied={form.fieldValues} onChange={setFields} />
             )}
 
-            <Labelled label="List">
-              {(id) => (
-                <select
-                  aria-labelledby={id}
+            <Field label="List">
+              {(control) => (
+                <Select
+                  {...control}
                   value={form.listId ?? ""}
                   onChange={(event) => set({ listId: event.target.value || null })}
-                  className="h-8 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
                 >
                   <option value="">No list (goes to Unsorted)</option>
                   {lists.map((list) => (
@@ -365,18 +348,18 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
                       {list.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               )}
-            </Labelled>
+            </Field>
 
-            <div className="flex justify-end gap-2">
+            <DialogFooter>
               <Button type="button" onClick={requestClose}>
                 Cancel
               </Button>
               <Button type="submit" variant="primary" aria-keyshortcuts="Meta+Enter">
                 Add album
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -430,57 +413,32 @@ function TextField({
   type?: "url";
   placeholder?: string;
 }) {
-  const id = useId();
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-small text-fg-secondary">
-        {label}
-        {required && <span aria-hidden> *</span>}
-      </label>
-      <div className="flex items-center gap-1">
-        <input
-          ref={inputRef}
-          id={id}
-          name={name}
-          value={value}
-          required={required}
-          aria-invalid={problem !== undefined}
-          aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={onBlur}
-          className={cn(
-            "h-8 min-w-0 flex-1 rounded-md border border-subtle bg-panel px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
-            problem !== undefined && "border-status-danger",
-          )}
-          {...rest}
-        />
-        {action}
-      </div>
-      {problem !== undefined && (
-        <p id={`${id}-problem`} className="text-small text-status-danger">
-          {problem}
-        </p>
+    <Field
+      label={
+        <>
+          {label}
+          {required && <span aria-hidden> *</span>}
+        </>
+      }
+      problem={problem}
+    >
+      {(control) => (
+        <div className="flex items-center gap-1">
+          <Input
+            {...control}
+            ref={inputRef}
+            name={name}
+            value={value}
+            required={required}
+            onChange={(event) => onChange(event.target.value)}
+            onBlur={onBlur}
+            className="flex-1"
+            {...rest}
+          />
+          {action}
+        </div>
       )}
-    </div>
-  );
-}
-
-function Labelled({
-  label,
-  className,
-  children,
-}: {
-  label: string;
-  className?: string;
-  children: (id: string) => ReactNode;
-}) {
-  const id = useId();
-  return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <span id={id} className="text-small text-fg-secondary">
-        {label}
-      </span>
-      {children(id)}
-    </div>
+    </Field>
   );
 }

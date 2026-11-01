@@ -14,6 +14,8 @@ import { memoryStore, viewRowKey } from "./testing";
 import {
   appAccountDefaults,
   appViewDefaults,
+  containerOfView,
+  sameServices,
   type AccountDefaults,
   type LinkTarget,
   type ViewDefaults,
@@ -506,5 +508,21 @@ describe("the protocol", () => {
     expect(mutationSchema.safeParse(envelope("unsorted")).success).toBe(true);
     expect(mutationSchema.safeParse(envelope(uuidv7())).success).toBe(true);
     expect(mutationSchema.safeParse(envelope("trash")).success).toBe(false);
+  });
+});
+
+describe("view keys and services (TON-147)", () => {
+  test("a view is a folder or list unless it is the root or Unsorted", () => {
+    const id = uuidv7();
+    expect(containerOfView(id)).toBe(id);
+    expect(containerOfView("root")).toBeUndefined();
+    expect(containerOfView("unsorted")).toBeUndefined();
+  });
+
+  test("services are the same whatever their order or repeats", () => {
+    expect(sameServices(["tidal", "spotify"], ["spotify", "tidal"])).toBe(true);
+    expect(sameServices(["spotify", "spotify"], ["spotify"])).toBe(true);
+    expect(sameServices([], [])).toBe(true);
+    expect(sameServices(["spotify"], ["spotify", "qobuz"])).toBe(false);
   });
 });

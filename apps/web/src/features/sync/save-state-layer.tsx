@@ -10,7 +10,7 @@
 
 import type { SyncClient } from "@/client/sync/client";
 import { resubmit, resubmitAll } from "@/client/sync/resubmit";
-import type { BatchReport } from "@/client/sync/writer";
+import { isUnderway, type BatchReport } from "@/client/sync/save-states";
 import { captureDraft } from "@/features/capture/manual-entry";
 import { formOf } from "@/features/collection/album-form";
 import { useCollectionUi, useMode, useStartEditor } from "@/features/collection/collection-ui";
@@ -22,7 +22,7 @@ import { createToastManager, notifier, Toaster, type Notifier } from "@tonaris/u
 import { ActivityContext, type ActivityControl } from "./activity";
 import { Announcer, useAnnounce } from "./announcer";
 import { ConflictView } from "./conflict-view";
-import { describeWrite, reasonOf } from "./describe";
+import { changes, describeWrite, goneReason, reasonOf } from "./describe";
 import { NotifyContext } from "./notify";
 import { retryTargets, summarize, underway, unsaved } from "./report";
 import { namesOf, SaveActionsContext, type SaveActions } from "./save-actions";
@@ -82,7 +82,7 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
           notify.problem({
             id: state.mutation.mutationId,
             title: `Couldn't save ${describeWrite(state.mutation, namesOf(client)).what}`,
-            description: "It no longer exists, so it can't be saved again.",
+            description: goneReason,
             tone: "danger",
             actions: [],
           });
@@ -168,9 +168,6 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
   );
 }
 
-/** States a write passes through before its outcome: one that reaches a failure or a conflict from them raises a toast. */
-const underwayStatuses = new Set<OutcomeStatus>(["pending", "unconfirmed"]);
-
 /**
  * Raises a persistent toast when one of this page's writes made on its own fails or meets a newer value (DS-80,
  * DS-108). A batch's writes are reported by their batch.
@@ -187,12 +184,13 @@ function useSettledToasts(
       const id = state.mutation.mutationId;
       const before = seen.get(id);
       // Batches' writes too: one still underway when its report is dismissed goes on, and is reported, on its own.
-      if (underwayStatuses.has(state.status)) {
+      // One that reaches a failure or a conflict from being underway raises a toast.
+      if (isUnderway(state.status)) {
         seen.set(id, state.status);
         return;
       }
       seen.delete(id);
-      if (state.batch !== undefined || !before || !underwayStatuses.has(before)) return;
+      if (state.batch !== undefined || !before || !isUnderway(before)) return;
       // A capture says what happened in its own words, with its own actions (DS-48).
       if (state.mutation.name === "album.capture") return;
       const { what, subject } = describeWrite(state.mutation, namesOf(client));
@@ -222,7 +220,6 @@ function useSettledToasts(
   }, [client, actions, notify]);
 }
 
-const changes = (n: number) => (n === 1 ? "1 change" : `${n} changes`);
 const albums = (n: number) => (n === 1 ? "1 album" : `${n} albums`);
 
 /** How a report's toast and announcement count its writes: albums for a batch of captures (DS-48). */
@@ -252,8 +249,8 @@ function useReportFeedback(
     const toasts = new Set<string>();
     return client.states.onReport((report, closed) => {
       const wasUnderway = running.has(report.id);
-      const isUnderway = underway(report);
-      if (isUnderway && !closed) running.add(report.id);
+      const stillUnderway = underway(report);
+      if (stillUnderway && !closed) running.add(report.id);
       else running.delete(report.id);
       const problems = unsaved(report);
 
@@ -261,7 +258,7 @@ function useReportFeedback(
         notify.close(report.id);
         toasts.delete(report.id);
       }
-      if (!wasUnderway || isUnderway) return;
+      if (!wasUnderway || stillUnderway) return;
       const { count, verb } = wordsFor(report);
       if (problems.length === 0) {
         announce(`${count(report.items.length)} ${verb === "add" ? "added" : "saved"}.`);

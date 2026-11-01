@@ -12,6 +12,7 @@ import {
   sections,
   sortAlbums,
   sortContainers,
+  unsortedOrder,
   type Keys,
 } from "./order";
 import { presentationOf } from "./presentation";
@@ -209,8 +210,7 @@ export function renderCollection(data: TonarisExport): string {
   );
   const unsorted = data.albums
     .filter((album) => album.status === "active" && !listed.has(album.id))
-    // Newest first, an inbox: its fallback order (DS-51). UUIDv7 IDs hold when each was made.
-    .toSorted((a, b) => (a.id < b.id ? 1 : a.id > b.id ? -1 : 0))
+    .toSorted(unsortedOrder)
     .map(rowOf);
 
   const activeCount = data.albums.filter((album) => album.status === "active").length;

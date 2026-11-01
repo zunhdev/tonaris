@@ -4,7 +4,7 @@ A personal workspace for saving, organizing, annotating, and revisiting music al
 
 ## Project status
 
-Tonaris is in early development: the foundations (M0) and the feasibility spikes (M1) are done. The first version will be a creator-hosted, invite-only web app. Desktop supports full collection management, while mobile browsers support browsing and search. The Spotify, Apple Music, Qobuz, Tidal, YouTube Music, and MCP integrations passed their feasibility gates (G1–G3) in October 2026.
+The first version (milestones M0–M11) is built, and the creator is testing it by hand. It is a creator-hosted, invite-only web app. Desktop supports full collection management, while mobile browsers support browsing and search. The Spotify, Apple Music, Qobuz, Tidal, YouTube Music, and MCP integrations passed their feasibility gates (G1–G3) in October 2026.
 
 ## Documents
 
@@ -29,7 +29,7 @@ A Bun workspace (tech spec TS-05):
 | `packages/db` | `@tonaris/db` | Drizzle schema, migrations, repositories. |
 | `packages/providers` | `@tonaris/providers` | Link parsing, MusicBrainz and Cover Art Archive clients, provider adapters. |
 | `packages/ui` | `@tonaris/ui` | Design system: tokens, primitives, patterns. |
-| `tooling` | `@tonaris/tooling` | Repository tooling: workspace checks, seeds and the reference workload, restore drill, export validator. |
+| `tooling` | `@tonaris/tooling` | Repository tooling: workspace checks, seeds and the reference workload, export validator, MCP client verification, and the M1 spikes. |
 | `docs` | — | Product requirements, design spec, tech spec, audits. |
 
 Packages may depend only on these internal packages (TS-02):
@@ -58,7 +58,7 @@ bun run check:workspace         # layering and pinning rules
 bun run check:specs             # openspec validate --all --strict
 bun run db:check                # migrations match the schema (drizzle-kit check, no-diff generate)
 bun run openapi:check           # the committed OpenAPI document matches the API routes
-bun test                        # all tests; the integration tests need the local Postgres
+bun test                        # all tests but the finished spikes' (bunfig.toml); the integration tests need the local Postgres
 bun run test:e2e                # Playwright browser tests of the web app (needs Node and Chromium)
 bun run --cwd apps/web test:perf  # TS-120 performance run on the reference workload; not part of check
 bun run build                   # production bundles: apps/api/dist (bin/*.js) and apps/web/dist
@@ -99,7 +99,7 @@ bun run mail:test                               # send one email to Mailpit
 | Postgres 18 | `localhost:5432`: database `tonaris` (`DATABASE_URL`), tests in `tonaris_test` (`TEST_DATABASE_URL`) |
 | Mailpit | inbox at http://localhost:8025, SMTP on `localhost:1025` |
 
-- The web app runs TanStack Start on Vite (`bun --bun vite dev`). The workspace shell is a placeholder until M2 fills it in.
+- The web app runs TanStack Start on Vite (`bun --bun vite dev`).
 - **Signing in:** open http://localhost:3000, enter the creator's email, and take the code (or the link) from the Mailpit inbox. Sign-in never creates accounts: any other address gets a "no account" email. Sign out from the account menu at the top of the sidebar.
 - **Reference workload:** `bun run seed:workload` gives `workload@tonaris.test` 5,000 albums in 250 lists and 60 folders, plus 3 collections shared with it by `workload-sharer-1@tonaris.test` to `-3`. Sign in as any of them. Every run replaces exactly those accounts' data with the same rows, IDs included, and leaves your own account alone.
 - **Settings:** every setting has a local default, so none is needed to run locally. `.env.example` lists them all (TS-105). Bun reads a `.env` file from the directory a command runs in, such as `apps/api`.
@@ -169,4 +169,4 @@ Notes:
 - **Change promises in the requirements first.** When product behavior changes, update the requirements before the design or tech spec, and add a change-log entry.
 - **OpenSpec grows change by change.** Capability specs in `openspec/specs/` build up as changes are archived; the requirements are not bulk-converted. See [Spec changes](#spec-changes-openspec) and the tech spec's delivery section (TS-132).
 
-Next steps: run the G1–G3 feasibility spikes, then set up Linear projects following the tech spec's delivery plan.
+Work is planned in Linear (team `TON`); [docs/linear-plan.md](docs/linear-plan.md) maps the seed plan's keys to its issues.

@@ -10,12 +10,13 @@ import {
   requestSignInCode,
   signInWithCode,
 } from "@/features/account/auth-client";
+import { resendLabel, useCodeEntry } from "@/features/account/code-entry";
 import { CodeField, useResendCountdown } from "@/features/account/code-field";
 import { browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { useRouter } from "@tanstack/react-router";
-import { type FormEvent, useEffect, useId, useRef, useState } from "react";
+import { type FormEvent, useEffect, useId, useState } from "react";
 
-import { type Account, type Passkey, signInCode } from "@tonaris/domain";
+import type { Account, Passkey } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Input } from "@tonaris/ui/components/input";
 
@@ -251,52 +252,30 @@ function ConfirmItsYou({
   onCancelled: () => void;
 }) {
   const id = useId();
-  const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-  const [notice, setNotice] = useState<string>();
-  const codeInput = useRef<HTMLInputElement>(null);
   const { resendIn, restart } = useResendCountdown(email);
+  const entry = useCodeEntry({ submit: (value) => void submit(value) });
 
   async function submit(value: string) {
-    setBusy(true);
-    setError(undefined);
-    setNotice(undefined);
+    entry.begin();
     const result = await signInWithCode(email, value);
-    setBusy(false);
     if (result.ok) {
+      entry.setBusy(false);
       onConfirmed();
       return;
     }
-    setCode("");
-    setError(authFailureMessage(result));
-    codeInput.current?.focus();
+    entry.refuse(authFailureMessage(result));
   }
 
   async function resend() {
-    setBusy(true);
-    setError(undefined);
-    setNotice(undefined);
+    entry.begin();
     const result = await requestSignInCode(email);
-    setBusy(false);
+    entry.setBusy(false);
     if (!result.ok) {
-      setError(authFailureMessage(result));
+      entry.setError(authFailureMessage(result));
       return;
     }
     restart();
-    setCode("");
-    setNotice(`We sent a new code to ${email}.`);
-  }
-
-  function onCodeChange(digits: string) {
-    setCode(digits);
-    if (digits.length === signInCode.length && !busy) void submit(digits);
-  }
-
-  function onSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (code.length === signInCode.length) void submit(code);
-    else setError(`Enter the ${signInCode.length}-digit code from the email.`);
+    entry.resent(email);
   }
 
   return (
@@ -304,25 +283,25 @@ function ConfirmItsYou({
       <h3 className="text-base font-medium [overflow-wrap:anywhere] text-fg-primary">
         Check {email}
       </h3>
-      <form className="flex max-w-sm flex-col gap-3" onSubmit={onSubmit}>
+      <form className="flex max-w-sm flex-col gap-3" onSubmit={entry.onSubmit}>
         <CodeField
           id={`${id}-code`}
-          value={code}
-          onChange={onCodeChange}
+          value={entry.code}
+          onChange={entry.onCodeChange}
           hint="To add a passkey, confirm it's you with the code we sent to your sign-in email."
-          error={error}
-          inputRef={codeInput}
+          error={entry.error}
+          inputRef={entry.codeInput}
         />
-        <Button type="submit" variant="primary" className="self-start" disabled={busy}>
+        <Button type="submit" variant="primary" className="self-start" disabled={entry.busy}>
           Continue
         </Button>
       </form>
-      <output className="text-fg-secondary empty:hidden">{notice}</output>
+      <output className="text-fg-secondary empty:hidden">{entry.notice}</output>
       <div className="flex flex-wrap gap-2">
-        <Button variant="ghost" disabled={busy || resendIn > 0} onClick={() => void resend()}>
-          {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
+        <Button variant="ghost" disabled={entry.busy || resendIn > 0} onClick={() => void resend()}>
+          {resendLabel(resendIn)}
         </Button>
-        <Button variant="ghost" disabled={busy} onClick={onCancelled}>
+        <Button variant="ghost" disabled={entry.busy} onClick={onCancelled}>
           Cancel
         </Button>
       </div>

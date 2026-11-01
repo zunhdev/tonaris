@@ -18,18 +18,13 @@ import {
 import { Elysia } from "elysia";
 import { errors as joseErrors, type JWTPayload } from "jose";
 
-import {
-  type Database,
-  type ExecutedMutation,
-  findConnection,
-  recordConnectionUse,
-} from "@tonaris/db";
-import { mcpModeOf, mcpScopes, type McpPrincipal } from "@tonaris/domain";
+import { type Database, findConnection, recordConnectionUse } from "@tonaris/db";
+import { mcpModeOf, type McpPrincipal } from "@tonaris/domain";
 
-import { type Auth, mcpResource } from "../auth/auth";
-import { mutationRunner, type CaptureDeps, type SharingDeps } from "../capture";
+import { type Auth, mcpRequestedScopes, mcpResource } from "../auth/auth";
 import type { ApiConfig } from "../config";
-import type { SyncHub } from "../sync/hub";
+import type { LogError } from "../observability";
+import type { Mutations } from "../sync/runner";
 import { createMcpLimiter, mcpLimits, type McpLimiter } from "./limits";
 import { createMcpServer } from "./server";
 import { mcpWriter } from "./writes";
@@ -38,20 +33,12 @@ export type McpRoutesOptions = {
   auth: Auth;
   db: Database;
   config: Pick<ApiConfig, "apiOrigin" | "webOrigin">;
-  logError: (error: unknown, context: string) => void;
-  /** The streams agents' writes go to, as the app's do (X-08). */
-  hub: SyncHub;
-  capture?: CaptureDeps | undefined;
-  sharing: SharingDeps;
+  logError: LogError;
+  /** Runs agents' writes as the app's run, and hands their changes to the same streams (X-02, X-08). */
+  mutations: Mutations;
   /** The per-connection limits (TS-66); a test may pass its own clock. */
   limiter?: McpLimiter;
 };
-
-/**
- * Clients ask for the scopes the challenge names: both modes', so consent can offer either, and `offline_access`
- * for a refresh token. ChatGPT asks for nothing else, and without it would sign in again every hour (TON-22).
- */
-const challengeScopes = [mcpScopes.read, mcpScopes.manage, "offline_access"];
 
 const unauthorized = (message: string, error?: string) =>
   new APIError(
@@ -162,28 +149,23 @@ export function mcpRoutes({
   db,
   config,
   logError,
-  hub,
-  capture,
-  sharing,
+  mutations,
   limiter = createMcpLimiter(),
 }: McpRoutesOptions) {
   const resource = mcpResource(config.apiOrigin);
   const verify = tokenVerifier(auth, { issuer: `${config.apiOrigin}/auth`, resource });
   const challenge = (error: unknown) => {
-    const response = createResourceServerChallenge(error, resource, { challengeScopes });
+    // Clients ask for the scopes the challenge names: both modes', so consent can offer either, and
+    // `offline_access` for a refresh token. ChatGPT asks for nothing else, and without it would sign in again every
+    // hour (TON-22).
+    const response = createResourceServerChallenge(error, resource, {
+      challengeScopes: mcpRequestedScopes,
+    });
     if (!response) throw error;
     return challengeResponse(response);
   };
 
-  const writer = mcpWriter({
-    db,
-    run: mutationRunner(db, capture, sharing),
-    // As the sync routes announce: a confirmed write without changes, such as sharing, still tells guest pages.
-    announce: (accountId: string, { result, changes, replayed }: ExecutedMutation) => {
-      if (changes.length > 0) hub.publish(accountId, changes);
-      else if (!replayed && result.outcome.status === "confirmed") hub.notify(accountId);
-    },
-  });
+  const writer = mcpWriter({ db, mutations });
   const handler = createMcpHandler(
     ({ authInfo }) =>
       createMcpServer({

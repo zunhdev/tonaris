@@ -10,7 +10,7 @@ import {
   type ProvenanceEntry,
 } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import type { Executor, Transaction } from "./client";
 import { albumProvenance as provenance } from "./schema";
 
 /** Inserts `entries` for the album, replacing the rows of the fields they name. */
@@ -34,7 +34,7 @@ export async function writeProvenance(
 }
 
 /** Removes the rows of `fields`, whose values are now unknown. */
-export async function clearProvenance(
+async function clearProvenance(
   tx: Transaction,
   albumId: string,
   fields: readonly EnrichableField[],
@@ -70,10 +70,7 @@ export function userEntries(values: Partial<EnrichableFields>): ProvenanceEntry[
 }
 
 /** The album's provenance, by field. */
-export async function albumProvenance(
-  db: Database | Transaction,
-  albumId: string,
-): Promise<ProvenanceEntry[]> {
+export async function provenanceOf(db: Executor, albumId: string): Promise<ProvenanceEntry[]> {
   return db
     .select({
       field: provenance.field,

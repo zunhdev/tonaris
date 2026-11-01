@@ -7,10 +7,8 @@
 import { albumFieldsSchema } from "./albums";
 import { containerKinds } from "./containers";
 import { searchTier, type SearchTier } from "./normalize";
+import { byBytes } from "./order";
 import { z } from "./zod";
-
-/** Bytewise, as search keys are compared everywhere (TS-12). */
-const byKey = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /** The entries whose key matches `queryKey`, a search key, best first. */
 export function rankNames<T>(
@@ -26,7 +24,7 @@ export function rankNames<T>(
     if (tier !== undefined) matched.push({ entry, key, id: idOf(entry), tier });
   }
   return matched
-    .toSorted((a, b) => a.tier - b.tier || byKey(a.key, b.key) || byKey(a.id, b.id))
+    .toSorted((a, b) => a.tier - b.tier || byBytes(a.key, b.key) || byBytes(a.id, b.id))
     .map(({ entry }) => entry);
 }
 
@@ -50,9 +48,9 @@ export function rankAlbums<T>(
     .toSorted(
       (a, b) =>
         a.tier - b.tier ||
-        byKey(a.title, b.title) ||
-        byKey(a.artist, b.artist) ||
-        byKey(a.id, b.id),
+        byBytes(a.title, b.title) ||
+        byBytes(a.artist, b.artist) ||
+        byBytes(a.id, b.id),
     )
     .map(({ entry }) => entry);
 }
@@ -60,6 +58,9 @@ export function rankAlbums<T>(
 /** How many results a group gives unless asked for more (DS-75). */
 export const defaultSearchLimit = 8;
 export const maxSearchLimit = 100;
+
+/** Characters in a search query, in the app and through MCP (TS-50). */
+export const maxSearchQueryLength = 200;
 
 const locationSchema = z.array(z.string()).meta({
   description:

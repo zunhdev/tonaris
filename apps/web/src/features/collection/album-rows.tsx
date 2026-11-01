@@ -12,6 +12,8 @@
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
+import { isUnderway } from "@/client/sync/save-states";
+import { sent } from "@/client/sync/writer";
 import { useOpenIn } from "@/features/open/open-in";
 import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -32,11 +34,12 @@ import {
 import type { Album, ServiceLink } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useNarrowScreen } from "../shell/media";
 import { isTextField } from "../shell/shortcuts";
-import { albumEdit, cellText, type AlbumCell } from "./album-edit";
+import { albumEdit, cellNames, cellText, typeName, type AlbumCell } from "./album-edit";
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
-import { useCollectionUi, useMode, useNarrowScreen } from "./collection-ui";
+import { useCollectionUi, useMode } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
@@ -52,33 +55,12 @@ const phoneRowHeight = 56;
 /** The cells that edit inline, by column: title, artist and year (DS-45). */
 const editableCells: readonly AlbumCell[] = ["title", "artistCredit", "year"];
 
-/** Each editor's name, for its accessible label: "Title of 'Nightfall'". */
-export const cellNames: Record<AlbumCell, string> = {
-  title: "Title",
-  artistCredit: "Artist",
-  year: "Year",
-  originalYear: "Original release year",
-  recording: "Recording year or range",
-};
-
 /** The cell being edited inline: its album, its value as typed, and why that was refused, if it was. */
 type CellEdit = { albumId: string; cell: AlbumCell; draft: string; refusal?: string };
 /** Below this width, the type column collapses (DS-21). */
 const typeFrom = 640;
 /** Below this width, the services column collapses, before the type (DS-21). */
 const servicesFrom = 760;
-
-const typeNames: Record<NonNullable<Album["releaseType"]>, string> = {
-  album: "Album",
-  ep: "EP",
-  compilation: "Compilation",
-};
-
-/** The release type in words (DS-19): live first, as the groups have it (FR-05.9). */
-export function typeName(album: Pick<Album, "releaseType" | "isLive">): string {
-  if (album.isLive) return "Live";
-  return album.releaseType === null ? "—" : typeNames[album.releaseType];
-}
 
 type Item =
   | { type: "header"; group: ReleaseGroup; count: number }
@@ -233,12 +215,12 @@ export function AlbumRows({
       return false;
     }
     if (result.kind === "save" && client) {
-      // One update from the values it replaces (TS-21); the save-state layer reports one that isn't saved.
-      client.albums
-        .update(album.id, (draft) => {
+      // One update from the values it replaces (TS-21).
+      sent(
+        client.albums.update(album.id, (draft) => {
           Object.assign(draft, result.values);
-        })
-        .isPersisted.promise.catch(() => {});
+        }),
+      );
     }
     closeEdit(edit);
     return true;
@@ -533,7 +515,7 @@ function AlbumRow({
       ref={rowRef}
       role="row"
       aria-rowindex={index + 2}
-      aria-busy={status === "pending" || status === "unconfirmed" ? true : undefined}
+      aria-busy={isUnderway(status) || undefined}
       className={cn(
         "group/row absolute inset-x-0 top-0 grid items-stretch rounded-md px-2 hover:bg-hover",
         drag.dragging && "opacity-40",

@@ -4,7 +4,9 @@
 // owner's arrangement follows (DS-51): an album entering Unsorted goes to its top, and one leaving Unsorted or a list
 // loses its place there, so a new entry lands at the end of the list.
 
+import { applied, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
+import type { StoredContainer } from "./containers";
 import { maxMemberships } from "./limits";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
@@ -26,13 +28,13 @@ export function membershipKey(listId: string, albumId: string): string {
 type EntryArgs = { listId: string; albumId: string };
 
 /**
- * The owner of the active list and album an entry joins, or why they can't have one. Another person's album and
- * a missing one get the same answer, so nobody can probe for other people's IDs.
+ * The active list `listId`, if the principal may change its entries, or why not: a missing list is `not_found`, and
+ * someone else's gets the policy's code (TS-30). Adding to a list and taking from it, captures included, ask this.
  */
-async function entryOwner(
-  { listId, albumId }: EntryArgs,
+export async function changeableList(
+  listId: string,
   { principal, store }: CommandContext,
-): Promise<string | Failure> {
+): Promise<StoredContainer | Failure> {
   const list = await store.findContainer(listId);
   if (!list) return failure("not_found", "This list doesn't exist.");
   const decision = authorizeWrite(principal, { ownerId: list.ownerId, scope: "collection" });
@@ -41,7 +43,28 @@ async function entryOwner(
     return failure("invalid_destination", "Folders don't hold albums. Choose a list.");
   }
   if (list.trashed) return failure("trashed", "This list is in Trash. Recover it to change it.");
-  const album = await store.findAlbum(albumId);
+  return list;
+}
+
+/** The refusal of an entry past the account's limit (TS-18): a list entry added, or a capture's. */
+export function membershipLimitProblem(): Failure {
+  return failure(
+    "limit_exceeded",
+    `You've reached ${maxMemberships.toLocaleString("en")} list entries (including Trash). Remove albums from lists, or permanently delete lists from Trash, to add more.`,
+  );
+}
+
+/**
+ * The owner of the active list and album an entry joins, or why they can't have one. Another person's album and
+ * a missing one get the same answer, so nobody can probe for other people's IDs.
+ */
+async function entryOwner(
+  { listId, albumId }: EntryArgs,
+  context: CommandContext,
+): Promise<string | Failure> {
+  const list = await changeableList(listId, context);
+  if (isFailure(list)) return list;
+  const album = await context.store.findAlbum(albumId);
   if (!album || album.ownerId !== list.ownerId) {
     return failure("not_found", "This album isn't in your collection.");
   }
@@ -60,18 +83,13 @@ export async function addMembership(
   context: CommandContext,
 ): Promise<CommandResult> {
   const ownerId = await entryOwner(args, context);
-  if (typeof ownerId !== "string") return ownerId;
+  if (isFailure(ownerId)) return ownerId;
   const { store } = context;
   if (await store.findMembership(args.listId, args.albumId)) {
     const result: MembershipAddResult = { alreadyInList: true };
     return { status: "applied", changes: [], result };
   }
-  if ((await store.countMemberships(ownerId)) >= maxMemberships) {
-    return failure(
-      "limit_exceeded",
-      `You've reached ${maxMemberships.toLocaleString("en")} list entries (including Trash). Remove albums from lists, or permanently delete lists from Trash, to add more.`,
-    );
-  }
+  if ((await store.countMemberships(ownerId)) >= maxMemberships) return membershipLimitProblem();
 
   const membership: Membership = {
     listId: args.listId,
@@ -106,11 +124,9 @@ export async function removeMembership(
   context: CommandContext,
 ): Promise<CommandResult> {
   const ownerId = await entryOwner(args, context);
-  if (typeof ownerId !== "string") return ownerId;
+  if (isFailure(ownerId)) return ownerId;
   const { store } = context;
-  if (!(await store.findMembership(args.listId, args.albumId))) {
-    return { status: "applied", changes: [] };
-  }
+  if (!(await store.findMembership(args.listId, args.albumId))) return applied();
 
   await store.deleteMembership(args.listId, args.albumId);
   const id = membershipKey(args.listId, args.albumId);
@@ -119,8 +135,5 @@ export async function removeMembership(
   const entered = (await store.inActiveList(args.albumId))
     ? []
     : [await placeAtTop(store, ownerId, "unsorted", args.albumId)];
-  return {
-    status: "applied",
-    changes: [{ entity: "membership", id, op: "delete", data: null }, ...left, ...entered],
-  };
+  return applied({ entity: "membership", id, op: "delete", data: null }, ...left, ...entered);
 }

@@ -10,6 +10,7 @@ import { provenanceSources, type ProvenanceSource } from "./enrichment";
 import type { FieldValue } from "./field-values";
 import { fieldTypes, type CustomField } from "./fields";
 import { streamingServices } from "./links";
+import { byBytes } from "./order";
 import type { Position } from "./positions";
 import type { ServiceLink } from "./service-links";
 import { trashUnitKinds, type TrashUnitKind } from "./trash";
@@ -288,9 +289,9 @@ export function buildExport(
     views[viewKey] = { ...choices, order: [] };
   }
   for (const [viewKey, placed] of positionsOf) {
-    // Fractional-index keys compare bytewise (TS-16); they are ASCII, so code units order them alike.
+    // Fractional-index keys compare bytewise (TS-16).
     const order = placed
-      .toSorted((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+      .toSorted((a, b) => byBytes(a.key, b.key))
       .map((position) => position.itemId);
     views[viewKey] = {
       ...(views[viewKey] ?? { sortMode: null, sortDir: null, grouped: null, layout: null }),

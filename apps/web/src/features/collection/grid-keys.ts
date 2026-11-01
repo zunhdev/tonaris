@@ -1,7 +1,10 @@
 // The keys of a collection view's grid (DS-115, DS-78; WAI-ARIA grid pattern): from the focused cell to the next.
 // ← and → stay within the row, without wrapping; ↑ and ↓, and K and J, keep the column, clamped to a shorter row
 // (the last row of cards); Home and End go to the row's ends, and with ⌘ or Ctrl to the grid's; Page Up and Page
-// Down move by the rows in view. Pure, so the rules are tested without a DOM.
+// Down move by the rows in view. ⌥↑ and ⌥↓ move the focused item instead, under manual order, ⇧ for the ends
+// (DS-49). Pure, so the rules are tested without a DOM.
+
+import type { Direction } from "./order";
 
 export type Cell = { row: number; col: number };
 
@@ -16,6 +19,14 @@ export type GridShape = {
 export type GridKey = Pick<KeyboardEvent, "key" | "altKey" | "ctrlKey" | "metaKey" | "shiftKey">;
 
 const clamp = (value: number, max: number) => Math.max(0, Math.min(value, max));
+
+/** The move a key asks for: ⌥↑ and ⌥↓, with ⇧ for the ends; undefined for any other key, or with ⌘ or Ctrl. */
+export function directionOf(key: GridKey): Direction | undefined {
+  if (!key.altKey || key.ctrlKey || key.metaKey) return undefined;
+  if (key.key === "ArrowUp") return key.shiftKey ? "top" : "up";
+  if (key.key === "ArrowDown") return key.shiftKey ? "bottom" : "down";
+  return undefined;
+}
 
 /** The cell `key` moves to from `from`, or undefined for a key the grid doesn't use. */
 export function nextCell(key: GridKey, from: Cell, shape: GridShape): Cell | undefined {

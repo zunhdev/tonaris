@@ -1,7 +1,8 @@
 // Separator (DS-20): a 1px `border.subtle` divider (DS-16).
 
 import { Separator as SeparatorPrimitive } from "@base-ui/react/separator";
-import { cn } from "cn";
+
+import { cn } from "@tonaris/ui/lib/utils";
 
 function Separator({ className, orientation = "horizontal", ...props }: SeparatorPrimitive.Props) {
   return (

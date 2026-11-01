@@ -4,6 +4,7 @@
 // collection, TON-68), and on `reread`, as after a save its owner makes in a share the tree follows.
 
 import { api } from "@/api";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useLiveQuery } from "@tanstack/react-db";
 import {
@@ -38,25 +39,12 @@ export function SharedEntriesProvider({ children }: { children: ReactNode }) {
     .map((reference) => reference.containerId)
     .toSorted()
     .join(",");
-  // The entries, with the read they came from: what was kept and how many times it was asked for again.
-  const [loaded, setLoaded] = useState<{ read: string; entries: SharedEntry[] }>();
   const [revision, setRevision] = useState(0);
   const reread = useCallback(() => setRevision((count) => count + 1), []);
-  useEffect(() => {
-    let current = true;
-    const read = `${kept}#${revision}`;
-    api.v1.shared.get().then(
-      ({ data }) => {
-        if (current && data) setLoaded({ read, entries: data.entries });
-        return data;
-      },
-      () => undefined,
-    );
-    return () => {
-      current = false;
-    };
-  }, [kept, revision]);
-  const entries = loaded?.entries;
+  // Read again for what is kept and each time it is asked for again.
+  const entries = useKeyedRead(`${kept}#${revision}`, () =>
+    api.v1.shared.get().then(({ data }) => data?.entries),
+  )?.value;
   useEffect(() => {
     globalThis.addEventListener("focus", reread);
     return () => globalThis.removeEventListener("focus", reread);

@@ -3,7 +3,7 @@
 // and the account-deletion dialog embeds the button as "Download your data first" (DS-97). On the desktop only, as
 // FR-08.1 asks.
 
-import { useNarrowScreen } from "@/features/collection/collection-ui";
+import { useNarrowScreen } from "@/features/shell/media";
 import { useId } from "react";
 
 import { Button } from "@tonaris/ui/components/button";

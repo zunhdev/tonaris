@@ -11,8 +11,11 @@
 // whom (DS-69, FR-07.14); choosing a destination previews it for the one chosen, and an Undo doesn't ask.
 
 import type { Deleted, RecoveryChoice } from "@/client/sync/trash";
+import { sent } from "@/client/sync/writer";
 import { useCollectionData } from "@/features/collection/data";
-import type { Tree } from "@/features/collection/tree";
+import { nameRefusal } from "@/features/collection/editing";
+import { PlaceList } from "@/features/collection/place-list";
+import { destinations, siblingsOf } from "@/features/collection/tree";
 import {
   readImpact,
   SharingImpactBlock,
@@ -21,26 +24,21 @@ import {
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
-import { FolderClosed, Library } from "lucide-react";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
-  useId,
   useRef,
   useState,
   type FormEvent,
   type ReactNode,
 } from "react";
-import { z } from "zod";
 
 import {
-  containerNameProblem,
   findNameConflict,
-  nameTakenProblem,
   recoveryResultSchema,
-  type Container,
+  sameAlbumSchema,
   type SameAlbum,
   type SharingImpact,
   type SkippedEntry,
@@ -51,12 +49,15 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
+import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
 
 import { ConfirmDialog } from "../shell/confirm-dialog";
+import { count } from "../shell/words";
 
 /** A unit to recover: what it is, where it was, and, after a deletion just made, what that deletion took out. */
 export type RecoveryTarget = {
@@ -87,12 +88,6 @@ const RecoveryContext = createContext<(target: RecoveryTarget) => void>(() => {}
 export function useRecover(): (target: RecoveryTarget) => void {
   return useContext(RecoveryContext);
 }
-
-/** The siblings a recovered root would have under `parentId`. */
-const siblingsUnder = (tree: Tree, parentId: string | null): Container[] =>
-  parentId === null ? tree.roots : (tree.children.get(parentId) ?? []);
-
-const albums = (n: number) => `${n} ${n === 1 ? "membership" : "memberships"}`;
 
 export function RecoveryProvider({ children }: { children: ReactNode }) {
   const client = useSyncClient();
@@ -142,10 +137,14 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
         notify?.info(`Restored '${name}'`);
         return;
       }
-      notify?.info(`Restored · ${albums(skipped.length)} skipped`, undefined, {
-        label: "Details",
-        onClick: () => setPrompt({ step: "skipped", name, skipped }),
-      });
+      notify?.info(
+        `Restored · ${count(skipped.length, "membership", "memberships")} skipped`,
+        undefined,
+        {
+          label: "Details",
+          onClick: () => setPrompt({ step: "skipped", name, skipped }),
+        },
+      );
     })();
   }
 
@@ -183,7 +182,7 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
       return;
     }
     const name = choice.name ?? target.name;
-    if (findNameConflict(name, siblingsUnder(now, parentId))) {
+    if (findNameConflict(name, siblingsOf(now, parentId))) {
       setPrompt({ step: "name", target, choice, parentId });
       return;
     }
@@ -256,9 +255,7 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
                 action: "Move to Trash and restore",
                 onConfirm: () => {
                   if (!client) return;
-                  client.trash
-                    .deleteAlbum(prompt.active.albumId)
-                    .transaction.isPersisted.promise.catch(() => {});
+                  sent(client.trash.deleteAlbum(prompt.active.albumId).transaction);
                   // Sent after the deletion, which the server applies first.
                   send(prompt.target, {});
                 },
@@ -278,22 +275,6 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** The collection and every active folder, nested, as places to recover into. */
-function places(tree: Tree): { parentId: string | null; name: string; level: number }[] {
-  const found: { parentId: string | null; name: string; level: number }[] = [
-    { parentId: null, name: "Collection", level: 0 },
-  ];
-  const walk = (siblings: readonly Container[], level: number) => {
-    for (const folder of siblings) {
-      if (folder.kind !== "folder") continue;
-      found.push({ parentId: folder.id, name: folder.name, level });
-      walk(tree.children.get(folder.id) ?? [], level + 1);
-    }
-  };
-  walk(tree.roots, 1);
-  return found;
-}
-
 /** "'Metal' is in Trash or no longer exists. Choose where to restore 'Doom'." (DS-56) */
 function DestinationPrompt({
   target,
@@ -306,9 +287,9 @@ function DestinationPrompt({
 }) {
   const client = useSyncClient();
   const { tree } = useCollectionData();
-  const options = places(tree);
-  const [chosen, setChosen] = useState<string>("root");
-  const group = useId();
+  // Collection and every active folder (DS-56).
+  const places = destinations(tree);
+  const [chosen, setChosen] = useState<string | null>(null);
   const formerName =
     target.parentId === null
       ? undefined
@@ -318,7 +299,7 @@ function DestinationPrompt({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    onChoose(chosen === "root" ? null : chosen);
+    onChoose(chosen);
   }
 
   return (
@@ -331,48 +312,16 @@ function DestinationPrompt({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <fieldset aria-labelledby={group} className="flex max-h-80 flex-col overflow-y-auto">
-            <legend id={group} className="sr-only">
-              Places
-            </legend>
-            {options.map((place) => {
-              const value = place.parentId ?? "root";
-              const Icon = place.parentId === null ? Library : FolderClosed;
-              return (
-                <label
-                  key={value}
-                  className="flex h-8 cursor-default items-center gap-2 rounded-md px-2 text-fg-primary hover:bg-hover has-[:checked]:bg-selected has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-focus has-[:focus-visible]:outline-solid"
-                  style={{ paddingLeft: 8 + place.level * 16 }}
-                >
-                  <input
-                    type="radio"
-                    name="place"
-                    value={value}
-                    checked={chosen === value}
-                    onChange={() => setChosen(value)}
-                    className="sr-only"
-                  />
-                  <Icon
-                    aria-hidden
-                    strokeWidth={1.5}
-                    className="size-4 shrink-0 text-fg-secondary"
-                  />
-                  <span className="truncate">{place.name}</span>
-                </label>
-              );
-            })}
-          </fieldset>
-          <SharingImpactPreview
-            query={{ recover: target.unitId, to: chosen === "root" ? null : chosen }}
-          />
-          <div className="flex justify-end gap-2">
+          <PlaceList mode="radios" places={places} chosen={chosen} onChange={setChosen} />
+          <SharingImpactPreview query={{ recover: target.unitId, to: chosen }} />
+          <DialogFooter>
             <Button type="button" onClick={onCancel}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">
               Restore
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -403,14 +352,14 @@ function SharingPrompt({
           </DialogDescription>
         </DialogHeader>
         <SharingImpactBlock impact={impact} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button type="button" onClick={onCancel}>
             Cancel
           </Button>
           <Button type="button" variant="primary" onClick={onRestore}>
             Restore
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -431,7 +380,6 @@ function NamePrompt({
   onCancel: () => void;
 }) {
   const { tree } = useCollectionData();
-  const id = useId();
   const input = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(target.name);
   const [problem, setProblem] = useState<string>();
@@ -443,20 +391,15 @@ function NamePrompt({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    const trimmed = name.trim();
-    const invalid = containerNameProblem(trimmed);
-    if (invalid) {
-      setProblem(invalid.problem.detail);
+    const refusal = nameRefusal(name, {
+      siblings: siblingsOf(tree, parentId),
+      parentName: parentId === null ? null : destination,
+    });
+    if (refusal) {
+      setProblem(refusal);
       return;
     }
-    const taken = findNameConflict(trimmed, siblingsUnder(tree, parentId));
-    if (taken) {
-      setProblem(
-        nameTakenProblem(taken.name, parentId === null ? null : destination).problem.detail,
-      );
-      return;
-    }
-    onName(trimmed);
+    onName(name.trim());
   }
 
   return (
@@ -470,25 +413,19 @@ function NamePrompt({
         </DialogHeader>
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor={id} className="text-small text-fg-secondary">
-              Name
-            </label>
-            <Input
-              ref={input}
-              id={id}
-              value={name}
-              aria-invalid={problem !== undefined}
-              aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-              onChange={(event) => {
-                setName(event.target.value);
-                setProblem(undefined);
-              }}
-            />
-            {problem && (
-              <p id={`${id}-problem`} className="text-small text-status-danger">
-                {problem}
-              </p>
-            )}
+            <Field label="Name" problem={problem}>
+              {(control) => (
+                <Input
+                  {...control}
+                  ref={input}
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    setProblem(undefined);
+                  }}
+                />
+              )}
+            </Field>
             <Button
               type="button"
               variant="ghost"
@@ -499,14 +436,14 @@ function NamePrompt({
               Choose another location…
             </Button>
           </div>
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button type="button" onClick={onCancel}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">
               Restore
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -558,23 +495,15 @@ function SkipReport({
             );
           })}
         </ul>
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button type="button" variant="primary" onClick={onClose}>
             Done
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
-const sameAlbumSchema = z.object({
-  unitId: z.string(),
-  albumId: z.string(),
-  title: z.string(),
-  artistCredit: z.string(),
-  originalYear: z.number().nullable(),
-});
 
 /** One of the two records a same-album pause shows. */
 function RecordCard({ title, detail }: { title: string; detail: string }) {
@@ -619,7 +548,7 @@ function SameAlbumPrompt({
               .join(" · ")}
           />
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
+        <DialogFooter className="flex-wrap">
           <Button type="button" onClick={onKeep}>
             Cancel
           </Button>
@@ -629,7 +558,7 @@ function SameAlbumPrompt({
           <Button ref={keep} type="button" variant="primary" onClick={onKeep}>
             Keep the active album
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

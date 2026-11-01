@@ -8,30 +8,34 @@
 
 import {
   albumFields,
+  containerOfView,
   fieldValueKey,
   membershipKey,
-  sameValue,
-  type CaptureArgs,
-  type CustomField,
-  type FieldValue,
   positionKey,
+  sameServices,
+  sameValue,
   serviceLinkKey,
   unsetView,
   viewDefaultsFields,
   viewPrefsFields,
+  type AccountDefaults,
   type Album,
+  type CaptureArgs,
   type Container,
+  type CustomField,
+  type FieldValue,
   type Membership,
   type Mutation,
   type ServiceLink,
-  type AccountDefaults,
-  type ViewDefaults,
   type ViewPrefs,
 } from "@tonaris/domain";
 
 import type { SyncClient } from "./client";
+import type { FieldWriteMetadata } from "./fields";
+import type { SaveState } from "./save-states";
 import { defaultsKey } from "./views";
-import type { SaveState } from "./writer";
+import { sent } from "./writer";
+import { diffFields } from "./writes";
 
 /**
  * `sent`: the change went out as a new write. `unchanged`: the records already hold it, so nothing was sent.
@@ -171,276 +175,267 @@ function remake(
   mutation: Mutation,
   planned: Plan,
 ): Resubmitted {
-  if (mutation.name === "album.create") {
-    if (albums.has(mutation.args.id)) return "unchanged";
-    planned.albumInserts.push({ ...mutation.args, artworkUrl: null });
-    return planned.needs("album.insert");
-  }
-  if (mutation.name === "album.setArtwork") {
-    const { id, artworkUrl } = mutation.args;
-    const current = albums.get(id);
-    if (!current) return "gone";
-    if (current.artworkUrl === artworkUrl) return "unchanged";
-    planned.albumUpdates.set(id, { ...planned.albumUpdates.get(id), artworkUrl });
-    return planned.needs("album.update");
-  }
-  if (mutation.name === "album.update") {
-    const { id, ...attempted } = mutation.args;
-    const current = albums.get(id);
-    if (!current) return "gone";
-    const changes: Partial<Album> = {};
-    for (const field of albumFields) {
-      if (attempted[field] !== undefined && attempted[field] !== current[field]) {
-        Object.assign(changes, { [field]: attempted[field] });
+  /** Whether a view's record is gone: the root and Unsorted always exist. */
+  const viewGone = (viewKey: string) => {
+    const container = containerOfView(viewKey);
+    return container !== undefined && !containers.has(container);
+  };
+  switch (mutation.name) {
+    case "album.create": {
+      if (albums.has(mutation.args.id)) return "unchanged";
+      planned.albumInserts.push({ ...mutation.args, artworkUrl: null });
+      return planned.needs("album.insert");
+    }
+    case "album.setArtwork": {
+      const { id, artworkUrl } = mutation.args;
+      const current = albums.get(id);
+      if (!current) return "gone";
+      if (current.artworkUrl === artworkUrl) return "unchanged";
+      planned.albumUpdates.set(id, { ...planned.albumUpdates.get(id), artworkUrl });
+      return planned.needs("album.update");
+    }
+    case "album.update": {
+      const { id, ...attempted } = mutation.args;
+      const current = albums.get(id);
+      if (!current) return "gone";
+      const changes = diffFields(albumFields, current, attempted)?.args;
+      if (!changes) return "unchanged";
+      planned.albumUpdates.set(id, { ...planned.albumUpdates.get(id), ...changes });
+      return planned.needs("album.update");
+    }
+    case "album.capture": {
+      // Sent again as it was; an album saved under its ID means it was saved after all.
+      if (albums.has(mutation.args.albumId)) return "unchanged";
+      planned.captures.push(mutation.args);
+      return planned.needs("capture");
+    }
+    case "link.set":
+    case "link.remove": {
+      const { albumId, service } = mutation.args;
+      if (!albums.has(albumId)) return "gone";
+      const key = serviceLinkKey(albumId, service);
+      const current = links.get(key);
+      if (mutation.name === "link.remove") {
+        if (!current) return "unchanged";
+        planned.linkDeletes.push(key);
+        return planned.needs("link.delete");
       }
-    }
-    if (Object.keys(changes).length === 0) return "unchanged";
-    planned.albumUpdates.set(id, { ...planned.albumUpdates.get(id), ...changes });
-    return planned.needs("album.update");
-  }
-  if (mutation.name === "album.capture") {
-    // Sent again as it was; an album saved under its ID means it was saved after all.
-    if (albums.has(mutation.args.albumId)) return "unchanged";
-    planned.captures.push(mutation.args);
-    return planned.needs("capture");
-  }
-  if (mutation.name === "link.set" || mutation.name === "link.remove") {
-    const { albumId, service } = mutation.args;
-    if (!albums.has(albumId)) return "gone";
-    const key = serviceLinkKey(albumId, service);
-    const current = links.get(key);
-    if (mutation.name === "link.remove") {
-      if (!current) return "unchanged";
-      planned.linkDeletes.push(key);
-      return planned.needs("link.delete");
-    }
-    const { url } = mutation.args;
-    if (current?.url === url) return "unchanged";
-    if (!current) {
-      planned.linkInserts.push({ albumId, service, url });
-      return planned.needs("link.insert");
-    }
-    planned.linkUpdates.set(key, { url });
-    return planned.needs("link.update");
-  }
-  if (mutation.name === "field.create") {
-    if (fields.has(mutation.args.id)) return "unchanged";
-    planned.fieldInserts.push(mutation.args);
-    return planned.needs("field.insert");
-  }
-  if (mutation.name === "field.rename") {
-    const current = fields.get(mutation.args.id);
-    if (!current) return "gone";
-    if (current.name === mutation.args.name) return "unchanged";
-    planned.fieldUpdates.set(mutation.args.id, {
-      ...planned.fieldUpdates.get(mutation.args.id),
-      name: mutation.args.name,
-    });
-    return planned.needs("field.update");
-  }
-  if (mutation.name === "field.delete") {
-    if (!fields.has(mutation.args.id)) return "unchanged";
-    planned.fieldDeletes[mutation.args.id] = mutation.args.scopeHash;
-    return planned.needs("field.delete");
-  }
-  if (
-    mutation.name === "field.changeType" ||
-    mutation.name === "field.addOption" ||
-    mutation.name === "field.renameOption" ||
-    mutation.name === "field.removeOption"
-  ) {
-    const fieldId = mutation.name === "field.changeType" ? mutation.args.id : mutation.args.fieldId;
-    const current = fields.get(fieldId);
-    if (!current) return "gone";
-    const update = planned.fieldUpdates.get(fieldId) ?? {};
-    const options = update.options ?? current.options;
-    let next: Partial<CustomField>;
-    if (mutation.name === "field.changeType") {
-      if ((update.type ?? current.type) === mutation.args.type) return "unchanged";
-      next = { type: mutation.args.type };
-    } else if (mutation.name === "field.addOption") {
-      const { id, label } = mutation.args;
-      if (options.some((option) => option.id === id)) return "unchanged";
-      next = { options: [...options, { id, label }] };
-    } else if (mutation.name === "field.renameOption") {
-      const { optionId, label } = mutation.args;
-      const option = options.find((each) => each.id === optionId);
-      if (!option) return "gone";
-      if (option.label === label) return "unchanged";
-      next = {
-        options: options.map((each) => (each.id === optionId ? { id: each.id, label } : each)),
-      };
-    } else {
-      const { optionId, scopeHash } = mutation.args;
-      if (!options.some((option) => option.id === optionId)) return "unchanged";
-      if (scopeHash !== undefined) planned.fieldConfirmed[optionId] = scopeHash;
-      next = { options: options.filter((option) => option.id !== optionId) };
-    }
-    planned.fieldUpdates.set(fieldId, { ...update, ...next });
-    return planned.needs("field.update");
-  }
-  if (
-    mutation.name === "fieldValue.apply" ||
-    mutation.name === "fieldValue.set" ||
-    mutation.name === "fieldValue.remove"
-  ) {
-    const { albumId, fieldId } = mutation.args;
-    if (!albums.has(albumId) || !fields.has(fieldId)) return "gone";
-    const key = fieldValueKey(albumId, fieldId);
-    const current = fieldValues.get(key);
-    if (mutation.name === "fieldValue.remove") {
-      if (!current) return "unchanged";
-      planned.valueDeletes.push(key);
-      return planned.needs("value.delete");
-    }
-    if (mutation.name === "fieldValue.apply") {
-      if (current) return "unchanged";
-      planned.valueInserts.push({ albumId, fieldId, value: null });
-      return planned.needs("value.insert");
-    }
-    if (!current) return "gone";
-    if (sameValue(current.value, mutation.args.value)) return "unchanged";
-    planned.valueUpdates.set(key, { value: mutation.args.value });
-    return planned.needs("value.update");
-  }
-  if (mutation.name === "container.delete") {
-    if (!containers.has(mutation.args.id)) return "unchanged";
-    planned.trashDeletes.push(mutation.args.id);
-    return planned.needs("trash.delete");
-  }
-  if (mutation.name === "album.delete") {
-    if (!albums.has(mutation.args.id)) return "unchanged";
-    planned.albumDeletes.push(mutation.args.id);
-    return planned.needs("album.delete");
-  }
-  // Sharing and the display name are sent from their dialog, never queued: nothing to remake (TON-65).
-  if (
-    mutation.name === "share.invite" ||
-    mutation.name === "share.setLink" ||
-    mutation.name === "share.resendInvitation" ||
-    mutation.name === "share.accept" ||
-    mutation.name === "share.decline" ||
-    mutation.name === "share.leave" ||
-    mutation.name === "share.revoke" ||
-    mutation.name === "share.saveLink" ||
-    mutation.name === "share.removeReference" ||
-    mutation.name === "account.setDisplayName"
-  ) {
-    return "unchanged";
-  }
-  if (mutation.name === "trash.purge") {
-    const left = mutation.args.unitIds.filter((unitId) => trashUnits.has(unitId));
-    if (left.length === 0) return "unchanged";
-    planned.purges.push(...left);
-    return planned.needs("trash.purge");
-  }
-  if (mutation.name === "trash.recover") {
-    if (!trashUnits.has(mutation.args.unitId)) return "unchanged";
-    planned.trashRecoveries.push(mutation.args);
-    return planned.needs("trash.recover");
-  }
-  if (mutation.name === "container.create") {
-    if (containers.has(mutation.args.id)) return "unchanged";
-    planned.containerInserts.push({ ...mutation.args, description: null });
-    return planned.needs("container.insert");
-  }
-  if (
-    mutation.name === "container.rename" ||
-    mutation.name === "container.move" ||
-    mutation.name === "container.describe"
-  ) {
-    const { args } = mutation;
-    const current = containers.get(args.id);
-    if (!current) return "gone";
-    let change: Partial<Container>;
-    if ("name" in args) {
-      if (current.name === args.name) return "unchanged";
-      change = { name: args.name };
-    } else if ("description" in args) {
-      if (current.description === args.description) return "unchanged";
-      change = { description: args.description };
-    } else {
-      if (current.parentId === args.parentId) return "unchanged";
-      change = { parentId: args.parentId };
-    }
-    planned.containerUpdates.set(args.id, { ...planned.containerUpdates.get(args.id), ...change });
-    return planned.needs("container.update");
-  }
-  if (mutation.name === "view.set") {
-    const { viewKey, ...attempted } = mutation.args;
-    if (viewKey !== "root" && viewKey !== "unsorted" && !containers.has(viewKey)) return "gone";
-    const saved = views.get(viewKey);
-    const current = saved ?? unsetView(viewKey);
-    const changes: Partial<ViewPrefs> = {};
-    for (const field of viewPrefsFields) {
-      if (attempted[field] !== undefined && attempted[field] !== current[field]) {
-        Object.assign(changes, { [field]: attempted[field] });
+      const { url } = mutation.args;
+      if (current?.url === url) return "unchanged";
+      if (!current) {
+        planned.linkInserts.push({ albumId, service, url });
+        return planned.needs("link.insert");
       }
+      planned.linkUpdates.set(key, { url });
+      return planned.needs("link.update");
     }
-    if (Object.keys(changes).length === 0) return "unchanged";
-    const target = { ...current, ...changes };
-    if (viewPrefsFields.every((field) => target[field] === null)) {
-      planned.viewDeletes.push(viewKey);
-      return planned.needs("view.delete");
+    case "field.create": {
+      if (fields.has(mutation.args.id)) return "unchanged";
+      planned.fieldInserts.push(mutation.args);
+      return planned.needs("field.insert");
     }
-    if (!saved) {
-      planned.viewInserts.push(target);
-      return planned.needs("view.insert");
+    case "field.rename": {
+      const current = fields.get(mutation.args.id);
+      if (!current) return "gone";
+      if (current.name === mutation.args.name) return "unchanged";
+      planned.fieldUpdates.set(mutation.args.id, {
+        ...planned.fieldUpdates.get(mutation.args.id),
+        name: mutation.args.name,
+      });
+      return planned.needs("field.update");
     }
-    planned.viewUpdates.set(viewKey, { ...planned.viewUpdates.get(viewKey), ...changes });
-    return planned.needs("view.update");
-  }
-  if (mutation.name === "defaults.set") {
-    const current = defaults.get(defaultsKey);
-    if (!current) return "gone";
-    const changes: Partial<ViewDefaults> = {};
-    for (const field of viewDefaultsFields) {
-      const value = mutation.args[field];
-      if (value !== undefined && value !== current[field])
-        Object.assign(changes, { [field]: value });
+    case "field.delete": {
+      if (!fields.has(mutation.args.id)) return "unchanged";
+      planned.fieldDeletes[mutation.args.id] = mutation.args.scopeHash;
+      return planned.needs("field.delete");
     }
-    if (Object.keys(changes).length === 0) return "unchanged";
-    Object.assign(planned.defaultsUpdate, changes);
-    return planned.needs("defaults.update");
-  }
-  if (mutation.name === "defaults.setLinkTarget") {
-    const current = defaults.get(defaultsKey);
-    if (!current) return "gone";
-    if (current.linkTarget === mutation.args.linkTarget) return "unchanged";
-    planned.defaultsUpdate.linkTarget = mutation.args.linkTarget;
-    return planned.needs("defaults.update");
-  }
-  if (mutation.name === "defaults.setHiddenServices") {
-    const current = defaults.get(defaultsKey);
-    if (!current) return "gone";
-    if (current.hiddenServices.join(",") === mutation.args.hiddenServices.join(",")) {
+    case "field.changeType":
+    case "field.addOption":
+    case "field.renameOption":
+    case "field.removeOption": {
+      const fieldId =
+        mutation.name === "field.changeType" ? mutation.args.id : mutation.args.fieldId;
+      const current = fields.get(fieldId);
+      if (!current) return "gone";
+      const update = planned.fieldUpdates.get(fieldId) ?? {};
+      const options = update.options ?? current.options;
+      let next: Partial<CustomField>;
+      if (mutation.name === "field.changeType") {
+        if ((update.type ?? current.type) === mutation.args.type) return "unchanged";
+        next = { type: mutation.args.type };
+      } else if (mutation.name === "field.addOption") {
+        const { id, label } = mutation.args;
+        if (options.some((option) => option.id === id)) return "unchanged";
+        next = { options: [...options, { id, label }] };
+      } else if (mutation.name === "field.renameOption") {
+        const { optionId, label } = mutation.args;
+        const option = options.find((each) => each.id === optionId);
+        if (!option) return "gone";
+        if (option.label === label) return "unchanged";
+        next = {
+          options: options.map((each) => (each.id === optionId ? { id: each.id, label } : each)),
+        };
+      } else {
+        const { optionId, scopeHash } = mutation.args;
+        if (!options.some((option) => option.id === optionId)) return "unchanged";
+        if (scopeHash !== undefined) planned.fieldConfirmed[optionId] = scopeHash;
+        next = { options: options.filter((option) => option.id !== optionId) };
+      }
+      planned.fieldUpdates.set(fieldId, { ...update, ...next });
+      return planned.needs("field.update");
+    }
+    case "fieldValue.apply":
+    case "fieldValue.set":
+    case "fieldValue.remove": {
+      const { albumId, fieldId } = mutation.args;
+      if (!albums.has(albumId) || !fields.has(fieldId)) return "gone";
+      const key = fieldValueKey(albumId, fieldId);
+      const current = fieldValues.get(key);
+      if (mutation.name === "fieldValue.remove") {
+        if (!current) return "unchanged";
+        planned.valueDeletes.push(key);
+        return planned.needs("value.delete");
+      }
+      if (mutation.name === "fieldValue.apply") {
+        if (current) return "unchanged";
+        planned.valueInserts.push({ albumId, fieldId, value: null });
+        return planned.needs("value.insert");
+      }
+      if (!current) return "gone";
+      if (sameValue(current.value, mutation.args.value)) return "unchanged";
+      planned.valueUpdates.set(key, { value: mutation.args.value });
+      return planned.needs("value.update");
+    }
+    case "container.delete": {
+      if (!containers.has(mutation.args.id)) return "unchanged";
+      planned.trashDeletes.push(mutation.args.id);
+      return planned.needs("trash.delete");
+    }
+    case "album.delete": {
+      if (!albums.has(mutation.args.id)) return "unchanged";
+      planned.albumDeletes.push(mutation.args.id);
+      return planned.needs("album.delete");
+    }
+    // Sharing and the display name are sent from their dialog, never queued: nothing to remake (TON-65).
+    case "share.invite":
+    case "share.setLink":
+    case "share.resendInvitation":
+    case "share.accept":
+    case "share.decline":
+    case "share.leave":
+    case "share.revoke":
+    case "share.saveLink":
+    case "share.removeReference":
+    case "account.setDisplayName":
       return "unchanged";
+    case "trash.purge": {
+      const left = mutation.args.unitIds.filter((unitId) => trashUnits.has(unitId));
+      if (left.length === 0) return "unchanged";
+      planned.purges.push(...left);
+      return planned.needs("trash.purge");
     }
-    planned.defaultsUpdate.hiddenServices = mutation.args.hiddenServices;
-    return planned.needs("defaults.update");
+    case "trash.recover": {
+      if (!trashUnits.has(mutation.args.unitId)) return "unchanged";
+      planned.trashRecoveries.push(mutation.args);
+      return planned.needs("trash.recover");
+    }
+    case "container.create": {
+      if (containers.has(mutation.args.id)) return "unchanged";
+      planned.containerInserts.push({ ...mutation.args, description: null });
+      return planned.needs("container.insert");
+    }
+    case "container.rename":
+    case "container.move":
+    case "container.describe": {
+      const { args } = mutation;
+      const current = containers.get(args.id);
+      if (!current) return "gone";
+      let change: Partial<Container>;
+      if ("name" in args) {
+        if (current.name === args.name) return "unchanged";
+        change = { name: args.name };
+      } else if ("description" in args) {
+        if (current.description === args.description) return "unchanged";
+        change = { description: args.description };
+      } else {
+        if (current.parentId === args.parentId) return "unchanged";
+        change = { parentId: args.parentId };
+      }
+      planned.containerUpdates.set(args.id, {
+        ...planned.containerUpdates.get(args.id),
+        ...change,
+      });
+      return planned.needs("container.update");
+    }
+    case "view.set": {
+      const { viewKey, ...attempted } = mutation.args;
+      if (viewGone(viewKey)) return "gone";
+      const saved = views.get(viewKey);
+      const current = saved ?? unsetView(viewKey);
+      const changes = diffFields(viewPrefsFields, current, attempted)?.args;
+      if (!changes) return "unchanged";
+      const target = { ...current, ...changes };
+      if (viewPrefsFields.every((field) => target[field] === null)) {
+        planned.viewDeletes.push(viewKey);
+        return planned.needs("view.delete");
+      }
+      if (!saved) {
+        planned.viewInserts.push(target);
+        return planned.needs("view.insert");
+      }
+      planned.viewUpdates.set(viewKey, { ...planned.viewUpdates.get(viewKey), ...changes });
+      return planned.needs("view.update");
+    }
+    case "defaults.set": {
+      const current = defaults.get(defaultsKey);
+      if (!current) return "gone";
+      const changes = diffFields(viewDefaultsFields, current, mutation.args)?.args;
+      if (!changes) return "unchanged";
+      Object.assign(planned.defaultsUpdate, changes);
+      return planned.needs("defaults.update");
+    }
+    case "defaults.setLinkTarget": {
+      const current = defaults.get(defaultsKey);
+      if (!current) return "gone";
+      if (current.linkTarget === mutation.args.linkTarget) return "unchanged";
+      planned.defaultsUpdate.linkTarget = mutation.args.linkTarget;
+      return planned.needs("defaults.update");
+    }
+    case "defaults.setHiddenServices": {
+      const current = defaults.get(defaultsKey);
+      if (!current) return "gone";
+      if (sameServices(current.hiddenServices, mutation.args.hiddenServices)) return "unchanged";
+      planned.defaultsUpdate.hiddenServices = mutation.args.hiddenServices;
+      return planned.needs("defaults.update");
+    }
+    case "order.set": {
+      const { viewKey, keys } = mutation.args;
+      if (viewGone(viewKey)) return "gone";
+      const changed = new Map(
+        Object.entries(keys).filter(
+          ([itemId, key]) => (positions.get(positionKey(viewKey, itemId))?.key ?? null) !== key,
+        ),
+      );
+      if (changed.size === 0) return "unchanged";
+      planned.orders.push({ viewKey, keys: changed });
+      return planned.needs("order");
+    }
+    case "membership.add":
+    case "membership.remove": {
+      const { listId, albumId } = mutation.args;
+      const key = membershipKey(listId, albumId);
+      if (mutation.name === "membership.add") {
+        if (memberships.has(key)) return "unchanged";
+        planned.entryInserts.push({ listId, albumId, addedAt: new Date().toISOString() });
+        return planned.needs("entry.insert");
+      }
+      if (!memberships.has(key)) return "unchanged";
+      planned.entryDeletes.push(key);
+      return planned.needs("entry.delete");
+    }
+    default:
+      return mutation satisfies never;
   }
-  if (mutation.name === "order.set") {
-    const { viewKey, keys } = mutation.args;
-    if (viewKey !== "root" && viewKey !== "unsorted" && !containers.has(viewKey)) return "gone";
-    const changed = new Map(
-      Object.entries(keys).filter(
-        ([itemId, key]) => (positions.get(positionKey(viewKey, itemId))?.key ?? null) !== key,
-      ),
-    );
-    if (changed.size === 0) return "unchanged";
-    planned.orders.push({ viewKey, keys: changed });
-    return planned.needs("order");
-  }
-  const { listId, albumId } = mutation.args;
-  const key = membershipKey(listId, albumId);
-  if (mutation.name === "membership.add") {
-    if (memberships.has(key)) return "unchanged";
-    planned.entryInserts.push({ listId, albumId, addedAt: new Date().toISOString() });
-    return planned.needs("entry.insert");
-  }
-  if (!memberships.has(key)) return "unchanged";
-  planned.entryDeletes.push(key);
-  return planned.needs("entry.delete");
 }
 
 /** Sets each row's planned changes on its draft; the drafts come in the order of the keys. */
@@ -472,63 +467,83 @@ function make(
   planned: Plan,
   call: Call,
 ): void {
-  if (call === "album.insert") sent(albums.insert(planned.albumInserts));
-  else if (call === "album.update") {
-    sent(albums.update([...planned.albumUpdates.keys()], applyTo(planned.albumUpdates)));
-  } else if (call === "container.insert") sent(containers.insert(planned.containerInserts));
-  else if (call === "container.update") {
-    sent(
-      containers.update([...planned.containerUpdates.keys()], applyTo(planned.containerUpdates)),
-    );
-  } else if (call === "entry.insert") sent(memberships.insert(planned.entryInserts));
-  else if (call === "entry.delete") sent(memberships.delete(planned.entryDeletes));
-  else if (call === "link.insert") sent(links.insert(planned.linkInserts));
-  else if (call === "field.insert") sent(fields.insert(planned.fieldInserts));
-  else if (call === "field.delete") {
-    sent(
-      fields.delete(Object.keys(planned.fieldDeletes), {
-        metadata: { confirmed: planned.fieldDeletes },
-      }),
-    );
-  } else if (call === "value.insert") sent(fieldValues.insert(planned.valueInserts));
-  else if (call === "value.update") {
-    sent(fieldValues.update([...planned.valueUpdates.keys()], applyTo(planned.valueUpdates)));
-  } else if (call === "value.delete") sent(fieldValues.delete(planned.valueDeletes));
-  else if (call === "field.update") {
-    sent(
-      fields.update(
-        [...planned.fieldUpdates.keys()],
-        { metadata: { confirmed: planned.fieldConfirmed } },
-        applyTo(planned.fieldUpdates),
-      ),
-    );
-  } else if (call === "link.update") {
-    sent(links.update([...planned.linkUpdates.keys()], applyTo(planned.linkUpdates)));
-  } else if (call === "link.delete") sent(links.delete(planned.linkDeletes));
-  else if (call === "view.insert") sent(views.insert(planned.viewInserts));
-  else if (call === "view.update") {
-    sent(views.update([...planned.viewUpdates.keys()], applyTo(planned.viewUpdates)));
-  } else if (call === "view.delete") sent(views.delete(planned.viewDeletes));
-  else if (call === "defaults.update") {
-    sent(
-      defaults.update(defaultsKey, (draft) => {
-        Object.assign(draft, planned.defaultsUpdate);
-      }),
-    );
-  } else if (call === "capture") captures.send(planned.captures);
-  else if (call === "trash.delete") sent(trash.deleteContainers(planned.trashDeletes).transaction);
-  else if (call === "trash.purge") sent(trash.purge(planned.purges).transaction);
-  else if (call === "album.delete") {
-    for (const id of planned.albumDeletes) sent(trash.deleteAlbum(id).transaction);
-  } else if (call === "trash.recover") {
-    for (const { unitId, ...choice } of planned.trashRecoveries) {
-      const rootId = trashUnits.get(unitId)?.rootId ?? unitId;
-      sent(trash.recover({ unitId, rootId }, choice).transaction);
+  switch (call) {
+    case "album.insert":
+      return sent(albums.insert(planned.albumInserts));
+    case "album.update":
+      return sent(albums.update([...planned.albumUpdates.keys()], applyTo(planned.albumUpdates)));
+    case "container.insert":
+      return sent(containers.insert(planned.containerInserts));
+    case "container.update":
+      return sent(
+        containers.update([...planned.containerUpdates.keys()], applyTo(planned.containerUpdates)),
+      );
+    case "entry.insert":
+      return sent(memberships.insert(planned.entryInserts));
+    case "entry.delete":
+      return sent(memberships.delete(planned.entryDeletes));
+    case "link.insert":
+      return sent(links.insert(planned.linkInserts));
+    case "link.update":
+      return sent(links.update([...planned.linkUpdates.keys()], applyTo(planned.linkUpdates)));
+    case "link.delete":
+      return sent(links.delete(planned.linkDeletes));
+    case "field.insert":
+      return sent(fields.insert(planned.fieldInserts));
+    case "field.update": {
+      const metadata = { confirmed: planned.fieldConfirmed } satisfies FieldWriteMetadata;
+      return sent(
+        fields.update(
+          [...planned.fieldUpdates.keys()],
+          { metadata },
+          applyTo(planned.fieldUpdates),
+        ),
+      );
     }
-  } else for (const { viewKey, keys } of planned.orders) sent(arrange(viewKey, keys));
-}
-
-/** The new writes report their own outcomes in the save states; a rejection is expected there, not here. */
-function sent(transaction: { isPersisted: { promise: Promise<unknown> } }): void {
-  transaction.isPersisted.promise.catch(() => {});
+    case "field.delete": {
+      const metadata = { confirmed: planned.fieldDeletes } satisfies FieldWriteMetadata;
+      return sent(fields.delete(Object.keys(planned.fieldDeletes), { metadata }));
+    }
+    case "value.insert":
+      return sent(fieldValues.insert(planned.valueInserts));
+    case "value.update":
+      return sent(
+        fieldValues.update([...planned.valueUpdates.keys()], applyTo(planned.valueUpdates)),
+      );
+    case "value.delete":
+      return sent(fieldValues.delete(planned.valueDeletes));
+    case "view.insert":
+      return sent(views.insert(planned.viewInserts));
+    case "view.update":
+      return sent(views.update([...planned.viewUpdates.keys()], applyTo(planned.viewUpdates)));
+    case "view.delete":
+      return sent(views.delete(planned.viewDeletes));
+    case "defaults.update":
+      return sent(
+        defaults.update(defaultsKey, (draft) => {
+          Object.assign(draft, planned.defaultsUpdate);
+        }),
+      );
+    case "order":
+      for (const { viewKey, keys } of planned.orders) sent(arrange(viewKey, keys));
+      return;
+    case "capture":
+      captures.send(planned.captures);
+      return;
+    case "trash.delete":
+      return sent(trash.deleteContainers(planned.trashDeletes).transaction);
+    case "album.delete":
+      for (const id of planned.albumDeletes) sent(trash.deleteAlbum(id).transaction);
+      return;
+    case "trash.purge":
+      return sent(trash.purge(planned.purges).transaction);
+    case "trash.recover":
+      for (const { unitId, ...choice } of planned.trashRecoveries) {
+        const rootId = trashUnits.get(unitId)?.rootId ?? unitId;
+        sent(trash.recover({ unitId, rootId }, choice).transaction);
+      }
+      return;
+    default:
+      return call satisfies never;
+  }
 }

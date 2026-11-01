@@ -17,7 +17,9 @@ export {
   emailChangeStages,
   emailChangeStartSchema,
   emailChangeStepSchema,
+  emailInputSchema,
   emailKey,
+  parseEmailAddress,
   emailRecoveryConfirmSchema,
   emailRecoveryHours,
   emailRecoveryRefusalDetails,
@@ -67,6 +69,7 @@ export {
 export {
   EmailDeliveryError,
   emailDataSchemas,
+  emailOutcomeSchema,
   emailLifetimeMs,
   emailTemplateSchema,
   renderEmail,
@@ -82,13 +85,13 @@ export {
   albumFieldsSchema,
   albumCapacityProblem,
   albumProblem,
-  hasAlbumSlot,
   artworkPath,
   coverSchema,
   coversSchema,
   artworkUrlRefusal,
   isArtworkUrl,
   albumSchema,
+  syncedAlbumSchema,
   albumCreateArgsSchema,
   type AlbumCreateArgs,
   releaseTypes,
@@ -96,6 +99,7 @@ export {
   type Cover,
   type AlbumField,
   type AlbumFields,
+  type SyncedAlbum,
 } from "./albums";
 export {
   albumDeletionScope,
@@ -116,7 +120,6 @@ export {
   approvalValidMinutes,
   canonicalJson,
   scopeHash,
-  trashRetentionDays,
   type AlbumDeletionScope,
   type AlbumDeletionTarget,
   type DeletionTargets,
@@ -129,7 +132,6 @@ export {
   type PendingApprovals,
 } from "./approvals";
 export {
-  captureAlbum,
   captureArgsSchema,
   captureMatches,
   captureResultSchema,
@@ -157,6 +159,7 @@ export {
   containerKinds,
   containerNameProblem,
   containerSchema,
+  descriptionProblem,
   descriptionTooLong,
   nameTakenProblem,
   type Container,
@@ -164,14 +167,8 @@ export {
   type ContainerKind,
   type StoredContainer,
 } from "./containers";
-export {
-  runCommand,
-  type ChangeInput,
-  type CollectionStore,
-  type CommandContext,
-  type CommandResult,
-  type StoredAlbum,
-} from "./commands";
+export type { CollectionStore } from "./collection-store";
+export { runCommand, type ChangeInput, type CommandContext, type CommandResult } from "./commands";
 export {
   blankAlbum,
   enrichableFields,
@@ -188,7 +185,7 @@ export {
   type Sourced,
   type SourcedValues,
 } from "./enrichment";
-export { uuidv7, uuidv7Time } from "./ids";
+export { isUuid, uuidv7, uuidv7Time } from "./ids";
 export {
   maxAlbumTextLength,
   maxAlbums,
@@ -203,6 +200,7 @@ export {
   maxLinkLength,
   maxMemberships,
   maxNameLength,
+  trashRetentionDays,
 } from "./limits";
 export {
   linkEntityId,
@@ -220,10 +218,7 @@ export {
   fieldValueKey,
   fieldValueProblem,
   fieldValueSchema,
-  maxTextValueLength,
-  normalizedValue,
   sameValue,
-  valueRefusals,
   type FieldValue,
   type FieldValueData,
 } from "./field-values";
@@ -231,6 +226,8 @@ export {
   choiceTypes,
   customFieldSchema,
   fieldCreateArgsSchema,
+  fieldDefinitionProblems,
+  fieldLimitProblem,
   fieldNameProblem,
   fieldNameTaken,
   fieldOptionSchema,
@@ -254,32 +251,28 @@ export {
   type PreparedLink,
   type ServiceLink,
 } from "./service-links";
-export { findNameConflict, isBlankName, type NamedItem } from "./names";
+export { exceedsLength, findNameConflict, isBlankName, type NamedItem } from "./names";
 export {
   isOrderKey,
   maxOrderItems,
   planMove,
+  planMoves,
   positionKey,
   positionSchema,
   type Place,
   type Position,
 } from "./positions";
+export { matchRange, nameKey, searchKey, searchTier, type SearchTier } from "./normalize";
 export {
-  caseFold,
-  matchRange,
-  nameKey,
-  searchKey,
-  searchMatches,
-  searchTier,
-  type SearchTier,
-} from "./normalize";
-export {
+  conflictOutcomeSchema,
   errorCodes,
   errorCodeSchema,
+  failedOutcomeSchema,
   failure,
   fieldConflictSchema,
   inputNeeds,
   invalidParamSchema,
+  needsInputOutcomeSchema,
   outcomeSchema,
   outcomeStatuses,
   problemSchema,
@@ -293,7 +286,6 @@ export {
 } from "./outcomes";
 export {
   authorizeAdmissionAdmin,
-  authorizeOwnerRead,
   authorizeWrite,
   type Decision,
   type OperationScope,
@@ -312,8 +304,6 @@ export {
 } from "./principals";
 export {
   albumCaptureSchema,
-  syncedAlbumSchema,
-  type SyncedAlbum,
   bootstrapSchema,
   changeOps,
   changeSchema,
@@ -336,9 +326,11 @@ export {
   accountDefaultsSchema,
   appAccountDefaults,
   appViewDefaults,
+  containerOfView,
   folderSortModes,
   linkTargets,
   listSortModes,
+  sameServices,
   sortDirections,
   sortModes,
   unsetView,
@@ -349,7 +341,6 @@ export {
   viewPrefsFields,
   viewPrefsFieldsSchema,
   viewPrefsSchema,
-  type ViewItems,
   type AccountDefaults,
   type FolderSortMode,
   type LinkTarget,
@@ -363,17 +354,171 @@ export {
   type ViewPrefsField,
   type ViewPrefsFields,
 } from "./views";
-export * from "./field-options";
-export * from "./field-deletion";
-export * from "./trash";
-export * from "./search";
-export * from "./sharing";
-export * from "./sharing-impact";
-export * from "./export";
-export * from "./order";
-export * from "./presentation";
-export * from "./export-markdown";
-export * from "./export-readme";
-export * from "./export-archive";
-export * from "./ledger";
-export * from "./telemetry";
+export {
+  fieldAddOptionArgsSchema,
+  fieldChangeTypeArgsSchema,
+  fieldRemoveOptionArgsSchema,
+  fieldRenameOptionArgsSchema,
+  fieldTypeInUse,
+  fieldUsageListSchema,
+  optionLabelTaken,
+  optionRemoval,
+  optionRemovalHash,
+  optionRemovalSchema,
+  optionRemovalScope,
+  usageText,
+  type FieldTypeChangeResult,
+  type FieldUsage,
+  type FieldUsageList,
+  type OptionRemoval,
+  type OptionRemovalScope,
+  type OptionUser,
+} from "./field-options";
+export {
+  fieldDeleteArgsSchema,
+  fieldDeletion,
+  fieldDeletionSchema,
+  fieldDeletionScope,
+  type FieldDeletion,
+  type FieldDeletionScope,
+} from "./field-deletion";
+export {
+  albumDeleteArgsSchema,
+  containerDeleteArgsSchema,
+  purgeResultSchema,
+  purgeUnit,
+  recoveryResultSchema,
+  sameAlbumSchema,
+  skippedEntrySchema,
+  trashPurgeArgsSchema,
+  trashRecoverArgsSchema,
+  trashUnitKinds,
+  trashUnitOf,
+  trashUnitSchema,
+  type DestinationNeed,
+  type NameNeed,
+  type PurgeResult,
+  type RecoveryResult,
+  type SameAlbum,
+  type SkippedEntry,
+  type StoredTrashUnit,
+  type Tombstone,
+  type TrashUnit,
+  type TrashUnitKind,
+} from "./trash";
+export {
+  defaultSearchLimit,
+  maxSearchLimit,
+  maxSearchQueryLength,
+  rankAlbums,
+  rankNames,
+  searchAlbumSchema,
+  searchContainerSchema,
+  searchResultsSchema,
+  sharedSearchAlbumSchema,
+  sharedSearchContainerSchema,
+  type SearchAlbum,
+  type SearchContainer,
+  type SearchResults,
+  type SharedSearchAlbum,
+  type SharedSearchContainer,
+} from "./search";
+export {
+  emailStatuses,
+  grantArgsSchema,
+  invitationListSchema,
+  invitationSchema,
+  invitationStateSchema,
+  leaveArgsSchema,
+  linkReferenceStateSchema,
+  readableContainers,
+  referenceSchema,
+  removeReferenceArgsSchema,
+  saveLinkArgsSchema,
+  setDisplayNameArgsSchema,
+  shareGrantStatuses,
+  shareInviteArgsSchema,
+  shareInviteResultSchema,
+  shareSetLinkArgsSchema,
+  shareSettingsSchema,
+  shareToken,
+  shareTokenHash,
+  shareTokenSchema,
+  sharedEntrySchema,
+  sharedInvalidateSchema,
+  sharedSnapshotSchema,
+  sharedWithMeSchema,
+  sourcesOf,
+  unavailableLink,
+  type EmailStatus,
+  type Invitation,
+  type InvitationState,
+  type Reference,
+  type ShareGrantStatus,
+  type ShareSettings,
+  type ShareViewer,
+  type SharedEntry,
+  type SharedInvalidate,
+  type SharedSnapshot,
+  type SharingState,
+} from "./sharing";
+export {
+  audienceSchema,
+  deletionImpact,
+  listsImpact,
+  moveImpact,
+  recoveryImpact,
+  sharingImpactSchema,
+  type Audience,
+  type ImpactState,
+  type SharingImpact,
+} from "./sharing-impact";
+export {
+  buildExport,
+  exportFormat,
+  exportFormatVersion,
+  exportJsonSchema,
+  exportSchema,
+  withheld,
+  type ExportAlbum,
+  type ExportSource,
+  type ExportValue,
+  type TonarisExport,
+  type Withheld,
+} from "./export";
+export {
+  arranged,
+  byBytes,
+  chronology,
+  entryOrder,
+  groupNames,
+  groupOf,
+  releaseGroups,
+  sections,
+  sortAlbums,
+  sortContainers,
+  sortFields,
+  sortYear,
+  unsortedOrder,
+  type Keys,
+  type ReleaseGroup,
+  type Section,
+  type Sort,
+} from "./order";
+export { defaultsFrom, presentationOf, type Presentation, type ViewKind } from "./presentation";
+export { renderCollection } from "./export-markdown";
+export { exportReadme } from "./export-readme";
+export { exportFileNames, exportFiles } from "./export-archive";
+export { ledgerEventSchema, ledgerJobKind, type LedgerEntry, type LedgerEvent } from "./ledger";
+export { redact, redactRecord, redactText } from "./telemetry";
+export type { ProviderCache } from "./provider-cache";
+
+// Rules moved from packages/db (TON-147).
+export { guestMutationRefusal, mutationIdInUse, mutationTooOld } from "./sync";
+export { codeRefusal, type CodeRefusal } from "./codes";
+export { invitationStateFor, shownEmailStatus } from "./invitations";
+export { maxMergeCandidates } from "./limits";
+export { endedGrantStatuses, openGrantStatuses } from "./sharing";
+export { chainOf, subtreeOf, treeOf, type Tree, type TreeNode } from "./container-tree";
+export { deletedListsOf, deletionTargetsOf, type DeletionPlace } from "./deletion-targets";
+export { impactOf, type ImpactQuery, type ImpactUnit } from "./sharing-preview";

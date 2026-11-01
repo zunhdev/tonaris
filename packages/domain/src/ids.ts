@@ -3,6 +3,7 @@
 // have been removed (TS-22). Runtime-neutral: `crypto.getRandomValues` exists in browsers and in Bun.
 
 const uuidv7Pattern = /^[\da-f]{8}-[\da-f]{4}-7[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i;
+const uuidPattern = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
 
 /** The millisecond of the last ID made here, and the counter within it. */
 let lastTime = -1;
@@ -34,4 +35,12 @@ export function uuidv7(now: number = Date.now()): string {
 export function uuidv7Time(id: string): number | undefined {
   if (!uuidv7Pattern.test(id)) return undefined;
   return Number.parseInt(id.slice(0, 8) + id.slice(9, 13), 16);
+}
+
+/**
+ * Whether `value` is a UUID of any version, in either case: an ID in a URL's search, or an arrangement's field, which
+ * is its item's ID (TS-16).
+ */
+export function isUuid(value: unknown): value is string {
+  return typeof value === "string" && uuidPattern.test(value);
 }

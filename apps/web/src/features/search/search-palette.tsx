@@ -30,7 +30,9 @@ import {
   type Command,
   type CommandId,
 } from "@/features/shell/shortcuts";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import type { CommandRunner, CommandTarget } from "@/features/shell/use-shortcuts";
+import { count } from "@/features/shell/words";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { defaultRangeExtractor, useVirtualizer } from "@tanstack/react-virtual";
@@ -50,11 +52,12 @@ import {
 
 import {
   matchRange,
+  maxSearchLimit,
+  maxSearchQueryLength,
   searchKey,
   searchTier,
   type Album,
   type Container,
-  type SearchResults,
   type SearchTier,
   type SharedSearchAlbum,
   type SharedSearchContainer,
@@ -153,29 +156,18 @@ const sharedDelayMs = 150;
  */
 function useSharedSearch(text: string, wanted: boolean) {
   const offline = useConnection() === "offline";
-  const q = text.trim().slice(0, 200);
+  const q = text.trim().slice(0, maxSearchQueryLength);
   const asking = wanted && !offline && q !== "";
-  const [read, setRead] = useState<{ q: string; shared: SearchResults["shared"] | undefined }>();
-  useEffect(() => {
-    if (!asking) return () => {};
-    let current = true;
-    const timer = setTimeout(() => {
-      api.v1.search.get({ query: { q, limit: 100 } }).then(
-        ({ data }) => {
-          if (current) setRead({ q, shared: data?.shared });
-          return data;
-        },
-        () => {
-          if (current) setRead({ q, shared: undefined });
-        },
-      );
-    }, sharedDelayMs);
-    return () => {
-      current = false;
-      clearTimeout(timer);
-    };
-  }, [asking, q]);
-  const answer = asking && read?.q === q ? read : undefined;
+  const read = useKeyedRead(
+    asking ? q : undefined,
+    () =>
+      api.v1.search.get({ query: { q, limit: maxSearchLimit } }).then(
+        ({ data }) => ({ shared: data?.shared }),
+        () => ({ shared: undefined }),
+      ),
+    { delayMs: sharedDelayMs },
+  );
+  const answer = asking && read?.key === q ? read.value : undefined;
   return { shared: answer?.shared, settled: !asking || answer !== undefined, offline };
 }
 
@@ -244,10 +236,10 @@ function PaletteBody({
   const { accountId } = useCollectionUi();
   const { editing } = useMode();
   const { sidebarHidden } = useShell();
-  const { tree, albumsById, entriesByList } = useCollectionData();
+  const { tree, albumsById, listsByAlbum } = useCollectionData();
   const index = useMemo(
-    () => buildSearchIndex({ tree, albumsById, entriesByList }),
-    [tree, albumsById, entriesByList],
+    () => buildSearchIndex({ tree, albumsById, listsByAlbum }),
+    [tree, albumsById, listsByAlbum],
   );
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<ReadonlySet<Group>>(new Set());
@@ -556,7 +548,7 @@ function PaletteBody({
         </p>
       )}
       <output className="sr-only">
-        {blank ? "" : total === 0 ? "No results" : total === 1 ? "1 result" : `${total} results`}
+        {blank ? "" : total === 0 ? "No results" : count(total, "result", "results")}
       </output>
     </>
   );

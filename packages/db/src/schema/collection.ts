@@ -20,21 +20,16 @@ import {
   provenanceSources,
   releaseTypes,
   streamingServices,
+  trashUnitKinds,
   type EnrichableField,
+  type Tombstone,
 } from "@tonaris/domain";
 
 import { users } from "./auth";
 import { instant, notBlank, oneOf, table, timestamps, trashStamp } from "./columns";
 
-export const trashUnitKinds = ["folder", "list", "album"] as const;
-
-/**
- * What was purged while a unit still referred to it, so its recovery can report the skip (TS-13): an album in a folder's
- * or list's unit, or a list in an album's unit.
- */
-export type Tombstone =
-  | { kind?: "album"; id: string; title: string; artist: string }
-  | { kind: "list"; id: string; name: string };
+// The domain's vocabulary, so the column's check and the commands agree (TS-13).
+export { trashUnitKinds, type Tombstone };
 
 /** Content deleted together: recovered and purged as one unit, with one expiry (FR-01.13). */
 export const trashUnits = table(

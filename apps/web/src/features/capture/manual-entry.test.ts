@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { SaveState } from "@/client/sync/writer";
+import type { SaveState } from "@/client/sync/save-states";
 
 import { failure, uuidv7, type Outcome } from "@tonaris/domain";
 

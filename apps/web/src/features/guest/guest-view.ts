@@ -2,16 +2,34 @@
 // the tab's session, per link, so a reload keeps them and a new visit starts from DS-44's defaults. Never sent
 // anywhere: the owner's choices aren't shared, and a guest's aren't saved.
 
+import { readText, storageOf, writeJson } from "@/features/shell/storage";
 import { useCallback, useSyncExternalStore } from "react";
 
-import { appViewDefaults } from "@tonaris/domain";
+import {
+  appViewDefaults,
+  listSortModes,
+  sortDirections,
+  viewLayouts,
+  type ListSortMode,
+  type SortDirection,
+  type ViewLayout,
+} from "@tonaris/domain";
+
+/** A guest sorts by year or name: manual order is the owner's arrangement, which guests see as saved. */
+type GuestSort = Exclude<ListSortMode, "manual">;
 
 export type GuestView = {
-  sort: "year" | "name";
-  dir: "asc" | "desc";
+  sort: GuestSort;
+  dir: SortDirection;
   grouped: boolean;
-  layout: "rows" | "grid";
+  layout: ViewLayout;
 };
+
+const guestSorts = listSortModes.filter((mode): mode is GuestSort => mode !== "manual");
+
+/** `value` if it is one of `options`. */
+const oneOf = <T extends string>(options: readonly T[], value: unknown): T | undefined =>
+  options.find((option) => option === value);
 
 export const guestDefaults: GuestView = {
   sort: appViewDefaults.listSortMode === "name" ? "name" : "year",
@@ -23,32 +41,31 @@ export const guestDefaults: GuestView = {
 const keyOf = (token: string) => `tonaris:guest-view:${token}`;
 const listeners = new Set<() => void>();
 /** The last read, by stored text, so the snapshot is stable between reads. */
-const cache = new Map<string, { text: string | null; view: GuestView }>();
+const cache = new Map<string, { text: string | undefined; view: GuestView }>();
+
+/** A stored view, each choice it can't read as DS-44's first default. */
+export function guestViewOf(text: string | undefined): GuestView {
+  let value: unknown;
+  try {
+    value = text ? JSON.parse(text) : undefined;
+  } catch {
+    return guestDefaults;
+  }
+  if (typeof value !== "object" || value === null) return guestDefaults;
+  const stored = new Map<string, unknown>(Object.entries(value));
+  return {
+    sort: oneOf(guestSorts, stored.get("sort")) ?? "year",
+    dir: oneOf(sortDirections, stored.get("dir")) ?? "asc",
+    grouped: stored.get("grouped") === true,
+    layout: oneOf(viewLayouts, stored.get("layout")) ?? "rows",
+  };
+}
 
 function read(token: string): GuestView {
-  let text: string | null = null;
-  try {
-    text = sessionStorage.getItem(keyOf(token));
-  } catch {
-    // Not kept; the defaults apply.
-  }
+  const text = readText(keyOf(token), storageOf(true));
   const cached = cache.get(token);
-  if (cached?.text === text) return cached.view;
-  let view = guestDefaults;
-  try {
-    const value: unknown = text ? JSON.parse(text) : undefined;
-    if (typeof value === "object" && value !== null) {
-      const stored = value as Partial<Record<keyof GuestView, unknown>>;
-      view = {
-        sort: stored.sort === "name" ? "name" : "year",
-        dir: stored.dir === "desc" ? "desc" : "asc",
-        grouped: stored.grouped === true,
-        layout: stored.layout === "grid" ? "grid" : "rows",
-      };
-    }
-  } catch {
-    view = guestDefaults;
-  }
+  if (cached && cached.text === text) return cached.view;
+  const view = guestViewOf(text);
   cache.set(token, { text, view });
   return view;
 }
@@ -64,11 +81,8 @@ export function useGuestView(token: string): [GuestView, (change: Partial<GuestV
   );
   const change = useCallback(
     (next: Partial<GuestView>) => {
-      try {
-        sessionStorage.setItem(keyOf(token), JSON.stringify({ ...read(token), ...next }));
-      } catch {
-        // Not kept beyond this render.
-      }
+      // Without storage, it isn't kept beyond this render.
+      writeJson(keyOf(token), { ...read(token), ...next }, storageOf(true));
       for (const listener of listeners) listener();
     },
     [token],

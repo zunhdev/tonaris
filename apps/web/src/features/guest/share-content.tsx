@@ -5,6 +5,7 @@
 // buttons, also move with ⌥↑ and ⌥↓, ⇧ for the ends (DS-49), in the viewer's own arrangement.
 
 import { Artwork, artworkSrc } from "@/features/collection/artwork";
+import { directionOf } from "@/features/collection/grid-keys";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology, groupNames, type Direction, type Section } from "@/features/collection/order";
 import { ServiceNames } from "@/features/open/service-names";
@@ -17,7 +18,7 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Container, SharedSnapshot } from "@tonaris/domain";
+import { entryOrder, type Container, type SharedSnapshot } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
@@ -37,11 +38,7 @@ export function albumsIn(snapshot: SharedSnapshot, listId: string): SharedAlbum[
   const byId = new Map(snapshot.albums.map((album) => [album.id, album]));
   return snapshot.memberships
     .filter((entry) => entry.listId === listId)
-    .toSorted(
-      (a, b) =>
-        (a.addedAt < b.addedAt ? -1 : a.addedAt > b.addedAt ? 1 : 0) ||
-        (a.albumId < b.albumId ? -1 : a.albumId > b.albumId ? 1 : 0),
-    )
+    .toSorted(entryOrder)
     .flatMap((entry) => byId.get(entry.albumId) ?? []);
 }
 
@@ -52,14 +49,6 @@ export function linksByAlbum(snapshot: SharedSnapshot): Map<string, SharedSnapsh
     links.set(link.albumId, [...(links.get(link.albumId) ?? []), link]);
   }
   return links;
-}
-
-/** The move a key asks for: ⌥↑ and ⌥↓, with ⇧ for the ends. */
-function directionOf(event: KeyboardEvent): Direction | undefined {
-  if (!event.altKey || event.ctrlKey || event.metaKey) return undefined;
-  if (event.key === "ArrowUp") return event.shiftKey ? "top" : "up";
-  if (event.key === "ArrowDown") return event.shiftKey ? "bottom" : "down";
-  return undefined;
 }
 
 const rowOf = (element: HTMLElement) => element.closest("li") ?? element;

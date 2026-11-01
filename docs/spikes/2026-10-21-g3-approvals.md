@@ -34,7 +34,7 @@ The browser tests also check the approval page on a phone-sized screen, with axe
 | MCP tools | `apps/api/src/mcp/` | `list_container` and `get_approval` (read); `add_to_list` and the gated `delete_albums`, for Manage connections only |
 | API | `apps/api/src/routes/v1/approvals.ts` | `GET /v1/approvals/{id}` and `POST /v1/approvals/{id}/decision`, owner only; another account gets a 403 |
 | Web | `apps/web/src/routes/approvals.$id.tsx` | The approval page (DS-87): summary, an expandable scope, consequences, a live expiry, Approve (danger) and Decline, the recorded decision, and the other-account, expired and missing states |
-| Live test | `tooling/src/spikes/g3-mcp/fixtures.ts` | Two lists and three albums in the workload account, one of them the injection. Running it again resets them. |
+| Live test | `tooling/src/spikes/g3-mcp/fixtures.ts`, since removed (it is in git history, added in commit `7f7dc5e`); `tooling/src/mcp-verification/fixtures.ts` replaced it | Two lists and three albums in the workload account, one of them the injection. Running it again resets them. |
 
 **Stand-ins.** The Trash and membership writes are minimal: one Trash unit per album, and memberships inserted directly. M2 and M5 bring the domain commands, which record changes in the change log (TS-20). The tools are TS-63's in spirit: `delete_albums` becomes `delete_items`, and `add_to_list` becomes `add_to_lists`.
 
@@ -106,4 +106,4 @@ bun run db:migrate
 bun tooling/src/spikes/g3-mcp/fixtures.ts
 ```
 
-The script prints the IDs and the four prompts. Run it again between clients: it restores the deleted albums and empties "G3 other".
+The script prints the IDs and the four prompts. Run it again between clients: it restores the deleted albums and empties "G3 other". It has since been removed: restore it from git history (added in commit `7f7dc5e`) to run it, or run the [MCP client verification](../mcp-verification.md), whose `tooling/src/mcp-verification/fixtures.ts` replaced it.

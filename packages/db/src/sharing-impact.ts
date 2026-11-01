@@ -1,24 +1,22 @@
 // The sharing consequences of an owner's move or recovery (FR-07.9, FR-07.10, FR-07.14; DS-69), for previews: the
-// owner's containers and who each is shared with, read in one repeatable-read transaction so the parts agree, and
-// the domain's rules applied to them. Read-only.
+// owner's containers and who each is shared with, and the Trash unit a recovery names, read in one repeatable-read
+// transaction so the parts agree, with the domain's rules deciding. Read-only.
 
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import {
-  listsImpact,
-  moveImpact,
-  recoveryImpact,
+  impactOf,
+  openGrantStatuses,
+  type ImpactQuery,
   type ImpactState,
   type SharingImpact,
 } from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
-import { containers, memberships, shareGrants, shareLinks, trashUnits, users } from "./schema";
+import { readSnapshot, type Database, type Transaction } from "./client";
+import { activeListsOf } from "./columns";
+import { containers, shareGrants, shareLinks, trashUnits, users } from "./schema";
 
-/** A move of a folder or list into a folder or the root, or a Trash unit's recovery, by default to where it was. */
-export type ImpactQuery =
-  | { kind: "move"; id: string; to: string | null }
-  | { kind: "recover"; unitId: string; to?: string | null };
+export type { ImpactQuery } from "@tonaris/domain";
 
 /** The owner's sharing, and which of their containers are folders. */
 export async function impactState(
@@ -48,7 +46,7 @@ export async function impactState(
       .innerJoin(containers, eq(containers.id, shareGrants.containerId))
       .innerJoin(users, eq(users.id, shareGrants.granteeId))
       .where(
-        and(eq(containers.ownerId, ownerId), inArray(shareGrants.status, ["pending", "accepted"])),
+        and(eq(containers.ownerId, ownerId), inArray(shareGrants.status, [...openGrantStatuses])),
       ),
     tx
       .select({ containerId: shareLinks.containerId })
@@ -77,58 +75,38 @@ export async function impactState(
   };
 }
 
-/**
- * What `query` would do to the owner's sharing; `not_found` if it names nothing of theirs, `invalid` if the
- * destination isn't an active folder of theirs, or is inside what moves.
- */
+/** What `query` would do to the owner's sharing, as the domain's `impactOf` decides, from one snapshot. */
 export function sharingImpact(
   db: Database,
   ownerId: string,
   query: ImpactQuery,
 ): Promise<SharingImpact | "not_found" | "invalid"> {
-  return db.transaction(
-    async (tx) => {
-      const { state, folders } = await impactState(tx, ownerId);
-      const byId = new Map(state.containers.map((container) => [container.id, container]));
-      const activeFolder = (id: string | null) =>
-        id === null || (folders.has(id) && byId.get(id)?.trashed === false);
+  return readSnapshot(db, async (tx) => {
+    const { state, folders } = await impactState(tx, ownerId);
+    const owned = { ...state, folders };
+    if (query.kind === "move") return impactOf(owned, query);
 
-      if (query.kind === "move") {
-        const item = byId.get(query.id);
-        if (!item || item.trashed) return "not_found";
-        if (!activeFolder(query.to)) return "invalid";
-        for (let at = query.to; at !== null; at = byId.get(at)?.parentId ?? null) {
-          if (at === query.id) return "invalid";
-        }
-        return moveImpact(state, query.id, query.to);
-      }
-
-      const [unit] = await tx
-        .select({ kind: trashUnits.kind, rootId: trashUnits.rootId })
-        .from(trashUnits)
-        .where(and(eq(trashUnits.id, query.unitId), eq(trashUnits.ownerId, ownerId)));
-      if (!unit) return "not_found";
-      if (unit.kind === "album") {
-        const lists = await tx
-          .select({ listId: memberships.listId })
-          .from(memberships)
-          .innerJoin(containers, eq(containers.id, memberships.listId))
-          .where(and(eq(memberships.albumId, unit.rootId), isNull(containers.trashedAt)));
-        return listsImpact(
-          state,
-          lists.map((row) => row.listId),
-        );
-      }
-      const members = await tx
-        .select({ id: containers.id })
-        .from(containers)
-        .where(eq(containers.trashUnitId, query.unitId));
-      const where = byId.get(unit.rootId)?.parentId ?? null;
-      const to = query.to === undefined ? (activeFolder(where) ? where : null) : query.to;
-      if (!activeFolder(to)) return "invalid";
-      const ids = [unit.rootId, ...members.map((row) => row.id).filter((id) => id !== unit.rootId)];
-      return recoveryImpact(state, ids, to);
-    },
-    { isolationLevel: "repeatable read", accessMode: "read only" },
-  );
+    const [unit] = await tx
+      .select({ kind: trashUnits.kind, rootId: trashUnits.rootId })
+      .from(trashUnits)
+      .where(and(eq(trashUnits.id, query.unitId), eq(trashUnits.ownerId, ownerId)));
+    if (!unit) return impactOf(owned, query);
+    if (unit.kind === "album") {
+      const lists = await activeListsOf(tx, [unit.rootId]);
+      return impactOf(owned, query, {
+        kind: "album",
+        rootId: unit.rootId,
+        listIds: lists.map((list) => list.id),
+      });
+    }
+    const members = await tx
+      .select({ id: containers.id })
+      .from(containers)
+      .where(eq(containers.trashUnitId, query.unitId));
+    return impactOf(owned, query, {
+      kind: unit.kind,
+      rootId: unit.rootId,
+      memberIds: members.map((row) => row.id),
+    });
+  });
 }

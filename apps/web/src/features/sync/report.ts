@@ -3,7 +3,12 @@
 // under Needs you (DS-108). An item skipped because of an earlier one says which, and retrying that one brings the
 // items that waited for it along; completed items are never made again (FR-13.5).
 
-import type { BatchReport, SaveState } from "@/client/sync/writer";
+import {
+  isUnderway,
+  needsPerson,
+  type BatchReport,
+  type SaveState,
+} from "@/client/sync/save-states";
 import { needReason } from "@/features/capture/outcomes";
 
 import type { OutcomeStatus } from "@tonaris/domain";
@@ -54,15 +59,12 @@ export function summarize(report: BatchReport): string {
 
 /** Whether any item is still on its way: queued, in flight, or unconfirmed. */
 export function underway(report: BatchReport): boolean {
-  return report.items.some((item) => item.status === "pending" || item.status === "unconfirmed");
+  return report.items.some((item) => isUnderway(item.status));
 }
 
 /** The items that settled without being saved: failed, skipped, or needing the person. */
 export function unsaved(report: BatchReport): SaveState[] {
-  return report.items.filter(
-    (item) =>
-      item.status !== "confirmed" && item.status !== "pending" && item.status !== "unconfirmed",
-  );
+  return report.items.filter((item) => needsPerson(item.status));
 }
 
 const waitedFor: Partial<Record<OutcomeStatus, string>> = {
@@ -74,15 +76,22 @@ const waitedFor: Partial<Record<OutcomeStatus, string>> = {
   pending: "is still being saved.",
 };
 
-/** Why an item isn't saved, in words (DS-107); nothing for items saved or still on their way. */
-export function reasonFor(item: SaveState, report: BatchReport, names: Names): string | undefined {
-  const { outcome } = item;
+/**
+ * Why a write isn't saved, in words (DS-107), in Activity and in its batch `report`; nothing for one saved or still on
+ * its way. Only a batch's writes are skipped, each naming the write it waited for.
+ */
+export function reasonForState(
+  state: SaveState,
+  names: Names,
+  report?: BatchReport,
+): string | undefined {
+  const { outcome } = state;
   if (outcome?.status === "failed") return reasonOf(outcome);
   if (outcome?.status === "conflict") return "Changed elsewhere. Review both versions to choose.";
   if (outcome?.status === "needs_input") return needReason(outcome) ?? "Needs your choice.";
   if (outcome?.status === "needs_approval") return "Waits for your approval.";
   if (outcome?.status !== "skipped") return undefined;
-  const prerequisite = report.items.find((each) => each.mutation.mutationId === outcome.dependsOn);
+  const prerequisite = report?.items.find((each) => each.mutation.mutationId === outcome.dependsOn);
   if (!prerequisite) return "Waits for an earlier change that wasn't saved.";
   const { what } = describeWrite(prerequisite.mutation, names);
   return `Waits for ${what}, which ${waitedFor[outcome.because] ?? "wasn't saved."}`;

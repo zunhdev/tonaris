@@ -5,9 +5,13 @@
 
 import { and, eq, inArray, isNull, lt } from "drizzle-orm";
 
-import { accountDeletionJobKind, type AccountDeletionStatus } from "@tonaris/domain";
+import {
+  accountDeletionJobKind,
+  openGrantStatuses,
+  type AccountDeletionStatus,
+} from "@tonaris/domain";
 
-import type { Database, Transaction } from "./client";
+import type { Database, Executor, Transaction } from "./client";
 import { enqueueJob } from "./jobs";
 import { recordInLedger } from "./ledger";
 import {
@@ -22,9 +26,6 @@ import {
   fieldDefinitions,
   memberships,
   mutations,
-  oauthAccessTokens,
-  oauthConsents,
-  oauthRefreshTokens,
   passkeys,
   positions,
   savedReferences,
@@ -35,20 +36,17 @@ import {
   users,
   viewPrefs,
 } from "./schema";
+import { endConnections } from "./teardowns";
 
 /** The address a deleted account holds until its row goes: under `.invalid`, which never receives email. */
 export const deletedEmailKey = (userId: string) => `${userId}@deleted.invalid`;
 
 /** How long a finished deletion's progress is kept for its page (TS-74). */
-export const finishedDeletionRetentionMs = 7 * 24 * 60 * 60_000;
+const finishedDeletionRetentionMs = 7 * 24 * 60 * 60_000;
 
 /** Albums removed per transaction, so a large collection never holds one long transaction. */
 export const deletionChunkSize = 500;
 
-/**
- * Starts deleting `userId` (TS-74), in one transaction. Refused for an unknown account, the creator, and one
- * already being deleted; otherwise answers "started", with the job queued on the same transaction.
- */
 /**
  * Ends every way into `userId`'s account and what it shares, at once (FR-11.11): its sign-in email, sessions,
  * passkeys and AI connections, its links and the grants it gave or held. Its data goes after, chunk by chunk. A restore's replay
@@ -62,9 +60,7 @@ export async function endAccountAccess(tx: Transaction, userId: string, now: Dat
   await tx.delete(sessions).where(eq(sessions.userId, userId));
   // A passkey signs in without the email, so moving the email alone wouldn't stop it.
   await tx.delete(passkeys).where(eq(passkeys.userId, userId));
-  await tx.delete(oauthAccessTokens).where(eq(oauthAccessTokens.userId, userId));
-  await tx.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.userId, userId));
-  await tx.delete(oauthConsents).where(eq(oauthConsents.userId, userId));
+  await endConnections(tx, { userId, clientId: null });
 
   const owned = tx
     .select({ id: containers.id })
@@ -74,7 +70,7 @@ export async function endAccountAccess(tx: Transaction, userId: string, now: Dat
     .update(shareLinks)
     .set({ revokedAt: now })
     .where(and(inArray(shareLinks.containerId, owned), isNull(shareLinks.revokedAt)));
-  const open = inArray(shareGrants.status, ["pending", "accepted"]);
+  const open = inArray(shareGrants.status, [...openGrantStatuses]);
   await tx
     .update(shareGrants)
     .set({ status: "revoked" })
@@ -85,6 +81,10 @@ export async function endAccountAccess(tx: Transaction, userId: string, now: Dat
     .where(and(eq(shareGrants.granteeId, userId), open));
 }
 
+/**
+ * Starts deleting `userId` (TS-74), in one transaction. Refused for an unknown account, the creator, and one
+ * already being deleted; otherwise answers "started", with the job queued on the same transaction.
+ */
 export async function beginAccountDeletion(
   db: Database,
   {
@@ -233,7 +233,7 @@ export async function retryAccountDeletion(
 }
 
 /** Finished deletions older than a week: the daily prune (TS-91). */
-export async function pruneAccountDeletions(db: Database | Transaction, now: Date): Promise<void> {
+export async function pruneAccountDeletions(db: Executor, now: Date): Promise<void> {
   const before = new Date(now.getTime() - finishedDeletionRetentionMs);
   // Only a finished deletion has `finished_at`.
   await db.delete(accountDeletions).where(lt(accountDeletions.finishedAt, before));

@@ -2,9 +2,12 @@
 // what it would do; the owner approves that scope in Tonaris, and the operation runs only while its recomputed
 // scope still hashes the same. An agent's claim that the owner approved is never enough.
 
+import { containerKinds } from "./containers";
 import type { FieldDeletion } from "./field-deletion";
 import type { OptionRemoval } from "./field-options";
 import { fieldTypes, type FieldType } from "./fields";
+import { trashRetentionDays } from "./limits";
+import { byBytes } from "./order";
 import { audienceSchema, type Audience } from "./sharing-impact";
 import { z } from "./zod";
 
@@ -31,9 +34,6 @@ export type ApprovalOperation = (typeof approvalOperations)[number];
 
 /** An approval is answered within 30 minutes (TS-64), then the agent asks again. */
 export const approvalValidMinutes = 30;
-
-/** Deleted albums stay recoverable in Trash for 30 days (FR-14.1, FR-14.5). */
-export const trashRetentionDays = 30;
 
 const listRefSchema = z.object({ id: z.uuid(), name: z.string() });
 
@@ -64,7 +64,7 @@ export const approvalScopeSchema = z
       .array(
         z.object({
           id: z.uuid(),
-          kind: z.enum(["folder", "list"]),
+          kind: z.enum(containerKinds),
           name: z.string(),
           folders: z.int().meta({ description: "Folders inside it, which go with it." }),
           lists: z.int().meta({ description: "Lists inside it, which go with it." }),
@@ -132,7 +132,7 @@ export type DeletionTargets = {
   sharing: readonly Audience[];
 };
 
-const byId = <T extends { id: string }>(a: T, b: T) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+const byId = <T extends { id: string }>(a: T, b: T) => byBytes(a.id, b.id);
 
 const sortedAlbums = (albums: readonly AlbumDeletionTarget[]) =>
   albums
@@ -159,9 +159,7 @@ export function itemsDeletionScope(targets: DeletionTargets): ApprovalScope {
     recoverableDays: trashRetentionDays,
     containers: targets.containers.map((container) => ({ ...container })).toSorted(byId),
     unsorted: targets.unsorted,
-    sharing: targets.sharing.toSorted((a, b) =>
-      audienceKey(a) < audienceKey(b) ? -1 : audienceKey(a) > audienceKey(b) ? 1 : 0,
-    ),
+    sharing: targets.sharing.toSorted((a, b) => byBytes(audienceKey(a), audienceKey(b))),
   };
 }
 
@@ -215,7 +213,7 @@ export function canonicalJson(value: unknown): string {
   if (typeof value === "object" && value !== null) {
     const entries = Object.entries(value)
       .filter(([, item]) => item !== undefined)
-      .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+      .toSorted(([a], [b]) => byBytes(a, b));
     return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(",")}}`;
   }
   return JSON.stringify(value);

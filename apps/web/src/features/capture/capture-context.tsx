@@ -3,9 +3,10 @@
 // ones, which the inspector offers to replace (FR-06.4). Capturing is an edit: it switches to Editing first and waits
 // while offline (DS-45, DS-81).
 
-import type { SaveState } from "@/client/sync/writer";
-import { useCollectionUi, useMode, useNarrowScreen } from "@/features/collection/collection-ui";
+import { isUnderway, type SaveState } from "@/client/sync/save-states";
+import { useCollectionUi, useMode } from "@/features/collection/collection-ui";
 import { useInspector } from "@/features/collection/inspector-state";
+import { useNarrowScreen } from "@/features/shell/media";
 import { inLayer, isTextField } from "@/features/shell/shortcuts";
 import { useAnnounce } from "@/features/sync/announcer";
 import { reasonOf } from "@/features/sync/describe";
@@ -24,9 +25,9 @@ import {
   type ReactNode,
 } from "react";
 
-import type { OutcomeStatus, StreamingService } from "@tonaris/domain";
+import { maxBatchItems, type StreamingService } from "@tonaris/domain";
 
-import { linksIn, maxPastedLinks } from "./links-in";
+import { linksIn } from "./links-in";
 import {
   captureNeed,
   captureResult,
@@ -76,8 +77,9 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
   const capture = useCallback(
     (links: readonly string[], into: string | null) => {
       if (!client || offline || links.length === 0) return false;
-      if (links.length > maxPastedLinks) {
-        notify?.info(`Add up to ${maxPastedLinks} links at once.`);
+      // At most one batch at once (TS-25).
+      if (links.length > maxBatchItems) {
+        notify?.info(`Add up to ${maxBatchItems} links at once.`);
         return false;
       }
       enterEditing();
@@ -145,8 +147,6 @@ function usePasteCapture(
     return () => document.removeEventListener("paste", onPaste);
   }, []);
 }
-
-const underway = new Set<OutcomeStatus>(["pending", "unconfirmed"]);
 
 /**
  * What a single capture's outcome says (DS-48): a toast for its result, a failure or a choice, and the announcement
@@ -300,7 +300,7 @@ function useCaptureFeedback(keep: (link: KeptLink) => void): void {
 
     const unsubscribe = client.states.subscribe((state) => {
       const id = state.mutation.mutationId;
-      if (underway.has(state.status)) {
+      if (isUnderway(state.status)) {
         seen.add(id);
         return;
       }

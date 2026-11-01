@@ -8,10 +8,11 @@
 // me opens to the folders and lists shared with the person, each opening to what's inside it in the person's own sort,
 // live while open; they open the shared view (TON-130).
 
+import { isUnderway } from "@/client/sync/save-states";
 import { usePendingApprovals } from "@/features/connections/pending-approvals";
-import { useShareStream } from "@/features/guest/use-share-stream";
 import { usePendingInvitations } from "@/features/sharing/pending-invitations";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
+import { useShareStream } from "@/features/sharing/use-share-stream";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection } from "@/features/sync/sync-provider";
@@ -28,17 +29,16 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
-import { sortContainers, type ContainerKind } from "@tonaris/domain";
+import type { ContainerKind } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionUi, useEditor, useStartEditor, useViewContainerId } from "./collection-ui";
 import { ContainerMenu, type ContainerMenuTarget } from "./container-menu";
-import { useCollectionData } from "./data";
+import { sortForView, useCollectionData } from "./data";
 import { useDestination, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
 import { ContainerIcon } from "./icons";
 import { NameEditor } from "./name-editor";
-import { presentationOf } from "./presentation";
 import {
   ancestorsOf,
   buildSharedTree,
@@ -169,14 +169,13 @@ export function CollectionTree() {
   const { entries, reread: rereadShared } = useSharedEntries();
   const sharedTree = useMemo(
     () =>
-      buildSharedTree(entries ?? [], (siblings, parentId) => {
-        const { sortMode: mode, sortDir: dir } = presentationOf(
-          "containers",
-          data.views.get(parentId),
-          data.defaults,
-        );
-        return sortContainers(siblings, { mode, dir }, data.keys.get(parentId));
-      }),
+      buildSharedTree(entries ?? [], (siblings, parentId) =>
+        sortForView(siblings, parentId, {
+          views: data.views,
+          defaults: data.defaults,
+          keys: data.keys,
+        }),
+      ),
     [entries, data.views, data.defaults, data.keys],
   );
 
@@ -631,7 +630,7 @@ function ContainerRow({
     "aria-setsize": row.setSize,
     "aria-expanded": isFolder ? expanded : undefined,
     "aria-selected": selected,
-    "aria-busy": status === "pending" || status === "unconfirmed" ? true : undefined,
+    "aria-busy": isUnderway(status) || undefined,
     tabIndex: tabbable ? 0 : -1,
     className: cn(
       rowClass,

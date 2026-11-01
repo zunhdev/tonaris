@@ -1,153 +1,48 @@
-// The albums collection: a TanStack DB custom sync collection over the sync protocol (TS-24). The engine fills it
-// from the bootstrap snapshot and the stream; inserts and updates are optimistic, and each becomes one mutation
-// envelope whose `base` is the record's value before the edit (TS-21). The artwork URL has its own mutation,
-// `album.setArtwork` (TON-48): an album made with artwork sends it after `album.create`, in the same request.
+// The albums collection: a TanStack DB collection over the snapshot and the stream (TS-24, snapshot.ts). Inserts
+// and updates are optimistic, and each becomes one mutation envelope whose `base` is the record's value before the
+// edit (TS-21). The artwork URL has its own mutation, `album.setArtwork` (TON-48): an album made with artwork sends
+// it after `album.create`, in the same request.
 
-import { createCollection } from "@tanstack/db";
-
-import {
-  albumFields,
-  uuidv7,
-  type Album,
-  type AlbumCreateArgs,
-  type AlbumFields,
-  type Mutation,
-} from "@tonaris/domain";
+import { albumFields, type Album, type Mutation } from "@tonaris/domain";
 
 import type { SyncEngine } from "./engine";
+import { snapshotCollection } from "./snapshot";
 import type { Writer } from "./writer";
-
-/** `album.create`'s arguments: the album's own fields and ID, whatever else the draft carried. */
-function createArgsOf(value: Album): AlbumCreateArgs {
-  const { id, title, artistCredit, releaseType, isLive, originalYear } = value;
-  const { recordingYearStart, recordingYearEnd } = value;
-  return {
-    id,
-    title,
-    artistCredit,
-    releaseType,
-    isLive,
-    originalYear,
-    recordingYearStart,
-    recordingYearEnd,
-  };
-}
+import { diffFields, envelope, pick } from "./writes";
 
 /** The write that sets an album's artwork over `base`, the URL the client last saw (TON-48). */
-const artworkWrite = (id: string, artworkUrl: string | null, base: string | null): Mutation => ({
-  mutationId: uuidv7(),
-  name: "album.setArtwork",
-  args: { id, artworkUrl },
-  base: { artworkUrl: base },
-});
+const artworkWrite = (id: string, artworkUrl: string | null, base: string | null) =>
+  envelope("album.setArtwork", { id, artworkUrl }, { artworkUrl: base });
 
-/** The fields an update changed, and their values before it: the mutation's `args` and `base`. */
-function updateOf(
-  original: Album,
-  changes: Partial<Album>,
-): Pick<Mutation & { name: "album.update" }, "args" | "base"> {
-  const args: Partial<AlbumFields> = {};
-  const base: Partial<AlbumFields> = {};
-  for (const field of albumFields) {
-    if (changes[field] === undefined) continue;
-    Object.assign(args, { [field]: changes[field] });
-    Object.assign(base, { [field]: original[field] });
-  }
-  return { args: { ...args, id: original.id }, base };
+/** The writes an edit makes: `album.update` for the fields it changed, and `album.setArtwork` for new artwork. */
+function updatesOf(original: Album, changes: Partial<Album>): Mutation[] {
+  const update = diffFields(albumFields, original, changes);
+  const artwork = changes.artworkUrl !== undefined && changes.artworkUrl !== original.artworkUrl;
+  return [
+    ...(update ? [envelope("album.update", { ...update.args, id: original.id }, update.base)] : []),
+    ...(artwork
+      ? [artworkWrite(original.id, changes.artworkUrl ?? null, original.artworkUrl)]
+      : []),
+  ];
 }
 
 export function createAlbumCollection({ engine, writer }: { engine: SyncEngine; writer: Writer }) {
-  return createCollection<Album, string>({
+  return snapshotCollection({
+    engine,
     id: "albums",
+    entity: "album",
+    rows: (snapshot) => snapshot.albums,
     getKey: (album) => album.id,
-    // The engine feeds every store from one stream, so the collection subscribes as soon as it exists and stays.
-    startSync: true,
-    gcTime: 0,
-    sync: {
-      rowUpdateMode: "full",
-      sync: ({ begin, write, commit, markReady, truncate }) => {
-        // Keys in the synced state, so a change is written as an insert or an update as TanStack DB expects.
-        const synced = new Set<string>();
-        const unregister = engine.register({
-          reset(snapshot) {
-            begin();
-            truncate();
-            synced.clear();
-            for (const album of snapshot.albums) {
-              write({ type: "insert", value: album });
-              synced.add(album.id);
-            }
-            void commit();
-            markReady();
-          },
-          apply(change) {
-            if (change.entity !== "album") return;
-            begin();
-            if (change.data === null) {
-              if (synced.delete(change.id)) write({ type: "delete", key: change.id });
-            } else {
-              write({ type: synced.has(change.id) ? "update" : "insert", value: change.data });
-              synced.add(change.id);
-            }
-            void commit();
-          },
-        });
-        return () => {
-          unregister();
-        };
-      },
+    handlers: {
+      // `album.create` takes the album's own fields and ID, whatever else the draft carried.
+      onInsert: ({ transaction }) =>
+        writer.persistEach(transaction, ({ modified }) => [
+          envelope("album.create", { ...pick(modified, albumFields), id: modified.id }),
+          ...(modified.artworkUrl ? [artworkWrite(modified.id, modified.artworkUrl, null)] : []),
+        ]),
+      onUpdate: ({ transaction }) =>
+        writer.persistEach(transaction, ({ original, changes }) => updatesOf(original, changes)),
     },
-    onInsert: ({ transaction }) =>
-      writer.persist(
-        transaction,
-        transaction.mutations.flatMap((pending) => {
-          const { key, modified } = pending;
-          const create: Mutation = {
-            mutationId: uuidv7(),
-            name: "album.create",
-            args: createArgsOf(modified),
-          };
-          return [
-            { key, mutation: create },
-            ...(modified.artworkUrl
-              ? [{ key, mutation: artworkWrite(modified.id, modified.artworkUrl, null) }]
-              : []),
-          ];
-        }),
-      ),
-    onUpdate: ({ transaction }) =>
-      writer.persist(
-        transaction,
-        transaction.mutations.flatMap((pending) => {
-          const { key, original, changes } = pending;
-          const update = updateOf(original, changes);
-          const fields = Object.keys(update.base).length > 0;
-          const artwork =
-            changes.artworkUrl !== undefined && changes.artworkUrl !== original.artworkUrl;
-          return [
-            ...(fields
-              ? [
-                  {
-                    key,
-                    mutation: { mutationId: uuidv7(), name: "album.update" as const, ...update },
-                  },
-                ]
-              : []),
-            ...(artwork
-              ? [
-                  {
-                    key,
-                    mutation: artworkWrite(
-                      original.id,
-                      changes.artworkUrl ?? null,
-                      original.artworkUrl,
-                    ),
-                  },
-                ]
-              : []),
-          ];
-        }),
-      ),
   });
 }
 

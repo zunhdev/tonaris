@@ -7,25 +7,29 @@
 // Every control is a native button, input or select, so the page works by keyboard alone.
 
 import { api } from "@/api";
+import { sent } from "@/client/sync/writer";
 import { apiUrl } from "@/config";
 import { useCollectionData } from "@/features/collection/data";
 import { FieldCreateDialog } from "@/features/collection/field-create-dialog";
 import { fieldTypeNames } from "@/features/collection/field-types";
+import { useInlineDraft } from "@/features/collection/inline-draft";
 import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
+import { useKeyedRead } from "@/features/shell/use-keyed-read";
+import { count } from "@/features/shell/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ChevronRight, X } from "lucide-react";
-import { useEffect, useId, useState, type KeyboardEvent } from "react";
+import { useId, useState } from "react";
 
 import {
   fieldNameProblem,
+  fieldLimitProblem,
   fieldNameTaken,
   fieldTypeInUse,
   fieldTypes,
   findNameConflict,
   isChoiceType,
   maxFieldOptions,
-  maxFields,
   optionLabelProblem,
   optionLabelTaken,
   optionRemovalSchema,
@@ -34,12 +38,14 @@ import {
   type FieldType,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
+import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
+import { Select } from "@tonaris/ui/components/select";
 import { cn } from "@tonaris/ui/lib/utils";
 
 type Usage = { albums: number; inTrash: number };
 
-const albums = (n: number) => `${n} ${n === 1 ? "album" : "albums"}`;
+const albums = (n: number) => count(n, "album", "albums");
 
 /** "Used by 214 albums · 3 in Trash", "Unused", or "—" before the counts arrive (DS-60). */
 function usageText(usage: Usage | undefined): string {
@@ -62,22 +68,7 @@ async function loadUsage(): Promise<Map<string, Usage> | undefined> {
  * holds them, changes, so another session's change shows. Until the first read, undefined.
  */
 function useFieldUsage(signature: string): Map<string, Usage> | undefined {
-  /** The counts, and the signature they were read for. */
-  const [usage, setUsage] = useState<{ signature: string; counts: Map<string, Usage> }>();
-  useEffect(() => {
-    let current = true;
-    const timer = setTimeout(() => {
-      void loadUsage().then((counts) => {
-        if (current && counts) setUsage({ signature, counts });
-        return counts;
-      });
-    }, 100);
-    return () => {
-      current = false;
-      clearTimeout(timer);
-    };
-  }, [signature]);
-  return usage?.counts;
+  return useKeyedRead(signature, loadUsage, { delayMs: 100 })?.value;
 }
 
 /** How many albums apply each field, as this client holds them, Trash included. */
@@ -106,11 +97,6 @@ async function readRemoval(fieldId: string, optionId: string) {
   }
 }
 
-/** A save the save-state layer reports if it fails. */
-const sent = (transaction: { isPersisted: { promise: Promise<unknown> } }) => {
-  transaction.isPersisted.promise.catch(() => {});
-};
-
 export function CustomFieldsSettings() {
   const { fields, ready } = useCollectionData();
   const clientUsage = useClientUsage();
@@ -120,19 +106,19 @@ export function CustomFieldsSettings() {
   const [open, setOpen] = useState<string>();
   const [creating, setCreating] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation>();
-  const atLimit = fields.length >= maxFields;
+  const limit = fieldLimitProblem(fields.length);
 
   return (
     <div className="flex max-w-3xl flex-col gap-4 overflow-y-auto p-6">
       <div className="flex items-center gap-3">
-        <Button variant="primary" disabled={!ready || atLimit} onClick={() => setCreating(true)}>
+        <Button
+          variant="primary"
+          disabled={!ready || limit !== undefined}
+          onClick={() => setCreating(true)}
+        >
           New field
         </Button>
-        {atLimit && (
-          <p className="text-small text-fg-secondary">
-            You&apos;ve reached {maxFields} custom fields. Delete one to add another.
-          </p>
-        )}
+        {limit && <p className="text-small text-fg-secondary">{limit.problem.detail}</p>}
       </div>
       {ready && fields.length === 0 ? (
         <p className="text-fg-secondary">
@@ -228,9 +214,7 @@ function FieldRows({
         </th>
         <td className="py-1 pr-3 text-fg-secondary">{fieldTypeNames[field.type]}</td>
         <td className="py-1 pr-3 text-fg-secondary">
-          {choice
-            ? `${field.options.length} ${field.options.length === 1 ? "option" : "options"}`
-            : "—"}
+          {choice ? count(field.options.length, "option", "options") : "—"}
         </td>
         <td className="py-1 text-fg-secondary">{usageText(usage)}</td>
       </tr>
@@ -376,69 +360,26 @@ function InlineText({
   onSave: (text: string) => void;
   hideLabel?: boolean;
 }) {
-  const id = useId();
-  const [draft, setDraft] = useState<string>();
-  const [problem, setProblem] = useState<string>();
-
-  function commit() {
-    if (draft === undefined) return;
-    const text = draft.trim();
-    if (text === value) {
-      setDraft(undefined);
-      setProblem(undefined);
-      return;
-    }
-    const found = check(text);
-    if (found) {
-      setProblem(found);
-      return;
-    }
-    onSave(text);
-    setDraft(undefined);
-    setProblem(undefined);
-  }
-
-  function keys(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      commit();
-    } else if (event.key === "Escape" && draft !== undefined) {
-      event.preventDefault();
-      event.stopPropagation();
-      setDraft(undefined);
-      setProblem(undefined);
-    }
-  }
+  const { refusal: problem, props } = useInlineDraft<HTMLInputElement>({
+    value,
+    // Unchanged, it closes without a check.
+    check: (typed) => (typed.trim() === value ? undefined : check(typed.trim())),
+    save: (typed) => {
+      if (typed.trim() !== value) onSave(typed.trim());
+    },
+    // The saved name shows until something is typed, and Escape is the page's until then.
+    opensOn: "typing",
+    escape: "open",
+    // Settings has no Editing mode to leave.
+    register: false,
+  });
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-small text-fg-secondary"}>
-        {label}
-      </label>
-      <Input
-        id={id}
-        value={draft ?? value}
-        aria-invalid={problem !== undefined}
-        aria-describedby={problem === undefined ? undefined : `${id}-problem`}
-        onChange={(event) => {
-          setDraft(event.target.value);
-          setProblem(undefined);
-        }}
-        onBlur={commit}
-        onKeyDown={keys}
-        className="max-w-sm"
-      />
-      {problem && (
-        <p id={`${id}-problem`} className="text-small text-status-danger">
-          {problem}
-        </p>
-      )}
-    </div>
+    <Field label={label} hideLabel={hideLabel} problem={problem} className="min-w-0 flex-1">
+      {(control) => <Input {...props} {...control} className="max-w-sm" />}
+    </Field>
   );
 }
-
-const selectClass =
-  "h-8 max-w-sm rounded-md border border-strong bg-app px-2 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid disabled:opacity-50";
 
 /**
  * The type select (FR-03.12, FR-03.13): disabled while any album uses the field, saying why, with Create new field;
@@ -457,7 +398,6 @@ function TypeChoice({
   onCreate: () => void;
   onChange: (type: FieldType) => void;
 }) {
-  const id = useId();
   const [pending, setPending] = useState<FieldType>();
   const counts = usage ?? { albums: used ? 1 : 0, inTrash: 0 };
   const locked = used || counts.albums + counts.inTrash > 0;
@@ -476,62 +416,65 @@ function TypeChoice({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-small text-fg-secondary">
-        Type
-      </label>
-      <select
-        id={id}
-        value={pending ?? field.type}
-        disabled={locked}
-        aria-describedby={locked ? `${id}-locked` : undefined}
-        onChange={(event) => {
-          const chosen = fieldTypes.find((each) => each === event.target.value);
-          if (chosen) choose(chosen);
-        }}
-        className={selectClass}
-      >
-        {fieldTypes.map((type) => (
-          <option key={type} value={type}>
-            {fieldTypeNames[type]}
-          </option>
-        ))}
-      </select>
-      {locked && (
-        <div className="flex flex-wrap items-center gap-3">
-          <p id={`${id}-locked`} className="text-small text-fg-secondary">
-            {
-              fieldTypeInUse({ active: counts.albums + counts.inTrash, trashed: counts.inTrash })
-                .problem.detail
-            }
-          </p>
-          <Button size="sm" onClick={onCreate}>
-            Create new field
-          </Button>
-        </div>
-      )}
-      {pending && (
-        <div className="flex flex-wrap items-center gap-3">
-          <p role="alert" className="text-small text-status-warning">
-            Changing to {fieldTypeNames[pending]} discards its options:{" "}
-            {field.options.map((option) => option.label).join(", ")}.
-          </p>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() => {
-              onChange(pending);
-              setPending(undefined);
+    <Field label="Type">
+      {(control) => (
+        <>
+          <Select
+            {...control}
+            value={pending ?? field.type}
+            disabled={locked}
+            aria-describedby={locked ? `${control.id}-locked` : undefined}
+            onChange={(event) => {
+              const chosen = fieldTypes.find((each) => each === event.target.value);
+              if (chosen) choose(chosen);
             }}
+            className="max-w-sm"
           >
-            Change type
-          </Button>
-          <Button size="sm" onClick={() => setPending(undefined)}>
-            Keep options
-          </Button>
-        </div>
+            {fieldTypes.map((type) => (
+              <option key={type} value={type}>
+                {fieldTypeNames[type]}
+              </option>
+            ))}
+          </Select>
+          {locked && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p id={`${control.id}-locked`} className="text-small text-fg-secondary">
+                {
+                  fieldTypeInUse({
+                    active: counts.albums + counts.inTrash,
+                    trashed: counts.inTrash,
+                  }).problem.detail
+                }
+              </p>
+              <Button size="sm" onClick={onCreate}>
+                Create new field
+              </Button>
+            </div>
+          )}
+          {pending && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p role="alert" className="text-small text-status-warning">
+                Changing to {fieldTypeNames[pending]} discards its options:{" "}
+                {field.options.map((option) => option.label).join(", ")}.
+              </p>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => {
+                  onChange(pending);
+                  setPending(undefined);
+                }}
+              >
+                Change type
+              </Button>
+              <Button size="sm" onClick={() => setPending(undefined)}>
+                Keep options
+              </Button>
+            </div>
+          )}
+        </>
       )}
-    </div>
+    </Field>
   );
 }
 
@@ -551,7 +494,6 @@ function OptionsEditor({
   onError: (error: string | undefined) => void;
 }) {
   const announce = useAnnounce();
-  const addId = useId();
   const [adding, setAdding] = useState("");
   const [addProblem, setAddProblem] = useState<string>();
 
@@ -650,36 +592,31 @@ function OptionsEditor({
         ))}
       </ul>
       {field.options.length < maxFieldOptions && (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1.5">
-            <Input
-              aria-label="New option"
-              value={adding}
-              placeholder="New option"
-              aria-invalid={addProblem !== undefined}
-              aria-describedby={addProblem === undefined ? undefined : addId}
-              onChange={(event) => {
-                setAdding(event.target.value);
-                setAddProblem(undefined);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  add();
-                }
-              }}
-              className="max-w-sm"
-            />
-            <Button size="sm" onClick={add}>
-              Add option
-            </Button>
-          </div>
-          {addProblem && (
-            <p id={addId} className="text-small text-status-danger">
-              {addProblem}
-            </p>
+        <Field label="New option" hideLabel problem={addProblem} className="gap-1">
+          {(control) => (
+            <div className="flex items-center gap-1.5">
+              <Input
+                {...control}
+                value={adding}
+                placeholder="New option"
+                onChange={(event) => {
+                  setAdding(event.target.value);
+                  setAddProblem(undefined);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    add();
+                  }
+                }}
+                className="max-w-sm"
+              />
+              <Button size="sm" onClick={add}>
+                Add option
+              </Button>
+            </div>
           )}
-        </div>
+        </Field>
       )}
     </fieldset>
   );

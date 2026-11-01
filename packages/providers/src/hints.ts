@@ -14,6 +14,7 @@ import { z } from "zod";
 import { searchKey } from "@tonaris/domain";
 
 import type { MusicBrainz } from "./musicbrainz";
+import { artistCreditSchema, creditText, searchByTitle, yearOf } from "./musicbrainz-answers";
 
 /**
  * What a store says about an album. `date` is `YYYY-MM-DD`, or coarser. `tracks`, which only YouTube's hints carry,
@@ -37,10 +38,22 @@ export type Candidate = {
   firstReleaseDate?: string | undefined;
 };
 
-export type HintMatch =
-  | { kind: "one"; releaseGroupId: string }
-  | { kind: "several"; albums: { releaseGroupId: string; title: string }[] }
-  | { kind: "none" };
+/** An album offered to choose from: MusicBrainz's release group and a title to show. */
+export type AlbumCandidate = { releaseGroupId: string; title: string };
+
+/** What a step of the chain found (TS-41): one album, several to choose from, or none. */
+export type Found =
+  | { kind: "one"; album: AlbumCandidate }
+  | { kind: "several"; albums: AlbumCandidate[] }
+  | undefined;
+
+/** `albums`, each release group once: one is found, several are to choose from. */
+export function albumsFound(albums: readonly AlbumCandidate[]): Found {
+  const unique = [...new Map(albums.map((album) => [album.releaseGroupId, album])).values()];
+  const [only] = unique;
+  if (unique.length === 1 && only) return { kind: "one", album: only };
+  return unique.length > 1 ? { kind: "several", albums: unique } : undefined;
+}
 
 const editionNote =
   /\s*[([](?=[^)\]]*\b(?:deluxe|remaster(?:ed)?|edition|expanded|anniversary|bonus|version|mono|stereo|reissue|special|collector'?s|legacy|super|explicit|clean|standard)\b)[^)\]]*[)\]]\s*$/i;
@@ -83,7 +96,6 @@ export function firstArtist(credit: string): string {
 
 /** A sort name turned back into a name: "Celeste, Gianni" → "Gianni Celeste". */
 const unsorted = (name: string) => name.replace(/^([^,]+),\s*([^,]+)$/, "$2 $1");
-const year = (date: string | undefined) => date?.slice(0, 4);
 
 /** Whether a release passes the rule for these hints. */
 export function passes(hints: Hints, candidate: Candidate): boolean {
@@ -99,23 +111,23 @@ export function passes(hints: Hints, candidate: Candidate): boolean {
     return false;
   }
   if (hints.tracks !== undefined && candidate.trackCount !== hints.tracks) return false;
-  const hinted = year(hints.date);
-  return year(candidate.date) === hinted || year(candidate.firstReleaseDate) === hinted;
+  const hinted = yearOf(hints.date);
+  return (
+    hinted !== undefined &&
+    (yearOf(candidate.date) === hinted || yearOf(candidate.firstReleaseDate) === hinted)
+  );
 }
 
 /** Accepted only when exactly one album passes, whichever of its releases do. */
-export function decide(hints: Hints, candidates: readonly Candidate[]): HintMatch {
-  const albums = new Map<string, string>();
-  for (const candidate of candidates) {
-    if (passes(hints, candidate)) albums.set(candidate.releaseGroupId, candidate.releaseGroupTitle);
-  }
-  const [only] = albums.keys();
-  if (albums.size === 1 && only) return { kind: "one", releaseGroupId: only };
-  if (albums.size === 0) return { kind: "none" };
-  return {
-    kind: "several",
-    albums: [...albums].map(([releaseGroupId, title]) => ({ releaseGroupId, title })),
-  };
+export function decide(hints: Hints, candidates: readonly Candidate[]): Found {
+  return albumsFound(
+    candidates
+      .filter((candidate) => passes(hints, candidate))
+      .map((candidate) => ({
+        releaseGroupId: candidate.releaseGroupId,
+        title: candidate.releaseGroupTitle,
+      })),
+  );
 }
 
 const releaseSearchSchema = z.object({
@@ -127,15 +139,7 @@ const releaseSearchSchema = z.object({
         date: z.string().optional(),
         status: z.string().nullish(),
         "track-count": z.number().optional(),
-        "artist-credit": z
-          .array(
-            z.object({
-              name: z.string(),
-              joinphrase: z.string().optional(),
-              artist: z.object({ name: z.string(), "sort-name": z.string().optional() }).optional(),
-            }),
-          )
-          .optional(),
+        "artist-credit": artistCreditSchema,
         "release-group": z.object({
           id: z.string(),
           title: z.string(),
@@ -147,35 +151,21 @@ const releaseSearchSchema = z.object({
 });
 const groupSearchSchema = z.object({
   "release-groups": z
-    .array(z.object({ id: z.string(), "first-release-date": z.string().optional() }))
+    .array(z.object({ id: z.string(), "first-release-date": z.string().nullish() }))
     .default([]),
 });
-
-/** A Lucene phrase: only quotes and backslashes need escaping inside one. */
-export const phrase = (text: string) =>
-  `"${text.replaceAll(/["\\]/g, (character) => `\\${character}`)}"`;
 
 /**
  * The releases the hints find: by title and first artist, or by title alone when the artist as the store spells
  * it finds nothing, such as "Mumiy Troll" for Мумий Тролль. Each gets its album's first release date.
  */
-export async function searchCandidates(
-  musicBrainz: MusicBrainz,
-  hints: Hints,
-): Promise<Candidate[]> {
-  const title = phrase(searchTitle(hints.title));
-  let found = releaseSearchSchema.parse(
-    await musicBrainz.search(
-      "release",
-      `release:${title} AND artist:${phrase(firstArtist(hints.artist))}`,
-      100,
-    ),
-  ).releases;
-  if (found.length === 0) {
-    found = releaseSearchSchema.parse(
-      await musicBrainz.search("release", `release:${title}`, 100),
-    ).releases;
-  }
+async function searchCandidates(musicBrainz: MusicBrainz, hints: Hints): Promise<Candidate[]> {
+  const found = await searchByTitle(
+    "release",
+    { title: searchTitle(hints.title), artist: firstArtist(hints.artist) },
+    async (query) =>
+      releaseSearchSchema.parse(await musicBrainz.search("release", query, 100)).releases,
+  );
   const groupIds = [...new Set(found.map((release) => release["release-group"].id))].slice(0, 50);
   const firstDates = new Map<string, string | undefined>();
   if (groupIds.length > 0) {
@@ -186,14 +176,14 @@ export async function searchCandidates(
         100,
       ),
     )["release-groups"];
-    for (const group of groups) firstDates.set(group.id, group["first-release-date"]);
+    for (const group of groups) firstDates.set(group.id, group["first-release-date"] ?? undefined);
   }
   return found.map((release) => {
     const credits = release["artist-credit"] ?? [];
     return {
       releaseId: release.id,
       title: release.title,
-      artistCredit: credits.map((credit) => credit.name + (credit.joinphrase ?? "")).join(""),
+      artistCredit: creditText(credits),
       artistNames: credits.flatMap((credit) =>
         credit.artist
           ? [credit.name, credit.artist.name, credit.artist["sort-name"] ?? credit.artist.name]
@@ -211,6 +201,6 @@ export async function searchCandidates(
 }
 
 /** Step 4 for one set of hints: the search, then the rule. */
-export async function matchHints(musicBrainz: MusicBrainz, hints: Hints): Promise<HintMatch> {
+export async function matchHints(musicBrainz: MusicBrainz, hints: Hints): Promise<Found> {
   return decide(hints, await searchCandidates(musicBrainz, hints));
 }

@@ -1,13 +1,14 @@
 // Folders and lists as clients hold them (TS-11, TS-24), and the commands that create, rename and move them
 // (TON-26) and describe them (TON-54). The albums in lists are memberships.ts.
 
-import type { ChangeInput, CollectionStore, CommandContext, CommandResult } from "./commands";
+import type { CollectionStore } from "./collection-store";
+import { actingOwner, applied, conflict, isFailure } from "./command-kit";
+import type { CommandContext, CommandResult } from "./commands";
 import { maxContainerDepth, maxContainers, maxDescriptionLength, maxNameLength } from "./limits";
-import { findNameConflict, isBlankName } from "./names";
+import { exceedsLength, findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { forgetPlace } from "./positions";
-import { actingUserId } from "./principals";
 import { z } from "./zod";
 
 export const containerKinds = ["folder", "list"] as const;
@@ -38,19 +39,24 @@ export type Container = z.infer<typeof containerSchema>;
 /** A container as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
 export type StoredContainer = Container & { ownerId: string; trashed: boolean };
 
-const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
-
 /** The container as clients see it. */
 export function containerOf({ id, kind, parentId, name, description }: Container): Container {
   return { id, kind, parentId, name, description };
 }
 
-/** Code points rather than graphemes: the limit bounds stored text (TS-18). */
-// oxlint-disable-next-line no-misused-spread
-const longerThan = (text: string, limit: number) => [...text].length > limit;
-
 /** The refusal of a description over the limit (FR-03.5, TS-18). Clients check it too, with these words. */
 export const descriptionTooLong = `Descriptions can be at most ${maxDescriptionLength.toLocaleString("en")} characters.`;
+
+/**
+ * Why `text`, already trimmed, can't describe a folder or list, if it can't (FR-03.5, TS-18). Empty text clears the
+ * description. Clients check it before sending too, with the same words.
+ */
+export function descriptionProblem(text: string): Failure | undefined {
+  if (!exceedsLength(text, maxDescriptionLength)) return undefined;
+  return failure("validation_failed", descriptionTooLong, [
+    { path: "args.description", message: `At most ${maxDescriptionLength} characters` },
+  ]);
+}
 
 /**
  * Why `name`, already trimmed, can't name a folder or list, if it can't (X-06, TS-18). Clients check it before
@@ -62,9 +68,7 @@ export function containerNameProblem(name: string): Failure | undefined {
       { path: "args.name", message: "Required" },
     ]);
   }
-  // Code points rather than graphemes: the limit bounds stored text, and a grapheme can hold any number of them.
-  // oxlint-disable-next-line no-misused-spread
-  if ([...name].length > maxNameLength) {
+  if (exceedsLength(name, maxNameLength)) {
     return failure("validation_failed", `Names can be at most ${maxNameLength} characters.`, [
       { path: "args.name", message: `At most ${maxNameLength} characters` },
     ]);
@@ -135,16 +139,11 @@ export function nameTakenProblem(takenName: string, parentName: string | null): 
  */
 export async function createContainer(
   args: ContainerFields,
-  { principal, store }: CommandContext,
+  context: CommandContext,
 ): Promise<CommandResult> {
-  const ownerId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "collection" });
-  if (!ownerId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "You can't add folders or lists here.",
-    );
-  }
+  const ownerId = actingOwner(context, "collection", "You can't add folders or lists here.");
+  if (isFailure(ownerId)) return ownerId;
+  const { store } = context;
   // A new folder or list has no description until one is set (FR-03.5).
   const container = containerOf({ ...args, name: args.name.trim(), description: null });
   const problem = containerNameProblem(container.name);
@@ -164,7 +163,7 @@ export async function createContainer(
   }
 
   const path = await destinationPath(container.parentId, ownerId, store);
-  if (!Array.isArray(path)) return path;
+  if (isFailure(path)) return path;
   if (path.length + 1 > maxContainerDepth) return tooDeep();
   const taken = await siblingConflict(container.name, { ...container, ownerId }, store);
   if (taken) return taken;
@@ -204,16 +203,11 @@ export async function renameContainer(
   context: CommandContext,
 ): Promise<CommandResult> {
   const container = await changeableContainer(id, context);
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   const renamed = name.trim();
   const problem = containerNameProblem(renamed);
   if (problem) return problem;
-  if (container.name !== base.name) {
-    return {
-      status: "conflict",
-      conflicts: [{ field: "name", current: container.name, attempted: renamed, base: base.name }],
-    };
-  }
+  if (container.name !== base.name) return conflict("name", container.name, renamed, base.name);
   if (renamed === container.name) return applied();
 
   const { ownerId, parentId } = container;
@@ -237,25 +231,15 @@ export async function moveContainer(
   context: CommandContext,
 ): Promise<CommandResult> {
   const container = await changeableContainer(id, context);
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   if (container.parentId !== base.parentId) {
-    return {
-      status: "conflict",
-      conflicts: [
-        {
-          field: "parentId",
-          current: container.parentId,
-          attempted: parentId,
-          base: base.parentId,
-        },
-      ],
-    };
+    return conflict("parentId", container.parentId, parentId, base.parentId);
   }
   if (parentId === container.parentId) return applied();
 
   const { store } = context;
   const path = await destinationPath(parentId, container.ownerId, store);
-  if (!Array.isArray(path)) return path;
+  if (isFailure(path)) return path;
   if (path.includes(id)) {
     return failure("cycle", "A folder can't move into itself or a folder inside it.");
   }
@@ -283,26 +267,13 @@ export async function describeContainer(
   context: CommandContext,
 ): Promise<CommandResult> {
   const container = await changeableContainer(id, context);
-  if ("status" in container) return container;
+  if (isFailure(container)) return container;
   const text = description?.trim() ?? "";
   const described = text === "" ? null : text;
-  if (described !== null && longerThan(described, maxDescriptionLength)) {
-    return failure("validation_failed", descriptionTooLong, [
-      { path: "args.description", message: `At most ${maxDescriptionLength} characters` },
-    ]);
-  }
+  const problem = descriptionProblem(text);
+  if (problem) return problem;
   if (container.description !== base.description) {
-    return {
-      status: "conflict",
-      conflicts: [
-        {
-          field: "description",
-          current: container.description,
-          attempted: described,
-          base: base.description,
-        },
-      ],
-    };
+    return conflict("description", container.description, described, base.description);
   }
   if (described === container.description) return applied();
 

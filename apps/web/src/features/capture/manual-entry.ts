@@ -3,7 +3,7 @@
 // found, and saving completes the capture, which keeps the link and the sources of the values left as offered
 // (TS-15). A failed capture opens it with the pasted link in its service's field, so the album is added with it.
 
-import type { SaveState } from "@/client/sync/writer";
+import type { SaveState } from "@/client/sync/save-states";
 import { emptyForm, type AlbumForm } from "@/features/collection/album-form";
 import type { NewAlbumDraft } from "@/features/collection/collection-ui";
 import { reasonOf } from "@/features/sync/describe";
@@ -48,12 +48,12 @@ export function captureDraft(state: SaveState): NewAlbumDraft | undefined {
   if (state.status !== "failed") return undefined;
   const form = emptyForm(listId);
   const parsed = parseLink(link);
-  // Short links are Spotify's (TS-40); the form's check lets them through for the server to follow.
+  // A short link names its service (TS-40); the form's check lets it through for the server to follow.
   const service =
     parsed.status === "parsed"
       ? parsed.link.service
       : parsed.status === "short"
-        ? "spotify"
+        ? parsed.service
         : undefined;
   return {
     form: service === undefined ? form : { ...form, links: { ...form.links, [service]: link } },

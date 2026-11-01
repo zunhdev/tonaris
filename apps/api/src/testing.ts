@@ -12,20 +12,18 @@ import {
   type UserRole,
 } from "@tonaris/domain";
 
-import { accountDeletionJob } from "./account-deletion";
-import { createApp, maxRequestBodySize } from "./app";
-import type { ImageFetch } from "./artwork";
+import { maxRequestBodySize } from "./app";
 import { issueAdmissionInvitation } from "./auth/admission";
-import { type AuthOptions, createAuth } from "./auth/auth";
+import type { AuthOptions } from "./auth/auth";
 import { syncFeedbackClient } from "./auth/feedback";
 import { createSignInLimiter, type SignInLimiter } from "./auth/sign-in-limits";
 import type { CaptureDeps } from "./capture";
 import { apiConfig } from "./config";
-import { emailJob, emailOutbox } from "./email/outbox";
-import { startJobWorker } from "./jobs";
-import { ledgerJob, memoryLedger } from "./ledger";
+import type { ImageFetch } from "./img/artwork";
+import { memoryLedger } from "./jobs/ledger";
 import type { McpLimiter } from "./mcp/limits";
 import type { CoverFinder } from "./routes/v1/covers";
+import { createRuntime } from "./runtime";
 import { databaseHub, type SyncHubOptions } from "./sync/hub";
 
 export type SentEmail = {
@@ -121,38 +119,21 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
   const config = apiConfig({ CLIENT_IP_HEADER: "x-forwarded-for", ...options.env });
   // Email is queued and sent by a worker as in production, quickly retried so failures show at once.
   const email = memoryEmail();
-  const hub = databaseHub(db, options.hub);
   const ledger = memoryLedger();
-  const worker = startJobWorker(
+  const { hub, worker, auth, app } = createRuntime({
     db,
-    [
-      emailJob(db, email),
-      accountDeletionJob(db, (accountId) => hub.notify(accountId)),
-      ledgerJob(ledger),
-    ],
-    { retryDelaysMs: [10, 10], logError: () => {} },
-  );
-  const outbox = emailOutbox(db, worker.wake);
-  const auth = createAuth({
     config,
-    db,
-    email: outbox,
+    transport: email,
+    ledger,
+    hub: databaseHub(db, options.hub),
+    retryDelaysMs: [10, 10],
     logError: () => {},
-    fetchClientMetadata: options.fetchClientMetadata,
-  });
-  const app = createApp({
-    config,
-    auth,
-    db,
-    email: outbox,
-    hub,
+    auth: { fetchClientMetadata: options.fetchClientMetadata },
     limiter: options.limiter ?? createSignInLimiter(),
-    wakeJobs: worker.wake,
     capture: options.capture,
     imageFetch: options.imageFetch,
     covers: options.covers,
     mcpLimiter: options.mcpLimiter,
-    logError: () => {},
   });
 
   /** Calls the app as the web app's browser would: from the web origin, with JSON bodies. */
@@ -199,6 +180,28 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     return { id, cookie };
   };
 
+  /**
+   * Opens the account's change stream as `cookie`, read until the server ends it, for tests of what ends one
+   * (TS-23). `endsWithin(ms)` answers whether it ended by then; `close()` leaves it.
+   */
+  const openStream = async (cookie: string) => {
+    const response = await call("/v1/sync/stream", { headers: { cookie } });
+    const reader = response.body?.getReader();
+    if (!response.ok || !reader) throw new Error(`The stream answered ${response.status}`);
+    // The opening comment comes once the stream is in the hub.
+    await reader.read();
+    const ended = (async () => {
+      for (;;) {
+        // oxlint-disable-next-line no-await-in-loop
+        if ((await reader.read()).done) return true;
+      }
+    })();
+    return {
+      endsWithin: (ms: number) => Promise.race([ended, Bun.sleep(ms).then(() => false)]),
+      close: () => reader.cancel(),
+    };
+  };
+
   /** Listens on `port` (default: a free one), for clients that need a real connection. Returns the origin. */
   const listen = (port = 0): string => {
     app.listen({ port, maxRequestBodySize });
@@ -211,7 +214,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     if (app.server) await app.stop();
     await worker.stop();
   };
-  return { app, auth, config, db, email, hub, ledger, call, signIn, listen, stop };
+  return { app, auth, config, db, email, hub, ledger, call, signIn, openStream, listen, stop };
 }
 
 /** The app on its own test schema; call `drop()` afterwards. */

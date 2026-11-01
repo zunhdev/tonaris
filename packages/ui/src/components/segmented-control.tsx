@@ -5,8 +5,9 @@
 
 import { Radio } from "@base-ui/react/radio";
 import { RadioGroup } from "@base-ui/react/radio-group";
-import { cn } from "cn";
 import type { ReactNode } from "react";
+
+import { cn } from "@tonaris/ui/lib/utils";
 
 export type SegmentedOption<Value extends string> = { value: Value; label: ReactNode };
 

@@ -2,16 +2,17 @@
 // is defined once per account (FR-03.6): text, number, date, yes/no, or a choice field with its options. Names are
 // unique per account across types, and option labels within their field, case-insensitively (FR-03.9, FR-03.14,
 // X-06). Renaming changes the one definition everywhere, albums in Trash included, and nothing else (FR-03.11,
-// X-09). Per-album values, option changes, type changes and deletion come with TON-50 to TON-52.
+// X-09). Per-album values are field-values.ts, option and type changes field-options.ts, and deletion
+// field-deletion.ts.
 
 import { generateNKeysBetween } from "fractional-indexing";
 
-import type { ChangeInput, CommandContext, CommandResult } from "./commands";
+import { actingOwner, applied, conflict, isFailure } from "./command-kit";
+import type { CommandContext, CommandResult } from "./commands";
 import { maxFieldOptions, maxFields, maxNameLength } from "./limits";
-import { findNameConflict, isBlankName } from "./names";
+import { exceedsLength, findNameConflict, isBlankName, type NamedItem } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
-import { actingUserId } from "./principals";
 import { z } from "./zod";
 
 /** The types a field has (FR-03.6). */
@@ -57,10 +58,6 @@ export const fieldCreateArgsSchema = z.object({
 });
 export type FieldCreateArgs = z.infer<typeof fieldCreateArgsSchema>;
 
-/** Code points rather than graphemes: the limit bounds stored text (TS-18). */
-// oxlint-disable-next-line no-misused-spread
-const tooLong = (text: string) => [...text].length > maxNameLength;
-
 /** Why `name`, already trimmed, can't name a field, if it can't (X-06, TS-18). Clients check it too. */
 export function fieldNameProblem(name: string): Failure | undefined {
   if (isBlankName(name)) {
@@ -68,7 +65,7 @@ export function fieldNameProblem(name: string): Failure | undefined {
       { path: "args.name", message: "Required" },
     ]);
   }
-  if (tooLong(name)) {
+  if (exceedsLength(name, maxNameLength)) {
     return failure("validation_failed", `Names can be at most ${maxNameLength} characters.`, [
       { path: "args.name", message: `At most ${maxNameLength} characters` },
     ]);
@@ -83,12 +80,34 @@ export function optionLabelProblem(label: string, path: string): Failure | undef
       { path, message: "Required" },
     ]);
   }
-  if (tooLong(label)) {
+  if (exceedsLength(label, maxNameLength)) {
     return failure("validation_failed", `Labels can be at most ${maxNameLength} characters.`, [
       { path, message: `At most ${maxNameLength} characters` },
     ]);
   }
   return undefined;
+}
+
+/** The refusal of an option past a choice field's limit (TS-18), at its creation or when one is added. */
+export function optionLimitProblem(): Failure {
+  return failure("limit_exceeded", `A choice field can have at most ${maxFieldOptions} options.`);
+}
+
+/**
+ * The option among `options` whose label collides with `label`, if any (FR-03.14, X-06). The option being relabelled
+ * (`selfId`) never collides with itself.
+ */
+export function optionLabelConflict(
+  label: string,
+  options: readonly FieldOption[],
+  selfId?: string,
+): FieldOption | undefined {
+  const taken = findNameConflict(
+    label,
+    options.map(({ id, label: name }) => ({ id, name })),
+    selfId,
+  );
+  return taken && options.find((option) => option.id === taken.id);
 }
 
 /** The refusal of a name another field of the account has (FR-03.9). Clients check it too, with these words. */
@@ -99,56 +118,85 @@ export function fieldNameTaken(takenName: string): Failure {
 }
 
 /** The field as clients see it. */
-const fieldOf = ({ id, name, type, options }: CustomField): CustomField => ({
+export const fieldOf = ({ id, name, type, options }: CustomField): CustomField => ({
   id,
   name,
   type,
   options: options.map(({ id: optionId, label }) => ({ id: optionId, label })),
 });
 
-const applied = (...changes: ChangeInput[]): CommandResult => ({ status: "applied", changes });
+const fieldMissing = () => failure("not_found", "This field doesn't exist.");
 
-/** The owner the principal writes fields for, or why they can't. */
-function fieldOwner({ principal }: CommandContext): string | Failure {
-  const ownerId = actingUserId(principal);
-  const decision = authorizeWrite(principal, { ownerId: ownerId ?? "", scope: "collection" });
-  if (!ownerId || !decision.allowed) {
-    return failure(
-      decision.allowed ? "permission_denied" : decision.code,
-      "You can't change custom fields here.",
-    );
-  }
-  return ownerId;
+/**
+ * `field`, as the store found it, if the principal may change it, or why not: a missing field is `not_found`, and
+ * someone else's gets the policy's code (TS-30). With `denial: "not_found"`, someone else's is answered as missing.
+ */
+export function ownField(
+  field: StoredField | undefined,
+  { principal }: CommandContext,
+  { denial }: { denial?: "not_found" } = {},
+): StoredField | Failure {
+  if (!field) return fieldMissing();
+  const decision = authorizeWrite(principal, { ownerId: field.ownerId, scope: "collection" });
+  if (decision.allowed) return field;
+  return denial === "not_found"
+    ? fieldMissing()
+    : failure(decision.code, "You can't change this field.");
 }
 
-/** The options a new field starts with, trimmed and checked; or why they can't be. */
-function initialOptions(args: FieldCreateArgs): FieldOption[] | Failure {
-  if (args.options.length > 0 && !isChoiceType(args.type)) {
-    return failure("validation_failed", "Only choice fields have options.", [
-      { path: "args.options", message: "Only for single and multiple choice" },
-    ]);
+/** Why the options a new field starts with can't be its own, each with its path, in order (FR-03.10, FR-03.14). */
+function optionProblems(type: FieldType, options: readonly FieldOption[]): Failure[] {
+  if (options.length > 0 && !isChoiceType(type)) {
+    return [
+      failure("validation_failed", "Only choice fields have options.", [
+        { path: "args.options", message: "Only for single and multiple choice" },
+      ]),
+    ];
   }
-  if (args.options.length > maxFieldOptions) {
-    return failure("limit_exceeded", `A choice field can have at most ${maxFieldOptions} options.`);
-  }
-  const options: FieldOption[] = [];
-  for (const [index, option] of args.options.entries()) {
+  if (options.length > maxFieldOptions) return [optionLimitProblem()];
+  const problems: Failure[] = [];
+  const labelled: FieldOption[] = [];
+  for (const [index, option] of options.entries()) {
     const label = option.label.trim();
-    const problem = optionLabelProblem(label, `args.options.${index}.label`);
-    if (problem) return problem;
-    if (
-      findNameConflict(
-        label,
-        options.map(({ id, label: taken }) => ({ id, name: taken })),
-      )
-    ) {
-      return failure("validation_failed", "Each option needs its own label.", [
-        { path: `args.options.${index}.label`, message: "Already used in this field" },
-      ]);
+    const path = `args.options.${index}.label`;
+    const problem = optionLabelProblem(label, path);
+    if (problem) problems.push(problem);
+    else if (optionLabelConflict(label, labelled)) {
+      problems.push(
+        failure("validation_failed", "Each option needs its own label.", [
+          { path, message: "Already used in this field" },
+        ]),
+      );
     }
-    options.push({ id: option.id, label });
+    labelled.push({ id: option.id, label });
   }
-  return options;
+  return problems;
+}
+
+/**
+ * Why a new field can't be defined as `name`, `type` and `options`, if it can't (FR-03.6, FR-03.9, FR-03.10): its
+ * name, blank, too long or another of `fields`', then its options, each refusal with its path, in the order the
+ * server checks them. Clients check it before sending, with these words.
+ */
+export function fieldDefinitionProblems(
+  name: string,
+  type: FieldType,
+  options: readonly FieldOption[],
+  fields: readonly NamedItem[],
+): Failure[] {
+  const trimmed = name.trim();
+  const taken = findNameConflict(trimmed, fields);
+  const nameProblem = fieldNameProblem(trimmed) ?? (taken ? fieldNameTaken(taken.name) : undefined);
+  return [...(nameProblem ? [nameProblem] : []), ...optionProblems(type, options)];
+}
+
+/** The refusal of a new field for an account with `count` fields, at the limit (TS-18); none below it. */
+export function fieldLimitProblem(count: number): Failure | undefined {
+  if (count < maxFields) return undefined;
+  return failure(
+    "limit_exceeded",
+    `You've reached ${maxFields} custom fields. Delete one to add another.`,
+  );
 }
 
 /** Whether two fields are the same definition: name, type and options, in order. */
@@ -170,14 +218,14 @@ export async function createField(
   args: FieldCreateArgs,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const ownerId = fieldOwner(context);
-  if (typeof ownerId !== "string") return ownerId;
+  const ownerId = actingOwner(context, "collection", "You can't change custom fields here.");
+  if (isFailure(ownerId)) return ownerId;
   const { store } = context;
   const name = args.name.trim();
-  const problem = fieldNameProblem(name);
+  // The account's fields come after the resend check below: a resend's own field has its name (FR-13.5).
+  const [problem] = fieldDefinitionProblems(name, args.type, args.options, []);
   if (problem) return problem;
-  const options = initialOptions(args);
-  if (!Array.isArray(options)) return options;
+  const options = args.options.map(({ id, label }) => ({ id, label: label.trim() }));
   const field: CustomField = { id: args.id, name, type: args.type, options };
 
   const existing = await store.findField(args.id);
@@ -187,23 +235,14 @@ export async function createField(
         { path: "args.id", message: "Already in use" },
       ]);
     }
-    return sameField(existing, field)
-      ? applied()
-      : {
-          status: "conflict",
-          conflicts: [{ field: "name", current: existing.name, attempted: field.name }],
-        };
+    return sameField(existing, field) ? applied() : conflict("name", existing.name, field.name);
   }
 
   const fields = await store.fieldsOf(ownerId);
   const taken = findNameConflict(name, fields);
   if (taken) return fieldNameTaken(taken.name);
-  if (fields.length >= maxFields) {
-    return failure(
-      "limit_exceeded",
-      `You've reached ${maxFields} custom fields. Delete one to add another.`,
-    );
-  }
+  const full = fieldLimitProblem(fields.length);
+  if (full) return full;
 
   const keys = generateNKeysBetween(null, null, options.length);
   await store.insertField(
@@ -226,18 +265,11 @@ export async function renameField(
   base: { name: string },
   context: CommandContext,
 ): Promise<CommandResult> {
-  const { store, principal } = context;
-  const field = await store.findField(args.id);
-  if (!field) return failure("not_found", "This field doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: field.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this field.");
+  const { store } = context;
+  const field = ownField(await store.findField(args.id), context);
+  if (isFailure(field)) return field;
   const name = args.name.trim();
-  if (field.name !== base.name) {
-    return {
-      status: "conflict",
-      conflicts: [{ field: "name", current: field.name, attempted: name, base: base.name }],
-    };
-  }
+  if (field.name !== base.name) return conflict("name", field.name, name, base.name);
   const problem = fieldNameProblem(name);
   if (problem) return problem;
   if (name === field.name) return applied();

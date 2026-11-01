@@ -2,8 +2,10 @@
 
 import { describe, expect, test } from "bun:test";
 
+import { brokenBody } from "../fixtures/broken-body";
+import { ProviderUnavailableError } from "./errors";
 import { ItunesLookup, itunesCacheMs } from "./itunes";
-import { memoryCache, ProviderUnavailableError } from "./provider-cache";
+import { memoryCache } from "./provider-cache";
 import type { SafeFetchInit } from "./safe-fetch";
 import { Spotify } from "./spotify";
 import { extractQobuzHints, extractTidalHints, robotsAllows, StorePages } from "./store-pages";
@@ -111,6 +113,16 @@ describe("ItunesLookup (TS-41)", () => {
     expect(error).toBeInstanceOf(ProviderUnavailableError);
     expect(error).toMatchObject({ provider: "itunes" });
   });
+
+  test("an answer that breaks off is unavailable, and nothing is kept", async () => {
+    const { options, cache } = scripted(() => brokenBody());
+    const error = await new ItunesLookup(options)
+      .album("1", ["us"])
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ProviderUnavailableError);
+    expect(error).toMatchObject({ provider: "itunes" });
+    expect(cache.size()).toBe(0);
+  });
 });
 
 const throttled = () => new Response(null, { status: 429, headers: { "retry-after": "7" } });
@@ -183,6 +195,28 @@ describe("Spotify (TS-41)", () => {
     ).toEqual({});
     expect(sent.filter(({ url }) => url.includes("/token"))).toHaveLength(2);
   });
+
+  test("an answer or a token that breaks off is unavailable, naming the call and no id", async () => {
+    const album = scripted((url) => (url.includes("/token") ? token() : brokenBody()));
+    const error = await new Spotify({ clientId: "id", clientSecret: "secret", ...album.options })
+      .album(albumId)
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ProviderUnavailableError);
+    expect(error).toMatchObject({ provider: "spotify" });
+    expect(String(error)).toContain("Get Album");
+    expect(String(error)).not.toContain(albumId);
+
+    const refused = scripted(() => brokenBody());
+    const tokenError = await new Spotify({
+      clientId: "id",
+      clientSecret: "secret",
+      ...refused.options,
+    })
+      .parentAlbum(albumId)
+      .catch((caught: unknown) => caught);
+    expect(tokenError).toBeInstanceOf(ProviderUnavailableError);
+    expect(String(tokenError)).toContain("the token");
+  });
 });
 
 const page = (blocks: unknown) =>
@@ -243,6 +277,8 @@ describe("store pages: hints (TS-41)", () => {
   });
 });
 
+const malformed = () => new Response(null, { status: 301, headers: { location: "https://[" } });
+
 const tidalAlbum = page({
   "@type": "MusicAlbum",
   name: "Bright Future",
@@ -301,7 +337,7 @@ describe("store pages: requests (TS-41)", () => {
     ).toBe(true);
   });
 
-  test("Qobuz's request A reads only Location, or the page when allowed", async () => {
+  test("Qobuz's request A reads only Location, or the page when allowed, in the home store", async () => {
     const answers: Record<string, () => Response> = {
       "https://www.qobuz.com/robots.txt": () =>
         new Response("User-agent: *\nDisallow: /commande/\n"),
@@ -316,10 +352,17 @@ describe("store pages: requests (TS-41)", () => {
       (url) => answers[url]?.() ?? new Response(null, { status: 404 }),
     );
     const pages = new StorePages(options);
-    expect(await pages.qobuzAddress("abc", { readPage: true })).toEqual({ slug: "the-slug" });
-    expect(await pages.qobuzAddress("def", { readPage: false })).toEqual({ slug: "-" });
+    expect(await pages.qobuzAddress("abc", { readPage: true })).toEqual({
+      slug: "the-slug",
+      locale: "fr-fr",
+    });
+    expect(await pages.qobuzAddress("def", { readPage: false })).toEqual({
+      slug: "-",
+      locale: "fr-fr",
+    });
     expect(await pages.qobuzAddress("def", { readPage: true })).toEqual({
       slug: "-",
+      locale: "fr-fr",
       page: "<html>the page itself</html>",
     });
     expect(await pages.qobuzAddress("ghi", { readPage: true })).toBeUndefined();
@@ -354,5 +397,74 @@ describe("store pages: requests (TS-41)", () => {
       date: "1989-06-01",
     });
     expect(await pages.qobuzHints("other", "x", "gb-en")).toBeUndefined();
+  });
+
+  test("Qobuz's request B asks the home store for a link without one", async () => {
+    const { options, sent } = scripted((url) =>
+      url.endsWith("robots.txt")
+        ? new Response("User-agent: *\nAllow: /\n")
+        : new Response(null, { status: 404 }),
+    );
+    expect(await new StorePages(options).qobuzHints("abc", "a-slug")).toBeUndefined();
+    expect(sent.map(({ url }) => url).at(-1)).toBe("https://www.qobuz.com/fr-fr/album/a-slug/abc");
+  });
+
+  test("a Location that isn't a URL leads to no album", async () => {
+    const answers: Record<string, () => Response> = {
+      "https://www.qobuz.com/robots.txt": () => new Response("User-agent: *\nAllow: /\n"),
+      "https://tidal.com/robots.txt": () => new Response("User-agent: *\nAllow: /\n"),
+      "https://www.qobuz.com/fr-fr/album/-/abc": malformed,
+      "https://www.qobuz.com/gb-en/album/x/abc": malformed,
+      "https://tidal.com/album/1": malformed,
+    };
+    const { options, sent } = scripted(
+      (url) => answers[url]?.() ?? new Response(null, { status: 404 }),
+    );
+    const pages = new StorePages(options);
+    expect(await pages.qobuzAddress("abc", { readPage: true })).toBeUndefined();
+    expect(await pages.qobuzHints("abc", "x", "gb-en")).toBeUndefined();
+    expect(await pages.tidalHints("1")).toBeUndefined();
+    expect(sent.map(({ url }) => url).filter((url) => !url.endsWith("robots.txt"))).toEqual([
+      "https://www.qobuz.com/fr-fr/album/-/abc",
+      "https://www.qobuz.com/gb-en/album/x/abc",
+      "https://tidal.com/album/1",
+    ]);
+  });
+
+  test("a page that breaks off, or a 4xx other than 404 and 410, is the store being unavailable", async () => {
+    const answers: Record<string, () => Response> = {
+      "https://www.qobuz.com/robots.txt": () => new Response("User-agent: *\nAllow: /\n"),
+      "https://tidal.com/robots.txt": () => new Response("User-agent: *\nAllow: /\n"),
+      "https://www.qobuz.com/fr-fr/album/-/abc": () => brokenBody(),
+      "https://tidal.com/album/1": () => brokenBody(),
+      "https://tidal.com/album/2": () => new Response(null, { status: 403 }),
+      "https://www.qobuz.com/gb-en/album/x/abc": () => new Response(null, { status: 400 }),
+    };
+    const { options } = scripted((url) => answers[url]?.() ?? new Response(null, { status: 404 }));
+    const pages = new StorePages(options);
+    const failures = await Promise.all([
+      pages.qobuzAddress("abc", { readPage: true }).catch((caught: unknown) => caught),
+      pages.tidalHints("1").catch((caught: unknown) => caught),
+      pages.tidalHints("2").catch((caught: unknown) => caught),
+      pages.qobuzHints("abc", "x", "gb-en").catch((caught: unknown) => caught),
+    ]);
+    expect(
+      failures.map((failure) =>
+        failure instanceof ProviderUnavailableError ? failure.provider : failure,
+      ),
+    ).toEqual(["qobuz", "tidal", "tidal", "qobuz"]);
+  });
+
+  test("a page that is gone (410) has no hints, as a 404", async () => {
+    const answers: Record<string, () => Response> = {
+      "https://www.qobuz.com/robots.txt": () => new Response("User-agent: *\nAllow: /\n"),
+      "https://tidal.com/robots.txt": () => new Response("User-agent: *\nAllow: /\n"),
+      "https://tidal.com/album/1": () => new Response(null, { status: 410 }),
+      "https://www.qobuz.com/fr-fr/album/-/abc": () => new Response(null, { status: 410 }),
+    };
+    const { options } = scripted((url) => answers[url]?.() ?? new Response(null, { status: 404 }));
+    const pages = new StorePages(options);
+    expect(await pages.tidalHints("1")).toBeUndefined();
+    expect(await pages.qobuzAddress("abc", { readPage: false })).toBeUndefined();
   });
 });
