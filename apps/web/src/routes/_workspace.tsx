@@ -7,6 +7,7 @@
 // (TON-131). Each collection view visited is remembered on the device, for `/` (DS-32), and each folder, list and
 // album opened, for the palette's Recent (DS-75).
 
+import { lastView, openedItems, recentItems } from "@/common/device";
 import { currentAccount } from "@/features/account/session";
 import { CaptureProvider } from "@/features/capture/capture-context";
 import { CollectionUiProvider } from "@/features/collection/collection-ui";
@@ -14,7 +15,6 @@ import { CollectionDataProvider } from "@/features/collection/data";
 import { TermsScreen } from "@/features/legal/terms-screen";
 import { OpenInProvider } from "@/features/open/open-in";
 import { SharedEntriesProvider } from "@/features/sharing/shared-entries";
-import { lastView, openedItems, recentItems } from "@/features/shell/device";
 import { Shell } from "@/features/shell/shell";
 import { SaveStateLayer } from "@/features/sync/save-state-layer";
 import { SyncProvider } from "@/features/sync/sync-provider";

@@ -2,7 +2,7 @@
 // the tab's session, per link, so a reload keeps them and a new visit starts from DS-44's defaults. Never sent
 // anywhere: the owner's choices aren't shared, and a guest's aren't saved.
 
-import { readText, storageOf, writeJson } from "@/features/shell/storage";
+import { readText, storageOf, writeJson } from "@/common/storage";
 import { useCallback, useSyncExternalStore } from "react";
 
 import {

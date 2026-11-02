@@ -4,7 +4,7 @@
 // the manual entry form for the same destination instead (DS-47).
 
 import { emptyForm } from "@/features/collection/album-form";
-import { useCollectionUi } from "@/features/collection/collection-ui";
+import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { useListOptions } from "@/features/collection/list-options";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useRef, useState, type FormEvent } from "react";
@@ -39,7 +39,7 @@ export function CaptureDialog() {
 
 function CaptureForm({ listId: initialList }: { listId: string | null }) {
   const ui = useCapture();
-  const { startNewAlbum } = useCollectionUi();
+  const { startNewAlbum } = useCollectionDialogs();
   const lists = useListOptions();
   const [text, setText] = useState("");
   const [listId, setListId] = useState(initialList);

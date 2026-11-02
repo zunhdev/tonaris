@@ -1,7 +1,7 @@
 // The Admin tabs (DS-100): Admissions, Members and Operations (TS-115), with the current one marked for assistive
 // technology too, as the Settings subnav does.
 
-import { PageTabs, type PageTab } from "@/features/shell/page-tabs";
+import { PageTabs, type PageTab } from "@/common/page-tabs";
 
 const pages: readonly PageTab[] = [
   { to: "/admin/admissions", label: "Admissions" },

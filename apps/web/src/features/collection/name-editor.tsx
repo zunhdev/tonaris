@@ -13,7 +13,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { uuidv7, type ContainerKind } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { useCollectionUi } from "./collection-ui";
+import { useCollectionMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { nameRefusal, type Editor } from "./editing";
 import { ContainerIcon } from "./icons";
@@ -41,7 +41,7 @@ export function NameEditor({
   const closed = useRef(false);
   const input = useRef<HTMLInputElement>(null);
   const errorId = useId();
-  const { registerEditor } = useCollectionUi();
+  const { registerEditor } = useCollectionMode();
   // What leaving the field does, for leaving Editing mode: the latest of it, registered once.
   const commit = useRef<() => boolean>(() => true);
   useEffect(

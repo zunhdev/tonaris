@@ -8,14 +8,14 @@
 
 import { api } from "@/api";
 import { sent } from "@/client/sync/writer";
+import { ConfirmDialog, type Confirmation } from "@/common/confirm-dialog";
+import { useKeyedRead } from "@/common/use-keyed-read";
+import { count } from "@/common/words";
 import { apiUrl } from "@/config";
 import { useCollectionData } from "@/features/collection/data";
 import { FieldCreateDialog } from "@/features/collection/field-create-dialog";
 import { fieldTypeNames } from "@/features/collection/field-types";
 import { useInlineDraft } from "@/features/collection/inline-draft";
-import { ConfirmDialog, type Confirmation } from "@/features/shell/confirm-dialog";
-import { useKeyedRead } from "@/features/shell/use-keyed-read";
-import { count } from "@/features/shell/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ChevronRight, X } from "lucide-react";

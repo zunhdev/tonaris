@@ -5,7 +5,7 @@
 // `usePendingInvitationList()`.
 
 import { api } from "@/api";
-import { createPolledStore } from "@/features/shell/polled-store";
+import { createPolledStore } from "@/common/polled-store";
 
 import type { Invitation } from "@tonaris/domain";
 

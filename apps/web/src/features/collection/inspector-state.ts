@@ -4,11 +4,12 @@
 // offsets it recorded for the view's scroll container, found by its place in the page, which rows and cards share: a
 // card's click could put the grid at the rows' offset, and a jump under way back there (TON-118).
 
+import { isTextField } from "@/common/shortcuts";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, type FocusEvent, type MouseEvent } from "react";
 
-import { isTextField } from "../shell/shortcuts";
-import { useCollectionUi, useMode } from "./collection-ui";
+import { useMode } from "./collection-mode";
+import { useCollectionUi } from "./collection-ui";
 import type { Cell } from "./grid-keys";
 import { cellAt } from "./use-grid";
 

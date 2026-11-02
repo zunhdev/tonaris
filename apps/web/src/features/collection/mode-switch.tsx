@@ -2,10 +2,11 @@
 // Leaving Editing stays put if an open inline editor refuses its value (use-mode.ts). Hidden on a narrow screen,
 // which is for browsing (FR-04.1).
 
+import type { Mode } from "@/common/device";
+
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 
-import type { Mode } from "../shell/device";
-import { useMode } from "./collection-ui";
+import { useMode } from "./collection-mode";
 
 const options: { value: Mode; label: string }[] = [
   { value: "view", label: "View" },

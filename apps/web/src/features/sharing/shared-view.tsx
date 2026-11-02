@@ -6,6 +6,9 @@
 // the owner's saves (its stream), and "No longer available" once access ends. The content draws as on guest pages.
 
 import { api } from "@/api";
+import { useNarrowScreen } from "@/common/media";
+import { PageHeader, useDocumentTitle } from "@/common/page-header";
+import { useKeyedRead } from "@/common/use-keyed-read";
 import { useAlbumArrangement, useContainerArrangement } from "@/features/collection/arrangement";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
 import { ViewOptions } from "@/features/collection/view-options";
@@ -17,9 +20,6 @@ import {
   ShareBreadcrumbs,
   type LinkTo,
 } from "@/features/guest/share-content";
-import { useNarrowScreen } from "@/features/shell/media";
-import { PageHeader, useDocumentTitle } from "@/features/shell/page-header";
-import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 

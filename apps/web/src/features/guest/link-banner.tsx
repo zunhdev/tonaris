@@ -3,8 +3,8 @@
 // rendered the public page: a guest, or the owner, sees no banner.
 
 import { api } from "@/api";
+import { useKeyedRead } from "@/common/use-keyed-read";
 import { useSend } from "@/features/sharing/send";
-import { useKeyedRead } from "@/features/shell/use-keyed-read";
 import { useState } from "react";
 
 import { Button } from "@tonaris/ui/components/button";

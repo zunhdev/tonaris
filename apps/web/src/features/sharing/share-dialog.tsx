@@ -6,10 +6,10 @@
 // each, with no outbox, and waits while offline (DS-81).
 
 import { api } from "@/api";
-import { useCollectionUi } from "@/features/collection/collection-ui";
+import { count } from "@/common/words";
+import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { useCollectionData } from "@/features/collection/data";
 import { unreachable, useSend, type Unsent } from "@/features/sharing/send";
-import { count } from "@/features/shell/words";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Check, Copy, Ellipsis, Folder } from "lucide-react";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
@@ -34,7 +34,7 @@ import { Input } from "@tonaris/ui/components/input";
 import { Switch } from "@tonaris/ui/components/switch";
 
 export function ShareDialog() {
-  const { sharing, endShare } = useCollectionUi();
+  const { sharing, endShare } = useCollectionDialogs();
   const { tree } = useCollectionData();
   const container = sharing === undefined ? undefined : tree.byId.get(sharing);
   return (
@@ -54,7 +54,7 @@ export function ShareDialog() {
 }
 
 function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder" | "list" }) {
-  const { startShare } = useCollectionUi();
+  const { startShare } = useCollectionDialogs();
   const offline = useConnection() === "offline";
   // Read when opened, and again after each change; what was shown stays until the new read arrives.
   const [loaded, setLoaded] = useState<{ settings?: ShareSettings; failed: boolean }>({

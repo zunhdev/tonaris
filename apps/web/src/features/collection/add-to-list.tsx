@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
 
-import { useCollectionUi } from "./collection-ui";
+import { useCollectionDialogs } from "./collection-dialogs";
 import { useCollectionData } from "./data";
 import { ancestorsOf } from "./tree";
 
@@ -26,7 +26,7 @@ const now = () => new Date().toISOString();
 export function AddToListDialog() {
   const client = useSyncClient();
   const announce = useAnnounce();
-  const { addingToList, endAddToList } = useCollectionUi();
+  const { addingToList, endAddToList } = useCollectionDialogs();
   const { tree, albumsById, listsByAlbum } = useCollectionData();
   const list = useRef<HTMLUListElement>(null);
   const album = addingToList === undefined ? undefined : albumsById.get(addingToList);

@@ -7,6 +7,12 @@
 // the shell is a drill-down (DS-110): no sidebar, each view's header is its top bar, and an album opens as a sheet
 // over the view.
 
+import { inspectorLayout, sidebarLayout } from "@/common/device";
+import { useNarrowScreen, useWideScreen } from "@/common/media";
+import { pageTitleId } from "@/common/page-header";
+import { ShellContext, type ShellControl } from "@/common/shell-context";
+import { type CommandTarget } from "@/common/shortcuts";
+import { AccountMenu } from "@/features/account/account-menu";
 import { CaptureDialog } from "@/features/capture/capture-dialog";
 import { CapturePanel } from "@/features/capture/capture-panel";
 import { AddToListDialog } from "@/features/collection/add-to-list";
@@ -25,15 +31,11 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 
 import type { Account } from "@tonaris/domain";
 
-import { inspectorLayout, sidebarLayout } from "./device";
-import { useNarrowScreen, useWideScreen } from "./media";
 import { usePageFade } from "./page-fade";
-import { pageTitleId } from "./page-header";
 import { PullToRefresh } from "./pull-to-refresh";
-import { ShellContext, type ShellControl } from "./shell-context";
 import { ShortcutReference } from "./shortcut-reference";
 import { Sidebar } from "./sidebar";
-import { useCommandRunner, useShortcuts, type CommandTarget } from "./use-shortcuts";
+import { useCommandRunner, useShortcuts } from "./use-shortcuts";
 
 export function Shell({ account, children }: { account: Account; children: ReactNode }) {
   const [layout, setLayout] = useState(() => sidebarLayout.read());
@@ -86,7 +88,7 @@ export function Shell({ account, children }: { account: Account; children: React
 
   const control = useMemo<ShellControl>(
     () => ({
-      account,
+      accountMenu: <AccountMenu account={account} compact />,
       sidebarHidden: layout.hidden,
       inspectorBeside: beside,
       inspectorWidth,

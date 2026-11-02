@@ -33,7 +33,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { useMode } from "./collection-ui";
+import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { useMoveContainer } from "./move";
 import { canMoveInto } from "./tree";

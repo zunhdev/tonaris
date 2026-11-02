@@ -4,6 +4,7 @@
 // view's choices, and "Save as my default" makes them the defaults for its kind of view. Defaults are also set in
 // Settings → Preferences (DS-94). Under Manual, the view itself is rearranged, by dragging or ⌥↑ and ⌥↓ (TON-36).
 
+import { useNarrowScreen } from "@/common/media";
 import {
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
@@ -25,7 +26,6 @@ import {
 } from "@tonaris/ui/components/popover";
 import { SegmentedControl, type SegmentedOption } from "@tonaris/ui/components/segmented-control";
 
-import { useNarrowScreen } from "../shell/media";
 import { useCollectionUi } from "./collection-ui";
 import type { ViewKind } from "./presentation";
 import { usePresentation, type ViewPresentation } from "./use-presentation";

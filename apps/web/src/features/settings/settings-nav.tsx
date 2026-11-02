@@ -2,8 +2,8 @@
 // assistive technology too. Profile has the display name (TON-76); Account the sign-in email (TON-77); Data the
 // usage meter (TON-60). A phone leaves out Custom fields, set up on the desktop (DS-110), and the row scrolls sideways.
 
-import { useNarrowScreen } from "@/features/shell/media";
-import { PageTabs, type PageTab } from "@/features/shell/page-tabs";
+import { useNarrowScreen } from "@/common/media";
+import { PageTabs, type PageTab } from "@/common/page-tabs";
 
 const pages: readonly PageTab[] = [
   { to: "/settings/profile", label: "Profile" },

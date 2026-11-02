@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
 
+import { useCollectionDialogs } from "./collection-dialogs";
 import { useCollectionUi } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { PlaceList } from "./place-list";
@@ -52,7 +53,7 @@ export function useMoveContainer(): (id: string, parentId: string | null) => boo
 
 /** "Move {name} to…": Collection and the folders that can take the item, ↑ and ↓ between them, Enter to move. */
 export function MoveDialog() {
-  const { moving, endMove } = useCollectionUi();
+  const { moving, endMove } = useCollectionDialogs();
   const { tree } = useCollectionData();
   const move = useMoveContainer();
   const item = moving === undefined ? undefined : tree.byId.get(moving);

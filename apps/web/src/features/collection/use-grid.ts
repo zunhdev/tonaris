@@ -3,6 +3,7 @@
 // out of view are unmounted; a key moving to such a row scrolls it into view first, then focuses the cell once it
 // renders. ⌥↑ and ⌥↓, with ⇧ for the ends, rearrange the focused item (DS-49), and focus follows it to its new cell.
 
+import { isTextField } from "@/common/shortcuts";
 import {
   useEffect,
   useLayoutEffect,
@@ -12,7 +13,6 @@ import {
   type RefObject,
 } from "react";
 
-import { isTextField } from "../shell/shortcuts";
 import { directionOf, nextCell, type Cell, type GridShape } from "./grid-keys";
 import type { Direction } from "./order";
 

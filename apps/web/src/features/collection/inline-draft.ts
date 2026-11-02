@@ -12,7 +12,7 @@ import {
   type KeyboardEvent,
 } from "react";
 
-import { useCollectionUi } from "./collection-ui";
+import { useCollectionMode } from "./collection-mode";
 
 /** An input or a textarea; its handlers take either, so one draft serves a field that is one or the other. */
 type TextField = HTMLInputElement | HTMLTextAreaElement;
@@ -64,7 +64,7 @@ export function useInlineDraft<Field extends TextField>({
    */
   onClose?: () => void;
 }) {
-  const { registerEditor } = useCollectionUi();
+  const { registerEditor } = useCollectionMode();
   const field = useRef<Field>(null);
   const [draft, setDraftState] = useState<string | undefined>(
     onClose === undefined ? undefined : value,

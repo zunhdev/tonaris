@@ -2,7 +2,7 @@
 // section's tabs under it. Each section is a pathless layout route around its pages (routes/_workspace/_settings.tsx,
 // _admin.tsx), so a page's route holds only its head, loader and body, and names itself in `staticData.title`.
 
-import { PageHeader, toCollection } from "@/features/shell/page-header";
+import { PageHeader, toCollection } from "@/common/page-header";
 import { useMatches } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 

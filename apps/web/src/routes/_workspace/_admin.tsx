@@ -2,10 +2,10 @@
 // anyone else finds no page there. It draws their header and the Admin tabs (features/settings/section-frame.tsx), and
 // on a phone says Admin is on the desktop instead of the page. Each page names itself in `staticData.title`.
 
+import { DesktopOnly } from "@/common/desktop-only";
+import { useNarrowScreen } from "@/common/media";
 import { AdminNav } from "@/features/admin/admin-nav";
 import { SectionFrame } from "@/features/settings/section-frame";
-import { DesktopOnly } from "@/features/shell/desktop-only";
-import { useNarrowScreen } from "@/features/shell/media";
 import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_workspace/_admin")({

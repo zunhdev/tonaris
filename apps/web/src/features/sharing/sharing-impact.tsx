@@ -6,7 +6,7 @@
 // Answers are kept for half a minute, so going back to a destination shows at once.
 
 import { api } from "@/api";
-import { useKeyedRead } from "@/features/shell/use-keyed-read";
+import { useKeyedRead } from "@/common/use-keyed-read";
 
 import type { Audience, SharingImpact } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";

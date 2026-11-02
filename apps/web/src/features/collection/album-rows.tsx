@@ -14,38 +14,29 @@
 
 import { isUnderway } from "@/client/sync/save-states";
 import { sent } from "@/client/sync/writer";
+import { useNarrowScreen } from "@/common/media";
+import { isTextField } from "@/common/shortcuts";
 import { useOpenIn } from "@/features/open/open-in";
 import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
-import { useVirtualizer, type Range } from "@tanstack/react-virtual";
 import { ExternalLink, GripVertical } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 import type { Album, ServiceLink } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { useNarrowScreen } from "../shell/media";
-import { isTextField } from "../shell/shortcuts";
 import { albumEdit, cellNames, cellText, typeName, type AlbumCell } from "./album-edit";
+import { albumOf, useAlbumGrid } from "./album-grid";
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
-import { useCollectionUi, useMode } from "./collection-ui";
+import { useCollectionMode, useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
-import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
-import { useAlbumOpening } from "./inspector-state";
+import { GroupHeaderRow } from "./groups";
 import type { ReleaseGroup, Section } from "./order";
-import { cellAt, useGridFocus, useWidth, type GridRearrange } from "./use-grid";
+import { cellAt, useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
@@ -61,23 +52,6 @@ type CellEdit = { albumId: string; cell: AlbumCell; draft: string; refusal?: str
 const typeFrom = 640;
 /** Below this width, the services column collapses, before the type (DS-21). */
 const servicesFrom = 760;
-
-type Item =
-  | { type: "header"; group: ReleaseGroup; count: number }
-  | { type: "album"; album: Album };
-
-/** The grid's rows: each group's header, then its albums unless collapsed; combined, just the albums. */
-function itemsOf(
-  sections: readonly Section<Album>[],
-  collapsed: ReadonlySet<ReleaseGroup>,
-): Item[] {
-  return sections.flatMap(({ group, albums }) => {
-    const rows = albums.map((album): Item => ({ type: "album", album }));
-    if (group === undefined) return rows;
-    const header: Item = { type: "header", group, count: albums.length };
-    return collapsed.has(group) ? [header] : [header, ...rows];
-  });
-}
 
 export function AlbumRows({
   sections,
@@ -106,16 +80,10 @@ export function AlbumRows({
   // A phone's title cell holds the artist too.
   const columns = (compact ? 3 : 4) + (showType ? 1 : 0) + (showServices ? 1 : 0);
   const { linksByAlbum } = useCollectionData();
-  const items = useMemo(() => itemsOf(sections, collapsed), [sections, collapsed]);
-  const headers = useMemo(
-    () => items.flatMap((item, index) => (item.type === "header" ? [index] : [])),
-    [items],
-  );
-  const { rangeExtractor, isStuck } = useStickyHeader(headers);
   const client = useSyncClient();
   const offline = useConnection() === "offline";
   const { editing, enterEditing } = useMode();
-  const { registerEditor } = useCollectionUi();
+  const { registerEditor } = useCollectionMode();
   // The edit lives here, not in the row, so that scrolling can't lose it; the ref is what the handlers read.
   const [cellEdit, setCellEditState] = useState<CellEdit | undefined>(undefined);
   const current = useRef<CellEdit | undefined>(undefined);
@@ -123,69 +91,21 @@ export function AlbumRows({
     current.current = next;
     setCellEditState(next);
   }, []);
-  const editRow =
-    cellEdit === undefined
-      ? -1
-      : items.findIndex((item) => item.type === "album" && item.album.id === cellEdit.albumId);
-  // The edited row stays drawn while the view scrolls.
-  const extractRange = useCallback(
-    (range: Range) => {
-      const indexes = rangeExtractor(range);
-      return editRow === -1 || indexes.includes(editRow)
-        ? indexes
-        : [...indexes, editRow].toSorted((a, b) => a - b);
-    },
-    [rangeExtractor, editRow],
-  );
-  // TanStack Virtual re-renders on scroll by design; the app isn't compiled with React Compiler, which the rule is
-  // about.
-  // oxlint-disable-next-line react/incompatible-library
-  const virtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => scroller.current,
-    estimateSize: (index) => (items[index]?.type === "header" ? headerHeight : height),
-    getItemKey: (index) => {
-      const item = items[index];
-      return item?.type === "header" ? `group:${item.group}` : (item?.album.id ?? index);
-    },
-    overscan: 10,
-    rangeExtractor: extractRange,
-  });
-  // Headers and rows differ in height, so offsets change whenever the items do.
-  useEffect(() => virtualizer.measure(), [virtualizer, items, height]);
-  const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
-  const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? 360) / height) - 1);
-  const rearrange = useMemo<GridRearrange>(
-    () => ({
-      itemAt: ({ row }) => {
-        const item = items[row];
-        return item?.type === "album" ? item.album.id : undefined;
-      },
-      cellOf: (id, col) => {
-        const row = items.findIndex((item) => item.type === "album" && item.album.id === id);
-        return row === -1 ? undefined : { row, col };
-      },
-      move: moves.move,
-    }),
-    [items, moves],
-  );
-  const opening = useAlbumOpening(rearrange.itemAt);
-  const { onKeyDown, cellProps, focusCell } = useGridFocus({
+  const { items, virtualizer, isStuck, opening, onKeyDown, cellProps, focusCell } = useAlbumGrid({
+    scroller,
     grid,
-    shape: {
-      rows: items.length,
-      columns: (row) => (items[row]?.type === "header" ? 1 : columns),
-      page,
-    },
-    reveal,
-    onActivate: opening.onActivate,
-    rearrange,
+    sections,
+    collapsed,
+    layout: { kind: "rows", columns },
+    rowSize: height,
+    page: (viewport) => Math.max(1, Math.floor((viewport ?? 360) / height) - 1),
+    overscan: 10,
+    // The edited row stays drawn while the view scrolls.
+    keepAlbum: cellEdit?.albumId,
+    moves,
   });
 
-  const albumAt = (id: string) => {
-    const item = items.find((each) => each.type === "album" && each.album.id === id);
-    return item?.type === "album" ? item.album : undefined;
-  };
+  const albumAt = (id: string) => items.map(albumOf).find((album) => album?.id === id);
 
   /** Opens a cell's editor; edits wait while offline (DS-81). */
   function startEdit(album: Album, cell: AlbumCell) {
@@ -196,7 +116,7 @@ export function AlbumRows({
   /** Closes the editor and gives its cell the focus back. */
   function closeEdit(edit: CellEdit) {
     setCellEdit(undefined);
-    const row = items.findIndex((item) => item.type === "album" && item.album.id === edit.albumId);
+    const row = items.findIndex((item) => albumOf(item)?.id === edit.albumId);
     if (row !== -1) focusCell({ row, col: editableCells.indexOf(edit.cell) });
   }
 
@@ -245,12 +165,12 @@ export function AlbumRows({
   function onGridKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (!isTextField(event.target) && (event.key === "Enter" || event.key === "F2")) {
       const at = cellAt(event.target);
-      const item = at && items[at.row];
+      const album = at && albumOf(items[at.row]);
       const cell = event.key === "F2" ? "title" : at && editableCells[at.col];
-      if (item?.type === "album" && cell && (editing || event.key === "F2") && !offline) {
+      if (album && cell && (editing || event.key === "F2") && !offline) {
         event.preventDefault();
         if (event.key === "F2") enterEditing();
-        startEdit(item.album, cell);
+        startEdit(album, cell);
         return;
       }
     }
@@ -285,9 +205,9 @@ export function AlbumRows({
         onDoubleClick={(event) => {
           // A double-click on an editable cell opens its editor, in Editing mode.
           const at = cellAt(event.target);
-          const item = at && items[at.row];
+          const album = at && albumOf(items[at.row]);
           const which = at && editableCells[at.col];
-          if (editing && item?.type === "album" && which) startEdit(item.album, which);
+          if (editing && album && which) startEdit(album, which);
         }}
         className="px-4"
       >
@@ -307,33 +227,29 @@ export function AlbumRows({
             if (!item) return null;
             if (item.type === "header") {
               return (
-                <div
+                <GroupHeaderRow
                   key={`group:${item.group}`}
-                  role="row"
-                  aria-rowindex={virtual.index + 2}
-                  className="inset-x-0 flex items-stretch bg-panel px-2"
-                  style={{
-                    height: headerHeight,
-                    ...placement(isStuck(virtual.index), virtual.start),
-                  }}
-                >
-                  <div role="gridcell" aria-colspan={columns} className="flex min-w-0">
-                    <GroupHeader
-                      group={item.group}
-                      count={item.count}
-                      collapsed={collapsed.has(item.group)}
-                      onToggle={onToggle}
-                      {...cellProps(virtual.index, 0)}
-                    />
-                  </div>
-                </div>
+                  group={item.group}
+                  count={item.count}
+                  index={virtual.index}
+                  rowIndex={virtual.index + 2}
+                  columns={columns}
+                  start={virtual.start}
+                  stuck={isStuck(virtual.index)}
+                  collapsed={collapsed.has(item.group)}
+                  onToggle={onToggle}
+                  cellProps={cellProps}
+                  className="px-2"
+                />
               );
             }
+            const album = albumOf(item);
+            if (!album) return null;
             return (
               // Keyed by the album, not the virtualizer's cached key, which lags a reorder by a render.
               <AlbumRow
-                key={item.album.id}
-                album={item.album}
+                key={album.id}
+                album={album}
                 viewKey={viewKey}
                 manual={moves.handles}
                 index={virtual.index}
@@ -343,9 +259,9 @@ export function AlbumRows({
                 height={height}
                 showType={showType}
                 showServices={showServices}
-                links={linksByAlbum.get(item.album.id)}
+                links={linksByAlbum.get(album.id)}
                 cellProps={cellProps}
-                edit={cellEdit?.albumId === item.album.id ? cellEdit : undefined}
+                edit={cellEdit?.albumId === album.id ? cellEdit : undefined}
                 onDraft={(draft) => {
                   const edit = current.current;
                   if (edit) setCellEdit({ ...edit, draft, refusal: undefined });

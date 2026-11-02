@@ -3,11 +3,13 @@
 // scrolls, following TanStack Virtual's sticky pattern: the range always includes it, and it is the one item placed
 // with `position: sticky` rather than at its offset.
 
+import { collapsedGroups } from "@/common/device";
 import { defaultRangeExtractor, type Range } from "@tanstack/react-virtual";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
-import { collapsedGroups } from "../shell/device";
+import { cn } from "@tonaris/ui/lib/utils";
+
 import { useCollectionUi } from "./collection-ui";
 import { groupNames, releaseGroups, type ReleaseGroup } from "./order";
 import type { useGridFocus } from "./use-grid";
@@ -99,5 +101,59 @@ export function GroupHeader({
         <span className="sr-only">{count === 1 ? " album" : " albums"}</span>
       </span>
     </button>
+  );
+}
+
+// The grids' rows are absolutely positioned plain elements, so the ARIA grid roles go on them (album-rows.tsx).
+/* oxlint-disable jsx-a11y/prefer-tag-over-role */
+
+/**
+ * A group's header as a row of an album grid, rows' or cards' (TON-150): one cell across the grid's `columns`, stuck
+ * at the top while its group is in view.
+ */
+export function GroupHeaderRow({
+  group,
+  count,
+  index,
+  rowIndex,
+  columns,
+  start,
+  stuck,
+  collapsed,
+  onToggle,
+  cellProps,
+  className,
+}: {
+  group: ReleaseGroup;
+  count: number;
+  /** Its virtual row. */
+  index: number;
+  /** Its `aria-rowindex`: one-based, after any column header row. */
+  rowIndex: number;
+  columns: number;
+  start: number;
+  stuck: boolean;
+  collapsed: boolean;
+  onToggle: (group: ReleaseGroup) => void;
+  cellProps: ReturnType<typeof useGridFocus>["cellProps"];
+  className?: string;
+}) {
+  return (
+    <div
+      role="row"
+      aria-rowindex={rowIndex}
+      className={cn("inset-x-0 flex items-stretch bg-panel", className)}
+      style={{ height: headerHeight, ...placement(stuck, start) }}
+    >
+      <div role="gridcell" aria-colspan={columns} className="flex min-w-0">
+        <GroupHeader
+          group={group}
+          count={count}
+          collapsed={collapsed}
+          onToggle={onToggle}
+          {...cellProps(index, 0)}
+        />
+      </div>
+    </div>
   );
 }

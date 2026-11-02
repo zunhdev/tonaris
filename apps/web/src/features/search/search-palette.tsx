@@ -17,22 +17,18 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { api } from "@/api";
+import { commandUses, recentItems } from "@/common/device";
+import { useShell } from "@/common/shell-context";
+import { commands, frequentCommands, type Command, type CommandId } from "@/common/shortcuts";
+import type { CommandRunner, CommandTarget } from "@/common/shortcuts";
+import { useKeyedRead } from "@/common/use-keyed-read";
+import { count } from "@/common/words";
 import { Artwork, artworkSrc } from "@/features/collection/artwork";
-import { useCollectionUi, useMode } from "@/features/collection/collection-ui";
+import { useMode } from "@/features/collection/collection-mode";
+import { useCollectionUi } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology } from "@/features/collection/order";
-import { commandUses, recentItems } from "@/features/shell/device";
-import { useShell } from "@/features/shell/shell-context";
-import {
-  commands,
-  frequentCommands,
-  type Command,
-  type CommandId,
-} from "@/features/shell/shortcuts";
-import { useKeyedRead } from "@/features/shell/use-keyed-read";
-import type { CommandRunner, CommandTarget } from "@/features/shell/use-shortcuts";
-import { count } from "@/features/shell/words";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { defaultRangeExtractor, useVirtualizer } from "@tanstack/react-virtual";

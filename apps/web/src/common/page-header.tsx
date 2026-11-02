@@ -4,8 +4,7 @@
 // view above, the name, the view's own controls, Search and Account. Two or more levels down, the name opens the
 // path, to go straight to Collection or any folder between (TON-153).
 
-import { AccountMenu } from "@/features/account/account-menu";
-import { useNarrowScreen } from "@/features/shell/media";
+import { useNarrowScreen } from "@/common/media";
 import { useRouter } from "@tanstack/react-router";
 import { ChevronDown, ChevronLeft, Folder, Library, PanelLeftOpen, Search } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
@@ -64,7 +63,7 @@ export function PageHeader({
    */
   path?: readonly PathStep[];
 }) {
-  const { sidebarHidden, toggleSidebar, account, openSearch } = useShell();
+  const { sidebarHidden, toggleSidebar, accountMenu, openSearch } = useShell();
   const narrow = useNarrowScreen();
   const router = useRouter();
   if (narrow) {
@@ -110,7 +109,7 @@ export function PageHeader({
         >
           <Search strokeWidth={1.5} aria-hidden />
         </Button>
-        {account && <AccountMenu account={account} compact />}
+        {accountMenu}
       </header>
     );
   }

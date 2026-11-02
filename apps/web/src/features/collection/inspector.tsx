@@ -3,15 +3,15 @@
 // service (DS-110); it takes the focus when it opens. Esc closes it, unless a field, dialog, popover or menu has the
 // keys; so does Close. An album that is gone says so (DS-83's "removed elsewhere" pattern, until Trash says more).
 
+import { inspectorWidths } from "@/common/device";
+import { ResizeHandle } from "@/common/resize-handle";
+import { inLayer, isTextField } from "@/common/shortcuts";
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { inspectorWidths } from "../shell/device";
-import { ResizeHandle } from "../shell/resize-handle";
-import { inLayer, isTextField } from "../shell/shortcuts";
 import { AlbumDetails } from "./album-details";
 import { useCollectionData } from "./data";
 import { useInspector } from "./inspector-state";

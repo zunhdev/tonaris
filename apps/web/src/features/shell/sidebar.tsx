@@ -4,6 +4,9 @@
 // Its right edge resizes it, by pointer or with the arrow keys, between 200 and 360 px. Collection takes a dragged
 // folder or list, to move it to the root (DS-49).
 
+import { sidebarWidths } from "@/common/device";
+import { ResizeHandle } from "@/common/resize-handle";
+import { useShell } from "@/common/shell-context";
 import { AccountMenu } from "@/features/account/account-menu";
 import { useCapture } from "@/features/capture/capture-context";
 import { CollectionTree } from "@/features/collection/collection-tree";
@@ -33,10 +36,6 @@ import {
   TooltipTrigger,
 } from "@tonaris/ui/components/tooltip";
 import { cn } from "@tonaris/ui/lib/utils";
-
-import { sidebarWidths } from "./device";
-import { ResizeHandle } from "./resize-handle";
-import { useShell } from "./shell-context";
 
 export function Sidebar({
   account,

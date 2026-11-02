@@ -6,18 +6,14 @@
 // Unsorted's newest first (DS-51). A folder link that names a list leads to the list, and the other way round; a
 // folder or list that doesn't exist says so, once the collection has loaded.
 
+import { phoneRootTab } from "@/common/device";
+import { useNarrowScreen } from "@/common/media";
+import { PageHeader, toCollection, useDocumentTitle, type PathStep } from "@/common/page-header";
+import { useShell } from "@/common/shell-context";
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
 import { PhoneShared } from "@/features/sharing/phone-shared";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
-import { phoneRootTab } from "@/features/shell/device";
-import {
-  PageHeader,
-  toCollection,
-  useDocumentTitle,
-  type PathStep,
-} from "@/features/shell/page-header";
-import { useShell } from "@/features/shell/shell-context";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Inbox, Pencil, Plus, Share2, Trash2 } from "lucide-react";
@@ -40,12 +36,13 @@ import {
   TooltipTrigger,
 } from "@tonaris/ui/components/tooltip";
 
-import { useNarrowScreen } from "../shell/media";
 import { AlbumCards } from "./album-cards";
 import { AlbumDetails } from "./album-details";
 import { AlbumRows } from "./album-rows";
 import { useAlbumArrangement, useContainerArrangement } from "./arrangement";
-import { useCollectionUi, useMode, useStartEditor } from "./collection-ui";
+import { useCollectionDialogs } from "./collection-dialogs";
+import { useMode } from "./collection-mode";
+import { useCollectionUi, useStartEditor } from "./collection-ui";
 import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
@@ -170,7 +167,7 @@ function ViewHeader({
 }) {
   const { editing } = useMode();
   const deleteContainer = useDeleteContainer();
-  const { startShare } = useCollectionUi();
+  const { startShare } = useCollectionDialogs();
   const { runCommand } = useShell();
   const narrow = useNarrowScreen();
   const offline = useConnection() === "offline";

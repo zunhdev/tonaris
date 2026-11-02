@@ -7,7 +7,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { uuidv7, type Container } from "@tonaris/domain";
 
-import { commands } from "../src/features/shell/shortcuts";
+import { commands } from "../src/common/shortcuts";
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
 import { added, album, insert, live, saved, violations } from "./support/workspace";

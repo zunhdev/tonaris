@@ -4,10 +4,20 @@
 // text field, or inside a dialog, popover or menu, are left alone, but for ⌘K in a text field, which searches.
 // A command acts on a target: what had the focus when its key was pressed, or when the palette opened.
 
+import { useNarrowScreen } from "@/common/media";
+import {
+  createShortcutMatcher,
+  inLayer,
+  type CommandId,
+  type CommandRunner,
+  type CommandTarget,
+  type ShortcutAction,
+} from "@/common/shortcuts";
 import { useCapture } from "@/features/capture/capture-context";
+import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
+import { useMode } from "@/features/collection/collection-mode";
 import {
   useCollectionUi,
-  useMode,
   useStartEditor,
   useViewContainerId,
 } from "@/features/collection/collection-ui";
@@ -20,9 +30,6 @@ import { useRecover } from "@/features/trash/recovery";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 
-import { useNarrowScreen } from "./media";
-import { createShortcutMatcher, inLayer, type CommandId, type ShortcutAction } from "./shortcuts";
-
 const destinations: Partial<
   Record<CommandId, "/c" | "/unsorted" | "/trash" | "/settings/preferences">
 > = {
@@ -30,16 +37,6 @@ const destinations: Partial<
   "go-unsorted": "/unsorted",
   "go-trash": "/trash",
   "go-settings": "/settings/preferences",
-};
-
-/** What a command acts on: the focus when it was asked for. */
-export type CommandTarget = {
-  /** The focused folder or list: the tree's item, else a view's row. */
-  container?: string | undefined;
-  /** The inspector's album, else the focused one. */
-  album?: string | undefined;
-  /** The Trash unit whose row had the focus. */
-  unit?: string | undefined;
 };
 
 /** Edits wait while offline (DS-81); opening, going and viewing don't. */
@@ -57,14 +54,6 @@ const onContainer = new Set<CommandId>(["rename", "move", "delete", "share"]);
 /** Sharing is online-only: it waits while offline, but isn't a collection edit, so it needs no Editing mode. */
 const online = new Set<CommandId>(["share"]);
 
-export type CommandRunner = {
-  run: (id: CommandId, target: CommandTarget) => void;
-  /** Why the command can't run on `target` now, if it can't. */
-  blocked: (id: CommandId, target: CommandTarget) => string | undefined;
-  /** The target the live focus gives. */
-  target: () => CommandTarget;
-};
-
 export function useCommandRunner({
   toggleSidebar,
   openShortcuts,
@@ -75,6 +64,7 @@ export function useCommandRunner({
   const navigate = useNavigate();
   const startEditor = useStartEditor();
   const ui = useCollectionUi();
+  const dialogs = useCollectionDialogs();
   const viewId = useViewContainerId();
   const mode = useMode();
   const offline = useConnection() === "offline";
@@ -91,6 +81,7 @@ export function useCommandRunner({
     navigate,
     startEditor,
     ui,
+    dialogs,
     viewId,
     mode,
     offline,
@@ -110,6 +101,7 @@ export function useCommandRunner({
       navigate,
       startEditor,
       ui,
+      dialogs,
       viewId,
       mode,
       offline,
@@ -174,7 +166,8 @@ export function useCommandRunner({
       else if (id === "share") {
         // The owner's dialog, desktop only (DS-65); it waits while offline.
         const container = containerOf(id, on);
-        if (container !== undefined && !now.offline && !now.narrow) now.ui.startShare(container);
+        if (container !== undefined && !now.offline && !now.narrow)
+          now.dialogs.startShare(container);
       } else if (id === "open-in") {
         // Opening isn't an edit: it works in Viewing mode and offline. The chooser sits by what has the focus
         // (DS-25).
@@ -208,13 +201,13 @@ export function useCommandRunner({
         const container = containerOf(id, on);
         if (container === undefined) return;
         now.mode.enterEditing();
-        if (id === "move") now.ui.startMove(container);
+        if (id === "move") now.dialogs.startMove(container);
         else now.deleteContainer(container);
       } else if (id === "add-to-list" || id === "delete-album") {
         if (on.album === undefined) return;
         now.mode.enterEditing();
-        if (id === "add-to-list") now.ui.startAddToList(on.album);
-        else now.ui.startDeleteAlbum(on.album);
+        if (id === "add-to-list") now.dialogs.startAddToList(on.album);
+        else now.dialogs.startDeleteAlbum(on.album);
       }
     },
     [containerOf],

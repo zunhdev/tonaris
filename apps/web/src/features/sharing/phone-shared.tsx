@@ -2,9 +2,9 @@
 // the inbox, then each folder or list shared with the person, by name, with its owner, those that can't be opened
 // last and dimmed. Each opens its shared view, whose Back returns here.
 
+import { count } from "@/common/words";
 import { ContainerIcon } from "@/features/collection/icons";
 import { buildSharedTree } from "@/features/collection/tree";
-import { count } from "@/features/shell/words";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, MailOpen, Users } from "lucide-react";
 import { useMemo } from "react";
