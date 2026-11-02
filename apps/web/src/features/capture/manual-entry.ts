@@ -5,7 +5,7 @@
 
 import type { SaveState } from "@/client/sync/save-states";
 import { emptyForm, type AlbumForm } from "@/features/collection/album-form";
-import type { NewAlbumDraft } from "@/features/collection/collection-ui";
+import type { NewAlbumDraft } from "@/features/collection/collection-dialogs";
 import { reasonOf } from "@/features/sync/describe";
 
 import type { AlbumFields } from "@tonaris/domain";

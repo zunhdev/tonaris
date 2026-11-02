@@ -50,7 +50,7 @@ import {
   type AlbumForm,
   type FormField,
 } from "./album-form";
-import { useCollectionUi, type NewAlbumDraft } from "./collection-ui";
+import { useCollectionDialogs, type NewAlbumDraft } from "./collection-dialogs";
 import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { FormFields } from "./form-fields";
@@ -69,7 +69,7 @@ const formFields: readonly FormField[] = [
 const now = () => new Date().toISOString();
 
 export function NewAlbumDialog() {
-  const { newAlbum, endNewAlbum } = useCollectionUi();
+  const { newAlbum, endNewAlbum } = useCollectionDialogs();
   // Each opening starts from its own draft.
   const [opened, setOpened] = useState(0);
   const [shown, setShown] = useState<NewAlbumDraft | undefined>(undefined);

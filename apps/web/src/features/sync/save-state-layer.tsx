@@ -13,7 +13,9 @@ import { resubmit, resubmitAll } from "@/client/sync/resubmit";
 import { isUnderway, type BatchReport } from "@/client/sync/save-states";
 import { captureDraft } from "@/features/capture/manual-entry";
 import { formOf } from "@/features/collection/album-form";
-import { useCollectionUi, useMode, useStartEditor } from "@/features/collection/collection-ui";
+import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
+import { useMode } from "@/features/collection/collection-mode";
+import { useStartEditor } from "@/features/collection/collection-ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { OutcomeStatus } from "@tonaris/domain";
@@ -46,7 +48,7 @@ function Feedback({ notify, children }: { notify: Notifier; children: ReactNode 
   const client = useSyncClient();
   const startEditor = useStartEditor();
   const { enterEditing } = useMode();
-  const { startNewAlbum } = useCollectionUi();
+  const { startNewAlbum } = useCollectionDialogs();
   const [reviewing, setReviewing] = useState<string>();
   const [activityOpen, setActivityOpen] = useState(false);
   const [shownReport, setShownReport] = useState<string>();

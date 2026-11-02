@@ -4,10 +4,11 @@
 // while offline (DS-45, DS-81).
 
 import { isUnderway, type SaveState } from "@/client/sync/save-states";
-import { useCollectionUi, useMode } from "@/features/collection/collection-ui";
+import { useNarrowScreen } from "@/common/media";
+import { inLayer, isTextField } from "@/common/shortcuts";
+import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
+import { useMode } from "@/features/collection/collection-mode";
 import { useInspector } from "@/features/collection/inspector-state";
-import { useNarrowScreen } from "@/features/shell/media";
-import { inLayer, isTextField } from "@/features/shell/shortcuts";
 import { useAnnounce } from "@/features/sync/announcer";
 import { reasonOf } from "@/features/sync/describe";
 import { useNotify } from "@/features/sync/notify";
@@ -159,7 +160,7 @@ function useCaptureFeedback(keep: (link: KeptLink) => void): void {
   const actions = useSaveActions();
   const announce = useAnnounce();
   const navigate = useNavigate();
-  const { startAddToList } = useCollectionUi();
+  const { startAddToList } = useCollectionDialogs();
   const { enterEditing } = useMode();
   const viewListId = useViewListId();
   const pathname = useLocation({ select: (location) => location.pathname });

@@ -4,6 +4,8 @@
 // showing what went goes to the nearest folder still there, or the collection.
 
 import { sent } from "@/client/sync/writer";
+import { ConfirmDialog } from "@/common/confirm-dialog";
+import { count } from "@/common/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -12,9 +14,8 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { trashRetentionDays, type Container } from "@tonaris/domain";
 
-import { ConfirmDialog } from "../shell/confirm-dialog";
-import { count } from "../shell/words";
-import { useCollectionUi, useViewContainerId } from "./collection-ui";
+import { useCollectionDialogs } from "./collection-dialogs";
+import { useViewContainerId } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { ancestorsOf, type Tree } from "./tree";
 
@@ -55,7 +56,7 @@ export function useDeleteContainer(): (id: string) => void {
   const announce = useAnnounce();
   const leaveGoing = useLeaveGoing();
   const { tree } = useCollectionData();
-  const { startDelete } = useCollectionUi();
+  const { startDelete } = useCollectionDialogs();
   const recover = useRecover();
 
   return (id: string) => {
@@ -93,7 +94,7 @@ export function DeleteFolderDialog() {
   const announce = useAnnounce();
   const leaveGoing = useLeaveGoing();
   const { tree } = useCollectionData();
-  const { deleting, endDelete } = useCollectionUi();
+  const { deleting, endDelete } = useCollectionDialogs();
   const folder = deleting === undefined ? undefined : tree.byId.get(deleting);
   const inside = folder ? descendants(tree, folder.id) : [];
   const folders = inside.filter((each) => each.kind === "folder").length;
@@ -145,7 +146,7 @@ export function DeleteAlbumDialog() {
   const announce = useAnnounce();
   const navigate = useNavigate();
   const { albumsById, listsByAlbum, tree } = useCollectionData();
-  const { deletingAlbum, endDeleteAlbum } = useCollectionUi();
+  const { deletingAlbum, endDeleteAlbum } = useCollectionDialogs();
   const album = deletingAlbum === undefined ? undefined : albumsById.get(deletingAlbum);
   const lists = (album === undefined ? [] : (listsByAlbum.get(album.id) ?? [])).flatMap(
     (listId) => tree.byId.get(listId)?.name ?? [],

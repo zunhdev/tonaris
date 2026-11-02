@@ -135,6 +135,24 @@ export function createShortcutMatcher({ sequenceMs = 1_500 } = {}): ShortcutMatc
 /** What the palette runs (DS-75): every action shortcut, and F2 and R, which act where they are pressed. */
 export type CommandId = Exclude<ShortcutAction, "search"> | "rename" | "restore";
 
+/** What a command acts on: the focus when it was asked for. */
+export type CommandTarget = {
+  /** The focused folder or list: the tree's item, else a view's row. */
+  container?: string | undefined;
+  /** The inspector's album, else the focused one. */
+  album?: string | undefined;
+  /** The Trash unit whose row had the focus. */
+  unit?: string | undefined;
+};
+
+export type CommandRunner = {
+  run: (id: CommandId, target: CommandTarget) => void;
+  /** Why the command can't run on `target` now, if it can't. */
+  blocked: (id: CommandId, target: CommandTarget) => string | undefined;
+  /** The target the live focus gives. */
+  target: () => CommandTarget;
+};
+
 type Section = "Moving around" | "Views" | "Albums" | "Folders and lists" | "Trash" | "Help";
 
 export type Command = {

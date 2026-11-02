@@ -2,9 +2,10 @@
 
 import { describe, expect, test } from "bun:test";
 
+import { isCollectionPath } from "@/common/device";
+
 import { uuidv7, type Container } from "@tonaris/domain";
 
-import { isCollectionPath } from "../shell/device";
 import { createEditing, nameRefusal, placeFor } from "./editing";
 
 const metal: Container = {

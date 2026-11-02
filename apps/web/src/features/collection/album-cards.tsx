@@ -10,23 +10,22 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { isUnderway } from "@/client/sync/save-states";
+import { useShell } from "@/common/shell-context";
 import { ServiceNames } from "@/features/open/service-names";
-import { useShell } from "@/features/shell/shell-context";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useRef } from "react";
 
 import type { Album } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useAlbumGrid } from "./album-grid";
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
 import { useCollectionData } from "./data";
-import { GroupHeader, headerHeight, placement, useStickyHeader } from "./groups";
-import { useAlbumOpening } from "./inspector-state";
+import { GroupHeaderRow } from "./groups";
 import type { ReleaseGroup, Section } from "./order";
-import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
+import { useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const minCard = 160;
@@ -34,27 +33,6 @@ const gap = 16;
 const padding = 24;
 /** The title, artist, year and services under the artwork. */
 const textHeight = 88;
-
-type Item =
-  | { type: "header"; group: ReleaseGroup; count: number }
-  | { type: "cards"; albums: Album[] };
-
-/** The grid's rows: each group's header, then its albums in rows of `columns` unless collapsed. */
-function itemsOf(
-  sections: readonly Section<Album>[],
-  collapsed: ReadonlySet<ReleaseGroup>,
-  columns: number,
-): Item[] {
-  return sections.flatMap(({ group, albums }) => {
-    const rows: Item[] = [];
-    for (let start = 0; start < albums.length; start += columns) {
-      rows.push({ type: "cards", albums: albums.slice(start, start + columns) });
-    }
-    if (group === undefined) return rows;
-    const header: Item = { type: "header", group, count: albums.length };
-    return collapsed.has(group) ? [header] : [header, ...rows];
-  });
-}
 
 export function AlbumCards({
   sections,
@@ -83,67 +61,17 @@ export function AlbumCards({
   const card = Math.min(inner, Math.floor((whole - gap * (wholeColumns - 1)) / wholeColumns));
   const columns = Math.max(1, Math.floor((inner + gap) / (card + gap)));
   const rowSize = card + textHeight + gap;
-  const items = useMemo(
-    () => itemsOf(sections, collapsed, columns),
-    [sections, collapsed, columns],
-  );
-  const headers = useMemo(
-    () => items.flatMap((item, index) => (item.type === "header" ? [index] : [])),
-    [items],
-  );
-  const { rangeExtractor, isStuck } = useStickyHeader(headers);
-  // TanStack Virtual re-renders on scroll by design; the app isn't compiled with React Compiler, which the rule is
-  // about.
-  // oxlint-disable-next-line react/incompatible-library
-  const virtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => scroller.current,
-    estimateSize: (index) => (items[index]?.type === "header" ? headerHeight : rowSize),
-    getItemKey: (index) => {
-      const item = items[index];
-      if (item?.type === "header") return `group:${item.group}`;
-      return item?.albums[0]?.id ?? index;
-    },
-    overscan: 3,
-    paddingStart: gap,
-    paddingEnd: gap,
-    rangeExtractor,
-  });
-  useEffect(() => virtualizer.measure(), [virtualizer, rowSize, items]);
-  const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
-  const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? rowSize) / rowSize));
-  const rearrange = useMemo<GridRearrange>(
-    () => ({
-      itemAt: ({ row, col }) => {
-        const item = items[row];
-        return item?.type === "cards" ? item.albums[col]?.id : undefined;
-      },
-      cellOf: (id) => {
-        for (const [row, item] of items.entries()) {
-          if (item.type !== "cards") continue;
-          const col = item.albums.findIndex((album) => album.id === id);
-          if (col !== -1) return { row, col };
-        }
-        return undefined;
-      },
-      move: moves.move,
-    }),
-    [items, moves],
-  );
-  const opening = useAlbumOpening(rearrange.itemAt);
-  const { onKeyDown, cellProps } = useGridFocus({
+  const { items, virtualizer, isStuck, opening, onKeyDown, cellProps } = useAlbumGrid({
+    scroller,
     grid,
-    rearrange,
-    onActivate: opening.onActivate,
-    shape: {
-      rows: items.length,
-      columns: (row) => {
-        const item = items[row];
-        return item?.type === "cards" ? item.albums.length : 1;
-      },
-      page,
-    },
-    reveal,
+    sections,
+    collapsed,
+    layout: { kind: "cards", perRow: columns },
+    rowSize,
+    page: (viewport) => Math.max(1, Math.floor((viewport ?? rowSize) / rowSize)),
+    overscan: 3,
+    padding: gap,
+    moves,
   });
 
   return (
@@ -167,26 +95,19 @@ export function AlbumCards({
             if (!item) return null;
             if (item.type === "header") {
               return (
-                <div
+                <GroupHeaderRow
                   key={virtual.key}
-                  role="row"
-                  aria-rowindex={virtual.index + 1}
-                  className="inset-x-0 flex items-stretch bg-panel"
-                  style={{
-                    height: headerHeight,
-                    ...placement(isStuck(virtual.index), virtual.start),
-                  }}
-                >
-                  <div role="gridcell" aria-colspan={columns} className="flex min-w-0">
-                    <GroupHeader
-                      group={item.group}
-                      count={item.count}
-                      collapsed={collapsed.has(item.group)}
-                      onToggle={onToggle}
-                      {...cellProps(virtual.index, 0)}
-                    />
-                  </div>
-                </div>
+                  group={item.group}
+                  count={item.count}
+                  index={virtual.index}
+                  rowIndex={virtual.index + 1}
+                  columns={columns}
+                  start={virtual.start}
+                  stuck={isStuck(virtual.index)}
+                  collapsed={collapsed.has(item.group)}
+                  onToggle={onToggle}
+                  cellProps={cellProps}
+                />
               );
             }
             return (

@@ -52,6 +52,37 @@
       }
     },
     {
+      "files": ["apps/web/src/common/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@tonaris/api",
+                "allowTypeImports": true,
+                "message": "The web app is an API client: import only types, such as `type App` for Eden (TS-29)."
+              },
+              {
+                "name": "@tonaris/db",
+                "message": "The web app never touches the database; call the API (TS-02)."
+              },
+              {
+                "name": "@tonaris/providers",
+                "message": "The web app may use only the pure link parser, `@tonaris/providers/links` (TS-02, TS-40)."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@/features/**", "@/routes/**", "**/features/**", "**/routes/**"],
+                "message": "apps/web/src/common holds what the features share: it imports no feature or route, so features never import each other through it (TON-150)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["packages/domain/**"],
       "rules": {
         "no-restricted-imports": [

@@ -1,7 +1,7 @@
 // The account deletion this tab follows (TS-74): its token, kept for the tab only, since the session ends when
 // deletion starts and `/account-deleted` asks for progress with it. Only that page reads it.
 
-import { forget, readText, storageOf, writeText } from "@/features/shell/storage";
+import { forget, readText, storageOf, writeText } from "@/common/storage";
 
 const key = "tonaris.account-deletion";
 

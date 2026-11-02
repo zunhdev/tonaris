@@ -4,7 +4,7 @@
 // person decides one. One store for the page, read through `usePendingApprovals()`.
 
 import { api } from "@/api";
-import { createPolledStore } from "@/features/shell/polled-store";
+import { createPolledStore } from "@/common/polled-store";
 
 import type { PendingApprovals } from "@tonaris/domain";
 

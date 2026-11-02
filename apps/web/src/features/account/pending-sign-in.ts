@@ -1,7 +1,7 @@
 // The sign-in this browser asked for (DS-90). When the email's link opens here, the code is submitted at once;
 // anywhere else the page first asks "Sign in on this device?". Only a heuristic: the code is the credential.
 
-import { forget, readJson, storageOf, writeJson } from "@/features/shell/storage";
+import { forget, readJson, storageOf, writeJson } from "@/common/storage";
 
 import { signInCode } from "@tonaris/domain";
 

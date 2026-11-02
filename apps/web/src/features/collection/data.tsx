@@ -5,6 +5,7 @@
 // and the top level as the root is (decided 23 October 2026), manual order included.
 
 import { sent } from "@/client/sync/writer";
+import { takeDeviceGridViews } from "@/common/device";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
@@ -23,7 +24,6 @@ import {
   type ViewPrefs,
 } from "@tonaris/domain";
 
-import { takeDeviceGridViews } from "../shell/device";
 import { useCollectionUi } from "./collection-ui";
 import { sortContainers, type Keys } from "./order";
 import { presentationOf } from "./presentation";

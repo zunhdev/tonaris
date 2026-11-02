@@ -42,7 +42,8 @@ import {
 import { CustomFieldsSection } from "./album-fields";
 import { LinksSection } from "./album-links";
 import { Artwork, artworkSrc } from "./artwork";
-import { useCollectionUi, useMode } from "./collection-ui";
+import { useCollectionDialogs } from "./collection-dialogs";
+import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { useInlineDraft } from "./inline-draft";
@@ -59,7 +60,7 @@ function sortHint(album: Album): string {
 }
 
 export function AlbumDetails({ album }: { album: Album }) {
-  const { startDeleteAlbum } = useCollectionUi();
+  const { startDeleteAlbum } = useCollectionDialogs();
   const client = useSyncClient();
   const { editing } = useMode();
   const offline = useConnection() === "offline";
@@ -330,7 +331,7 @@ function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
   const notify = useNotify();
   const announce = useAnnounce();
   const { tree, listsByAlbum } = useCollectionData();
-  const { startAddToList } = useCollectionUi();
+  const { startAddToList } = useCollectionDialogs();
   const lists = (listsByAlbum.get(album.id) ?? [])
     .flatMap((listId) => tree.byId.get(listId) ?? [])
     .toSorted((a, b) => a.name.localeCompare(b.name));

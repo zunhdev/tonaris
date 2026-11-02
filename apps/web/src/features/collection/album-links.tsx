@@ -29,7 +29,7 @@ import { Button } from "@tonaris/ui/components/button";
 import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
 
-import { useMode } from "./collection-ui";
+import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { useInlineDraft } from "./inline-draft";
 import { checkLink } from "./link-check";

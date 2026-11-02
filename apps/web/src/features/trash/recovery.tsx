@@ -12,6 +12,8 @@
 
 import type { Deleted, RecoveryChoice } from "@/client/sync/trash";
 import { sent } from "@/client/sync/writer";
+import { ConfirmDialog } from "@/common/confirm-dialog";
+import { count } from "@/common/words";
 import { useCollectionData } from "@/features/collection/data";
 import { nameRefusal } from "@/features/collection/editing";
 import { PlaceList } from "@/features/collection/place-list";
@@ -55,9 +57,6 @@ import {
 } from "@tonaris/ui/components/dialog";
 import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
-
-import { ConfirmDialog } from "../shell/confirm-dialog";
-import { count } from "../shell/words";
 
 /** A unit to recover: what it is, where it was, and, after a deletion just made, what that deletion took out. */
 export type RecoveryTarget = {

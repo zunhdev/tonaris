@@ -6,8 +6,8 @@
 // unsent, it asks first (decided 22 October 2026). On a phone it is the top bar's Account button, without Admin or
 // the shortcuts, which a phone doesn't have, and with 44 px items (DS-110).
 
+import { useShell } from "@/common/shell-context";
 import { feedbackUrl } from "@/config";
-import { useShell } from "@/features/shell/shell-context";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
 import {

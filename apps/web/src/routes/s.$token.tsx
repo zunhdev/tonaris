@@ -3,10 +3,10 @@
 // URL; `?c=` picks a folder or list inside it, on the client. The token never leaves in a Referer (security/headers.ts).
 
 import { createApiClient } from "@/api";
+import { count } from "@/common/words";
 import { serverApiUrl } from "@/config";
 import { GuestPage, UnavailableShare } from "@/features/guest/guest-page";
 import { useShareStream } from "@/features/sharing/use-share-stream";
-import { count } from "@/features/shell/words";
 import { uuidSearch } from "@/search";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCallback } from "react";

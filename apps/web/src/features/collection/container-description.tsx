@@ -9,7 +9,7 @@ import { useSyncClient } from "@/features/sync/sync-provider";
 import { descriptionProblem, type Container } from "@tonaris/domain";
 import { Field } from "@tonaris/ui/components/field";
 
-import { useMode } from "./collection-ui";
+import { useMode } from "./collection-mode";
 import { useInlineDraft } from "./inline-draft";
 
 export function ContainerDescription({ container }: { container: Container }) {

@@ -3,7 +3,7 @@
 // together. They are noticed as the sidebar's Invitations is: on load, on focus and every minute. Each is announced once
 // on the device, those found on load included; on the Invitations pages, they're already in view.
 
-import { announcedInvitations } from "@/features/shell/device";
+import { announcedInvitations } from "@/common/device";
 import { useNotify } from "@/features/sync/notify";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";

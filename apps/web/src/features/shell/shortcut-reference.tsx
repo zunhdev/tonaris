@@ -1,6 +1,8 @@
 // The shortcut reference (DS-78): `?` or the account menu's "Keyboard shortcuts" opens it, listing the shortcuts
 // that work now. Shortcuts arriving with later issues join the list with them.
 
+import { shortcutReference } from "@/common/shortcuts";
+
 import {
   Dialog,
   DialogContent,
@@ -8,8 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
-
-import { shortcutReference } from "./shortcuts";
 
 export function ShortcutReference({
   open,

@@ -4,8 +4,8 @@
 // opens from the row's ⋯ with the pointer, and with Shift+F10 or the Menu key from the keyboard. Offline, the
 // commands wait, and the menu says why (DS-81).
 
-import { useShell } from "@/features/shell/shell-context";
-import { shortcutLabel, type CommandId } from "@/features/shell/shortcuts";
+import { useShell } from "@/common/shell-context";
+import { shortcutLabel, type CommandId } from "@/common/shortcuts";
 import { Fragment, useRef } from "react";
 
 import type { ContainerKind } from "@tonaris/domain";

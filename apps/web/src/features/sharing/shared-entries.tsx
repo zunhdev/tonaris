@@ -4,7 +4,7 @@
 // collection, TON-68), and on `reread`, as after a save its owner makes in a share the tree follows.
 
 import { api } from "@/api";
-import { useKeyedRead } from "@/features/shell/use-keyed-read";
+import { useKeyedRead } from "@/common/use-keyed-read";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useLiveQuery } from "@tanstack/react-db";
 import {

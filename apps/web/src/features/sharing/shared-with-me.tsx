@@ -4,7 +4,7 @@
 // link-saved one, Remove from Shared with me. The entries are the workspace's (shared-entries.tsx), read again after
 // a change here. An available one opens in the app, view-only (shared-view.tsx).
 
-import { PageHeader, toCollection } from "@/features/shell/page-header";
+import { PageHeader, toCollection } from "@/common/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { Link2, Users } from "lucide-react";

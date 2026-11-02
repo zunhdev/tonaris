@@ -4,7 +4,7 @@
 // one already accepted. Answering is online-only and goes straight to the API, as sharing does.
 
 import { api } from "@/api";
-import { PageHeader, toCollection } from "@/features/shell/page-header";
+import { PageHeader, toCollection } from "@/common/page-header";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";

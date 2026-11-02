@@ -4,10 +4,10 @@
 // can't claim it.
 
 import { api } from "@/api";
+import { count } from "@/common/words";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
 import { fieldTypeNames } from "@/features/collection/field-types";
 import { refreshPendingApprovals } from "@/features/connections/pending-approvals";
-import { count } from "@/features/shell/words";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useId, useState } from "react";

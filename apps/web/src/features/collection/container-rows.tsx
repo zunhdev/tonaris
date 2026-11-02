@@ -9,6 +9,8 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { isUnderway } from "@/client/sync/save-states";
+import { useNarrowScreen } from "@/common/media";
+import { count } from "@/common/words";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -18,8 +20,6 @@ import { useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { useNarrowScreen } from "../shell/media";
-import { count } from "../shell/words";
 import { DragHandle, DropLine } from "./album-rows";
 import { useCollectionUi } from "./collection-ui";
 import { useRowDrag } from "./drag";
