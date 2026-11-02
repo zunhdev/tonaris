@@ -3,7 +3,6 @@
 // the account's guest link is unavailable at once; its address signs in to nothing; Cancel changes nothing; and
 // the creator has no Delete account.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
 import { shareSettingsSchema, uuidv7 } from "@tonaris/domain";
@@ -11,7 +10,7 @@ import { shareSettingsSchema, uuidv7 } from "@tonaris/domain";
 import { accounts, apiUrl } from "./support/accounts";
 import { latestEmail } from "./support/mailpit";
 import { requestCode, signIn } from "./support/sign-in";
-import { created, live, violations, webOrigin } from "./support/workspace";
+import { created, live, pageViolations, violations, webOrigin } from "./support/workspace";
 
 async function send(page: Page, name: string, args: Record<string, unknown>) {
   const response = await page.request.post(`${apiUrl}/v1/mutations`, {
@@ -69,7 +68,7 @@ test.describe("a member", () => {
     await expect(page.getByRole("heading", { name: "Your account has been deleted" })).toBeVisible({
       timeout: 15_000,
     });
-    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    expect(await pageViolations(page)).toEqual([]);
 
     // The link is gone for guests, and the address has no account.
     const guestContext = await browser.newContext({ storageState: { cookies: [], origins: [] } });

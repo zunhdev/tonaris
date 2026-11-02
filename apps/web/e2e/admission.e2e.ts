@@ -4,12 +4,12 @@
 // link shows its address, the emailed code or its link creates the account, an optional name, the first run, and
 // signing in again; an unusable invitation shows only its sentence.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
 import { accounts, apiUrl, invitee, joiners } from "./support/accounts";
 import { clearInbox, invitationEmail, joinEmail, latestEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { pageViolations } from "./support/workspace";
 
 // Pausing admissions is service-wide, so this file's tests run in order: a pause never lands mid-join.
 test.describe.configure({ mode: "default" });
@@ -43,7 +43,7 @@ test("the creator invites someone, sees the email sent, and revokes the invitati
   const { subject, text } = await latestEmail(invitee);
   expect(subject).toBe("You're invited to join Tonaris");
   expect(text).toMatch(/\/join\/\S+/);
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
 
   // A member's address is refused, keeping what was typed.
   await page.getByLabel("Email address to invite").fill(accounts.adminOutsider);
@@ -139,11 +139,11 @@ test.describe("joining", () => {
       "href",
       "/privacy",
     );
-    expect((await new AxeBuilder({ page: guest }).analyze()).violations).toEqual([]);
+    expect(await pageViolations(guest)).toEqual([]);
 
     await guest.getByRole("button", { name: "Continue" }).click();
     await expect(guest.getByRole("heading", { name: `Check ${email}` })).toBeVisible();
-    expect((await new AxeBuilder({ page: guest }).analyze()).violations).toEqual([]);
+    expect(await pageViolations(guest)).toEqual([]);
     const { code } = await joinEmail(email, 2);
     await guest.getByLabel("Code", { exact: true }).fill(code);
 

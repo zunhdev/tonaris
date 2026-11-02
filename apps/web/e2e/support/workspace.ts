@@ -116,7 +116,6 @@ export const activity = (page: Page) => page.getByRole("dialog", { name: "Activi
 export const toasts = (page: Page) => page.locator('[data-slot="toast"]');
 export const announcements = (page: Page) => page.locator('[data-slot="announcer"]');
 
-/** Axe's findings in `selector`, once its opening animation is over: mid-fade, its text is still faint. */
 /** Waits out a page switch's fade (DS-17, `page-fade.ts`), so axe never measures text halfway in. */
 export async function pageFaded(page: Page): Promise<void> {
   await page.evaluate(() =>
@@ -129,6 +128,13 @@ export async function pageFaded(page: Page): Promise<void> {
   );
 }
 
+/** Axe's findings on the whole page, once a page switch's fade is over: mid-fade, its text is still faint (TON-118). */
+export async function pageViolations(page: Page) {
+  await pageFaded(page);
+  return (await new AxeBuilder({ page }).analyze()).violations;
+}
+
+/** Axe's findings in `selector`, once its opening animation is over: mid-fade, its text is still faint. */
 export async function violations(page: Page, selector: string) {
   await page.locator(selector).evaluate((element) =>
     // A cancelled animation is as done as a finished one.

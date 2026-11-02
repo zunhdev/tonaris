@@ -3,7 +3,6 @@
 // revocation, with when the client last called. The client is registered by DCR and its callback is caught in the
 // browser.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { accounts, creatorState } from "./support/accounts";
@@ -17,7 +16,7 @@ import {
   registerClient,
 } from "./support/mcp";
 import { requestCode } from "./support/sign-in";
-import { live } from "./support/workspace";
+import { live, pageViolations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -49,7 +48,7 @@ test("a client connects through sign-in and consent, and Settings revokes it", a
   ).toBeVisible();
   await expect(page.getByText(`Signed in as ${accounts.mcp}`)).toBeVisible();
   await expect(page.getByRole("radio", { name: /Read-only/ })).toBeChecked();
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
 
   await page.getByRole("radio", { name: /Manage collection/ }).check();
   await page.getByRole("button", { name: "Connect" }).click();
@@ -64,7 +63,7 @@ test("a client connects through sign-in and consent, and Settings revokes it", a
   const connection = page.getByRole("listitem").filter({ hasText: "E2E Client" });
   await expect(connection).toContainText("Manage collection");
   await expect(connection).toContainText("Last used");
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
   await connection.getByRole("button", { name: "Revoke E2E Client" }).click();
   await expect(page.getByText("No AI client is connected.")).toBeVisible();
   expect((await mcpRequest(client, token, listTools)).status()).toBe(401);
@@ -134,6 +133,6 @@ test.describe("signed in as the creator", () => {
     await expect(page.getByText("Add custom MCP server")).toBeVisible();
     await page.getByRole("radio", { name: "Codex" }).click();
     await expect(page.getByText(/codex mcp add tonaris --url .*\/mcp/)).toBeVisible();
-    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    expect(await pageViolations(page)).toEqual([]);
   });
 });

@@ -2,7 +2,6 @@
 // the sidebar and Settings → Connections and approves on the approval page (here on a phone-sized screen, X-04), and
 // only then does the agent's next call run. Another account can't see the request.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { z } from "zod";
 
@@ -20,7 +19,7 @@ import {
   registerClient,
 } from "./support/mcp";
 import { requestCode, signIn } from "./support/sign-in";
-import { live } from "./support/workspace";
+import { live, pageViolations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -75,7 +74,7 @@ test("the owner approves on a phone, and the agent's next call deletes the album
   );
   // The consent page by keyboard (TON-93): every stop named and ringed, and nothing for axe.
   await expect(page.getByRole("radio", { name: /Manage collection/ })).toBeVisible();
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
   expect(faults(await tabThrough(page))).toEqual([]);
   await page.getByRole("radio", { name: /Manage collection/ }).check();
   await page.getByRole("button", { name: "Connect" }).click();
@@ -119,7 +118,7 @@ test("the owner approves on a phone, and the agent's next call deletes the album
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
   expect(faults(await tabThrough(page))).toEqual([]);
 
   // Before the owner decides, the agent's retry still waits.
@@ -196,7 +195,7 @@ test("declining a list's deletion tells the agent, and nothing is deleted", asyn
   await expect(page.getByText("Move 1 list to Trash")).toBeVisible();
   await page.getByText("1 list", { exact: true }).click();
   await expect(page.getByText("Late Miles")).toBeVisible();
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
   await page.getByRole("button", { name: "Decline" }).click();
   await expect(page.getByText("Declined. Nothing will change.")).toBeVisible();
   expect(

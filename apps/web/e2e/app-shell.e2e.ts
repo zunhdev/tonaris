@@ -1,7 +1,8 @@
 // app-shell spec: the three-pane shell, the rendering modes (TS-03) and the root redirect (DS-30, DS-32).
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+
+import { pageViolations } from "./support/workspace";
 
 test.describe("three-pane desktop shell", () => {
   test("the workspace opens in the shell", async ({ page }) => {
@@ -65,7 +66,7 @@ for (const path of ["/c", "/sign-in"]) {
   test(`${path} has no axe violations`, async ({ page }) => {
     await page.goto(path);
     await page.getByRole("main").waitFor();
-    const { violations } = await new AxeBuilder({ page }).analyze();
+    const violations = await pageViolations(page);
     expect(violations.map(({ id, nodes }) => `${id} (${nodes.length})`)).toEqual([]);
   });
 }

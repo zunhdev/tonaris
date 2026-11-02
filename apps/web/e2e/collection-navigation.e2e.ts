@@ -2,7 +2,6 @@
 // DS-30–DS-32, DS-78): folders and lists created, renamed and walked by keyboard alone, views that say where they are,
 // what the device remembers, and the fade a page switch brings. Each test signs in with its own account.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { uuidv7, type Album } from "@tonaris/domain";
@@ -139,7 +138,7 @@ test("folders and lists are created, renamed and walked by keyboard alone", asyn
   expect(await violations(page, '[data-slot="dialog-content"]')).toEqual([]);
   await page.keyboard.press("Escape");
   await expect(reference).toBeHidden();
-  expect((await new AxeBuilder({ page }).include("nav").analyze()).violations).toEqual([]);
+  expect(await violations(page, "nav")).toEqual([]);
 });
 
 test("the tree and the sidebar's width are remembered on the device, and / returns to the last view", async ({
