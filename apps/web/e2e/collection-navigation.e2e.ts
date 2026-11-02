@@ -1,6 +1,7 @@
 // The sidebar tree, the collection routes and the shortcuts in a real browser (FR-01.1, FR-01.3; DS-17, DS-27,
 // DS-30–DS-32, DS-78): folders and lists created, renamed and walked by keyboard alone, views that say where they are,
-// what the device remembers, and the fade a page switch brings. Each test signs in with its own account.
+// what the device remembers, the fade a page switch brings, and each view and album opening at its top. Each test
+// signs in with its own account.
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
@@ -9,11 +10,13 @@ import { uuidv7, type Album } from "@tonaris/domain";
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
 import {
+  added,
   created,
   indicator,
   insert,
   list,
   live,
+  pageFaded,
   savedNames,
   toasts,
   violations,
@@ -348,4 +351,47 @@ test("a page switch fades the new page in, but going back and reduced motion swi
   await item(page, /^Sludge\b/).click();
   await expect(heading(page)).toHaveText("Sludge");
   expect(await fades(page)).toEqual({ below: false, elsewhere: false });
+});
+
+/** Forty albums, `{name} 01` to `{name} 40`. */
+const numbered = (name: string) =>
+  Array.from({ length: 40 }, (_, n) => album(`${name} ${String(n + 1).padStart(2, "0")}`));
+const offset = (scroller: Locator) => scroller.evaluate((element) => element.scrollTop);
+const scrollDown = (scroller: Locator) =>
+  scroller.evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
+
+test("another list opens at its top, and so does another album in the album panel", async ({
+  page,
+}) => {
+  await signIn(page, accounts.navScrolled);
+  await live(page);
+  const doom = await created(page, "Doom");
+  const sludge = await created(page, "Sludge");
+  await added(page, numbered("Doom"), doom.id);
+  await added(page, numbered("Sludge"), sludge.id);
+  // Short enough that the album panel scrolls too.
+  await page.setViewportSize({ width: 1280, height: 480 });
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  const view = page.locator('[data-page-scroll="view"]');
+
+  // The router once gave Sludge's rows Doom's offset: the same route, and its scroll container, kept (TON-157).
+  await scrollDown(view);
+  await expect.poll(() => offset(view)).toBeGreaterThan(0);
+  await item(page, /^Sludge\b/).click();
+  await expect(heading(page)).toHaveText("Sludge");
+  await pageFaded(page);
+  expect(await offset(view)).toBe(0);
+
+  // Scrolled down in one album, the panel shows the next from its top.
+  const rows = page.getByRole("grid", { name: "Sludge" }).getByRole("row");
+  await rows.filter({ hasText: "Sludge 01" }).getByText("Sludge 01").click();
+  const panel = page.getByRole("complementary", { name: "Album" });
+  await expect(panel).toContainText("Sludge 01");
+  const details = panel.locator('[data-page-scroll="album"]');
+  await scrollDown(details);
+  await expect.poll(() => offset(details)).toBeGreaterThan(0);
+  await rows.filter({ hasText: "Sludge 02" }).getByText("Sludge 02").click();
+  await expect(panel).toContainText("Sludge 02");
+  expect(await offset(details)).toBe(0);
 });

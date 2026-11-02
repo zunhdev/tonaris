@@ -567,6 +567,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **In the browser:** the workspace sends a signed-out `/` to `/welcome` rather than `/sign-in`, which covers a stale cookie and links to `/` inside the app. Every other signed-out path still goes to `/sign-in` with its redirect.
 - **Signed in,** `/` opens the last view as before.
 
+*Fixed in TON-157* (from the creator's manual testing, 2 November 2026): **a new page opens at its top.** The router remembers each scroll area's offset by its place on the page. It copied an offset onto whatever sat in that place on the next page, and a route whose ID changed kept its scroll area as it was. So a list opened from far down a folder opened far down. The same went for a folder opened from the root, a list from another list, Unsorted, Trash, Settings from Preferences to Custom fields, a phone's Mine and Shared, a list's description, and another album in the album panel. Now a page's own scroll areas start at the top on a new page, and Back and Forward still return them to where they were. The sidebar and a section's tabs stay where they are, and the album panel shows each album from its top.
+
 ---
 
 ## 5. Collection views

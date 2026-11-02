@@ -6,6 +6,7 @@
 // kept across reloads like any write.
 
 import { isUnderway, type SaveState } from "@/client/sync/save-states";
+import { pageScroll } from "@/common/page-scroll";
 import { reasonOf } from "@/features/sync/describe";
 import { useSaveActions } from "@/features/sync/save-actions";
 import { useOpenStates } from "@/features/sync/save-states";
@@ -41,6 +42,7 @@ export function CaptureRows({ listId }: { listId: string | null }) {
     <section
       aria-label="Albums being added"
       data-slot="capture-rows"
+      {...pageScroll("captures")}
       className="flex max-h-[40%] shrink-0 flex-col overflow-y-auto border-b border-subtle"
     >
       <ul className="flex flex-col">

@@ -5,6 +5,7 @@
 // web pages or their apps (FR-06.6, TON-104). Streaming services: the ones the person uses, a switch each; the album
 // panel and New album show link fields only for those, while saved links still show (TON-138).
 
+import { pageScroll } from "@/common/page-scroll";
 import {
   directionOptions,
   folderSortOptions,
@@ -28,7 +29,7 @@ const linkTargetOptions: readonly SegmentedOption<LinkTarget>[] = [
 export function PreferencesSettings() {
   const { defaults, ready, set, setService } = useAccountDefaults();
   return (
-    <div className="flex max-w-2xl flex-col gap-8 overflow-y-auto p-6">
+    <div {...pageScroll("view")} className="flex max-w-2xl flex-col gap-8 overflow-y-auto p-6">
       <section aria-labelledby="list-defaults" className="flex max-w-sm flex-col gap-3">
         <h2 id="list-defaults" className="text-title text-fg-primary">
           Lists and Unsorted

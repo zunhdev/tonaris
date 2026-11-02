@@ -15,6 +15,7 @@
 import { isUnderway } from "@/client/sync/save-states";
 import { sent } from "@/client/sync/writer";
 import { useNarrowScreen } from "@/common/media";
+import { pageScroll } from "@/common/page-scroll";
 import { isTextField } from "@/common/shortcuts";
 import { useOpenIn } from "@/features/open/open-in";
 import { ServiceNames } from "@/features/open/service-names";
@@ -191,7 +192,7 @@ export function AlbumRows({
   ).join(" ");
 
   return (
-    <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-2">
+    <div ref={scroller} {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto py-2">
       <div
         ref={grid}
         role="grid"

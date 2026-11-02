@@ -9,6 +9,7 @@
 import { api } from "@/api";
 import { sent } from "@/client/sync/writer";
 import { ConfirmDialog, type Confirmation } from "@/common/confirm-dialog";
+import { pageScroll } from "@/common/page-scroll";
 import { useKeyedRead } from "@/common/use-keyed-read";
 import { count } from "@/common/words";
 import { apiUrl } from "@/config";
@@ -109,7 +110,7 @@ export function CustomFieldsSettings() {
   const limit = fieldLimitProblem(fields.length);
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4 overflow-y-auto p-6">
+    <div {...pageScroll("view")} className="flex max-w-3xl flex-col gap-4 overflow-y-auto p-6">
       <div className="flex items-center gap-3">
         <Button
           variant="primary"
