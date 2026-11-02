@@ -41,6 +41,12 @@ export const maxLinkLength = 2_048;
 /** Items in one batch, from any client: the app, native clients or MCP (TS-25, decided 22 October 2026). */
 export const maxBatchItems = 200;
 
+/**
+ * Trash units one `trash.purge` removes. Trash can hold more (`maxAlbums` + `maxContainers`), so the app empties a
+ * fuller Trash with several purges (TON-148).
+ */
+export const maxPurgeUnits = 5_000;
+
 /** Custom fields per account (TS-18). */
 export const maxFields = 50;
 

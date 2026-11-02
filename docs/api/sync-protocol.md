@@ -174,6 +174,7 @@ The server ends a stream in four cases:
 - **Permanent removal** (FR-01.17, FR-01.18, FR-14.5, TON-58):
   - **`trash.purge`** `{unitIds}` removes units for good. It is app-only (`app_only` through MCP).
     - Its `confirmed` result is `{purged, gone}`; units already gone are reported, and the rest still go.
+    - It takes at most 5,000 units (`maxPurgeUnits`). Trash can hold more, so a client empties a fuller Trash with several purges and adds up their `gone` (TON-148).
     - The stream sends each unit's `trashUnit` delete, and for a purged album its `link` and `fieldValue` deletes.
   - **The hourly expiry** sends the same changes, with `mutationId` null, for units 30 days old.
   - **Later recoveries** report what was purged: `album_deleted` in a list's recovery, `list_deleted` in an album's restore.

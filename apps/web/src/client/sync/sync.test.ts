@@ -10,8 +10,10 @@ import {
   batchSchema,
   membershipKey,
   fieldDeletionSchema,
+  maxPurgeUnits,
   mutationSchema,
   optionRemovalSchema,
+  purgeResultSchema,
   serviceLinkKey,
   uuidv7,
   type Album,
@@ -1589,4 +1591,28 @@ describe("albums in Trash (FR-14.1, FR-14.2, TON-57)", () => {
     await web.trash.purge([again.unitId]).transaction.isPersisted.promise;
     await until(() => !phone.trashUnits.has(again.unitId), 3_000, "the purge");
   });
+
+  test("a Trash fuller than one purge takes is emptied by several, each reporting what was already gone (TON-148)", async () => {
+    const web = await openClient(45);
+    await web.trashUnits.preload();
+    const { id: albumId } = await saved(web);
+    const deleted = web.trash.deleteAlbum(albumId);
+    await deleted.transaction.isPersisted.promise;
+    await until(() => web.trashUnits.has(deleted.unitId), 3_000, "the unit");
+    // One unit in Trash, and more IDs than a purge takes of units another session already emptied.
+    const goneIds = Array.from({ length: maxPurgeUnits }, () => uuidv7());
+    const { transaction, mutationIds } = web.trash.purge([deleted.unitId, ...goneIds]);
+    await transaction.isPersisted.promise;
+    const results = mutationIds.map((mutationId) => {
+      const outcome = web.states.get(mutationId)?.outcome;
+      if (outcome?.status !== "confirmed") return outcome?.status;
+      const { purged, gone } = purgeResultSchema.parse(outcome.result);
+      return { purged: purged.length, gone: gone.length };
+    });
+    expect(results).toEqual([
+      { purged: 1, gone: maxPurgeUnits - 1 },
+      { purged: 0, gone: 1 },
+    ]);
+    expect(web.trashUnits.has(deleted.unitId)).toBe(false);
+  }, 30_000);
 });
