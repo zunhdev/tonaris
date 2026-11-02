@@ -111,6 +111,27 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
 
+  // A long name ends in an ellipsis before its row's count, which shows in full (TON-156).
+  const period: Container = {
+    ...list("1 Классический период русского рока, 80-е и 90-е годы"),
+    kind: "folder",
+  };
+  await insert(page, period);
+  const periodRow = page
+    .getByRole("grid", { name: "Collection" })
+    .getByRole("row")
+    .filter({ hasText: "Классический период" });
+  const periodName = periodRow.getByRole("link");
+  const periodCount = periodRow.getByRole("gridcell").last();
+  await expect(periodCount).toHaveText("0 folders and lists");
+  const nameEnd = await periodName.evaluate((link) => link.getBoundingClientRect().right);
+  const countStart = await periodCount.evaluate((cell) => cell.getBoundingClientRect().left);
+  expect(nameEnd).toBeLessThanOrEqual(countStart);
+  expect(
+    await periodName.locator(".truncate").evaluate((name) => name.scrollWidth > name.clientWidth),
+  ).toBe(true);
+  expect(await periodCount.evaluate((cell) => cell.scrollWidth <= cell.clientWidth)).toBe(true);
+
   await page.getByRole("link", { name: "Metal" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Metal" })).toBeVisible();
   await page.getByRole("link", { name: "Doom" }).click();
