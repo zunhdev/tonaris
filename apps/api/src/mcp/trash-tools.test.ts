@@ -182,6 +182,31 @@ describe("recover_from_trash (FR-10.7)", () => {
     });
   });
 
+  test("reports no sharing while a unit needs a place, and reports it once given one (TON-151)", async () => {
+    const { cookie, mcp } = await manager();
+    await t.signIn("ben@example.com");
+    await send(cookie, "account.setDisplayName", { displayName: "Anna" });
+    const folder = await container(cookie, "folder", "Metal");
+    const list = await container(cookie, "list", "Doom", folder);
+    await send(cookie, "share.invite", {
+      grantId: uuidv7(),
+      containerId: list,
+      email: "ben@example.com",
+    });
+    const unitId = await trash(cookie, list);
+    await trash(cookie, folder);
+
+    // Asked where it goes, it has no place yet to say anything about.
+    const [asked] = await recover(mcp, [{ unitId }]);
+    expect(asked?.outcome).toMatchObject({ status: "needs_input", need: "destination" });
+    expect(asked).not.toHaveProperty("sharing");
+    const [placed] = await recover(mcp, [{ unitId, parentId: null }]);
+    expect(placed).toMatchObject({
+      sharing: { stillSharedWith: [{ kind: "person", invited: true }] },
+      outcome: { status: "confirmed" },
+    });
+  });
+
   test("an expired unit is unavailable, and one no longer in Trash isn't found", async () => {
     const { cookie, mcp } = await manager();
     const unitId = await trash(cookie, await container(cookie, "list", "Old"));

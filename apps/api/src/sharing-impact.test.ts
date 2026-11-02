@@ -152,4 +152,14 @@ test("recovery shows the destination's audiences and the shares that resume", as
     added: [{ kind: "link", via: { id: heavy } }],
   });
   expect((await preview(`recover=${unitId}`, ben.cookie)).status).toBe(404);
+
+  // Its folder in Trash too: as `trash.recover`, the preview asks for a place first (TON-151).
+  await send({ name: "container.delete", args: { id: metal, unitId: uuidv7() } });
+  const asked = await preview(`recover=${unitId}`);
+  expect(asked.status).toBe(422);
+  expect(await asked.json()).toMatchObject({ code: "required_missing" });
+  expect(await impactOf(`recover=${unitId}&to=root`)).toMatchObject({
+    added: [],
+    direct: [{ kind: "person", name: "Ben@Example.com" }],
+  });
 });

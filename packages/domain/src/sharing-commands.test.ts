@@ -157,6 +157,13 @@ describe("account.setDisplayName (FR-11.3, TS-34)", () => {
     expect(accounts.get(owner)?.displayName).toBe("Denis");
     expect(codeOf(await run(rename("D."), agent))).toBe("app_only");
   });
+
+  test("a name's length counts code points, as every name's does (TON-151)", () => {
+    // Each saxophone is two UTF-16 units: 200 of them were refused as 400 characters.
+    expect(mutationSchema.safeParse(rename("🎷".repeat(200))).success).toBe(true);
+    const tooLong = mutationSchema.safeParse(rename("🎷".repeat(201)));
+    expect(tooLong.error?.issues.map((issue) => issue.message)).toContain("At most 200 characters");
+  });
 });
 
 const answer = (

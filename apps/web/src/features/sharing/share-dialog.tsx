@@ -14,7 +14,7 @@ import { useConnection } from "@/features/sync/sync-provider";
 import { Check, Copy, Ellipsis, Folder } from "lucide-react";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 
-import { maxNameLength, uuidv7, type ShareSettings } from "@tonaris/domain";
+import { clipLength, maxNameLength, uuidv7, type ShareSettings } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -304,8 +304,7 @@ function DisplayNameForm({ disabled, onSaved }: { disabled: boolean; onSaved: ()
             <Input
               {...control}
               value={name}
-              maxLength={maxNameLength}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => setName(clipLength(event.target.value, maxNameLength))}
             />
             <Button type="submit" disabled={disabled || busy}>
               Save

@@ -14,7 +14,7 @@ import { fieldValueSchema } from "./field-values";
 import { customFieldSchema } from "./fields";
 import { maxNameLength } from "./limits";
 import { membershipSchema } from "./memberships";
-import { isBlankName } from "./names";
+import { exceedsLength, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { serviceLinkSchema } from "./service-links";
@@ -185,7 +185,14 @@ export const shareSetLinkArgsSchema = z.object({
 
 /** `account.setDisplayName`'s arguments: null or blank clears it. */
 export const setDisplayNameArgsSchema = z.object({
-  displayName: z.string().max(maxNameLength).nullable(),
+  // Counted in code points, as every name is (TON-151); JSON Schema's `maxLength` counts them too.
+  displayName: z
+    .string()
+    .refine((name) => !exceedsLength(name, maxNameLength), {
+      message: `At most ${maxNameLength} characters`,
+    })
+    .meta({ maxLength: maxNameLength })
+    .nullable(),
 });
 
 /** What `share.invite` reports: the person's invitation, new or the one they had (FR-07.5). */

@@ -80,7 +80,7 @@ export function sharingImpact(
   db: Database,
   ownerId: string,
   query: ImpactQuery,
-): Promise<SharingImpact | "not_found" | "invalid"> {
+): Promise<SharingImpact | "not_found" | "invalid" | "needs_destination"> {
   return readSnapshot(db, async (tx) => {
     const { state, folders } = await impactState(tx, ownerId);
     const owned = { ...state, folders };

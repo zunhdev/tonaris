@@ -21,7 +21,7 @@ import { useSend } from "@/features/sharing/send";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 
-import { maxNameLength } from "@tonaris/domain";
+import { clipLength, maxNameLength } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Input } from "@tonaris/ui/components/input";
 import { Label } from "@tonaris/ui/components/label";
@@ -249,7 +249,6 @@ function NameStep({ onDone }: { onDone: () => void }) {
           <Input
             id="display-name"
             value={name}
-            maxLength={maxNameLength}
             autoComplete="nickname"
             // The step's only task, so the field takes focus on arrival.
             // oxlint-disable-next-line jsx-a11y/no-autofocus
@@ -257,7 +256,7 @@ function NameStep({ onDone }: { onDone: () => void }) {
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? "name-error" : undefined}
             onChange={(event) => {
-              setName(event.target.value);
+              setName(clipLength(event.target.value, maxNameLength));
               setError(undefined);
             }}
           />

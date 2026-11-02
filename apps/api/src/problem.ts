@@ -13,6 +13,7 @@ export type HttpProblemCode = Extract<
   ErrorCode,
   | "not_found"
   | "validation_failed"
+  | "required_missing"
   | "unauthenticated"
   | "permission_denied"
   | "expired"

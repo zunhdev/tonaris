@@ -1202,7 +1202,7 @@ The block never says "private" while another access path remains.
     - the destination prompt shows the block for the chosen place.
 - **Rules** (`packages/domain/src/sharing-impact.ts`), previewed by `GET /v1/sharing/impact`:
   - a move adds the destination's audiences and removes those of the folders it leaves, less those on the item itself;
-  - recovery adds the destination's, and its own shares resume;
+  - recovery adds the destination's, and its own shares resume. Asked without a destination for a unit whose folder is gone or in Trash, it answers 422 `required_missing`, as `trash.recover` asks for a place there (TON-151);
   - an album's adds those of its active lists.
 
 **DS-70 Viewer chrome (signed-in).** Same shell. The header shows a "View only · Shared by {name}" pill, has no mode toggle or edit affordances, and offers view options. Desktop viewers can rearrange (DS-49) in their own arrangement. *(FR-05.2, FR-07.17)*

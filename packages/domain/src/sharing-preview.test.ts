@@ -1,5 +1,5 @@
 // A sharing preview's question (DS-69; FR-07.9, FR-07.10): where a move or a recovery may go, what is not found, and
-// where a recovery goes by default, including the root when its folder is gone or in Trash.
+// where a recovery goes by default, or that it needs a place when its folder is gone or in Trash.
 
 import { describe, expect, test } from "bun:test";
 
@@ -54,7 +54,7 @@ describe("impactOf (DS-69)", () => {
     });
   });
 
-  test("by default a unit returns to its folder, or is previewed at the root when that folder isn't active", () => {
+  test("by default a unit returns to its folder, and needs a place when that folder isn't active (TON-151)", () => {
     const inMetal = {
       ...state,
       containers: [...state.containers, container("back", "metal", true)],
@@ -62,13 +62,15 @@ describe("impactOf (DS-69)", () => {
     expect(impactOf(inMetal, { kind: "recover", unitId: "u" }, unit("back"))).toMatchObject({
       added: [{ id: "anna" }],
     });
-    // `trash.recover` asks for a destination here; the preview assumes the root.
-    expect(impactOf(state, { kind: "recover", unitId: "u" }, unit("lost"))).toEqual({
-      added: [],
-      removed: [],
-      direct: [],
-    });
-    expect(impactOf(state, { kind: "recover", unitId: "u" }, unit("stray"))).toEqual({
+    // In Trash, or gone: `trash.recover` asks for a destination here, and so does the preview.
+    expect(impactOf(state, { kind: "recover", unitId: "u" }, unit("lost"))).toBe(
+      "needs_destination",
+    );
+    expect(impactOf(state, { kind: "recover", unitId: "u" }, unit("stray"))).toBe(
+      "needs_destination",
+    );
+    // A place given is previewed there.
+    expect(impactOf(state, { kind: "recover", unitId: "u", to: null }, unit("lost"))).toEqual({
       added: [],
       removed: [],
       direct: [],

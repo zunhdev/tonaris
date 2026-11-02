@@ -27,13 +27,14 @@ export type ImpactUnit =
 /**
  * What `query` would do to the owner's sharing, `state` with which of their containers are `folders`: `not_found` if
  * it names nothing of theirs (no `unit` for a recovery), `invalid` if the destination isn't an active folder of theirs
- * or is inside what moves.
+ * or is inside what moves, and `needs_destination` for a recovery asked without one whose folder is gone or in Trash,
+ * where `trash.recover` asks for a place (FR-01.15, TON-151).
  */
 export function impactOf(
   state: ImpactState & { folders: ReadonlySet<string> },
   query: ImpactQuery,
   unit?: ImpactUnit,
-): SharingImpact | "not_found" | "invalid" {
+): SharingImpact | "not_found" | "invalid" | "needs_destination" {
   const tree = treeOf(state.containers);
   const activeFolder = (id: string | null) =>
     id === null || (state.folders.has(id) && tree.byId.get(id)?.trashed === false);
@@ -48,10 +49,11 @@ export function impactOf(
 
   if (!unit) return "not_found";
   if (unit.kind === "album") return listsImpact(state, unit.listIds);
-  // Asked for no destination, a unit whose folder is gone or in Trash is previewed at the root, where `trash.recover`
-  // instead asks for a destination (FR-01.15).
+  // Asked for no destination, a unit goes back to its folder; if that is gone or in Trash, `trash.recover` asks
+  // where it should go instead, and so does the preview (FR-01.15).
   const where = tree.byId.get(unit.rootId)?.parentId ?? null;
-  const to = query.to === undefined ? (activeFolder(where) ? where : null) : query.to;
+  if (query.to === undefined && !activeFolder(where)) return "needs_destination";
+  const to = query.to === undefined ? where : query.to;
   if (!activeFolder(to)) return "invalid";
   const ids = [unit.rootId, ...unit.memberIds.filter((id) => id !== unit.rootId)];
   return recoveryImpact(state, ids, to);

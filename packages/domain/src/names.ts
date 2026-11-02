@@ -13,6 +13,15 @@ export function exceedsLength(text: string, limit: number): boolean {
   return [...text].length > limit;
 }
 
+/**
+ * `text` cut to `limit` code points: what a field that takes no more keeps of a longer paste. An input's own
+ * `maxLength` counts UTF-16 units, so it would stop an emoji-rich name short of the limit (TON-151).
+ */
+export function clipLength(text: string, limit: number): string {
+  // oxlint-disable-next-line no-misused-spread
+  return exceedsLength(text, limit) ? [...text].slice(0, limit).join("") : text;
+}
+
 /** Blank names are invalid (X-06): empty, or only whitespace. */
 export function isBlankName(name: string): boolean {
   return name.trim() === "";
