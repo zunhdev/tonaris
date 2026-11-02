@@ -9,6 +9,7 @@
 import { phoneRootTab } from "@/common/device";
 import { useNarrowScreen } from "@/common/media";
 import { PageHeader, toCollection, useDocumentTitle, type PathStep } from "@/common/page-header";
+import { pageScroll } from "@/common/page-scroll";
 import { useShell } from "@/common/shell-context";
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
@@ -530,7 +531,7 @@ export function AlbumView({ id }: { id: string }) {
         editing={editing}
         actions={<ModeSwitch />}
       />
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto">
         <div className="max-w-xl">
           <AlbumDetails album={album} />
         </div>

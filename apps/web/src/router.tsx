@@ -3,6 +3,7 @@
 import { createRouter } from "@tanstack/react-router";
 import { getGlobalStartContext } from "@tanstack/react-start";
 
+import { pageScrollSelectors } from "./common/page-scroll";
 import { reportError, startErrorReports } from "./observability";
 import { routeTree } from "./routeTree.gen";
 
@@ -12,6 +13,8 @@ export function getRouter() {
   return createRouter({
     routeTree,
     scrollRestoration: true,
+    // A page's own scroll containers start at the top on a new page, not where the last page's were (TON-157).
+    scrollToTopSelectors: pageScrollSelectors,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     // On the server, the request's CSP nonce (src/start.ts) goes on every script and style the router renders.

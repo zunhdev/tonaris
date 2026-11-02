@@ -4,6 +4,7 @@
 // cleared. Over 2,000 characters it stays with its reason (X-05).
 
 import { sent } from "@/client/sync/writer";
+import { pageScroll } from "@/common/page-scroll";
 import { useSyncClient } from "@/features/sync/sync-provider";
 
 import { descriptionProblem, type Container } from "@tonaris/domain";
@@ -17,7 +18,10 @@ export function ContainerDescription({ container }: { container: Container }) {
   if (editing) return <DescriptionEditor key={container.id} container={container} />;
   if (!container.description) return null;
   return (
-    <p className="max-h-24 shrink-0 overflow-y-auto px-6 pt-3 whitespace-pre-line text-fg-secondary">
+    <p
+      {...pageScroll("description")}
+      className="max-h-24 shrink-0 overflow-y-auto px-6 pt-3 whitespace-pre-line text-fg-secondary"
+    >
       {container.description}
     </p>
   );
@@ -54,6 +58,7 @@ function DescriptionEditor({ container }: { container: Container }) {
         <textarea
           {...props}
           {...control}
+          {...pageScroll("description")}
           placeholder="Add a description"
           rows={Math.min(6, Math.max(1, shown.split("\n").length))}
           className="-mx-2 max-w-3xl resize-none rounded-md border border-transparent bg-transparent px-2 py-1 text-fg-secondary outline-none placeholder:text-fg-tertiary hover:border-subtle focus-visible:border-strong focus-visible:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-invalid:border-status-danger"

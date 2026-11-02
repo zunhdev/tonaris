@@ -2,7 +2,8 @@
 // this file alone. A phone browses by drilling down: a top bar with Back, the name, Search and Account; the root's
 // folders and lists, then Unsorted; Mine and Shared switching the root (TON-134); 56 px album rows; an album in a
 // read-only sheet with its links; view options in a bottom sheet; Trash and custom fields left to the desktop; the
-// path from the top bar's name (TON-153); and pull to refresh in an iPhone Home Screen app (TON-139).
+// path from the top bar's name (TON-153); pull to refresh in an iPhone Home Screen app (TON-139); and a list opened
+// from far down a folder opening at its top (TON-157).
 
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
@@ -390,4 +391,45 @@ test("in an iPhone Home Screen app, pulling down at the top shows a spinner, and
   await Promise.all([page.waitForEvent("load"), touch("touchEnd", 360)]);
   await live(page);
   expect(await page.evaluate(() => "beforePull" in window)).toBe(false);
+});
+
+test("a list opened from far down a folder opens at its top, and Back returns to where the folder was", async ({
+  page,
+}) => {
+  await signIn(page, accounts.phoneScrolled);
+  await live(page);
+  const shelf: Container = { ...list("Shelf"), kind: "folder" };
+  const lists = Array.from({ length: 30 }, (_, n) => ({
+    ...list(`Shelf ${String(n + 1).padStart(2, "0")}`),
+    parentId: shelf.id,
+  }));
+  await page.evaluate(
+    async (containers) => {
+      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+    },
+    [shelf, ...lists],
+  );
+  const last = lists.at(-1)!;
+  await added(
+    page,
+    Array.from({ length: 30 }, (_, n) => album(`Record ${n + 1}`)),
+    last.id,
+  );
+  await page.goto(`/f/${shelf.id}`);
+  await live(page);
+  const view = page.locator('[data-page-scroll="view"]');
+  const offset = () => view.evaluate((element) => element.scrollTop);
+
+  // The router once gave the list the folder's offset, its scroll container being in the same place.
+  await view.evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
+  await expect.poll(offset).toBeGreaterThan(0);
+  const down = await offset();
+  await page.getByRole("link", { name: last.name, exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: last.name })).toBeVisible();
+  await pageFaded(page);
+  expect(await offset()).toBe(0);
+
+  await page.goBack();
+  await expect(page.getByRole("heading", { level: 1, name: "Shelf" })).toBeVisible();
+  await expect.poll(offset).toBe(down);
 });

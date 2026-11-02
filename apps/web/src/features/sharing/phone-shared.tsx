@@ -2,6 +2,7 @@
 // the inbox, then each folder or list shared with the person, by name, with its owner, those that can't be opened
 // last and dimmed. Each opens its shared view, whose Back returns here.
 
+import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
 import { ContainerIcon } from "@/features/collection/icons";
 import { buildSharedTree } from "@/features/collection/tree";
@@ -23,7 +24,7 @@ export function PhoneShared() {
   const items = useMemo(() => buildSharedTree(entries ?? []).roots, [entries]);
   if (!entries) return null;
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-2">
+    <div {...pageScroll("view")} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-2">
       {invitations > 0 && (
         <Link to="/invitations" className={row}>
           <MailOpen strokeWidth={1.5} aria-hidden className="size-4 text-fg-secondary" />

@@ -4,6 +4,7 @@
 // keys; so does Close. An album that is gone says so (DS-83's "removed elsewhere" pattern, until Trash says more).
 
 import { inspectorWidths } from "@/common/device";
+import { pageScroll } from "@/common/page-scroll";
 import { ResizeHandle } from "@/common/resize-handle";
 import { inLayer, isTextField } from "@/common/shortcuts";
 import { X } from "lucide-react";
@@ -80,7 +81,8 @@ export function AlbumInspector({
           onResize={onResize}
         />
       )}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {/* Each album starts at its top, not at the last one's offset (TON-157). */}
+      <div key={albumId} {...pageScroll("album")} className="min-h-0 flex-1 overflow-y-auto">
         {album ? (
           <AlbumDetails key={album.id} album={album} />
         ) : (

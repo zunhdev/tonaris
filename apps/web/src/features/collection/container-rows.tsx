@@ -10,6 +10,7 @@
 
 import { isUnderway } from "@/client/sync/save-states";
 import { useNarrowScreen } from "@/common/media";
+import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
@@ -106,7 +107,7 @@ export function ContainerRows({
   });
 
   return (
-    <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-2">
+    <div ref={scroller} {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto py-2">
       <div
         ref={grid}
         role="grid"

@@ -10,6 +10,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { isUnderway } from "@/client/sync/save-states";
+import { pageScroll } from "@/common/page-scroll";
 import { useShell } from "@/common/shell-context";
 import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -75,7 +76,7 @@ export function AlbumCards({
   });
 
   return (
-    <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto">
+    <div ref={scroller} {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto">
       {inner > 0 && (
         <div
           ref={grid}

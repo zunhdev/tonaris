@@ -8,6 +8,7 @@ import { ConfirmDialog, type Confirmation } from "@/common/confirm-dialog";
 import { DesktopOnly } from "@/common/desktop-only";
 import { useNarrowScreen } from "@/common/media";
 import { PageHeader, toCollection } from "@/common/page-header";
+import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
 import { useCollectionData } from "@/features/collection/data";
 import { useAnnounce } from "@/features/sync/announcer";
@@ -209,7 +210,7 @@ export function TrashView() {
       ) : shown.length === 0 ? (
         <p className="p-8 text-center text-fg-secondary">Nothing in Trash matches '{filter}'.</p>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+        <div {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           <table aria-label="Trash" className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-subtle text-small text-fg-secondary">

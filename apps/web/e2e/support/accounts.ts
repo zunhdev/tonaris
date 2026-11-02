@@ -52,6 +52,7 @@ export const accounts = {
   navNames: at("nav-names"),
   navOffline: at("nav-offline"),
   navFade: at("nav-fade"),
+  navScrolled: at("nav-scrolled"),
   // The collection views (collection-views.e2e.ts), one per test.
   viewsList: at("views-list"),
   viewsFolder: at("views-folder"),
@@ -200,6 +201,8 @@ export const accounts = {
   phonePathSharer: at("phone-path-sharer"),
   // Pull to refresh in an iPhone Home Screen app (mobile.e2e.ts, TON-139).
   phonePull: at("phone-pull"),
+  // A phone's views opening at their top (mobile.e2e.ts, TON-157).
+  phoneScrolled: at("phone-scrolled"),
   deleteCancel: at("delete-cancel"),
   // Keyboard-only walkthroughs (walkthrough.e2e.ts, TON-93), one per test.
   walker: at("a11y-walker"),
