@@ -7,7 +7,7 @@ import { useSend } from "@/features/sharing/send";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useId, useState } from "react";
 
-import { maxNameLength } from "@tonaris/domain";
+import { clipLength, maxNameLength } from "@tonaris/domain";
 import { Input } from "@tonaris/ui/components/input";
 import { Label } from "@tonaris/ui/components/label";
 
@@ -51,13 +51,12 @@ function Profile() {
         <Input
           id={`${id}-name`}
           value={name}
-          maxLength={maxNameLength}
           autoComplete="nickname"
           className="max-w-sm"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-hint ${id}-error` : `${id}-hint`}
           onChange={(event) => {
-            setName(event.target.value);
+            setName(clipLength(event.target.value, maxNameLength));
             setError(undefined);
             setSaved(false);
           }}

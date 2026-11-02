@@ -252,7 +252,7 @@ export {
   type PreparedLink,
   type ServiceLink,
 } from "./service-links";
-export { exceedsLength, findNameConflict, isBlankName, type NamedItem } from "./names";
+export { clipLength, exceedsLength, findNameConflict, isBlankName, type NamedItem } from "./names";
 export {
   isOrderKey,
   maxOrderItems,

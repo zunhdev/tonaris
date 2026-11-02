@@ -60,7 +60,7 @@ export function sharingRoutes(
         detail: {
           summary: "Preview a move's or a recovery's sharing consequences",
           description:
-            "For the owner, before moving a folder or list or recovering a Trash unit (FR-07.9, FR-07.10, FR-07.14): the audiences it newly reaches, those it no longer reaches through the folders it leaves (never one another path keeps), and the direct shares on it and its contents. Changes nothing.",
+            "For the owner, before moving a folder or list or recovering a Trash unit (FR-07.9, FR-07.10, FR-07.14): the audiences it newly reaches, those it no longer reaches through the folders it leaves (never one another path keeps), and the direct shares on it and its contents. Changes nothing. A recovery without `to` whose folder is gone or in Trash answers 422 `required_missing`, as `trash.recover` asks for a destination there.",
           tags: ["sharing"],
           operationId: "previewSharingImpact",
         },
@@ -79,6 +79,14 @@ export function sharingRoutes(
         }
         if (impact === "invalid") {
           throw new ProblemError(422, "validation_failed", "It can't go there.");
+        }
+        // As `trash.recover` asks for a place here, so does its preview (TON-151).
+        if (impact === "needs_destination") {
+          throw new ProblemError(
+            422,
+            "required_missing",
+            "Choose where it goes: the folder it was in is gone or in Trash.",
+          );
         }
         return impact;
       },

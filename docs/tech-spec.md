@@ -410,7 +410,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 | List memberships, Trash included (decided 22 October 2026) | 50,000 |
 | Custom fields | 50 |
 | Options per choice field | 100 |
-| Names (containers, fields, options) | 200 characters |
+| Names (containers, fields, options, display names) | 200 characters, counted in code points (display names since TON-151) |
 | Album titles and artist credits (decided 29 October 2026, TON-95) | 1,000 characters |
 | Descriptions and text values | 2,000 characters |
 | Saved shared references | 100 |
@@ -1230,7 +1230,7 @@ There are deliberately **no** tools for sharing management, Trash purge, export,
 - **`recover_from_trash {items: [{unitId, parentId?, name?}]}`** runs `trash.recover` per unit, each on its own (FR-10.7, FR-14).
   - A missing or trashed parent answers `needs_input` `destination`, and a taken name `name` (TS-26). The agent sends the item again with `parentId` or `name`.
   - The confirmed result carries the skip report.
-- **Sharing effects.** Each recovered unit, and each `move_items` move, reports its sharing effects as the app previews them (`sharingImpact()`, FR-07.14): `newlySeenBy`, `noLongerSeenBy`, `stillSharedWith`, each an audience with the folder or list it comes through.
+- **Sharing effects.** Each recovered unit, and each `move_items` move, reports its sharing effects as the app previews them (`sharingImpact()`, FR-07.14): `newlySeenBy`, `noLongerSeenBy`, `stillSharedWith`, each an audience with the folder or list it comes through. A unit that answers `needs_input` `destination` reports none until it is sent again with a place (TON-151).
 - **Expiry is enforced at recovery.** `trash.recover` refuses a unit past `expires_at` as `expired`, even before the hourly purge removes it (FR-01.17). The app and MCP both get the refusal.
 
 *As built in TON-81:* the read group (`apps/api/src/mcp/read-tools.ts`, over `packages/db/src/mcp-reads.ts`), for both modes.

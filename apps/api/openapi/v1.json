@@ -3915,7 +3915,7 @@
     "/v1/sharing/impact": {
       "get": {
         "summary": "Preview a move's or a recovery's sharing consequences",
-        "description": "For the owner, before moving a folder or list or recovering a Trash unit (FR-07.9, FR-07.10, FR-07.14): the audiences it newly reaches, those it no longer reaches through the folders it leaves (never one another path keeps), and the direct shares on it and its contents. Changes nothing.",
+        "description": "For the owner, before moving a folder or list or recovering a Trash unit (FR-07.9, FR-07.10, FR-07.14): the audiences it newly reaches, those it no longer reaches through the folders it leaves (never one another path keeps), and the direct shares on it and its contents. Changes nothing. A recovery without `to` whose folder is gone or in Trash answers 422 `required_missing`, as `trash.recover` asks for a destination there.",
         "tags": [
           "sharing"
         ],
