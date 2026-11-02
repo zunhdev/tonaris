@@ -30,9 +30,13 @@ export async function enqueueJob(
 /**
  * Claims the live job of one of `kinds` that has been due longest, counting the attempt and holding it for
  * `leaseMs`. Answers nothing when no job is due.
+ *
+ * The job is picked by a scalar subquery, which Postgres runs once. With `id IN (…)`, a plan could run the locking
+ * subquery again for each row it joined; each run skipped the row just claimed and locked the next due one, so one
+ * claim leased several jobs and answered only the first. The rest waited out their lease unrun (TON-118).
  */
 export async function claimJob(
-  db: Database,
+  db: Executor,
   { kinds, now, leaseMs }: { kinds: readonly string[]; now: Date; leaseMs: number },
 ): Promise<JobRow | undefined> {
   const due = db
@@ -56,7 +60,7 @@ export async function claimJob(
       lockedUntil: new Date(now.getTime() + leaseMs),
       updatedAt: now,
     })
-    .where(inArray(jobs.id, due))
+    .where(eq(jobs.id, sql`(${due})`))
     .returning();
   return claimed;
 }
