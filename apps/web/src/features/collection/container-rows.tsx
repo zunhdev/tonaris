@@ -210,10 +210,12 @@ function ContainerRow({
       <SaveStateMarker status={status} />
     </>
   );
+  // With a description after it, the name keeps its width, up to 60%, and the description gives way first. Without
+  // one, the name shrinks and ends in an ellipsis before the count (TON-156).
   const link = cn(
     focusable,
-    "flex min-w-0 shrink-0 items-center gap-2.5 rounded-sm pr-3 text-fg-primary",
-    excerpt && "max-w-[60%]",
+    "flex min-w-0 items-center gap-2.5 rounded-sm pr-3 text-fg-primary",
+    excerpt && "max-w-[60%] shrink-0",
   );
   return (
     <div
