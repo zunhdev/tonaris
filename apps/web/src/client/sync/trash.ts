@@ -6,7 +6,13 @@
 
 import { createTransaction } from "@tanstack/db";
 
-import { membershipKey, uuidv7, type Container, type Membership } from "@tonaris/domain";
+import {
+  maxPurgeUnits,
+  membershipKey,
+  uuidv7,
+  type Container,
+  type Membership,
+} from "@tonaris/domain";
 
 import type { AlbumCollection } from "./albums";
 import type { SyncEngine } from "./engine";
@@ -128,20 +134,30 @@ export function createTrash({
 
     /**
      * Removes units from Trash for good (FR-01.18), as the owner confirmed: they leave the Trash at once, and
-     * `trash.purge` reports any already gone. Answers the transaction and its write's ID.
+     * `trash.purge` reports any already gone. More units than one purge takes go as several, in one transaction
+     * (TON-148). Answers the transaction and its writes' IDs.
      */
     purge(unitIds: readonly string[]) {
-      const mutation = envelope("trash.purge", { unitIds: [...unitIds] });
+      const mutations = Array.from(
+        { length: Math.ceil(unitIds.length / maxPurgeUnits) },
+        (_, index) =>
+          envelope("trash.purge", {
+            unitIds: unitIds.slice(index * maxPurgeUnits, (index + 1) * maxPurgeUnits),
+          }),
+      );
       const transaction = createTransaction({
         mutationFn: async ({ transaction: written }) => {
-          await writer.persist(written, [{ key: `purge:${mutation.mutationId}`, mutation }]);
+          await writer.persist(
+            written,
+            mutations.map((mutation) => ({ key: `purge:${mutation.mutationId}`, mutation })),
+          );
         },
       });
       transaction.mutate(() => {
         const held = unitIds.filter((unitId) => trashUnits.has(unitId));
         if (held.length > 0) trashUnits.delete(held);
       });
-      return { transaction, mutationId: mutation.mutationId };
+      return { transaction, mutationIds: mutations.map((mutation) => mutation.mutationId) };
     },
 
     /**

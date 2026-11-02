@@ -22,7 +22,7 @@ import {
   type Container,
 } from "./containers";
 import { fieldValueKey } from "./field-values";
-import { maxContainerDepth, trashRetentionDays } from "./limits";
+import { maxContainerDepth, maxPurgeUnits, trashRetentionDays } from "./limits";
 import { membershipKey, type Membership } from "./memberships";
 import { findNameConflict } from "./names";
 import { failure } from "./outcomes";
@@ -579,7 +579,7 @@ async function recoverAlbumUnit(
 }
 
 export const trashPurgeArgsSchema = z.object({
-  unitIds: z.array(z.uuid()).min(1).max(5_000).meta({
+  unitIds: z.array(z.uuid()).min(1).max(maxPurgeUnits).meta({
     description:
       "The units to remove for good: those the owner confirmed, or all of Trash for Empty Trash.",
   }),

@@ -329,7 +329,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 *As built in TON-58:*
 - **Purging a folder's or list's unit** deletes its containers, their entries cascading. Albums in Trash that were in its lists get a tombstone `{kind: "list", id, name}` in their own unit.
 - **Purging an album's unit** writes `{id, title, artist}` into every unit whose lists hold an entry of it, deletes its positions, and deletes the album; entries, links, field values and provenance cascade. It logs `link` and `fieldValue` deletes, as clients hold those.
-- **`trash.purge {unitIds}`** is app-only (`trash_purge`). Its result is `{purged, gone}`.
+- **`trash.purge {unitIds}`** is app-only (`trash_purge`). Its result is `{purged, gone}`. It takes at most `maxPurgeUnits` (5,000) units; the web app empties a fuller Trash with several purges in one transaction, sent as a batch (TON-148).
 - **Expiry:** `purgeExpiredTrash` purges each owner's expired units in a transaction under their lock, logged with `mutation_id` null. The hourly `trash-expiry` schedule publishes the changes to the owner's streams after commit.
 - **Skip reports:** an album's restore reports list tombstones as `list_deleted`.
 

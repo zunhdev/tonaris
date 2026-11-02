@@ -200,6 +200,7 @@ export {
   maxLinkLength,
   maxMemberships,
   maxNameLength,
+  maxPurgeUnits,
   trashRetentionDays,
 } from "./limits";
 export {

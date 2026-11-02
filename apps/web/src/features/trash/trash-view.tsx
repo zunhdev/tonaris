@@ -79,7 +79,7 @@ export function TrashView() {
 
   function purge(ids: string[], done: string) {
     if (!client) return;
-    const { transaction, mutationId } = client.trash.purge(ids);
+    const { transaction, mutationIds } = client.trash.purge(ids);
     announce(done);
     void (async () => {
       try {
@@ -88,10 +88,13 @@ export function TrashView() {
         // The save-state layer reports a removal that wasn't made.
         return;
       }
-      const outcome = client.states.get(mutationId)?.outcome;
-      const result =
-        outcome?.status === "confirmed" ? purgeResultSchema.safeParse(outcome.result) : undefined;
-      const gone = result?.success ? result.data.gone.length : 0;
+      // A fuller Trash goes as several purges (TON-148): what each found already gone adds up.
+      const gone = mutationIds.reduce((sum, mutationId) => {
+        const outcome = client.states.get(mutationId)?.outcome;
+        const result =
+          outcome?.status === "confirmed" ? purgeResultSchema.safeParse(outcome.result) : undefined;
+        return sum + (result?.success ? result.data.gone.length : 0);
+      }, 0);
       notify?.info(
         gone === 0 ? done : `${done} · ${count(gone, "item was", "items were")} already gone`,
       );
