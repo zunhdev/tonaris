@@ -63,9 +63,17 @@ test("a write the server saved, whose answer was lost, is sent again after a rel
   await signIn(page, accounts.syncReload);
   await live(page);
 
-  // The server saves the album, but the page never hears back before it reloads.
+  // The server saves the album, but the page never hears back before it reloads. The first send is held unanswered
+  // and dies with the page; later ones go through. Unrouting instead would release the held send to the server, and
+  // its answer could reach the page before the reload, leaving nothing to resend (TON-118).
   const reached = Promise.withResolvers<string>();
+  let held = false;
   await page.route(`${apiUrl}/v1/mutations`, async (route) => {
+    if (held) {
+      await route.continue();
+      return;
+    }
+    held = true;
     await route.fetch();
     reached.resolve(mutationSchema.parse(route.request().postDataJSON()).mutationId);
   });
@@ -74,7 +82,6 @@ test("a write the server saved, whose answer was lost, is sent again after a rel
     window.tonarisSync?.albums.insert(value).isPersisted.promise.catch(() => {});
   }, args);
   const mutationId = await reached.promise;
-  await page.unrouteAll({ behavior: "ignoreErrors" });
 
   await page.reload();
   await live(page);

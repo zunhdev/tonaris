@@ -3,12 +3,12 @@
 // signs in to the same account. Cancelling changes nothing, a change resumes after a reload, and another
 // account's address is refused.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
 import { accounts, apiUrl, newAddresses } from "./support/accounts";
 import { clearInbox, emailedCode } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { violations } from "./support/workspace";
 
 const signedOut = { cookies: [], origins: [] };
 test.use({ storageState: signedOut });
@@ -43,7 +43,7 @@ test("the email changes after both codes, other sessions end, and the new addres
 
   await expect(page.getByRole("heading", { name: `Check ${from}` })).toBeVisible();
   await expect(page.getByText("Step 2 of 3")).toBeVisible();
-  expect((await new AxeBuilder({ page }).include("main").analyze()).violations).toEqual([]);
+  expect(await violations(page, "main")).toEqual([]);
   await code(page).fill(await emailedCode(from, 2));
 
   await expect(page.getByRole("heading", { name: `Check ${to}` })).toBeVisible();

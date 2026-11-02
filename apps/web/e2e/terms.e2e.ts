@@ -1,13 +1,12 @@
 // The terms of use and the privacy notice (TON-131): public pages reached from sign-in, what YouTube's policies ask of
 // them, and the one-time agreement screen a member from before the terms meets. Joining's line is in admission.e2e.ts.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { accounts } from "./support/accounts";
 import { signInEmail } from "./support/mailpit";
 import { requestCode } from "./support/sign-in";
-import { live } from "./support/workspace";
+import { live, pageViolations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -28,7 +27,7 @@ test("the terms and the privacy notice are public, linked from sign-in, and say 
   );
   // The support address, from the API's SUPPORT_EMAIL.
   await expect(notice.getByRole("link", { name: /@/ }).first()).toHaveAttribute("href", /^mailto:/);
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
 
   await page.getByRole("link", { name: "Terms of use" }).click();
   const terms = page.getByRole("main", { name: "Terms of use" });
@@ -37,7 +36,7 @@ test("the terms and the privacy notice are public, linked from sign-in, and say 
     "https://www.youtube.com/t/terms",
   );
   await expect(terms.getByText(/agree to be bound by the/)).toBeVisible();
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
 });
 
 test("a member from before the terms agrees once, and then goes straight to the collection", async ({
@@ -50,7 +49,7 @@ test("a member from before the terms agrees once, and then goes straight to the 
   const heading = page.getByRole("heading", { name: "Tonaris has terms and a privacy notice" });
   await expect(heading).toBeVisible();
   await expect(page.getByRole("main", { name: "Collection" })).toHaveCount(0);
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(page)).toEqual([]);
 
   await page.getByRole("button", { name: "Agree and continue" }).click();
   await expect(page.getByRole("main", { name: "Collection" })).toBeVisible();

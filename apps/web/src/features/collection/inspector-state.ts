@@ -1,5 +1,8 @@
 // Which album the inspector shows (DS-46, DS-32): the `album` search parameter, on whatever view is open, so a reload
-// or a link keeps it. Opening from a view adds a history entry; following the grid's focus replaces it.
+// or a link keeps it. Opening from a view adds a history entry; following the grid's focus replaces it. The view stays
+// as it is: these navigations leave scrolling alone (`resetScroll: false`). Otherwise the router writes back the scroll
+// offsets it recorded for the view's scroll container, found by its place in the page, which rows and cards share: a
+// card's click could put the grid at the rows' offset, and a jump under way back there (TON-118).
 
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, type FocusEvent, type MouseEvent } from "react";
@@ -14,11 +17,21 @@ export function useInspector() {
   const albumId = useSearch({ strict: false, select: (search) => search.album });
   const open = useCallback(
     (id: string, { replace = false }: { replace?: boolean } = {}) =>
-      void navigate({ to: ".", search: (previous) => ({ ...previous, album: id }), replace }),
+      void navigate({
+        to: ".",
+        search: (previous) => ({ ...previous, album: id }),
+        replace,
+        resetScroll: false,
+      }),
     [navigate],
   );
   const close = useCallback(
-    () => void navigate({ to: ".", search: (previous) => ({ ...previous, album: undefined }) }),
+    () =>
+      void navigate({
+        to: ".",
+        search: (previous) => ({ ...previous, album: undefined }),
+        resetScroll: false,
+      }),
     [navigate],
   );
   return { albumId, open, close };

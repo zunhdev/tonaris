@@ -282,6 +282,10 @@ test("5,000 albums stay virtualized in both layouts", async ({ page }) => {
   await expect(cards).toHaveAttribute("aria-rowcount", String(Math.ceil(5_000 / columns)));
   expect(await cards.getByRole("gridcell").count()).toBeLessThan(120);
   await focusIn(cards);
+  // The click opened its album beside the grid. That leaves the grid where it is: the router once put it at the rows'
+  // last offset, its scroll container being in the same place, and so stopped a ⌘End under way (TON-118).
+  await expect(page.getByRole("complementary", { name: "Album" })).toContainText("Album 0001");
+  expect(await cards.evaluate((element) => element.parentElement?.scrollTop)).toBe(0);
   await page.keyboard.press("ControlOrMeta+End");
   await expect(page.locator(":focus")).toHaveAccessibleName(/^Album 5000/, { timeout: 15_000 });
   if (process.env.MEASURE_SCROLL) {

@@ -3,12 +3,12 @@
 // collections; the creator's recovery waits for the new address, whose link confirms it, moving the same account
 // and signing it out; a cancelled recovery's link refuses; and other accounts find no Admin page.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { type Browser, expect, type Page, test } from "@playwright/test";
 
 import { accounts, apiUrl, newAddresses } from "./support/accounts";
 import { clearInbox, recoveryEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { pageViolations, violations } from "./support/workspace";
 
 const signedOut = { cookies: [], origins: [] };
 
@@ -60,7 +60,7 @@ test.describe("signed out", () => {
       "href",
       "mailto:support@tonaris.test",
     );
-    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    expect(await pageViolations(page)).toEqual([]);
   });
 });
 
@@ -78,7 +78,7 @@ test("the creator recovers a member's email; the new address confirms it, and si
   await openMembers(page);
   await expect(row(page, member).getByRole("cell", { name: "—" }).first()).toBeVisible();
   await recover(page, member, to);
-  expect((await new AxeBuilder({ page }).include("main").analyze()).violations).toEqual([]);
+  expect(await violations(page, "main")).toEqual([]);
 
   // Nothing has changed yet: the member is still signed in.
   expect((await memberPage.request.get(`${apiUrl}/v1/me`)).status()).toBe(200);
@@ -91,7 +91,7 @@ test("the creator recovers a member's email; the new address confirms it, and si
     confirming.getByRole("heading", { name: "Confirm your new sign-in email" }),
   ).toBeVisible();
   await expect(confirming.getByLabel("Code", { exact: true })).toHaveValue(/^\d{6}$/);
-  expect((await new AxeBuilder({ page: confirming }).analyze()).violations).toEqual([]);
+  expect(await pageViolations(confirming)).toEqual([]);
   await confirming.getByRole("button", { name: "Confirm" }).click();
   await expect(
     confirming.getByRole("heading", { name: `Done — use ${to} to sign in.` }),

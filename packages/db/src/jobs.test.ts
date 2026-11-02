@@ -3,6 +3,8 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
+import { gt, sql } from "drizzle-orm";
+
 import {
   buryJob,
   claimJob,
@@ -61,6 +63,25 @@ describe("claimJob", () => {
     );
     const claimed = claims.flatMap((job) => (job ? [job.id] : []));
     expect(claimed.toSorted()).toEqual(ids);
+  });
+
+  test("a claim leases only the job it answers, whatever plan Postgres picks (TON-118)", async () => {
+    for (let index = 0; index < 5; index += 1) {
+      // oxlint-disable-next-line no-await-in-loop
+      await queue(`01a18700-0000-7000-8000-00000000000${index}`, later(index));
+    }
+    // Without sorts, hashing or materializing, the planner joins every job to the subquery, running it once per job:
+    // the plan that once leased all five.
+    const claimed = await t.db.transaction(async (tx) => {
+      for (const setting of ["hashagg", "sort", "hashjoin", "mergejoin", "material"]) {
+        // oxlint-disable-next-line no-await-in-loop
+        await tx.execute(sql.raw(`set local enable_${setting} = off`));
+      }
+      return claimJob(tx, { kinds: ["email"], now: later(10), leaseMs: minute });
+    });
+    expect(claimed?.id).toBe("01a18700-0000-7000-8000-000000000000");
+    const leased = await t.db.select({ id: jobs.id }).from(jobs).where(gt(jobs.attempts, 0));
+    expect(leased.map((row) => row.id)).toEqual(["01a18700-0000-7000-8000-000000000000"]);
   });
 
   test("a held job is free again when its lease runs out, as when its worker stopped", async () => {

@@ -4,12 +4,12 @@
 // answers the autofill's request by itself, as choosing the passkey there would; Firefox and WebKit have none, so it
 // runs on Chromium only.
 
-import { AxeBuilder } from "@axe-core/playwright";
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 
 import { accounts } from "./support/accounts";
 import { clearInbox, latestEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -63,7 +63,7 @@ test("a passkey added in Settings signs in without an email, and once removed si
   await passkeys.getByRole("button", { name: "Add a passkey" }).click();
   await expect(passkeys.getByText("Passkey added.")).toBeVisible();
   await expect(passkeys.getByRole("listitem")).toHaveCount(1);
-  expect((await new AxeBuilder({ page }).include("main").analyze()).violations).toEqual([]);
+  expect(await violations(page, "main")).toEqual([]);
   expect((await latestEmail(email)).subject).toBe("A passkey was added to your Tonaris account");
 
   // Renaming, in place of the row.

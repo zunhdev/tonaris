@@ -168,8 +168,12 @@ export function DeleteAlbumDialog() {
           action: "Move to Trash",
           onConfirm: () => {
             if (!client) return;
-            // The inspector showing it closes.
-            void navigate({ to: ".", search: (previous) => ({ ...previous, album: undefined }) });
+            // The inspector showing it closes, leaving the view's scrolling alone (inspector-state.ts).
+            void navigate({
+              to: ".",
+              search: (previous) => ({ ...previous, album: undefined }),
+              resetScroll: false,
+            });
             sent(client.trash.deleteAlbum(album.id).transaction);
             announce(`Moved ${album.title} to Trash`);
             notify?.info(`'${album.title}' moved to Trash`);
