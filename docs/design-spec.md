@@ -758,6 +758,12 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
 *As built in TON-123* (from the creator's manual testing, 31 October 2026): **the Links section's links read as links.** Each address is in the link colour (`accent.solid`), as the app's other text links are, with an underline that is faint at rest and solid on hover, then a ↗ that says it opens outside Tonaris. Still no service logos (DS-19).
 
+*As built in TON-160* (from the creator's manual testing, 4 November 2026): **a paste adds a link to the open album.** Adding links by hand after MCP made the albums took a click on the album, a trip to the panel's bottom-right corner, and a paste. Now, with an album open on desktop, no text field focused and no dialog, popover or menu open, ⌘V puts each pasted link in its service's row instead of capturing it (DS-48).
+- **Each link is checked as a typed one is,** and its service is its own. A link that can't be one gives capture's reason in a toast, and two for one service read "Paste one Tidal link at a time."; either sends nothing. The album's own link again reads "The album already has this Tidal link."
+- **It is an edit:** it switches to Editing first. Offline it sends nothing, with "You're offline. Changes can wait until the connection is back."
+- **What it did** is an Undo toast (DS-50), "Added the Tidal link", "Replaced the Spotify link" or, for several, "Added the Tidal and Qobuz links", announced with the album's title. Undo takes an added link off, or puts a replaced one back.
+- **In Editing mode,** under the rows: "Paste a link to add it to this album."
+
 *As built in TON-124* (from the creator's manual testing, 31 October 2026):
 - **The artwork fills the panel's width,** up to 500 px, the size of the covers Find brings (the Cover Art Archive's `front-500`). It is 347 px in a 380 px panel, and stops at 500 from a 533 px panel up. It stays a square over its letter tile (DS-23).
 - **Find** replaces "Find artwork": a ghost button to the right of the Artwork URL field, on its row, as in the manual entry form (DS-47). Assistive technology still hears "Find artwork". The popover is unchanged.
@@ -815,6 +821,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Paste anywhere:** ⌘V with no text field focused, in a list, Unsorted, root, or folder view (desktop owner only).
   - In a list, links go to that list.
   - Elsewhere they are saved without a list. A toast offers "Add to list…" (`L`).
+  - *As built in TON-160:* with an album open in the inspector, the paste goes to that album's links instead (DS-46). C and "+ Add album" still capture with it open.
 - **`C` or "+ Add album"** opens a capture popover. It has a multi-line input (one link per line), a destination combobox, and an "Enter manually" link that opens DS-47.
 - **Inline progress:** each link becomes a placeholder row at its insertion point, showing skeleton artwork and "Resolving link…". The row becomes the real album on success.
   - **Failure:** the row turns into an inline error row with the reason and three actions: **Retry**, **Enter manually** (pre-filled), and **Dismiss**. The pasted link is preserved until dismissed.

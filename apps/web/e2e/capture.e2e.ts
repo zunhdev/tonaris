@@ -2,7 +2,8 @@
 // the browser-test API, which answers captures from fixtures (apps/api/src/capture-fixtures.ts). Pasting and the
 // capture dialog; albums of each service and a track's album; Unsorted with Add to list; manual entry with the link
 // kept, prefilled or after a failure; a failure kept across a reload; the decision card; a batch's panel and report;
-// already in the list; and a kept link replaced from the inspector. Each test signs in with its own account.
+// already in the list; a kept link replaced from the inspector; and, with an album open in the inspector, a paste
+// going to its links instead (TON-160). Each test signs in with its own account.
 
 import { expect, test, type Page } from "@playwright/test";
 
@@ -322,4 +323,63 @@ test("a link pasted into a field is typed, not captured", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(capturing(page)).toHaveCount(0);
   await expect(grid(page, "Grunge")).toHaveCount(0);
+});
+
+test("with an album open, a paste puts the link on it, with Undo; with none open, it adds an album", async ({
+  page,
+}) => {
+  await signIn(page, accounts.capturePasted);
+  await live(page);
+  await inList(page, "Grunge");
+  await paste(page, links.bleachSpotify);
+  await expect(rowOf(page, "Grunge", "Bleach")).toContainText("1989");
+  await saved(page);
+  const editMode = page
+    .getByRole("radiogroup", { name: "Mode" })
+    .getByRole("radio", { name: "Edit" });
+  await page.keyboard.press("e");
+  await expect(editMode).not.toBeChecked();
+  await rowOf(page, "Grunge", "Bleach").getByRole("gridcell").first().click();
+  await expect(linksSection(page)).toBeVisible();
+
+  // The link goes to its service's row, switching to Editing, and nothing is captured.
+  await paste(page, "https://tidal.com/browse/album/1663133?u");
+  await expect(linksSection(page).getByRole("link", { name: /Open in Tidal/ })).toHaveAttribute(
+    "href",
+    "https://tidal.com/album/1663133",
+  );
+  await expect(toasts(page).filter({ hasText: "Added the Tidal link" })).toBeVisible();
+  await expect(editMode).toBeChecked();
+  await expect(linksSection(page)).toContainText("Paste a link to add it to this album.");
+  await expect(capturing(page)).toHaveCount(0);
+  await expect(grid(page, "Grunge").getByRole("row").filter({ hasText: "Nirvana" })).toHaveCount(1);
+
+  // Another link for a service the album has replaces it, with Undo.
+  const spotify = linksSection(page).getByRole("link", { name: /Open in Spotify/ });
+  await paste(page, links.bleachOtherSpotify);
+  await expect(spotify).toHaveAttribute("href", links.bleachOtherSpotify);
+  await toasts(page)
+    .filter({ hasText: "Replaced the Spotify link" })
+    .getByRole("button", { name: "Undo" })
+    .click();
+  await expect(spotify).toHaveAttribute("href", links.bleachSpotify);
+
+  // A link that can't be the album's says why, and sends nothing.
+  await paste(page, "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M");
+  await expect(
+    toasts(page).filter({ hasText: "Only Spotify album and track links can be added." }),
+  ).toBeVisible();
+  await expect(spotify).toHaveAttribute("href", links.bleachSpotify);
+  await saved(page);
+
+  // With the panel closed, a paste adds an album again.
+  await page.keyboard.press("Escape");
+  await expect(inspector(page)).toHaveCount(0);
+  await paste(page, links.nevermindApple);
+  await expect(rowOf(page, "Grunge", "Nevermind")).toContainText("1991");
+  await saved(page);
+  await page.reload();
+  await live(page);
+  await rowOf(page, "Grunge", "Bleach").getByRole("gridcell").first().click();
+  await expect(linksSection(page).getByRole("link", { name: /Open in Tidal/ })).toBeVisible();
 });
