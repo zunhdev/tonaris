@@ -94,6 +94,8 @@ export const accounts = {
   captureBatch: at("capture-batch"),
   captureKept: at("capture-kept"),
   captureField: at("capture-field"),
+  // A paste with an album open (capture.e2e.ts, TON-160).
+  capturePasted: at("capture-pasted"),
   // Opening a service (open-in.e2e.ts), one per test.
   openDesktop: at("open-desktop"),
   openKeys: at("open-keys"),

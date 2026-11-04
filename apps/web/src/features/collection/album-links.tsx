@@ -4,7 +4,8 @@
 // that saves on Enter or when left and discards on Escape, checked first as the server will read it (TS-40), so a
 // refused link stays with its reason and nothing is sent. Remove applies at once, with Undo (DS-50). Each link shows
 // its save state (DS-80). A link capture kept instead of a pasted one shows the pasted one, for an explicit Replace
-// (FR-06.4, TON-45).
+// (FR-06.4, TON-45). In Editing mode, a line says a paste adds a link (TON-160): ⌘V with the panel open puts each
+// pasted link in its service's row (paste-onto-album.ts).
 
 import { sent } from "@/client/sync/writer";
 import { useCapture, type KeptLink } from "@/features/capture/capture-context";
@@ -58,21 +59,30 @@ export function LinksSection({ album, canEdit }: { album: Album; canEdit: boolea
   const notices = kept.map((each) => (
     <KeptLinkNotice key={each.service} kept={each} canEdit={canEdit} />
   ));
-  // A kept link's notice needs the album's link, so an album without links has none.
-  if (shown.length === 0) return <p className="text-small text-fg-tertiary">No links yet.</p>;
   return (
-    <ul className="flex flex-col gap-2">
-      {notices}
-      {shown.map((service) => (
-        <LinkRow
-          key={service}
-          album={album}
-          service={service}
-          link={links.get(service)}
-          canEdit={canEdit}
-        />
-      ))}
-    </ul>
+    <>
+      {/* A kept link's notice needs the album's link, so an album without links has none. */}
+      {shown.length === 0 ? (
+        <p className="text-small text-fg-tertiary">No links yet.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {notices}
+          {shown.map((service) => (
+            <LinkRow
+              key={service}
+              album={album}
+              service={service}
+              link={links.get(service)}
+              canEdit={canEdit}
+            />
+          ))}
+        </ul>
+      )}
+      {/* ⌘V with the panel open adds the link to the album (TON-160). */}
+      {canEdit && (
+        <p className="text-small text-fg-tertiary">Paste a link to add it to this album.</p>
+      )}
+    </>
   );
 }
 

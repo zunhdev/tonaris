@@ -9,6 +9,7 @@ import { inLayer, isTextField } from "@/common/shortcuts";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { useMode } from "@/features/collection/collection-mode";
 import { useInspector } from "@/features/collection/inspector-state";
+import { usePasteOntoAlbum } from "@/features/collection/paste-onto-album";
 import { useAnnounce } from "@/features/sync/announcer";
 import { reasonOf } from "@/features/sync/describe";
 import { useNotify } from "@/features/sync/notify";
@@ -109,7 +110,7 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
     [dialog, offline, enterEditing, listId, capture, keptLinks],
   );
 
-  usePasteCapture(capture, listId);
+  usePasteCapture(capture, listId, usePasteOntoAlbum());
   useCaptureFeedback((link) =>
     setKeptLinks((current) => [
       ...current.filter((each) => each.albumId !== link.albumId || each.service !== link.service),
@@ -122,16 +123,18 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
 
 /**
  * ⌘V anywhere in the workspace, on desktop, with no text field focused and no dialog, popover or menu open: the
- * pasted lines that look like links are captured into the list on view, else into none (DS-48, DS-78).
+ * pasted lines that look like links are captured into the list on view, else into none (DS-48, DS-78). With an album
+ * open in the inspector, they go to its links instead (TON-160).
  */
 function usePasteCapture(
   capture: (links: readonly string[], listId: string | null) => boolean,
   listId: string | null,
+  ontoAlbum: (links: readonly string[]) => boolean,
 ): void {
   const narrow = useNarrowScreen();
-  const latest = useRef({ capture, listId, narrow });
+  const latest = useRef({ capture, listId, narrow, ontoAlbum });
   useEffect(() => {
-    latest.current = { capture, listId, narrow };
+    latest.current = { capture, listId, narrow, ontoAlbum };
   });
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
@@ -142,7 +145,7 @@ function usePasteCapture(
       const links = linksIn(event.clipboardData?.getData("text/plain") ?? "");
       if (links.length === 0) return;
       event.preventDefault();
-      now.capture(links, now.listId);
+      if (!now.ontoAlbum(links)) now.capture(links, now.listId);
     };
     document.addEventListener("paste", onPaste);
     return () => document.removeEventListener("paste", onPaste);
