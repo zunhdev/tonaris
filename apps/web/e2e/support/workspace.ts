@@ -206,3 +206,16 @@ export async function added(page: Page, albums: Album[], listId?: string): Promi
     { owned: albums, listId },
   );
 }
+
+/** Switches the view to `layout` in its View options (DS-49). */
+export async function chooseLayout(page: Page, layout: "Rows" | "Grid"): Promise<void> {
+  await page.getByRole("button", { name: "View", exact: true }).click();
+  const options = page.getByRole("dialog", { name: "View options" });
+  const radio = options
+    .getByRole("radiogroup", { name: "Layout" })
+    .getByRole("radio", { name: layout });
+  await radio.click();
+  await expect(radio).toBeChecked();
+  await page.keyboard.press("Escape");
+  await expect(options).toBeHidden();
+}

@@ -134,7 +134,7 @@ export function useAlbumGrid({
     }),
     [items, moves, rows],
   );
-  const opening = useAlbumOpening(rearrange.itemAt);
+  const opening = useAlbumOpening(rearrange.itemAt, { doubleClickEdits: rows });
   const focus = useGridFocus({
     grid,
     rearrange,

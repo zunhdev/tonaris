@@ -12,6 +12,7 @@ import {
   added,
   album,
   announcements,
+  chooseLayout,
   created,
   live,
   saved,
@@ -109,6 +110,101 @@ test("with the panel and the sidebar longer than the window, only they scroll, n
       return { height: document.documentElement.scrollHeight, scrolled: window.scrollY };
     });
   expect(await windowState()).toEqual({ height: 480, scrolled: 0 });
+});
+
+test("in Editing mode, a double-click on a card opens the album, and on a row's title edits it instead", async ({
+  page,
+}) => {
+  await signIn(page, accounts.inspectorDoubleClick);
+  await live(page);
+  const doom = await created(page, "Doom");
+  await added(page, [album("Nightfall", { originalYear: 1987 }), album("Epicus")], doom.id);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  await page.keyboard.press("e");
+  await expect(mode(page, "Edit")).toBeChecked();
+
+  // A row's title waits out the double-click, which edits it (DS-45): the inspector stays closed.
+  await rowOf(page, "Doom", "Nightfall").getByRole("gridcell").first().dblclick();
+  await expect(page.getByRole("textbox", { name: "Title of 'Nightfall'" })).toBeFocused();
+  await expect(inspector(page)).toHaveCount(0);
+  expect(new URL(page.url()).searchParams.has("album")).toBe(false);
+  await page.keyboard.press("Escape");
+
+  // A card has nothing to double-click, so its first click opens the album at once (TON-159).
+  await chooseLayout(page, "Grid");
+  await grid(page, "Doom")
+    .getByRole("gridcell", { name: /^Epicus/ })
+    .dblclick();
+  await expect(inspector(page).getByRole("textbox", { name: "Title of 'Epicus'" })).toBeVisible();
+});
+
+test("the panel slides in and out, fades under reduced motion, and shows at once after a reload or Back", async ({
+  page,
+}) => {
+  // The panel's animations, as the page asks for them.
+  await page.addInitScript(() => {
+    const slides: { keyframes: unknown; duration: unknown; easing: unknown }[] = [];
+    Object.assign(window, { slides });
+    // Kept to be called on its element below.
+    // oxlint-disable-next-line typescript/unbound-method
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      if (this.matches('aside[aria-label="Album"]') && typeof options === "object")
+        slides.push({ keyframes, duration: options.duration, easing: options.easing });
+      return animate.call(this, keyframes, options);
+    };
+  });
+  const slides = () =>
+    page.evaluate(() => {
+      const seen: unknown = Reflect.get(window, "slides");
+      return Array.isArray(seen) ? seen : [];
+    });
+  const enter = "cubic-bezier(0.2, 0, 0, 1)";
+  const exit = "cubic-bezier(0.4, 0, 1, 1)";
+  const away = { transform: "translateX(100%)" };
+  const rest = { transform: "none" };
+  await signIn(page, accounts.inspectorSlide);
+  await live(page);
+  const doom = await created(page, "Doom");
+  const nightfall = album("Nightfall", { originalYear: 1987 });
+  await added(page, [nightfall], doom.id);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+
+  // In from the right, and out again over the view, which has its width back at once.
+  await rowOf(page, "Doom", "Nightfall").getByRole("gridcell").first().click();
+  await expect(inspector(page)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(inspector(page)).toHaveCount(0);
+  expect(await slides()).toEqual([
+    { keyframes: [away, rest], duration: 200, easing: enter },
+    { keyframes: [rest, away], duration: 200, easing: exit },
+  ]);
+
+  // Back reopens it at once, as page switches do on Back.
+  await page.goBack();
+  await expect(inspector(page)).toBeVisible();
+  expect(await slides()).toHaveLength(2);
+
+  // A reload with it open shows it as it is.
+  await page.reload();
+  await live(page);
+  await expect(inspector(page)).toBeVisible();
+  expect(await slides()).toEqual([]);
+
+  // With reduced motion, it fades.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.keyboard.press("Escape");
+  await expect(inspector(page)).toHaveCount(0);
+  await rowOf(page, "Doom", "Nightfall").getByRole("gridcell").first().click();
+  await expect(inspector(page)).toBeVisible();
+  expect(await slides()).toEqual([
+    { keyframes: [{ opacity: 1 }, { opacity: 0 }], duration: 200, easing: exit },
+    { keyframes: [{ opacity: 0 }, { opacity: 1 }], duration: 200, easing: enter },
+  ]);
 });
 
 test("a click opens an album in the inspector, J moves it, and Esc closes it", async ({ page }) => {

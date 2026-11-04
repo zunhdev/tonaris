@@ -2,13 +2,15 @@
 // wide as its left edge was dragged, 380 px at first (TON-124). On a phone it is a sheet over the view, read-only as phones are, with an Open button for each
 // service (DS-110); it takes the focus when it opens. Esc closes it, unless a field, dialog, popover or menu has the
 // keys; so does Close. An album that is gone says so (DS-83's "removed elsewhere" pattern, until Trash says more).
+// The shell slides it in and out (inspector-slide.ts, TON-159); while it slides out it is inert, and beside the view it
+// floats at the window's edge, so the view has its width back at once.
 
 import { inspectorWidths } from "@/common/device";
 import { pageScroll } from "@/common/page-scroll";
 import { ResizeHandle } from "@/common/resize-handle";
 import { inLayer, isTextField } from "@/common/shortcuts";
 import { X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type Ref } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -17,18 +19,28 @@ import { AlbumDetails } from "./album-details";
 import { useCollectionData } from "./data";
 import { useInspector } from "./inspector-state";
 
+/** Beside the view, over it on a narrow window, or a phone's sheet. */
+export type InspectorPlacement = "beside" | "overlay" | "sheet";
+
 export function AlbumInspector({
+  ref,
+  albumId,
+  closing,
   placement,
   width,
   onResize,
 }: {
-  placement: "beside" | "overlay" | "sheet";
+  ref: Ref<HTMLElement>;
+  /** The album shown: `?album=`'s, or, while the panel slides out, the one it showed. */
+  albumId: string;
+  closing: boolean;
+  placement: InspectorPlacement;
   width: number;
   onResize: (width: number) => void;
 }) {
-  const { albumId, close } = useInspector();
+  const { close } = useInspector();
   const { albumsById, ready } = useCollectionData();
-  const album = albumId === undefined ? undefined : albumsById.get(albumId);
+  const album = albumsById.get(albumId);
   const closeButton = useRef<HTMLButtonElement>(null);
   const sheet = placement === "sheet";
 
@@ -37,6 +49,7 @@ export function AlbumInspector({
   }, [sheet]);
 
   useEffect(() => {
+    if (closing) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented) return;
       if (isTextField(event.target) || inLayer(event.target)) return;
@@ -44,17 +57,22 @@ export function AlbumInspector({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [close]);
+  }, [close, closing]);
 
+  // Over the view, or, beside it, while sliding out.
+  const floating = placement === "overlay" || (placement === "beside" && closing);
   return (
     <aside
+      ref={ref}
       aria-label="Album"
-      style={placement === "overlay" ? { width } : undefined}
+      inert={closing}
+      style={floating ? { width } : undefined}
       className={cn(
         "flex min-h-0 min-w-0 flex-col bg-panel",
         placement !== "sheet" && "border-l border-subtle",
-        placement === "beside" && "relative",
-        placement === "overlay" && "fixed inset-y-0 right-0 z-50 max-w-full shadow-floating",
+        placement === "beside" && !closing && "relative",
+        floating && "fixed inset-y-0 right-0 z-50 max-w-full",
+        placement === "overlay" && "shadow-floating",
         sheet &&
           "fixed inset-x-0 bottom-0 z-50 h-[92dvh] rounded-t-xl border-t border-subtle pb-[env(safe-area-inset-bottom)] shadow-floating",
       )}

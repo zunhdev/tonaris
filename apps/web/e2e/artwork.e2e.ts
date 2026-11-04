@@ -47,6 +47,38 @@ test("artwork shows through the image proxy, and a failed one keeps the tile", a
   expect(requested.filter((url) => url.includes("images.example"))).toEqual([]);
 });
 
+test("artwork a row has shown shows in the inspector at once, without fading in", async ({
+  page,
+}) => {
+  await signIn(page, accounts.artworkAtOnce);
+  await live(page);
+  const grunge = await created(page, "Grunge");
+  await added(
+    page,
+    [album("Bleach", { artworkUrl: "https://images.example/bleach.png" })],
+    grunge.id,
+  );
+  await page.goto(`/l/${grunge.id}`);
+  await live(page);
+  const image = (locator: ReturnType<typeof inspector>) =>
+    locator.evaluate((element: HTMLImageElement) => ({
+      loaded: element.naturalWidth > 0,
+      opacity: getComputedStyle(element).opacity,
+      fade: getComputedStyle(element).transitionDuration,
+    }));
+
+  // The row's artwork fades in as it loads (DS-23).
+  const row = rowOf(page, "Grunge", "Bleach");
+  await expect
+    .poll(() => image(row.locator("img")))
+    .toEqual({ loaded: true, opacity: "1", fade: "0.15s" });
+
+  // The inspector's copy of it is there at once (TON-159).
+  await row.getByRole("gridcell").first().click();
+  const cover = inspector(page).getByRole("img", { name: "Cover of Bleach" }).locator("img");
+  expect(await image(cover)).toEqual({ loaded: true, opacity: "1", fade: "0s" });
+});
+
 test("the inspector edits the artwork URL, refusing one that isn't https", async ({ page }) => {
   await signIn(page, accounts.artworkEdited);
   await live(page);

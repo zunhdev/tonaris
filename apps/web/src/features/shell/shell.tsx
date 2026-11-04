@@ -6,7 +6,8 @@
 // the sidebar and the view, "Move to…" (DS-49), "Add to list…" (DS-46) and the manual entry form (DS-47). On a phone
 // the shell is a drill-down (DS-110): no sidebar, each view's header is its top bar, and an album opens as a sheet
 // over the view. On desktop the shell is the window and the page itself never scrolls (TON-158): the main pane
-// scrolls a page that has no scroll area of its own, such as Account.
+// scrolls a page that has no scroll area of its own, such as Account. The album panel slides in and out
+// (inspector-slide.ts, TON-159).
 
 import { inspectorLayout, sidebarLayout } from "@/common/device";
 import { useNarrowScreen, useWideScreen } from "@/common/media";
@@ -21,7 +22,7 @@ import { AddToListDialog } from "@/features/collection/add-to-list";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { DeleteAlbumDialog, DeleteFolderDialog } from "@/features/collection/delete-containers";
 import { DragProvider } from "@/features/collection/drag";
-import { AlbumInspector } from "@/features/collection/inspector";
+import { AlbumInspector, type InspectorPlacement } from "@/features/collection/inspector";
 import { useInspector } from "@/features/collection/inspector-state";
 import { MoveDialog } from "@/features/collection/move";
 import { NewAlbumDialog } from "@/features/collection/new-album";
@@ -34,6 +35,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { Account } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { useInspectorSlide } from "./inspector-slide";
 import { usePageFade } from "./page-fade";
 import { PullToRefresh } from "./pull-to-refresh";
 import { ShortcutReference } from "./shortcut-reference";
@@ -57,6 +59,9 @@ export function Shell({ account, children }: { account: Account; children: React
   const sidebar = !layout.hidden && !narrow;
   const main = useRef<HTMLElement>(null);
   usePageFade(main);
+  const placement: InspectorPlacement = narrow ? "sheet" : wide ? "beside" : "overlay";
+  const panel = useRef<HTMLElement>(null);
+  const inspector = useInspectorSlide(panel, albumId, placement);
 
   useEffect(() => sidebarLayout.write(layout), [layout]);
   useEffect(() => inspectorLayout.write(inspectorWidth), [inspectorWidth]);
@@ -149,9 +154,12 @@ export function Shell({ account, children }: { account: Account; children: React
             <OfflineBanner />
             {children}
           </main>
-          {albumId !== undefined && (
+          {inspector.shown !== undefined && (
             <AlbumInspector
-              placement={narrow ? "sheet" : wide ? "beside" : "overlay"}
+              ref={panel}
+              albumId={inspector.shown}
+              closing={inspector.closing}
+              placement={placement}
               width={inspectorWidth}
               onResize={setInspectorWidth}
             />

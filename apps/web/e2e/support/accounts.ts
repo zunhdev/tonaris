@@ -104,6 +104,7 @@ export const accounts = {
   openList: at("open-list"),
   // Artwork (artwork.e2e.ts), one per test.
   artworkShown: at("artwork-shown"),
+  artworkAtOnce: at("artwork-at-once"),
   artworkEdited: at("artwork-edited"),
   artworkFound: at("artwork-found"),
   artworkFoundForm: at("artwork-found-form"),
@@ -122,6 +123,9 @@ export const accounts = {
   inspectorResize: at("inspector-resize"),
   // The page never scrolling past the shell (album-inspector.e2e.ts).
   inspectorPage: at("inspector-page"),
+  // Opening without a wait, and the panel's slide (album-inspector.e2e.ts), one per test.
+  inspectorDoubleClick: at("inspector-double-click"),
+  inspectorSlide: at("inspector-slide"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),

@@ -151,6 +151,11 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
   - A change that keeps the path, such as opening an album, isn't a switch.
   - Back, forward and reduced motion show the page at once. For back and forward, that keeps a fade from following Safari's own swipe-back.
   - Built with Web Animations on the router's `onRendered`, before the page paints (`page-fade.ts`), not the View Transitions API.
+- *As built in TON-159* (from the creator's manual testing, 4 November 2026): **the album inspector slides.**
+  - It slides in from the right over 200ms with the enter easing, and out with the exit easing. On a phone, the album sheet slides up and down.
+  - The view narrows at once as it opens, and widens at once as it closes, while the inspector slides out over it, inert.
+  - Switching albums in it doesn't move it. Reduced motion fades it instead. Back, forward, and an inspector already open as the page loads show it at once.
+  - Built with Web Animations, before the inspector paints (`inspector-slide.ts`).
 
 *(Q-02)*
 
@@ -296,6 +301,10 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 
 *As built in TON-126:*
 - **On a server-rendered page,** such as a shared link's, the tile is neutral (`bg.raised`, the letter in `fg.secondary`) until the page is live, then takes its hue.
+
+*As built in TON-159:*
+- **Artwork the browser already has shows at once,** without the fade: a row's or card's, shown again in the inspector, is there as the inspector opens. Artwork still loading fades in as before.
+- **The inspector's artwork loads eagerly,** since it is always in view.
 
 **DS-24 Chronology display.** *(FR-05.5, FR-05.6, FR-02.8)*
 
@@ -694,7 +703,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
 *As built in TON-38:*
 - **Opening:**
-  - a click on an album's row or card, except its drag handle. Opening the inspector narrows the view, so in Editing mode, with the inspector closed, a click waits 300 ms for a double-click, which edits the cell instead;
+  - a click on an album's row or card, except its drag handle. Opening the inspector narrows the view, so in Editing mode, with the inspector closed, a click on a row waits 300 ms for a double-click, which edits the cell instead. A card opens at once in either mode, since cards have nothing to double-click (TON-159; the creator kept the rows' wait, 4 November 2026);
   - Enter on a row or card in Viewing mode. In Editing mode, Enter on the title, artist or year still edits the cell (DS-45).
   - From a view, opening adds a history entry. With the inspector open, focus moving to another album (J, K, the arrows, a click) shows that one in place.
 - **Closing:** Esc, unless a field, dialog, popover or menu has the keys, or the Close button.

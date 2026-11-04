@@ -10,7 +10,16 @@ import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, created, list, live, violations, webOrigin } from "./support/workspace";
+import {
+  added,
+  album,
+  chooseLayout,
+  created,
+  list,
+  live,
+  violations,
+  webOrigin,
+} from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -20,19 +29,6 @@ const rows = (page: Page, name: string) =>
   grid(page, name)
     .getByRole("row")
     .filter({ hasNot: page.getByRole("columnheader") });
-
-/** Switches the view to `layout` in its View options (DS-49). */
-async function chooseLayout(page: Page, layout: "Rows" | "Grid"): Promise<void> {
-  await page.getByRole("button", { name: "View", exact: true }).click();
-  const options = page.getByRole("dialog", { name: "View options" });
-  const radio = options
-    .getByRole("radiogroup", { name: "Layout" })
-    .getByRole("radio", { name: layout });
-  await radio.click();
-  await expect(radio).toBeChecked();
-  await page.keyboard.press("Escape");
-  await expect(options).toBeHidden();
-}
 
 test("a list's albums show as rows in chronological order, or as cards kept per view", async ({
   page,
