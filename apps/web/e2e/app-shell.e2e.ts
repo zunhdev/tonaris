@@ -26,6 +26,39 @@ test.describe("three-pane desktop shell", () => {
     await expect(page.getByRole("main", { name: "Collection" })).toBeVisible();
   });
 
+  test("a page with no scroll area of its own scrolls in the main pane, never the window, and the sidebar stays", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 360 });
+    await page.goto("/settings/account");
+    const main = page.getByRole("main", { name: "Account" });
+    await expect(main).toBeVisible();
+    const sidebar = page.getByRole("navigation", { name: "Sidebar" });
+
+    // The window can't scroll: the sidebar would go with it and leave a blank band below (TON-158).
+    const windowState = () =>
+      page.evaluate(() => {
+        window.scrollTo(0, 1000);
+        return { height: document.documentElement.scrollHeight, scrolled: window.scrollY };
+      });
+    expect(await windowState()).toEqual({ height: 360, scrolled: 0 });
+
+    // The main pane scrolls instead, and the sidebar stays put.
+    await main.evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
+    await expect.poll(() => main.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    expect((await sidebar.boundingBox())?.y).toBe(0);
+    expect(await windowState()).toEqual({ height: 360, scrolled: 0 });
+
+    // Another page starts at its top (TON-157).
+    await page
+      .getByRole("navigation", { name: "Settings" })
+      .getByRole("link", { name: "Profile" })
+      .click();
+    const profile = page.getByRole("main", { name: "Profile" });
+    await expect(profile).toBeVisible();
+    await expect.poll(() => profile.evaluate((element) => element.scrollTop)).toBe(0);
+  });
+
   test("panes are named landmarks", async ({ page }) => {
     await page.goto("/c");
     await expect(page.getByRole("navigation", { name: "Sidebar" })).toHaveCount(1);

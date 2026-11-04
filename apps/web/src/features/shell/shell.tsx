@@ -5,11 +5,13 @@
 // shortcuts and their reference live here (DS-78), as does the search palette (DS-75), and so do dragging, which spans
 // the sidebar and the view, "Move to…" (DS-49), "Add to list…" (DS-46) and the manual entry form (DS-47). On a phone
 // the shell is a drill-down (DS-110): no sidebar, each view's header is its top bar, and an album opens as a sheet
-// over the view.
+// over the view. On desktop the shell is the window and the page itself never scrolls (TON-158): the main pane
+// scrolls a page that has no scroll area of its own, such as Account.
 
 import { inspectorLayout, sidebarLayout } from "@/common/device";
 import { useNarrowScreen, useWideScreen } from "@/common/media";
 import { pageTitleId } from "@/common/page-header";
+import { pageScroll } from "@/common/page-scroll";
 import { ShellContext, type ShellControl } from "@/common/shell-context";
 import { type CommandTarget } from "@/common/shortcuts";
 import { AccountMenu } from "@/features/account/account-menu";
@@ -30,6 +32,7 @@ import { OfflineBanner } from "@/features/sync/offline-banner";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { Account } from "@tonaris/domain";
+import { cn } from "@tonaris/ui/lib/utils";
 
 import { usePageFade } from "./page-fade";
 import { PullToRefresh } from "./pull-to-refresh";
@@ -115,7 +118,11 @@ export function Shell({ account, children }: { account: Account; children: React
     <ShellContext value={control}>
       <DragProvider>
         <div
-          className="grid h-dvh bg-app"
+          // Clipped on desktop, since text only screen readers see, below a pane's fold, sits outside the pane's scroll
+          // area and would stretch the page past the window, which then scrolls the panes away over a blank band
+          // (TON-158). `relative` brings what the views place against the window into the clip. On a phone, a page with
+          // no scroll area of its own scrolls the window, as Safari expects.
+          className={cn("grid h-dvh bg-app", !narrow && "relative overflow-clip")}
           style={{
             gridTemplateColumns: [
               sidebar ? `${layout.width}px` : undefined,
@@ -136,7 +143,8 @@ export function Shell({ account, children }: { account: Account; children: React
           <main
             ref={main}
             aria-labelledby={pageTitleId}
-            className="flex min-h-0 min-w-0 flex-col bg-panel"
+            {...pageScroll("main")}
+            className={cn("flex min-h-0 min-w-0 flex-col bg-panel", !narrow && "overflow-y-auto")}
           >
             <OfflineBanner />
             {children}

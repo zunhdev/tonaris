@@ -8,6 +8,9 @@
 // (inspector-state.ts).
 
 const pageScrollers = [
+  // The main pane, which on desktop scrolls a page with no scroll area of its own, such as Account (TON-158). The
+  // shell draws it, but what it scrolls is the page.
+  "main",
   // The view: its rows or cards, or the page's body.
   "view",
   // A folder's or list's description, read or edited.

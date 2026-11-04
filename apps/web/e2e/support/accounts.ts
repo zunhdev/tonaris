@@ -120,6 +120,8 @@ export const accounts = {
   addAlbumKey: at("add-album-key"),
   // The inspector's width (album-inspector.e2e.ts).
   inspectorResize: at("inspector-resize"),
+  // The page never scrolling past the shell (album-inspector.e2e.ts).
+  inspectorPage: at("inspector-page"),
   // Custom fields (custom-fields.e2e.ts), one per test.
   fieldsApply: at("fields-apply"),
   fieldsTypes: at("fields-types"),
