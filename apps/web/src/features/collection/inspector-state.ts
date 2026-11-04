@@ -46,10 +46,14 @@ const doubleClickMs = 300;
  * and Enter, through the grid's `onActivate`. While the inspector is open, focus moving to another album shows that
  * one instead, in place. The focused album is also what L adds to a list.
  *
- * Opening the inspector narrows the view, so in Editing mode a click waits out a double-click before opening it: a
- * double-click edits the cell (DS-45), and the cell mustn't move between its two clicks.
+ * Opening the inspector narrows the view, so where a double-click edits the cell (DS-45), rows in Editing mode, a click
+ * waits it out before opening: the cell mustn't move between its two clicks. Cards have nothing to double-click, so
+ * they open at once in either mode (TON-159).
  */
-export function useAlbumOpening(albumAt: (cell: Cell) => string | undefined) {
+export function useAlbumOpening(
+  albumAt: (cell: Cell) => string | undefined,
+  { doubleClickEdits }: { doubleClickEdits: boolean },
+) {
   const { albumId, open } = useInspector();
   const { setFocusedAlbum } = useCollectionUi();
   const { editing } = useMode();
@@ -71,7 +75,7 @@ export function useAlbumOpening(albumAt: (cell: Cell) => string | undefined) {
         const at = cellAt(event.target);
         const id = at && albumAt(at);
         if (id === undefined || id === albumId || event.detail > 1) return;
-        if (editing && albumId === undefined)
+        if (editing && doubleClickEdits && albumId === undefined)
           waiting.current = setTimeout(() => show(id), doubleClickMs);
         else show(id);
       },

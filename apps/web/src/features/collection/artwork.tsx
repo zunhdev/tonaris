@@ -1,6 +1,7 @@
 // Album artwork (DS-23): a fixed square that never shifts the layout. The fallback tile (artwork-tile.ts) shows the
 // title's first letter on its hue whenever there is no artwork, while it loads, and if it fails, never as an error.
-// An image fades in over it in 150 ms once loaded (DS-17). The image comes from the API's image proxy, never from
+// An image fades in over it in 150 ms once loaded (DS-17); one the browser already has, such as a card's shown again
+// in the inspector, shows at once (TON-159). The image comes from the API's image proxy, never from
 // the artwork's own host (TS-103): the album carries the server's signature of its URL. Decorative in rows and
 // cards, where the title is beside it; "Cover of {title}" in the inspector.
 
@@ -25,6 +26,7 @@ export function Artwork({
   label,
   className,
   letterClassName,
+  eager = false,
 }: {
   title: string;
   /** The image proxy's URL for the artwork (`artworkSrc()`), if the album has artwork. */
@@ -34,6 +36,8 @@ export function Artwork({
   /** Its size, as classes: `size-7` in rows, `w-full` in cards. */
   className?: string;
   letterClassName?: string;
+  /** Loaded at once, for artwork that is in view as it shows, as in the inspector; lazily otherwise. */
+  eager?: boolean;
 }) {
   const { letter, background, foreground } = artworkTile(title);
   // Painted through the DOM, not a style attribute, which the CSP refuses in server-rendered HTML such as a shared
@@ -46,9 +50,18 @@ export function Artwork({
     },
     [background, foreground],
   );
-  // By source, so replaced artwork loads afresh.
-  const [loaded, setLoaded] = useState<string>();
+  // By source, so replaced artwork loads afresh; without the fade when the browser already had it.
+  const [loaded, setLoaded] = useState<{ src: string; fade: boolean }>();
   const [failed, setFailed] = useState<string>();
+  // Checked as the image is attached, before its first paint.
+  const loadedAlready = useCallback(
+    (element: HTMLImageElement | null) => {
+      if (src && element?.complete && element.naturalWidth > 0) setLoaded({ src, fade: false });
+    },
+    [src],
+  );
+  const shown = loaded?.src === src;
+  const atOnce = shown && loaded?.fade === false;
   return (
     <span
       ref={paint}
@@ -69,15 +82,19 @@ export function Artwork({
       </span>
       {src && src !== failed && (
         <img
+          ref={loadedAlready}
           src={src}
           alt=""
-          loading="lazy"
+          loading={eager ? "eager" : "lazy"}
           decoding="async"
-          onLoad={() => setLoaded(src)}
+          onLoad={() =>
+            setLoaded((current) => (current?.src === src ? current : { src, fade: true }))
+          }
           onError={() => setFailed(src)}
           className={cn(
-            "absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-150 ease-enter",
-            loaded === src && "opacity-100",
+            "absolute inset-0 size-full object-cover",
+            !atOnce && "transition-opacity duration-150 ease-enter",
+            shown ? "opacity-100" : "opacity-0",
           )}
         />
       )}

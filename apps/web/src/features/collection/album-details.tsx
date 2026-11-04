@@ -94,6 +94,7 @@ export function AlbumDetails({ album }: { album: Album }) {
           title={album.title}
           src={artworkSrc(album)}
           label={`Cover of ${album.title}`}
+          eager
           // The panel's width, up to the 500 px of the covers Find brings (TON-124).
           className="w-full max-w-[500px] rounded-md"
           letterClassName="text-display"
