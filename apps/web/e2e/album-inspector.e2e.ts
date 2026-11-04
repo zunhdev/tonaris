@@ -442,6 +442,9 @@ test("the form saves into the list on view, and live albums need only their reco
     .click();
   const form = page.getByRole("dialog", { name: "New album" });
   await expect(form.getByRole("combobox", { name: "List" })).toHaveValue(doom.id);
+  // The release type starts at Album (TON-161).
+  const releaseType = form.getByRole("radiogroup", { name: "Release type" });
+  await expect(releaseType.getByRole("radio", { name: "Album" })).toBeChecked();
   await form.getByRole("textbox", { name: "Title" }).fill("Nightfall");
   await form.getByRole("textbox", { name: "Artist" }).fill("Candlemass");
   await form.getByRole("textbox", { name: "Original release year" }).fill("1987");

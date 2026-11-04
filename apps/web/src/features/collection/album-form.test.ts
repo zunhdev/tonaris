@@ -76,13 +76,21 @@ describe("the domain's last word (X-05)", () => {
   });
 });
 
+describe("the release type (TON-161)", () => {
+  test("starts at Album, and Unknown stays a choice", () => {
+    expect(emptyForm(null).releaseType).toBe("album");
+    expect(albumOfForm(form())?.releaseType).toBe("album");
+    expect(albumOfForm(form({ releaseType: null }))?.releaseType).toBeNull();
+  });
+});
+
 describe("the album it makes", () => {
   test("is trimmed, keeps what was left empty empty, and ignores recording years unless live", () => {
     const made = albumOfForm(form({ title: "  Nightfall ", recording: "1980" }));
     expect(made).toMatchObject({
       title: "Nightfall",
       artistCredit: "Candlemass",
-      releaseType: null,
+      releaseType: "album",
       isLive: false,
       originalYear: 1987,
       recordingYearStart: null,
@@ -127,6 +135,7 @@ describe("the album it makes", () => {
       listId: "list",
     });
     expect(isFormDirty(emptyForm("list"))).toBe(false);
+    expect(isFormDirty({ ...emptyForm("list"), releaseType: null })).toBe(true);
     expect(isFormDirty({ ...emptyForm("list"), title: "N" })).toBe(true);
     const linked = emptyForm(null);
     expect(

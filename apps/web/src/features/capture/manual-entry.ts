@@ -24,7 +24,8 @@ function prefilled(values: Partial<AlbumFields> | undefined, listId: string | nu
     ...form,
     title: values.title ?? "",
     artistCredit: values.artistCredit ?? "",
-    releaseType: values.releaseType ?? null,
+    // Capture's type if it found one; else the form's, Album (TON-161).
+    releaseType: values.releaseType ?? form.releaseType,
     isLive: values.isLive === true,
     originalYear: values.originalYear == null ? "" : String(values.originalYear),
     recording:

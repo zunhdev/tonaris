@@ -810,6 +810,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 
   Each switches to Editing first.
 
+*As built in TON-161* (from the creator's manual testing, 4 November 2026): **the release type starts at Album,** as nearly every album entered by hand is one. That holds from "Enter manually", after a failed capture, and when capture asks for details without a type, as its prefills never carry one. Edit on a failed save keeps the album's own. Unknown stays a choice, and an untouched form still closes on Esc without asking.
+
 **DS-48 Link capture.** *(FR-02.1–FR-02.3, FR-02.5, FR-02.9–FR-02.11, FR-01.7, FR-06.4, FR-14.4, FR-15.3, X-04)*
 
 - **Paste anywhere:** ⌘V with no text field focused, in a list, Unsorted, root, or folder view (desktop owner only).

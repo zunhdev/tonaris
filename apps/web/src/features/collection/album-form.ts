@@ -1,6 +1,7 @@
 // The manual entry form's rules (DS-47, FR-02.4, FR-02.6): its fields as typed, what is missing or malformed, and the
 // album they make. Title, artist and the applicable year are required: the original release year, or for a live
-// album the recording year or the release year (FR-02.6). Nothing is invented: a field left empty stays empty. The
+// album the recording year or the release year (FR-02.6). Nothing is invented: a field left empty stays empty; the
+// release type alone starts at Album, a choice in view (TON-161). The
 // domain's `albumProblem` checks the built album last, and anything it refuses that the form's own checks don't word,
 // such as a title over its length, shows at its field in the domain's words. A link per service is optional, and
 // checked as the server will read it (FR-06.3, TS-40). Pure, so the rules are tested without a DOM.
@@ -68,12 +69,15 @@ export const formFieldNames: Record<FormField, string> = {
   ...perService((service) => `${serviceNames[service]} link`),
 };
 
-/** An empty form, going to `listId` if given. */
+/**
+ * An empty form, going to `listId` if given. Its release type starts at Album, as nearly every album entered by hand
+ * is one (TON-161); Unknown stays a choice.
+ */
 export function emptyForm(listId: string | null): AlbumForm {
   return {
     title: "",
     artistCredit: "",
-    releaseType: null,
+    releaseType: "album",
     isLive: false,
     originalYear: "",
     recording: "",
