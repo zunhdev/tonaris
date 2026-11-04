@@ -12,7 +12,7 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 
 import {
@@ -60,7 +60,6 @@ function sortHint(album: Album): string {
 }
 
 export function AlbumDetails({ album }: { album: Album }) {
-  const { startDeleteAlbum } = useCollectionDialogs();
   const client = useSyncClient();
   const { editing } = useMode();
   const offline = useConnection() === "offline";
@@ -184,19 +183,6 @@ export function AlbumDetails({ album }: { album: Album }) {
           {added === undefined ? "Added date unknown" : `Added ${addedDate.format(added)}`}
         </p>
       </Section>
-
-      {canEdit && (
-        <div>
-          <Button
-            variant="danger"
-            aria-keyshortcuts="Meta+Backspace"
-            onClick={() => startDeleteAlbum(album.id)}
-          >
-            <Trash2 aria-hidden strokeWidth={1.5} />
-            Delete from collection…
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

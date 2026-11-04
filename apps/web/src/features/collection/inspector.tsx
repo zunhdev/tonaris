@@ -3,19 +3,29 @@
 // service (DS-110); it takes the focus when it opens. Esc closes it, unless a field, dialog, popover or menu has the
 // keys; so does Close. An album that is gone says so (DS-83's "removed elsewhere" pattern, until Trash says more).
 // The shell slides it in and out (inspector-slide.ts, TON-159); while it slides out it is inert, and beside the view it
-// floats at the window's edge, so the view has its width back at once.
+// floats at the window's edge, so the view has its width back at once. In Editing mode its header has "Delete from
+// collection…", beside Close, always in view (TON-162).
 
 import { inspectorWidths } from "@/common/device";
 import { pageScroll } from "@/common/page-scroll";
 import { ResizeHandle } from "@/common/resize-handle";
 import { inLayer, isTextField } from "@/common/shortcuts";
-import { X } from "lucide-react";
+import { useConnection } from "@/features/sync/sync-provider";
+import { Trash2, X } from "lucide-react";
 import { useEffect, useRef, type Ref } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipShortcut,
+  TooltipTrigger,
+} from "@tonaris/ui/components/tooltip";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { AlbumDetails } from "./album-details";
+import { useCollectionDialogs } from "./collection-dialogs";
+import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { useInspector } from "./inspector-state";
 
@@ -79,16 +89,19 @@ export function AlbumInspector({
     >
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-subtle pr-2 pl-4">
         <span className="text-small font-medium text-fg-secondary">Album</span>
-        <Button
-          ref={closeButton}
-          variant="ghost"
-          size="icon"
-          aria-label="Close album"
-          className={cn(sheet && "size-11")}
-          onClick={close}
-        >
-          <X aria-hidden strokeWidth={1.5} />
-        </Button>
+        <div className="flex items-center gap-1">
+          {album && <DeleteAlbum albumId={album.id} />}
+          <Button
+            ref={closeButton}
+            variant="ghost"
+            size="icon"
+            aria-label="Close album"
+            className={cn(sheet && "size-11")}
+            onClick={close}
+          >
+            <X aria-hidden strokeWidth={1.5} />
+          </Button>
+        </div>
       </div>
       {!sheet && (
         <ResizeHandle
@@ -108,5 +121,37 @@ export function AlbumInspector({
         )}
       </div>
     </aside>
+  );
+}
+
+/**
+ * "Delete from collection…" (DS-46, TON-162): a trash icon in the header, in Editing mode, so it is in view however
+ * long the album's details are. It opens the confirmation, as ⌘⌫ does (DS-50); offline it waits, as edits do (DS-81).
+ */
+function DeleteAlbum({ albumId }: { albumId: string }) {
+  const { editing } = useMode();
+  const offline = useConnection() === "offline";
+  const { startDeleteAlbum } = useCollectionDialogs();
+  if (!editing || offline) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Delete from collection…"
+            aria-keyshortcuts="Meta+Backspace"
+            className="hover:text-status-danger"
+          />
+        }
+        onClick={() => startDeleteAlbum(albumId)}
+      >
+        <Trash2 aria-hidden strokeWidth={1.5} />
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        Delete from collection…<TooltipShortcut>⌘⌫</TooltipShortcut>
+      </TooltipContent>
+    </Tooltip>
   );
 }
