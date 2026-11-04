@@ -699,7 +699,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 4. **Custom fields:** applied fields with editors (DS-26), then "+ Add field".
 5. **Lists:** membership chips with × to remove and "+ Add to list" (`L`). With no memberships, an "Unsorted" chip.
 6. **Info:** source service and date added to the collection.
-7. **Footer (editing):** "Delete from collection…" in danger text.
+7. **Footer (editing):** "Delete from collection…" in danger text. *Moved to the header, beside Close, in TON-162 (below).*
 
 *As built in TON-38:*
 - **Opening:**
@@ -726,6 +726,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
     - "No covers found." when none has a front. A failure shows its reason, such as "Couldn't reach MusicBrainz. Try again.", with Try again.
     - Offline, the editor isn't shown, so neither is the button.
 - **Delete from collection…** arrives with Trash (M5).
+  - *As built in TON-162* (from the creator's manual testing, 4 November 2026): **"Delete from collection…" is a trash icon in the header, beside Close,** in view however long the details are; at the foot it was out of view on a laptop. It is a ghost icon button, named "Delete from collection…", turning danger red on hover, with the tooltip "Delete from collection… ⌘⌫". It shows in Editing mode only, and not offline, and opens the same confirmation as ⌘⌫ (DS-50). The footer button is gone. Phones are read-only, so their sheet has none.
 
 *As built in TON-46:* **Links** (FR-06.2, FR-06.3).
 - **Viewing mode:** a row per service the album has a link for: its name, and the URL's host and path as a link that opens the page in a new tab. Each row is itself an explicit choice of service (DS-25), so it stays a plain link after TON-47. With none: "No links yet."
@@ -964,7 +965,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Multi-select** comes with selection (X).
 
 *As built in TON-57:* **deleting an album.**
-- **Triggers:** ⌘⌫ (Ctrl+⌫ elsewhere) on the inspector's album, else the focused album; and **Delete from collection…** at the foot of the inspector in Editing mode.
+- **Triggers:** ⌘⌫ (Ctrl+⌫ elsewhere) on the inspector's album, else the focused album; and **Delete from collection…** in the inspector's header in Editing mode (at its foot until TON-162).
 - **The confirmation:**
   - title "Delete 'Bleach' from your collection?";
   - scope "It leaves 2 lists: Doom, Later." or "It leaves Unsorted.";
