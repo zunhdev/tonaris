@@ -4,7 +4,7 @@
 // to one with L; the manual entry form's required information, saving into the current list, and asking before
 // discarding; and an album's own page. Each test signs in with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
@@ -28,6 +28,8 @@ const rowOf = (page: Page, gridName: string, text: string) =>
 const mode = (page: Page, name: "View" | "Edit") =>
   page.getByRole("radiogroup", { name: "Mode" }).getByRole("radio", { name });
 const lists = (page: Page) => inspector(page).getByRole("region", { name: "Lists" });
+const overflows = (scroller: Locator) =>
+  scroller.evaluate((element) => element.scrollHeight > element.clientHeight);
 
 test("the inspector's left edge resizes it, kept on the device, and the artwork grows with it up to 500 px", async ({
   page,
@@ -73,6 +75,40 @@ test("the inspector's left edge resizes it, kept on the device, and the artwork 
     "460",
   );
   expect(await violations(page, "aside")).toEqual([]);
+});
+
+test("with the panel and the sidebar longer than the window, only they scroll, never the page", async ({
+  page,
+}) => {
+  await signIn(page, accounts.inspectorPage);
+  await live(page);
+  const doom = await created(page, "Doom");
+  await Promise.all(
+    ["Ash", "Birch", "Cedar", "Elm", "Fir", "Hazel", "Larch", "Oak", "Pine"].map((name) =>
+      created(page, name),
+    ),
+  );
+  const nightfall = album("Nightfall", { originalYear: 1987 });
+  await added(page, [nightfall], doom.id);
+  await page.setViewportSize({ width: 1280, height: 480 });
+  await page.goto(`/l/${doom.id}?album=${nightfall.id}`);
+  await live(page);
+  // Editing mode lengthens the panel with fields, switches and choices.
+  await page.keyboard.press("e");
+  await expect(mode(page, "Edit")).toBeChecked();
+  await expect(inspector(page).getByRole("switch", { name: "Live" })).toBeAttached();
+
+  expect(await overflows(inspector(page).locator('[data-page-scroll="album"]'))).toBe(true);
+  expect(await overflows(page.locator('[data-slot="scroll-area-viewport"]'))).toBe(true);
+
+  // Labels and inputs only screen readers see, below the fold, used to stretch the page past the shell; the window
+  // then scrolled the panes away over a blank band (TON-158).
+  const windowState = () =>
+    page.evaluate(() => {
+      window.scrollTo(0, 1000);
+      return { height: document.documentElement.scrollHeight, scrolled: window.scrollY };
+    });
+  expect(await windowState()).toEqual({ height: 480, scrolled: 0 });
 });
 
 test("a click opens an album in the inspector, J moves it, and Esc closes it", async ({ page }) => {
