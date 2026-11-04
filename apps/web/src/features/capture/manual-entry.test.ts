@@ -47,6 +47,8 @@ describe("manual entry from a capture (DS-47, DS-48)", () => {
       title: "Idéal",
       artistCredit: "Trust",
       originalYear: "1983",
+      // Capture found no type, so it starts at Album (TON-161).
+      releaseType: "album",
       listId: list,
       links: { "apple-music": "" },
     });
@@ -68,6 +70,7 @@ describe("manual entry from a capture (DS-47, DS-48)", () => {
       }),
     );
     expect(draft?.form.title).toBe("");
+    expect(draft?.form.releaseType).toBe("album");
     expect(draft?.capture?.mode).toBe("details");
   });
 
