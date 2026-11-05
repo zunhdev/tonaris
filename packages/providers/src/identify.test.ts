@@ -38,6 +38,7 @@ const album = {
   andJustice: "67553e23-8dad-3792-b6f2-8fedd5650ff3",
   youtubeTrackUrl: "f2e6f789-7de8-4eb7-bf5e-774f9a8f0576",
   naturalEp: "042bf6e1-0d47-4486-9b20-1bfad4214152",
+  opiate2: "7224db21-5e7f-481c-a5a7-f8af73310664",
 };
 
 describe("the chain's order (FR-02.1, TS-41)", () => {
@@ -264,6 +265,11 @@ describe("YouTube Music (TON-131)", () => {
     expect(answer).toMatchObject({ status: "unidentified", reason: unidentifiedReasons.notFound });
     expect(JSON.stringify(answer)).not.toContain(album.naturalEp);
     expect(answer.status === "unidentified" && answer.prefill).toBeFalsy();
+  });
+
+  test("a single's playlist, titled as an album, finds the single by its track count", async () => {
+    const { answer } = await run(cases.youtubeSingle);
+    expect(answer).toMatchObject({ status: "identified", step: 4, releaseGroupId: album.opiate2 });
   });
 
   test("an owner who hasn't agreed to the terms: no read, then manual entry", async () => {

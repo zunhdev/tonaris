@@ -94,6 +94,24 @@ describe("passes", () => {
     expect(passes(playlist, candidate({ trackCount: 4, primaryType: "EP" }))).toBe(false);
     expect(passes(playlist, candidate({}))).toBe(false);
   });
+
+  test("with a track count, a single passes when its count is the playlist's", () => {
+    const single = { ...ikra, tracks: 2 };
+    expect(passes(single, candidate({ trackCount: 2, primaryType: "Single" }))).toBe(true);
+    // An album playlist isn't taken for its namesake single.
+    const album = { ...ikra, tracks: 12 };
+    expect(passes(album, candidate({ trackCount: 2, primaryType: "Single" }))).toBe(false);
+    expect(
+      decide(album, [
+        candidate({ trackCount: 12 }),
+        candidate({ releaseId: "r2", releaseGroupId: "g2", trackCount: 2, primaryType: "Single" }),
+      ]),
+    ).toEqual({ kind: "one", album: { releaseGroupId: "g1", title: "Икра" } });
+    // Still official only.
+    expect(
+      passes(single, candidate({ trackCount: 2, primaryType: "Single", status: "Promotion" })),
+    ).toBe(false);
+  });
 });
 
 describe("decide", () => {

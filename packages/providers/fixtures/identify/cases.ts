@@ -360,6 +360,17 @@ export const cases = {
       tracks: 12,
     }),
   },
+  youtubeSingle: {
+    name: "a playlist of Tool's single Opiate², titled as an album",
+    input: `https://music.youtube.com/playlist?list=${youtubeList(12)}`,
+    spotify: true,
+    stubs: youtubeAlbum(youtubeList(12), {
+      title: "Opiate²",
+      artist: "Tool",
+      date: "2022-03-01",
+      tracks: 1,
+    }),
+  },
   youtubeNotAgreed: {
     name: "a YouTube Music link of an owner who hasn't agreed to the terms",
     input: `https://music.youtube.com/playlist?list=${youtubeList(1)}`,

@@ -7,7 +7,8 @@
 // - the release is official, of an album or an EP, or of a single when Apple's title says " - Single".
 // The track count is ignored: it never stopped a wrong match, and bonus tracks cost right ones. YouTube Music's hints
 // are the exception (TON-131): an album playlist's count must be a passing release's, so an EP of the album's name
-// isn't taken for it, as the spike's one error was (TON-128).
+// isn't taken for it, as the spike's one error was (TON-128). With that count, singles count too (TON-163): it tells
+// an album from its namesake single, and YouTube titles a single's playlist "Album - …" anyway.
 
 import { z } from "zod";
 
@@ -18,7 +19,7 @@ import { artistCreditSchema, creditText, searchByTitle, yearOf } from "./musicbr
 
 /**
  * What a store says about an album. `date` is `YYYY-MM-DD`, or coarser. `tracks`, which only YouTube's hints carry,
- * must be a passing release's track count.
+ * must be a passing release's track count, and lets singles pass.
  */
 export type Hints = { title: string; artist: string; date: string; tracks?: number };
 
@@ -97,9 +98,18 @@ export function firstArtist(credit: string): string {
 /** A sort name turned back into a name: "Celeste, Gianni" → "Gianni Celeste". */
 const unsorted = (name: string) => name.replace(/^([^,]+),\s*([^,]+)$/, "$2 $1");
 
+/**
+ * The album types a release may have: albums and EPs, and singles when Apple's title says " - Single" or the hints
+ * carry a track count, which tells an album from its namesake single (TON-163).
+ */
+const allowedTypes = (hints: Hints) =>
+  singleSuffix.test(hints.title) || hints.tracks !== undefined
+    ? ["Album", "EP", "Single"]
+    : ["Album", "EP"];
+
 /** Whether a release passes the rule for these hints. */
 export function passes(hints: Hints, candidate: Candidate): boolean {
-  const types = singleSuffix.test(hints.title) ? ["Album", "EP", "Single"] : ["Album", "EP"];
+  const types = allowedTypes(hints);
   if (candidate.status !== "Official" || !types.includes(candidate.primaryType ?? "")) return false;
   if (looseKey(searchTitle(hints.title)) !== looseKey(searchTitle(candidate.title))) return false;
   const names = new Set(

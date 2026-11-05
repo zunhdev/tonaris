@@ -1558,6 +1558,172 @@
       ]
     }
   },
+  "https://musicbrainz.org/ws/2/release-group?query=rgid%3Abec2ca63-468d-46bc-895c-75861d931fb9+OR+rgid%3A7224db21-5e7f-481c-a5a7-f8af73310664&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 2,
+      "release-groups": [
+        {
+          "id": "7224db21-5e7f-481c-a5a7-f8af73310664",
+          "count": 2,
+          "title": "Opiate²",
+          "first-release-date": "2022-03-01",
+          "primary-type": "Single",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "c0c0c002-26db-4377-a8b3-33649989ee45",
+              "title": "Opiate²",
+              "status": "Official"
+            },
+            {
+              "id": "027b7303-11a7-483e-bd6a-7422c58bb60d",
+              "title": "Opiate²",
+              "status": "Official"
+            }
+          ]
+        },
+        {
+          "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+          "count": 22,
+          "title": "Opiate",
+          "first-release-date": "1992-03-10",
+          "primary-type": "EP",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "releases": [
+            {
+              "id": "be640a62-70fe-4fb2-8dfb-bebd54c12dcb",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "9197b40d-3f3e-4342-b694-4a62c401e24a",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "c6c0959a-f4ca-4d31-bfcf-0a2eb49778e9",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "98a352cd-4198-4bcd-879a-a996b583be18",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "1bc318e1-906e-43e3-b314-3b18a50da767",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "3e7bade6-c5c6-42cd-8102-fa9b1eec0573",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "c10e1119-deef-4724-bf17-70c02f2db1a4",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "a20feaa1-cf01-47b4-bbea-94cc053479d9",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "520031d3-bed2-40a5-8ffb-36d9c7c0f809",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "3cabae2f-439b-4087-a105-82ff6d4e9dbe",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "187ee52c-af44-4765-8ea8-075a1a8028d0",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "eeac6e6b-e6e6-4e19-b2ee-803fbcf0ddfa",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "45549575-78a4-3d98-92d4-89f8ef9988b2",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "e44c1270-69c5-3871-bf9d-463b15b9f5aa",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "b8782c94-9b43-357c-b15b-821b3cb2d983",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "2691c66b-1d5f-3dcd-998a-f05067881406",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "d0922f4a-df19-354c-ab57-5c56cdd029c7",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "002fe68d-3414-4925-a9a6-bc9bc6336b06",
+              "title": "Opiate",
+              "status": "Bootleg"
+            },
+            {
+              "id": "ce550440-4771-45f7-ab90-2e2321879bf7",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "e7cceb23-751f-48b8-9283-1d38b997bee7",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "15ad7f36-9aeb-41ad-9c19-7ba28b44b9c8",
+              "title": "Opiate",
+              "status": "Official"
+            },
+            {
+              "id": "d9f65d7c-75e1-3caf-8797-0fdd25281117",
+              "title": "Opiate",
+              "status": "Official"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "https://musicbrainz.org/ws/2/release-group?query=rgid%3Acd526339-785e-4ccd-abc1-8d374bd6d68d+OR+rgid%3A8268d959-db46-4015-9dc4-4c95a2a2761f+OR+rgid%3Aa56f1250-ecc4-4077-9146-771dbd6f4745+OR+rgid%3A0e61ea15-fd97-4ce9-8c7d-f97830381512+OR+rgid%3Ad8e13584-70ea-4071-9a8b-157b89e92b2b+OR+rgid%3A6c958576-04b0-459a-b1dc-582e7fc11763+OR+rgid%3Ad393ee5b-b0f1-4072-a1cb-d3257b3c24da+OR+rgid%3A43f15aac-cd83-4dce-97c3-b2fc5937d44d&limit=100&fmt=json": {
     "status": 200,
     "body": {
@@ -5747,6 +5913,586 @@
       "releases": []
     }
   },
+  "https://musicbrainz.org/ws/2/release?query=release%3A%22Opiate%C2%B2%22+AND+artist%3A%22Tool%22&limit=100&fmt=json": {
+    "status": 200,
+    "body": {
+      "count": 24,
+      "releases": [
+        {
+          "id": "eeac6e6b-e6e6-4e19-b2ee-803fbcf0ddfa",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1996-09-17",
+          "barcode": "614223102719",
+          "track-count": 6
+        },
+        {
+          "id": "15ad7f36-9aeb-41ad-9c19-7ba28b44b9c8",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992-03-10",
+          "barcode": "724451102723",
+          "track-count": 7
+        },
+        {
+          "id": "ce550440-4771-45f7-ab90-2e2321879bf7",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992-03-10",
+          "barcode": "724451102723",
+          "track-count": 6
+        },
+        {
+          "id": "b8782c94-9b43-357c-b15b-821b3cb2d983",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "2000-08-11",
+          "track-count": 6
+        },
+        {
+          "id": "45549575-78a4-3d98-92d4-89f8ef9988b2",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1998-10-19",
+          "track-count": 6
+        },
+        {
+          "id": "002fe68d-3414-4925-a9a6-bc9bc6336b06",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Bootleg",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992",
+          "track-count": 11
+        },
+        {
+          "id": "027b7303-11a7-483e-bd6a-7422c58bb60d",
+          "count": 1,
+          "title": "Opiate²",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "7224db21-5e7f-481c-a5a7-f8af73310664",
+            "title": "Opiate²",
+            "primary-type": "Single"
+          },
+          "date": "2022-03-18",
+          "barcode": "194399484197",
+          "track-count": 2
+        },
+        {
+          "id": "3e7bade6-c5c6-42cd-8102-fa9b1eec0573",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "2013-03-26",
+          "track-count": 6
+        },
+        {
+          "id": "c0c0c002-26db-4377-a8b3-33649989ee45",
+          "count": 1,
+          "title": "Opiate²",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "7224db21-5e7f-481c-a5a7-f8af73310664",
+            "title": "Opiate²",
+            "primary-type": "Single"
+          },
+          "date": "2022-03-01",
+          "barcode": "886449932917",
+          "track-count": 1
+        },
+        {
+          "id": "c6c0959a-f4ca-4d31-bfcf-0a2eb49778e9",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "2019-08-02",
+          "barcode": "886447824733",
+          "track-count": 6
+        },
+        {
+          "id": "3cabae2f-439b-4087-a105-82ff6d4e9dbe",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1998",
+          "barcode": "5013705500220",
+          "track-count": 6
+        },
+        {
+          "id": "187ee52c-af44-4765-8ea8-075a1a8028d0",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "2007",
+          "barcode": "614223102719",
+          "track-count": 7
+        },
+        {
+          "id": "a20feaa1-cf01-47b4-bbea-94cc053479d9",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1998-10-19",
+          "barcode": "724384668921",
+          "track-count": 6
+        },
+        {
+          "id": "d9f65d7c-75e1-3caf-8797-0fdd25281117",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992-03-10",
+          "barcode": "614223102726",
+          "track-count": 6
+        },
+        {
+          "id": "520031d3-bed2-40a5-8ffb-36d9c7c0f809",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992",
+          "barcode": "614223300924",
+          "track-count": 6
+        },
+        {
+          "id": "e44c1270-69c5-3871-bf9d-463b15b9f5aa",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992-03-17",
+          "barcode": "828765364621",
+          "track-count": 6
+        },
+        {
+          "id": "d0922f4a-df19-354c-ab57-5c56cdd029c7",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992",
+          "barcode": "9397603316029",
+          "track-count": 6
+        },
+        {
+          "id": "2691c66b-1d5f-3dcd-998a-f05067881406",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992",
+          "barcode": "9326382000188",
+          "track-count": 6
+        },
+        {
+          "id": "c10e1119-deef-4724-bf17-70c02f2db1a4",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1997",
+          "barcode": "9326382000188",
+          "track-count": 6
+        },
+        {
+          "id": "98a352cd-4198-4bcd-879a-a996b583be18",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "",
+          "barcode": "828765364621",
+          "track-count": 6
+        },
+        {
+          "id": "e7cceb23-751f-48b8-9283-1d38b997bee7",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992-03-10",
+          "barcode": "",
+          "track-count": 7
+        },
+        {
+          "id": "9197b40d-3f3e-4342-b694-4a62c401e24a",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "",
+          "barcode": "614223300924",
+          "track-count": 6
+        },
+        {
+          "id": "1bc318e1-906e-43e3-b314-3b18a50da767",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1993",
+          "barcode": "724451102723",
+          "track-count": 6
+        },
+        {
+          "id": "be640a62-70fe-4fb2-8dfb-bebd54c12dcb",
+          "count": 1,
+          "title": "Opiate",
+          "status": "Official",
+          "artist-credit": [
+            {
+              "name": "Tool",
+              "artist": {
+                "id": "66fc5bf8-daa4-4241-b378-9bc9077939d2",
+                "name": "Tool",
+                "sort-name": "Tool"
+              }
+            }
+          ],
+          "release-group": {
+            "id": "bec2ca63-468d-46bc-895c-75861d931fb9",
+            "title": "Opiate",
+            "primary-type": "EP"
+          },
+          "date": "1992",
+          "barcode": "724451102723",
+          "track-count": 6
+        }
+      ]
+    }
+  },
   "https://musicbrainz.org/ws/2/release?query=release%3A%22Red+%28Taylor%27s+Version%29%22+AND+artist%3A%22Taylor+Swift%22&limit=100&fmt=json": {
     "status": 200,
     "body": {
@@ -7876,6 +8622,13 @@
     "body": {
       "urls": [],
       "url-count": 0
+    }
+  },
+  "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000012&resource=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000012&resource=https%3A%2F%2Fyoutube.com%2Fplaylist%3Flist%3DOLAK5uy_000000000000000000000000000000012&inc=release-rels+release-group-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "url-count": 0,
+      "urls": []
     }
   },
   "https://musicbrainz.org/ws/2/url?resource=https%3A%2F%2Fmusic.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s&resource=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DOLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s&resource=https%3A%2F%2Fyoutube.com%2Fplaylist%3Flist%3DOLAK5uy_n7HSS_Si8DdQYazuUFlRlPA4-S7YIMY1s&inc=release-rels+release-group-rels&fmt=json": {
