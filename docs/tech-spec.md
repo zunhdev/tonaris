@@ -254,7 +254,7 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | --- | --- | --- | --- |
 | `account_sync` | `account_id` PK, `seq bigint` | Per-account write serializer and cursor (TS-23) | FR-09 |
 | `containers` | `id`, `owner_id`, `kind` (`folder`\|`list`), `parent_id` (null = root), `name`, `name_key`, `search_name_key` (TON-62), `description`, `trashed_at`, `trash_unit_id` | Partial unique index `(owner_id, coalesce(parent_id, nil UUID), name_key) WHERE trashed_at IS NULL`, so root-level names collide too; drizzle-kit can't emit `NULLS NOT DISTINCT` on a partial index. No foreign key on `parent_id`: a container trashed on its own keeps its parent's id after that parent is purged, so recovery can see the parent is missing (FR-01.15). CHECK: name not blank. Depth ≤ 32 enforced in the move/create command (TS-31). Clients hold `description` (null for none) with each container; `container.describe` sets it, at most 2,000 characters (TON-54). A GIN trigram index on `search_name_key` (TS-50). | FR-01.1–FR-01.5, X-06 |
-| `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `artwork_url` (on client records since TON-48), `mb_release_group_id`, `mb_release_id`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live IS TRUE AND recording_year_start IS NOT NULL)`. (`IS TRUE`, because a null `is_live` would make the expression null, which a CHECK accepts.) CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. One record per album (FR-02.12): `mb_release_group_id` is the album's identity (TS-44), and `mb_release_id` only records the release a link resolved to. There is no edition label or barcode: TON-27 dropped `edition_label` and `barcode`. GIN trigram indexes on both search keys (TS-50, TON-62). | FR-02.6, FR-02.8, FR-02.12, FR-05.5 |
+| `albums` | `id`, `owner_id`, `title`, `artist_credit`, `release_type` (`album`\|`ep`\|`single`\|`compilation`\|null), `is_live` (bool\|null), `original_year`, `recording_year_start`, `recording_year_end`, `artwork_url` (on client records since TON-48), `mb_release_group_id`, `mb_release_id`, `trashed_at`, `trash_unit_id`, `search_title_key`, `search_artist_key` | CHECK on the applicable year: `original_year IS NOT NULL OR (is_live IS TRUE AND recording_year_start IS NOT NULL)`. (`IS TRUE`, because a null `is_live` would make the expression null, which a CHECK accepts.) CHECK: `recording_year_end >= recording_year_start`. CHECK: title and artist not blank. One record per album (FR-02.12): `mb_release_group_id` is the album's identity (TS-44), and `mb_release_id` only records the release a link resolved to. There is no edition label or barcode: TON-27 dropped `edition_label` and `barcode`. GIN trigram indexes on both search keys (TS-50, TON-62). | FR-02.6, FR-02.8, FR-02.12, FR-05.5 |
 | `album_provenance` | `album_id`, `field`, `source` (`user`\|`musicbrainz`\|`coverartarchive`\|`itunes-lookup`), `source_ref`, `retrieved_at`. PK `(album_id, field)` | Policy flags are *derived* from `source` through a versioned policy map in `packages/providers` (TS-15). Spotify-derived values are never stored, so there is no `spotify` source (TS-41). | G1, FR-08.8 |
 | `album_service_links` | `album_id`, `owner_id` (copied from the album), `service`, `url` (canonical), `entity_id`: the album's id when the link names one, else `track:{id}` (`linkEntityId()`, TON-42). PK `(album_id, service)` | One current link per service. Index on `(owner_id, service, entity_id)` for matching. Clients hold `{albumId, service, url}` per row, keyed `<albumId>:<service>`, and edit it with `link.set` and `link.remove` (TON-46). | FR-06.2–FR-06.4 |
 | `memberships` | `list_id`, `album_id`, `owner_id`, `added_at`. PK `(list_id, album_id)` | A membership is *effective* when both list and album are active. Rows survive the trashing of either side (TS-13). | FR-01.6–FR-01.10, FR-14.2 |
@@ -1041,7 +1041,7 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 - **Editions resolve to their album.** 176 links to deluxe, remastered, anniversary, expanded, reissued and regional editions were identified through steps 3 and 4 alone.
   - 125 found their album, none found a wrong one, and 3 went to confirmation.
   - MusicBrainz relates each of 580 edition links to exactly one album, so step 2 is unambiguous.
-- **Track links** add the release they belong to (FR-02.3): a compilation, or a single, which is Unclassified (TS-45).
+- **Track links** add the release they belong to (FR-02.3): a compilation, or a single (TS-45).
 - **Release group ids change (proposed by the G2 spike, decided 21 October 2026).** MusicBrainz merges release groups, and a lookup of a merged id returns the group it now belongs to. The spike's 141 albums included one merged id and one deleted one.
   - When MusicBrainz answers with another id, enrichment replaces the stored `mb_release_group_id`.
   - Matching compares a new link's album with saved albums whose old id was merged into it.
@@ -1066,12 +1066,14 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
 | --- | --- |
 | Album | Album |
 | EP | EP |
-| Single, Broadcast, Other | Unclassified (`release_type = null`) |
+| Single | Single |
+| Broadcast, Other | Unclassified (`release_type = null`) |
 
-The MB secondary type `Compilation` sets `release_type = compilation`, and the secondary type `Live` sets `is_live = true`. Live then takes priority in grouping (FR-05.9). Unknown stays null. **Singles are Unclassified** (creator decision, 17 October 2026), so no type is invented. Classification comes from MusicBrainz, the canonical source (TS-41). Provider hints never set a type.
+The MB secondary type `Compilation` sets `release_type = compilation`, and the secondary type `Live` sets `is_live = true`. Live then takes priority in grouping (FR-05.9). Unknown stays null. Classification comes from MusicBrainz, the canonical source (TS-41). Provider hints never set a type.
 
-- **Secondary types apply to Album, EP, and a release group with no primary type** (decided by the creator on 24 October 2026, TON-43). Single, Broadcast and Other stay Unclassified with `is_live = false`, whatever their secondary types, so a live single isn't Live. A primary type MusicBrainz adds later is treated as Other.
-- *As built in TON-43* (`classify()` in `packages/providers/src/album-facts.ts`): an Album or EP gets `is_live` from `Live`, true or false. A release group with no types leaves both fields unknown.
+- **Secondary types apply to Album, EP, Single, and a release group with no primary type** (decided by the creator on 24 October 2026, TON-43; Single added on 5 November 2026, TON-164). Broadcast and Other stay Unclassified with `is_live = false`, whatever their secondary types. A primary type MusicBrainz adds later is treated as Other.
+- **Singles are a release type like EPs** (creator decision, 5 November 2026, TON-164), replacing the 17 October 2026 decision that made them Unclassified. Singles saved before it keep no type: nothing reclassifies them, and a person can set Single.
+- *As built in TON-43* (`classify()` in `packages/providers/src/album-facts.ts`): an Album, EP or Single gets `is_live` from `Live`, true or false. A release group with no types leaves both fields unknown.
 
 **TS-46 Chronology (Proposed; FR-02.8, FR-05.5, FR-05.6).**
 
@@ -1505,7 +1507,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   "accountDefaults": { "sortMode": "chronological", "sortDirection": "asc", "grouped": true },
   "fields": [ { "id": "…", "name": "Rating", "type": "singleChoice",
                 "options": [ { "id": "…", "label": "★★★★★" } ] } ],
-  "albums": [ { "id": "…", "title": "…", "artistCredit": "…", "releaseType": "album|ep|compilation|null",
+  "albums": [ { "id": "…", "title": "…", "artistCredit": "…", "releaseType": "album|ep|single|compilation|null",
                 "isLive": false, "originalYear": 1977, "recordingYears": null,
                 "artworkUrl": "…", "serviceLinks": { "spotify": "https://open.spotify.com/album/…" },
                 "identifiers": { "musicbrainzReleaseGroup": "…" },
@@ -2134,7 +2136,7 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 **Decided 17 October 2026**
 
 - The identification chain for the experiment: MusicBrainz lookups, Spotify identifiers only, and Apple hints with an automatic strict search (TS-41).
-- Singles are Unclassified (TS-45).
+- Singles are Unclassified (TS-45); replaced on 5 November 2026: singles are a release type (TON-164).
 - Resource limits (TS-18).
 - The verification matrix (TS-122).
 - Admission-invitation expiry of 14 days (TS-71).

@@ -189,7 +189,7 @@ describe("OpenAPI", () => {
       ?.properties.args.properties.releaseType;
     expect(releaseType).toEqual({
       type: ["string", "null"],
-      enum: ["album", "ep", "compilation", null],
+      enum: ["album", "ep", "single", "compilation", null],
     });
   });
 

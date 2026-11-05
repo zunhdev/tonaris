@@ -148,7 +148,7 @@ These are user-facing concepts, not a data model.
 | Album | A saved album record (album, EP, live album, compilation). There is one record per album, whichever edition its links point to (FR-02.12). |
 | Edition | A version of an album, for example "2010 remaster" or "2022 deluxe". This version doesn't distinguish editions: a link to any edition belongs to the album (FR-02.12). |
 | Album chronology | The year used for chronological sorting (FR-05.5). It is never a reissue's release year. |
-| Release-type group | A presentation group: Album, EP, Live, Compilation, or Unclassified (FR-05.9). |
+| Release-type group | A presentation group: Album, EP, Single, Live, Compilation, or Unclassified (FR-05.9). |
 | Service link | A link to a particular release on a streaming service. |
 | Custom field | An account-level field definition that albums can optionally use. Values belong to the album. |
 | Owner | The user who controls a collection and grants access. |
@@ -268,7 +268,7 @@ The rule applies to creation, renaming, moves, and recovery.
 - If the addition reuses an active record, that record's memberships are untouched.
 - A matched trashed album added without a destination is reactivated with no memberships (FR-14.4).
 
-**FR-02.3 Track links.** A track link resolves to the album of the release that specific link belongs to. For example, a track linked from a compilation adds that compilation, not some other album containing the song. A track from a single adds the single, which is Unclassified (FR-05.9; decided 19 October 2026). Only that album is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
+**FR-02.3 Track links.** A track link resolves to the album of the release that specific link belongs to. For example, a track linked from a compilation adds that compilation, not some other album containing the song. A track from a single adds the single (decided 19 October 2026), which is a Single (FR-05.9; decided 5 November 2026). Only that album is saved, under the usual matching, duplicate, and required-information rules. Unresolvable or unsupported input is explained, with manual entry offered and the input preserved.
 
 - Tidal and Qobuz track links name no album Tonaris may look up (G1). Such a link is explained, and manual entry opens with the link kept as the album's link for that service (decided 20 October 2026 for Tidal, 24 October 2026 for Qobuz).
 - A YouTube Music track link names its album's playlist, which is what's identified and kept as the album's link (TON-131).
@@ -411,16 +411,16 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-05.6 Missing recording year.** A live release with an unknown recording year sorts by its original release year. The recording year stays unknown, and the interface indicates the fallback.
 
-**FR-05.7 Release-type grouping.** Users choose a combined view or grouping into Album, EP, Live, and Compilation, plus Unclassified for unknown types. Grouping is presentation only: no copies or extra lists. Everyone sees the same app-defined group sequence, which users cannot reorder. The exact sequence is defined in the design spec.
+**FR-05.7 Release-type grouping.** Users choose a combined view or grouping into Album, EP, Single, Live, and Compilation, plus Unclassified for unknown types. Grouping is presentation only: no copies or extra lists. Everyone sees the same app-defined group sequence, which users cannot reorder. The exact sequence is defined in the design spec.
 
 **FR-05.8 Grouping and sorting are independent.** Grouping works with every sort mode, and switching one never changes the other. When grouped, the selected order applies within each group. Manual order uses the same personal arrangement in combined and grouped views, and switching never resets it. This applies to owned, shared, and guest views.
 
 **FR-05.9 Group assignment.** Each album appears in exactly one group.
 
-- Live classification takes priority over EP and Compilation. The EP and Compilation groups hold non-live releases.
+- Live classification takes priority over EP, Single and Compilation. The EP, Single and Compilation groups hold non-live releases.
 - An unknown type goes to Unclassified when grouped and stays in the normal flow when combined. A type is never assigned just to place an album.
 - Mixed content follows the metadata source's main release identity: live bonus tracks do not make a studio release Live, and vice versa.
-- Singles, and any other release type outside Album, EP, Live, and Compilation, go to Unclassified. A live single stays Unclassified: the source's live or compilation marking doesn't move a single out of it (decided 24 October 2026).
+- Singles are a release type like EPs (decided 5 November 2026, replacing 17 and 24 October 2026's Unclassified singles): a live single is Live, and a compilation single is a Compilation. Any other release type outside Album, EP, Single, Live, and Compilation goes to Unclassified.
 - Users can correct classification. There is no track-by-track classification.
 
 **FR-05.10 Initial presentation.** The design spec chooses the initial sort, grouping, and mode on entry, within the supported options, device scope, and permissions. Saved account defaults and remembered choices take precedence (FR-11.7).
@@ -1112,6 +1112,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decisions (31 October 2026), terms of use and privacy notice** (TON-131): YouTube's Developer Policies require terms that bind users to YouTube's Terms of Service and a privacy notice users agree to, and Tonaris had neither. The creator chose to build both with YouTube Music; that the notice names zunh.dev; and that joining's "By continuing, you agree…" line plus a one-time screen for earlier members is the agreement. **Added** FR-11.14; **updated** FR-02.1, FR-02.3, FR-10.5 and AC-06.
 - **Decision (31 October 2026), your streaming services** (TON-138), from the creator's manual testing: each person turns services on or off in Settings, and the album panel and New album show link fields only for those that are on. Saved links always show. **Updated** FR-06.3.
 - **Decision (1 November 2026), a feedback board** (TON-132), from the creator's manual testing: members reach a public feedback board from the account menu, signed in through Tonaris. It is Fider Cloud's free plan, which receives their name and email so it can tell them about replies, and requests reach planning by hand. **Added** FR-11.15.
+- **Decision (5 November 2026), singles** (TON-164), from the creator's manual testing: Single is a release type, no different from EP. It can be chosen and set by agents, singles get it from MusicBrainz on capture, and grouping shows a Single group after EP. Singles saved earlier keep no type until someone sets one. This replaces the 17 and 24 October 2026 decisions that made singles Unclassified. **Updated** FR-02.3, FR-05.7, FR-05.9 and the glossary.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);

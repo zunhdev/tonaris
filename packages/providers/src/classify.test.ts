@@ -5,9 +5,18 @@ import { describe, expect, test } from "bun:test";
 import { classify, recordingYears } from "./album-facts";
 
 describe("classify (TS-45, FR-05.9)", () => {
-  test("Album and EP map to themselves", () => {
+  test("Album, EP and Single map to themselves", () => {
     expect(classify("Album", [])).toEqual({ releaseType: "album", isLive: false });
     expect(classify("EP", [])).toEqual({ releaseType: "ep", isLive: false });
+    expect(classify("Single", [])).toEqual({ releaseType: "single", isLive: false });
+  });
+
+  test("a single is classified as an EP is (TON-164)", () => {
+    expect(classify("Single", ["Live"])).toEqual({ releaseType: "single", isLive: true });
+    expect(classify("Single", ["Compilation"])).toEqual({
+      releaseType: "compilation",
+      isLive: false,
+    });
   });
 
   test("Compilation makes a compilation, and Live makes it live", () => {
@@ -23,8 +32,8 @@ describe("classify (TS-45, FR-05.9)", () => {
     });
   });
 
-  test("Single, Broadcast and Other are Unclassified and not live, whatever their secondary types", () => {
-    for (const type of ["Single", "Broadcast", "Other"]) {
+  test("Broadcast and Other are Unclassified and not live, whatever their secondary types", () => {
+    for (const type of ["Broadcast", "Other"]) {
       expect(classify(type, [])).toEqual({ isLive: false });
       expect(classify(type, ["Live"])).toEqual({ isLive: false });
       expect(classify(type, ["Compilation", "Live"])).toEqual({ isLive: false });

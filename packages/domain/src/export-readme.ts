@@ -23,7 +23,7 @@ This archive holds your whole Tonaris collection as it was on ${data.exportedAt.
 - **\`accountDefaults\`**: how your views sort, group and lay out unless you chose otherwise for one.
 - **\`fields\`**: your custom fields, each with its \`type\` and, for choices, its \`options\` with their labels.
 - **\`albums\`**: every album, once each. An album in several lists still appears once; lists point to it by \`id\`. Each album has:
-  - its metadata: \`title\`, \`artistCredit\`, \`releaseType\` (\`album\`, \`ep\`, \`compilation\`, or \`null\` for unclassified), \`isLive\`, \`originalYear\`, and \`recordingYearStart\` and \`recordingYearEnd\` for live recordings;
+  - its metadata: \`title\`, \`artistCredit\`, \`releaseType\` (\`album\`, \`ep\`, \`single\`, \`compilation\`, or \`null\` for unclassified), \`isLive\`, \`originalYear\`, and \`recordingYearStart\` and \`recordingYearEnd\` for live recordings;
   - \`artworkUrl\`, the artwork's address (image files aren't included);
   - \`serviceLinks\`, its links on Spotify, Apple Music, Qobuz, Tidal and YouTube Music;
   - \`identifiers\`, its MusicBrainz release and release group, when known;

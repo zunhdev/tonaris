@@ -26,7 +26,7 @@ type Row = {
   id: string;
   title: string;
   artistCredit: string;
-  releaseType: "album" | "ep" | "compilation" | null;
+  releaseType: "album" | "ep" | "single" | "compilation" | null;
   isLive: boolean | null;
   originalYear: number | null;
   recordingYearStart: number | null;

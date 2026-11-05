@@ -119,11 +119,11 @@ The year in rows and cards SHALL show which year an album sorts by (DS-24, AC-14
 - **THEN** its year reads 1979 with the fallback marker, and its accessible label says "Recording year unknown — sorted by release year"
 
 ### Requirement: Lists and Unsorted can be grouped by release type
-Lists and Unsorted SHALL show their albums combined or grouped by release type (FR-05.7, FR-05.9, DS-43). Groups come in one fixed sequence: Album, EP, Live, Compilation, then Unclassified. Live SHALL take priority over the other types. Singles and unknown types SHALL go to Unclassified. Each group has a header with its name and count. Empty groups SHALL be hidden. Combined, every album SHALL stay in one sequence.
+Lists and Unsorted SHALL show their albums combined or grouped by release type (FR-05.7, FR-05.9, DS-43). Groups come in one fixed sequence: Album, EP, Single, Live, Compilation, then Unclassified. Live SHALL take priority over the other types. Unknown types SHALL go to Unclassified. Each group has a header with its name and count. Empty groups SHALL be hidden. Combined, every album SHALL stay in one sequence.
 
 #### Scenario: Grouping a list
 - **WHEN** an owner groups a list holding a studio album, a live EP, a single and a compilation by release type
-- **THEN** the list shows Album, Live, Compilation and Unclassified in that order, with the live EP under Live and the single under Unclassified
+- **THEN** the list shows Album, Single, Live and Compilation in that order, with the live EP under Live and the single under Single
 
 #### Scenario: Collapsing a group
 - **WHEN** an owner collapses the Live group

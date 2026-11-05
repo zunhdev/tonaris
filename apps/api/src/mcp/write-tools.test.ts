@@ -432,6 +432,11 @@ describe("albums (FR-10.4, FR-10.5)", () => {
       title: "Nightfall",
       releaseType: "album",
     });
+    // Single is a release type an agent sets, as EP (TON-164).
+    expect(
+      statuses(await write(mcp, "update_album", { albumId, values: { releaseType: "single" } })),
+    ).toEqual(["confirmed"]);
+    expect(await read(mcp, "get_album", { albumId })).toMatchObject({ releaseType: "single" });
   });
 
   test("sets custom fields: applies and sets in one go, clears, and removes", async () => {

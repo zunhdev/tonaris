@@ -154,8 +154,10 @@ describe("sorting folders and lists (FR-05.1, DS-42)", () => {
 });
 
 describe("release-type groups (FR-05.7–FR-05.9, DS-43)", () => {
-  test("live comes before any type, and singles and unknown types are Unclassified", () => {
+  test("live comes before any type, and unknown types are Unclassified", () => {
     expect(groupOf({ isLive: true, releaseType: "ep" })).toBe("live");
+    expect(groupOf({ isLive: true, releaseType: "single" })).toBe("live");
+    expect(groupOf({ isLive: false, releaseType: "single" })).toBe("single");
     expect(groupOf({ isLive: true, releaseType: "compilation" })).toBe("live");
     expect(groupOf({ isLive: true, releaseType: null })).toBe("live");
     expect(groupOf({ isLive: false, releaseType: "ep" })).toBe("ep");
@@ -166,15 +168,17 @@ describe("release-type groups (FR-05.7–FR-05.9, DS-43)", () => {
   test("groups come in the fixed sequence, empty ones gone, each in the sorted order", () => {
     const studio = album("Nightfall");
     const liveEp = album("Live EP", { isLive: true, releaseType: "ep" });
-    const single = album("Samarithan", { releaseType: null });
+    const single = album("Samarithan", { releaseType: "single" });
+    const unknown = album("Demo", { releaseType: null });
     const best = album("The Best Of", { releaseType: "compilation" });
     const ancient = album("Ancient Dreams");
-    const sorted = [studio, liveEp, single, best, ancient];
+    const sorted = [unknown, studio, liveEp, single, best, ancient];
     expect(sections(sorted, true).map(({ group, albums }) => [group, titles(albums)])).toEqual([
       ["album", ["Nightfall", "Ancient Dreams"]],
+      ["single", ["Samarithan"]],
       ["live", ["Live EP"]],
       ["compilation", ["The Best Of"]],
-      ["unclassified", ["Samarithan"]],
+      ["unclassified", ["Demo"]],
     ]);
   });
 

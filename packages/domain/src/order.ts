@@ -140,20 +140,28 @@ export function sortContainers<T extends Pick<Container, "id" | "kind" | "name">
 }
 
 /** DS-43's group sequence: core studio work first, unknowns last. Everyone sees the same (FR-05.7). */
-export const releaseGroups = ["album", "ep", "live", "compilation", "unclassified"] as const;
+export const releaseGroups = [
+  "album",
+  "ep",
+  "single",
+  "live",
+  "compilation",
+  "unclassified",
+] as const;
 export type ReleaseGroup = (typeof releaseGroups)[number];
 
 export const groupNames: Record<ReleaseGroup, string> = {
   album: "Album",
   ep: "EP",
+  single: "Single",
   live: "Live",
   compilation: "Compilation",
   unclassified: "Unclassified",
 };
 
 /**
- * The one group an album belongs to (FR-05.9): Live before any type, then its type. Singles and unknown types are
- * Unclassified, which TS-45 stores as no type.
+ * The one group an album belongs to (FR-05.9): Live before any type, then its type. Unknown types are Unclassified,
+ * which TS-45 stores as no type.
  */
 export function groupOf(album: Pick<Album, "isLive" | "releaseType">): ReleaseGroup {
   if (album.isLive === true) return "live";

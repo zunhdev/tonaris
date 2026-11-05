@@ -72,14 +72,21 @@ const recordingTypes = new Set(["recorded at", "recorded in"]);
 
 type ReleaseType = NonNullable<AlbumFields["releaseType"]>;
 
+/** MusicBrainz's primary types that are a release type of their own (TS-45). */
+const ownTypes = new Map<string, ReleaseType>([
+  ["Album", "album"],
+  ["EP", "ep"],
+  ["Single", "single"],
+]);
+
 /** A classification; a part MusicBrainz leaves unknown is absent. */
 export type Classification = { releaseType?: ReleaseType; isLive?: boolean };
 
 /**
- * TS-45, as decided on 24 October 2026: Album and EP map to themselves, and Compilation among the secondary types
- * makes either a compilation, as it does a release group with no primary type; Live makes them live. Single,
- * Broadcast and Other, and any type MusicBrainz adds later, are Unclassified and not live, whatever their secondary
- * types, so a live single isn't Live (FR-05.9).
+ * TS-45, as decided on 24 October 2026, with Single on 5 November 2026 (TON-164): Album, EP and Single map to
+ * themselves, and Compilation among the secondary types makes any of them a compilation, as it does a release group
+ * with no primary type; Live makes them live. Broadcast and Other, and any type MusicBrainz adds later, are
+ * Unclassified and not live, whatever their secondary types (FR-05.9).
  */
 export function classify(
   primaryType: string | null | undefined,
@@ -87,12 +94,8 @@ export function classify(
 ): Classification {
   const compilation = secondaryTypes.includes("Compilation");
   const live = secondaryTypes.includes("Live");
-  if (primaryType === "Album" || primaryType === "EP") {
-    return {
-      releaseType: compilation ? "compilation" : primaryType === "EP" ? "ep" : "album",
-      isLive: live,
-    };
-  }
+  const own = ownTypes.get(primaryType ?? "");
+  if (own) return { releaseType: compilation ? "compilation" : own, isLive: live };
   if (primaryType === null || primaryType === undefined) {
     return {
       ...(compilation ? { releaseType: "compilation" as const } : {}),

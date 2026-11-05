@@ -72,6 +72,7 @@ test("albums sort by their chronological year or name, and group by release type
       album("Live Evil", { ...values, isLive: true, releaseType: "ep", originalYear: 1982 }),
       album("Neon Knights", { ...values, releaseType: null, originalYear: 1980 }),
       album("The Best Of", { ...values, releaseType: "compilation", originalYear: 1985 }),
+      album("Die Young", { ...values, releaseType: "single", originalYear: 1980 }),
     ],
     sabbath.id,
   );
@@ -81,6 +82,7 @@ test("albums sort by their chronological year or name, and group by release type
   await live(page);
   await expect(titles(page, "Sabbath")).toHaveText([
     "LLive at the Rainbow",
+    "DDie Young",
     "HHeaven and Hell",
     "NNeon Knights",
     "LLive Evil",
@@ -88,9 +90,9 @@ test("albums sort by their chronological year or name, and group by release type
   ]);
   const yearOf = (row: number) => albumRows(page, "Sabbath").nth(row).getByRole("gridcell").nth(2);
   await expect(yearOf(0)).toHaveText("rec. 1978–1982");
-  await expect(yearOf(1)).toHaveText("1980");
-  await expect(yearOf(3)).toHaveText(`1982 · ${fallbackText}`);
-  await yearOf(3).locator("svg").hover();
+  await expect(yearOf(2)).toHaveText("1980");
+  await expect(yearOf(4)).toHaveText(`1982 · ${fallbackText}`);
+  await yearOf(4).locator("svg").hover();
   await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText(fallbackText);
 
   // By name, descending.
@@ -104,6 +106,7 @@ test("albums sort by their chronological year or name, and group by release type
     "LLive Evil",
     "LLive at the Rainbow",
     "HHeaven and Hell",
+    "DDie Young",
   ]);
 
   // Grouped by release type, the sort is kept within each group (AC-15).
@@ -113,14 +116,17 @@ test("albums sort by their chronological year or name, and group by release type
   expect(await violations(page, '[role="dialog"]')).toEqual([]);
   await page.keyboard.press("Escape");
   await expect(viewOptions(page)).toBeHidden();
+  // Single comes after EP (TON-164); the empty EP group is hidden.
   await expect(groupHeaders(page, "Sabbath")).toHaveText([
     "Album1 album",
+    "Single1 album",
     "Live2 albums",
     "Compilation1 album",
     "Unclassified1 album",
   ]);
   await expect(titles(page, "Sabbath")).toHaveText([
     "HHeaven and Hell",
+    "DDie Young",
     "LLive Evil",
     "LLive at the Rainbow",
     "TThe Best Of",
@@ -141,6 +147,7 @@ test("albums sort by their chronological year or name, and group by release type
   await expect(liveGroup).toHaveAttribute("aria-expanded", "false");
   await expect(titles(page, "Sabbath")).toHaveText([
     "HHeaven and Hell",
+    "DDie Young",
     "TThe Best Of",
     "NNeon Knights",
   ]);
@@ -156,6 +163,7 @@ test("albums sort by their chronological year or name, and group by release type
   await expect(viewOptions(page).getByRole("radio", { name: "Descending" })).toBeDisabled();
   await expect(titles(page, "Sabbath")).toHaveText([
     "HHeaven and Hell",
+    "DDie Young",
     "LLive at the Rainbow",
     "LLive Evil",
     "TThe Best Of",
@@ -168,6 +176,7 @@ test("albums sort by their chronological year or name, and group by release type
     "LLive Evil",
     "NNeon Knights",
     "TThe Best Of",
+    "DDie Young",
   ]);
 });
 
