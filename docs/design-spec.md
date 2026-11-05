@@ -636,7 +636,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Folders and lists:** Name sorts by name, ignoring case and accents. Created sorts by when each was made, as its UUIDv7 ID holds.
 
 **DS-43 Group sequence and headers** *(handoff FR-05.7)*:
-- Sequence: **Album → EP → Live → Compilation → Unclassified.** Core studio work comes first and unknowns last.
+- Sequence: **Album → EP → Single → Live → Compilation → Unclassified.** Core studio work comes first, by length, and unknowns last (Single added in TON-164).
 - Sticky 28px headers show the group name and count (`text.small`, `fg.secondary`).
 - Empty groups are hidden.
 - Groups can be collapsed per session; collapse state is not synced.
@@ -694,7 +694,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 **DS-46 Album inspector.** It opens with Enter or a click on a row, shows the album at `?album=:id`, and Esc closes it. With the inspector open, J/K moves to the next or previous album. Sections, top to bottom: *(FR-03.1–FR-03.4, FR-06.2–FR-06.4, FR-01.6, FR-01.8, FR-14.1)*
 
 1. **Artwork** (240px), title and artist credit.
-2. **Chronology:** release type (Album / EP / Compilation / Unknown), a Live switch, original release year, and recording year or range (shown when Live is on). Hints explain which year sorts.
+2. **Chronology:** release type (Album / EP / Single / Compilation / Unknown), a Live switch, original release year, and recording year or range (shown when Live is on). Hints explain which year sorts.
 3. **Links:** one row per service, each with Open, Replace, and Remove (editing). A pending alternative link from capture (FR-06.4) shows as a notice: "Another Spotify link was found for this album · Replace · Dismiss".
 4. **Custom fields:** applied fields with editors (DS-26), then "+ Add field".
 5. **Lists:** membership chips with × to remove and "+ Add to list" (`L`). With no memberships, an "Unsorted" chip.

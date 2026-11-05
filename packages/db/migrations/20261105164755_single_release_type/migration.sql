@@ -1,0 +1,1 @@
+ALTER TABLE "albums" DROP CONSTRAINT "albums_release_type_check", ADD CONSTRAINT "albums_release_type_check" CHECK ("release_type" in ('album', 'ep', 'single', 'compilation'));

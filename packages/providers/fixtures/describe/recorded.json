@@ -22,18 +22,19 @@
   "https://musicbrainz.org/ws/2/release-group/155ba060-6b49-4f0b-8556-2e13853e061d?inc=artist-credits+releases&fmt=json": {
     "status": 200,
     "body": {
-      "primary-type": "Single",
+      "id": "155ba060-6b49-4f0b-8556-2e13853e061d",
       "artist-credit": [
         {
-          "name": "Nirvana",
-          "joinphrase": ""
+          "joinphrase": "",
+          "name": "Nirvana"
         }
       ],
-      "first-release-date": "1996",
       "secondary-types": ["Live"],
-      "id": "155ba060-6b49-4f0b-8556-2e13853e061d",
+      "first-release-date": "1996",
       "releases": [
         {
+          "id": "6644d2fa-d41d-4dc1-9eac-5b7700f89dfe",
+          "status": "Promotion",
           "artist-credit": [
             {
               "name": "Nirvana",
@@ -41,11 +42,10 @@
             }
           ],
           "title": "Smells Like Teen Spirit (live)",
-          "status": "Promotion",
-          "date": "1996",
-          "id": "6644d2fa-d41d-4dc1-9eac-5b7700f89dfe"
+          "date": "1996"
         }
       ],
+      "primary-type": "Single",
       "title": "Smells Like Teen Spirit (live)"
     }
   },
@@ -1313,6 +1313,41 @@
         }
       ],
       "first-release-date": "2020-07-03"
+    }
+  },
+  "https://musicbrainz.org/ws/2/release/6644d2fa-d41d-4dc1-9eac-5b7700f89dfe?inc=recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json": {
+    "status": 200,
+    "body": {
+      "status": "Promotion",
+      "id": "6644d2fa-d41d-4dc1-9eac-5b7700f89dfe",
+      "date": "1996",
+      "title": "Smells Like Teen Spirit (live)",
+      "media": [
+        {
+          "title": "",
+          "id": "1eff2717-4758-420c-baba-d1ac46c9816b",
+          "tracks": [
+            {
+              "id": "58a24b35-3e0c-46af-9f5b-af237c2c1a27",
+              "title": "Smells Like Teen Spirit (live)",
+              "recording": {
+                "title": "Smells Like Teen Spirit",
+                "id": "1090ec7d-6c3b-445f-a18e-e1105dfe706e",
+                "first-release-date": "1996",
+                "relations": [
+                  {
+                    "begin": "1991-12-28",
+                    "target-type": "place",
+                    "end": "1991-12-28",
+                    "type": "recorded at"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "relations": []
     }
   },
   "https://musicbrainz.org/ws/2/release/e34abdb8-6548-4337-8a1f-3deca9e90095?inc=recordings+recording-level-rels+place-rels+area-rels+event-rels&fmt=json": {

@@ -178,12 +178,16 @@ describe("renderCollection", () => {
   test("a grouped view shows its albums by release type", () => {
     const studio = album("Kind of Blue");
     const ep = album("Four", { releaseType: "ep" });
-    const source = { ...empty(), albums: [studio, ep] };
+    const single = album("So What", { releaseType: "single" });
+    const source = { ...empty(), albums: [studio, ep, single] };
     const text = render({ ...source, defaults: { ...appViewDefaults, grouped: true } });
     const unsorted = text.slice(text.indexOf("## Unsorted"), text.indexOf("## Trash"));
     expect(unsorted.indexOf("**Album**")).toBeLessThan(unsorted.indexOf("Kind of Blue"));
     expect(unsorted.indexOf("**EP**")).toBeLessThan(unsorted.indexOf("Four"));
     expect(unsorted).toContain("| 2 | Four |");
+    // Single after EP (TON-164).
+    expect(unsorted.indexOf("Four")).toBeLessThan(unsorted.indexOf("**Single**"));
+    expect(unsorted.indexOf("**Single**")).toBeLessThan(unsorted.indexOf("So What"));
   });
 });
 

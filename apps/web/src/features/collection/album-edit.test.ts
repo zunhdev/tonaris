@@ -160,6 +160,7 @@ describe("release types in words (DS-19, FR-05.9)", () => {
     expect(releaseTypeOptions.map(({ label }) => label)).toEqual([
       "Album",
       "EP",
+      "Single",
       "Compilation",
       "Unknown",
     ]);

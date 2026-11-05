@@ -22,7 +22,7 @@ import { placeAtTop } from "./positions";
 import { z } from "./zod";
 
 /** Null means Unclassified (TS-45). */
-export const releaseTypes = ["album", "ep", "compilation"] as const;
+export const releaseTypes = ["album", "ep", "single", "compilation"] as const;
 
 const year = z.int().min(1).max(9999);
 

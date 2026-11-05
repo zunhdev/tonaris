@@ -3230,6 +3230,7 @@
                                 "enum": [
                                   "album",
                                   "ep",
+                                  "single",
                                   "compilation",
                                   null
                                 ]
@@ -3537,6 +3538,7 @@
                                     "enum": [
                                       "album",
                                       "ep",
+                                      "single",
                                       "compilation",
                                       null
                                     ]
@@ -6567,6 +6569,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -7142,6 +7145,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -7539,6 +7543,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -7628,6 +7633,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -7689,6 +7695,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -7851,6 +7858,7 @@
                                 "enum": [
                                   "album",
                                   "ep",
+                                  "single",
                                   "compilation",
                                   null
                                 ]
@@ -9857,6 +9865,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -9946,6 +9955,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -10007,6 +10017,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -10169,6 +10180,7 @@
                                 "enum": [
                                   "album",
                                   "ep",
+                                  "single",
                                   "compilation",
                                   null
                                 ]
@@ -12175,6 +12187,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -12264,6 +12277,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -12325,6 +12339,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -12487,6 +12502,7 @@
                                 "enum": [
                                   "album",
                                   "ep",
+                                  "single",
                                   "compilation",
                                   null
                                 ]
@@ -15678,6 +15694,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation",
                               null
                             ]
@@ -16559,6 +16576,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation"
                             ]
                           },
@@ -17844,6 +17862,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation"
                             ]
                           },
@@ -17950,6 +17969,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation"
                             ]
                           },
@@ -18027,6 +18047,7 @@
                             "enum": [
                               "album",
                               "ep",
+                              "single",
                               "compilation"
                             ]
                           },
@@ -18217,6 +18238,7 @@
                                 "enum": [
                                   "album",
                                   "ep",
+                                  "single",
                                   "compilation"
                                 ]
                               },

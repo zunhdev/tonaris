@@ -51,13 +51,16 @@ describe("describeAlbum: the release group's facts (TS-41, FR-02.12)", () => {
   });
 });
 
-describe("describeAlbum: classification (TS-45, decided 24 October 2026)", () => {
-  test("a live single is Unclassified and not live, so it never asks for recordings", async () => {
-    const harnessed = run(cases.liveSingle);
-    const facts = await harnessed.describe();
-    expect(facts.status === "found" && facts.values.releaseType).toBeUndefined();
-    expect(facts.status === "found" && facts.values.isLive?.value).toBe(false);
-    expect(harnessed.requests.filter((request) => request.includes("/ws/2/release/"))).toEqual([]);
+describe("describeAlbum: classification (TS-45, Single on 5 November 2026)", () => {
+  test("a live single is a live Single, with its recording years, as a live EP is (TON-164)", async () => {
+    const facts = await run(cases.liveSingle).describe();
+    if (facts.status !== "found") throw new Error(facts.status);
+    expect(facts.values).toMatchObject({
+      releaseType: { value: "single" },
+      isLive: { value: true },
+      recordingYearStart: { value: 1991 },
+      recordingYearEnd: { value: 1991 },
+    });
   });
 });
 

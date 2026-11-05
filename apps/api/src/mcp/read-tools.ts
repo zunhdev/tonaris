@@ -72,7 +72,7 @@ const albumSummarySchema = z.object({
   artistCredit: agentValue(z.string()).describe("The artist as credited."),
   originalYear: agentValue(year.nullable()).describe("The original release year, when known."),
   releaseType: agentValue(z.enum(releaseTypes).nullable()).describe(
-    "Album, EP, single, compilation and so on; null when unclassified.",
+    "Album, EP, single or compilation; null when unclassified.",
   ),
 });
 
