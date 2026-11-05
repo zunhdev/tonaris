@@ -509,3 +509,46 @@ test("an album has its own page", async ({ page }) => {
   await live(page);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Not available");
 });
+
+test("the release type's five choices fit, also in the panel at its narrowest (TON-165)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.releaseTypeFit);
+  await live(page);
+  const doom = await created(page, "Doom");
+  const nightfall = album("Nightfall", { originalYear: 1987 });
+  await added(page, [nightfall], doom.id);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`/l/${doom.id}?album=${nightfall.id}`);
+  await live(page);
+  await page.keyboard.press("e");
+  await expect(mode(page, "Edit")).toBeChecked();
+  const group = inspector(page).getByRole("radiogroup", { name: "Release type" });
+  // Each label inside its option, and the control inside the panel.
+  const spills = () =>
+    group.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const panel = element.closest("aside")?.getBoundingClientRect();
+      const labels = [...element.querySelectorAll('[role="radio"]')].flatMap((radio) => {
+        const range = document.createRange();
+        range.selectNodeContents(radio);
+        const text = range.getBoundingClientRect();
+        const option = radio.getBoundingClientRect();
+        return text.left < option.left || text.right > option.right ? [radio.textContent] : [];
+      });
+      return panel && box.right > panel.right ? [...labels, "the panel"] : labels;
+    });
+  await expect(group.getByRole("radio")).toHaveText([
+    "Album",
+    "EP",
+    "Single",
+    "Compilation",
+    "Unknown",
+  ]);
+  expect(await spills()).toEqual([]);
+  const edge = page.getByRole("separator", { name: "Resize album panel" });
+  await edge.focus();
+  await page.keyboard.press("Home");
+  await expect(edge).toHaveAttribute("aria-valuenow", "320");
+  expect(await spills()).toEqual([]);
+});
