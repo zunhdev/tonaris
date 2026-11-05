@@ -1,7 +1,8 @@
 // SegmentedControl (DS-20): one choice among a few, shown side by side, as in View options and Settings →
 // Preferences (DS-49, DS-94). It is Base UI's radio group, so assistive technology hears a radio group, it takes one
 // tab stop, and the arrow keys move between options. The chosen option takes the selected surface (DS-12); focus is
-// a solid `focus` outline (DS-14).
+// a solid `focus` outline (DS-14). Options share the width equally, but none gets narrower than its label: a long
+// one, such as the release type's "Compilation" in a 320 px album panel, takes its own width (TON-165).
 
 import { Radio } from "@base-ui/react/radio";
 import { RadioGroup } from "@base-ui/react/radio-group";
@@ -45,7 +46,7 @@ function SegmentedControl<Value extends string>({
           key={option.value}
           value={option.value}
           className={cn(
-            "flex h-6 min-w-0 flex-1 cursor-default items-center justify-center gap-1.5 rounded-sm px-2 text-small font-medium whitespace-nowrap text-fg-secondary transition-colors duration-100 ease-enter outline-none select-none hover:text-fg-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid data-checked:bg-selected data-checked:text-fg-primary data-disabled:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
+            "flex h-6 flex-1 cursor-default items-center justify-center gap-1.5 rounded-sm px-1.5 text-small font-medium whitespace-nowrap text-fg-secondary transition-colors duration-100 ease-enter outline-none select-none hover:text-fg-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid data-checked:bg-selected data-checked:text-fg-primary data-disabled:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
             size === "touch" && "h-10 text-base",
           )}
         >

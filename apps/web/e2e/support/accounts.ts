@@ -123,6 +123,8 @@ export const accounts = {
   addAlbumKey: at("add-album-key"),
   // The inspector's width (album-inspector.e2e.ts).
   inspectorResize: at("inspector-resize"),
+  // The release type's choices fitting the panel (album-inspector.e2e.ts).
+  releaseTypeFit: at("release-type-fit"),
   // The page never scrolling past the shell (album-inspector.e2e.ts).
   inspectorPage: at("inspector-page"),
   // Opening without a wait, and the panel's slide (album-inspector.e2e.ts), one per test.
