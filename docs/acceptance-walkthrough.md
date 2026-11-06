@@ -29,7 +29,7 @@ Q-04's objectives on 30 October 2026.
 | AC-07 | Save without a list | Pass | `api/capture.test.ts`: into Unsorted, and out of Trash with only the requested list. `domain/capture.test.ts`. `mcp/write-tools.test.ts`. |
 | AC-08 | Required information | Pass | `album-form.test.ts`. `album-inspector.e2e.ts`. `api/capture.test.ts`. `mcp/write-tools.test.ts`. |
 | AC-09 | Identify and match | Pass | `api/capture.test.ts`: another edition reuses it; an uncertain match waits while the batch goes on. `providers/album-facts.test.ts`. |
-| AC-10 | Correct and enrich | Pass | `domain/memberships.test.ts`. `db/enrichment.test.ts`: fills only gaps. `domain/commands.test.ts`: chronology. |
+| AC-10 | Correct and enrich | Pass | `domain/memberships.test.ts`. `domain/enrichment.test.ts`, `domain/capture.test.ts`: fills only gaps. `domain/commands.test.ts`: chronology. |
 | AC-11 | Optional fields | Pass | `custom-fields.e2e.ts`. `domain/field-values.test.ts`. |
 | AC-12 | Definitions and options | Pass | `domain/fields.test.ts`. `domain/field-options.test.ts`. `db/field-options.test.ts`. `db/field-deletion.test.ts`. |
 | AC-13 | Change field types | Pass | `domain/field-options.test.ts`. `custom-fields-settings.e2e.ts`. |

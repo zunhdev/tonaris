@@ -24,8 +24,8 @@ export const providerNames = {
 export type ProviderId = keyof typeof providerNames;
 
 /**
- * A provider didn't answer usefully in time: busy, unreachable or broken. The work that asked can be retried
- * later (TS-90), and the outcome is `provider_unavailable` (TS-27). Messages name no query (TS-41).
+ * A provider didn't answer usefully in time: busy, unreachable or broken. The capture that asked can be retried
+ * by the person, and the outcome is `provider_unavailable` (TS-27). Messages name no query (TS-41).
  */
 export class ProviderUnavailableError extends Error {
   override name = "ProviderUnavailableError";

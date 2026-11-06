@@ -156,6 +156,36 @@ describe("album.capture: a confident match reuses the saved album (FR-02.9, FR-0
     expect(t.albums.get(bleach.id)?.artworkUrl).toContain(bleachId);
   });
 
+  test("a reused album fills only its gaps: values and classification kept, artwork kept, a repeat writes nothing (FR-03.3, TS-42, AC-10)", async () => {
+    const entered = saved("Bleach", { releaseType: null, originalYear: 1990 });
+    const ep = saved("Bleach (EP)", { releaseType: "ep", releaseGroupId: bleachId });
+    const withArt = saved("Bleach", {
+      artworkUrl: "https://example.com/mine.jpg",
+      releaseGroupId: bleachId,
+    });
+    const t = setup({ albums: [entered] });
+    const first = applied(await t.run(capture(null), identified(bleachFacts)));
+    // The person's year stays; the missing type and artwork are filled.
+    expect(t.albums.get(entered.id)).toMatchObject({
+      originalYear: 1990,
+      releaseType: "album",
+      artworkUrl: expect.stringContaining(bleachId),
+    });
+    expect(first.changes.filter((change) => change.entity === "album")).toHaveLength(1);
+
+    // The same facts again: nothing more is written or published.
+    const again = applied(await t.run(capture(null), identified(bleachFacts)));
+    expect(again.changes.filter((change) => change.entity === "album")).toEqual([]);
+
+    // A classification MusicBrainz disagrees with, and an artwork URL, are kept.
+    const other = setup({ albums: [ep] });
+    applied(await other.run(capture(null), identified(bleachFacts)));
+    expect(other.albums.get(ep.id)?.releaseType).toBe("ep");
+    const art = setup({ albums: [withArt] });
+    applied(await art.run(capture(null), identified(bleachFacts)));
+    expect(art.albums.get(withArt.id)?.artworkUrl).toBe("https://example.com/mine.jpg");
+  });
+
   test("an album already in the list keeps its entry, and says so (FR-01.7)", async () => {
     const bleach = saved("Bleach");
     const grunge = list("Grunge");

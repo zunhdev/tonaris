@@ -828,7 +828,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
     - MusicBrainz unavailable, or the archive for every album found, answers `503 provider_unavailable`.
 - **The user-supplied canonical URL** is stored as the service link; it is user input.
 
-*Resolver chain.* It runs in the capture job and stops at the first confident result.
+*Resolver chain.* It runs in the capture request, before the write lock, and stops at the first confident result.
 
 | Step | Applies to | What happens | Result |
 | --- | --- | --- | --- |
@@ -917,7 +917,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - **One queue per process** (built in TON-41: `MusicBrainz` in `packages/providers/src/musicbrainz.ts`). Every MusicBrainz request waits its turn, and turns start at least 1 s apart, start to start. The API makes one client and shares it, so captures, enrichment and batches all queue together.
     - A request's turn passes once it starts, so a slow answer doesn't hold the queue: MusicBrainz limits rate, not concurrency.
     - Identical requests in flight share one.
-    - It is in-process, not one `jobs` row per request. A capture asks several dependent questions, and its durable retries belong to the capture's job (TS-90).
+    - It is in-process, not one `jobs` row per request. A capture asks several dependent questions, and a failed one is retried by the person (FR-02.5), not by a job.
     - If the API ever runs as more than one instance, the next start moves to Postgres, as TS-104's limits would.
   - **A 7-day cache keyed by URL, barcode and MBID** (`provider_cache`):
     - URL and barcode lookups ask for every form in one request. Each form is kept on its own: a hit under MusicBrainz's own spelling of the URL or barcode, and a miss as an empty entry.
@@ -929,7 +929,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - **A 503 from MusicBrainz means "retry later",** whatever its cause: it answers so at times even well under the limit ([TON-14](spikes/2026-10-18-g1-musicbrainz.md)).
     - 503s, 502s, 504s and failed connections are retried after `max(Retry-After, 2^n)` seconds: 1, 2, 4, 8.
     - The wait holds back the whole queue.
-    - After 4 retries the lookup throws `ProviderUnavailableError`. The capture's job retries later, and its outcome is `provider_unavailable`.
+    - After 4 retries the lookup throws `ProviderUnavailableError`. The capture fails as `provider_unavailable` and saves nothing, and the person retries it (FR-02.5).
     - Any other answer but a 404, and an answer that breaks off, throws it at once (*as built in TON-147*: one rule for every client, in `packages/providers/src/errors.ts`).
     - Messages name the path, never the query.
   - **The Cover Art Archive** is asked with `HEAD …/release-group/{mbid}/front-500` and redirects not followed. A redirect means a front, kept as that stable address. It is archive.org's service, outside MusicBrainz's limit, so it isn't queued.
@@ -992,18 +992,18 @@ Settled with them, as technical points:
 
 The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-review.md), decided 19 October 2026.
 
-**TS-42 Enrichment rule (Decided; FR-03.3).** Enrichment writes only fields that are currently null and records their provenance. Populated fields, including user-entered ones, are never overwritten. Retries and newly matched links follow the same rule.
+**TS-42 Enrichment rule (Decided; FR-03.3).** Enrichment writes only fields that are currently null and records their provenance. Populated fields, including user-entered ones, are never overwritten. A person's Retry and a link from another service that matches a saved album are captures, so they follow the same rule.
 
 *As built in TON-43:*
 - **The decision** is `planEnrichment(album, facts)` in `packages/domain/src/enrichment.ts`, a pure function. The facts come from `describeAlbum()` in `packages/providers` (TS-41, TS-45, TS-46).
   - A missing value is null, or a blank title or artist, so a capture plans from `blankAlbum`.
   - The recording range is one value: filled only when both its years are missing, and only for an album that is live once filled. A person's "not live" keeps an album free of recording years.
   - Artwork follows the same rule (FR-03.4).
-- **The write** is `enrichAlbum()` in `packages/db`, under the owner's write lock, so the plan is made on the album as it then is. A person's edit committed while MusicBrainz was asked is a populated value, and kept.
-  - Filled values reach the owner's sessions as one album `update` with a null `mutationId`.
+- **The write** is `store.fillAlbum()` in `captureAlbum`, under the owner's write lock, so the plan is made on the album as it then is. A person's edit committed while MusicBrainz was asked is a populated value, and kept.
+  - Filled values reach the owner's sessions as an album `update` in the capture's own changes.
   - Clients' album records don't carry artwork or MBIDs yet (TON-48), so filling only those logs nothing.
   - Trashed albums are enriched too, since matching may bring them back (FR-14.4).
-- **The API's `enrich(accountId, albumId)`** asks MusicBrainz about the album's saved release group, applies the plan and publishes the change. An unidentified album has nothing to enrich from. MusicBrainz's unavailability writes nothing and propagates, so the capture's job retries (TS-90).
+- **Where it runs.** Only inside `album.capture`: a new album and a reused one are planned the same way, and `store.fillAlbum` writes the plan under the lock. There is no separate enrichment job or API function: a capture that can't reach MusicBrainz saves nothing, and an entered album has no release group to ask about. *Dropped in TON-149:* `createEnricher` and `enrichAlbum`, which nothing called, with the retry job they were built for.
 
 **TS-43 Service links and opening (Decided, with a spike; FR-06.5, FR-06.6).**
 
@@ -1046,7 +1046,7 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
   - When MusicBrainz answers with another id, enrichment replaces the stored `mb_release_group_id`.
   - Matching compares a new link's album with saved albums whose old id was merged into it.
   - A deleted release group (404) leaves the album unidentified, with its data.
-  - *As built in TON-43:* enrichment asks about the album's saved id. A merge stores the id MusicBrainz answered under; a 404 clears `mb_release_group_id` and keeps every value. An album already saved as another release group takes nothing from the facts.
+  - *As built in TON-43:* a capture asks about the saved id of a merge candidate. A merge stores the id MusicBrainz answered under; a 404 clears `mb_release_group_id` and keeps every value. An album already saved as another release group takes nothing from the facts.
 - Matching reads candidates for the owner, including trashed albums (FR-14.4), under the write lock.
 - *As built in TON-44* (`album.capture`; `captureAlbum()` in `packages/domain/src/capture.ts`, prepared by `prepareCapture()` in `apps/api/src/capture.ts`):
   - **The API asks first, outside the lock.** It identifies the link (TS-41), then describes the release group (TON-43), then checks for merge matches.
