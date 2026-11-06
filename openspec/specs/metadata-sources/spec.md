@@ -112,15 +112,15 @@ Enrichment SHALL ask MusicBrainz for the release group with its artist credit an
 - **THEN** no request is sent
 
 ### Requirement: Unavailable artwork doesn't hold up enrichment
-When the Cover Art Archive can't be asked, enrichment SHALL go on without artwork, so the album's other values are still filled (FR-03.4). When MusicBrainz can't be asked, enrichment SHALL fail as `provider_unavailable`, writing nothing, so it can be retried (TS-90).
+When the Cover Art Archive can't be asked, enrichment SHALL go on without artwork, so the album's other values are still filled (FR-03.4). When MusicBrainz can't be asked, the capture SHALL fail as `provider_unavailable`, writing nothing, so the person can retry it.
 
 #### Scenario: The Cover Art Archive is down
-- **WHEN** an album is enriched while the Cover Art Archive answers 503
+- **WHEN** an album is captured while the Cover Art Archive answers 503
 - **THEN** its other values are filled, and it has no artwork yet
 
 #### Scenario: MusicBrainz stays busy
-- **WHEN** an album is enriched while MusicBrainz answers 503 to every retry
-- **THEN** enrichment fails as MusicBrainz being unavailable, and the album is unchanged
+- **WHEN** an album is captured while MusicBrainz answers 503 to every retry
+- **THEN** the capture fails as MusicBrainz being unavailable, and nothing is saved
 
 ### Requirement: The YouTube Data API is read only as its terms allow
 YouTube's pages SHALL never be read. A YouTube Music link's step 4 SHALL take at most three Data API reads to www.googleapis.com, with `YOUTUBE_API_KEY` sent in a header, and only for an owner who agreed to the current terms (TS-41, TS-105). Nothing from them SHALL be stored, cached or logged, and the key SHALL appear in no URL, log or error. Without the key, step 4 SHALL be skipped. A refused read SHALL send the link to manual entry; an unreachable API SHALL fail with `provider_unavailable`.
