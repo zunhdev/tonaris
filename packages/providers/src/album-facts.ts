@@ -157,8 +157,8 @@ async function front(musicBrainz: MusicBrainz, releaseGroupId: string): Promise<
 /**
  * What MusicBrainz says about the release group `releaseGroupId`. Asks for the release group, then, for a live
  * album only, for its original release's recordings; both lookups are kept 7 days. MusicBrainz's unavailability
- * propagates as `ProviderUnavailableError`, so the capture's job retries (TS-90); the Cover Art Archive's leaves
- * the artwork out.
+ * propagates as `ProviderUnavailableError`, which fails the capture with nothing saved; the Cover Art Archive's
+ * leaves the artwork out.
  */
 export async function describeAlbum(
   musicBrainz: MusicBrainz,

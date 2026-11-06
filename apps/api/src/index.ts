@@ -19,9 +19,8 @@ const config = apiConfig();
 // Errors go to the logs, and to Sentry when it is configured, redacted (TS-115).
 startErrorReports(config.sentryDsn, config.environment);
 const db = createDatabase();
-// The providers take the hub to publish what they enrich (TS-42), so it is made before the rest.
 const hub = databaseHub(db, { logError: reportError });
-const providers = createProviders(config, db, hub);
+const providers = createProviders(config, db);
 const { worker, app } = createRuntime({
   db,
   config,

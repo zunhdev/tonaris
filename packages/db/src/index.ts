@@ -83,7 +83,6 @@ export { operationsStatus, type OperationsStatus } from "./operations";
 export { findFieldIn } from "./field-values";
 export { lockAccount, purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
-export { albumReleaseGroup, enrichAlbum, type Enrichment } from "./enrichment";
 export {
   collectionOverview,
   findConnection,
