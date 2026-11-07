@@ -1,8 +1,9 @@
 // The album inspector and manual entry in a real browser (FR-02.4, FR-02.6, FR-03.1, FR-01.6, FR-01.8; DS-46, DS-47,
 // DS-32): opening an album by click with `?album=`, J moving it and Esc closing it; editing its chronology in
 // Editing mode, shown in every list, and a refused choice; taking it out of its only list with Undo, and adding it
-// to one with L; the manual entry form's required information, saving into the current list, and asking before
-// discarding; and an album's own page. Each test signs in with its own account.
+// to one with L, suggested as recent or found by typing (TON-177); the manual entry form's required information,
+// saving into the current list, and asking before discarding; and an album's own page. Each test signs in with its
+// own account.
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
@@ -14,6 +15,7 @@ import {
   announcements,
   chooseLayout,
   created,
+  list,
   live,
   saved,
   toasts,
@@ -424,11 +426,84 @@ test("the inspector takes an album out of its only list with Undo, and L adds it
   await expect(picker).toBeVisible();
   // The Undo toast is a dialog too, and may still be fading out: check the picker alone.
   expect(await violations(page, '[data-slot="dialog-content"]')).toEqual([]);
-  await picker.getByRole("button", { name: "Epic" }).click();
+  await picker.getByRole("option", { name: "Epic" }).click();
   await expect(picker).toHaveCount(0);
   await expect(lists(page).getByRole("link", { name: "Epic" })).toBeVisible();
   await expect(lists(page).getByRole("link", { name: "Doom" })).toBeVisible();
   await saved(page);
+});
+
+test("Add to a list suggests recent lists, and finds the others by typing their names or folders", async ({
+  page,
+}) => {
+  await signIn(page, accounts.findList);
+  await live(page);
+  const rock = { ...list("Русский рок"), kind: "folder" as const };
+  const decade = { ...list("4 2000-2010-е"), kind: "folder" as const, parentId: rock.id };
+  const doom = list("Doom");
+  const mixes = Array.from({ length: 9 }, (_, n) => list(`Mix ${n + 1}`));
+  // Each level after the one above it.
+  await page.evaluate(
+    async (levels) => {
+      for (const level of levels) {
+        // oxlint-disable-next-line no-await-in-loop
+        await window.tonarisSync?.containers.insert(level).isPersisted.promise;
+      }
+    },
+    [
+      [rock, doom, ...mixes],
+      [decade],
+      [
+        { ...list("Земфира"), parentId: decade.id },
+        { ...list("Noize MC"), parentId: decade.id },
+      ],
+    ],
+  );
+  const nightfall = album("Nightfall");
+  await added(page, [nightfall], doom.id);
+  const fifth = mixes[4];
+  if (!fifth) throw new Error("No fifth mix.");
+  await added(page, [album("Epicus")], fifth.id);
+  await page.goto(`/l/${doom.id}?album=${nightfall.id}`);
+  await live(page);
+  await page.keyboard.press("e");
+
+  await lists(page).getByRole("button", { name: "Add to list" }).click();
+  const picker = page.getByRole("dialog", { name: "Add 'Nightfall' to a list" });
+  const field = picker.getByRole("combobox", { name: "Find a list" });
+  const options = picker.getByRole("option");
+  await expect(field).toBeFocused();
+
+  // Before typing: the list added to last, then others by path, 8 in all; Doom, its own, isn't offered.
+  await expect(picker.getByRole("group", { name: "Recent" }).getByRole("option")).toHaveText([
+    "Mix 5",
+  ]);
+  await expect(options).toHaveCount(8);
+  await expect(options.filter({ hasText: "Doom" })).toHaveCount(0);
+  await expect(picker.getByText("Type to find the other 3 lists.")).toBeVisible();
+  expect(await violations(page, '[data-slot="dialog-content"]')).toEqual([]);
+
+  // A folder's name and part of the list's find it, marked; the arrows and Enter add it.
+  await field.fill("2000 ЗЕМФ");
+  await expect(options).toHaveText(["Русский рок › 4 2000-2010-е › Земфира"]);
+  await expect(options.first().locator("mark")).toHaveText(["2000", "Земф"]);
+  await expect(options.first()).toHaveAttribute("aria-selected", "true");
+  await field.fill("рок");
+  await expect(options).toHaveCount(2);
+  await page.keyboard.press("ArrowDown");
+  await expect(options.nth(1)).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Enter");
+  await expect(picker).toHaveCount(0);
+  await expect(lists(page).getByRole("link", { name: "Земфира" })).toBeVisible();
+  await expect(announcements(page).first()).toHaveText("Added Nightfall to Земфира");
+  await saved(page);
+
+  // It opens afresh, and says when nothing matches.
+  await lists(page).getByRole("button", { name: "Add to list" }).click();
+  await expect(field).toHaveValue("");
+  await field.fill("jazz");
+  await expect(options).toHaveCount(0);
+  await expect(picker.getByText("No lists match 'jazz'.")).toBeVisible();
 });
 
 test("the form reports missing required information, saves nothing, and asks before discarding", async ({

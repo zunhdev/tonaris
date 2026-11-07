@@ -84,6 +84,8 @@ export const accounts = {
   inspectorOpen: at("inspector-open"),
   inspectorEdit: at("inspector-edit"),
   inspectorLists: at("inspector-lists"),
+  // "Add to a list" finding lists by typing (album-inspector.e2e.ts, TON-177).
+  findList: at("find-list"),
   // The panel's cover wash and Properties (album-inspector.e2e.ts, TON-173).
   inspectorProperties: at("inspector-properties"),
   entryRequired: at("entry-required"),
