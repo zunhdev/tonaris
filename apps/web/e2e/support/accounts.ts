@@ -106,6 +106,8 @@ export const accounts = {
   captureField: at("capture-field"),
   // A paste with an album open (capture.e2e.ts, TON-160).
   capturePasted: at("capture-pasted"),
+  // A very long list name in the capture dialog (capture.e2e.ts, TON-180).
+  captureLongName: at("capture-long-name"),
   // Opening a service (open-in.e2e.ts), one per test.
   openDesktop: at("open-desktop"),
   openKeys: at("open-keys"),

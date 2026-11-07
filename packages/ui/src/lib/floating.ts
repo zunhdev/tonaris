@@ -9,10 +9,11 @@ export const scrimClass =
 
 /**
  * A dialog's surface, centred on the dialog layer 60: 12px radius and the floating shadow, opening in 200ms and only
- * fading under reduced motion (DS-15 to DS-17). The caller adds its width.
+ * fading under reduced motion (DS-15 to DS-17). The caller adds its width. Its one column is never wider than the
+ * surface, so content as wide as a long name, such as a select's longest option, can't push past its edge (TON-180).
  */
 export const dialogSurfaceClass =
-  "fixed top-1/2 left-1/2 z-60 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-raised p-5 text-fg-primary shadow-floating duration-200 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95";
+  "fixed top-1/2 left-1/2 z-60 grid w-[calc(100%-2rem)] grid-cols-1 -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-raised p-5 text-fg-primary shadow-floating duration-200 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95";
 
 /** A dialog's title and description (DS-13). */
 export const dialogTitleClass = "text-title text-fg-primary";
