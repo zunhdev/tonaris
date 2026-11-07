@@ -1,6 +1,7 @@
-// design-system spec: the dark theme and typography, as a browser renders them (DS-11, DS-13).
+// design-system spec: the dark theme and typography, as a browser renders them (DS-11, DS-13), with frosted menus and
+// filled fields (DS-16, DS-20; TON-168).
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 for (const path of ["/c", "/sign-in"]) {
   test(`${path} loads dark`, async ({ page }) => {
@@ -39,6 +40,62 @@ test("Inter Variable loads from the app's own origin", async ({ page, baseURL })
   expect(loaded).toBe(true);
   expect(fonts.length).toBeGreaterThan(0);
   expect(fonts.filter((url) => !url.startsWith(`${baseURL}/`))).toEqual([]);
+});
+
+/** A CSS color as the browser computes it: the minified CSS spells oklch() values differently. */
+const computedColor = (page: Page, value: string) =>
+  page.evaluate((color) => {
+    const probe = document.createElement("div");
+    probe.style.setProperty("color", color);
+    document.body.append(probe);
+    const shown = getComputedStyle(probe).color;
+    probe.remove();
+    return shown;
+  }, value);
+
+test("fields are filled, with a faint edge that strengthens on hover (DS-20, TON-168)", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const page = await context.newPage();
+  await page.goto("/sign-in");
+  const field = page.getByLabel("Email");
+  // A headless browser refuses the passkey prompt, which marks the field invalid, with an edge of its own: take the
+  // mark away to see the field's.
+  await field.evaluate((element) => element.removeAttribute("aria-invalid"));
+  await page.mouse.move(0, 0);
+  await expect(field).toHaveCSS("background-color", await computedColor(page, "oklch(1 0 0 / 5%)"));
+  // border.subtle at rest, border.strong under the pointer.
+  await expect(field).toHaveCSS(
+    "border-top-color",
+    await computedColor(page, "oklch(0.26 0.026 274)"),
+  );
+  await field.hover();
+  await expect(field).toHaveCSS(
+    "border-top-color",
+    await computedColor(page, "oklch(0.53 0.03 274)"),
+  );
+  await context.close();
+});
+
+test("menus and the palette are frosted (DS-16, TON-168)", async ({ page }) => {
+  await page.goto("/c");
+  await page.getByRole("button", { name: /^Account: / }).click();
+  const menu = page.locator('[data-slot="dropdown-menu-content"]');
+  await expect(menu).toBeVisible();
+  await expect(menu).toHaveCSS("backdrop-filter", /blur\(24px\)/);
+  await expect(menu).toHaveCSS(
+    "background-color",
+    await computedColor(page, "oklch(0.22 0.026 274 / 94%)"),
+  );
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
+
+  await page.keyboard.press("ControlOrMeta+k");
+  await expect(page.locator('[data-slot="command-content"]')).toHaveCSS(
+    "backdrop-filter",
+    /blur\(24px\)/,
+  );
 });
 
 test("text falls back to system fonts for scripts Inter lacks", async ({ page }) => {

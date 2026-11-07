@@ -21,7 +21,9 @@
   --gray-770: oklch(0.77 0.02 274);
   --gray-955: oklch(0.955 0.008 274);
   --gray-140-a75: oklch(0.14 0.02 274 / 75%);
+  --gray-220-a94: oklch(0.22 0.026 274 / 94%);
   --white-980: oklch(0.98 0 0);
+  --white-a5: oklch(1 0 0 / 5%);
   --white-a11: oklch(1 0 0 / 11%);
   --violet-280: oklch(0.28 0.05 276);
   --violet-540: oklch(0.54 0.17 275);
@@ -54,6 +56,10 @@
   --bg-raised: var(--gray-220);
   --bg-hover: var(--gray-240);
   --bg-selected: var(--violet-280);
+  /* Menus, popovers, the palette, tooltips, toasts (DS-16, TON-168): see-through as far as text allows over white. */
+  --bg-frosted: var(--gray-220-a94);
+  /* A text field's fill (DS-20, TON-168): a light veil, so a field shows on the panel and in a dialog alike. */
+  --bg-field: var(--white-a5);
   /* A label's ground on a cover (DS-22): dark enough for `fg.on-artwork` over a white cover. */
   --bg-on-artwork: var(--gray-140-a75);
   --border-subtle: var(--gray-260);
@@ -208,6 +214,8 @@
   --color-raised: var(--bg-raised);
   --color-hover: var(--bg-hover);
   --color-selected: var(--bg-selected);
+  --color-frosted: var(--bg-frosted);
+  --color-field: var(--bg-field);
   --color-on-artwork: var(--bg-on-artwork);
   --color-subtle: var(--border-subtle);
   --color-strong: var(--border-strong);

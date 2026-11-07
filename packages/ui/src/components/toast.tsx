@@ -158,7 +158,7 @@ function Toasts() {
       key={toast.id}
       toast={toast}
       data-slot="toast"
-      className="rounded-lg bg-raised p-3 text-fg-primary shadow-floating transition-opacity duration-150 ease-enter data-ending-style:opacity-0 data-limited:hidden data-starting-style:opacity-0"
+      className="rounded-lg bg-frosted p-3 text-fg-primary shadow-floating backdrop-blur-xl backdrop-saturate-150 transition-opacity duration-150 ease-enter data-ending-style:opacity-0 data-limited:hidden data-starting-style:opacity-0"
     >
       <ToastPrimitive.Content className="flex items-start gap-2.5">
         {toast.data?.tone && <span className="mt-0.5 shrink-0">{toneIcons[toast.data.tone]}</span>}

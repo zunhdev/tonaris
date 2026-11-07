@@ -65,6 +65,8 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `bg.raised` | 0.22 0.026 274 | Popovers, menus, dialogs, palette |
 | `bg.hover` | 0.24 0.028 274 | Row and item hover, a card under the pointer |
 | `bg.selected` | 0.28 0.05 276 | Selected row (tinted toward accent) |
+| `bg.frosted` | 0.22 0.026 274 / 94% | Menus, popovers, the palette, tooltips and toasts, under a background blur (DS-16, TON-168) |
+| `bg.field` | 1 0 0 / 5% | A text field's fill, a veil that shows on every surface (DS-20, TON-168) |
 | `bg.on-artwork` | 0.14 0.02 274 / 75% | A release label's ground on a cover (DS-22) |
 | `border.subtle` | 0.26 0.026 274 | Dividers, row separators |
 | `border.strong` | 0.53 0.03 274 | Inputs, focused containers (raised from 0.32 to reach 3:1, DS-14) |
@@ -129,6 +131,10 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 *(Q-02)*
 
+*As built in TON-168* (the creator chose filled fields, variant 4A, over a variant that kept 3:1, 7 November 2026): **an input's border reaches 3:1 under the pointer, not at rest.** At rest a field's edge is `border.subtle`, about 1.2:1; fields are told apart by their `bg.field` fill, their label and their place. The token test still checks `border.strong` at 3:1, and adds:
+- text in a field (`fg.primary`, `fg.tertiary`) on its veil over `bg.panel`, `bg.raised` and `bg.app`, at 4.5:1;
+- text on a frosted layer (`fg.primary`, `fg.secondary`, `fg.tertiary`) over a white cover, at 4.5:1.
+
 **DS-15 Spacing, sizing, radius.**
 - **Spacing:** 4px base, using the scale 0, 2, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 64.
 - **Control heights:** 24 for inline chips and key hints, 28 for the default (toolbar buttons, menu items, sidebar items), 32 for form inputs and dialog buttons.
@@ -140,6 +146,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - Surfaces separate by lightness step plus a 1px border.
 - Shadows appear only on floating layers (popover, menu, dialog, palette, toast), as a single soft shadow at `0 8px 24px oklch(0 0 0 / 40%)` plus a 1px `border.subtle` ring.
 - Nothing else in the main layout casts a shadow.
+- *As built in TON-168* (the creator picked variant 2A, 7 November 2026): **menus, popovers, the palette, tooltips and toasts are frosted:** `bg.frosted` (`bg.raised` at 94%) under a 24px background blur at 150% saturation, so what's behind shows as a soft tint. 94% is the most see-through value at which every text color keeps 4.5:1 over a white cover; without blur support it is nearly solid. Dialogs and sheets stay solid over their scrim.
 - *As built in TON-167* (the creator picked variant 3B, 7 November 2026): **covers are the one exception.** A cover in a card, on a guest page's grid, or in the album panel casts `shadow-artwork`: `0 1px 2px` and `0 6px 16px`, both at 35% black. Rows' small covers don't.
 
 **DS-17 Motion.**
@@ -203,7 +210,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | Need | Base component | Tonaris adjustments |
 | --- | --- | --- |
 | Actions | Button, Toggle, ToggleGroup | Sizes 24/28/32; variants: primary, secondary, ghost, danger |
-| Text entry | Input, Textarea | Inline-edit variant with no border until hover or focus |
+| Text entry | Input, Textarea | Inline-edit variant with no border until hover or focus. *As built in TON-168:* filled with `bg.field` and edged in `border.subtle`, `border.strong` on hover (DS-14); Select shares the look |
 | Choices | Select, Combobox, Checkbox, RadioGroup, Switch | Combobox supports multi-select chips |
 | Overlays | Popover, DropdownMenu, ContextMenu, Tooltip | Menus at 28px rows with shortcut hints (`Kbd`) |
 | Dialogs | Dialog, AlertDialog | The standard confirmation dialog (DS-28) is built on AlertDialog |
@@ -2034,7 +2041,7 @@ The tech spec sets the measurable targets (Q-01, pending approval).
 
 ## 17. Design decisions log
 
-No design questions are open. The creator settled these on 17 October 2026, rows 10 and 11 on 18 October 2026, and row 12 on 1 November 2026:
+No design questions are open. The creator settled these on 17 October 2026, rows 10 and 11 on 18 October 2026, row 12 on 1 November 2026, and row 13 on 7 November 2026:
 
 | # | Question | Decision |
 | --- | --- | --- |
@@ -2050,6 +2057,7 @@ No design questions are open. The creator settled these on 17 October 2026, rows
 | 10 | Input borders below 3:1 (DS-12, DS-14), 18 Oct 2026 | Raise `border.strong` to 0.52, reaching 3:1 on every surface |
 | 11 | Primary button labels below 4.5:1 on the accent (DS-12, DS-14), 18 Oct 2026 | New `accent.fill` (0.54 0.17 275) behind near-white `fg.on-accent` labels; `accent.solid` stays for focus and selection |
 | 12 | A landing page (DS-120), 1 Nov 2026 | Direction 1, "in the app's clothes", refined, with invented albums in cover set 1, "Label series"; at `/welcome`, where signed-out visits to `/` arrive, and `/sign-in` back to just the card |
+| 13 | Input borders at rest below 3:1 (DS-14), 7 Nov 2026 | Filled fields with a faint edge (TON-168's 4A): 3:1 under the pointer, told apart at rest by fill, label and place |
 
 New questions are added here as **Open (design)** rows.
 
