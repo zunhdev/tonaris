@@ -323,3 +323,10 @@ A shared folder SHALL show its folders and lists as cards fanning their covers o
 #### Scenario: A guest switches to rows
 - **WHEN** a guest opens a shared folder 'Metal' holding the list 'Doom' with two albums, then chooses Rows
 - **THEN** 'Doom' first shows as a card fanning its two covers, reading "2 albums", then as a row
+
+### Requirement: Viewers see a share's colors
+People a folder or list is shared with, signed in or as guests, SHALL see its folders' and lists' colors as the owner set them, inherited within the share (FR-01.19, FR-07.11, TON-175).
+
+#### Scenario: A guest sees a folder's color
+- **WHEN** the owner colors the shared folder 'Metal' orange and a guest opens the link
+- **THEN** the list 'Doom' inside it shows an orange icon
