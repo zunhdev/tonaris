@@ -60,6 +60,8 @@ export const accountSettings = table(
     folderSortDir: text({ enum: sortDirections }).notNull(),
     grouped: boolean().notNull(),
     layout: text({ enum: viewLayouts }).notNull(),
+    /** Folders' and the root's layout (TON-174): cards by default, for defaults saved before it too. */
+    folderLayout: text({ enum: viewLayouts }).notNull().default("grid"),
     linkTarget: text({ enum: linkTargets }).notNull().default("web"),
     /** The streaming services the person turned off (TON-138); empty means all are on, new ones included. */
     hiddenServices: text({ enum: streamingServices })
@@ -79,6 +81,7 @@ export const accountSettings = table(
     check("account_settings_folder_sort_mode_check", oneOf(t.folderSortMode, folderSortModes)),
     check("account_settings_folder_sort_dir_check", oneOf(t.folderSortDir, sortDirections)),
     check("account_settings_layout_check", oneOf(t.layout, viewLayouts)),
+    check("account_settings_folder_layout_check", oneOf(t.folderLayout, viewLayouts)),
   ],
 );
 

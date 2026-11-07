@@ -445,6 +445,7 @@ const fieldLabels: Partial<Record<string, string>> = {
   listSortDir: "Direction for lists",
   folderSortMode: "Sort for folders",
   folderSortDir: "Direction for folders",
+  folderLayout: "Layout for folders",
   linkTarget: "Open links in",
   hiddenServices: "Streaming services",
 } satisfies Partial<Record<BaseField, string>>;

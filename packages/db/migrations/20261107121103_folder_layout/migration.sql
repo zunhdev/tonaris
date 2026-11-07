@@ -1,0 +1,2 @@
+ALTER TABLE "account_settings" ADD COLUMN "folder_layout" text DEFAULT 'grid' NOT NULL;--> statement-breakpoint
+ALTER TABLE "account_settings" ADD CONSTRAINT "account_settings_folder_layout_check" CHECK ("folder_layout" in ('rows', 'grid'));

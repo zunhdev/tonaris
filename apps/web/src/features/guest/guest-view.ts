@@ -23,6 +23,8 @@ export type GuestView = {
   dir: SortDirection;
   grouped: boolean;
   layout: ViewLayout;
+  /** Folders' layout, cards unless the guest picks rows (TON-174). */
+  folderLayout: ViewLayout;
 };
 
 const guestSorts = listSortModes.filter((mode): mode is GuestSort => mode !== "manual");
@@ -36,6 +38,7 @@ export const guestDefaults: GuestView = {
   dir: appViewDefaults.listSortDir,
   grouped: appViewDefaults.grouped,
   layout: appViewDefaults.layout,
+  folderLayout: appViewDefaults.folderLayout,
 };
 
 const keyOf = (token: string) => `tonaris:guest-view:${token}`;
@@ -58,6 +61,7 @@ export function guestViewOf(text: string | undefined): GuestView {
     dir: oneOf(sortDirections, stored.get("dir")) ?? "asc",
     grouped: stored.get("grouped") === true,
     layout: oneOf(viewLayouts, stored.get("layout")) ?? "rows",
+    folderLayout: oneOf(viewLayouts, stored.get("folderLayout")) ?? appViewDefaults.folderLayout,
   };
 }
 

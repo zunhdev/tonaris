@@ -72,7 +72,7 @@ describe("buildExport", () => {
     expect(result.tree.containers.map((each) => each.albumIds)).toEqual([[kind.id], [kind.id]]);
     expect(result).toMatchObject({
       format: "tonaris-export",
-      formatVersion: "1.0",
+      formatVersion: "1.1",
       exportedAt: "2026-10-29T12:00:00.000Z",
     });
   });

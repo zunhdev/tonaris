@@ -18,6 +18,7 @@ import {
   live,
   saved,
   violations,
+  foldersAsRows,
 } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -225,6 +226,8 @@ test("folders and lists move with M and by dragging onto the tree, and the root 
 }) => {
   await signIn(page, accounts.arrangeMoves);
   await live(page);
+  // Folders as rows, which this test is about; cards are their default (TON-174).
+  await foldersAsRows(page);
   const metal: Container = { ...list("Metal"), kind: "folder" };
   const funeral: Container = { ...list("Funeral"), kind: "folder", parentId: metal.id };
   const archive: Container = { ...list("Archive"), kind: "folder" };

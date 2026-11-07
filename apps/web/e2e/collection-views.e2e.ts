@@ -15,10 +15,12 @@ import {
   album,
   chooseLayout,
   created,
+  insert,
   list,
   live,
   violations,
   webOrigin,
+  foldersAsRows,
 } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -246,9 +248,79 @@ test("cards mark the open album, raise a surface under the pointer, and label re
   await expect(cards.locator("[data-open]")).toHaveCount(0);
 });
 
+test("a folder opens as cards fanning each list's first covers, walked by keyboard; Rows is kept per folder", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await signIn(page, accounts.viewsFolderCards);
+  await live(page);
+  const rock: Container = { ...list("Rock"), kind: "folder" };
+  const classic: Container = { ...list("Classic Rock"), kind: "folder", parentId: rock.id };
+  const zeppelin: Container = { ...list("Led Zeppelin"), parentId: classic.id };
+  const who: Container = { ...list("The Who"), parentId: classic.id };
+  const prog: Container = { ...list("Prog"), kind: "folder", parentId: classic.id };
+  const yes: Container = { ...list("Yes"), parentId: prog.id };
+  await insert(page, rock, classic, zeppelin, who, prog, yes);
+  // Added out of order: a list's covers follow its own sort, by year.
+  await added(
+    page,
+    [
+      album("Presence", { originalYear: 1976 }),
+      album("Celebration Day", { originalYear: 2012 }),
+      album("Led Zeppelin II", { originalYear: 1969 }),
+      album("Houses of the Holy", { originalYear: 1973 }),
+    ],
+    zeppelin.id,
+  );
+  await added(
+    page,
+    [album("Fragile", { originalYear: 1971 }), album("Close to the Edge", { originalYear: 1972 })],
+    yes.id,
+  );
+  await page.goto(`/f/${classic.id}`);
+  await live(page);
+
+  const cards = grid(page, "Classic Rock");
+  const card = (name: string) => cards.getByRole("link", { name: new RegExp(`^${name}`) });
+  // The letters of the fanned covers, back to front: the list's first three by year, the first in front.
+  const fan = (name: string) => card(name).locator('[data-slot="cover-fan-cover"]');
+  await expect(fan("Led Zeppelin")).toHaveText(["P", "H", "L"]);
+  await expect(card("Led Zeppelin")).toContainText("4 albums");
+  // An empty list shows its icon; a subfolder fans the covers found inside it.
+  await expect(card("The Who").locator('[data-slot="cover-fan-empty"]')).toHaveCount(1);
+  await expect(card("The Who")).toContainText("0 albums");
+  await expect(fan("Prog")).toHaveText(["C", "F"]);
+  await expect(card("Prog")).toContainText("1 folder or list");
+  expect(await violations(page, '[role="grid"]')).toEqual([]);
+
+  // The arrows walk the cards and Enter opens one.
+  await card("Led Zeppelin").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(card("The Who")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(`/l/${who.id}`);
+
+  // Rows, chosen for this folder, are kept for it alone: Rock still shows cards.
+  await page.goto(`/f/${classic.id}`);
+  await live(page);
+  await chooseLayout(page, "Rows");
+  await expect(rows(page, "Classic Rock")).toHaveCount(3);
+  await page.reload();
+  await live(page);
+  await expect(rows(page, "Classic Rock")).toHaveCount(3);
+  await page.goto(`/f/${rock.id}`);
+  await live(page);
+  await expect(grid(page, "Rock").getByRole("link", { name: /^Classic Rock/ })).toContainText(
+    "3 folders and lists",
+  );
+  await expect(grid(page, "Rock").locator('[data-slot="cover-fan-cover"]')).toHaveCount(3);
+});
+
 test("a folder shows its folders and lists as rows, opened by keyboard", async ({ page }) => {
   await signIn(page, accounts.viewsFolder);
   await live(page);
+  // Folders as rows, which this test is about; cards are their default (TON-174).
+  await foldersAsRows(page);
   const metal: Container = { ...list("Metal"), kind: "folder" };
   const funeral: Container = { ...list("Funeral"), kind: "folder", parentId: metal.id };
   const doom: Container = { ...list("Doom"), parentId: metal.id };

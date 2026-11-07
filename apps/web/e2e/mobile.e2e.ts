@@ -12,7 +12,17 @@ import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, insert, list, live, pageFaded, saved, webOrigin } from "./support/workspace";
+import {
+  added,
+  album,
+  insert,
+  list,
+  live,
+  pageFaded,
+  saved,
+  webOrigin,
+  foldersAsRows,
+} from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -58,6 +68,8 @@ const axe = async (page: Page) => {
 test("a phone browses by drilling down, and opens an album in a sheet", async ({ page }) => {
   await signIn(page, accounts.phone);
   await live(page);
+  // Folders as rows, which this test is about; cards are their default (TON-174).
+  await foldersAsRows(page);
   await seeded(page);
   await page.goto("/c");
   await live(page);
@@ -457,6 +469,16 @@ test("a list's cards label a live album, open a link by tap, and leave no hover 
   expect(
     await card.evaluate((element) => getComputedStyle(element, "::before").backgroundColor),
   ).toBe("rgba(0, 0, 0, 0)");
+
+  // Collection's folders and lists are cards too, fanning their covers, two to a row (TON-174).
+  await page.goto("/c");
+  await live(page);
+  const doomCard = page
+    .getByRole("grid", { name: "Collection" })
+    .getByRole("link", { name: /^Doom/ });
+  await expect(doomCard.locator('[data-slot="cover-fan-cover"]')).toHaveCount(2);
+  await expect(doomCard).toContainText("2 albums");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test("a list opened from far down a folder opens at its top, and Back returns to where the folder was", async ({
@@ -464,6 +486,8 @@ test("a list opened from far down a folder opens at its top, and Back returns to
 }) => {
   await signIn(page, accounts.phoneScrolled);
   await live(page);
+  // Folders as rows, which this test is about; cards are their default (TON-174).
+  await foldersAsRows(page);
   const shelf: Container = { ...list("Shelf"), kind: "folder" };
   const lists = Array.from({ length: 30 }, (_, n) => ({
     ...list(`Shelf ${String(n + 1).padStart(2, "0")}`),

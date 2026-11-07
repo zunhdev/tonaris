@@ -189,7 +189,7 @@ function AlbumViewChoices({ viewKey }: { viewKey: string }) {
   );
 }
 
-/** A folder's or the root's choices: the sort and its direction. */
+/** A folder's or the root's choices: the sort, its direction and the layout, rows or cards (TON-174). */
 function FolderViewChoices({ viewKey }: { viewKey: string }) {
   const view = usePresentation(viewKey, "containers");
   return (
@@ -209,6 +209,16 @@ function FolderViewChoices({ viewKey }: { viewKey: string }) {
         sortDir={view.presentation.sortDir}
         onChange={(sortDir) => view.choose({ sortDir })}
       />
+      <Field group label="Layout">
+        {(_, labelId) => (
+          <SegmentedControl
+            aria-labelledby={labelId}
+            options={layoutOptions}
+            value={view.presentation.layout}
+            onValueChange={(layout) => view.choose({ layout })}
+          />
+        )}
+      </Field>
       <DefaultsFooter view={view} />
     </>
   );

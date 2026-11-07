@@ -62,6 +62,8 @@ export const accounts = {
   viewsInspector: at("views-inspector"),
   // Cards' open album, hover, labels and covers (collection-views.e2e.ts, TON-167).
   viewsCards: at("views-cards"),
+  // Folders as cards (collection-views.e2e.ts, TON-174).
+  viewsFolderCards: at("views-folder-cards"),
   // Sorting, grouping, View options and defaults (view-options.e2e.ts), one per test.
   orderViews: at("order-views"),
   syncViews: at("sync-views"),

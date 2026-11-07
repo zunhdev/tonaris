@@ -9,7 +9,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, created, live, saved, violations } from "./support/workspace";
+import { added, album, created, live, saved, violations, foldersAsRows } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -52,6 +52,8 @@ test("artwork a row has shown shows in the inspector at once, without fading in"
 }) => {
   await signIn(page, accounts.artworkAtOnce);
   await live(page);
+  // Folders as rows, which this test is about; cards are their default (TON-174).
+  await foldersAsRows(page);
   const grunge = await created(page, "Grunge");
   await added(
     page,

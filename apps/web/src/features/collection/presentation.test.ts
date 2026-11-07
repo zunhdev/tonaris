@@ -16,11 +16,12 @@ describe("a view's presentation (FR-11.7)", () => {
       grouped: false,
       layout: "rows",
     });
+    // Folders open as cards (TON-174).
     expect(presentationOf("containers", undefined, appViewDefaults)).toEqual({
       sortMode: "manual",
       sortDir: "asc",
       grouped: false,
-      layout: "rows",
+      layout: "grid",
     });
   });
 
@@ -38,14 +39,22 @@ describe("a view's presentation (FR-11.7)", () => {
     });
   });
 
-  test("folders and the root are always combined, in rows, whatever is stored", () => {
+  test("folders and the root are always combined, and take their layout from their own default", () => {
     expect(
-      presentationOf(
-        "containers",
-        view({ sortMode: "created", sortDir: "desc", grouped: true, layout: "grid" }),
-        { ...appViewDefaults, grouped: true, layout: "grid" },
-      ),
+      presentationOf("containers", view({ sortMode: "created", sortDir: "desc", grouped: true }), {
+        ...appViewDefaults,
+        grouped: true,
+        layout: "grid",
+        folderLayout: "rows",
+      }),
     ).toEqual({ sortMode: "created", sortDir: "desc", grouped: false, layout: "rows" });
+    // A folder's own choice wins (TON-174).
+    expect(
+      presentationOf("containers", view({ layout: "grid" }), {
+        ...appViewDefaults,
+        folderLayout: "rows",
+      }).layout,
+    ).toBe("grid");
   });
 
   test("a mode the view's kind doesn't take gives way to the default", () => {
@@ -64,6 +73,6 @@ describe("a view's presentation (FR-11.7)", () => {
     });
     expect(
       defaultsFrom("containers", presentationOf("containers", undefined, appViewDefaults)),
-    ).toEqual({ folderSortMode: "manual", folderSortDir: "asc" });
+    ).toEqual({ folderSortMode: "manual", folderSortDir: "asc", folderLayout: "grid" });
   });
 });

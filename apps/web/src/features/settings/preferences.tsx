@@ -106,6 +106,17 @@ export function PreferencesSettings() {
             />
           )}
         </Field>
+        <Field group label="Layout">
+          {(_, id) => (
+            <SegmentedControl
+              aria-labelledby={id}
+              options={layoutOptions}
+              value={defaults.folderLayout}
+              disabled={!ready}
+              onValueChange={(folderLayout) => set({ folderLayout })}
+            />
+          )}
+        </Field>
       </section>
 
       <p className="max-w-md text-fg-secondary">

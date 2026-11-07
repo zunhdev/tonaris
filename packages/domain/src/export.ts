@@ -24,8 +24,8 @@ import {
 import { z } from "./zod";
 
 export const exportFormat = "tonaris-export";
-/** Semver: a minor version only adds fields (TS-81). */
-export const exportFormatVersion = "1.0";
+/** Semver: a minor version only adds fields (TS-81). 1.1 added `accountDefaults.folderLayout` (TON-174). */
+export const exportFormatVersion = "1.1";
 
 /** What replaces a value a provider's policy keeps out of exports and from agents (TS-15, FR-08.8). */
 export const withheld = { withheld: "provider-policy" } as const;

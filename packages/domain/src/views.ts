@@ -27,7 +27,7 @@ export const listSortModes = ["year", "name", "manual"] as const;
 export const folderSortModes = ["name", "created", "manual"] as const;
 export const sortModes = ["year", "name", "created", "manual"] as const;
 export const sortDirections = ["asc", "desc"] as const;
-/** Rows or a grid of cards, for lists and Unsorted (DS-40). */
+/** Rows or a grid of cards: for lists and Unsorted (DS-40), and folders and the root (TON-174). */
 export const viewLayouts = ["rows", "grid"] as const;
 /** Where service links open: the canonical `https` page, or the service's app through its scheme (FR-06.6). */
 export const linkTargets = ["web", "app"] as const;
@@ -69,13 +69,19 @@ export const viewDefaultsSchema = z
     folderSortDir: z.enum(sortDirections),
     grouped: z.boolean(),
     layout: z.enum(viewLayouts),
+    folderLayout: z.enum(viewLayouts).meta({
+      description: "Folders' and the root's layout: rows or cards (TON-174).",
+    }),
   })
   .meta({ description: "A person's account defaults for presentation (FR-11.7)." });
 export type ViewDefaults = z.infer<typeof viewDefaultsSchema>;
 export type ViewDefaultsField = keyof ViewDefaults;
 export const viewDefaultsFields: readonly ViewDefaultsField[] = viewDefaultsSchema.keyof().options;
 
-/** DS-44's first-time defaults: lists chronological ascending, combined, in Rows; folders in manual order. */
+/**
+ * DS-44's first-time defaults: lists chronological ascending, combined, in Rows; folders in manual order, as cards
+ * (decided with the creator, TON-174).
+ */
 export const appViewDefaults: ViewDefaults = {
   listSortMode: "year",
   listSortDir: "asc",
@@ -83,6 +89,7 @@ export const appViewDefaults: ViewDefaults = {
   folderSortDir: "asc",
   grouped: false,
   layout: "rows",
+  folderLayout: "grid",
 };
 
 /** The account defaults with the person's link setting, as their sessions see them (FR-06.6, TON-104). */
@@ -193,12 +200,11 @@ export async function setView(
       [{ path: "args.sortMode", message: `One of ${modes.join(", ")}` }],
     );
   }
-  if (folders && ((values.grouped ?? null) !== null || (values.layout ?? null) !== null)) {
-    return failure(
-      "validation_failed",
-      "Folders and the collection always show rows, without grouping.",
-      [{ path: values.layout ? "args.layout" : "args.grouped", message: "Must be null" }],
-    );
+  // Folders and the root take a layout (TON-174), but have nothing to group.
+  if (folders && (values.grouped ?? null) !== null) {
+    return failure("validation_failed", "Folders and the collection have no grouping.", [
+      { path: "args.grouped", message: "Must be null" },
+    ]);
   }
 
   const saved = await store.findViewPrefs(personId, viewKey);

@@ -46,7 +46,7 @@ This archive holds your whole Tonaris collection as it was on ${data.exportedAt.
 
 ## Versioning
 
-\`formatVersion\` follows semantic versioning. A new minor version (1.1, 1.2…) only adds fields, so a program written for ${exportFormatVersion} keeps working. A new major version would change or remove something, and this guide would say what.
+\`formatVersion\` follows semantic versioning. A new minor version only adds fields, so a program written for an earlier 1.x version keeps working; 1.1 added \`accountDefaults.folderLayout\`. A new major version would change or remove something, and this guide would say what.
 
 ## Not included
 

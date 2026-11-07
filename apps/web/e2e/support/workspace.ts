@@ -207,6 +207,20 @@ export async function added(page: Page, albums: Album[], listId?: string): Promi
   );
 }
 
+/**
+ * Shows folders and the root as rows, the account's folder layout, as they were before cards became the default
+ * (TON-174): for tests of the rows themselves.
+ */
+export async function foldersAsRows(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const sync = window.tonarisSync;
+    if (!sync) throw new Error("No sync client on the page.");
+    await sync.defaults.update("defaults", (draft) => {
+      draft.folderLayout = "rows";
+    }).isPersisted.promise;
+  });
+}
+
 /** Switches the view to `layout` in its View options (DS-49). */
 export async function chooseLayout(page: Page, layout: "Rows" | "Grid"): Promise<void> {
   await page.getByRole("button", { name: "View", exact: true }).click();
