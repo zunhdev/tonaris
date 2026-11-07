@@ -53,6 +53,8 @@ export const accounts = {
   navOffline: at("nav-offline"),
   navFade: at("nav-fade"),
   navScrolled: at("nav-scrolled"),
+  // The tree's guide lines and the account's avatar (collection-navigation.e2e.ts, TON-169).
+  navGuides: at("nav-guides"),
   // The collection views (collection-views.e2e.ts), one per test.
   viewsList: at("views-list"),
   viewsFolder: at("views-folder"),

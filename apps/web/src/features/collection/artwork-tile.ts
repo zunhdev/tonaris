@@ -4,7 +4,8 @@
 
 export type Tile = { letter: string; background: string; foreground: string };
 
-function fnv1a(text: string): number {
+/** A 32-bit FNV-1a hash of the text's UTF-8 bytes; the account avatar's hue uses it too (TON-169). */
+export function fnv1a(text: string): number {
   let hash = 0x811c9dc5;
   for (const unit of new TextEncoder().encode(text)) {
     hash ^= unit;
@@ -17,7 +18,7 @@ const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 const punctuationOrSpace = /^[\p{P}\p{Z}]/u;
 
 /** The first grapheme that isn't punctuation or a space, or the first one when all are (TON-110). */
-function firstMark(text: string): string {
+export function firstMark(text: string): string {
   let fallback = "";
   for (const { segment } of graphemes.segment(text)) {
     if (!punctuationOrSpace.test(segment)) return segment;
