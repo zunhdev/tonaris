@@ -7,8 +7,16 @@ import { guestDefaults, guestViewOf } from "./guest-view";
 describe("a guest's view (DS-72)", () => {
   test("reads each choice the domain knows", () => {
     expect(
-      guestViewOf(JSON.stringify({ sort: "name", dir: "desc", grouped: true, layout: "grid" })),
-    ).toEqual({ sort: "name", dir: "desc", grouped: true, layout: "grid" });
+      guestViewOf(
+        JSON.stringify({
+          sort: "name",
+          dir: "desc",
+          grouped: true,
+          layout: "grid",
+          folderLayout: "rows",
+        }),
+      ),
+    ).toEqual({ sort: "name", dir: "desc", grouped: true, layout: "grid", folderLayout: "rows" });
   });
 
   test("takes the first default for what it can't read, and manual order, which is the owner's", () => {
@@ -17,6 +25,8 @@ describe("a guest's view (DS-72)", () => {
       dir: "asc",
       grouped: false,
       layout: "rows",
+      // Folders as cards (TON-174).
+      folderLayout: "grid",
     });
     expect(guestViewOf("{not json")).toBe(guestDefaults);
     expect(guestViewOf(undefined)).toBe(guestDefaults);

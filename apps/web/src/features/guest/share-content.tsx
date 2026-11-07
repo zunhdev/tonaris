@@ -5,6 +5,7 @@
 // buttons, also move with ⌥↑ and ⌥↓, ⇧ for the ends (DS-49), in the viewer's own arrangement.
 
 import { Artwork, artworkSrc } from "@/features/collection/artwork";
+import { CoverFan, type FanCover } from "@/features/collection/cover-fan";
 import { directionOf } from "@/features/collection/grid-keys";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology, groupNames, type Direction, type Section } from "@/features/collection/order";
@@ -96,20 +97,63 @@ export function ShareBreadcrumbs({ path, linkTo }: { path: readonly Container[];
   );
 }
 
-/** A folder's folders and lists, in the order given. */
+/**
+ * A folder's folders and lists, in the order given: as rows, or as cards fanning their first covers (TON-174). A card
+ * is a link, raised under a hovering pointer.
+ */
 export function FolderItems({
   folder,
   items,
   linkTo,
   onMove,
+  layout = "rows",
+  coversOf,
+  contentsOf,
 }: {
   folder: Container;
   items: readonly Container[];
   linkTo: LinkTo;
   onMove?: Mover | undefined;
+  layout?: "rows" | "grid";
+  /** A card's covers, for the grid. */
+  coversOf?: (item: Container) => readonly FanCover[];
+  /** What a card's folder or list holds, counted, for the grid. */
+  contentsOf?: (item: Container) => string;
 }) {
   const keysFor = useMoveKeys(onMove);
   if (items.length === 0) return <p className="text-fg-secondary">This folder is empty.</p>;
+  if (layout === "grid") {
+    return (
+      <ul
+        aria-label={`In ${folder.name}`}
+        className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-4"
+      >
+        {items.map((child) => (
+          <li key={child.id} className="min-w-0">
+            {linkTo(child.id, {
+              className:
+                "relative isolate flex flex-col gap-1 rounded-md text-fg-primary before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:transition-colors before:duration-100 before:ease-enter hover:before:bg-hover",
+              onKeyDown: keysFor?.(child.id),
+              "aria-keyshortcuts": keysFor ? "Alt+ArrowUp Alt+ArrowDown" : undefined,
+              children: (
+                <>
+                  <span className="relative block aspect-square w-full">
+                    <CoverFan covers={coversOf?.(child) ?? []} kind={child.kind} />
+                  </span>
+                  <span className="mt-1.5 truncate font-medium">{child.name}</span>
+                  {contentsOf && (
+                    <span className="truncate text-small text-fg-tertiary">
+                      {contentsOf(child)}
+                    </span>
+                  )}
+                </>
+              ),
+            })}
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <ul aria-label={`In ${folder.name}`} className="flex max-w-3xl flex-col">
       {items.map((child) => (

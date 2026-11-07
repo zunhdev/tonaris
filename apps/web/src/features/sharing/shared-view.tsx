@@ -9,7 +9,12 @@ import { api } from "@/api";
 import { useNarrowScreen } from "@/common/media";
 import { PageHeader, useDocumentTitle } from "@/common/page-header";
 import { useKeyedRead } from "@/common/use-keyed-read";
+import { count as counted } from "@/common/words";
 import { useAlbumArrangement, useContainerArrangement } from "@/features/collection/arrangement";
+import { artworkSrc } from "@/features/collection/artwork";
+import { coversIn } from "@/features/collection/container-covers";
+import { useCollectionData } from "@/features/collection/data";
+import { sections as sectionsOf, sortAlbums, sortContainers } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
 import { ViewOptions } from "@/features/collection/view-options";
 import {
@@ -23,7 +28,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 
-import type { Container, SharedSnapshot } from "@tonaris/domain";
+import { presentationOf, type Container, type SharedSnapshot } from "@tonaris/domain";
 
 import { useShareStream } from "./use-share-stream";
 
@@ -140,6 +145,8 @@ function SharedContent({
             key={current.id}
             folder={current}
             items={tree.children.get(current.id) ?? []}
+            tree={tree}
+            snapshot={snapshot}
             linkTo={linkTo}
           />
         ) : (
@@ -150,18 +157,63 @@ function SharedContent({
   );
 }
 
-/** A shared folder's folders and lists in the person's own sort (DS-41). */
+/**
+ * A shared folder's folders and lists in the person's own sort and layout (DS-41): as cards, their covers in the
+ * person's presentation of each list and folder (TON-174), or as rows.
+ */
 function FolderBody({
   folder,
   items,
+  tree,
+  snapshot,
   linkTo,
 }: {
   folder: Container;
   items: readonly Container[];
+  tree: ReturnType<typeof buildTree>;
+  snapshot: SharedSnapshot;
   linkTo: LinkTo;
 }) {
-  const { shown, moves } = useContainerArrangement(items, folder.id);
-  return <FolderItems folder={folder} items={shown} linkTo={linkTo} onMove={moves.move} />;
+  const { presentation, shown, moves } = useContainerArrangement(items, folder.id);
+  const { views, defaults, keys } = useCollectionData();
+  const coversOf = useCallback(
+    (item: Container) =>
+      coversIn(item, {
+        children: (id) => {
+          const { sortMode, sortDir } = presentationOf("containers", views.get(id), defaults);
+          return sortContainers(
+            tree.children.get(id) ?? [],
+            { mode: sortMode, dir: sortDir },
+            keys.get(id),
+          );
+        },
+        albums: (id) => {
+          const { sortMode, sortDir, grouped } = presentationOf("albums", views.get(id), defaults);
+          const sorted = sortAlbums(
+            albumsIn(snapshot, id),
+            { mode: sortMode, dir: sortDir },
+            keys.get(id),
+          );
+          return sectionsOf(sorted, grouped).flatMap((section) => section.albums);
+        },
+      }).map((album) => ({ id: album.id, title: album.title, src: artworkSrc(album) })),
+    [tree, snapshot, views, defaults, keys],
+  );
+  const contentsOf = (item: Container) =>
+    item.kind === "list"
+      ? counted(albumsIn(snapshot, item.id).length, "album", "albums")
+      : counted(tree.children.get(item.id)?.length ?? 0, "folder or list", "folders and lists");
+  return (
+    <FolderItems
+      folder={folder}
+      items={shown}
+      linkTo={linkTo}
+      onMove={moves.move}
+      layout={presentation.layout}
+      coversOf={coversOf}
+      contentsOf={contentsOf}
+    />
+  );
 }
 
 /** A shared list's albums in the person's own sort, grouping and layout (DS-40, DS-43). */

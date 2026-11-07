@@ -6,6 +6,9 @@
 // DS-72's unavailable sentence once the link stops working. No search; "Sign in", the terms and the privacy notice
 // at the foot (TON-131).
 
+import { count } from "@/common/words";
+import { artworkSrc } from "@/features/collection/artwork";
+import { coversIn } from "@/features/collection/container-covers";
 import { sections, sortAlbums, sortContainers } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
 import { LegalLinks } from "@/features/legal/legal-page";
@@ -111,20 +114,81 @@ export function GuestPage({
           )}
         </div>
         {current.kind === "folder" ? (
-          <FolderItems
+          <FolderContents
+            snapshot={snapshot}
+            tree={tree}
             folder={current}
-            // Folders first, then lists, by name: the owner's arrangement isn't shared (FR-07.17).
-            items={sortContainers(tree.children.get(current.id) ?? [], {
-              mode: "name",
-              dir: "asc",
-            })}
             linkTo={linkTo}
+            view={view}
+            setView={setView}
           />
         ) : (
           <ListContents snapshot={snapshot} list={current} view={view} setView={setView} />
         )}
       </main>
     </GuestFrame>
+  );
+}
+
+/** Folders first, then lists, by name: the owner's arrangement isn't shared (FR-07.17). */
+const byName = (items: readonly Container[]) => sortContainers(items, { mode: "name", dir: "asc" });
+
+/** A folder's folders and lists, as cards fanning their first covers or as rows, as the visit chooses (TON-174). */
+function FolderContents({
+  snapshot,
+  tree,
+  folder,
+  linkTo,
+  view,
+  setView,
+}: {
+  snapshot: SharedSnapshot;
+  tree: ReturnType<typeof buildTree>;
+  folder: Container;
+  linkTo: LinkTo;
+  view: GuestView;
+  setView: (change: Partial<GuestView>) => void;
+}) {
+  const coversOf = useCallback(
+    (item: Container) =>
+      coversIn(item, {
+        children: (id) => byName(tree.children.get(id) ?? []),
+        // A list's albums in the visit's sort, as its page shows them.
+        albums: (id) =>
+          sections(
+            sortAlbums(albumsIn(snapshot, id), { mode: view.sort, dir: view.dir }),
+            view.grouped,
+          ).flatMap((section) => section.albums),
+      }).map((album) => ({ id: album.id, title: album.title, src: artworkSrc(album) })),
+    [snapshot, tree, view.sort, view.dir, view.grouped],
+  );
+  const contentsOf = (item: Container) =>
+    item.kind === "list"
+      ? count(albumsIn(snapshot, item.id).length, "album", "albums")
+      : count(tree.children.get(item.id)?.length ?? 0, "folder or list", "folders and lists");
+  return (
+    <>
+      <ClientOnly fallback={<div className="h-7.5" />}>
+        <SegmentedControl
+          aria-label="Layout"
+          value={view.folderLayout}
+          onValueChange={(folderLayout) => setView({ folderLayout })}
+          options={[
+            { value: "rows", label: "Rows" },
+            { value: "grid", label: "Grid" },
+          ]}
+          className="self-start"
+        />
+      </ClientOnly>
+      <FolderItems
+        folder={folder}
+        items={byName(tree.children.get(folder.id) ?? [])}
+        linkTo={linkTo}
+        layout={view.folderLayout}
+        coversOf={coversOf}
+        contentsOf={contentsOf}
+      />
+    </>
   );
 }
 

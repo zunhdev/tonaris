@@ -9226,6 +9226,14 @@
                               "rows",
                               "grid"
                             ]
+                          },
+                          "folderLayout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ],
+                            "description": "Folders' and the root's layout: rows or cards (TON-174)."
                           }
                         }
                       },
@@ -9271,6 +9279,14 @@
                               "rows",
                               "grid"
                             ]
+                          },
+                          "folderLayout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ],
+                            "description": "Folders' and the root's layout: rows or cards (TON-174)."
                           }
                         }
                       }
@@ -11548,6 +11564,14 @@
                               "rows",
                               "grid"
                             ]
+                          },
+                          "folderLayout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ],
+                            "description": "Folders' and the root's layout: rows or cards (TON-174)."
                           }
                         }
                       },
@@ -11593,6 +11617,14 @@
                               "rows",
                               "grid"
                             ]
+                          },
+                          "folderLayout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ],
+                            "description": "Folders' and the root's layout: rows or cards (TON-174)."
                           }
                         }
                       }
@@ -13870,6 +13902,14 @@
                               "rows",
                               "grid"
                             ]
+                          },
+                          "folderLayout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ],
+                            "description": "Folders' and the root's layout: rows or cards (TON-174)."
                           }
                         }
                       },
@@ -13915,6 +13955,14 @@
                               "rows",
                               "grid"
                             ]
+                          },
+                          "folderLayout": {
+                            "type": "string",
+                            "enum": [
+                              "rows",
+                              "grid"
+                            ],
+                            "description": "Folders' and the root's layout: rows or cards (TON-174)."
                           }
                         }
                       }
@@ -16142,6 +16190,14 @@
                             "grid"
                           ]
                         },
+                        "folderLayout": {
+                          "type": "string",
+                          "enum": [
+                            "rows",
+                            "grid"
+                          ],
+                          "description": "Folders' and the root's layout: rows or cards (TON-174)."
+                        },
                         "linkTarget": {
                           "type": "string",
                           "enum": [
@@ -16172,6 +16228,7 @@
                         "folderSortDir",
                         "grouped",
                         "layout",
+                        "folderLayout",
                         "linkTarget",
                         "hiddenServices"
                       ],
@@ -17735,6 +17792,14 @@
                       "grid"
                     ]
                   },
+                  "folderLayout": {
+                    "type": "string",
+                    "enum": [
+                      "rows",
+                      "grid"
+                    ],
+                    "description": "Folders' and the root's layout: rows or cards (TON-174)."
+                  },
                   "linkTarget": {
                     "type": "string",
                     "enum": [
@@ -17765,6 +17830,7 @@
                   "folderSortDir",
                   "grouped",
                   "layout",
+                  "folderLayout",
                   "linkTarget",
                   "hiddenServices"
                 ],
@@ -19716,6 +19782,14 @@
                           "rows",
                           "grid"
                         ]
+                      },
+                      "folderLayout": {
+                        "type": "string",
+                        "enum": [
+                          "rows",
+                          "grid"
+                        ],
+                        "description": "Folders' and the root's layout: rows or cards (TON-174)."
                       }
                     },
                     "additionalProperties": false
@@ -19762,6 +19836,14 @@
                           "rows",
                           "grid"
                         ]
+                      },
+                      "folderLayout": {
+                        "type": "string",
+                        "enum": [
+                          "rows",
+                          "grid"
+                        ],
+                        "description": "Folders' and the root's layout: rows or cards (TON-174)."
                       }
                     },
                     "additionalProperties": false

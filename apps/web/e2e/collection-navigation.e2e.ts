@@ -20,6 +20,7 @@ import {
   savedNames,
   toasts,
   violations,
+  foldersAsRows,
 } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -55,6 +56,8 @@ const album = (title: string): Album => ({
 test("folders and lists are created, renamed and walked by keyboard alone", async ({ page }) => {
   await signIn(page, accounts.navKeyboard);
   await live(page);
+  // Folders as rows, which this test is about; cards are their default (TON-174).
+  await foldersAsRows(page);
 
   // ⇧N makes a folder at the top level, then N with it focused makes a list inside it.
   await page.keyboard.press("Shift+N");

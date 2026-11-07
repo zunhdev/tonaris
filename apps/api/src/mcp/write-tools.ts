@@ -460,7 +460,7 @@ export function registerWriteTools(
     {
       title: "Set how a view shows",
       description:
-        "Sets the user's choices for one view: its sort (mode and direction together), grouping by release type, and layout. Null forgets a choice, back to the account default. Folder views sort by name, created or manual; lists and Unsorted by year, name or manual.",
+        "Sets the user's choices for one view: its sort (mode and direction together), grouping by release type, and layout (rows or grid). Null forgets a choice, back to the account default. Folder views sort by name, created or manual, and take a layout but no grouping; lists and Unsorted sort by year, name or manual.",
       inputSchema: z.object({
         view: viewInput,
         sortMode: z.enum(sortModes).nullable().optional(),

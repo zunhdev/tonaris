@@ -60,6 +60,7 @@ export const defaultsColumns = {
   folderSortDir: accountSettings.folderSortDir,
   grouped: accountSettings.grouped,
   layout: accountSettings.layout,
+  folderLayout: accountSettings.folderLayout,
 };
 
 /**

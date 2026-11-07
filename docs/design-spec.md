@@ -633,6 +633,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **The layout is chosen in View options** (DS-49) and saved with the view's other choices to the account, so it follows the person to every device. The header switch is gone.
 - **Layouts kept on the device move to the account.** The first time the workspace loads, each list or Unsorted kept as Grid on the device since TON-34 is saved as Grid, unless it chose a layout meanwhile. Then the device forgets them.
 
+*As built in TON-174* (the creator picked variant 13C from TON-166's mock, and Grid as the default, 7 November 2026): **folders and the root offer Rows and Grid too,** in their View options, kept per view like a list's. Their own account default, `folderLayout`, starts at Grid, so folders open as cards for everyone, existing accounts included, until they pick Rows. "Save as my default" in a folder's View options saves it, and Settings → Preferences has it under Folders and Collection. Folders still have no grouping. The cards are DS-41's.
+
 *(FR-05.2)*
 
 **DS-41 Folder and root rows.** Each row shows the container icon (folder or list), name, a description excerpt (`fg.tertiary`, one line), the item count (albums for lists, children for folders), and a sharing glyph. When sorted by creation date, a date column appears. *(FR-01.3, FR-03.5, FR-05.1)*
@@ -653,6 +655,13 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 *As built in TON-35:*
 - **Order:** the view's sort (DS-42), the same as the tree's.
 - **Created:** sorted by creation date, a Created column between the name and the contents shows each one's date, in the browser's medium date style ("Oct 23, 2026"). The date comes from the folder's or list's UUIDv7 ID, made when it was created (TS-10).
+
+*As built in TON-174* (the creator picked variant 13C from TON-166's mock, 7 November 2026): **cards.** In Grid, a folder's or the root's folders and lists are cards, sized and walked as album cards are (DS-22, DS-40): at least 160 px, 16 px apart, a virtualized ARIA grid, the arrows moving card by card, Enter opening, ⌥↑ and ⌥↓ rearranging under Manual. Each card is a link with:
+- **a fan of its first three covers:** a list's first albums in its person's presentation of it (sort, grouping and manual order); a subfolder's, the first found in its folders and lists, top to bottom in its own order (decided with the creator). The first is in front at the bottom left, 76% of the card, each behind it 12% up and to the right and dimmer (75%, then 50% brightness); one or two are centred the same way. Covers have their edge and shadow (DS-23). An empty list or folder shows its icon on a `bg.raised` tile;
+- **its name and what it holds,** "9 albums" or "3 folders and lists", in `text.small` `fg.tertiary`;
+- the raised surface under a hovering pointer (DS-22), the save state on the fan's top-right corner, and DS-82's highlight.
+
+There's no description excerpt or Created column on cards; Rows keeps them. Shared folders (DS-70) show the same cards in their viewer's presentation, and guest pages (DS-72) in the visit's, with a Rows | Grid control for folders that starts at Grid; the fan there is drawn by classes alone, as the CSP refuses style attributes on server-rendered pages.
 
 **DS-42 Lists and folders under each sort** *(handoff FR-05.1)*:
 - **Name and creation-date sorts:** folders first, then lists, each sorted by the selected key and direction. This is the filesystem convention and keeps hierarchy scannable.
@@ -682,7 +691,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 | Context | First-time default |
 | --- | --- |
 | Lists, Unsorted | Chronological year, ascending; combined (no grouping); Rows |
-| Folders, root | Manual order |
+| Folders, root | Manual order; Grid (TON-174) |
 | Shared views (viewers, guests) | Same defaults; guests always start from these (FR-11.9) |
 | Mode on entry (desktop owner) | Viewing (DS-45) |
 
@@ -1773,6 +1782,8 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **While sharing,** clearing it is refused with "People you share with see your display name. Stop sharing to clear it." under the field, and the field shows the saved name again.
 
 **DS-94 Preferences.** Default sort and direction for lists, default sort for folders, default grouping, and default layout. A note explains that remembered per-view choices are kept when defaults change. *(FR-11.7)*
+
+*As built in TON-174:* Folders and Collection also have a default **Layout**, Rows or Grid, starting at Grid.
 
 *As built in TON-35:*
 - **Two sections,** with the same segmented controls as View options:

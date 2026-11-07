@@ -1,6 +1,6 @@
 // What a view shows (FR-05.2, FR-11.7, DS-44): its sort, direction, grouping and layout, from the person's choices
-// for that view where they made one, and from their account defaults otherwise. Folders and the root always show
-// rows, combined. The web app and the export's Markdown (TS-82) share it. Pure, so the precedence is tested without
+// for that view where they made one, and from their account defaults otherwise. Folders and the root are never
+// grouped; their layout is rows or cards, their own default being `folderLayout` (TON-174). The web app and the export's Markdown (TS-82) share it. Pure, so the precedence is tested without
 // a DOM.
 
 import {
@@ -56,7 +56,7 @@ export function presentationOf(
       sortMode: chosen ? own : defaults.folderSortMode,
       sortDir: (chosen ? prefs?.sortDir : undefined) ?? defaults.folderSortDir,
       grouped: false,
-      layout: "rows",
+      layout: prefs?.layout ?? defaults.folderLayout,
     };
   }
   const own = prefs?.sortMode;
@@ -74,7 +74,10 @@ export function defaultsFrom(kind: ViewKind, presentation: Presentation): Partia
   const { sortMode, sortDir, grouped, layout } = presentation;
   if (kind === "containers") {
     const folderSortMode = folderSortModes.find((mode) => mode === sortMode);
-    return folderSortMode ? { folderSortMode, folderSortDir: sortDir } : {};
+    return {
+      ...(folderSortMode ? { folderSortMode, folderSortDir: sortDir } : {}),
+      folderLayout: layout,
+    };
   }
   const listSortMode = listSortModes.find((mode) => mode === sortMode);
   return { ...(listSortMode ? { listSortMode, listSortDir: sortDir } : {}), grouped, layout };

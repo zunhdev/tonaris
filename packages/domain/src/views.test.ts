@@ -210,7 +210,7 @@ describe("view.set", () => {
     expect(half?.code).toBe("validation_failed");
   });
 
-  test("a folder takes folder sorts, and no grouping or layout", async () => {
+  test("a folder takes folder sorts and a layout, but no grouping", async () => {
     const metal = container("folder", "Metal");
     const { store } = memoryStore({ containers: [metal] });
     const byYear = failed(
@@ -238,6 +238,12 @@ describe("view.set", () => {
       { principal: anna, store },
     );
     expect(changesOf(created)).toHaveLength(1);
+    // Rows or cards, as lists have (TON-174).
+    const rows = await runCommand(setView(metal.id, { layout: "rows" }, { layout: null }), {
+      principal: anna,
+      store,
+    });
+    expect(changesOf(rows)).toHaveLength(1);
   });
 
   test("a list takes list sorts", async () => {

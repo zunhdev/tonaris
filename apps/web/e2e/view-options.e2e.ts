@@ -10,7 +10,16 @@ import { bootstrapSchema, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, created, list, live, saved, violations } from "./support/workspace";
+import {
+  added,
+  album,
+  created,
+  list,
+  live,
+  saved,
+  violations,
+  foldersAsRows,
+} from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -270,6 +279,8 @@ test("the root sorts folders first, the tree follows it, and Created shows the d
 }) => {
   await signIn(page, accounts.sortFolders);
   await live(page);
+  // Folders as rows, which this test is about; cards are their default (TON-174).
+  await foldersAsRows(page);
   const later = list("Later");
   const metal: Container = { ...list("Metal"), kind: "folder" };
   const archive: Container = { ...list("Archive"), kind: "folder" };

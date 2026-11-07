@@ -60,8 +60,9 @@ test("fields are filled, with a faint edge that strengthens on hover (DS-20, TON
   const page = await context.newPage();
   await page.goto("/sign-in");
   const field = page.getByLabel("Email");
-  // A headless browser refuses the passkey prompt, which marks the field invalid, with an edge of its own: take the
-  // mark away to see the field's.
+  // A headless browser refuses the passkey prompt, which marks the field invalid, with an edge of its own: once it has,
+  // take the mark away to see the field's.
+  await expect(field).toHaveAttribute("aria-invalid", "true");
   await field.evaluate((element) => element.removeAttribute("aria-invalid"));
   await page.mouse.move(0, 0);
   await expect(field).toHaveCSS("background-color", await computedColor(page, "oklch(1 0 0 / 5%)"));

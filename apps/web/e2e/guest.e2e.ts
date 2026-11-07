@@ -89,7 +89,20 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   const response = await guest.goto(path);
   expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
   await expect(guest.getByRole("heading", { level: 1 })).toHaveText("Metal");
-  await guest.getByRole("link", { name: "Doom" }).click();
+  // A folder's lists are cards fanning their covers, or rows, for the visit (TON-174).
+  const inMetal = guest.getByRole("list", { name: "In Metal" });
+  await expect(inMetal.locator('[data-slot="cover-fan-cover"]')).toHaveCount(2);
+  await expect(inMetal).toContainText("2 albums");
+  await guest
+    .getByRole("radiogroup", { name: "Layout" })
+    .getByRole("radio", { name: "Rows" })
+    .click();
+  await expect(inMetal.locator('[data-slot="cover-fan-cover"]')).toHaveCount(0);
+  await guest
+    .getByRole("radiogroup", { name: "Layout" })
+    .getByRole("radio", { name: "Grid" })
+    .click();
+  await guest.getByRole("link", { name: /^Doom/ }).click();
   await expect(guest.getByRole("heading", { level: 1 })).toHaveText("Doom");
   await expect(guest).toHaveURL(new RegExp(`\\?c=${doom.id}$`));
   const albums = guest.getByRole("list", { name: "Albums in Doom" }).getByRole("listitem");

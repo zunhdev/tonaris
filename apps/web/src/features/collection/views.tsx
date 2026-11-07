@@ -11,6 +11,7 @@ import { useNarrowScreen } from "@/common/media";
 import { PageHeader, toCollection, useDocumentTitle, type PathStep } from "@/common/page-header";
 import { pageScroll } from "@/common/page-scroll";
 import { useShell } from "@/common/shell-context";
+import { count as counted } from "@/common/words";
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
 import { PhoneShared } from "@/features/sharing/phone-shared";
@@ -44,6 +45,7 @@ import { useAlbumArrangement, useContainerArrangement } from "./arrangement";
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useMode } from "./collection-mode";
 import { useCollectionUi, useStartEditor } from "./collection-ui";
+import { ContainerCards } from "./container-cards";
 import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
@@ -89,13 +91,29 @@ function ContainersBody({
     [manual, editing, arranged],
   );
   useDropHandler(viewKey, moves.drop);
+  const childCounts = (folderId: string) => tree.children.get(folderId)?.length ?? 0;
+  // Cards by default, rows as chosen (TON-174).
+  if (presentation.layout === "grid") {
+    return (
+      <ContainerCards
+        containers={shown}
+        label={label}
+        contentsOf={(container) =>
+          container.kind === "list"
+            ? counted(counts.get(container.id) ?? 0, "album", "albums")
+            : counted(childCounts(container.id), "folder or list", "folders and lists")
+        }
+        moves={moves}
+      />
+    );
+  }
   return (
     <ContainerRows
       containers={shown}
       label={label}
       viewKey={viewKey}
       albumCounts={counts}
-      childCounts={(folderId) => tree.children.get(folderId)?.length ?? 0}
+      childCounts={childCounts}
       showCreated={presentation.sortMode === "created"}
       moves={moves}
     />

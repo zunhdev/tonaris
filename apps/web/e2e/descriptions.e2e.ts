@@ -8,7 +8,7 @@ import { uuidv7 } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { insert, live, saved, violations } from "./support/workspace";
+import { insert, live, saved, violations, foldersAsRows } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -20,6 +20,8 @@ test("a description is written, shown in the header and rows, kept through a mov
 }) => {
   await signIn(page, accounts.descriptions);
   await live(page);
+  // Folders as rows, which this test is about; cards are their default (TON-174).
+  await foldersAsRows(page);
   const rock = {
     id: uuidv7(),
     kind: "folder" as const,
