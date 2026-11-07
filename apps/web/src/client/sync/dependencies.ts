@@ -35,6 +35,7 @@ function created(mutation: Mutation): string[] {
     case "container.rename":
     case "container.move":
     case "container.describe":
+    case "container.setColor":
     case "trash.recover":
     case "trash.purge":
     case "membership.add":
@@ -80,6 +81,7 @@ function referenced(mutation: Mutation): (string | null)[] {
     case "album.setArtwork":
     case "container.rename":
     case "container.describe":
+    case "container.setColor":
     case "container.delete":
     case "album.delete":
       return [mutation.args.id];

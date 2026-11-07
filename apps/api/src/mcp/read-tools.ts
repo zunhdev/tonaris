@@ -24,6 +24,7 @@ import {
   type SourcedAlbum,
 } from "@tonaris/db";
 import {
+  containerColors,
   approvalState,
   approvalSummary,
   containerKinds,
@@ -186,7 +187,13 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
       }),
       outputSchema: z.object({
         container: containerSchema
-          .extend({ description: z.string().nullable() })
+          .extend({
+            description: z.string().nullable(),
+            color: z
+              .enum(containerColors)
+              .nullable()
+              .describe("Its own color; null shows its nearest folder's (TON-175)."),
+          })
           .nullable()
           .describe("The folder or list; null for the top level."),
         sharedBy,

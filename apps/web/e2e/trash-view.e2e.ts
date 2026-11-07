@@ -19,7 +19,7 @@ const container = (
   kind: Container["kind"],
   name: string,
   parentId: string | null = null,
-): Container => ({ id: uuidv7(), kind, parentId, name, description: null });
+): Container => ({ id: uuidv7(), kind, parentId, name, description: null, color: null });
 const trash = (page: Page) => page.getByRole("table", { name: "Trash" });
 const unitRow = (page: Page, name: string) =>
   trash(page)

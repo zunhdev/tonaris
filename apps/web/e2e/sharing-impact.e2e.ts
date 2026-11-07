@@ -18,6 +18,7 @@ const container = (kind: Container["kind"], name: string): Container => ({
   parentId: null,
   name,
   description: null,
+  color: null,
 });
 
 async function send(page: Page, name: string, args: Record<string, unknown>) {

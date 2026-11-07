@@ -16,6 +16,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import {
+  containerColors,
   containerKinds,
   provenanceSources,
   releaseTypes,
@@ -70,6 +71,8 @@ export const containers = table(
     // searchKey() of the name, stored like the albums' keys so the server searches as the app does (TS-12, TS-50).
     searchNameKey: text().notNull(),
     description: text(),
+    /** Its own color (TON-175), null for none: its contents without one take it. */
+    color: text({ enum: containerColors }),
     trashedAt: instant(),
     trashUnitId: uuid().references(() => trashUnits.id),
     ...timestamps,
@@ -93,6 +96,7 @@ export const containers = table(
       t.searchNameKey.op("public.gin_trgm_ops"),
     ),
     check("containers_kind_check", oneOf(t.kind, containerKinds)),
+    check("containers_color_check", oneOf(t.color, containerColors)),
     check("containers_name_check", notBlank(t.name)),
     check("containers_trash_check", trashStamp(t.trashedAt, t.trashUnitId)),
   ],

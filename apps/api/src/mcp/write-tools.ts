@@ -22,6 +22,7 @@ import {
 } from "@tonaris/db";
 import {
   albumFields,
+  containerColors,
   containerKinds,
   fieldTypes,
   maxBatchItems,
@@ -253,6 +254,30 @@ export function registerWriteTools(
       return run("rename_container", args, () =>
         each(
           [{ name: "container.rename", args: { id: args.containerId, name: args.name }, base }],
+          [{ containerId: args.containerId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_color",
+    {
+      title: "Color a folder or list",
+      description: `Sets a folder's or list's own color, one of ${containerColors.join(", ")}, or clears it with null. A folder or list without its own color shows its nearest folder's, in the app's tree, folders and the album panel. Pass base, the color you read, to be told if it changed since.`,
+      inputSchema: containerChange.extend({
+        color: z.enum(containerColors).nullable(),
+        base: z.object({ color: z.enum(containerColors).nullable() }).optional(),
+      }),
+      outputSchema: output({ containerId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const current = await containerBase(db, { ownerId: userId, containerId: args.containerId });
+      const base = args.base ?? { color: current?.color ?? null };
+      return run("set_color", args, () =>
+        each(
+          [{ name: "container.setColor", args: { id: args.containerId, color: args.color }, base }],
           [{ containerId: args.containerId }],
         ),
       );

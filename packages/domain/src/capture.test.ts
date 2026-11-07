@@ -101,6 +101,7 @@ const list = (name: string, values: Partial<StoredContainer> = {}): StoredContai
   id: uuidv7(),
   kind: "list",
   description: null,
+  color: null,
   parentId: null,
   name,
   ownerId: owner,

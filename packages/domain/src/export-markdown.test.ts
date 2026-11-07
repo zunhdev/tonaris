@@ -34,6 +34,7 @@ const container = (kind: "folder" | "list", name: string, parentId: string | nul
   parentId,
   name,
   description: null,
+  color: null,
   trashedAt: null,
   trashUnitId: null,
 });
@@ -197,7 +198,7 @@ describe("exportReadme", () => {
     // A part's name in code, alone or as the start of a path such as `tree.containers`.
     for (const key of Object.keys(exportJsonSchema().properties ?? {}))
       expect(text).toMatch(new RegExp(`\`${key}[\`.]`));
-    expect(text).toContain("its version (1.1)");
+    expect(text).toContain("its version (1.2)");
     expect(text).toContain("on 2026-10-29 at 12:00 UTC");
   });
 });

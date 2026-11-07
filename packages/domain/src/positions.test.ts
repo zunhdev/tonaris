@@ -38,6 +38,7 @@ const container = (kind: StoredContainer["kind"], name: string, parentId: string
     parentId,
     name,
     description: null,
+    color: null,
     ownerId: owner,
     trashed: false,
   }) satisfies StoredContainer;

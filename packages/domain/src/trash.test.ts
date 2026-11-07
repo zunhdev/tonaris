@@ -29,6 +29,7 @@ const container = (
   parentId,
   name,
   description: null,
+  color: null,
   ownerId: owner,
   trashed: false,
 });

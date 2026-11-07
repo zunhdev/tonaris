@@ -39,6 +39,7 @@ const container = (kind: StoredContainer["kind"], name: string): StoredContainer
   parentId: null,
   name,
   description: null,
+  color: null,
   ownerId: owner,
   trashed: false,
 });

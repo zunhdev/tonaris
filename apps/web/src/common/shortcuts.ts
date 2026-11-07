@@ -133,7 +133,7 @@ export function createShortcutMatcher({ sequenceMs = 1_500 } = {}): ShortcutMatc
 }
 
 /** What the palette runs (DS-75): every action shortcut, and F2 and R, which act where they are pressed. */
-export type CommandId = Exclude<ShortcutAction, "search"> | "rename" | "restore";
+export type CommandId = Exclude<ShortcutAction, "search"> | "rename" | "restore" | "color";
 
 /** What a command acts on: the focus when it was asked for. */
 export type CommandTarget = {
@@ -198,6 +198,8 @@ export const commands: readonly Command[] = [
   { id: "new-folder", title: "New folder", keys: ["⇧", "N"], section: "Folders and lists" },
   { id: "rename", title: "Rename", keys: ["F2"], section: "Folders and lists" },
   { id: "move", title: "Move to…", keys: ["M"], section: "Folders and lists" },
+  // From ⌘K or the ⋯ menu, without a key of its own (TON-175).
+  { id: "color", title: "Color…", keys: [], section: "Folders and lists" },
   { id: "share", title: "Share…", keys: ["⇧", "S"], section: "Folders and lists" },
   { id: "delete", title: "Delete a folder or list", keys: ["⌫"], section: "Folders and lists" },
   { id: "restore", title: "Restore", keys: ["R"], section: "Trash" },

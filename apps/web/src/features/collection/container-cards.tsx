@@ -22,8 +22,10 @@ import { cn } from "@tonaris/ui/lib/utils";
 import { artworkSrc } from "./artwork";
 import { useCollectionUi } from "./collection-ui";
 import { coversOf } from "./container-covers";
+import { effectiveColor } from "./container-palette";
 import { CoverFan, type FanCover } from "./cover-fan";
 import { useCollectionData } from "./data";
+import { ContainerIcon } from "./icons";
 import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -183,7 +185,10 @@ function ContainerCard({
           </span>
         )}
       </span>
-      <span className="mt-1.5 truncate font-medium text-fg-primary">{container.name}</span>
+      <span className="mt-1.5 flex min-w-0 items-center gap-1.5">
+        <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
+        <span className="truncate font-medium text-fg-primary">{container.name}</span>
+      </span>
       <span className="truncate text-small text-fg-tertiary">{contents}</span>
     </>
   );

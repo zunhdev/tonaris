@@ -10,7 +10,7 @@ import {
   syncedAlbumSchema,
 } from "./albums";
 import { captureArgsSchema } from "./capture";
-import { containerFieldsSchema, containerSchema } from "./containers";
+import { containerColors, containerFieldsSchema, containerSchema } from "./containers";
 import { fieldDeleteArgsSchema } from "./field-deletion";
 import {
   fieldAddOptionArgsSchema,
@@ -281,6 +281,17 @@ export const containerDescribeSchema = z.object({
   base: z.object({ description: z.string().nullable() }),
 });
 
+/**
+ * `container.setColor`: sets a folder's or list's own color, or clears it with null (TON-175); `base.color` is the one
+ * the client last saw (TS-21).
+ */
+export const containerSetColorSchema = z.object({
+  mutationId,
+  name: z.literal("container.setColor"),
+  args: z.object({ id: z.uuid(), color: z.enum(containerColors).nullable() }),
+  base: z.object({ color: z.enum(containerColors).nullable() }),
+});
+
 /** `container.rename`: `base.name` is the name the client last saw (TS-21, FR-01.3). */
 export const containerRenameSchema = z.object({
   mutationId,
@@ -522,6 +533,7 @@ export const mutationSchema = z
     shareRemoveReferenceSchema,
     defaultsSetLinkTargetSchema,
     defaultsSetHiddenServicesSchema,
+    containerSetColorSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

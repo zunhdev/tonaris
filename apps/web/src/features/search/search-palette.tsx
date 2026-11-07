@@ -627,7 +627,10 @@ function ResultRow({
           </span>
         )}
         <span className="flex shrink-0 gap-1">
-          <span className="sr-only">, shortcut {row.command.keys.join(" ")}</span>
+          {/* Color… has no key of its own (TON-175). */}
+          {row.command.keys.length > 0 && (
+            <span className="sr-only">, shortcut {row.command.keys.join(" ")}</span>
+          )}
           {row.command.keys.map((key) => (
             <kbd
               key={key}

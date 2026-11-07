@@ -18,7 +18,7 @@ const container = (
   kind: Container["kind"],
   name: string,
   parentId: string | null = null,
-): Container => ({ id: uuidv7(), kind, parentId, name, description: null });
+): Container => ({ id: uuidv7(), kind, parentId, name, description: null, color: null });
 
 /** Deletes the folder or list `name` from the sidebar with ⌫, confirming a folder. */
 async function deleted(page: Page, name: string, folder = false) {

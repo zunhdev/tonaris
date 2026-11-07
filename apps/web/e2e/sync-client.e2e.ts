@@ -133,6 +133,7 @@ test("edits made offline wait, never as saved, then go out in order once back on
     parentId: null,
     name: "Later",
     description: null,
+    color: null,
   };
   await page.evaluate(
     async ([value, container]) => {

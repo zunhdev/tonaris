@@ -18,7 +18,7 @@ const container = (
   kind: Container["kind"],
   name: string,
   parentId: string | null = null,
-): Container => ({ id: uuidv7(), kind, parentId, name, description: null });
+): Container => ({ id: uuidv7(), kind, parentId, name, description: null, color: null });
 
 async function send(page: Page, name: string, args: Record<string, unknown>) {
   const response = await page.request.post(`${apiUrl}/v1/mutations`, {

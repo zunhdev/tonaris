@@ -287,6 +287,19 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
         subject: capitalized(target),
       };
     }
+    case "container.setColor": {
+      const colored = names.container(mutation.args.id);
+      const target = kindNamed(colored?.kind, colored?.name);
+      return {
+        summary: capitalized(
+          mutation.args.color === null
+            ? `clear the color of ${target}`
+            : `color ${target} ${mutation.args.color}`,
+        ),
+        what: `the color of ${target}`,
+        subject: capitalized(`the color of ${target}`),
+      };
+    }
     case "container.describe": {
       const described = names.container(mutation.args.id);
       const target = kindNamed(described?.kind, described?.name);

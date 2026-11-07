@@ -13,6 +13,7 @@ import { count as counted } from "@/common/words";
 import { useAlbumArrangement, useContainerArrangement } from "@/features/collection/arrangement";
 import { artworkSrc } from "@/features/collection/artwork";
 import { coversIn } from "@/features/collection/container-covers";
+import { effectiveColor } from "@/features/collection/container-palette";
 import { useCollectionData } from "@/features/collection/data";
 import { sections as sectionsOf, sortAlbums, sortContainers } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
@@ -212,6 +213,7 @@ function FolderBody({
       layout={presentation.layout}
       coversOf={coversOf}
       contentsOf={contentsOf}
+      colorOf={(item) => effectiveColor(item, tree.byId)}
     />
   );
 }

@@ -104,6 +104,13 @@ describe("DS-14 contrast targets", () => {
     expect(shortfalls).toEqual([]);
   });
 
+  test("folder and list colors reach 3:1 on every surface and on a selected row (DS-27, TON-175)", () => {
+    const colors = ["red", "orange", "amber", "green", "teal", "blue", "violet", "pink"].map(
+      (color) => `folder-${color}`,
+    );
+    expect(failures(colors, [...surfaces, "bg-selected"], 3)).toEqual([]);
+  });
+
   test("a failing pair is reported by name and ratio", () => {
     expect(failures(["fg-disabled"], ["bg-hover"], 4.5)).toEqual([
       expect.stringMatching(/^fg-disabled on bg-hover: \d\.\d\d:1 < 4\.5:1$/),

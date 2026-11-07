@@ -35,6 +35,7 @@ const container = (kind: Container["kind"], name: string, parentId: string | nul
   parentId,
   name,
   description: null,
+  color: null,
 });
 
 test("shared content is found from its shared root, opens view-only, and goes once revoked", async ({

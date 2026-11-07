@@ -43,6 +43,7 @@ test("a batch that partly fails is reported once, by status, kept across a reloa
     parentId: null,
     name: "Later",
     description: null,
+    color: null,
   };
   const doom: Container = {
     id: uuidv7(),
@@ -50,6 +51,7 @@ test("a batch that partly fails is reported once, by status, kept across a reloa
     parentId: folder.id,
     name: "Doom",
     description: null,
+    color: null,
   };
   await insert(page, folder, doom, list("Soon"), list("Sooner"));
 

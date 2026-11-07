@@ -97,7 +97,14 @@ async function made(
   name: string,
   parentId: string | null = null,
 ): Promise<Container> {
-  const container: Container = { id: uuidv7(), kind, parentId, name, description: null };
+  const container: Container = {
+    id: uuidv7(),
+    kind,
+    parentId,
+    name,
+    description: null,
+    color: null,
+  };
   await run(principal, { name: "container.create", args: container });
   return container;
 }

@@ -23,6 +23,8 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 import { DragHandle, DropLine } from "./album-rows";
 import { useCollectionUi } from "./collection-ui";
+import { effectiveColor } from "./container-palette";
+import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { ContainerIcon } from "./icons";
 import { useGridFocus, type GridRearrange } from "./use-grid";
@@ -188,6 +190,7 @@ function ContainerRow({
 }) {
   const row = useRef<HTMLDivElement>(null);
   const { setFocusedRow } = useCollectionUi();
+  const { tree } = useCollectionData();
   useLiveHighlight(container.id, row);
   const drag = useRowDrag(
     { kind: "container", id: container.id, name: container.name, viewKey },
@@ -206,7 +209,7 @@ function ContainerRow({
   const excerpt = container.description?.split("\n")[0];
   const name = (
     <>
-      <ContainerIcon kind={container.kind} />
+      <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
       <span className="truncate">{container.name}</span>
       <SaveStateMarker status={status} />
     </>

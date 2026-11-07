@@ -22,6 +22,7 @@ const container = (
   parentId,
   name,
   description: null,
+  color: null,
 });
 
 async function send(
@@ -63,6 +64,8 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
     { url: null },
   );
   await send(page, "account.setDisplayName", { displayName: "Denis" });
+  // Metal is orange; its list Doom, without a color of its own, shows it to guests too (TON-175).
+  await send(page, "container.setColor", { id: metal.id, color: "orange" }, { color: null });
   await send(page, "share.setLink", { containerId: metal.id, linkId: uuidv7(), enabled: true });
   const settings = await (
     await page.request.get(`${apiUrl}/v1/containers/${metal.id}/sharing`)
@@ -93,6 +96,7 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   const inMetal = guest.getByRole("list", { name: "In Metal" });
   await expect(inMetal.locator('[data-slot="cover-fan-cover"]')).toHaveCount(2);
   await expect(inMetal).toContainText("2 albums");
+  await expect(inMetal.locator('svg[data-color="orange"]')).toHaveCount(1);
   await guest
     .getByRole("radiogroup", { name: "Layout" })
     .getByRole("radio", { name: "Rows" })

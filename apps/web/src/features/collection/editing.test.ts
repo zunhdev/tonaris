@@ -14,6 +14,7 @@ const metal: Container = {
   parentId: null,
   name: "Metal",
   description: null,
+  color: null,
 };
 const doom: Container = {
   id: uuidv7(),
@@ -21,6 +22,7 @@ const doom: Container = {
   parentId: metal.id,
   name: "Doom",
   description: null,
+  color: null,
 };
 const later: Container = {
   id: uuidv7(),
@@ -28,6 +30,7 @@ const later: Container = {
   parentId: null,
   name: "Later",
   description: null,
+  color: null,
 };
 
 describe("creating and renaming (DS-78)", () => {

@@ -18,7 +18,7 @@ const container = (
   name: string,
   parentId: string | null = null,
   description: string | null = null,
-): Container => ({ id: uuidv7(), kind, parentId, name, description });
+): Container => ({ id: uuidv7(), kind, parentId, name, description, color: null });
 const palette = (page: Page) => page.getByRole("dialog", { name: "Search" });
 const field = (page: Page) => page.getByRole("combobox", { name: "Search" });
 const group = (page: Page, name: string) => palette(page).getByRole("group", { name, exact: true });

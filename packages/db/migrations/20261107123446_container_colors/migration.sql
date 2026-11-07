@@ -1,0 +1,2 @@
+ALTER TABLE "containers" ADD COLUMN "color" text;--> statement-breakpoint
+ALTER TABLE "containers" ADD CONSTRAINT "containers_color_check" CHECK ("color" in ('red', 'orange', 'amber', 'green', 'teal', 'blue', 'violet', 'pink'));

@@ -1,6 +1,6 @@
 // A folder's or list's menu in the sidebar (TON-117, DS-27): New list and New folder, made inside a folder and beside
 // a list, as N and ⇧N make them from its row (TON-120); then Rename, Move to…, Share… and Delete…, each the command
-// its shortcut runs (F2, M, ⇧S, ⌫) on that folder or list. Each shows its keys from the shortcuts' list (DS-78). It
+// its shortcut runs (F2, M, ⇧S, ⌫) on that folder or list; and Color, whose submenu sets its own color (TON-175). Each shows its keys from the shortcuts' list (DS-78). It
 // opens from the row's ⋯ with the pointer, and with Shift+F10 or the Menu key from the keyboard. Offline, the
 // commands wait, and the menu says why (DS-81).
 
@@ -8,16 +8,23 @@ import { useShell } from "@/common/shell-context";
 import { shortcutLabel, type CommandId } from "@/common/shortcuts";
 import { Fragment, useRef } from "react";
 
-import type { ContainerKind } from "@tonaris/domain";
+import { containerColors, type ContainerColor, type ContainerKind } from "@tonaris/domain";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@tonaris/ui/components/dropdown-menu";
 
 import { useStartEditor } from "./collection-ui";
+import { useSetColor } from "./container-color";
+import { colorNames, ColorSwatch } from "./container-palette";
 import { useCollectionData } from "./data";
 import { placeFor } from "./editing";
 
@@ -46,6 +53,8 @@ export function ContainerMenu({
   const { runCommand, commandBlocked } = useShell();
   const startEditor = useStartEditor();
   const { tree } = useCollectionData();
+  const setColor = useSetColor();
+  const own = target === undefined ? undefined : tree.byId.get(target.id);
   // A chosen command places the focus itself, such as in the name's editor; otherwise it goes back to the row.
   const chosen = useRef(false);
   const on = target === undefined ? {} : { container: target.id };
@@ -95,6 +104,29 @@ export function ContainerMenu({
         <DropdownMenuSeparator />
         {items.map(({ id, label, destructive }) => (
           <Fragment key={id}>
+            {destructive && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger disabled={blocked !== undefined}>
+                  Color
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent aria-label="Color">
+                  <DropdownMenuRadioGroup
+                    value={own?.color ?? "none"}
+                    onValueChange={(value: ContainerColor | "none") => {
+                      if (!target) return;
+                      setColor(target.id, value === "none" ? null : value);
+                    }}
+                  >
+                    {(["none", ...containerColors] as const).map((color) => (
+                      <DropdownMenuRadioItem key={color} value={color}>
+                        <ColorSwatch color={color === "none" ? null : color} />
+                        {color === "none" ? "None" : colorNames[color]}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
             {destructive && <DropdownMenuSeparator />}
             <DropdownMenuItem
               variant={destructive ? "destructive" : "default"}

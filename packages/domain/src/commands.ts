@@ -7,6 +7,7 @@ import { createAlbum, setArtwork, updateAlbum, type Album } from "./albums";
 import { captureAlbum, type CaptureSource } from "./capture";
 import type { CollectionStore } from "./collection-store";
 import {
+  colorContainer,
   createContainer,
   describeContainer,
   moveContainer,
@@ -112,6 +113,7 @@ const handlers = {
   "container.rename": ({ args, base }, context) => renameContainer(args, base, context),
   "container.move": ({ args, base }, context) => moveContainer(args, base, context),
   "container.describe": ({ args, base }, context) => describeContainer(args, base, context),
+  "container.setColor": ({ args, base }, context) => colorContainer(args, base, context),
   "container.delete": ({ args }, context) => deleteContainer(args, context),
   "trash.recover": ({ args }, context) => recoverUnit(args, context),
   "album.delete": ({ args }, context) => deleteAlbum(args, context),

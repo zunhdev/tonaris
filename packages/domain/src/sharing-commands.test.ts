@@ -23,6 +23,7 @@ const doom: StoredContainer = {
   parentId: null,
   name: "Doom",
   description: null,
+  color: null,
   ownerId: owner,
   trashed: false,
 };

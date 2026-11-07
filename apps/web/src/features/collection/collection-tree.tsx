@@ -34,6 +34,7 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionUi, useEditor, useStartEditor, useViewContainerId } from "./collection-ui";
 import { ContainerMenu, type ContainerMenuTarget } from "./container-menu";
+import { effectiveColor } from "./container-palette";
 import { sortForView, useCollectionData } from "./data";
 import { useDestination, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
@@ -616,6 +617,7 @@ function ContainerRow({
   useLiveHighlight(container.id, ref);
   const status = useSaveState(container.id);
   const isFolder = container.kind === "folder";
+  const { tree } = useCollectionData();
   const drag = useTreeDrag(container);
   const destination = useDestination(container.id, isFolder);
   const props = {
@@ -651,7 +653,7 @@ function ContainerRow({
       ) : (
         <span className="w-3.5 shrink-0" />
       )}
-      <ContainerIcon kind={container.kind} />
+      <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
       <span className="min-w-0 flex-1 truncate">{container.name}</span>
       {count !== undefined && (
         // The ⋯ takes the count's place while it shows.

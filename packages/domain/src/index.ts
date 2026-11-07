@@ -155,6 +155,7 @@ export {
   type BatchResult,
 } from "./batches";
 export {
+  containerColors,
   containerFieldsSchema,
   containerKinds,
   containerNameProblem,
@@ -163,6 +164,7 @@ export {
   descriptionTooLong,
   nameTakenProblem,
   type Container,
+  type ContainerColor,
   type ContainerFields,
   type ContainerKind,
   type StoredContainer,

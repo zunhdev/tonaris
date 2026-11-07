@@ -255,3 +255,10 @@ Settings → Connections SHALL show the MCP server URL with Copy, and for Claude
 #### Scenario: Another client
 - **WHEN** they pick Codex
 - **THEN** the steps show the desktop app's MCP servers settings, and the CLI's `codex mcp add` and `codex mcp login` with the server URL
+
+### Requirement: Agents set folder and list colors
+A Manage collection agent SHALL set a folder's or list's color, or clear it, with `set_color`, under the same rules and conflict checks as the app (FR-01.19, FR-10.4, TON-175). `list_container` SHALL return a folder's or list's own color.
+
+#### Scenario: An agent colors a list
+- **WHEN** a Manage collection agent calls `set_color` on the list 'Doom' with violet
+- **THEN** the change is confirmed, and `list_container` returns 'Doom' with the color violet
