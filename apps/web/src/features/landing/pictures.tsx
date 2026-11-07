@@ -472,11 +472,11 @@ export function PlayPicture() {
   );
 }
 
-/** Each cover's place in a fan of three, back to front, as the app's cards place them (DS-41, TON-174). */
+/** Each cover's place in a fan of three, back to front, as the app's cards place them (DS-41, TON-178). */
 const fanPlaces = [
-  "left-[24%] top-0 brightness-50",
-  "left-[12%] top-[12%] brightness-75",
-  "left-0 top-[24%]",
+  "left-[12%] top-0 brightness-50",
+  "left-[6%] top-[6%] brightness-75",
+  "left-0 top-[12%]",
 ];
 
 /** A folder's or list's card: its first three covers fanned, the first in front; its icon and name; what it holds. */
@@ -497,7 +497,7 @@ function ContainerCard({
     <span className="flex min-w-0 flex-col">
       <span className="relative block aspect-square w-full">
         {covers.toReversed().map((album, index) => (
-          <span key={album} className={cn("absolute w-[76%]", fanPlaces[index])}>
+          <span key={album} className={cn("absolute w-[88%]", fanPlaces[index])}>
             <Art album={album} raised className="rounded-md" />
           </span>
         ))}

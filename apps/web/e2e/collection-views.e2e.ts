@@ -285,6 +285,24 @@ test("a folder opens as cards fanning each list's first covers, walked by keyboa
   // The letters of the fanned covers, back to front: the list's first three by year, the first in front.
   const fan = (name: string) => card(name).locator('[data-slot="cover-fan-cover"]');
   await expect(fan("Led Zeppelin")).toHaveText(["P", "H", "L"]);
+  // The covers fill the card, in percent of its width: each 88% wide, each behind 6% up and to the right (TON-178).
+  const placed = await fan("Led Zeppelin").evaluateAll((covers) =>
+    covers.map((cover) => {
+      const box = cover.getBoundingClientRect();
+      const square = cover.parentElement!.getBoundingClientRect();
+      const percent = (length: number) => Math.round((100 * length) / square.width);
+      return {
+        left: percent(box.left - square.left),
+        top: percent(box.top - square.top),
+        width: percent(box.width),
+      };
+    }),
+  );
+  expect(placed).toEqual([
+    { left: 12, top: 0, width: 88 },
+    { left: 6, top: 6, width: 88 },
+    { left: 0, top: 12, width: 88 },
+  ]);
   await expect(card("Led Zeppelin")).toContainText("4 albums");
   // An empty list shows its icon; a subfolder fans the covers found inside it.
   await expect(card("The Who").locator('[data-slot="cover-fan-empty"]')).toHaveCount(1);
