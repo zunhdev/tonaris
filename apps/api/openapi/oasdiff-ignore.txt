@@ -9,13 +9,3 @@ POST /v1/approvals/{id}/decision the 'operation' response property const value '
 # backup. Its only reader was the web app's Admin → Operations page.
 GET /v1/admin/operations removed the required property `lastBackup` from the response with the `200` status
 GET /v1/admin/operations removed the required property 'lastBackup' from the response with the '200' status
-# TON-164, 5 November 2026: Single became a release type, so the release-type enums of album.create, album.update
-# and album.capture gained a value, in place: no one uses the API yet (closed testing), the creator said. Additive,
-# but oasdiff matches inline oneOf variants by content and reads each as removed. TON-131's entries for its own
-# enum widening were removed with this change, as nothing matched them once it was on main.
-POST /v1/mutations removed `subschema #1, subschema #2, subschema #4` from the request body `oneOf` list (media type: application/json)
-POST /v1/mutations removed 'subschema #1, subschema #2, subschema #4' from the request body 'oneOf' list (media type: application/json)
-POST /v1/mutations removed `subschema #1, subschema #2, subschema #4` from the request body `oneOf` list (media type: application/x-www-form-urlencoded)
-POST /v1/mutations removed 'subschema #1, subschema #2, subschema #4' from the request body 'oneOf' list (media type: application/x-www-form-urlencoded)
-POST /v1/mutations removed `subschema #1, subschema #2, subschema #4` from the request body `oneOf` list (media type: multipart/form-data)
-POST /v1/mutations removed 'subschema #1, subschema #2, subschema #4' from the request body 'oneOf' list (media type: multipart/form-data)

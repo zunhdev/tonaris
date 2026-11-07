@@ -5,7 +5,7 @@
 - [x] 1.1 `folderLayout` in the account defaults (Grid), `presentationOf` and `defaultsFrom` for folders, `setView` taking a folder's layout; verified by `views.test.ts` and `presentation.test.ts`
 - [x] 1.2 `account_settings.folder_layout` with its check and a migration; verified by `db:check`
 - [x] 1.3 The export's `formatVersion` 1.1 and its README; verified by the export tests and the validator's
-- [x] 1.4 The MCP tool's description; OpenAPI regenerated; oasdiff ignore entries from CI's report, TON-164's spent ones removed; verified by `openapi:check` and CI
+- [x] 1.4 The MCP tool's description; OpenAPI regenerated; TON-164's spent oasdiff ignore entries removed; verified by `openapi:check` and CI's oasdiff, which finds no breaking change
 
 ## 2. Web
 
@@ -18,7 +18,7 @@
 ## 3. Docs and checks
 
 - [x] 3.1 DS-40, DS-41, DS-44, DS-94 and the tech spec as built in TON-174
-- [ ] 3.2 `bun run check` passes, and a native `bun run build`
+- [x] 3.2 `bun run check` passes, and a native `bun run build`
 
 ## Workflow follow-up
 

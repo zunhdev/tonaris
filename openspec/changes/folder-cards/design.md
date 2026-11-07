@@ -28,4 +28,4 @@ Browser tests of rows' own features (descriptions, Created, dragging, phone rows
 
 - [Everyone's folders change at once] → the creator chose it; Rows is one choice away, per folder or as the default.
 - [Sorting a long list for its card's covers] → only for cards in view, memoized; sorting thousands of albums takes milliseconds.
-- [`defaults.set`'s request changed in place] → closed testing; oasdiff ignore entries name it, and TON-164's spent entries go.
+- [`defaults.set`'s request changed in place] → closed testing; oasdiff reads an added optional field as compatible. TON-164's spent ignore entries go, so they can't hide a real removal later.
