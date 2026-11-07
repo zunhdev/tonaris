@@ -170,6 +170,7 @@ describe("access across moves, Trash and revocation, as properties", () => {
           parentId: parent,
           name: `C${index}`,
           description: null,
+          color: null,
           ownerId: owner,
           trashed: false,
         });
@@ -327,6 +328,7 @@ describe("access across moves, Trash and revocation, as properties", () => {
       parentId: null,
       name: "Metal",
       description: null,
+      color: null,
       ownerId: owner,
       trashed: false,
     };

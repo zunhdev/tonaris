@@ -34,6 +34,10 @@ type CollectionDialogs = {
   moving: string | undefined;
   startMove: (id: string) => void;
   endMove: () => void;
+  /** The folder or list ⌘K's "Color…" is open for, if it is open (TON-175). */
+  coloring: string | undefined;
+  startColor: (id: string) => void;
+  endColor: () => void;
   /** The folder or list whose sharing dialog is open (DS-65). */
   sharing: string | undefined;
   startShare: (id: string) => void;
@@ -60,6 +64,7 @@ const CollectionDialogsContext = createContext<CollectionDialogs | undefined>(un
 
 export function CollectionDialogsProvider({ children }: { children: ReactNode }) {
   const [moving, setMoving] = useState<string | undefined>(undefined);
+  const [coloring, setColoring] = useState<string | undefined>(undefined);
   const [sharing, setSharing] = useState<string | undefined>(undefined);
   const [deleting, setDeleting] = useState<string | undefined>(undefined);
   const [deletingAlbum, setDeletingAlbum] = useState<string | undefined>(undefined);
@@ -71,6 +76,9 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
       moving,
       startMove: setMoving,
       endMove: () => setMoving(undefined),
+      coloring,
+      startColor: setColoring,
+      endColor: () => setColoring(undefined),
       sharing,
       startShare: setSharing,
       endShare: () => setSharing(undefined),
@@ -87,7 +95,7 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
       startNewAlbum: setNewAlbum,
       endNewAlbum: () => setNewAlbum(undefined),
     }),
-    [moving, sharing, deleting, deletingAlbum, addingToList, newAlbum],
+    [moving, coloring, sharing, deleting, deletingAlbum, addingToList, newAlbum],
   );
 
   return <CollectionDialogsContext value={value}>{children}</CollectionDialogsContext>;

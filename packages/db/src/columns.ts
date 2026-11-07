@@ -37,6 +37,7 @@ export const containerColumns = {
   parentId: containers.parentId,
   name: containers.name,
   description: containers.description,
+  color: containers.color,
 };
 
 export const membershipColumns = {

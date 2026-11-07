@@ -125,6 +125,8 @@ export const accounts = {
   rowMenuKeys: at("row-menu-keys"),
   headerRename: at("header-rename"),
   rowMenuCreate: at("row-menu-create"),
+  // Folder and list colors (container-menu.e2e.ts, TON-175).
+  rowMenuColors: at("row-menu-colors"),
   // Closing a folder that holds the view (collection-navigation.e2e.ts).
   closeHolder: at("close-holder"),
   // Add album's key in its tooltips (capture.e2e.ts).

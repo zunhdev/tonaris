@@ -20,6 +20,7 @@ const list = (name: string): Container => ({
   parentId: null,
   name,
   description: null,
+  color: null,
 });
 
 /** Sends a mutation as the page's account, as the sharing dialog does. */

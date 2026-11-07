@@ -96,7 +96,14 @@ export function NameEditor({
     if (editor.mode === "create") {
       saved = uuidv7();
       sent(
-        client.containers.insert({ id: saved, kind, parentId, name: trimmed, description: null }),
+        client.containers.insert({
+          id: saved,
+          kind,
+          parentId,
+          name: trimmed,
+          description: null,
+          color: null,
+        }),
       );
     } else {
       saved = editor.id;

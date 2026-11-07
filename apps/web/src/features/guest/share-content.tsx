@@ -20,7 +20,12 @@ import {
   type ReactNode,
 } from "react";
 
-import { entryOrder, type Container, type SharedSnapshot } from "@tonaris/domain";
+import {
+  entryOrder,
+  type Container,
+  type ContainerColor,
+  type SharedSnapshot,
+} from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
@@ -109,6 +114,7 @@ export function FolderItems({
   layout = "rows",
   coversOf,
   contentsOf,
+  colorOf,
 }: {
   folder: Container;
   items: readonly Container[];
@@ -119,6 +125,8 @@ export function FolderItems({
   coversOf?: (item: Container) => readonly FanCover[];
   /** What a card's folder or list holds, counted, for the grid. */
   contentsOf?: (item: Container) => string;
+  /** Its own or its folder's color, as the owner set it (TON-175). */
+  colorOf?: (item: Container) => ContainerColor | null;
 }) {
   const keysFor = useMoveKeys(onMove);
   if (items.length === 0) return <p className="text-fg-secondary">This folder is empty.</p>;
@@ -140,7 +148,10 @@ export function FolderItems({
                   <span className="relative block aspect-square w-full">
                     <CoverFan covers={coversOf?.(child) ?? []} kind={child.kind} />
                   </span>
-                  <span className="mt-1.5 truncate font-medium">{child.name}</span>
+                  <span className="mt-1.5 flex min-w-0 items-center gap-1.5">
+                    <ContainerIcon kind={child.kind} color={colorOf?.(child) ?? null} />
+                    <span className="truncate font-medium">{child.name}</span>
+                  </span>
                   {contentsOf && (
                     <span className="truncate text-small text-fg-tertiary">
                       {contentsOf(child)}
@@ -165,7 +176,7 @@ export function FolderItems({
             "aria-keyshortcuts": keysFor ? "Alt+ArrowUp Alt+ArrowDown" : undefined,
             children: (
               <>
-                <ContainerIcon kind={child.kind} />
+                <ContainerIcon kind={child.kind} color={colorOf?.(child) ?? null} />
                 <span className="truncate">{child.name}</span>
               </>
             ),

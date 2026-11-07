@@ -8,7 +8,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { list, live, saved, toasts, violations } from "./support/workspace";
+import { added, album, list, live, saved, toasts, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -53,6 +53,7 @@ test("a row's ⋯ renames, moves and deletes the folder or list it's on", async 
     "RenameF2",
     "Move to…M",
     "Share…⇧S",
+    "Color",
     "Delete…⌫",
   ]);
   expect(await violations(page, '[data-slot="dropdown-menu-content"]')).toEqual([]);
@@ -180,4 +181,79 @@ test("a folder's menu makes a new list inside it, a list's a folder beside it, a
   await editor.press("Enter");
   await saved(page);
   await expect(item(page, "Later")).toHaveAttribute("aria-level", "1");
+});
+
+test("a folder's color from the ⋯ menu shows on it and what's inside; ⌘K's Color… sets a list's own (TON-175)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.rowMenuColors);
+  await live(page);
+  const metal = { ...list("Metal"), kind: "folder" as const };
+  const doom = { ...list("Doom"), parentId: metal.id };
+  await page.evaluate(
+    async (containers) => {
+      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+    },
+    [metal, doom],
+  );
+  await added(page, [album("Nightfall", { originalYear: 1987 })], doom.id);
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  const icon = (name: string) => item(page, name).locator("svg[data-color]");
+
+  // The ⋯ menu's Color submenu: Metal turns orange, and Doom, without a color of its own, takes it.
+  await openMenu(page, "Metal");
+  await menu(page, "Metal").getByRole("menuitem", { name: "Color" }).click();
+  const colors = page.getByRole("menu", { name: "Color" });
+  await expect(colors.getByRole("menuitemradio")).toHaveText([
+    "None",
+    "Red",
+    "Orange",
+    "Amber",
+    "Green",
+    "Teal",
+    "Blue",
+    "Violet",
+    "Pink",
+  ]);
+  await expect(colors.getByRole("menuitemradio", { name: "None" })).toBeChecked();
+  await colors.getByRole("menuitemradio", { name: "Orange" }).click();
+  await expect(icon("Metal")).toHaveAttribute("data-color", "orange");
+  await expect(icon("Doom")).toHaveAttribute("data-color", "orange");
+  // Coloring is an edit, so Editing mode is on.
+  await expect(page.getByRole("radio", { name: "Edit" })).toBeChecked();
+
+  // ⌘K's Color… gives Doom its own.
+  await item(page, "Doom").focus();
+  await page.keyboard.press("ControlOrMeta+k");
+  await page.getByRole("combobox", { name: "Search" }).fill(">color");
+  await page.getByRole("option", { name: /^Color…/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Color for Doom" });
+  await expect(dialog.getByRole("button", { name: "Orange" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await dialog.getByRole("button", { name: "Teal" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(icon("Doom")).toHaveAttribute("data-color", "teal");
+  await expect(icon("Metal")).toHaveAttribute("data-color", "orange");
+  await saved(page);
+
+  // The album panel's chip for Doom is tinted teal (16A); the colors are kept on reload.
+  await page.reload();
+  await live(page);
+  await expect(icon("Doom")).toHaveAttribute("data-color", "teal");
+  await page
+    .getByRole("grid", { name: "Doom" })
+    .getByRole("row")
+    .filter({ hasText: "Nightfall" })
+    .getByRole("gridcell")
+    .first()
+    .click();
+  const chip = page
+    .getByRole("complementary", { name: "Album" })
+    .getByRole("region", { name: "Lists" })
+    .getByRole("link", { name: "Doom" });
+  await expect(chip).toHaveAttribute("data-color", "teal");
+  expect(await violations(page, "aside")).toEqual([]);
 });

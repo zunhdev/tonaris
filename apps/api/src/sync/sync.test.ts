@@ -447,6 +447,7 @@ const node = (
   parentId,
   name,
   description: null,
+  color: null,
 });
 const createContainer = (args: Container): Mutation => ({
   mutationId: uuidv7(),
@@ -536,7 +537,14 @@ describe("folders and lists (FR-01.1–FR-01.5)", () => {
       // oxlint-disable-next-line no-await-in-loop
       await post(
         anna.cookie,
-        createContainer({ id, kind: "folder", parentId, name: "Level", description: null }),
+        createContainer({
+          id,
+          kind: "folder",
+          parentId,
+          name: "Level",
+          description: null,
+          color: null,
+        }),
       );
       parentId = id;
     }

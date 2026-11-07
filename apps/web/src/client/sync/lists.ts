@@ -47,6 +47,11 @@ function containerUpdates(original: Container, changes: Partial<Container>): Mut
       ),
     );
   }
+  if (changes.color !== undefined && changes.color !== original.color) {
+    updates.push(
+      envelope("container.setColor", { id, color: changes.color }, { color: original.color }),
+    );
+  }
   return updates;
 }
 
@@ -66,12 +71,13 @@ export function createContainerCollection({
     handlers: {
       onInsert: ({ transaction }) =>
         writer.persistEach(transaction, ({ modified }) => {
-          const { id, description } = modified;
+          const { id, description, color } = modified;
           return [
             envelope("container.create", pick(modified, createFields)),
             ...(description
               ? [envelope("container.describe", { id, description }, { description: null })]
               : []),
+            ...(color ? [envelope("container.setColor", { id, color }, { color: null })] : []),
           ];
         }),
       onUpdate: ({ transaction }) =>

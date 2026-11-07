@@ -118,6 +118,7 @@ const made = (kind: Container["kind"], name: string): Container => ({
   parentId: null,
   name,
   description: null,
+  color: null,
 });
 
 const names = (containers: readonly Container[]) => containers.map((each) => each.name);
@@ -257,6 +258,7 @@ describe("manual order (TS-16, DS-44)", () => {
       parentId: null,
       name: "Later",
       description: null,
+      color: null,
     };
     const metal: Container = {
       id: uuidv7(),
@@ -264,6 +266,7 @@ describe("manual order (TS-16, DS-44)", () => {
       parentId: null,
       name: "Metal",
       description: null,
+      color: null,
     };
     expect(
       sortContainers(

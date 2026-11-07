@@ -259,6 +259,8 @@ The rule applies to creation, renaming, moves, and recovery.
 
 **FR-01.18 Early permanent removal.** This is *confirmed* (X-07) and app-only (X-03). Owners permanently delete selected Trash items, including a whole unit, or clear all of Trash. The confirmation states the scope and that it cannot be undone. Purging containers keeps active albums. Purging albums frees their slots once removal succeeds. Partial completion is reported accurately.
 
+**FR-01.19 Colors.** The owner may give any folder or list one of a fixed set of colors, or none. A folder or list without its own color shows the nearest folder's above it. Colors are part of how the collection is organized: they reach the owner's other sessions, viewers of a shared folder or list see them, and exports include them. Setting a color is an ordinary change, in the app and for Manage collection agents (FR-10.4).
+
 ### FR-02 — Capture: links and manual entry
 
 **FR-02.1 Link capture.** A user pastes a Spotify, Apple Music, Qobuz, Tidal, or YouTube Music album link into a list or without one (FR-02.2). Common share-link variants are supported. Tonaris identifies the album behind the link (FR-02.12) and populates the available metadata automatically from permitted sources (G1): title, artist credit, artwork, source service and link, and available release information. Missing information stays unknown.
@@ -607,7 +609,7 @@ An approval never elevates a Read-only connection or enables an app-only operati
 
 **FR-10.4 Ordinary operations (Manage collection).**
 
-- Create and rename lists and folders, and edit their descriptions.
+- Create and rename lists and folders, and edit their descriptions and colors (FR-01.19).
 - Add albums from supplied links or manual data (FR-02).
 - Edit metadata and field values, and apply or remove fields on albums.
 - Create definitions (including initial options) and rename them.
@@ -1113,6 +1115,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (31 October 2026), your streaming services** (TON-138), from the creator's manual testing: each person turns services on or off in Settings, and the album panel and New album show link fields only for those that are on. Saved links always show. **Updated** FR-06.3.
 - **Decision (1 November 2026), a feedback board** (TON-132), from the creator's manual testing: members reach a public feedback board from the account menu, signed in through Tonaris. It is Fider Cloud's free plan, which receives their name and email so it can tell them about replies, and requests reach planning by hand. **Added** FR-11.15.
 - **Decision (5 November 2026), singles** (TON-164), from the creator's manual testing: Single is a release type, no different from EP. It can be chosen and set by agents, singles get it from MusicBrainz on capture, and grouping shows a Single group after EP. Singles saved earlier keep no type until someone sets one. This replaces the 17 and 24 October 2026 decisions that made singles Unclassified. **Updated** FR-02.3, FR-05.7, FR-05.9 and the glossary.
+- **Decision (7 November 2026), folder and list colors** (TON-175), from the creator's design review: owners color folders and lists from a fixed set, contents without their own color show their folder's, viewers of a share see them, agents can set them, and exports carry them. **Added** FR-01.19; **updated** FR-10.4.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);

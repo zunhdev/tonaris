@@ -103,6 +103,7 @@ describe("a change's base (TS-21)", () => {
       name: "Grunge",
       parentId: null,
       description: null,
+      color: null,
     });
     expect(await fieldBase(t.db, { ownerId: anna.userId, fieldId })).toMatchObject({
       id: fieldId,

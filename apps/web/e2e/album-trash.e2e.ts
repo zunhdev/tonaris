@@ -23,6 +23,7 @@ test("⌘⌫ deletes the focused album after confirming; the inspector does too"
     parentId: null,
     name: "Doom",
     description: null,
+    color: null,
   };
   await insert(page, doom);
   const dopesmoker = album("Dopesmoker", { artistCredit: "Sleep", originalYear: 1999 });

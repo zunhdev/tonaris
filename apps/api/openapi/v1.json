@@ -6536,6 +6536,24 @@
                               "string",
                               "null"
                             ]
+                          },
+                          "color": {
+                            "description": "Its own color, null for none: without one it takes the nearest folder's above it (TON-175).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
                           }
                         },
                         "required": [
@@ -6543,10 +6561,11 @@
                           "kind",
                           "parentId",
                           "name",
-                          "description"
+                          "description",
+                          "color"
                         ],
                         "additionalProperties": false,
-                        "description": "A folder or list, with its description (FR-01.1, FR-03.5)."
+                        "description": "A folder or list, with its description and color (FR-01.1, FR-03.5)."
                       },
                       "description": "The root, with no parent, and its active folders and lists."
                     },
@@ -7112,6 +7131,24 @@
                               "string",
                               "null"
                             ]
+                          },
+                          "color": {
+                            "description": "Its own color, null for none: without one it takes the nearest folder's above it (TON-175).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
                           }
                         },
                         "required": [
@@ -7119,10 +7156,11 @@
                           "kind",
                           "parentId",
                           "name",
-                          "description"
+                          "description",
+                          "color"
                         ],
                         "additionalProperties": false,
-                        "description": "A folder or list, with its description (FR-01.1, FR-03.5)."
+                        "description": "A folder or list, with its description and color (FR-01.1, FR-03.5)."
                       },
                       "description": "The root, with no parent, and its active folders and lists."
                     },
@@ -9842,6 +9880,83 @@
                       "args",
                       "base"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "container.setColor"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "color": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "color"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "color": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "color"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -12180,6 +12295,83 @@
                       "args",
                       "base"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "container.setColor"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "color": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "color"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "color": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "color"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -14509,6 +14701,83 @@
                         },
                         "required": [
                           "hiddenServices"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "container.setColor"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "color": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "color"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "color": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "color"
                         ]
                       }
                     },
@@ -15843,6 +16112,24 @@
                               "string",
                               "null"
                             ]
+                          },
+                          "color": {
+                            "description": "Its own color, null for none: without one it takes the nearest folder's above it (TON-175).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink",
+                              null
+                            ]
                           }
                         },
                         "required": [
@@ -15850,10 +16137,11 @@
                           "kind",
                           "parentId",
                           "name",
-                          "description"
+                          "description",
+                          "color"
                         ],
                         "additionalProperties": false,
-                        "description": "A folder or list, with its description (FR-01.1, FR-03.5)."
+                        "description": "A folder or list, with its description and color (FR-01.1, FR-03.5)."
                       }
                     },
                     "memberships": {
@@ -16810,6 +17098,27 @@
                           "string",
                           "null"
                         ]
+                      },
+                      "color": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Its own color, null for none: without one it takes the nearest folder's above it (TON-175)."
                       }
                     },
                     "required": [
@@ -16817,10 +17126,11 @@
                       "kind",
                       "parentId",
                       "name",
-                      "description"
+                      "description",
+                      "color"
                     ],
                     "additionalProperties": false,
-                    "description": "A folder or list, with its description (FR-01.1, FR-03.5)."
+                    "description": "A folder or list, with its description and color (FR-01.1, FR-03.5)."
                   },
                   {
                     "type": "null"
@@ -20422,6 +20732,92 @@
                     },
                     "required": [
                       "hiddenServices"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "container.setColor"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "color": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "color"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "red",
+                              "orange",
+                              "amber",
+                              "green",
+                              "teal",
+                              "blue",
+                              "violet",
+                              "pink"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "color"
                     ],
                     "additionalProperties": false
                   }

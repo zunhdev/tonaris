@@ -81,7 +81,12 @@ export async function containerBase(
 ) {
   const found = await findContainerIn(db, containerId);
   if (found?.ownerId !== ownerId) return undefined;
-  return { name: found.name, parentId: found.parentId, description: found.description };
+  return {
+    name: found.name,
+    parentId: found.parentId,
+    description: found.description,
+    color: found.color,
+  };
 }
 
 /** The owner's field, with its options in order, for a change's `base`. */

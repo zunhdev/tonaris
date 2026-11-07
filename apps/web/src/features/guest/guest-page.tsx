@@ -9,6 +9,7 @@
 import { count } from "@/common/words";
 import { artworkSrc } from "@/features/collection/artwork";
 import { coversIn } from "@/features/collection/container-covers";
+import { effectiveColor } from "@/features/collection/container-palette";
 import { sections, sortAlbums, sortContainers } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
 import { LegalLinks } from "@/features/legal/legal-page";
@@ -187,6 +188,7 @@ function FolderContents({
         layout={view.folderLayout}
         coversOf={coversOf}
         contentsOf={contentsOf}
+        colorOf={(item) => effectiveColor(item, tree.byId)}
       />
     </>
   );

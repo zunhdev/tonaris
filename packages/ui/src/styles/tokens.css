@@ -26,6 +26,15 @@
   --white-a5: oklch(1 0 0 / 5%);
   --white-a11: oklch(1 0 0 / 11%);
   --violet-280: oklch(0.28 0.05 276);
+  /* Folder and list colors (DS-27, TON-175): one lightness band, so each reads as clearly on the dark theme. */
+  --red-700: oklch(0.7 0.16 25);
+  --orange-750: oklch(0.75 0.15 55);
+  --amber-810: oklch(0.81 0.14 85);
+  --green-750: oklch(0.75 0.14 150);
+  --teal-750: oklch(0.75 0.11 195);
+  --blue-710: oklch(0.71 0.13 250);
+  --violet-710: oklch(0.71 0.15 295);
+  --pink-730: oklch(0.73 0.15 350);
   --violet-540: oklch(0.54 0.17 275);
   --violet-660: oklch(0.66 0.17 275);
   --violet-660-a12: oklch(0.66 0.17 275 / 12%);
@@ -72,6 +81,15 @@
   --fg-disabled: var(--gray-470);
   --fg-on-accent: var(--white-980);
   --fg-on-artwork: var(--white-980);
+  /* A folder's or list's color (DS-27, TON-175): its icon, and the tint of its chips. */
+  --folder-red: var(--red-700);
+  --folder-orange: var(--orange-750);
+  --folder-amber: var(--amber-810);
+  --folder-green: var(--green-750);
+  --folder-teal: var(--teal-750);
+  --folder-blue: var(--blue-710);
+  --folder-violet: var(--violet-710);
+  --folder-pink: var(--pink-730);
   --accent-solid: var(--violet-660);
   --accent-fill: var(--violet-540);
   --accent-soft: var(--violet-660-a12);
@@ -226,6 +244,14 @@
   --color-fg-disabled: var(--fg-disabled);
   --color-fg-on-accent: var(--fg-on-accent);
   --color-fg-on-artwork: var(--fg-on-artwork);
+  --color-folder-red: var(--folder-red);
+  --color-folder-orange: var(--folder-orange);
+  --color-folder-amber: var(--folder-amber);
+  --color-folder-green: var(--folder-green);
+  --color-folder-teal: var(--folder-teal);
+  --color-folder-blue: var(--folder-blue);
+  --color-folder-violet: var(--folder-violet);
+  --color-folder-pink: var(--folder-pink);
   --color-accent-solid: var(--accent-solid);
   --color-accent-fill: var(--accent-fill);
   --color-accent-soft: var(--accent-soft);

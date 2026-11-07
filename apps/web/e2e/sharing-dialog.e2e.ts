@@ -23,6 +23,7 @@ const container = (
   parentId,
   name,
   description: null,
+  color: null,
 });
 const dialog = (page: Page, name: string) => page.getByRole("dialog", { name });
 

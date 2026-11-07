@@ -30,7 +30,7 @@ This archive holds your whole Tonaris collection as it was on ${data.exportedAt.
   - \`fields\`, the custom fields it uses, by field ID, each with the field's \`name\`, \`type\` and \`value\`;
   - \`status\`: \`active\`, or \`trashed\` when it's in Trash, with its \`trashUnitId\`;
   - \`provenance\`: where each value came from: \`user\` (you), \`musicbrainz\`, \`coverartarchive\` or \`itunes-lookup\` (an Apple Music fact you confirmed).
-- **\`tree.containers\`**: your folders and lists, Trash included. Each has its \`kind\`, \`name\`, \`description\`, and \`parentId\` (\`null\` at the top level). A list's \`albumIds\` are its albums, in the order they were added.
+- **\`tree.containers\`**: your folders and lists, Trash included. Each has its \`kind\`, \`name\`, \`description\`, \`color\` (its own, or \`null\` to show its nearest folder's), and \`parentId\` (\`null\` at the top level). A list's \`albumIds\` are its albums, in the order they were added.
 - **\`personal.views\`**: your choices for each view: \`root\` (the top level), \`unsorted\`, or a folder's or list's ID. A choice of \`null\` follows \`accountDefaults\`. \`order\` is your manual arrangement, by item ID; items you never placed follow it in the view's usual order.
 - **\`trash.units\`**: what's in Trash, one unit per deletion. Each has its \`deletedAt\` and \`expiresAt\` dates, the \`containerIds\` and \`albumIds\` deleted together, and the \`formerMemberships\` that recovering it would bring back. Trash empties itself 30 days after each deletion.
 
@@ -46,7 +46,7 @@ This archive holds your whole Tonaris collection as it was on ${data.exportedAt.
 
 ## Versioning
 
-\`formatVersion\` follows semantic versioning. A new minor version only adds fields, so a program written for an earlier 1.x version keeps working; 1.1 added \`accountDefaults.folderLayout\`. A new major version would change or remove something, and this guide would say what.
+\`formatVersion\` follows semantic versioning. A new minor version only adds fields, so a program written for an earlier 1.x version keeps working; 1.1 added \`accountDefaults.folderLayout\`, and 1.2 each folder's and list's \`color\`. A new major version would change or remove something, and this guide would say what.
 
 ## Not included
 

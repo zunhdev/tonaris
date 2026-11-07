@@ -30,6 +30,7 @@ const jazz: Container = {
   parentId: null,
   name: "Jazz",
   description: null,
+  color: null,
 };
 const later: Container = {
   id: uuidv7(),
@@ -37,6 +38,7 @@ const later: Container = {
   parentId: null,
   name: "Later",
   description: null,
+  color: null,
 };
 
 const names: Names = {
@@ -102,6 +104,7 @@ describe("describeWrite (DS-80, DS-81)", () => {
       parentId: null,
       name: "Soon",
       description: null,
+      color: null,
     };
     expect(write({ name: "container.create", args: soon })).toEqual({
       summary: "New list 'Soon'",

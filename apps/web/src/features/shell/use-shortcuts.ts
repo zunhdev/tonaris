@@ -45,12 +45,13 @@ const edits = new Set<CommandId>([
   "new-folder",
   "rename",
   "move",
+  "color",
   "delete",
   "delete-album",
   "add-to-list",
 ]);
 const onAlbum = new Set<CommandId>(["add-to-list", "open-in", "delete-album"]);
-const onContainer = new Set<CommandId>(["rename", "move", "delete", "share"]);
+const onContainer = new Set<CommandId>(["rename", "move", "color", "delete", "share"]);
 /** Sharing is online-only: it waits while offline, but isn't a collection edit, so it needs no Editing mode. */
 const online = new Set<CommandId>(["share"]);
 
@@ -196,12 +197,13 @@ export function useCommandRunner({
         // As F2 in the tree: the name's editor, in place.
         const container = now.tree.byId.get(containerOf(id, on) ?? "");
         if (container) now.startEditor({ mode: "rename", id: container.id, name: container.name });
-      } else if (id === "move" || id === "delete") {
+      } else if (id === "move" || id === "color" || id === "delete") {
         // Edit intent switches to Editing first (DS-45).
         const container = containerOf(id, on);
         if (container === undefined) return;
         now.mode.enterEditing();
         if (id === "move") now.dialogs.startMove(container);
+        else if (id === "color") now.dialogs.startColor(container);
         else now.deleteContainer(container);
       } else if (id === "add-to-list" || id === "delete-album") {
         if (on.album === undefined) return;

@@ -32,6 +32,7 @@ const list = (name: string, parentId: string | null = null) => ({
   parentId,
   name,
   description: null,
+  color: null,
   trashedAt: null,
   trashUnitId: null,
 });
@@ -72,7 +73,7 @@ describe("buildExport", () => {
     expect(result.tree.containers.map((each) => each.albumIds)).toEqual([[kind.id], [kind.id]]);
     expect(result).toMatchObject({
       format: "tonaris-export",
-      formatVersion: "1.1",
+      formatVersion: "1.2",
       exportedAt: "2026-10-29T12:00:00.000Z",
     });
   });

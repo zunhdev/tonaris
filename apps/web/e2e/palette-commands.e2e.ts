@@ -20,6 +20,7 @@ const container = (kind: Container["kind"], name: string): Container => ({
   parentId: null,
   name,
   description: null,
+  color: null,
 });
 const palette = (page: Page) => page.getByRole("dialog", { name: "Search" });
 const field = (page: Page) => page.getByRole("combobox", { name: "Search" });
@@ -30,6 +31,8 @@ const item = (page: Page, name: string) =>
 test("commands: > lists only them, they act on the focus or say why not, and match the reference", async ({
   page,
 }) => {
+  // Tall enough for every command at once: the palette's list is virtualized.
+  await page.setViewportSize({ width: 1280, height: 1200 });
   await signIn(page, accounts.paletteCommands);
   await live(page);
   const doom = container("list", "Doom");
@@ -91,10 +94,13 @@ test("commands: > lists only them, they act on the focus or say why not, and mat
   await field(page).fill(">");
   const all = group(page, "Commands").getByRole("option");
   await expect(all).toHaveCount(commands.length);
+  // Each with its keys; Color… has none (TON-175).
   await Promise.all(
-    commands.map(({ keys }) =>
-      expect(all.filter({ hasText: `shortcut ${keys.join(" ")}` })).toHaveCount(1),
-    ),
+    commands
+      .filter(({ keys }) => keys.length > 0)
+      .map(({ keys }) =>
+        expect(all.filter({ hasText: `shortcut ${keys.join(" ")}` })).toHaveCount(1),
+      ),
   );
 });
 

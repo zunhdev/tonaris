@@ -1,5 +1,5 @@
 // Folders and lists as clients hold them (TS-11, TS-24), and the commands that create, rename and move them
-// (TON-26) and describe them (TON-54). The albums in lists are memberships.ts.
+// (TON-26), describe them (TON-54) and color them (TON-175). The albums in lists are memberships.ts.
 
 import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, conflict, isFailure } from "./command-kit";
@@ -13,6 +13,19 @@ import { z } from "./zod";
 
 export const containerKinds = ["folder", "list"] as const;
 export type ContainerKind = (typeof containerKinds)[number];
+
+/** The colors a folder or list can have (DS-27, TON-175): a fixed palette tuned for the dark theme. */
+export const containerColors = [
+  "red",
+  "orange",
+  "amber",
+  "green",
+  "teal",
+  "blue",
+  "violet",
+  "pink",
+] as const;
+export type ContainerColor = (typeof containerColors)[number];
 
 /** A folder or list as `container.create` takes it. `parentId` null is the root (FR-01.3). */
 export const containerFieldsSchema = z
@@ -32,16 +45,27 @@ export const containerSchema = containerFieldsSchema
       .string()
       .nullable()
       .meta({ description: "Plain text, null for none (FR-03.5). Not searched (FR-12.4)." }),
+    color: z.enum(containerColors).nullable().meta({
+      description:
+        "Its own color, null for none: without one it takes the nearest folder's above it (TON-175).",
+    }),
   })
-  .meta({ description: "A folder or list, with its description (FR-01.1, FR-03.5)." });
+  .meta({ description: "A folder or list, with its description and color (FR-01.1, FR-03.5)." });
 export type Container = z.infer<typeof containerSchema>;
 
 /** A container as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
 export type StoredContainer = Container & { ownerId: string; trashed: boolean };
 
 /** The container as clients see it. */
-export function containerOf({ id, kind, parentId, name, description }: Container): Container {
-  return { id, kind, parentId, name, description };
+export function containerOf({
+  id,
+  kind,
+  parentId,
+  name,
+  description,
+  color,
+}: Container): Container {
+  return { id, kind, parentId, name, description, color };
 }
 
 /** The refusal of a description over the limit (FR-03.5, TS-18). Clients check it too, with these words. */
@@ -144,8 +168,13 @@ export async function createContainer(
   const ownerId = actingOwner(context, "collection", "You can't add folders or lists here.");
   if (isFailure(ownerId)) return ownerId;
   const { store } = context;
-  // A new folder or list has no description until one is set (FR-03.5).
-  const container = containerOf({ ...args, name: args.name.trim(), description: null });
+  // A new folder or list has no description or color until one is set (FR-03.5, TON-175).
+  const container = containerOf({
+    ...args,
+    name: args.name.trim(),
+    description: null,
+    color: null,
+  });
   const problem = containerNameProblem(container.name);
   if (problem) return problem;
 
@@ -280,4 +309,26 @@ export async function describeContainer(
   await context.store.updateContainer(id, { description: described });
   const data = containerOf({ ...container, description: described });
   return applied({ entity: "container", id, op: "update", data });
+}
+
+/**
+ * Sets a folder's or list's own color, or clears it with null (TON-175). `base.color` is the one the client last saw
+ * (TS-21). Its folders and lists without a color of their own take it, wherever they show.
+ */
+export async function colorContainer(
+  { id, color }: { id: string; color: ContainerColor | null },
+  base: { color: ContainerColor | null },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const container = await changeableContainer(id, context);
+  if (isFailure(container)) return container;
+  if (container.color !== base.color) return conflict("color", container.color, color, base.color);
+  if (color === container.color) return applied();
+  await context.store.updateContainer(id, { color });
+  return applied({
+    entity: "container",
+    id,
+    op: "update",
+    data: containerOf({ ...container, color }),
+  });
 }

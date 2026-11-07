@@ -20,6 +20,7 @@ import { CaptureDialog } from "@/features/capture/capture-dialog";
 import { CapturePanel } from "@/features/capture/capture-panel";
 import { AddToListDialog } from "@/features/collection/add-to-list";
 import { useCollectionUi } from "@/features/collection/collection-ui";
+import { ColorDialog } from "@/features/collection/container-color";
 import { DeleteAlbumDialog, DeleteFolderDialog } from "@/features/collection/delete-containers";
 import { DragProvider } from "@/features/collection/drag";
 import { AlbumInspector, type InspectorPlacement } from "@/features/collection/inspector";
@@ -174,6 +175,7 @@ export function Shell({ account, children }: { account: Account; children: React
         runner={runner}
       />
       <MoveDialog />
+      <ColorDialog />
       <ShareDialog />
       <InvitationToasts accountId={account.id} />
       {narrow && <PullToRefresh />}

@@ -77,6 +77,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `fg.disabled` | 0.47 0.024 274 | Disabled controls only |
 | `fg.on-accent` | 0.98 0 0 | Labels on `accent.fill` (primary buttons) |
 | `fg.on-artwork` | 0.98 0 0 | A release label's words on `bg.on-artwork` |
+| `folder.red` … `folder.pink` | 0.70 0.16 25 · 0.75 0.15 55 · 0.81 0.14 85 · 0.75 0.14 150 · 0.75 0.11 195 · 0.71 0.13 250 · 0.71 0.15 295 · 0.73 0.15 350 | Folder and list colors (DS-27, TON-175): red, orange, amber, green, teal, blue, violet, pink; each 3:1 on every surface and on a selected row |
 | `accent.solid` | 0.66 0.17 275 | Focus ring (`focus`), selection marks |
 | `accent.fill` | 0.54 0.17 275 | Primary button backgrounds; dark enough for `fg.on-accent` labels at 4.5:1 |
 | `accent.soft` | 0.66 0.17 275 / 12% | Accent backgrounds, live-update flash |
@@ -446,6 +447,12 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 
 *As built in TON-169* (the creator picked variant 11A from TON-166's mock, 7 November 2026): **guide lines.** Under every level above a row's own, a 1px `border.subtle` line runs where that level's chevron sits (11 px, then every 12 px), from the row's top edge, over the 1px gap between rows, to its bottom, so an open folder's branch reads as one down to its last child. The rename and new-name editors draw them too. Phones have no tree.
 
+*As built in TON-175* (the creator picked variants 10C and 16A from TON-166's mock, and colors for lists too, 7 November 2026): **folder and list colors** (FR-01.19).
+- **The palette:** red, orange, amber, green, teal, blue, violet, pink (`folder.*`, DS-12), or none. A fixed set, not a picker, keeps the tree calm and every color legible on the dark theme.
+- **Inheritance:** a folder or list without its own color shows the nearest folder's above it. In a share, inheritance stops at the shared root, since what is above it isn't shared.
+- **Where it shows:** the icon of the folder or list, in its color and filled with it at 25%, in the tree, folder rows and cards (DS-41), and shared and guest folders; and the album panel's list chips (DS-46).
+- **Where it's set:** the ⋯ menu's **Color** submenu, between Share… and Delete…, with None first and a swatch for each, the folder's or list's own checked; and ⌘K's **Color…** (DS-75), a dialog listing the same, which closes on a choice. Either switches to Editing first (DS-45); the menu's waits offline like its other items (DS-81). Agents set it with MCP's `set_color`.
+
 **DS-28 Standard confirmation dialog.** Built on AlertDialog. It is used for every *confirmed* operation (X-07). *(X-07, FR-07.14)*
 
 1. **Title:** the verb and target, e.g. "Delete folder 'Metal'?"
@@ -661,7 +668,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **its name and what it holds,** "9 albums" or "3 folders and lists", in `text.small` `fg.tertiary`;
 - the raised surface under a hovering pointer (DS-22), the save state on the fan's top-right corner, and DS-82's highlight.
 
-There's no description excerpt or Created column on cards; Rows keeps them. Shared folders (DS-70) show the same cards in their viewer's presentation, and guest pages (DS-72) in the visit's, with a Rows | Grid control for folders that starts at Grid; the fan there is drawn by classes alone, as the CSP refuses style attributes on server-rendered pages.
+There's no description excerpt or Created column on cards; Rows keeps them. *As built in TON-175:* the card's name follows its icon, colored as in the tree (DS-27). Shared folders (DS-70) show the same cards in their viewer's presentation, and guest pages (DS-72) in the visit's, with a Rows | Grid control for folders that starts at Grid; the fan there is drawn by classes alone, as the CSP refuses style attributes on server-rendered pages.
 
 **DS-42 Lists and folders under each sort** *(handoff FR-05.1)*:
 - **Name and creation-date sorts:** folders first, then lists, each sorted by the selected key and direction. This is the filesystem convention and keeps hierarchy scannable.
@@ -814,6 +821,8 @@ There's no description excerpt or Created column on cards; Rows keeps them. Shar
   - It fades in over 200 ms once read; a cover read before shows its wash at once, as does reduced motion. An album without artwork, or a cover that can't be read, keeps the plain panel.
 - **Properties.** The read-only facts gather in one block at the end, labels in `fg.tertiary` on the left (8rem), values in `fg.primary` on the right: in Viewing mode the release type, live, the original year and the recording years, with which year sorts, which leaves no Chronology section; then, in both modes, Added, In lists ("None, in Unsorted" for none) and Links, the services by name. It replaces Info. Editing mode keeps Chronology's fields above.
 - **Dividers.** A `border.subtle` line above each section, 20 px over its heading; sections are 20 px apart.
+
+*As built in TON-175* (16A): **a list chip takes its list's color** (DS-27): a 16% ground over the panel and a 40% edge in it, its × too; the name stays `fg.primary`.
 
 **DS-47 Manual entry form.** A 560px dialog titled "New album" (desktop). Shortcut ⌘Enter saves; Esc asks before discarding entered data. *(FR-02.4, FR-02.6, FR-13.2)*
 
@@ -2108,3 +2117,5 @@ New questions are added here as **Open (design)** rows.
 | Q-10 Experience direction | DS-04, DS-10–DS-20 |
 | X-04 Device scope | DS-07, DS-45, DS-110 |
 | X-07 Confirmations | DS-05, DS-28, DS-50, DS-57 |
+*As built in TON-175:* **Color…** joins the folder and list commands. It has no key of its own, so the palette shows none beside it and doesn't announce a shortcut, and the reference lists it without keys (DS-78). It opens the Color dialog for the focused folder or list (DS-27).
+

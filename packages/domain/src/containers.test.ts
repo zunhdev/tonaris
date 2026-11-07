@@ -43,6 +43,7 @@ function stored(
     parentId,
     name,
     description: null,
+    color: null,
     ownerId: owner,
     trashed: false,
     ...values,
@@ -126,7 +127,7 @@ describe("container.create (FR-01.1, FR-01.2)", () => {
           entity: "container",
           id: jazz.args.id,
           op: "insert",
-          data: { ...jazz.args, description: null },
+          data: { ...jazz.args, description: null, color: null },
         },
       ],
     });
@@ -137,6 +138,7 @@ describe("container.create (FR-01.1, FR-01.2)", () => {
     expect(containers.get(favorites.args.id)).toEqual({
       ...favorites.args,
       description: null,
+      color: null,
       ownerId: owner,
       trashed: false,
     });
@@ -320,6 +322,7 @@ describe("container.rename (FR-01.3)", () => {
             parentId: null,
             name: "Desert island",
             description: null,
+            color: null,
           },
         },
       ],
@@ -389,7 +392,14 @@ describe("container.move (FR-01.4, FR-01.5)", () => {
           entity: "container",
           id: bebop.id,
           op: "update",
-          data: { id: bebop.id, kind: "folder", parentId: null, name: "Bebop", description: null },
+          data: {
+            id: bebop.id,
+            kind: "folder",
+            parentId: null,
+            name: "Bebop",
+            description: null,
+            color: null,
+          },
         },
       ],
     });
@@ -589,6 +599,7 @@ describe("any sequence of commands leaves a sound tree (property)", () => {
                 parentId: row.parentId,
                 name: row.name,
                 description: row.description,
+                color: row.color,
               });
             }
           } else {

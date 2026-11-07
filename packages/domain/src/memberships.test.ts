@@ -54,6 +54,7 @@ function stored(
     parentId: null,
     name,
     description: null,
+    color: null,
     ownerId: owner,
     trashed: false,
     ...values,

@@ -129,7 +129,7 @@ export type CollectionStore = {
   /** Sets the fields in `values`; fields left undefined keep their value. */
   updateContainer(
     id: string,
-    values: Partial<Pick<Container, "name" | "parentId" | "description">>,
+    values: Partial<Pick<Container, "name" | "parentId" | "description" | "color">>,
   ): Promise<void>;
 
   /** The folder or list and its active descendants, itself first (TS-13). */

@@ -47,6 +47,7 @@ import { LinksSection } from "./album-links";
 import { Artwork, artworkSrc } from "./artwork";
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useMode } from "./collection-mode";
+import { effectiveColor, tintedChip } from "./container-palette";
 import { CoverWash } from "./cover-wash";
 import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
@@ -386,13 +387,16 @@ function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
         ) : (
           lists.map((list) => {
             const path = ancestorsOf(tree, list.id).map((folder) => folder.name);
+            // Tinted with its own or its folder's color (TON-175).
+            const tint = tintedChip(effectiveColor(list, tree.byId));
             return (
               <li key={list.id} className="flex items-center">
                 <Link
                   to="/l/$listId"
                   params={{ listId: list.id }}
                   title={[...path, list.name].join(" › ")}
-                  className={cn(chip, canEdit && "rounded-r-none pr-1.5")}
+                  data-color={effectiveColor(list, tree.byId) ?? undefined}
+                  className={cn(chip, tint, canEdit && "rounded-r-none pr-1.5")}
                 >
                   {list.name}
                 </Link>
@@ -401,7 +405,10 @@ function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
                     type="button"
                     aria-label={`Remove from ${list.name}`}
                     onClick={() => remove(list.id, list.name)}
-                    className="flex h-6 items-center rounded-r-full border border-l-0 border-subtle bg-raised px-1.5 text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+                    className={cn(
+                      "flex h-6 items-center rounded-r-full border border-l-0 border-subtle bg-raised px-1.5 text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+                      tint,
+                    )}
                   >
                     <X aria-hidden strokeWidth={1.5} className="size-3.5" />
                   </button>
