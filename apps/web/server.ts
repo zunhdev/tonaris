@@ -57,12 +57,29 @@ async function clientFileRoutes(): Promise<Record<string, Response>> {
   return routes;
 }
 
+/**
+ * A build file this deploy doesn't have (TON-179). During a deploy the old and new servers both take requests for a
+ * moment, so a page from one can ask the other for a file it never had. The miss must not outlive that moment:
+ * without `no-store`, Cloudflare kept the 404 at the edge for minutes and told the browser to keep it for 4 hours.
+ */
+const missingBuildFile = new Response("Not found", {
+  status: 404,
+  headers: {
+    "content-type": "text/plain; charset=utf-8",
+    "cache-control": "no-store",
+    "x-content-type-options": "nosniff",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+  },
+});
+
 const server = Bun.serve({
   port: Number(process.env.PORT ?? 3000),
   routes: {
     // The host's health check (TS-110), outside Start.
     "/healthz": new Response("ok"),
     ...(await clientFileRoutes()),
+    // Bun matches a file's exact route first, so only misses under assets/ reach this.
+    "/assets/*": missingBuildFile,
   },
   fetch: (request) => handler.fetch(request),
 });

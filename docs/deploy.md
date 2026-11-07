@@ -237,7 +237,7 @@ The feedback board is a [Fider Cloud](https://fider.io) site on its free plan, a
 
 ## Things to get right
 
-- **Don't cache HTML at Cloudflare.** Each page carries its own CSP nonce (TS-101). Cloudflare doesn't cache HTML unless a rule tells it to. Files under `/assets/` are fingerprinted and cached by default; `/img/` is cached by the rule in step 5.
+- **Don't cache HTML at Cloudflare.** Each page carries its own CSP nonce (TS-101). Cloudflare doesn't cache HTML unless a rule tells it to. Files under `/assets/` are fingerprinted and cached by default; `/img/` is cached by the rule in step 5. A missing file under `/assets/` answers 404 with `Cache-Control: no-store`, which Cloudflare keeps as it is, so a miss during a deploy isn't cached (TON-179).
 - **Don't let Cloudflare change pages.** Email Address Obfuscation, Rocket Loader, Web Analytics' automatic setup and similar features inject scripts, which the CSP refuses.
 - **Don't add or override security headers** at Cloudflare. Both services set their own CSP, HSTS and `X-Content-Type-Options` (TS-101).
 - **The API needs no CORS configuration at Cloudflare.** It allows credentialed requests from `WEB_ORIGIN` only (TS-102).

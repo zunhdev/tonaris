@@ -1,6 +1,7 @@
 // The document every route renders into. Workspace routes are client-only, but the server still sends this
 // shell, so even their first paint is dark (DS-11) and styled.
 
+import { reloadOnMissingBuildFileScript } from "@/common/build-file-reload";
 import {
   apiUrl,
   apiUrlMeta,
@@ -11,7 +12,14 @@ import {
   testHooks,
   testHooksMeta,
 } from "@/config";
-import { createRootRoute, HeadContent, Link, Scripts, useRouter } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  HeadContent,
+  Link,
+  ScriptOnce,
+  Scripts,
+  useRouter,
+} from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { CSPProvider } from "@tonaris/ui/components/csp-provider";
@@ -74,6 +82,8 @@ function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-theme="dark">
       <head>
+        {/* Ahead of the page's main script, so it hears if that or a file it needs fails to load (TON-179). */}
+        <ScriptOnce>{reloadOnMissingBuildFileScript}</ScriptOnce>
         <HeadContent />
       </head>
       <body>
