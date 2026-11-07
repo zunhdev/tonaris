@@ -68,7 +68,7 @@ export const albums: readonly LandingAlbum[] = [
     artist: "Ayo Lindqvist Quartet",
     year: "1961",
     group: "Album",
-    services: "Qobuz",
+    services: "Apple Music, Qobuz",
     number: "TN 005",
   },
   {
@@ -123,9 +123,3 @@ export function albumById(id: AlbumId): LandingAlbum {
   if (!found) throw new Error(`No landing album ${id}`);
   return found;
 }
-
-/** The list's albums by release-type group, in the order the groups come (DS-43). */
-export const albumGroups = (["Album", "EP", "Live"] as const).map((group) => ({
-  group,
-  albums: albums.filter((album) => album.group === group),
-}));

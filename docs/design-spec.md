@@ -1918,6 +1918,12 @@ The creator chose direction 1, "in the app's clothes", refined, from sketches on
 - **Invented albums:** ten, with names and artists made up for the page, because the Cover Art Archive's images are copyrighted by their owners. Their covers are the creator's choice, set 1, "Label series": inline SVG in one house style, a flat ground, one geometric motif, the artist and title in Inter at the top left and a catalogue number (TN 001–010) in the mono stack, with a fine grain from 64 px. The colors are the artwork's own (DS-04).
 - **Wordmarks that lead here:** the sign-in frame's on pages for signed-out visitors (DS-90) and the guest page's (DS-72).
 
+*As built in TON-176* (7 November 2026): **the pictures show the app as it looks after TON-167 to TON-175.**
+- **The workspace picture:** Late night is a grid of covers, sorted by year as a list is at first. Covers have their edge and shadow, the EPs and the live album have their labels, and Blue Hour Sessions is open, with the accent's ring and its title on the accent. The sidebar's folders and lists are in their colors, with guide lines and the round avatar. Blue Hour Sessions is in the panel, with its cover's wash, the sections Links, Custom fields and Lists (tinted chips), and Properties. The picture is 680 px tall from 1024 px wide, so Properties shows.
+- **Folders within folders:** the tree is in colors with guide lines, and the selected folder Japanese's folder and list show as cards with their covers fanned (from 640 px). Static Bloom's list chips are tinted.
+- **Steps and features:** the Add album box's field is filled and has the focus ring. Open in… is a frosted popover over Field Notes' cover. The share link's field is filled, and search is frosted, its list in its color.
+- **Every cover** has the faint edge, and covers on cards and in the panel are raised, as in the app (DS-22).
+
 ## 15. States, copy, and mobile
 
 **DS-105 Empty states.** One sentence and one action. *(FR-01.9, FR-12)*
