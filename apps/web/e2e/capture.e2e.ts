@@ -2,10 +2,13 @@
 // the browser-test API, which answers captures from fixtures (apps/api/src/capture-fixtures.ts). Pasting and the
 // capture dialog; albums of each service and a track's album; Unsorted with Add to list; manual entry with the link
 // kept, prefilled or after a failure; a failure kept across a reload; the decision card; a batch's panel and report;
-// already in the list; a kept link replaced from the inspector; and, with an album open in the inspector, a paste
-// going to its links instead (TON-160). Each test signs in with its own account.
+// already in the list; a kept link replaced from the inspector; with an album open in the inspector, a paste going to
+// its links instead (TON-160); and a very long list name staying inside the dialogs (TON-180). Each test signs in with
+// its own account.
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
+
+import { maxNameLength } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
@@ -140,6 +143,49 @@ test("album links of each service resolve into the list, pasted or added from th
   await expect(toasts(page).filter({ hasText: "Already in this list" })).toBeVisible();
   await expect(grid(page, "Grunge").getByRole("row").filter({ hasText: "Bleach" })).toHaveCount(1);
   await saved(page);
+});
+
+/** The controls in `dialog` that reach past its sides, by label, and whether it scrolls sideways. */
+const spills = (dialog: Locator) =>
+  dialog.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const controls = [...element.querySelectorAll("textarea, select, input, button")].flatMap(
+      (control) => {
+        const { left, right } = control.getBoundingClientRect();
+        if (left >= box.left && right <= box.right) return [];
+        const label =
+          control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement
+            ? control.labels?.[0]?.textContent
+            : (control.getAttribute("aria-label") ?? control.textContent);
+        return [label ?? control.tagName];
+      },
+    );
+    return element.scrollWidth > element.clientWidth ? [...controls, "sideways scroll"] : controls;
+  });
+
+test("a very long list name stays inside Add albums and the manual entry form (TON-180)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.captureLongName);
+  await live(page);
+  // As long as a name may be, on a list other than the one on view: every list is one of the picker's choices.
+  const long = await created(
+    page,
+    "A list with a very long name ".repeat(7).slice(0, maxNameLength).trim(),
+  );
+  const grunge = await inList(page, "Grunge");
+
+  await page.keyboard.press("c");
+  const dialog = page.getByRole("dialog", { name: "Add albums" });
+  const picker = dialog.getByRole("combobox", { name: "List" });
+  await expect(picker).toHaveValue(grunge.id);
+  await expect.poll(() => spills(dialog)).toEqual([]);
+  await picker.selectOption(long.id);
+  await expect.poll(() => spills(dialog)).toEqual([]);
+
+  await dialog.getByRole("button", { name: "Enter manually" }).click();
+  await expect(form(page).getByRole("combobox", { name: "List" })).toHaveValue(long.id);
+  await expect.poll(() => spills(form(page))).toEqual([]);
 });
 
 test("a link pasted outside a list goes to Unsorted, and Add to list is offered", async ({
