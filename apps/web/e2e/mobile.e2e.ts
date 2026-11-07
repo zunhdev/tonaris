@@ -159,8 +159,11 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
     "href",
     spotify,
   );
-  // Read-only: nothing to edit on a phone.
+  // Read-only: nothing to edit on a phone. Its facts are under Properties (TON-173).
   await expect(sheet.getByRole("button", { name: /^Edit|Replace|Remove/ })).toHaveCount(0);
+  await expect(sheet.getByRole("region", { name: "Properties" })).toContainText(
+    "Original release year",
+  );
   expect(await axe(page)).toEqual([]);
   await sheet.getByRole("button", { name: "Close album" }).click();
   await expect(sheet).toHaveCount(0);

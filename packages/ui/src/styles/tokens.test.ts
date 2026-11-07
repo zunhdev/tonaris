@@ -4,6 +4,7 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 
+import { washColor } from "../lib/wash";
 import { contrastOnGround, contrastRatio, parseOklch } from "./color";
 import { textSizes } from "./text-sizes";
 import { readTokens, tokensPath } from "./tokens";
@@ -82,6 +83,25 @@ describe("DS-14 contrast targets", () => {
         "bg-app",
       ]),
     ).toEqual([]);
+  });
+
+  test("text keeps 4.5:1 on the album panel's wash, in a field too, for every cover hue (DS-46, TON-173)", () => {
+    const shortfalls = Array.from({ length: 72 }, (_, step) => washColor(step * 5, 1)).flatMap(
+      (wash) => {
+        const ground = parseOklch(wash);
+        const field = tokens.color("bg-field");
+        return ["fg-primary", "fg-secondary", "fg-tertiary"].flatMap((foreground) => {
+          const plain = contrastRatio(tokens.color(foreground), ground);
+          const inField = contrastOnGround(tokens.color(foreground), field, ground);
+          return plain < 4.5 || inField < 4.5
+            ? [
+                `${foreground} on ${wash}: ${plain.toFixed(2)}:1, in a field ${inField.toFixed(2)}:1`,
+              ]
+            : [];
+        });
+      },
+    );
+    expect(shortfalls).toEqual([]);
   });
 
   test("a failing pair is reported by name and ratio", () => {

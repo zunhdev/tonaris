@@ -248,6 +248,69 @@ test("a click opens an album in the inspector, J moves it, and Esc closes it", a
   await expect(inspector(page).getByRole("heading", { name: "Nightfall" })).toBeVisible();
 });
 
+test("the panel takes its cover's color at the top, gathers its facts under Properties, and divides its sections", async ({
+  page,
+}) => {
+  await signIn(page, accounts.inspectorProperties);
+  await live(page);
+  const doom = await created(page, "Doom");
+  // The fixture host's cover is one green pixel.
+  const nightfall = album("Nightfall", {
+    originalYear: 1987,
+    artworkUrl: "https://images.example/nightfall.png",
+  });
+  await added(page, [nightfall, album("Ancient Dreams", { originalYear: 1988 })], doom.id);
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+
+  await rowOf(page, "Doom", "Nightfall").getByRole("gridcell").first().click();
+  const panel = inspector(page);
+  await expect(panel.getByRole("heading", { name: "Nightfall" })).toBeVisible();
+  // The wash: the cover's green, at the wash's lightness and chroma (TON-173).
+  await expect(panel.locator('[data-slot="cover-wash"]')).toHaveCSS(
+    "background-image",
+    /oklch\(0\.21 0\.08 1[34]\d(\.\d+)?\)/,
+  );
+
+  // Viewing mode: the chronology folds into Properties, at the end.
+  const properties = panel.getByRole("region", { name: "Properties" });
+  await expect(panel.getByRole("region", { name: "Chronology" })).toHaveCount(0);
+  await expect(properties.locator("dt")).toHaveText([
+    "Release type",
+    "Live",
+    "Original release year",
+    "Added",
+    "In lists",
+    "Links",
+  ]);
+  await expect(properties.locator("dd")).toHaveText([
+    "Album",
+    "No",
+    "1987",
+    /^\w{3} \d{1,2}, \d{4}$/,
+    "1",
+    "None",
+  ]);
+  await expect(properties).toContainText("Sorts by its original release year.");
+  // A thin line divides each section from the one above.
+  await Promise.all(
+    ["Links", "Custom fields", "Lists", "Properties"].map((name) =>
+      expect(panel.getByRole("region", { name })).toHaveCSS("border-top-style", "solid"),
+    ),
+  );
+  expect(await violations(page, "aside")).toEqual([]);
+
+  // Editing mode: Chronology's fields come back, and Properties keeps the rest.
+  await mode(page, "Edit").click();
+  await expect(panel.getByRole("region", { name: "Chronology" })).toBeVisible();
+  await expect(properties.locator("dt")).toHaveText(["Added", "In lists", "Links"]);
+
+  // An album without artwork has no wash.
+  await rowOf(page, "Doom", "Ancient Dreams").getByRole("gridcell").nth(1).click();
+  await expect(panel.getByRole("textbox", { name: /^Title/ })).toHaveValue("Ancient Dreams");
+  await expect(panel.locator('[data-slot="cover-wash"]')).toHaveCount(0);
+});
+
 test("Editing mode edits the chronology everywhere, and refuses leaving an album without a year", async ({
   page,
 }) => {

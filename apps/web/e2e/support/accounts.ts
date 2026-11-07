@@ -82,6 +82,8 @@ export const accounts = {
   inspectorOpen: at("inspector-open"),
   inspectorEdit: at("inspector-edit"),
   inspectorLists: at("inspector-lists"),
+  // The panel's cover wash and Properties (album-inspector.e2e.ts, TON-173).
+  inspectorProperties: at("inspector-properties"),
   entryRequired: at("entry-required"),
   entryIntoList: at("entry-into-list"),
   albumPage: at("album-page"),

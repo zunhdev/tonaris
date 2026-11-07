@@ -799,6 +799,13 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **The artwork fills the panel's width,** up to 500 px, the size of the covers Find brings (the Cover Art Archive's `front-500`). It is 347 px in a 380 px panel, and stops at 500 from a 533 px panel up. It stays a square over its letter tile (DS-23).
 - **Find** replaces "Find artwork": a ghost button to the right of the Artwork URL field, on its row, as in the manual entry form (DS-47). Assistive technology still hears "Find artwork". The popover is unchanged.
 
+*As built in TON-173* (the creator picked variants 14B and 15C from TON-166's mock, 7 November 2026):
+- **The top takes the cover's color.** A wash behind the panel's content, from the cover's hue at its top to transparent 28rem down. Its color is `oklch(0.21 c h)`: h is the cover's main hue, c its chroma capped at 0.08 (`washColor` in `packages/ui/src/lib/wash.ts`). 0.21 is the lightest at which every text color, a field's placeholder included, keeps 4.5:1 for every hue; the token test checks all 72 hues in 5° steps.
+  - **The main hue** is read in the browser from the image the proxy serves, which lets the web app's origin read its pixels (CORS, with `Vary: Origin`). It is fetched apart from the panel's `<img>`, which keeps showing at once (TON-159), downscaled to 24 × 24, and counted in 512 color buckets weighted toward saturated mid-tones, so a cover's color wins over a plain ground. Nearly transparent pixels don't count.
+  - It fades in over 200 ms once read; a cover read before shows its wash at once, as does reduced motion. An album without artwork, or a cover that can't be read, keeps the plain panel.
+- **Properties.** The read-only facts gather in one block at the end, labels in `fg.tertiary` on the left (8rem), values in `fg.primary` on the right: in Viewing mode the release type, live, the original year and the recording years, with which year sorts, which leaves no Chronology section; then, in both modes, Added, In lists ("None, in Unsorted" for none) and Links, the services by name. It replaces Info. Editing mode keeps Chronology's fields above.
+- **Dividers.** A `border.subtle` line above each section, 20 px over its heading; sections are 20 px apart.
+
 **DS-47 Manual entry form.** A 560px dialog titled "New album" (desktop). Shortcut ⌘Enter saves; Esc asks before discarding entered data. *(FR-02.4, FR-02.6, FR-13.2)*
 
 - **Field order:**
