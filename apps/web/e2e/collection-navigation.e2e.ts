@@ -240,6 +240,49 @@ test("closing a folder that holds the open list selects the folder, and it stays
   await expect(thrashItem).toBeHidden();
 });
 
+test("the tree draws a guide line under each level above a row, and the account shows its avatar (TON-169)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.navGuides);
+  await live(page);
+  const metal = { ...list("Metal"), kind: "folder" as const };
+  const thrash = { ...list("Thrash"), kind: "folder" as const, parentId: metal.id };
+  const doom = { ...list("Doom"), parentId: thrash.id };
+  await insert(page, metal, thrash, doom);
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  await expect(item(page, /^Doom\b/)).toHaveAttribute("aria-selected", "true");
+
+  // One line per level above the row, under that level's chevron, from the row's top edge (over the 1px gap) down.
+  const guides = (name: RegExp) => item(page, name).locator('[data-slot="tree-guide"]');
+  await expect(guides(/^Metal\b/)).toHaveCount(0);
+  await expect(guides(/^Thrash\b/)).toHaveCount(1);
+  await expect(guides(/^Doom\b/)).toHaveCount(2);
+  const placed = await guides(/^Doom\b/).evaluateAll((lines) =>
+    lines.map((line) => {
+      const box = line.getBoundingClientRect();
+      const row = line.parentElement!.getBoundingClientRect();
+      return { left: box.left - row.left, top: box.top - row.top, bottom: row.bottom - box.bottom };
+    }),
+  );
+  expect(placed).toEqual([
+    { left: 11, top: -1, bottom: 0 },
+    { left: 23, top: -1, bottom: 0 },
+  ]);
+  expect(await violations(page, '[role="tree"]')).toEqual([]);
+
+  // The account's round avatar: the first letter of its name, here the email's.
+  const avatar = page.getByRole("button", { name: /^Account: / }).locator('[data-slot="avatar"]');
+  await expect(avatar).toHaveAttribute("data-letter", "N");
+  expect(await avatar.evaluate((element) => getComputedStyle(element, "::before").content)).toBe(
+    '"N"',
+  );
+  await expect(avatar).toHaveCSS("border-radius", /px$/);
+  expect(await avatar.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+    "rgba(0, 0, 0, 0)",
+  );
+});
+
 test("names are checked before sending, and a name the server refuses can be edited", async ({
   page,
 }) => {

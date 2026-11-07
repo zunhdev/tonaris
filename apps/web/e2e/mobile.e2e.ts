@@ -67,6 +67,10 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
   await expect(page.getByRole("tree")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Search", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Account: / })).toBeVisible();
+  // Its avatar, not a person icon: the first letter of the account's name, here the email's (TON-169).
+  await expect(
+    page.getByRole("button", { name: /^Account: / }).locator('[data-slot="avatar"]'),
+  ).toHaveAttribute("data-letter", "P");
   // The top bar is sticky and opaque, or an iOS 26 Home Screen app blurs it (TON-135).
   const bar = await page
     .locator("header")

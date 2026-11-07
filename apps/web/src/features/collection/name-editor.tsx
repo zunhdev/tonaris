@@ -18,6 +18,7 @@ import { useCollectionData } from "./data";
 import { nameRefusal, type Editor } from "./editing";
 import { ContainerIcon } from "./icons";
 import { siblingsOf } from "./tree";
+import { TreeGuides } from "./tree-guides";
 
 export function NameEditor({
   level,
@@ -123,9 +124,10 @@ export function NameEditor({
       aria-label={label}
       aria-level={level}
       aria-selected={false}
-      className="flex min-w-0 flex-col gap-0.5 py-0.5 pr-2"
+      className="relative flex min-w-0 flex-col gap-0.5 py-0.5 pr-2"
       style={{ paddingLeft: `${4 + (level - 1) * 12}px` }}
     >
+      <TreeGuides level={level} />
       <div className="flex min-w-0 items-center gap-1.5">
         <span className="w-3.5 shrink-0" />
         <ContainerIcon kind={kind} />

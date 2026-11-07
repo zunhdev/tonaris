@@ -444,6 +444,8 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 
 *(FR-01.1, FR-01.3, Q-02)*
 
+*As built in TON-169* (the creator picked variant 11A from TON-166's mock, 7 November 2026): **guide lines.** Under every level above a row's own, a 1px `border.subtle` line runs where that level's chevron sits (11 px, then every 12 px), from the row's top edge, over the 1px gap between rows, to its bottom, so an open folder's branch reads as one down to its last child. The rename and new-name editors draw them too. Phones have no tree.
+
 **DS-28 Standard confirmation dialog.** Built on AlertDialog. It is used for every *confirmed* operation (X-07). *(X-07, FR-07.14)*
 
 1. **Title:** the verb and target, e.g. "Delete folder 'Metal'?"
@@ -530,6 +532,8 @@ Typed confirmation is reserved for account deletion (DS-97).
 9. **Footer:** the SyncIndicator.
 
 Shared containers in the user's own collection carry a sharing glyph: people, link, or both. Inherited sharing uses a dimmer glyph variant.
+
+*As built in TON-169* (the creator picked variant 12B from TON-166's mock, 7 November 2026): **the account menu shows a round avatar** before the name: the name's first letter (the email's until there is a name), white, on `oklch(0.52 0.12 h)`, where h is the FNV-1a hash of the name modulo 360, as a cover's letter tile takes its hue (DS-23). 0.52 is the lightest at which the white letter keeps 4.5:1 at every hue (4.68:1 at the weakest, teal). 22 px in the sidebar; on a phone, 26 px in the top bar's Account button, in place of the person icon. It is decorative: the name is beside it, or in the button's name. Its letter is generated content (`::before`), not text, so the button's visible label still matches its name, "Account: …".
 
 *As built in TON-33:*
 - **Collection** is a heading link to the root, with a "+" menu: New list (N) and New folder (⇧N). Offline, the menu is disabled with "You're offline" (DS-81).

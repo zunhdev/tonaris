@@ -50,6 +50,7 @@ import {
   type SharedTree,
   type TreeRow,
 } from "./tree";
+import { TreeGuides } from "./tree-guides";
 
 /** A row of the tree: a folder or list, a place, or the editor naming a new folder or list. */
 type Row = TreeRow | { type: "new"; level: number; kind: ContainerKind; parentId: string | null };
@@ -144,7 +145,7 @@ function withEditor(rows: TreeRow[], editor: Editor | undefined): Row[] {
 }
 
 const rowClass =
-  "flex h-7 min-w-0 items-center gap-1.5 rounded-md pr-2 text-fg-secondary outline-none hover:bg-hover hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-focus aria-selected:bg-selected aria-selected:text-fg-primary";
+  "relative flex h-7 min-w-0 items-center gap-1.5 rounded-md pr-2 text-fg-secondary outline-none hover:bg-hover hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-focus aria-selected:bg-selected aria-selected:text-fg-primary";
 
 /** The left padding that shows an item's level. */
 const indent = (level: number) => ({ paddingLeft: `${4 + (level - 1) * 12}px` });
@@ -432,6 +433,7 @@ export function CollectionTree() {
               className={cn(rowClass, row.place === "unsorted" && "mt-2")}
               style={indent(row.level)}
             >
+              <TreeGuides level={row.level} />
               {row.expanded === undefined ? (
                 <span className="w-3.5 shrink-0" />
               ) : (
@@ -551,6 +553,7 @@ function SharedRow({
       className={cn(rowClass, !item.available && "opacity-60")}
       style={indent(row.level)}
     >
+      <TreeGuides level={row.level} />
       {isFolder ? (
         <Chevron open={expanded} onToggle={onToggle} />
       ) : (
@@ -642,6 +645,7 @@ function ContainerRow({
   };
   const content = (
     <>
+      <TreeGuides level={row.level} />
       {isFolder ? (
         <Chevron open={expanded} onToggle={onToggle} />
       ) : (
