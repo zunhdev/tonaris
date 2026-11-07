@@ -1,11 +1,13 @@
 // An album's details (DS-46), as the inspector and `/a/:albumId` show them: the artwork, title and artist with the
-// album's save state; its chronology, with which year sorts (FR-05.5, FR-05.6); its links (FR-06.2, FR-06.3); its
-// custom fields (FR-03.7); the lists it is in, or Unsorted; and when it was added. Viewing mode shows
-// values; Editing mode makes them editors (DS-45). Each edit is one `album.update` from the values it replaces (TS-21), checked by the album
+// album's save state, over a wash of the cover's color; in Editing mode, its chronology, with which year sorts
+// (FR-05.5, FR-05.6); its links (FR-06.2, FR-06.3); its custom fields (FR-03.7); the lists it is in, or Unsorted; and
+// its Properties: in Viewing mode its chronology, then when it was added and how many lists and links it has
+// (TON-173). Thin lines divide the sections. Viewing mode shows values; Editing mode makes them editors (DS-45). Each edit is one `album.update` from the values it replaces (TS-21), checked by the album
 // rules first, so a refused value stays with its reason and nothing is sent (FR-02.6, X-05). Open fields commit when
 // Editing mode is left. A change from elsewhere never overwrites a field being edited (DS-82).
 
 import { sent } from "@/client/sync/writer";
+import { ordered } from "@/features/open/service-choices";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -20,6 +22,7 @@ import {
   groupNames,
   isArtworkUrl,
   membershipKey,
+  serviceNames,
   uuidv7Time,
   type Album,
   type AlbumFields,
@@ -44,6 +47,7 @@ import { LinksSection } from "./album-links";
 import { Artwork, artworkSrc } from "./artwork";
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useMode } from "./collection-mode";
+import { CoverWash } from "./cover-wash";
 import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { useInlineDraft } from "./inline-draft";
@@ -65,7 +69,6 @@ export function AlbumDetails({ album }: { album: Album }) {
   const offline = useConnection() === "offline";
   const status = useSaveState(album.id);
   const [choiceRefusal, setChoiceRefusal] = useState<string>();
-  const added = uuidv7Time(album.id);
   const liveId = useId();
   // Editing waits while offline (DS-81).
   const canEdit = editing && !offline;
@@ -86,12 +89,15 @@ export function AlbumDetails({ album }: { album: Album }) {
     }
   }
 
+  const src = artworkSrc(album);
   return (
-    <div className="flex flex-col gap-6 p-4">
+    // `isolate` keeps the wash behind this panel's content only.
+    <div className="relative isolate flex flex-col gap-5 p-4">
+      <CoverWash src={src} />
       <div className="flex flex-col gap-3">
         <Artwork
           title={album.title}
-          src={artworkSrc(album)}
+          src={src}
           label={`Cover of ${album.title}`}
           eager
           raised
@@ -125,8 +131,8 @@ export function AlbumDetails({ album }: { album: Album }) {
         )}
       </div>
 
-      <Section title="Chronology">
-        {canEdit ? (
+      {canEdit && (
+        <Section title="Chronology">
           <div className="flex flex-col gap-3">
             <Field group label="Release type">
               {(_, labelId) => (
@@ -154,20 +160,9 @@ export function AlbumDetails({ album }: { album: Album }) {
             <FieldEditor album={album} cell="originalYear" labelled />
             {album.isLive === true && <FieldEditor album={album} cell="recording" labelled />}
           </div>
-        ) : (
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-            <Value term="Release type">
-              {album.releaseType === null ? "Unknown" : groupNames[album.releaseType]}
-            </Value>
-            <Value term="Live">{album.isLive === true ? "Yes" : "No"}</Value>
-            <Value term="Original release year">{cellText(album, "originalYear") || "—"}</Value>
-            {album.isLive === true && (
-              <Value term="Recording year or range">{cellText(album, "recording") || "—"}</Value>
-            )}
-          </dl>
-        )}
-        <p className="text-small text-fg-tertiary">{sortHint(album)}</p>
-      </Section>
+          <p className="text-small text-fg-tertiary">{sortHint(album)}</p>
+        </Section>
+      )}
 
       <Section title="Links">
         <LinksSection album={album} canEdit={canEdit} />
@@ -179,11 +174,7 @@ export function AlbumDetails({ album }: { album: Album }) {
 
       <ListsSection album={album} canEdit={canEdit} />
 
-      <Section title="Info">
-        <p className="text-small text-fg-secondary">
-          {added === undefined ? "Added date unknown" : `Added ${addedDate.format(added)}`}
-        </p>
-      </Section>
+      <PropertiesSection album={album} withChronology={!canEdit} />
     </div>
   );
 }
@@ -191,7 +182,8 @@ export function AlbumDetails({ album }: { album: Album }) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   const id = useId();
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-2">
+    // A thin line above each section divides the panel (TON-173).
+    <section aria-labelledby={id} className="flex flex-col gap-2 border-t border-subtle pt-5">
       <h3 id={id} className="text-small font-medium text-fg-secondary">
         {title}
       </h3>
@@ -200,11 +192,51 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Value({ term, children }: { term: string; children: ReactNode }) {
+/**
+ * The album's read-only facts in one block at the end (DS-46, TON-173), labels left, values right: in Viewing mode,
+ * its chronology, with which year sorts; then when it was added, how many lists it is in, and the services it has
+ * links for.
+ */
+function PropertiesSection({ album, withChronology }: { album: Album; withChronology: boolean }) {
+  const { listsByAlbum, linksByAlbum } = useCollectionData();
+  const added = uuidv7Time(album.id);
+  const lists = listsByAlbum.get(album.id)?.length ?? 0;
+  const links = ordered(linksByAlbum.get(album.id)).map((link) => serviceNames[link.service]);
+  return (
+    <Section title="Properties">
+      <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-3 gap-y-1.5">
+        {withChronology && (
+          <>
+            <Property term="Release type">
+              {album.releaseType === null ? "Unknown" : groupNames[album.releaseType]}
+            </Property>
+            <Property term="Live">{album.isLive === true ? "Yes" : "No"}</Property>
+            <Property term="Original release year">
+              {cellText(album, "originalYear") || "—"}
+            </Property>
+            {album.isLive === true && (
+              <Property term="Recording year or range">
+                {cellText(album, "recording") || "—"}
+              </Property>
+            )}
+          </>
+        )}
+        <Property term="Added">
+          {added === undefined ? "Unknown" : addedDate.format(added)}
+        </Property>
+        <Property term="In lists">{lists === 0 ? "None, in Unsorted" : lists}</Property>
+        <Property term="Links">{links.length === 0 ? "None" : links.join(", ")}</Property>
+      </dl>
+      {withChronology && <p className="text-small text-fg-tertiary">{sortHint(album)}</p>}
+    </Section>
+  );
+}
+
+function Property({ term, children }: { term: string; children: ReactNode }) {
   return (
     <>
-      <dt className="text-fg-secondary">{term}</dt>
-      <dd className="text-fg-primary tabular-nums">{children}</dd>
+      <dt className="text-fg-tertiary">{term}</dt>
+      <dd className="min-w-0 text-fg-primary tabular-nums">{children}</dd>
     </>
   );
 }

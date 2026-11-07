@@ -171,6 +171,16 @@ describe("the image proxy (TS-103)", () => {
     ]);
   });
 
+  test("the web app may read an image's pixels, for its cover colors; other sites may not (TON-173)", async () => {
+    const path = artworkPath(cover, signer().sign(cover));
+    const fromWeb = await t.call(path, { headers: { origin: t.config.webOrigin } });
+    expect(fromWeb.headers.get("access-control-allow-origin")).toBe(t.config.webOrigin);
+    // A copy kept from an image tag, asked without an origin, isn't reused for a request that needs CORS.
+    expect(fromWeb.headers.get("vary")?.toLowerCase()).toContain("origin");
+    const fromElsewhere = await t.call(path, { headers: { origin: "https://elsewhere.example" } });
+    expect(fromElsewhere.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
   test("anything the server didn't sign is never fetched", async () => {
     const forged = artworkPath(blocked, signer().sign(cover));
     expect((await t.call(forged)).status).toBe(404);
