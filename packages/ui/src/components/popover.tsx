@@ -1,5 +1,5 @@
-// Popover (DS-20): Base UI's popover, styled like the other floating layers (DS-15 to DS-18): 8px radius, the
-// floating shadow and the popover layer 40. It opens in 150ms (DS-17) and only fades under reduced motion. Focus
+// Popover (DS-20): Base UI's popover, styled like the other floating layers (DS-15 to DS-18): 8px radius, frosted
+// (TON-168), the floating shadow and the popover layer 40. It opens in 150ms (DS-17) and only fades under reduced motion. Focus
 // moves into it and returns to the trigger when it closes.
 
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
@@ -46,7 +46,7 @@ function PopoverContent({
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           className={cn(
-            "max-h-(--available-height) w-80 origin-(--transform-origin) overflow-y-auto rounded-lg bg-raised p-3 text-fg-primary shadow-floating duration-150 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95",
+            "max-h-(--available-height) w-80 origin-(--transform-origin) overflow-y-auto rounded-lg bg-frosted p-3 text-fg-primary shadow-floating backdrop-blur-xl backdrop-saturate-150 duration-150 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95",
             className,
           )}
           {...props}

@@ -1,4 +1,4 @@
-// Tooltip (DS-20): Base UI's tooltip, on the tooltip layer 90 (DS-18) with the floating shadow (DS-16), opening in
+// Tooltip (DS-20): Base UI's tooltip, on the tooltip layer 90 (DS-18), frosted with the floating shadow (DS-16), opening in
 // 150ms (DS-17). Tooltips only add clarity for pointer and keyboard users; what they say is also in the trigger's
 // accessible name, so nobody depends on them (DS-115). A shortcut in a tooltip follows its words, dimmer, as a
 // menu's does (TON-122).
@@ -28,7 +28,7 @@ function TooltipContent({
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           className={cn(
-            "origin-(--transform-origin) rounded-md bg-raised px-2 py-1 text-small text-fg-primary shadow-floating duration-150 ease-enter data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+            "origin-(--transform-origin) rounded-md bg-frosted px-2 py-1 text-small text-fg-primary shadow-floating backdrop-blur-xl backdrop-saturate-150 duration-150 ease-enter data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
             className,
           )}
           {...props}

@@ -1,5 +1,5 @@
 // DropdownMenu (DS-20): shadcn's Base UI menu, restyled to DS-15 and DS-16. The popup is a floating layer
-// (8px radius, the floating shadow, the dropdown layer 40 from DS-18) with 28px items and a `bg.hover` highlight;
+// (8px radius, frosted (TON-168), the floating shadow, the dropdown layer 40 from DS-18) with 28px items and a `bg.hover` highlight;
 // it opens in 150ms (DS-17) and only fades under reduced motion. On a phone, the `touch` size makes items 44px (DS-110).
 
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
@@ -55,7 +55,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            "max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-raised p-1 text-fg-primary shadow-floating duration-150 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95",
+            "max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-frosted p-1 text-fg-primary shadow-floating backdrop-blur-xl backdrop-saturate-150 duration-150 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95",
             size === "touch" && "[&_[role^=menuitem]]:h-11",
             className,
           )}

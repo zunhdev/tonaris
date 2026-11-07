@@ -23,6 +23,19 @@ function failures(foregrounds: string[], backgrounds: string[], minimum: number)
   );
 }
 
+/** Every foreground below 4.5:1 on a translucent `ground` over each backdrop, by name and ratio. */
+function failuresOnGround(foregrounds: string[], ground: string, backdrops: string[]): string[] {
+  return foregrounds.flatMap((foreground) =>
+    backdrops.flatMap((backdrop) => {
+      const behind = backdrop === "white" ? parseOklch("oklch(1 0 0)") : tokens.color(backdrop);
+      const ratio = contrastOnGround(tokens.color(foreground), tokens.color(ground), behind);
+      return ratio < 4.5
+        ? [`${foreground} on ${ground} over ${backdrop}: ${ratio.toFixed(2)}:1`]
+        : [];
+    }),
+  );
+}
+
 describe("DS-14 contrast targets", () => {
   test("informational text reaches 4.5:1 on every surface", () => {
     expect(failures(["fg-primary", "fg-secondary", "fg-tertiary"], surfaces, 4.5)).toEqual([]);
@@ -55,6 +68,22 @@ describe("DS-14 contrast targets", () => {
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   });
 
+  test("text on a frosted layer reaches 4.5:1, even over a white cover (DS-16, TON-168)", () => {
+    expect(
+      failuresOnGround(["fg-primary", "fg-secondary", "fg-tertiary"], "bg-frosted", ["white"]),
+    ).toEqual([]);
+  });
+
+  test("text in a field reaches 4.5:1 on the panel and in a dialog (DS-20, TON-168)", () => {
+    expect(
+      failuresOnGround(["fg-primary", "fg-tertiary"], "bg-field", [
+        "bg-panel",
+        "bg-raised",
+        "bg-app",
+      ]),
+    ).toEqual([]);
+  });
+
   test("a failing pair is reported by name and ratio", () => {
     expect(failures(["fg-disabled"], ["bg-hover"], 4.5)).toEqual([
       expect.stringMatching(/^fg-disabled on bg-hover: \d\.\d\d:1 < 4\.5:1$/),
@@ -71,6 +100,8 @@ describe("semantic tokens", () => {
     "bg-raised": "0.22 0.026 274",
     "bg-hover": "0.24 0.028 274",
     "bg-selected": "0.28 0.05 276",
+    "bg-frosted": "0.22 0.026 274 / 0.94",
+    "bg-field": "1 0 0 / 0.05",
     "bg-on-artwork": "0.14 0.02 274 / 0.75",
     "border-subtle": "0.26 0.026 274",
     "border-strong": "0.53 0.03 274",
