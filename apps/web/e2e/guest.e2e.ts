@@ -49,7 +49,8 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   await insert(page, metal, doom);
   await saved(page);
   const nightfall = album("Nightfall", { originalYear: 1987 });
-  const epicus = album("Epicus Doomicus Metallicus", { originalYear: 1986 });
+  // An EP, for the grid's release label (TON-167).
+  const epicus = album("Epicus Doomicus Metallicus", { originalYear: 1986, releaseType: "ep" });
   await added(page, [nightfall, epicus], doom.id);
   await send(
     page,
@@ -141,6 +142,14 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
       .filter({ hasText: "Nightfall" })
       .getByRole("link", { name: "Open 'Nightfall' in Spotify" }),
   ).toBeVisible();
+  // As on the workspace's cards, the EP's cover says so and casts a soft shadow; the album's has no label (TON-167).
+  const epCard = albums.filter({ hasText: "Epicus" });
+  await expect(epCard.locator('[data-slot="release-label"]')).toHaveText("EP");
+  await expect(epCard.locator('[data-slot="artwork"]')).not.toHaveCSS("box-shadow", "none");
+  await expect(
+    albums.filter({ hasText: "Nightfall" }).locator('[data-slot="release-label"]'),
+  ).toHaveCount(0);
+  expect(await violations(guest, "main")).toEqual([]);
   await guest.getByRole("radio", { name: "Rows" }).click();
   expect(refused).toEqual([]);
   await guest.reload();

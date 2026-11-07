@@ -58,6 +58,8 @@ export const accounts = {
   viewsFolder: at("views-folder"),
   viewsLarge: at("views-large"),
   viewsInspector: at("views-inspector"),
+  // Cards' open album, hover, labels and covers (collection-views.e2e.ts, TON-167).
+  viewsCards: at("views-cards"),
   // Sorting, grouping, View options and defaults (view-options.e2e.ts), one per test.
   orderViews: at("order-views"),
   syncViews: at("sync-views"),
@@ -213,6 +215,8 @@ export const accounts = {
   phonePull: at("phone-pull"),
   // A phone's views opening at their top (mobile.e2e.ts, TON-157).
   phoneScrolled: at("phone-scrolled"),
+  // A phone's cards: labels, a link's tap, and no hover left behind (mobile.e2e.ts, TON-167).
+  phoneCards: at("phone-cards"),
   deleteCancel: at("delete-cancel"),
   // Keyboard-only walkthroughs (walkthrough.e2e.ts, TON-93), one per test.
   walker: at("a11y-walker"),

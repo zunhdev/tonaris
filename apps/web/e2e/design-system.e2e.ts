@@ -12,7 +12,7 @@ for (const path of ["/c", "/sign-in"]) {
     // Compare as the browser computes colors: the minified CSS spells oklch() values differently.
     const { background, expected } = await page.evaluate(() => {
       const probe = document.createElement("div");
-      probe.style.backgroundColor = "oklch(0.155 0.006 265)"; // bg.app (DS-12)
+      probe.style.backgroundColor = "oklch(0.16 0.021 274)"; // bg.app (DS-12, tinted in TON-167)
       document.body.append(probe);
       const colors = {
         background: getComputedStyle(document.body).backgroundColor,
@@ -73,7 +73,7 @@ test("typed text in an input is fg.primary at 14px, 16px on a phone (DS-13, DS-1
   await field.fill("someone@example.com");
   const expected = await page.evaluate(() => {
     const probe = document.createElement("div");
-    probe.style.color = "oklch(0.95 0.004 265)"; // fg.primary (DS-12)
+    probe.style.color = "oklch(0.955 0.008 274)"; // fg.primary (DS-12, tinted in TON-167)
     document.body.append(probe);
     const color = getComputedStyle(probe).color;
     probe.remove();

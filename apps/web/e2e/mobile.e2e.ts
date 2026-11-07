@@ -393,6 +393,65 @@ test("in an iPhone Home Screen app, pulling down at the top shows a spinner, and
   expect(await page.evaluate(() => "beforePull" in window)).toBe(false);
 });
 
+test("a list's cards label a live album, open a link by tap, and leave no hover behind", async ({
+  page,
+}) => {
+  await signIn(page, accounts.phoneCards);
+  await live(page);
+  const doom = list("Doom");
+  await insert(page, doom);
+  const roadburn = album("Live at Roadburn", {
+    isLive: true,
+    originalYear: 2011,
+    recordingYearStart: 2010,
+  });
+  await added(page, [roadburn, album("Nightfall", { originalYear: 1987 })], doom.id);
+  await page.evaluate(
+    async (link) => {
+      await window.tonarisSync?.links.insert(link).isPersisted.promise;
+    },
+    { albumId: roadburn.id, service: "spotify" as const, url: spotify },
+  );
+  await page
+    .context()
+    .route("https://open.spotify.com/**", (route) => route.fulfill({ body: "Spotify" }));
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+
+  await page.getByRole("button", { name: "View options" }).click();
+  const options = page.getByRole("dialog", { name: "View options" });
+  await options
+    .getByRole("radiogroup", { name: "Layout" })
+    .getByRole("radio", { name: "Grid" })
+    .click();
+  await page.keyboard.press("Escape");
+  await expect(options).toHaveCount(0);
+
+  // The live album's cover says so; the studio album's says nothing; nothing is wider than the screen (TON-167).
+  const cards = page.getByRole("grid", { name: "Doom" });
+  const card = cards.getByRole("gridcell", { name: /^Live at Roadburn/ });
+  await expect(card.locator('[data-slot="release-label"]')).toHaveText("Live");
+  await expect(
+    cards.getByRole("gridcell", { name: /^Nightfall/ }).locator('[data-slot="release-label"]'),
+  ).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await axe(page)).toEqual([]);
+
+  // A tap on the link opens Spotify rather than the album's sheet, and leaves no raised surface: a phone's pointer
+  // doesn't hover, so the card's hover never applies.
+  expect(await page.evaluate(() => matchMedia("(hover: hover)").matches)).toBe(false);
+  const [opened] = await Promise.all([
+    page.waitForEvent("popup"),
+    card.getByRole("link", { name: "Open 'Live at Roadburn' in Spotify" }).tap(),
+  ]);
+  await expect(opened).toHaveURL(spotify);
+  await opened.close();
+  await expect(page.getByRole("complementary", { name: "Album" })).toHaveCount(0);
+  expect(
+    await card.evaluate((element) => getComputedStyle(element, "::before").backgroundColor),
+  ).toBe("rgba(0, 0, 0, 0)");
+});
+
 test("a list opened from far down a folder opens at its top, and Back returns to where the folder was", async ({
   page,
 }) => {

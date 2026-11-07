@@ -9,18 +9,21 @@
 
 /* 1. Primitives */
 :root {
-  --gray-155: oklch(0.155 0.006 265);
-  --gray-185: oklch(0.185 0.007 265);
-  --gray-215: oklch(0.215 0.008 265);
-  --gray-235: oklch(0.235 0.008 265);
-  --gray-250: oklch(0.25 0.008 265);
-  --gray-460: oklch(0.46 0.008 265);
-  --gray-520: oklch(0.52 0.01 265);
-  --gray-640: oklch(0.64 0.01 265);
-  --gray-760: oklch(0.76 0.008 265);
-  --gray-950: oklch(0.95 0.004 265);
+  /* The neutrals lean toward the accent's hue (TON-167): dark indigo rather than graphite. */
+  --gray-160: oklch(0.16 0.021 274);
+  --gray-190: oklch(0.19 0.023 274);
+  --gray-220: oklch(0.22 0.026 274);
+  --gray-240: oklch(0.24 0.028 274);
+  --gray-260: oklch(0.26 0.026 274);
+  --gray-470: oklch(0.47 0.024 274);
+  --gray-530: oklch(0.53 0.03 274);
+  --gray-650: oklch(0.65 0.026 274);
+  --gray-770: oklch(0.77 0.02 274);
+  --gray-955: oklch(0.955 0.008 274);
+  --gray-140-a75: oklch(0.14 0.02 274 / 75%);
   --white-980: oklch(0.98 0 0);
-  --violet-260: oklch(0.26 0.03 275);
+  --white-a11: oklch(1 0 0 / 11%);
+  --violet-280: oklch(0.28 0.05 276);
   --violet-540: oklch(0.54 0.17 275);
   --violet-660: oklch(0.66 0.17 275);
   --violet-660-a12: oklch(0.66 0.17 275 / 12%);
@@ -28,6 +31,7 @@
   --amber-800: oklch(0.8 0.14 80);
   --red-660: oklch(0.66 0.19 25);
   --blue-720: oklch(0.72 0.11 240);
+  --black-a35: oklch(0 0 0 / 35%);
   --black-a40: oklch(0 0 0 / 40%);
 
   /* Stacking layers (DS-18) */
@@ -41,22 +45,27 @@
   --z-tooltip: 90;
 }
 
-/* 2. Semantic tokens: the dark theme (DS-11, DS-12; tuned against DS-14 on 18 October 2026) */
+/* 2. Semantic tokens: the dark theme (DS-11, DS-12; tuned against DS-14 on 18 October 2026, tinted in TON-167) */
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --bg-app: var(--gray-155);
-  --bg-panel: var(--gray-185);
-  --bg-raised: var(--gray-215);
-  --bg-hover: var(--gray-235);
-  --bg-selected: var(--violet-260);
-  --border-subtle: var(--gray-250);
-  --border-strong: var(--gray-520);
-  --fg-primary: var(--gray-950);
-  --fg-secondary: var(--gray-760);
-  --fg-tertiary: var(--gray-640);
-  --fg-disabled: var(--gray-460);
+  --bg-app: var(--gray-160);
+  --bg-panel: var(--gray-190);
+  --bg-raised: var(--gray-220);
+  --bg-hover: var(--gray-240);
+  --bg-selected: var(--violet-280);
+  /* A label's ground on a cover (DS-22): dark enough for `fg.on-artwork` over a white cover. */
+  --bg-on-artwork: var(--gray-140-a75);
+  --border-subtle: var(--gray-260);
+  --border-strong: var(--gray-530);
+  /* The faint light edge inside a cover (DS-23). */
+  --border-artwork: var(--white-a11);
+  --fg-primary: var(--gray-955);
+  --fg-secondary: var(--gray-770);
+  --fg-tertiary: var(--gray-650);
+  --fg-disabled: var(--gray-470);
   --fg-on-accent: var(--white-980);
+  --fg-on-artwork: var(--white-980);
   --accent-solid: var(--violet-660);
   --accent-fill: var(--violet-540);
   --accent-soft: var(--violet-660-a12);
@@ -66,6 +75,8 @@
   --status-info: var(--blue-720);
   --focus: var(--accent-solid);
   --shadow-color: var(--black-a40);
+  /* A cover's own shadow in cards and the album panel (DS-16's exception). */
+  --shadow-soft: var(--black-a35);
   /* Dims the page behind a dialog. */
   --scrim: var(--black-a40);
 }
@@ -188,6 +199,8 @@
 
 @theme inline {
   --shadow-floating: 0 8px 24px var(--shadow-color), 0 0 0 1px var(--border-subtle);
+  /* Covers in cards and the album panel (DS-16, TON-167). */
+  --shadow-artwork: 0 1px 2px var(--shadow-soft), 0 6px 16px var(--shadow-soft);
 
   /* Semantic tokens, named after the design spec: bg.panel is `bg-panel`, border.strong `border-strong`. */
   --color-app: var(--bg-app);
@@ -195,13 +208,16 @@
   --color-raised: var(--bg-raised);
   --color-hover: var(--bg-hover);
   --color-selected: var(--bg-selected);
+  --color-on-artwork: var(--bg-on-artwork);
   --color-subtle: var(--border-subtle);
   --color-strong: var(--border-strong);
+  --color-artwork: var(--border-artwork);
   --color-fg-primary: var(--fg-primary);
   --color-fg-secondary: var(--fg-secondary);
   --color-fg-tertiary: var(--fg-tertiary);
   --color-fg-disabled: var(--fg-disabled);
   --color-fg-on-accent: var(--fg-on-accent);
+  --color-fg-on-artwork: var(--fg-on-artwork);
   --color-accent-solid: var(--accent-solid);
   --color-accent-fill: var(--accent-fill);
   --color-accent-soft: var(--accent-soft);

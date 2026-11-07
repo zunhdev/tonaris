@@ -162,6 +162,90 @@ test("cards keep their size when the inspector opens beside them, showing fewer 
   expect(await width()).toBe(size);
 });
 
+/** The background of a card's raised surface, its `::before` (TON-167). */
+const surface = (card: Locator) =>
+  card.evaluate((element) => getComputedStyle(element, "::before").backgroundColor);
+const transparent = "rgba(0, 0, 0, 0)";
+
+test("cards mark the open album, raise a surface under the pointer, and label releases that aren't studio albums", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await signIn(page, accounts.viewsCards);
+  await live(page);
+  const doom = await created(page, "Doom");
+  await added(
+    page,
+    [
+      album("Nightfall", { originalYear: 1987 }),
+      album("Tales of Creation", { originalYear: 1989, releaseType: "ep" }),
+      album("Live in Stockholm", { isLive: true, originalYear: 1990, recordingYearStart: 1988 }),
+      album("The Best of Candlemass", {
+        originalYear: 1991,
+        releaseType: "compilation",
+        isLive: true,
+        recordingYearStart: 1990,
+      }),
+    ],
+    doom.id,
+  );
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+
+  // Rows: each small cover has the light edge, and no shadow (DS-16, DS-23).
+  const rowCover = grid(page, "Doom").locator('[data-slot="artwork"]').first();
+  await expect(rowCover).toHaveCSS("box-shadow", "none");
+  await expect(rowCover.locator('[data-slot="artwork-edge"]')).toHaveCSS("box-shadow", /inset/);
+
+  await chooseLayout(page, "Grid");
+  const cards = grid(page, "Doom");
+  const card = (title: string) => cards.getByRole("gridcell", { name: new RegExp(`^${title}`) });
+
+  // Cards' covers cast a soft shadow, over the edge.
+  const cover = card("Nightfall").locator('[data-slot="artwork"]');
+  await expect(cover).not.toHaveCSS("box-shadow", "none");
+  await expect(cover.locator('[data-slot="artwork-edge"]')).toHaveCSS("box-shadow", /inset/);
+
+  // Labels name what isn't a studio album; the words follow the year for assistive technology.
+  const label = (title: string) => card(title).locator('[data-slot="release-label"]');
+  await expect(label("Nightfall")).toHaveCount(0);
+  await expect(label("Tales of Creation")).toHaveText("EP");
+  await expect(label("Live in Stockholm")).toHaveText("Live");
+  await expect(label("The Best of Candlemass")).toHaveText("Compilation · Live");
+  await expect(label("Tales of Creation")).toHaveCSS("text-transform", "uppercase");
+  await expect(card("Tales of Creation")).toHaveAccessibleName(/^Tales of Creation.*, EP$/);
+  expect(await violations(page, '[role="grid"]')).toEqual([]);
+
+  // A hovering pointer raises a surface behind the card, gone when it leaves.
+  expect(await surface(card("Nightfall"))).toBe(transparent);
+  await card("Nightfall").hover();
+  await expect.poll(() => surface(card("Nightfall"))).not.toBe(transparent);
+  await page.mouse.move(1, 1);
+  await expect.poll(() => surface(card("Nightfall"))).toBe(transparent);
+
+  // The open album's card: a ring around its cover, its title on the accent.
+  const inspector = page.getByRole("complementary", { name: "Album" });
+  await card("Nightfall").click();
+  await expect(inspector).toBeVisible();
+  await expect(card("Nightfall")).toHaveAttribute("data-open", "true");
+  await expect(cover).toHaveCSS("outline-style", "solid");
+  await expect(cover).toHaveCSS("outline-offset", "3px");
+  await expect(card("Nightfall").getByText("Nightfall", { exact: true })).not.toHaveCSS(
+    "background-color",
+    transparent,
+  );
+  await expect(cards.locator("[data-open]")).toHaveCount(1);
+
+  // Another album takes the mark; closing the inspector clears it.
+  await card("Tales of Creation").click();
+  await expect(card("Tales of Creation")).toHaveAttribute("data-open", "true");
+  await expect(card("Nightfall")).not.toHaveAttribute("data-open");
+  await expect(cover).toHaveCSS("outline-style", "none");
+  await page.keyboard.press("Escape");
+  await expect(inspector).toHaveCount(0);
+  await expect(cards.locator("[data-open]")).toHaveCount(0);
+});
+
 test("a folder shows its folders and lists as rows, opened by keyboard", async ({ page }) => {
   await signIn(page, accounts.viewsFolder);
   await live(page);

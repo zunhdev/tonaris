@@ -8,6 +8,7 @@ import { Artwork, artworkSrc } from "@/features/collection/artwork";
 import { directionOf } from "@/features/collection/grid-keys";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology, groupNames, type Direction, type Section } from "@/features/collection/order";
+import { ReleaseLabel, ReleaseLabelText, releaseLabel } from "@/features/collection/release-label";
 import { ServiceNames } from "@/features/open/service-names";
 import { ChevronRight, GripVertical } from "lucide-react";
 import {
@@ -194,17 +195,24 @@ function AlbumItem({
   const { year, recorded } = chronology(album);
   const shown = `${recorded ? "rec. " : ""}${year}`;
   if (layout === "grid") {
+    // The cover's shadow and release label, as on the workspace's cards (TON-167). Nothing opens here, so no hover.
+    const label = releaseLabel(album);
     return (
       <li className="flex flex-col gap-1.5 [contain-intrinsic-size:auto_14rem] [content-visibility:auto]">
-        <Artwork
-          title={album.title}
-          src={artworkSrc(album)}
-          className="w-full"
-          letterClassName="text-display"
-        />
+        <span className="relative block">
+          <Artwork
+            title={album.title}
+            src={artworkSrc(album)}
+            raised
+            className="w-full"
+            letterClassName="text-display"
+          />
+          <ReleaseLabel label={label} />
+        </span>
         <span className="truncate text-fg-primary">{album.title}</span>
         <span className="truncate text-small text-fg-secondary">
           {album.artistCredit} · {shown}
+          <ReleaseLabelText label={label} />
         </span>
         {links.length > 0 && (
           <span className="text-small text-fg-tertiary">

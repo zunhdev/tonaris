@@ -3,7 +3,8 @@
 // An image fades in over it in 150 ms once loaded (DS-17); one the browser already has, such as a card's shown again
 // in the inspector, shows at once (TON-159). The image comes from the API's image proxy, never from
 // the artwork's own host (TS-103): the album carries the server's signature of its URL. Decorative in rows and
-// cards, where the title is beside it; "Cover of {title}" in the inspector.
+// cards, where the title is beside it; "Cover of {title}" in the inspector. A faint light edge inside every cover
+// keeps a dark one's outline on the dark theme, and covers in cards and the inspector cast a soft shadow (TON-167).
 
 import { apiUrl } from "@/config";
 import { useCallback, useState } from "react";
@@ -27,6 +28,7 @@ export function Artwork({
   className,
   letterClassName,
   eager = false,
+  raised = false,
 }: {
   title: string;
   /** The image proxy's URL for the artwork (`artworkSrc()`), if the album has artwork. */
@@ -38,6 +40,8 @@ export function Artwork({
   letterClassName?: string;
   /** Loaded at once, for artwork that is in view as it shows, as in the inspector; lazily otherwise. */
   eager?: boolean;
+  /** Casts a soft shadow, as covers in cards and the inspector do (DS-16's exception). */
+  raised?: boolean;
 }) {
   const { letter, background, foreground } = artworkTile(title);
   // Painted through the DOM, not a style attribute, which the CSP refuses in server-rendered HTML such as a shared
@@ -66,8 +70,10 @@ export function Artwork({
     <span
       ref={paint}
       {...(label === undefined ? { "aria-hidden": true } : { role: "img", "aria-label": label })}
+      data-slot="artwork"
       className={cn(
         "relative block aspect-square shrink-0 overflow-hidden rounded-sm bg-raised text-fg-secondary",
+        raised && "shadow-artwork",
         className,
       )}
     >
@@ -98,6 +104,12 @@ export function Artwork({
           )}
         />
       )}
+      {/* Above the image: an inset ring on the box itself would paint under it. */}
+      <span
+        aria-hidden
+        data-slot="artwork-edge"
+        className="pointer-events-none absolute inset-0 rounded-[inherit] inset-ring inset-ring-artwork"
+      />
     </span>
   );
 }

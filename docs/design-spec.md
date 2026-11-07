@@ -56,22 +56,25 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 *(Q-10)*
 
-**DS-12 Color.** The neutral ramp is cool-tinted at hue ≈ 265 with chroma ≤ 0.012. These were starting values, tuned in implementation against the contrast targets in DS-14; the tuned values below are the ones in `packages/ui/src/styles/tokens.css` (18 October 2026).
+**DS-12 Color.** The neutral ramp is cool-tinted at hue ≈ 265 with chroma ≤ 0.012. These were starting values, tuned in implementation against the contrast targets in DS-14; the tuned values below are the ones in `packages/ui/src/styles/tokens.css` (18 October 2026), with the neutrals as tinted in TON-167 (below the table).
 
 | Semantic token | Value (OKLCH) | Use |
 | --- | --- | --- |
-| `bg.app` | 0.155 0.006 265 | Window background, sidebar |
-| `bg.panel` | 0.185 0.007 265 | Main content, inspector |
-| `bg.raised` | 0.215 0.008 265 | Popovers, menus, dialogs, palette |
-| `bg.hover` | 0.235 0.008 265 | Row and item hover |
-| `bg.selected` | 0.26 0.03 275 | Selected row (tinted toward accent) |
-| `border.subtle` | 0.25 0.008 265 | Dividers, row separators |
-| `border.strong` | 0.52 0.01 265 | Inputs, focused containers (raised from 0.32 to reach 3:1, DS-14) |
-| `fg.primary` | 0.95 0.004 265 | Titles, primary text |
-| `fg.secondary` | 0.76 0.008 265 | Artist, metadata |
-| `fg.tertiary` | 0.64 0.01 265 | Hints, timestamps, placeholders |
-| `fg.disabled` | 0.46 0.008 265 | Disabled controls only |
+| `bg.app` | 0.16 0.021 274 | Window background, sidebar |
+| `bg.panel` | 0.19 0.023 274 | Main content, inspector |
+| `bg.raised` | 0.22 0.026 274 | Popovers, menus, dialogs, palette |
+| `bg.hover` | 0.24 0.028 274 | Row and item hover, a card under the pointer |
+| `bg.selected` | 0.28 0.05 276 | Selected row (tinted toward accent) |
+| `bg.on-artwork` | 0.14 0.02 274 / 75% | A release label's ground on a cover (DS-22) |
+| `border.subtle` | 0.26 0.026 274 | Dividers, row separators |
+| `border.strong` | 0.53 0.03 274 | Inputs, focused containers (raised from 0.32 to reach 3:1, DS-14) |
+| `border.artwork` | 1 0 0 / 11% | The light edge inside every cover (DS-23) |
+| `fg.primary` | 0.955 0.008 274 | Titles, primary text |
+| `fg.secondary` | 0.77 0.02 274 | Artist, metadata |
+| `fg.tertiary` | 0.65 0.026 274 | Hints, timestamps, placeholders |
+| `fg.disabled` | 0.47 0.024 274 | Disabled controls only |
 | `fg.on-accent` | 0.98 0 0 | Labels on `accent.fill` (primary buttons) |
+| `fg.on-artwork` | 0.98 0 0 | A release label's words on `bg.on-artwork` |
 | `accent.solid` | 0.66 0.17 275 | Focus ring (`focus`), selection marks |
 | `accent.fill` | 0.54 0.17 275 | Primary button backgrounds; dark enough for `fg.on-accent` labels at 4.5:1 |
 | `accent.soft` | 0.66 0.17 275 / 12% | Accent backgrounds, live-update flash |
@@ -82,6 +85,12 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 
 - The accent hue is a cool violet-indigo (decided 17 October 2026).
 - No service brand colors appear anywhere: services are named in text (DS-19).
+
+*As built in TON-167* (the creator picked variant 1B from a mock of their own list, 7 November 2026, finding the app "a tad dry"): **the neutrals lean toward the accent.**
+- Surfaces, borders and text moved from hue 265 at chroma 0.004–0.01 to hue 274 at about three times that, 0.008–0.03, so the app reads as dark indigo rather than graphite. Lightness rose by 0.005–0.01 to keep each step apart.
+- `bg.selected` grew to 0.28 0.05 276, so a selected row still stands out from `bg.hover`.
+- `fg.on-accent`, the accent and the status colors are unchanged. Every DS-14 pair still passes.
+- New tokens for covers: `border.artwork`, and `bg.on-artwork` with `fg.on-artwork` for release labels. The token test checks the label at 4.5:1 with its ground over a white cover, the worst case.
 
 **DS-13 Typography.**
 - **Font.** Inter Variable, self-hosted woff2. Fallback stack: `Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif`. The system fallback renders saved text in scripts Inter doesn't cover, such as CJK. *(Section 2.3)*
@@ -131,6 +140,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - Surfaces separate by lightness step plus a 1px border.
 - Shadows appear only on floating layers (popover, menu, dialog, palette, toast), as a single soft shadow at `0 8px 24px oklch(0 0 0 / 40%)` plus a 1px `border.subtle` ring.
 - Nothing else in the main layout casts a shadow.
+- *As built in TON-167* (the creator picked variant 3B, 7 November 2026): **covers are the one exception.** A cover in a card, on a guest page's grid, or in the album panel casts `shadow-artwork`: `0 1px 2px` and `0 6px 16px`, both at 35% black. Rows' small covers don't.
 
 **DS-17 Motion.**
 
@@ -277,6 +287,11 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 
 *As built in TON-106* (decided with the creator, 30 October 2026): **the window sets a card's size, not the inspector.** Cards fill the row and resize with the window. The inspector beside the grid leaves fewer cards a row at the same size, with a gap of less than a card at the right. Before, the cards were resized to fill the narrower row.
 
+*As built in TON-167* (the creator picked variants 5A, 6A and 7A from a mock of their own list, 7 November 2026):
+- **The open album shows.** The card of the album the inspector shows has a 2 px `accent.solid` ring 3 px off its cover, and its title on `accent.fill` in `fg.on-accent`, padded 6 px and pulled back 6 px so its text stays in line with the other cards'. Opening another album moves both; closing the inspector clears them.
+- **A hovering pointer raises the card.** A `bg.hover` surface with an 8 px radius shows behind the cover and text, 8 px outside the card (half the gap, so neighbours never overlap), over 100 ms (DS-17). It takes no clicks, so the service links still open their service. It shows only where the pointer can hover (`@media (hover: hover)`): a tap on a phone leaves nothing behind. Guest pages' cards open nothing, so they have none.
+- **A label names what isn't a studio album.** On the cover's top-left corner (the save state has the top-right): "EP", "Single" or "Compilation" for those types, "Live" for a live album, both for a live one, as in "Compilation · Live". Albums and unknown types get none. Unlike FR-05.9's groups, where a live compilation sits under Live alone, the label says both. `text.micro`, semibold, upper-cased with 0.05em tracking, `fg.on-artwork` on `bg.on-artwork` with a small background blur, 4 px radius. It is hidden from assistive technology; the same words follow the year in the card's name instead, so the name still starts with the title. Guest pages' grids show it too.
+
 **DS-23 Artwork.**
 - A fixed-aspect box with lazy loading, `decoding="async"`, a `sizes`/`srcset` where the source allows it, and a 150ms fade-in.
 - **Fallback tile:** a neutral surface with the first letter of the title and a hue derived from a hash of the title, desaturated to stay calm. The same tile is used when artwork is missing, still loading, or fails to load. A failed load is never shown as an error. *(FR-03.4)*
@@ -305,6 +320,10 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 *As built in TON-159:*
 - **Artwork the browser already has shows at once,** without the fade: a row's or card's, shown again in the inspector, is there as the inspector opens. Artwork still loading fades in as before.
 - **The inspector's artwork loads eagerly,** since it is always in view.
+
+*As built in TON-167* (the creator picked variant 3B, 7 November 2026):
+- **Every cover has a faint light edge inside it,** a 1 px inset ring in `border.artwork`, so a dark cover keeps its outline on the dark theme. It is a layer above the image, since an inset shadow on the box would paint under it, and the letter tile has it too.
+- **Covers in cards, on guest pages' grids and in the album panel cast a soft shadow** (DS-16's exception). Rows, the search palette and Find artwork's choices have the edge only.
 
 **DS-24 Chronology display.** *(FR-05.5, FR-05.6, FR-02.8)*
 
