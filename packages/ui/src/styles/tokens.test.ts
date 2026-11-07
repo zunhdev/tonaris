@@ -4,7 +4,7 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 
-import { contrastRatio } from "./color";
+import { contrastOnGround, contrastRatio, parseOklch } from "./color";
 import { textSizes } from "./text-sizes";
 import { readTokens, tokensPath } from "./tokens";
 
@@ -45,6 +45,16 @@ describe("DS-14 contrast targets", () => {
     expect(failures(["accent-fill"], ["bg-app", "bg-panel"], 3)).toEqual([]);
   });
 
+  test("a cover's label reaches 4.5:1 on its ground, even over a white cover (DS-22)", () => {
+    const white = parseOklch("oklch(1 0 0)");
+    const ratio = contrastOnGround(
+      tokens.color("fg-on-artwork"),
+      tokens.color("bg-on-artwork"),
+      white,
+    );
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+
   test("a failing pair is reported by name and ratio", () => {
     expect(failures(["fg-disabled"], ["bg-hover"], 4.5)).toEqual([
       expect.stringMatching(/^fg-disabled on bg-hover: \d\.\d\d:1 < 4\.5:1$/),
@@ -53,20 +63,24 @@ describe("DS-14 contrast targets", () => {
 });
 
 describe("semantic tokens", () => {
-  // DS-12, with border.strong, accent.fill and fg.on-accent as tuned against DS-14 on 18 October 2026.
+  // DS-12, with border.strong, accent.fill and fg.on-accent as tuned against DS-14 on 18 October 2026, and the
+  // neutrals tinted toward the accent in TON-167.
   const expected: Record<string, string> = {
-    "bg-app": "0.155 0.006 265",
-    "bg-panel": "0.185 0.007 265",
-    "bg-raised": "0.215 0.008 265",
-    "bg-hover": "0.235 0.008 265",
-    "bg-selected": "0.26 0.03 275",
-    "border-subtle": "0.25 0.008 265",
-    "border-strong": "0.52 0.01 265",
-    "fg-primary": "0.95 0.004 265",
-    "fg-secondary": "0.76 0.008 265",
-    "fg-tertiary": "0.64 0.01 265",
-    "fg-disabled": "0.46 0.008 265",
+    "bg-app": "0.16 0.021 274",
+    "bg-panel": "0.19 0.023 274",
+    "bg-raised": "0.22 0.026 274",
+    "bg-hover": "0.24 0.028 274",
+    "bg-selected": "0.28 0.05 276",
+    "bg-on-artwork": "0.14 0.02 274 / 0.75",
+    "border-subtle": "0.26 0.026 274",
+    "border-strong": "0.53 0.03 274",
+    "border-artwork": "1 0 0 / 0.11",
+    "fg-primary": "0.955 0.008 274",
+    "fg-secondary": "0.77 0.02 274",
+    "fg-tertiary": "0.65 0.026 274",
+    "fg-disabled": "0.47 0.024 274",
     "fg-on-accent": "0.98 0 0",
+    "fg-on-artwork": "0.98 0 0",
     "accent-solid": "0.66 0.17 275",
     "accent-fill": "0.54 0.17 275",
     "accent-soft": "0.66 0.17 275 / 0.12",

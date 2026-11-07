@@ -55,9 +55,18 @@ export function relativeLuminance(color: Oklch): number {
   return luminanceOf(toLinearSrgb(color));
 }
 
+const ratioOf = (one: number, other: number) =>
+  (Math.max(one, other) + 0.05) / (Math.min(one, other) + 0.05);
+
 /** WCAG 2 contrast ratio of `foreground` shown over the opaque `background`, from 1 to 21. */
 export function contrastRatio(foreground: Oklch, background: Oklch): number {
-  const front = luminanceOf(shownOver(foreground, background));
-  const back = relativeLuminance(background);
-  return (Math.max(front, back) + 0.05) / (Math.min(front, back) + 0.05);
+  return ratioOf(luminanceOf(shownOver(foreground, background)), relativeLuminance(background));
+}
+
+/**
+ * WCAG 2 contrast ratio of the opaque `foreground` on a translucent `ground` shown over the opaque `backdrop`, as a
+ * label's text on its ground over a cover (DS-22).
+ */
+export function contrastOnGround(foreground: Oklch, ground: Oklch, backdrop: Oklch): number {
+  return ratioOf(relativeLuminance(foreground), luminanceOf(shownOver(ground, backdrop)));
 }

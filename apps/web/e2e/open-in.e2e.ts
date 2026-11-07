@@ -186,6 +186,12 @@ test("a list's cards and rows name the album's services, each opening it and not
     "href",
     spotify,
   );
+  // With the pointer over the card, its raised surface shows behind the links and takes none of their clicks
+  // (TON-167): Playwright's click below fails if anything else would receive it.
+  await card.hover();
+  await expect
+    .poll(() => card.evaluate((element) => getComputedStyle(element, "::before").backgroundColor))
+    .not.toBe("rgba(0, 0, 0, 0)");
   const [fromCard] = await Promise.all([
     page.waitForEvent("popup"),
     card.getByRole("link", { name: "Open 'Bleach' in Tidal" }).click(),

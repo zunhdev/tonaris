@@ -4,6 +4,10 @@
 // virtual row is a row of cards; the grid states every row and column (DS-115). Grouped, each group starts with its
 // header on a row of its own, the one in view sticking at the top (DS-43). A click or Enter opens a card's album in the
 // inspector (DS-46).
+//
+// TON-167: the open album's card has an accent ring around its cover and its title on an accent highlight; a hovering
+// pointer raises a surface behind a card, which takes no clicks, so the service links still open their service; and
+// a cover names a release that isn't a plain studio album (`ReleaseLabel`).
 
 // Virtualized rows are absolutely positioned, which table elements can't be without overriding their display, and
 // that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -25,7 +29,9 @@ import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
 import { useCollectionData } from "./data";
 import { GroupHeaderRow } from "./groups";
+import { useInspector } from "./inspector-state";
 import type { ReleaseGroup, Section } from "./order";
+import { ReleaseLabel, ReleaseLabelText, releaseLabel } from "./release-label";
 import { useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -55,6 +61,7 @@ export function AlbumCards({
   // The inspector beside the view leaves fewer cards a row, not other cards: their size is worked out as if it took
   // no room, so opening and closing it keeps them as they are (TON-106).
   const { inspectorBeside, inspectorWidth } = useShell();
+  const { albumId } = useInspector();
   const beside = inspectorBeside ? inspectorWidth : 0;
   const inner = Math.max(0, useWidth(scroller, beside) - 2 * padding);
   const whole = inner + beside;
@@ -125,6 +132,7 @@ export function AlbumCards({
                     album={album}
                     width={card}
                     col={col}
+                    open={album.id === albumId}
                     {...cellProps(virtual.index, col)}
                   />
                 ))}
@@ -141,23 +149,33 @@ function AlbumCard({
   album,
   width,
   col,
+  open,
   ...cell
 }: {
   album: Album;
   width: number;
   col: number;
+  /** Whether the inspector shows this album. */
+  open: boolean;
 } & ReturnType<ReturnType<typeof useGridFocus>["cellProps"]>) {
   const ref = useRef<HTMLDivElement>(null);
   useLiveHighlight(album.id, ref);
   const status = useSaveState(album.id);
   const { linksByAlbum } = useCollectionData();
+  const label = releaseLabel(album);
   return (
     <div
       ref={ref}
       role="gridcell"
       aria-colindex={col + 1}
       aria-busy={isUnderway(status) || undefined}
-      className="flex flex-col gap-1 rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
+      data-open={open || undefined}
+      className={cn(
+        "relative isolate flex flex-col gap-1 rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid",
+        // The raised surface under a hovering pointer, behind the card and half the gap outside it. It takes no
+        // clicks, and `hover:` matches only a pointer that hovers, so a tap on a phone leaves none behind.
+        "before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:transition-colors before:duration-100 before:ease-enter hover:before:bg-hover",
+      )}
       style={{ width, height: width + textHeight }}
       {...cell}
     >
@@ -165,19 +183,34 @@ function AlbumCard({
         <Artwork
           title={album.title}
           src={artworkSrc(album)}
-          className="w-full rounded-md"
+          raised
+          className={cn(
+            "w-full rounded-md",
+            open && "outline-2 outline-offset-3 outline-accent-solid outline-solid",
+          )}
           letterClassName="text-display"
         />
+        <ReleaseLabel label={label} />
         {status && (
           <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-raised shadow-floating">
             <SaveStateMarker status={status} />
           </span>
         )}
       </span>
-      <span className="mt-1 truncate font-medium text-fg-primary">{album.title}</span>
+      <span
+        className={cn(
+          "mt-1 truncate font-medium text-fg-primary",
+          // The open album's title on the accent, padded out and pulled back so its text stays in line.
+          open &&
+            "-mx-1.5 max-w-[calc(100%+0.75rem)] self-start rounded-sm bg-accent-fill px-1.5 text-fg-on-accent",
+        )}
+      >
+        {album.title}
+      </span>
       <span className={cn("truncate text-small text-fg-secondary")}>{album.artistCredit}</span>
       <span className="flex text-small text-fg-tertiary">
         <ChronologyYear album={album} />
+        <ReleaseLabelText label={label} />
       </span>
       <span className="truncate text-small text-fg-tertiary">
         <ServiceNames title={album.title} links={linksByAlbum.get(album.id)} />
