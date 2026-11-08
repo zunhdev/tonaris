@@ -67,8 +67,16 @@ test("a list whose folder is in Trash asks where to go; Cancel leaves it, a choi
   await expect(prompt("Doom")).toHaveCount(0);
   await expect(item(page, "Doom")).toHaveCount(0);
 
+  // "Find a folder" (TON-183): Collection is checked at first; a click picks a place, Restore restores.
   await undo("Sludge").click();
-  await prompt("Sludge").getByText("Collection").click();
+  const collection = prompt("Sludge").getByRole("option", { name: "Collection" });
+  await expect(collection).toHaveAttribute("aria-checked", "true");
+  await expect(prompt("Sludge").getByRole("combobox", { name: "Find a folder" })).toBeFocused();
+  await prompt("Sludge").getByRole("combobox", { name: "Find a folder" }).fill("coll");
+  await page.keyboard.press("Enter");
+  // Enter picks, and doesn't restore yet.
+  await expect(prompt("Sludge")).toBeVisible();
+  await expect(collection).toHaveAttribute("aria-checked", "true");
   await prompt("Sludge").getByRole("button", { name: "Restore" }).click();
   await expect(item(page, "Sludge")).toHaveAttribute("aria-level", "1");
   await saved(page);

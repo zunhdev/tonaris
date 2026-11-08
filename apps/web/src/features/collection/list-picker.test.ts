@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import {
-  findLists,
+  findByPath,
   listChoices,
   matchedParts,
   matchLimit,
@@ -93,18 +93,18 @@ describe("suggestions", () => {
   });
 });
 
-describe("findLists", () => {
+describe("findByPath", () => {
   const choices = listChoices(tree, []);
 
   test("each word must be somewhere in the path, case- and accent-insensitive", () => {
-    expect(paths(findLists(choices, "2000 ЗЕМФ").shown)).toEqual([
+    expect(paths(findByPath(choices, "2000 ЗЕМФ").shown)).toEqual([
       "Русский рок › 4 2000-2010-е › Земфира",
     ]);
-    expect(paths(findLists(choices, "рок").shown)).toEqual([
+    expect(paths(findByPath(choices, "рок").shown)).toEqual([
       "Русский рок › 4 2000-2010-е › Noize MC",
       "Русский рок › 4 2000-2010-е › Земфира",
     ]);
-    expect(findLists(choices, "doom jazz").total).toBe(0);
+    expect(findByPath(choices, "doom jazz").total).toBe(0);
   });
 
   test("names matching the whole text come first, prefix before word before the rest", () => {
@@ -112,25 +112,25 @@ describe("findLists", () => {
       buildTree([metal, doom, classicDoom, list("Doomsday"), list("Kaboom")]),
       [],
     );
-    expect(paths(findLists(withMetalDoom, "doom").shown)).toEqual([
+    expect(paths(findByPath(withMetalDoom, "doom").shown)).toEqual([
       "Doomsday",
       "Metal › Doom",
       "Metal › Classic Doom",
     ]);
     // "metal" is in the folder's name only: by path.
-    expect(paths(findLists(withMetalDoom, "metal").shown)).toEqual([
+    expect(paths(findByPath(withMetalDoom, "metal").shown)).toEqual([
       "Metal › Classic Doom",
       "Metal › Doom",
     ]);
   });
 
   test("blank text finds nothing", () => {
-    expect(findLists(choices, "   ")).toEqual({ shown: [], total: 0 });
+    expect(findByPath(choices, "   ")).toEqual({ shown: [], total: 0 });
   });
 
   test("at most 50 show, with the total", () => {
     const many = listChoices(buildTree(Array.from({ length: 70 }, (_, n) => list(`Mix ${n}`))), []);
-    const { shown, total } = findLists(many, "mix");
+    const { shown, total } = findByPath(many, "mix");
     expect(shown).toHaveLength(matchLimit);
     expect(total).toBe(70);
   });

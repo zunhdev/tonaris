@@ -75,7 +75,7 @@ test("a row's ⋯ renames, moves and deletes the folder or list it's on", async 
     .getByRole("menuitem", { name: /^Move to/ })
     .click();
   const picker = page.getByRole("dialog", { name: "Move 'Funeral doom' to…" });
-  await picker.getByRole("button", { name: "Metal" }).click();
+  await picker.getByRole("option", { name: "Metal", exact: true }).click();
   await saved(page);
   await expect(picker).toHaveCount(0);
   await item(page, "Metal").press("ArrowRight");
