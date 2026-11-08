@@ -330,3 +330,10 @@ People a folder or list is shared with, signed in or as guests, SHALL see its fo
 #### Scenario: A guest sees a folder's color
 - **WHEN** the owner colors the shared folder 'Metal' orange and a guest opens the link
 - **THEN** the list 'Doom' inside it shows an orange icon
+
+### Requirement: A destination's preview doesn't move the places above it
+In "Move to…" and the restore prompt, the sharing preview SHALL keep room for two lines, and the dialog SHALL keep its top edge while open, so a change of preview, or of the folders found, never moves the field or the folders under the pointer (DS-69, TON-183).
+
+#### Scenario: Pointing at another folder
+- **WHEN** the preview for "Collection" reads "Sharing unchanged" and the owner points at "Metal", whose preview takes two lines
+- **THEN** the dialog's top, the field and the folders stay where they were
