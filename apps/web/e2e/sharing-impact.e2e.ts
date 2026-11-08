@@ -66,19 +66,48 @@ test("moves and recovery say who would see the content before they happen", asyn
   });
   await send(viewer, "share.accept", { grantId });
 
-  // Move to…: each destination's consequences before choosing.
+  // Move to…: the active destination's consequences before choosing, by keyboard or pointer.
   await item(page, "Doom").focus();
   await page.keyboard.press("m");
   const picker = page.getByRole("dialog", { name: "Move 'Doom' to…" });
   const preview = picker.getByRole("status", { name: "Sharing" });
-  await picker.getByRole("button", { name: "Metal" }).focus();
+  const place = (name: string) => picker.getByRole("option", { name, exact: true });
+  await expect(place("Heavy")).toHaveAttribute("aria-selected", "true");
+  await expect(preview).toHaveText("Sharing unchanged");
+  await page.keyboard.press("ArrowDown");
   await expect(preview).toHaveText("Newly visible to Anna");
-  await picker.getByRole("button", { name: "Heavy" }).focus();
+  await place("Heavy").hover();
   await expect(preview).toHaveText("Sharing unchanged");
   expect(await violations(page, '[role="dialog"]')).toEqual([]);
-  await picker.getByRole("button", { name: "Metal" }).click();
+  await place("Metal").click();
   await expect(item(page, "Doom")).toHaveAttribute("aria-level", "2");
   await saved(page);
+
+  // A preview of one line or two takes the same room, and the dialog keeps its top (TON-183).
+  await send(page, "share.setLink", { containerId: heavy.id, linkId: uuidv7(), enabled: true });
+  await item(page, "Doom").focus();
+  await page.keyboard.press("m");
+  await expect(place("Collection")).toHaveAttribute("aria-selected", "true");
+  await expect(preview).toHaveText("No longer visible through 'Metal': Anna");
+  const field = picker.getByRole("combobox", { name: "Find a folder" });
+  // Measured once its opening zoom is over.
+  await picker.evaluate((node) =>
+    Promise.all(node.getAnimations({ subtree: true }).map((animation) => animation.finished)),
+  );
+  const oneLine = { field: await field.boundingBox(), preview: await preview.boundingBox() };
+  await place("Heavy").hover();
+  await expect(preview.locator("span")).toHaveText([
+    "Newly visible to anyone with the link to 'Heavy'",
+    "No longer visible through 'Metal': Anna",
+  ]);
+  expect(await field.boundingBox()).toEqual(oneLine.field);
+  expect(await preview.boundingBox()).toEqual(oneLine.preview);
+  // Fewer folders found: the field stays put.
+  await field.fill("heavy");
+  await expect(picker.getByRole("option")).toHaveText(["Heavy"]);
+  expect(await field.boundingBox()).toEqual(oneLine.field);
+  await page.keyboard.press("Escape");
+  await expect(picker).toHaveCount(0);
 
   // Restoring the shared list asks first; Cancel leaves it in Trash.
   await send(page, "container.delete", { id: doom.id, unitId: uuidv7() });

@@ -247,7 +247,7 @@ test("folders and lists move with M and by dragging onto the tree, and the root 
   await tree.getByRole("treeitem", { name: /^Metal/ }).focus();
   await page.keyboard.press("m");
   const picker = page.getByRole("dialog", { name: "Move 'Metal' to…" });
-  await expect(picker.getByRole("list", { name: "Places" }).getByRole("button")).toHaveText([
+  await expect(picker.getByRole("listbox", { name: "Folders" }).getByRole("option")).toHaveText([
     "Archive",
   ]);
   expect(await violations(page, '[role="dialog"]')).toEqual([]);
@@ -258,7 +258,7 @@ test("folders and lists move with M and by dragging onto the tree, and the root 
   await page.keyboard.press("m");
   await page
     .getByRole("dialog", { name: "Move 'Doom' to…" })
-    .getByRole("button", { name: "Metal" })
+    .getByRole("option", { name: "Metal", exact: true })
     .click();
   await expect(announcements(page).first()).toHaveText("Moved Doom to Metal");
   await expect(tree.getByRole("treeitem", { name: /^Doom/ })).toHaveAttribute("aria-level", "2");

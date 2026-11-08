@@ -1010,6 +1010,10 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - **"Move to position…"** waits for the command palette (TON-63).
 - **Moving folders and lists:**
   - **`M`, "Move to…",** acts on the focused tree item, else the focused folder or list row of a view, else the folder or list the view shows. The dialog lists Collection and the folders that can take it, indented by level, and ↑ and ↓ move between them.
+    - *As built in TON-183* (from the creator's manual testing, 8 November 2026; there can be hundreds of folders): **a "Find a folder" field** has the focus, a combobox over the places, as "Find a list" is (DS-46). ↑ and ↓ move through them, and Enter or a click moves. Each folder shows as its path, its parent folders dimmed ("Metal › Black").
+    - **Before typing** (decided with the creator): Collection first, then under "Recent" the folders this device last moved things into, by this dialog or by dragging, newest first, then under "Other folders" ("Folders" with no recent ones) others by path, 8 folders in all. "Type to find the other {n} folders." counts the rest.
+    - **Typing** finds folders whose path holds every typed word, and Collection by its name, as "Find a list" finds lists: names that match first, at most 50, with "Showing 50 of {n}. Keep typing to narrow them down."; none, "No folders match '{text}'."
+    - **The dialog sits at 12% of the window's height**, as the palette does, and keeps its top edge while open (decided with the creator), so a shorter list or a longer preview moves only its bottom edge.
   - **Dragging** a folder or list from its row or the tree onto a folder in the tree, or onto Collection, moves it.
   - **After a move,** the destination opens in the tree, and "Moved {name} to {destination}" is announced. The item follows its new parent's arranged items, in creation order among the rest.
   - **While offline,** M does nothing and the tree takes no drops (DS-81). A refused move is reported like any failed write (DS-107).
@@ -1105,6 +1109,7 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
   - "'Metal' is in Trash or no longer exists. Choose where to restore 'Doom'." ("Its folder" when the parent's name is unknown);
   - "Collection" and the active folders, nested, as a radio group;
   - **Restore** or **Cancel**.
+  - *As built in TON-183* (decided with the creator, 8 November 2026): "Find a folder" over Collection and every active folder, as Move to… has it (DS-49), with the dialog's top kept the same way. Collection is checked at first; a click or Enter picks another, which gets the check, and Restore restores.
 - **Name:**
   - the same title, and "'Collection' already has a list or folder named 'Doom'.";
   - a "Name" field with the name selected, and "Choose another location…";
@@ -1282,6 +1287,7 @@ The block never says "private" while another access path remains.
 - **While reading:** "Checking sharing…". **When it can't be read:** "Sharing effects couldn't be checked."
 - **Where it shows:**
   - **Move to…:** under the destinations, for the one last focused or pointed at;
+    - *As built in TON-183:* for the active one, with ↑ and ↓ or the pointer, from the dialog's opening. In Move to… and the destination prompt, the block keeps room for two lines (decided with the creator), so "Sharing unchanged" and a two-line preview are the same height. Answers kept for half a minute are forgotten after a move, which changes what moving the same item would do.
   - **dragging** a folder or list over a folder it can move into: under its name in the drag overlay, after 150 ms;
   - **recovery:**
     - a restore that would make content visible to anyone asks "Restore '{name}'?", "Once it's back, others can see it.", with the block and Cancel or Restore. An unshared one restores at once, and Undo never asks;

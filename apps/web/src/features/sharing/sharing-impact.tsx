@@ -3,7 +3,7 @@
 // through '{folder}': …" those it loses with the folders it leaves, never one another path keeps, and "Still shared
 // directly with …" the shares on it and its contents; "Sharing unchanged" when nothing is gained or lost. People go
 // by display name or the address as typed, "(invited)" until they accept; links by the folder or list they share.
-// Answers are kept for half a minute, so going back to a destination shows at once.
+// Answers are kept for half a minute, so going back to a destination shows at once, and forgotten after a move.
 
 import { api } from "@/api";
 import { useKeyedRead } from "@/common/use-keyed-read";
@@ -23,6 +23,14 @@ const keyOf = (query: ImpactQuery) =>
   "move" in query
     ? `move:${query.move}:${query.to ?? "root"}`
     : `recover:${query.recover}:${query.to === undefined ? "" : (query.to ?? "root")}`;
+
+/**
+ * Forgets the answers kept: after a move, what moving the same item to a destination would do has changed, though its
+ * query hasn't (TON-183).
+ */
+export function forgetImpacts(): void {
+  answers.clear();
+}
 
 /** The preview for `query`; throws if it can't be read. */
 export async function readImpact(query: ImpactQuery): Promise<SharingImpact> {
@@ -93,6 +101,12 @@ export function impactLines({ added, removed, direct }: SharingImpact): string[]
   }
   return lines;
 }
+
+/**
+ * Room for two lines, with the block's padding and border: a destination's preview keeps its height between one line
+ * and two, so it doesn't move what's around it (TON-183).
+ */
+export const twoLineImpactClass = "min-h-[calc(2lh_+_0.125rem_+_1rem_+_2px)]";
 
 /** The block, for an answer, while reading, or when it couldn't be read. */
 export function SharingImpactBlock({

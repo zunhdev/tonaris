@@ -15,6 +15,12 @@ export const scrimClass =
 export const dialogSurfaceClass =
   "fixed top-1/2 left-1/2 z-60 grid w-[calc(100%-2rem)] grid-cols-1 -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-raised p-5 text-fg-primary shadow-floating duration-200 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95";
 
+/**
+ * A dialog that keeps its top edge while open, at 12% of the window's height as the palette is: a finder's dialog, whose
+ * height changes as it finds and previews, moves only its bottom edge (TON-183). Added to the surface's classes.
+ */
+export const pinnedDialogClass = "top-[12dvh] max-h-[calc(88dvh-1rem)] translate-y-0";
+
 /** A dialog's title and description (DS-13). */
 export const dialogTitleClass = "text-title text-fg-primary";
 export const dialogDescriptionClass = "text-base text-fg-secondary";

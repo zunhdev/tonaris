@@ -1,6 +1,6 @@
 // What the workspace remembers on this device, not synced (DS-27, DS-30, DS-32, DS-43, DS-45, DS-75): which folders
 // are expanded, the sidebar's width and whether it is hidden, the album inspector's width (TON-124), the last
-// collection view visited, Viewing or Editing mode, what was opened lately and which palette commands are run most, which invitations were announced, a phone's Mine or Shared, and, for the tab's session, which groups
+// collection view visited, Viewing or Editing mode, what was opened lately and which palette commands are run most, the folders things were last moved into, which invitations were announced, a phone's Mine or Shared, and, for the tab's session, which groups
 // are collapsed. Kept in localStorage and sessionStorage, which can be missing or refuse writes (private
 // modes, blocked storage): then nothing is remembered, and nothing fails (storage.ts).
 
@@ -196,6 +196,20 @@ export const recentItems = {
   record(accountId: string, opened: readonly RecentItem[]): void {
     if (opened.length === 0) return;
     write(`tonaris:recent:${accountId}`, opened.reduce(withRecent, recentItems.read(accountId)));
+  },
+};
+
+/** The folders the account last moved things into on this device, newest first, for "Find a folder" (TON-183). */
+export const recentFolders = {
+  read(accountId: string): string[] {
+    const value = read(`tonaris:recent-folders:${accountId}`);
+    return Array.isArray(value)
+      ? value.filter((each): each is string => typeof each === "string").slice(0, recentLimit)
+      : [];
+  },
+  record(accountId: string, folderId: string): void {
+    const kept = recentFolders.read(accountId).filter((each) => each !== folderId);
+    write(`tonaris:recent-folders:${accountId}`, [folderId, ...kept].slice(0, recentLimit));
   },
 };
 

@@ -158,6 +158,8 @@ export const accounts = {
   // Trash (trash.e2e.ts), one per test.
   trashList: at("trash-list"),
   trashFolder: at("trash-folder"),
+  // "Find a folder" in Move to… (folder-finder.e2e.ts).
+  folderFinder: at("folder-finder"),
   // Recovery prompts (recovery.e2e.ts), one per test.
   recoveryDestination: at("recovery-destination"),
   recoveryName: at("recovery-name"),

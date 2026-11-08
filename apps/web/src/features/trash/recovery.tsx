@@ -16,12 +16,14 @@ import { ConfirmDialog } from "@/common/confirm-dialog";
 import { count } from "@/common/words";
 import { useCollectionData } from "@/features/collection/data";
 import { nameRefusal } from "@/features/collection/editing";
-import { PlaceList } from "@/features/collection/place-list";
-import { destinations, siblingsOf } from "@/features/collection/tree";
+import { FolderFinder } from "@/features/collection/folder-finder";
+import { folderChoices } from "@/features/collection/folder-picker";
+import { siblingsOf } from "@/features/collection/tree";
 import {
   readImpact,
   SharingImpactBlock,
   SharingImpactPreview,
+  twoLineImpactClass,
 } from "@/features/sharing/sharing-impact";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
@@ -31,6 +33,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -57,6 +60,7 @@ import {
 } from "@tonaris/ui/components/dialog";
 import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
+import { pinnedDialogClass } from "@tonaris/ui/lib/floating";
 
 /** A unit to recover: what it is, where it was, and, after a deletion just made, what that deletion took out. */
 export type RecoveryTarget = {
@@ -274,7 +278,10 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** "'Metal' is in Trash or no longer exists. Choose where to restore 'Doom'." (DS-56) */
+/**
+ * "'Metal' is in Trash or no longer exists. Choose where to restore 'Doom'." (DS-56): "Find a folder" over Collection
+ * and every active folder (TON-183). A click or Enter picks one, checked, with its sharing previewed; Restore restores.
+ */
 function DestinationPrompt({
   target,
   onChoose,
@@ -286,8 +293,8 @@ function DestinationPrompt({
 }) {
   const client = useSyncClient();
   const { tree } = useCollectionData();
-  // Collection and every active folder (DS-56).
-  const places = destinations(tree);
+  const field = useRef<HTMLInputElement>(null);
+  const choices = useMemo(() => folderChoices(tree), [tree]);
   const [chosen, setChosen] = useState<string | null>(null);
   const formerName =
     target.parentId === null
@@ -303,16 +310,19 @@ function DestinationPrompt({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent>
+      <DialogContent initialFocus={field} className={pinnedDialogClass}>
         <DialogHeader>
           <DialogTitle>Restore '{target.name}'</DialogTitle>
           <DialogDescription>
             {former} is in Trash or no longer exists. Choose where to restore '{target.name}'.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <PlaceList mode="radios" places={places} chosen={chosen} onChange={setChosen} />
-          <SharingImpactPreview query={{ recover: target.unitId, to: chosen }} />
+        <form onSubmit={submit} className="flex min-h-0 flex-col gap-4">
+          <FolderFinder choices={choices} field={field} chosen={chosen} onChoose={setChosen} />
+          <SharingImpactPreview
+            query={{ recover: target.unitId, to: chosen }}
+            className={twoLineImpactClass}
+          />
           <DialogFooter>
             <Button type="button" onClick={onCancel}>
               Cancel
