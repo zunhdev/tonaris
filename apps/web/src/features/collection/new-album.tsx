@@ -37,7 +37,6 @@ import {
 import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
-import { Select } from "@tonaris/ui/components/select";
 import { Switch } from "@tonaris/ui/components/switch";
 
 import { releaseTypeOptions } from "./album-edit";
@@ -54,7 +53,7 @@ import { useCollectionDialogs, type NewAlbumDraft } from "./collection-dialogs";
 import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { FormFields } from "./form-fields";
-import { useListOptions } from "./list-options";
+import { ListField } from "./list-field";
 
 const formFields: readonly FormField[] = [
   "title",
@@ -102,8 +101,6 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
     if (problems[field] && (submitted || touched.has(field)))
       shownProblems[field] = problems[field];
   }
-
-  const lists = useListOptions();
 
   const set = (values: Partial<AlbumForm>) => setForm((current) => ({ ...current, ...values }));
   // The applied fields as their editors last saved them, so ⌘Enter from an editor saves its value too.
@@ -335,22 +332,7 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
               <FormFields applied={form.fieldValues} onChange={setFields} />
             )}
 
-            <Field label="List">
-              {(control) => (
-                <Select
-                  {...control}
-                  value={form.listId ?? ""}
-                  onChange={(event) => set({ listId: event.target.value || null })}
-                >
-                  <option value="">No list (goes to Unsorted)</option>
-                  {lists.map((list) => (
-                    <option key={list.id} value={list.id}>
-                      {list.label}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </Field>
+            <ListField listId={form.listId} onChange={(listId) => set({ listId })} />
 
             <DialogFooter>
               <Button type="button" onClick={requestClose}>

@@ -858,6 +858,11 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
 
 *As built in TON-48:* **"Artwork URL"** replaces its line, with the placeholder "https://…". It is optional, checked when left and on submit, with the inspector's reason.
 
+*As built in TON-181* (from the creator's manual testing, 8 November 2026; there can be thousands of lists, and a select showed them all): **the List field** is a button with the chosen list's path, or "No list (goes to Unsorted)", and a chevron. A click, ↓, Enter or Space opens a popover at its width, on the dialog's layer (DS-18), with "Find a list" as "Add to a list" has it (DS-46, TON-177).
+- Before typing, "No list (goes to Unsorted)" comes first, then the 8 suggested lists. Typing finds lists by the words of their path, as there.
+- ↑ and ↓ move, and Enter or a click chooses and closes the popover. The current choice has a check.
+- Esc closes only the popover. The capture dialog's List field is the same (DS-48).
+
 *As built in TON-112:* **"Find artwork"** sits under the Artwork URL, as in the inspector (DS-46), searching for the form's title and artist. Until both are filled, it is disabled with "Enter the title and artist first". Its popover is on the dialog's layer (DS-18). Choosing a cover fills the field. A form completing a capture has no Artwork URL, so no Find artwork.
 
 *As built in TON-46:* **links** replace their line: "Spotify link", "Apple Music link", "Qobuz link" and "Tidal link", each optional, with the placeholder "Album or track link". TON-131 added "YouTube Music link".
@@ -931,6 +936,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - At most 200 links at once: "Add up to 200 links at once."
 - **The capture dialog,** "Add albums", opens from `C` and every "Add album": the sidebar's, the empty list's and the one below a list's rows.
   - It has "Paste Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track links.", a Links textarea ("One link per line"), and the List select from manual entry, defaulting to the list on view.
+    - *As built in TON-181:* the List field finds lists by typing, as manual entry's does (DS-47).
   - **Add** or ⌘Enter captures every non-empty line; a line that isn't a link gets its reason in its row. With none: "Paste at least one Spotify, Apple Music, Qobuz, Tidal or YouTube Music link."
   - "Enter manually" opens DS-47 for the chosen list.
 - **Placeholder rows** sit at the top of the destination view, the list or Unsorted, in "Albums being added", whatever the sort, since the album's place is known only once it is identified. The section scrolls past 40% of the view.

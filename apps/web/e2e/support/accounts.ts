@@ -108,6 +108,8 @@ export const accounts = {
   capturePasted: at("capture-pasted"),
   // A very long list name in the capture dialog (capture.e2e.ts, TON-180).
   captureLongName: at("capture-long-name"),
+  // The List field finding lists by typing (capture.e2e.ts, TON-181).
+  captureListField: at("capture-list-field"),
   // Opening a service (open-in.e2e.ts), one per test.
   openDesktop: at("open-desktop"),
   openKeys: at("open-keys"),

@@ -579,7 +579,7 @@ test("the form saves into the list on view, and live albums need only their reco
     .getByRole("button", { name: "Enter manually" })
     .click();
   const form = page.getByRole("dialog", { name: "New album" });
-  await expect(form.getByRole("combobox", { name: "List" })).toHaveValue(doom.id);
+  await expect(form.getByRole("combobox", { name: "List", exact: true })).toHaveText("Doom");
   // The release type starts at Album (TON-161), and Single is a choice after EP (TON-164).
   const releaseType = form.getByRole("radiogroup", { name: "Release type" });
   await expect(releaseType.getByRole("radio", { name: "Album" })).toBeChecked();
