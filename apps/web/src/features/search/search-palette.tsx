@@ -59,6 +59,7 @@ import {
   type SharedSearchContainer,
 } from "@tonaris/domain";
 import { CommandDialog, CommandDialogContent } from "@tonaris/ui/components/command";
+import { Input } from "@tonaris/ui/components/input";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import {
@@ -469,9 +470,15 @@ function PaletteBody({
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-2 border-b border-subtle px-4">
-        <Search strokeWidth={1.5} aria-hidden className="size-4 shrink-0 text-fg-tertiary" />
-        <input
+      {/* A field with room around it for DS-115's ring, with the icon inside, as "Find a list" has (TON-182). Its
+          text lines up with the results' names. */}
+      <div className="relative shrink-0 border-b border-subtle p-3">
+        <Search
+          strokeWidth={1.5}
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 left-5.5 size-4 -translate-y-1/2 text-fg-tertiary"
+        />
+        <Input
           ref={field}
           role="combobox"
           aria-label="Search"
@@ -488,8 +495,7 @@ function PaletteBody({
             setActive(0);
           }}
           onKeyDown={onKeyDown}
-          // DS-115's ring, inset, so the palette's edge doesn't clip it.
-          className="h-12 min-w-0 flex-1 rounded-md bg-transparent px-1 text-[0.875rem]/5 text-fg-primary outline-none placeholder:text-fg-tertiary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid max-md:text-[1rem]"
+          className="h-9 pl-8"
         />
       </div>
       <div
