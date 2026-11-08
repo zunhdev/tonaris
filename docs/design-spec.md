@@ -1379,6 +1379,7 @@ The block never says "private" while another access path remains.
   - It sits 12% from the top, 640px wide, on the palette layer (DS-18).
   - Below 768px it fills the screen, inside the safe area, opened from the top bar's Search (DS-110, TON-103).
   - Its field reads "Search, or type > for commands…" (TON-63).
+  - *As built in TON-182* (from the creator's manual testing, 8 November 2026): the field is a 36px box like other fields, with the search icon inside it, 12px in from the palette's edges. DS-115's ring has room all round it, and the field's text lines up with the results' names. Before, the field filled its 48px strip and the ring touched the palette's edge.
   - With no match it says "No results for '{query}'."
 - **Groups:** Folders, Lists, Albums, each with a heading, up to 8 results, then a "Show all {n}" option that expands the group in place.
 - **Order within a group** (decided with the creator, 28 October 2026):
