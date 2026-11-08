@@ -1,11 +1,11 @@
 // The capture dialog (DS-48; FR-02.1, FR-02.2, FR-02.4): `C` or "+ Add album" opens "Add albums", which takes one link
-// per line and a destination: the list on view, another list, or none, so the albums go to Unsorted. Add, or ⌘Enter,
-// captures each line; a line that isn't a link gets its reason in its row, as a paste's would. "Enter manually" opens
-// the manual entry form for the same destination instead (DS-47).
+// per line and a destination: the list on view, another list found by typing (TON-181), or none, so the albums go to
+// Unsorted. Add, or ⌘Enter, captures each line; a line that isn't a link gets its reason in its row, as a paste's
+// would. "Enter manually" opens the manual entry form for the same destination instead (DS-47).
 
 import { emptyForm } from "@/features/collection/album-form";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
-import { useListOptions } from "@/features/collection/list-options";
+import { ListField } from "@/features/collection/list-field";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useRef, useState, type FormEvent } from "react";
 
@@ -19,7 +19,6 @@ import {
   DialogTitle,
 } from "@tonaris/ui/components/dialog";
 import { Field } from "@tonaris/ui/components/field";
-import { Select } from "@tonaris/ui/components/select";
 import { Textarea } from "@tonaris/ui/components/textarea";
 
 import { useCapture } from "./capture-context";
@@ -40,7 +39,6 @@ export function CaptureDialog() {
 function CaptureForm({ listId: initialList }: { listId: string | null }) {
   const ui = useCapture();
   const { startNewAlbum } = useCollectionDialogs();
-  const lists = useListOptions();
   const [text, setText] = useState("");
   const [listId, setListId] = useState(initialList);
   const [problem, setProblem] = useState<string>();
@@ -107,22 +105,7 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
             )}
           </Field>
 
-          <Field label="List">
-            {(control) => (
-              <Select
-                {...control}
-                value={listId ?? ""}
-                onChange={(event) => setListId(event.target.value || null)}
-              >
-                <option value="">No list (goes to Unsorted)</option>
-                {lists.map((list) => (
-                  <option key={list.id} value={list.id}>
-                    {list.label}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
+          <ListField listId={listId} onChange={setListId} />
 
           <div className="flex items-center justify-between gap-2">
             <Button

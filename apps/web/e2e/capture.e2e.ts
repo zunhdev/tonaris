@@ -3,12 +3,12 @@
 // capture dialog; albums of each service and a track's album; Unsorted with Add to list; manual entry with the link
 // kept, prefilled or after a failure; a failure kept across a reload; the decision card; a batch's panel and report;
 // already in the list; a kept link replaced from the inspector; with an album open in the inspector, a paste going to
-// its links instead (TON-160); and a very long list name staying inside the dialogs (TON-180). Each test signs in with
-// its own account.
+// its links instead (TON-160); a very long list name staying inside the dialogs (TON-180); and the List field finding
+// lists by typing (TON-181). Each test signs in with its own account.
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { maxNameLength } from "@tonaris/domain";
+import { maxNameLength, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
@@ -20,6 +20,7 @@ import {
   live,
   saved,
   toasts,
+  violations,
 } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -84,6 +85,14 @@ async function paste(page: Page, text: string): Promise<void> {
 const grid = (page: Page, name: string) => page.getByRole("grid", { name });
 const rowOf = (page: Page, gridName: string, text: string) =>
   grid(page, gridName).getByRole("row").filter({ hasText: text });
+/** A dialog's List field, and the "Find a list" field of the popover it opens (TON-181). */
+const listField = (dialog: Locator) => dialog.getByRole("combobox", { name: "List", exact: true });
+const finder = (page: Page) => page.getByRole("combobox", { name: "Find a list" });
+const folder = (name: string, parentId: string | null): Container => ({
+  ...listNamed(name),
+  kind: "folder",
+  parentId,
+});
 const capturing = (page: Page) => page.getByRole("region", { name: "Albums being added" });
 const captureRow = (page: Page, text: string) =>
   capturing(page).getByRole("listitem").filter({ hasText: text });
@@ -104,7 +113,7 @@ test("album links of each service resolve into the list, pasted or added from th
 }) => {
   await signIn(page, accounts.captureList);
   await live(page);
-  const grunge = await inList(page, "Grunge");
+  await inList(page, "Grunge");
 
   await paste(page, links.bleachSpotify);
   await expect(rowOf(page, "Grunge", "Bleach")).toContainText("1989");
@@ -115,7 +124,7 @@ test("album links of each service resolve into the list, pasted or added from th
 
   await page.keyboard.press("c");
   const dialog = page.getByRole("dialog", { name: "Add albums" });
-  await expect(dialog.getByRole("combobox", { name: "List" })).toHaveValue(grunge.id);
+  await expect(listField(dialog)).toHaveText("Grunge");
   await dialog
     .getByRole("textbox", { name: "Links" })
     .fill(
@@ -153,11 +162,14 @@ const spills = (dialog: Locator) =>
       (control) => {
         const { left, right } = control.getBoundingClientRect();
         if (left >= box.left && right <= box.right) return [];
-        const label =
-          control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement
+        const labelled =
+          control instanceof HTMLButtonElement ||
+          control instanceof HTMLInputElement ||
+          control instanceof HTMLSelectElement ||
+          control instanceof HTMLTextAreaElement
             ? control.labels?.[0]?.textContent
-            : (control.getAttribute("aria-label") ?? control.textContent);
-        return [label ?? control.tagName];
+            : undefined;
+        return [labelled ?? control.getAttribute("aria-label") ?? control.textContent];
       },
     );
     return element.scrollWidth > element.clientWidth ? [...controls, "sideways scroll"] : controls;
@@ -173,19 +185,93 @@ test("a very long list name stays inside Add albums and the manual entry form (T
     page,
     "A list with a very long name ".repeat(7).slice(0, maxNameLength).trim(),
   );
-  const grunge = await inList(page, "Grunge");
+  await inList(page, "Grunge");
 
   await page.keyboard.press("c");
   const dialog = page.getByRole("dialog", { name: "Add albums" });
-  const picker = dialog.getByRole("combobox", { name: "List" });
-  await expect(picker).toHaveValue(grunge.id);
+  await expect(listField(dialog)).toHaveText("Grunge");
   await expect.poll(() => spills(dialog)).toEqual([]);
-  await picker.selectOption(long.id);
+  await listField(dialog).click();
+  await finder(page).fill("very long");
+  await page.keyboard.press("Enter");
+  await expect(finder(page)).toHaveCount(0);
+  await expect(listField(dialog)).toHaveText(long.name);
   await expect.poll(() => spills(dialog)).toEqual([]);
 
   await dialog.getByRole("button", { name: "Enter manually" }).click();
-  await expect(form(page).getByRole("combobox", { name: "List" })).toHaveValue(long.id);
+  await expect(listField(form(page))).toHaveText(long.name);
   await expect.poll(() => spills(form(page))).toEqual([]);
+});
+
+test("the List field finds a list by typing, in a popover Esc closes alone, or goes to no list (TON-181)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.captureListField);
+  await live(page);
+  const rock = folder("Русский рок", null);
+  const decade = folder("4 2000-2010-е", rock.id);
+  const zemfira = { ...listNamed("Земфира"), parentId: decade.id };
+  const mixes = Array.from({ length: 9 }, (_, at) => listNamed(`Mix ${at + 1}`));
+  await insert(page, rock, decade, zemfira, ...mixes);
+  await saved(page);
+  await inList(page, "Grunge");
+  const path = "Русский рок › 4 2000-2010-е › Земфира";
+
+  await page.keyboard.press("c");
+  const dialog = page.getByRole("dialog", { name: "Add albums" });
+  const field = listField(dialog);
+  await field.click();
+  await expect(finder(page)).toBeFocused();
+  // No list first, then 8 lists by path, the chosen one checked; the other 3 are found by typing.
+  const options = page.getByRole("listbox", { name: "Lists" }).getByRole("option");
+  await expect(options).toHaveCount(9);
+  await expect(options.first()).toHaveText("No list (goes to Unsorted)");
+  await expect(options.filter({ hasText: "Grunge" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByText("Type to find the other 3 lists.")).toBeVisible();
+  expect(await violations(page, '[data-slot="popover-content"]')).toEqual([]);
+
+  // A folder's word and a name's; Enter chooses, closing only the popover.
+  await page.keyboard.type("2000 ЗЕМФ");
+  await expect(options).toHaveText([path]);
+  await page.keyboard.press("Enter");
+  await expect(finder(page)).toHaveCount(0);
+  await expect(field).toHaveText(path);
+  await expect(field).toBeFocused();
+
+  // ↓ opens it too, and Esc closes the popover, not the dialog.
+  await page.keyboard.press("ArrowDown");
+  await expect(finder(page)).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(finder(page)).toHaveCount(0);
+  await expect(field).toBeFocused();
+  await expect(dialog).toBeVisible();
+
+  // Manual entry keeps the list, and its Esc too closes only the popover.
+  await dialog.getByRole("button", { name: "Enter manually" }).click();
+  const manual = listField(form(page));
+  await expect(manual).toHaveText(path);
+  await manual.click();
+  await expect(finder(page)).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(finder(page)).toHaveCount(0);
+  await expect(form(page)).toBeVisible();
+  await form(page).getByRole("button", { name: "Cancel" }).click();
+  await expect(form(page)).toHaveCount(0);
+
+  // No list, the first option, sends the album to Unsorted.
+  await page.keyboard.press("c");
+  await expect(field).toHaveText("Grunge");
+  await field.press("Enter");
+  await expect(finder(page)).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveText("No list (goes to Unsorted)");
+  await dialog.getByRole("textbox", { name: "Links" }).fill(links.bleachSpotify);
+  await page.keyboard.press("Meta+Enter");
+  await expect(dialog).toHaveCount(0);
+  await expect(toasts(page).filter({ hasText: "Added 'Bleach' to Unsorted" })).toBeVisible();
+  await page.goto("/unsorted");
+  await live(page);
+  await expect(rowOf(page, "Unsorted", "Bleach")).toContainText("Nirvana");
 });
 
 test("a link pasted outside a list goes to Unsorted, and Add to list is offered", async ({
