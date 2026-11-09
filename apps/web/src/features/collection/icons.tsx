@@ -11,10 +11,13 @@ import { iconColorClass } from "./container-palette";
 export function ContainerIcon({
   kind,
   color = null,
+  className,
 }: {
   kind: ContainerKind;
   /** Its own or its folder's color, null for none (`effectiveColor`). */
   color?: ContainerColor | null;
+  /** Its size, if not 16 px: a phone's two-line rows take 20 px (TON-184). */
+  className?: string;
 }) {
   const Icon = kind === "folder" ? Folder : ListMusic;
   return (
@@ -25,6 +28,7 @@ export function ContainerIcon({
       className={cn(
         "size-4 shrink-0",
         color !== null && [iconColorClass[color], "fill-current/25"],
+        className,
       )}
     />
   );

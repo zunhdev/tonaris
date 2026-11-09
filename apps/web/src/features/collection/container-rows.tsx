@@ -2,7 +2,8 @@
 // with its icon and name, as a link, and its count: albums for a list, folders and lists for a folder. Sorted by
 // creation date, a Created column shows when each was made, which its UUIDv7 ID holds (TS-10). Enter opens it from
 // any cell. A description's first line follows the name; DS-41's sharing glyph isn't shown yet. Each row shows its
-// save state, is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83).
+// save state, is busy while saving and highlighted when changed elsewhere (DS-80, DS-82, DS-83). On a phone, a row is
+// one cell, all of it the link: the name across the full width, and the count and description under it (TON-184).
 
 // Virtualized rows are absolutely positioned CSS grid rows, which table elements can't be without overriding their
 // display, and that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -16,7 +17,15 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useEffect, useId, useMemo, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+} from "react";
 
 import { uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -31,8 +40,8 @@ import { useGridFocus, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
-/** A phone's rows (DS-110): tall enough for a 44 px touch target. */
-const phoneRowHeight = 48;
+/** A phone's rows (DS-110): two lines, the name over the count, as tall as album rows (TON-184). */
+const phoneRowHeight = 56;
 
 const createdDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
@@ -65,7 +74,8 @@ export function ContainerRows({
   const height = compact ? phoneRowHeight : rowHeight;
   // A phone has no room for the creation date.
   const showCreated = createdChosen && !compact;
-  const columns = showCreated ? 3 : 2;
+  // A phone's row is one cell, the count under the name (TON-184).
+  const columns = compact ? 1 : showCreated ? 3 : 2;
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
@@ -125,7 +135,7 @@ export function ContainerRows({
           <div role="row" aria-rowindex={1}>
             <span role="columnheader">Name</span>
             {showCreated && <span role="columnheader">Created</span>}
-            <span role="columnheader">Contents</span>
+            {!compact && <span role="columnheader">Contents</span>}
           </div>
         </div>
         <div role="rowgroup" className="relative" style={{ height: virtualizer.getTotalSize() }}>
@@ -184,7 +194,7 @@ function ContainerRow({
   index: number;
   top: number;
   height: number;
-  /** A phone's row: the count in a narrower column (DS-110). */
+  /** A phone's row: one cell, the count under the name (DS-110, TON-184). */
   compact: boolean;
   cellProps: ReturnType<typeof useGridFocus>["cellProps"];
 }) {
@@ -205,14 +215,15 @@ function ContainerRow({
     [dragRef],
   );
   const status = useSaveState(container.id);
+  const nameId = useId();
   const descriptionId = useId();
   const excerpt = container.description?.split("\n")[0];
-  const name = (
-    <>
-      <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
-      <span className="truncate">{container.name}</span>
-      <SaveStateMarker status={status} />
-    </>
+  const icon = (
+    <ContainerIcon
+      kind={container.kind}
+      color={effectiveColor(container, tree.byId)}
+      className={compact ? "size-5" : undefined}
+    />
   );
   // With a description after it, the name keeps its width, up to 60%, and the description gives way first. Without
   // one, the name shrinks and ends in an ellipsis before the count (TON-156).
@@ -234,7 +245,7 @@ function ContainerRow({
         "group/row absolute inset-x-0 top-0 grid items-stretch rounded-md px-2 hover:bg-hover",
         drag.dragging && "opacity-40",
         compact
-          ? "grid-cols-[minmax(0,1fr)_auto]"
+          ? "grid-cols-[minmax(0,1fr)]"
           : createdOn === undefined
             ? "grid-cols-[minmax(0,1fr)_12rem]"
             : "grid-cols-[minmax(0,1fr)_9rem_12rem]",
@@ -243,35 +254,49 @@ function ContainerRow({
     >
       {manual && <DragHandle {...drag.handle} />}
       {drag.side && <DropLine side={drag.side} />}
-      <div role="gridcell" className="flex min-w-0 items-center">
-        {container.kind === "folder" ? (
-          <Link
-            to="/f/$folderId"
-            params={{ folderId: container.id }}
+      {compact ? (
+        // A phone's row is one cell, and all of it opens the folder or list: the name across the full width, and
+        // under it the count, then the description's first line, which describe the link (TON-184).
+        <div role="gridcell" className="flex min-w-0">
+          <ContainerLink
+            container={container}
+            className={cn(focusable, "flex min-w-0 flex-1 items-center gap-3 rounded-sm")}
+            aria-labelledby={nameId}
+            aria-describedby={descriptionId}
+            {...cellProps(index, 0)}
+          >
+            {icon}
+            <span className="flex min-w-0 flex-col">
+              <span id={nameId} className="flex min-w-0 items-center gap-2.5 text-fg-primary">
+                <span className="truncate">{container.name}</span>
+                <SaveStateMarker status={status} />
+              </span>
+              <span id={descriptionId} className="truncate text-small text-fg-tertiary">
+                {excerpt ? `${contents} · ${excerpt}` : contents}
+              </span>
+            </span>
+          </ContainerLink>
+        </div>
+      ) : (
+        <div role="gridcell" className="flex min-w-0 items-center">
+          <ContainerLink
+            container={container}
             className={link}
             aria-describedby={excerpt ? descriptionId : undefined}
             {...cellProps(index, 0)}
           >
-            {name}
-          </Link>
-        ) : (
-          <Link
-            to="/l/$listId"
-            params={{ listId: container.id }}
-            className={link}
-            aria-describedby={excerpt ? descriptionId : undefined}
-            {...cellProps(index, 0)}
-          >
-            {name}
-          </Link>
-        )}
-        {/* The description's first line, after the name (DS-41); the link's description for assistive technology. */}
-        {excerpt && (
-          <span id={descriptionId} className="min-w-0 truncate pr-3 text-fg-tertiary">
-            {excerpt}
-          </span>
-        )}
-      </div>
+            {icon}
+            <span className="truncate">{container.name}</span>
+            <SaveStateMarker status={status} />
+          </ContainerLink>
+          {/* The description's first line, after the name (DS-41); the link's description for assistive technology. */}
+          {excerpt && (
+            <span id={descriptionId} className="min-w-0 truncate pr-3 text-fg-tertiary">
+              {excerpt}
+            </span>
+          )}
+        </div>
+      )}
       {createdOn !== undefined && (
         <div
           role="gridcell"
@@ -281,13 +306,30 @@ function ContainerRow({
           {createdOn}
         </div>
       )}
-      <div
-        role="gridcell"
-        className={cn(focusable, "flex items-center rounded-sm text-fg-tertiary")}
-        {...cellProps(index, createdOn === undefined ? 1 : 2)}
-      >
-        {contents}
-      </div>
+      {!compact && (
+        <div
+          role="gridcell"
+          className={cn(focusable, "flex items-center rounded-sm text-fg-tertiary")}
+          {...cellProps(index, createdOn === undefined ? 1 : 2)}
+        >
+          {contents}
+        </div>
+      )}
     </div>
+  );
+}
+
+/** A link opening the folder or list. */
+function ContainerLink({
+  container,
+  ...props
+}: { container: Container; children: ReactNode } & Omit<
+  ComponentPropsWithoutRef<"a">,
+  "href" | "children"
+>) {
+  return container.kind === "folder" ? (
+    <Link to="/f/$folderId" params={{ folderId: container.id }} {...props} />
+  ) : (
+    <Link to="/l/$listId" params={{ listId: container.id }} {...props} />
   );
 }
