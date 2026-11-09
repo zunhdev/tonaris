@@ -95,11 +95,10 @@ test("visiting the root lands on the collection", async ({ page }) => {
   await expect(page.getByRole("main", { name: "Collection" })).toBeVisible();
 });
 
-for (const path of ["/c", "/sign-in"]) {
-  test(`${path} has no axe violations`, async ({ page }) => {
-    await page.goto(path);
-    await page.getByRole("main").waitFor();
-    const violations = await pageViolations(page);
-    expect(violations.map(({ id, nodes }) => `${id} (${nodes.length})`)).toEqual([]);
-  });
-}
+// Signed in, `/sign-in` sends the person on (TON-185); sign-in.e2e.ts checks it signed out.
+test("/c has no axe violations", async ({ page }) => {
+  await page.goto("/c");
+  await page.getByRole("main").waitFor();
+  const violations = await pageViolations(page);
+  expect(violations.map(({ id, nodes }) => `${id} (${nodes.length})`)).toEqual([]);
+});
