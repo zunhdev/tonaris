@@ -6,7 +6,7 @@
 // from far down a folder opening at its top (TON-157).
 
 import { AxeBuilder } from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { uuidv7, type Container } from "@tonaris/domain";
 
@@ -64,6 +64,9 @@ const axe = async (page: Page) => {
       .analyze()
   ).violations.map((violation) => violation.id);
 };
+
+/** Where something is on the page, once it is there. */
+const boxOf = async (part: Locator) => (await part.boundingBox())!;
 
 test("a phone browses by drilling down, and opens an album in a sheet", async ({ page }) => {
   await signIn(page, accounts.phone);
@@ -128,28 +131,31 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
 
-  // A long name ends in an ellipsis before its row's count, which shows in full (TON-156).
-  const period: Container = {
-    ...list("1 Классический период русского рока, 80-е и 90-е годы"),
-    kind: "folder",
-  };
-  await insert(page, period);
-  const periodRow = page
-    .getByRole("grid", { name: "Collection" })
-    .getByRole("row")
-    .filter({ hasText: "Классический период" });
-  const periodName = periodRow.getByRole("link");
-  const periodCount = periodRow.getByRole("gridcell").last();
-  await expect(periodCount).toHaveText("0 folders and lists");
-  const nameEnd = await periodName.evaluate((link) => link.getBoundingClientRect().right);
-  const countStart = await periodCount.evaluate((cell) => cell.getBoundingClientRect().left);
-  expect(nameEnd).toBeLessThanOrEqual(countStart);
+  // A row is one cell of two lines, 56 px: a long name takes the full width and ends in an ellipsis at the row's
+  // edge, with the count under it (TON-156, TON-184). The link is named by the name, and described by the count.
+  const periodName = "1 Классический период русского рока, 80-е и 90-е годы";
+  await insert(page, { ...list(periodName), kind: "folder" });
+  const grid = page.getByRole("grid", { name: "Collection" });
+  await expect(grid).toHaveAttribute("aria-colcount", "1");
+  const periodRow = grid.getByRole("row").filter({ hasText: "Классический период" });
+  const periodLink = periodRow.getByRole("link", { name: periodName, exact: true });
+  await expect(periodLink).toHaveAccessibleDescription("0 folders and lists");
+  await expect(periodRow.getByRole("gridcell")).toHaveCount(1);
+  const rowBox = await boxOf(periodRow);
+  const linkBox = await boxOf(periodLink);
+  const nameBox = await boxOf(periodRow.getByText(periodName));
+  const countBox = await boxOf(periodRow.getByText("0 folders and lists"));
+  expect(rowBox.height).toBe(56);
+  // The link fills the row, inside its 8 px padding, and the name runs to the link's edge.
+  expect(Math.round(linkBox.x + linkBox.width)).toBe(Math.round(rowBox.x + rowBox.width - 8));
+  expect(Math.round(nameBox.x + nameBox.width)).toBe(Math.round(linkBox.x + linkBox.width));
+  expect(countBox.y).toBeGreaterThanOrEqual(nameBox.y + nameBox.height - 1);
   expect(
-    await periodName.locator(".truncate").evaluate((name) => name.scrollWidth > name.clientWidth),
+    await periodRow.getByText(periodName).evaluate((name) => name.scrollWidth > name.clientWidth),
   ).toBe(true);
-  expect(await periodCount.evaluate((cell) => cell.scrollWidth <= cell.clientWidth)).toBe(true);
 
-  await page.getByRole("link", { name: "Metal" }).click();
+  // A tap on the count opens the folder too.
+  await page.getByText("1 folder or list", { exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Metal" })).toBeVisible();
   await page.getByRole("link", { name: "Doom" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Doom" })).toBeVisible();

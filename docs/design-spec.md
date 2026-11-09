@@ -663,6 +663,8 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **Order:** the view's sort (DS-42), the same as the tree's.
 - **Created:** sorted by creation date, a Created column between the name and the contents shows each one's date, in the browser's medium date style ("Oct 23, 2026"). The date comes from the folder's or list's UUIDv7 ID, made when it was created (TS-10).
 
+*As built in TON-184:* **on a phone, a row is one cell of two lines,** the count and description under the name (DS-110).
+
 *As built in TON-174* (the creator picked variant 13C from TON-166's mock, 7 November 2026): **cards.** In Grid, a folder's or the root's folders and lists are cards, sized and walked as album cards are (DS-22, DS-40): at least 160 px, 16 px apart, a virtualized ARIA grid, the arrows moving card by card, Enter opening, ⌥↑ and ⌥↓ rearranging under Manual. Each card is a link with:
 - **a fan of its first three covers:** a list's first albums in its person's presentation of it (sort, grouping and manual order); a subfolder's, the first found in its folders and lists, top to bottom in its own order (decided with the creator). The first is in front at the bottom left, 88% of the card, each behind it 6% up and to the right and dimmer (75%, then 50% brightness), so the fan fills the card; one or two are centred the same way. *As built in TON-178:* the creator found the first fan, 76% covers 12% apart, "too heavy for eyes" and asked to halve the step while keeping the covers behind visible; the covers grew to keep the fan's outline (7 November 2026). Covers have their edge and shadow (DS-23). An empty list or folder shows its icon on a `bg.raised` tile;
 - **its name and what it holds,** "9 albums" or "3 folders and lists", in `text.small` `fg.tertiary`;
@@ -2048,6 +2050,11 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 - The creator chose this over a Home button in the top bar, a breadcrumb row under it, or a long press on Back.
 
 *Fixed in TON-156* (from the creator's manual testing, 2 November 2026): **a long folder or list name ends in an ellipsis before its count.** The name kept its full width so that a description after it would give way first (TON-54), but with no description nothing limited it, and it ran under the count, "2 folders and lists". A phone's count column is only as wide as its text, so it showed there first. Now the name keeps its width only when a description follows it. A phone test checks a long name.
+
+*As built in TON-184* (from the creator's manual testing on Android; the creator proposed it, 9 November 2026): **a phone's folder and list rows put the count under the name.** The count's column, as wide as "22 folders and lists", took almost half the screen and cut names like "Независимая сцена …" short.
+- **Two lines, 56 px,** the height of album rows. The first has the icon, now 20 px, the name and its save state, across the full width. The second has the count in `text.small` `fg.tertiary`, then " · " and a description's first line, which no longer follows the name.
+- **One cell, all of it the link,** so a tap anywhere on the row opens it, the count included. The link is named by its name and described by the second line.
+- Desktop rows and cards don't change. A phone test checks a long name's row: 56 px, the name to the row's edge with an ellipsis, and the count under it.
 
 *As built in TON-115:* **installable.** `/manifest.webmanifest` names the app "Tonaris", starts at `/c`, displays `standalone`, and gives `bg.app`'s color as its background and theme, with TON-114's icons: 192 and 512 px, and a maskable 512 px.
 - **Android Chrome** offers "Install app" in its menu, and the installed app opens without browser chrome.
