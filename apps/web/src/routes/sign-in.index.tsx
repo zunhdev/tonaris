@@ -2,7 +2,7 @@
 // nothing about who has an account; the email itself says when there is none. **Sign in with a passkey** under it,
 // and the email field's autofill, sign in with a passkey instead (TON-143). "Lost access to your email?" leads
 // to `/help/recovery` (DS-93). When the API's authorization server sends someone here to connect an AI client
-// (TS-61), signing in continues that request.
+// (TS-61), signing in continues that request. Someone already signed in is sent on (TON-185).
 
 import {
   type AuthResult,
@@ -13,7 +13,7 @@ import {
 } from "@/features/account/auth-client";
 import { forgetSignIn, rememberSignIn } from "@/features/account/pending-sign-in";
 import { safeRedirect } from "@/features/account/redirect";
-import { forgetAccount } from "@/features/account/session";
+import { currentAccount, forgetAccount } from "@/features/account/session";
 import { signInTitleId } from "@/features/account/sign-in-card";
 import { authorizeContinuation } from "@/features/connections/oauth";
 import { browserSupportsWebAuthn, browserSupportsWebAuthnAutofill } from "@simplewebauthn/browser";
@@ -60,6 +60,23 @@ function EmailStep() {
     setSending(false);
     if (result.reason !== "cancelled") setError(authFailureMessage(result));
   }
+
+  // Someone already signed in goes on, to the page they asked for or to `/`, their last view (TON-185). An AI client's
+  // sign-in stays: its client may have asked for a fresh one (`prompt=login`).
+  useEffect(() => {
+    let open = true;
+    async function goOn() {
+      if (requested?.startsWith("/oauth/")) return;
+      const account = await currentAccount().catch(() => undefined);
+      if (open && account) router.history.replace(requested ? safeRedirect(requested) : "/");
+    }
+    void goOn();
+    return () => {
+      open = false;
+    };
+    // Once, on arrival.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The email field offers saved passkeys while the page is open, where the browser can (TON-143).
   useEffect(() => {

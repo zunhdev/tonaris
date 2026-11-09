@@ -1,8 +1,10 @@
 // The landing page (TON-155, DS-120) at `/welcome`, where a signed-out visit to `/` arrives: what Tonaris is, the
 // workspace as it looks, How it works in four steps, What sets it apart, On your phone, and Sign in. Direction 1, "in
 // the app's clothes", that the creator chose: the app's dark tokens, larger type (DS-13's landing sizes), and pictures
-// drawn from the app's parts with invented albums (pictures.tsx). Rendered on the server and static.
+// drawn from the app's parts with invented albums (pictures.tsx). Rendered on the server and static; once the browser
+// knows the visitor is signed in, its Sign in buttons become Open Tonaris, to their collection (TON-185).
 
+import { useSignedIn } from "@/features/account/session";
 import { LegalLinks } from "@/features/legal/legal-page";
 import { Link } from "@tanstack/react-router";
 import { Bot, ChevronDown, Download, FolderTree, Share2, Zap, type LucideIcon } from "lucide-react";
@@ -37,12 +39,28 @@ const card = "flex min-w-0 flex-col rounded-2xl border border-subtle bg-panel";
 
 const services = ["Spotify", "Apple Music", "Qobuz", "Tidal", "YouTube Music"];
 
+/**
+ * Sign in, or, for a visitor already signed in, Open Tonaris, which goes to `/` and so to their last view (TON-185).
+ */
+function EntryLink({ signedIn, className }: { signedIn: boolean; className: string }) {
+  return signedIn ? (
+    <Link to="/" className={className}>
+      Open Tonaris
+    </Link>
+  ) : (
+    <Link to="/sign-in" className={className}>
+      Sign in
+    </Link>
+  );
+}
+
 export function LandingPage() {
+  const signedIn = useSignedIn();
   return (
     <div className="min-h-dvh bg-app text-body text-fg-primary">
-      <Header />
+      <Header signedIn={signedIn} />
       <main aria-labelledby={landingTitleId}>
-        <Hero />
+        <Hero signedIn={signedIn} />
         <div className="mx-auto w-full max-w-[78rem] px-4 sm:px-6">
           <WorkspacePicture />
         </div>
@@ -50,7 +68,7 @@ export function LandingPage() {
         <Features />
         <OnYourPhone />
         <AndAlso />
-        <Closing />
+        <Closing signedIn={signedIn} />
       </main>
       <footer className="border-t border-subtle">
         <div
@@ -71,7 +89,7 @@ export function LandingPage() {
   );
 }
 
-function Header() {
+function Header({ signedIn }: { signedIn: boolean }) {
   const section = "text-fg-secondary hover:text-fg-primary";
   return (
     <header className="sticky top-0 z-10 border-b border-subtle bg-app/85 backdrop-blur-md">
@@ -92,19 +110,17 @@ function Header() {
               On your phone
             </a>
           </span>
-          <Link
-            to="/sign-in"
+          <EntryLink
+            signedIn={signedIn}
             className={buttonVariants({ size: "lg", className: "h-11 px-4 md:h-9 md:px-3.5" })}
-          >
-            Sign in
-          </Link>
+          />
         </nav>
       </div>
     </header>
   );
 }
 
-function Hero() {
+function Hero({ signedIn }: { signedIn: boolean }) {
   return (
     <section
       className={cn(
@@ -125,9 +141,7 @@ function Hero() {
         yours.
       </p>
       <div className="mt-2 flex flex-wrap justify-center gap-3">
-        <Link to="/sign-in" className={primary}>
-          Sign in
-        </Link>
+        <EntryLink signedIn={signedIn} className={primary} />
         <a href="#how" className={secondary}>
           See how it works
           <ChevronDown strokeWidth={1.75} aria-hidden />
@@ -362,7 +376,7 @@ function AndAlso() {
   );
 }
 
-function Closing() {
+function Closing({ signedIn }: { signedIn: boolean }) {
   return (
     <section
       aria-labelledby="closing-title"
@@ -373,12 +387,12 @@ function Closing() {
         Your collection, the way you think about it
       </h2>
       <p className="max-w-lg text-lead text-fg-secondary">
-        Tonaris is invitation-only for now. Got an invitation? Open the link in its email. Already
-        in? Sign in with your email or a passkey.
+        Tonaris is invitation-only for now.{" "}
+        {signedIn
+          ? "You're signed in, so your collection is one click away."
+          : "Got an invitation? Open the link in its email. Already in? Sign in with your email or a passkey."}
       </p>
-      <Link to="/sign-in" className={cn(primary, "mt-2")}>
-        Sign in
-      </Link>
+      <EntryLink signedIn={signedIn} className={cn(primary, "mt-2")} />
     </section>
   );
 }

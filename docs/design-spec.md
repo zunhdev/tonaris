@@ -1725,6 +1725,8 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **The wordmark above the card** links to `/welcome`, named "Tonaris, what it is", with a hover and focus ring, on the pages a signed-out visitor reaches: the sign-in steps, the admission landing (DS-91), recovery help, account recovery and the account-deleted page.
 - **It stays plain** on pages for signed-in people in the same frame: approvals, connection consent and the agreement screen.
 
+*As built in TON-185* (9 November 2026): **someone already signed in doesn't get the form.** `/sign-in` asks the API in the browser, after the page shows, and sends a signed-in person on, replacing the page in history: to the page asked for (`redirect`, through the same checks), or else to `/`, their last view. This covers the landing page's and guest pages' Sign in, and bookmarks. **An AI client's sign-in stays** on the form (a `redirect` to `/oauth/…`), since the client may have asked for a fresh sign-in (`prompt=login`).
+
 **DS-91 Admission landing** (`/join/:admissionToken`). *(FR-11.2, FR-11.6, FR-11.3)*
 1. "You're invited to Tonaris", showing the bound email.
 2. **Continue** sends a code to that email and leads to the verify screen.
@@ -1942,6 +1944,10 @@ The creator chose direction 1, "in the app's clothes", refined, from sketches on
 - **Folders within folders:** the tree is in colors with guide lines, and the selected folder Japanese's folder and list show as cards with their covers fanned (from 640 px). Static Bloom's list chips are tinted.
 - **Steps and features:** the Add album box's field is filled and has the focus ring. Open in… is a frosted popover over Field Notes' cover. The share link's field is filled, and search is frosted, its list in its color.
 - **Every cover** has the faint edge, and covers on cards and in the panel are raised, as in the app (DS-22).
+
+*As built in TON-185* (from the creator's manual testing, 9 November 2026): **a signed-in visitor is offered Open Tonaris.** Signed-in people reach the page through the guest page's wordmark, links passed on, or to look at it, and Sign in gave them the email form again.
+- **The server's page stays the same for everyone,** with Sign in, so crawlers, link previews and caching are unaffected.
+- **Once the browser learns the visitor is signed in** (`GET /v1/me`, as the workspace asks), the header's, the hero's and the close's Sign in become **Open Tonaris**, to `/` and so to the last view. The close reads "Tonaris is invitation-only for now. You're signed in, so your collection is one click away." Until the answer comes, a signed-in visitor sees Sign in for a moment.
 
 ## 15. States, copy, and mobile
 
