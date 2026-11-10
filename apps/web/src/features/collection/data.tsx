@@ -4,6 +4,7 @@
 // so the tree and the view share one pass over the data. The tree orders each level as its folder's view is sorted,
 // and the top level as the root is (decided 23 October 2026), manual order included.
 
+import type { SyncClient } from "@/client/sync/client";
 import { sent } from "@/client/sync/writer";
 import { takeDeviceGridViews } from "@/common/device";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -78,10 +79,52 @@ const empty: CollectionData = {
   ready: false,
 };
 
+/** The collection on screen: the person's own, or a share's they edit (TON-191). */
 const CollectionDataContext = createContext<CollectionData>(empty);
+/** The person's own collection, whatever is on screen. */
+const OwnCollectionDataContext = createContext<CollectionData>(empty);
 
+/** The person's collection, from their own client; the workspace's, made once. */
 export function CollectionDataProvider({ children }: { children: ReactNode }) {
-  const client = useSyncClient();
+  const value = useCollectionDataOf(useSyncClient());
+  useDeviceLayoutsSaved(value);
+  return (
+    <OwnCollectionDataContext value={value}>
+      <CollectionDataContext value={value}>{children}</CollectionDataContext>
+    </OwnCollectionDataContext>
+  );
+}
+
+/**
+ * The collection on screen for what is below: a share's, from `client`, in the person's own presentation (TON-191).
+ * Without a client, the person's own passes through, so the tree below stays the same either way.
+ */
+export function ActiveCollectionData({
+  client,
+  children,
+}: {
+  client: SyncClient | undefined;
+  children: ReactNode;
+}) {
+  const share = useCollectionDataOf(client);
+  const own = useContext(OwnCollectionDataContext);
+  const shown = client ? share : own;
+  return <CollectionDataContext value={shown}>{children}</CollectionDataContext>;
+}
+
+/** The person's own collection again, for what always shows it, such as the sidebar. */
+export function OwnCollectionData({ children }: { children: ReactNode }) {
+  const own = useContext(OwnCollectionDataContext);
+  return <CollectionDataContext value={own}>{children}</CollectionDataContext>;
+}
+
+/** The person's own collection, whatever is on screen. */
+export function useOwnCollectionData(): CollectionData {
+  return useContext(OwnCollectionDataContext);
+}
+
+/** What the views read of `client`'s collections, live. */
+function useCollectionDataOf(client: SyncClient | undefined): CollectionData {
   const containers = useLiveQuery(() => client?.containers, [client]);
   const memberships = useLiveQuery(() => client?.memberships, [client]);
   const albums = useLiveQuery(() => client?.albums, [client]);
@@ -180,10 +223,7 @@ export function CollectionDataProvider({ children }: { children: ReactNode }) {
     positionData,
     ready,
   ]);
-
-  useDeviceLayoutsSaved(value);
-
-  return <CollectionDataContext value={value}>{children}</CollectionDataContext>;
+  return value;
 }
 
 export function useCollectionData(): CollectionData {

@@ -12,7 +12,6 @@ import { isUnderway } from "@/client/sync/save-states";
 import { pageScroll } from "@/common/page-scroll";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
-import { Link, useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 
@@ -26,6 +25,7 @@ import { effectiveColor } from "./container-palette";
 import { CoverFan, type FanCover } from "./cover-fan";
 import { useCollectionData } from "./data";
 import { ContainerIcon } from "./icons";
+import { ContainerLink, useOpenContainer } from "./place";
 import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -52,7 +52,7 @@ export function ContainerCards({
 }) {
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
+  const open = useOpenContainer();
   const inner = Math.max(0, useWidth(scroller) - 2 * padding);
   const columns = Math.max(1, Math.floor((inner + gap) / (minCard + gap)));
   const card = Math.min(inner, Math.floor((inner - gap * (columns - 1)) / columns));
@@ -97,9 +97,7 @@ export function ContainerCards({
     onActivate: ({ row, col }) => {
       const container = containers[row * columns + col];
       if (!container) return false;
-      void (container.kind === "folder"
-        ? navigate({ to: "/f/$folderId", params: { folderId: container.id } })
-        : navigate({ to: "/l/$listId", params: { listId: container.id } }));
+      void open(container);
       return true;
     },
   });
@@ -208,15 +206,9 @@ function ContainerCard({
       )}
       style={{ width, height: width + textHeight }}
     >
-      {container.kind === "folder" ? (
-        <Link to="/f/$folderId" params={{ folderId: container.id }} className={cardClass} {...cell}>
-          {body}
-        </Link>
-      ) : (
-        <Link to="/l/$listId" params={{ listId: container.id }} className={cardClass} {...cell}>
-          {body}
-        </Link>
-      )}
+      <ContainerLink container={container} className={cardClass} {...cell}>
+        {body}
+      </ContainerLink>
     </div>
   );
 }

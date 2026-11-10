@@ -27,7 +27,9 @@ import { AlbumInspector, type InspectorPlacement } from "@/features/collection/i
 import { useInspector } from "@/features/collection/inspector-state";
 import { MoveDialog } from "@/features/collection/move";
 import { NewAlbumDialog } from "@/features/collection/new-album";
+import { OwnCollection } from "@/features/collection/own-collection";
 import { SearchPalette } from "@/features/search/search-palette";
+import { LostShareEdits } from "@/features/sharing/editable-share";
 import { InvitationToasts } from "@/features/sharing/invitation-toasts";
 import { ShareDialog } from "@/features/sharing/share-dialog";
 import { OfflineBanner } from "@/features/sync/offline-banner";
@@ -140,11 +142,14 @@ export function Shell({ account, children }: { account: Account; children: React
           }}
         >
           {sidebar && (
-            <Sidebar
-              account={account}
-              width={layout.width}
-              onResize={(width) => setLayout((current) => ({ ...current, width }))}
-            />
+            // The person's own collection, even while a share they edit is on screen (TON-191).
+            <OwnCollection>
+              <Sidebar
+                account={account}
+                width={layout.width}
+                onResize={(width) => setLayout((current) => ({ ...current, width }))}
+              />
+            </OwnCollection>
           )}
           <main
             ref={main}
@@ -168,16 +173,19 @@ export function Shell({ account, children }: { account: Account; children: React
         </div>
       </DragProvider>
       <ShortcutReference open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-      <SearchPalette
-        open={search.open}
-        onOpenChange={setSearchOpen}
-        target={search.target}
-        runner={runner}
-      />
+      <OwnCollection>
+        <SearchPalette
+          open={search.open}
+          onOpenChange={setSearchOpen}
+          target={search.target}
+          runner={runner}
+        />
+      </OwnCollection>
       <MoveDialog />
       <ColorDialog />
       <ShareDialog />
       <InvitationToasts accountId={account.id} />
+      <LostShareEdits />
       {narrow && <PullToRefresh />}
       <DeleteFolderDialog />
       <DeleteAlbumDialog />

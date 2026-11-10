@@ -7,7 +7,7 @@
 
 import { expandedFolders } from "@/common/device";
 import { useSyncClient } from "@/features/sync/sync-provider";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useSearch } from "@tanstack/react-router";
 import {
   createContext,
   useCallback,
@@ -24,6 +24,7 @@ import type { ContainerKind } from "@tonaris/domain";
 import { CollectionDialogsProvider } from "./collection-dialogs";
 import { CollectionModeProvider, useMode } from "./collection-mode";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
+import { useCollectionPlace } from "./place";
 import { ancestorsOf, buildTree } from "./tree";
 
 type CollectionUi = {
@@ -141,6 +142,10 @@ export function useEditor(): Editor | undefined {
 /** The folder or list the main view shows, from the route. */
 export function useViewContainerId(): string | undefined {
   const params = useParams({ strict: false });
+  const search = useSearch({ strict: false });
+  const place = useCollectionPlace();
+  // In a share the person edits, the folder or list it shows (TON-191); a share they only view has none to edit.
+  if (place.kind === "share") return search.c ?? place.rootId;
   return params.folderId ?? params.listId;
 }
 

@@ -52,7 +52,7 @@ import {
   sharedSnapshot,
   sharedWithMe,
 } from "./sharing";
-import { executeMutation } from "./sync";
+import { executeMutation, headSeq } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
@@ -424,6 +424,8 @@ describe("the shared snapshot (FR-07.11, FR-07.12)", () => {
     ]);
     expect(snapshot?.fieldValues).toEqual([{ albumId: nightfall.id, fieldId: mood, value: heavy }]);
     expect(snapshot?.role).toBe("view");
+    // Current at the owner's latest change (TS-24).
+    expect(snapshot?.seq).toBe(await headSeq(t.db, owner.userId));
 
     // An editor sees all the owner's fields, used or not, with all their options (FR-07.20, "An unused field").
     const cleo = await newPrincipal();

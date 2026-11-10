@@ -26,7 +26,16 @@ function updatesOf(original: Album, changes: Partial<Album>): Mutation[] {
   ];
 }
 
-export function createAlbumCollection({ engine, writer }: { engine: SyncEngine; writer: Writer }) {
+export function createAlbumCollection({
+  engine,
+  writer,
+  listOf = () => undefined,
+}: {
+  engine: SyncEngine;
+  writer: Writer;
+  /** The list a new album is made for, if one was named: in a share, it joins the list's owner's collection (TON-191). */
+  listOf?: (albumId: string) => string | undefined;
+}) {
   return snapshotCollection({
     engine,
     id: "albums",
@@ -36,10 +45,17 @@ export function createAlbumCollection({ engine, writer }: { engine: SyncEngine; 
     handlers: {
       // `album.create` takes the album's own fields and ID, whatever else the draft carried.
       onInsert: ({ transaction }) =>
-        writer.persistEach(transaction, ({ modified }) => [
-          envelope("album.create", { ...pick(modified, albumFields), id: modified.id }),
-          ...(modified.artworkUrl ? [artworkWrite(modified.id, modified.artworkUrl, null)] : []),
-        ]),
+        writer.persistEach(transaction, ({ modified }) => {
+          const listId = listOf(modified.id);
+          return [
+            envelope("album.create", {
+              ...pick(modified, albumFields),
+              id: modified.id,
+              ...(listId === undefined ? {} : { listId }),
+            }),
+            ...(modified.artworkUrl ? [artworkWrite(modified.id, modified.artworkUrl, null)] : []),
+          ];
+        }),
       onUpdate: ({ transaction }) =>
         writer.persistEach(transaction, ({ original, changes }) => updatesOf(original, changes)),
     },

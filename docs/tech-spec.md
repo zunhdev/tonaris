@@ -594,8 +594,15 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
     - it bootstraps from `GET /v1/shared/{id}`, mapped to a `Bootstrap` of the share's containers, entries, albums, links, fields and values;
     - on each `shared-invalidate` from `GET /v1/shared/{id}/stream`, it reads the share again and hands the consumers a `reset`. Nothing finer is needed at this scale, and content moving into or out of the share, or access ending, needs no special case;
     - its `seq` is the owner's: the snapshot gains the owner's `seq`, read in the same transaction, and `awaitSeq(n)` resolves once a read reaches `n`. An editor's write is confirmed by the owner's `seq` its outcome carries (TS-20), so the optimistic value gives way to the saved one without a flicker, as for the owner.
-  - **The share client** is `createSyncClient`'s outbox, writer, save states, captures and content collections on that engine. Its unsent writes are kept apart from the person's own, keyed by the share. It has no tab coordination: each tab reads the share itself, as viewers' pages do.
-  - **The view** mounts its own providers under the shared route: the share client as the sync client, and a `CollectionDataProvider` whose content is the share's while views, defaults and manual order stay the person's own (FR-07.17). Save states, conflicts and captures follow the share client.
+  - **The share client** is `createSyncClient`'s outbox, writer, save states, captures and content collections on that engine (`engine` and `personal` options). Its unsent writes are kept apart from the person's own, keyed by the share. It has no tab coordination: each tab reads the share itself, as viewers' pages do.
+  - *As built in TON-191:* `createShareEngine` (`client/sync/share-engine.ts`) reads the share when a write waits on a newer `seq` too, not only after the stream's notice, so a confirmation never waits on the notice's debounce. A read with the role view, or a 404, reads Shared with me again, which hands the view back to the viewer's page.
+  - **The view** *(as built in TON-191, changed from the spike's plan of providers under the route only)*: the inspector, the dialogs, captures, save states and the shortcuts all sit above the routes, so the active collection is swapped there.
+    - `ActiveCollectionProvider` (`features/sharing/editable-share.tsx`), below the workspace's own providers, creates the share client while an editable share is on screen. It re-provides the sync client and the collection data (`ActiveSyncProvider`, `ActiveCollectionData`) and the place (`features/collection/place.tsx`), passing the person's own through otherwise, so the tree below never changes shape and nothing remounts.
+    - The sidebar and the palette sit in `OwnCollection`, which re-provides the person's own.
+    - Views, defaults and manual order are the person's own (`personal` in `createSyncClient`, FR-07.17).
+    - Links and moves to folders and lists ask the place (`ContainerLink`, `useOpenContainer`), so a share's go to `/shared/{root}?c={id}`.
+    - A new album made in a share carries its list in `album.create` (`newAlbumLists`).
+    - The share client's unsent writes are kept under `{account}~{root}`.
   - **What follows from it** (TON-191, TON-195):
     - links to folders and lists come from a context, so a share's link to `/shared/{root}?c={id}` instead of `/f/{id}` and `/l/{id}`;
     - the shell's shortcuts and the palette's commands act on the open view's client, not always the person's own;

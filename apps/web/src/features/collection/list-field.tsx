@@ -14,9 +14,12 @@ import { cn } from "@tonaris/ui/lib/utils";
 import { useCollectionData } from "./data";
 import { ListFinder } from "./list-finder";
 import { listChoices } from "./list-picker";
+import { useCollectionPlace } from "./place";
 import { ancestorsOf } from "./tree";
 
 const noList = "No list (goes to Unsorted)";
+/** In a share, an album goes in one of its lists: there's no Unsorted of the person's there (TON-191). */
+const shareList = "Choose a list in this share";
 
 export function ListField({
   listId,
@@ -27,6 +30,7 @@ export function ListField({
   onChange: (listId: string | null) => void;
 }) {
   const { tree } = useCollectionData();
+  const inShare = useCollectionPlace().kind === "share";
   const [open, setOpen] = useState(false);
   const field = useRef<HTMLInputElement>(null);
   const popupId = useId();
@@ -57,7 +61,9 @@ export function ListField({
             onKeyDown={onKeyDown}
             className={cn(controlClass, "flex h-8 w-full items-center gap-2 text-left")}
           >
-            <span className="min-w-0 flex-1 truncate">{path ?? noList}</span>
+            <span className="min-w-0 flex-1 truncate">
+              {path ?? (inShare ? shareList : noList)}
+            </span>
             <ChevronDown
               strokeWidth={1.5}
               aria-hidden
@@ -73,6 +79,7 @@ export function ListField({
           >
             <Finder
               field={field}
+              inShare={inShare}
               listId={list ? listId : null}
               onChoose={(chosen) => {
                 onChange(chosen);
@@ -89,10 +96,12 @@ export function ListField({
 /** The popover's finder, made on each opening, so it starts with an empty field. */
 function Finder({
   field,
+  inShare,
   listId,
   onChoose,
 }: {
   field: RefObject<HTMLInputElement | null>;
+  inShare: boolean;
   listId: string | null;
   onChoose: (listId: string | null) => void;
 }) {
@@ -102,7 +111,7 @@ function Finder({
     <ListFinder
       choices={choices}
       field={field}
-      none={noList}
+      none={inShare ? undefined : noList}
       chosen={listId}
       onChoose={(chosen) => onChoose(chosen?.id ?? null)}
     />

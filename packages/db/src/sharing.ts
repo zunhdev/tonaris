@@ -36,6 +36,7 @@ import {
 import { valuesOfAlbums } from "./field-values";
 import { ancestorsCte, descendantsCte } from "./hierarchy";
 import {
+  accountSync,
   albums,
   albumServiceLinks,
   containers,
@@ -86,6 +87,13 @@ export function sharedSnapshot(
       .from(containers)
       .innerJoin(users, eq(users.id, containers.ownerId))
       .where(eq(containers.id, id));
+    // In the same snapshot as the content, so the content is current at exactly this position (TS-24).
+    const [sync] = owner
+      ? await tx
+          .select({ seq: accountSync.seq })
+          .from(accountSync)
+          .where(eq(accountSync.accountId, owner.id))
+      : [];
     const shown = await tx
       .select(containerColumns)
       .from(containers)
@@ -117,6 +125,7 @@ export function sharedSnapshot(
     return {
       rootId: id,
       role,
+      seq: sync?.seq ?? 0,
       owner: { displayName: owner?.displayName ?? null },
       // The root's parent is a folder the viewer may not know of.
       containers: shown.map((each) =>

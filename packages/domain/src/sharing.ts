@@ -196,6 +196,10 @@ export const sharedSnapshotSchema = z
       description:
         "The reader's role on the root (FR-07.18): edit through an accepted invitation to edit it or a folder above, else view.",
     }),
+    seq: z.int().nonnegative().meta({
+      description:
+        "The owner's change log position this read is current at (TS-23), so an editor's client knows its writes are in it (TS-24).",
+    }),
     owner: z.object({
       displayName: z.string().nullable(),
     }),

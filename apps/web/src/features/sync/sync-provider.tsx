@@ -21,6 +21,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -37,7 +38,10 @@ declare global {
 
 type Sync = { client: SyncClient; connection: ConnectionWatch };
 
+/** The client of the collection on screen: the person's own, or a share's they edit (TON-191). */
 const SyncContext = createContext<Sync | undefined>(undefined);
+/** The person's own client, whatever is on screen. */
+const OwnSyncContext = createContext<Sync | undefined>(undefined);
 
 export function SyncProvider({ account, children }: { account: Account; children: ReactNode }) {
   const router = useRouter();
@@ -86,12 +90,46 @@ export function SyncProvider({ account, children }: { account: Account; children
     };
   }, [account.id, router]);
 
-  return <SyncContext value={sync}>{children}</SyncContext>;
+  return (
+    <OwnSyncContext value={sync}>
+      <SyncContext value={sync}>{children}</SyncContext>
+    </OwnSyncContext>
+  );
 }
 
-/** The workspace's sync client; undefined for the moment before it is created. */
+/**
+ * Puts `client` on screen in place of the person's own, for what is below: a share's they edit (TON-191). Without one,
+ * the own client passes through, so the tree below stays the same either way.
+ */
+export function ActiveSyncProvider({
+  client,
+  children,
+}: {
+  client: SyncClient | undefined;
+  children: ReactNode;
+}) {
+  const own = useContext(OwnSyncContext);
+  const value = useMemo(
+    () => (client && own ? { client, connection: own.connection } : own),
+    [client, own],
+  );
+  return <SyncContext value={value}>{children}</SyncContext>;
+}
+
+/** The person's own client again, for what always shows their own collection, such as the sidebar. */
+export function OwnSyncProvider({ children }: { children: ReactNode }) {
+  const own = useContext(OwnSyncContext);
+  return <SyncContext value={own}>{children}</SyncContext>;
+}
+
+/** The sync client of the collection on screen; undefined for the moment before it is created. */
 export function useSyncClient(): SyncClient | undefined {
   return useContext(SyncContext)?.client;
+}
+
+/** The person's own sync client, whatever is on screen. */
+export function useOwnSyncClient(): SyncClient | undefined {
+  return useContext(OwnSyncContext)?.client;
 }
 
 /** The connection as the workspace reports it (DS-81); `connecting` until the client exists. */
