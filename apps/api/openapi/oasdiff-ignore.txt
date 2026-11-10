@@ -9,3 +9,15 @@ POST /v1/approvals/{id}/decision the 'operation' response property const value '
 # backup. Its only reader was the web app's Admin → Operations page.
 GET /v1/admin/operations removed the required property `lastBackup` from the response with the `200` status
 GET /v1/admin/operations removed the required property 'lastBackup' from the response with the '200' status
+# TON-188, 10 November 2026: invitations gained a role. share.invite takes an optional role in place, as no one uses
+# the API yet (closed testing, the creator said on 5 November 2026), and the invitation page's pending and accepted
+# states carry it. Additive, but oasdiff matches inline oneOf variants by content: the request's reads as removed, the
+# response's as added.
+GET /v1/invitations/{id} added `subschema #1, subschema #2` to the response body `oneOf` list for the response status `200`
+GET /v1/invitations/{id} added 'subschema #1, subschema #2' to the response body 'oneOf' list for the response status '200'
+POST /v1/mutations removed `subschema #30` from the request body `oneOf` list (media type: application/json)
+POST /v1/mutations removed 'subschema #30' from the request body 'oneOf' list (media type: application/json)
+POST /v1/mutations removed `subschema #30` from the request body `oneOf` list (media type: application/x-www-form-urlencoded)
+POST /v1/mutations removed 'subschema #30' from the request body 'oneOf' list (media type: application/x-www-form-urlencoded)
+POST /v1/mutations removed `subschema #30` from the request body `oneOf` list (media type: multipart/form-data)
+POST /v1/mutations removed 'subschema #30' from the request body 'oneOf' list (media type: multipart/form-data)

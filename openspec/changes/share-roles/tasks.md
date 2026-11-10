@@ -24,7 +24,7 @@
 - [x] 4.2 `invitationSchema` gains `role`; `pendingInvitations` and `invitationState` fill it. A db test.
 - [x] 4.3 `sharedEntrySchema` gains `role` (null while unavailable); `sharedWithMe` fills it. A db test: "Shared with me".
 - [x] 4.4 `sharedSnapshotSchema` gains `role`; `sharedSnapshot` fills it, and gives an editor all the owner's fields with all options. A db test: "An unused field", for an editor and a viewer.
-- [x] 4.5 The API's OpenAPI document is regenerated (`bun run openapi:check` passes), with an `oasdiff-ignore.txt` entry for the widened `share.invite` request. API tests that compare these responses still pass.
+- [x] 4.5 The API's OpenAPI document is regenerated (`bun run openapi:check` passes), with `oasdiff-ignore.txt` entries for the widened `share.invite` request and the invitation page's response. API tests that compare these responses still pass.
 
 ## 5. Verification
 
