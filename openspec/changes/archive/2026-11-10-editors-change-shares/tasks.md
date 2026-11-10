@@ -30,5 +30,5 @@
 
 ## Workflow follow-up
 
-- Push before the archive, so CI's oasdiff judges `album.create`'s new `listId`; add ignore entries if it reads it as a removal.
+- Push before the archive, so CI's oasdiff judges `album.create`'s new `listId` (it passed), and drop TON-188's spent ignore entries.
 - Archive as the PR's last commit, check the merged spec, open the PR with `Closes TON-189`, and merge.
