@@ -13,6 +13,8 @@ through on 30 October 2026, on `main` after TON-102.
   - **AC-46:** a recorded review of the scope.
 - **Waits for the creator (4):** AC-18, AC-42, AC-43 and AC-44.
 
+**Shared editing (P-TON-47), 10 November 2026 (TON-193):** AC-47 to AC-50 joined with editing shared folders and lists (FR-07.18–FR-07.21). All four pass on automated tests, after a security review of every path where one person writes to another's collection (below). The review's findings were fixed, or filed as TON-198 and TON-199 when low risk. The creator's own check of the editing flows, and of an editor's AI agent in a live client, is left for their testing.
+
 The PRD has no open **Pending approval** items (section 9). Q-01's targets were approved on 29 October 2026, and
 Q-04's objectives on 30 October 2026.
 
@@ -66,6 +68,10 @@ Q-04's objectives on 30 October 2026.
 | AC-44 | Recover the hosted service | **Waits for the creator** | `runbooks/restore.md`: the drill passed on 30 October 2026, on the development database. `db/ledger.test.ts`. `account-deletion.e2e.ts`: the backup disclosure. `db/reconcile.test.ts`. Backups are Render Postgres's point-in-time recovery since TON-108. **Left:** the hosted service, and a drill from a Render restore. |
 | AC-45 | Reject hostile input | Pass | `adversarial.test.ts`. `adversarial.e2e.ts`. `providers/safe-fetch.test.ts`. `security.test.ts`. `security.e2e.ts`. `mcp/limits.test.ts`. |
 | AC-46 | Language and scope | Pass (reviewed) | The scope review below. Multilingual text is saved and shown in `capture.e2e.ts` ("Idéal"), searched in `search-index.test.ts` ("BJÖRK"), and identified in `providers/identify.test.ts` ("Икра"). |
+| AC-47 | Roles | Pass | `share-roles.e2e.ts`: inviting to edit, changing a role in place, and "Also editable through". `domain/sharing.test.ts` and `db/sharing.test.ts`: the higher role through folders, links only view, held equal by property tests. `domain/sharing-commands.test.ts`: `share.setRole` without a new acceptance. |
+| AC-48 | Edit a share | Pass | `share-editing.e2e.ts`: an owner and an editor build a list together, live both ways. `domain/shared-editing.test.ts`: each content command with an editor, in the owner's collection, and an owner/editor conflict. `db/sharing.test.ts`: the owner's lock and change log. `mcp/shared-editing.test.ts`: a Manage agent edits as its person does. |
+| AC-49 | What editors can't do | Pass (reviewed) | `domain/shared-editing.test.ts`: sharing, fields, the share's own folder, moves across its edge, the owner's Trash, viewers, strangers and a lowered role. `share-editing.e2e.ts`: Move to and ⌫ on the share itself. `db/ledger.test.ts`: a lowered role stays lowered after a restore. `db/sharing.test.ts`: an editor's preview names nobody. The security review below. |
+| AC-50 | Editors and albums | Pass | `domain/shared-editing.test.ts`: an edit shows wherever the album is, and a deletion keeps the owner's other lists. `share-editing.e2e.ts`: the confirmation, and the owner's private list keeping the album. `capture.test.ts`: a capture reusing an album the editor didn't see reads as added. |
 
 ## Claims that hold by how it's built
 
@@ -79,6 +85,32 @@ test of their own:
 - **AC-27:** a unit's expiry stays put while recovery asks a question. The tests check that the unit is still in Trash, not its expiry date.
 - **AC-41:** the export is one point in time, because it reads in one `REPEATABLE READ` transaction (`packages/db/src/export.ts`). No test writes while it exports.
 
+## The shared-editing security review (TON-193)
+
+On 10 November 2026, a separate review read every path where one person writes to another's collection: the app's commands, `/v1`, MCP and the sync stream. It looked for ways an editor could reach content outside the share, keep edit rights after losing them, or learn about the owner's other content. Findings, most severe first:
+
+| # | Finding | Now |
+| --- | --- | --- |
+| 1 | A capture's choice between albums named the owner's albums outside the share and in Trash | Fixed: only albums the editor can edit (`capture.test.ts`) |
+| 2 | Creating a folder, list or album with a used ID echoed the record's values; moving the shared folder with a stale base gave the folder above it | Fixed: "already in use", and the move is refused first (`shared-editing.test.ts`) |
+| 3 | An editor's capture brought an album back from the owner's Trash and dropped its entries in the owner's other lists | Fixed: a new album is saved, and the owner's stays in Trash (`capture.test.ts`, both) |
+| 4 | Renaming the shared folder to a sibling's name named the sibling and the folder above | Fixed: it says only that the name is taken. One bit is left (TON-198) |
+| 5 | Reusing a Trash unit ID tells whether an editor's album deletion went to Trash | Filed: TON-198 |
+| 6 | The owner's change-log position reached viewers, guests and editors | Fixed for viewers and guests (`db/sharing.test.ts`). Editors need it; filed: TON-198 |
+| 7 | An editor's Undo listed the owner's albums in Trash | Fixed: none are listed (`shared-editing.test.ts`) |
+| 8 | A change's collection is read before its lock, so two dependent creates sent at once can log in the wrong account | Filed: TON-199. It needs a client that sends both at once |
+
+Checked and sound:
+- sharing, field definitions and Trash purges stay with the owner;
+- moves stay inside one share;
+- the shared folder or list itself doesn't move or go to Trash;
+- private albums can't be reached through lists, links or fields;
+- a lowered role, a withdrawn invitation, or the share going to Trash stops the next change, and a lowered role stays lowered after a restore;
+- Read-only connections and guests can't write;
+- retries and mutation IDs stay with the sender.
+
+Two MCP tools that still assumed the agent's own collection were filed as TON-200.
+
 ## The scope review (AC-46)
 
 Each of section 2.6's exclusions, checked against the code on 30 October 2026:
@@ -89,7 +121,7 @@ Each of section 2.6's exclusions, checked against the code on 30 October 2026:
 | Sync with streaming libraries | Yes | The Spotify bridge uses client credentials only (`providers/src/spotify.ts`), so it never reaches a user's library. |
 | Track items | Yes | The database has no track table. Track links resolve to their album (`capture.e2e.ts`). |
 | Discovery feeds, follows, comments, profiles | Yes | No such tables or routes. Sharing is by invitation or link. |
-| Collaborative editing | Yes | Shared views are view-only (`shared-viewing.e2e.ts`). |
+| Collaborative editing | Removed 10 November 2026 | No longer an exclusion: invitations can let people edit (FR-07.18–FR-07.21, P-TON-47). Links and viewers stay view-only (`shared-viewing.e2e.ts`, AC-49). |
 | Built-in recommendations | Yes | The MCP tool list has no recommendation tool (`mcp/write-tools.test.ts`). |
 | Automatic listening history | Yes | No predefined listening fields, and no import. Opening a link changes no field. |
 | Importing or restoring exports | Yes | No import route. `bin/reconcile.js` belongs to the operator's backup restore (`runbooks/restore.md`), not a user import. |
@@ -114,3 +146,8 @@ Each of section 2.6's exclusions, checked against the code on 30 October 2026:
    - open the app once in Edge.
 3. **AC-43:** review the providers' quotas and the running cost before admission expands.
 4. **AC-44:** deploy to Render (`deploy.md`), then run a restore drill from a Render restore (`runbooks/restore.md`).
+5. **Shared editing (AC-47–AC-50), in the creator's own testing:**
+   - edit a share together from two accounts, as in the request that started P-TON-47;
+   - step 10 of `mcp-verification.md`: an editor's Manage agent in a live client;
+   - not covered by automated tests: the toast for edits that weren't saved when access ended;
+   - the new browser tests run in Chromium only: WebKit can't sign in in the browser tests locally, old tests included (TON-197), and Firefox doesn't launch here.

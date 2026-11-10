@@ -175,19 +175,24 @@ function askForDetails(
 /**
  * The owner's album the source names, with the facts to enrich it from: the linked album; else one saved as the
  * release group, active first; else a merge match, active first, still saved as it was when MusicBrainz was asked.
+ * For an editor, `activeOnly`: the owner's Trash is the owner's to restore from, so an album there isn't matched, and
+ * the capture saves a new one (FR-07.20).
  */
 async function matchOf(
   ownerId: string,
   source: CaptureSource,
   { store }: CommandContext,
+  activeOnly: boolean,
 ): Promise<{ target: CaptureTarget; facts?: FoundFacts } | undefined> {
   if (source.kind === "entered") return undefined;
+  const usable = (target: CaptureTarget | undefined): target is CaptureTarget =>
+    target?.ownerId === ownerId && !(activeOnly && target.trashed);
   if (source.kind === "linked") {
     const target = await store.findCaptureTarget(source.albumId);
-    return target?.ownerId === ownerId ? { target } : undefined;
+    return usable(target) ? { target } : undefined;
   }
   const { facts } = source;
-  const [saved] = await store.albumsOfReleaseGroup(ownerId, facts.releaseGroupId);
+  const saved = (await store.albumsOfReleaseGroup(ownerId, facts.releaseGroupId)).find(usable);
   if (saved) return { target: saved, facts };
   const merged = (
     await Promise.all(
@@ -197,9 +202,7 @@ async function matchOf(
       })),
     )
   ).flatMap(({ target, facts: own }) =>
-    target?.ownerId === ownerId && target.releaseGroupId === own.askedId
-      ? [{ target, facts: own }]
-      : [],
+    usable(target) && target.releaseGroupId === own.askedId ? [{ target, facts: own }] : [],
   );
   return merged.find((match) => !match.target.trashed) ?? merged[0];
 }
@@ -468,16 +471,14 @@ export async function captureAlbum(
   }
   if (isFailure(ownerId)) return ownerId;
 
-  const match = await matchOf(ownerId, source, context);
+  const userId = actingUserId(context.principal);
+  const editor = userId !== undefined && userId !== ownerId;
+  const match = await matchOf(ownerId, source, context, editor);
   const refusal = await entryLimit(args.listId, ownerId, match?.target.id, context);
   if (match) {
     if (refusal) return refusal;
     // An editor learns nothing of the owner's albums they don't see: reusing one of those reads as adding it (FR-07.21).
-    const userId = actingUserId(context.principal);
-    const unseen =
-      userId !== undefined &&
-      userId !== ownerId &&
-      !(await seenBy(context, userId, match.target.id));
+    const unseen = editor && !(await seenBy(context, userId, match.target.id));
     return reuse(args, ownerId, source.link, match, context, unseen);
   }
   if (source.kind === "linked") {

@@ -5,6 +5,7 @@
 // before the lock too (TON-46).
 
 import {
+  canEditAlbum,
   captureCollection,
   agreedToTerms,
   findLinkedAlbum,
@@ -101,10 +102,13 @@ export async function prepareCapture(
   if (!userId) return { outcome: failure("permission_denied", "You can't add albums here.") };
   // Matched against the collection it saves to: an editor's capture into a share, the owner's (FR-07.19).
   const ownerId = await captureCollection(db, userId, args.listId);
+  // An editor's capture never finds the owner's Trash, which is the owner's to restore from (FR-07.20).
+  const editor = ownerId !== userId;
   try {
     const identification = await deps.identify(args.link, {
       agent: principal.kind === "mcp",
-      linked: (service, entityId) => findLinkedAlbum(db, ownerId, service, entityId),
+      linked: (service, entityId) =>
+        findLinkedAlbum(db, ownerId, service, entityId, { activeOnly: editor }),
       // The person capturing agreed to YouTube's terms, or didn't (FR-11.14).
       mayReadYouTube: () => agreedToTerms(db, userId, termsVersion),
     });
@@ -158,6 +162,13 @@ export async function prepareCapture(
         ownerId,
         candidates.map((candidate) => candidate.releaseGroupId),
       );
+      // An editor is shown only the albums they can see already, never the owner's others (FR-07.20).
+      if (editor) {
+        for (const [releaseGroupId, albumId] of saved) {
+          // oxlint-disable-next-line no-await-in-loop
+          if (!(await canEditAlbum(db, userId, albumId))) saved.delete(releaseGroupId);
+        }
+      }
       return {
         outcome: {
           status: "needs_input",

@@ -425,14 +425,17 @@ describe("the shared snapshot (FR-07.11, FR-07.12)", () => {
     ]);
     expect(snapshot?.fieldValues).toEqual([{ albumId: nightfall.id, fieldId: mood, value: heavy }]);
     expect(snapshot?.role).toBe("view");
-    // Current at the owner's latest change (TS-24).
-    expect(snapshot?.seq).toBe(await headSeq(t.db, owner.userId));
+    // A viewer doesn't learn how much the owner changes elsewhere (TON-193).
+    expect(snapshot?.seq).toBe(0);
 
     // An editor sees all the owner's fields, used or not, with all their options (FR-07.20, "An unused field").
     const cleo = await newPrincipal();
     await grant(metal.id, cleo.userId, "accepted", "edit");
     const edited = await sharedSnapshot(t.db, person(cleo), metal.id);
     expect(edited?.role).toBe("edit");
+    // Current at the owner's latest change, for the editor's writes to wait on (TS-24).
+    expect(edited?.seq).toBe(await headSeq(t.db, owner.userId));
+    expect(edited?.seq).toBeGreaterThan(0);
     expect(edited?.fields).toEqual([
       {
         id: mood,

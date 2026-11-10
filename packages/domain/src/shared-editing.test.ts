@@ -351,6 +351,83 @@ describe("albums inside a share (FR-07.19, FR-07.21)", () => {
   });
 });
 
+describe("what an editor's answers don't tell (FR-07.20, FR-07.21; TON-193)", () => {
+  test("a new folder, list or album with an ID already used outside the share is only refused as in use", async () => {
+    const { run, tree, records } = setup();
+    const taken = await run(
+      m("container.create", {
+        id: tree.secret.id,
+        kind: "list",
+        parentId: tree.metal.id,
+        name: "x",
+      }),
+    );
+    expect(taken).toMatchObject({ problem: { detail: "This ID is already in use." } });
+    const album = await run(
+      m("album.create", {
+        id: records.hidden.id,
+        listId: tree.doom.id,
+        title: "x",
+        artistCredit: "x",
+        releaseType: "album",
+        isLive: false,
+        originalYear: 2000,
+        recordingYearStart: null,
+        recordingYearEnd: null,
+      }),
+    );
+    expect(album).toMatchObject({ problem: { detail: "This album ID is already in use." } });
+    // Inside the share, a different create with a used ID is still a conflict with what's there.
+    expect(
+      await run(
+        m("container.create", {
+          id: tree.deep.id,
+          kind: "list",
+          parentId: tree.metal.id,
+          name: "x",
+        }),
+      ),
+    ).toMatchObject({ status: "conflict" });
+  });
+
+  test("moving the shared folder is refused before its base is compared, so the folder above it never shows", async () => {
+    const { run, tree } = setup();
+    const outer = container("Outer", "folder");
+    const stale = await run(
+      m("container.move", { id: tree.metal.id, parentId: tree.jazz.id }, { parentId: outer.id }),
+    );
+    expect(stale).toMatchObject({ status: "failed", code: "permission_denied" });
+  });
+
+  test("renaming the shared folder to a name used beside it says only that it's taken", async () => {
+    const { run, tree } = setup();
+    const rename = (id: string, from: string, name: string) =>
+      run(m("container.rename", { id, name }, { name: from }));
+    const top = await rename(tree.metal.id, "Metal", "private");
+    expect(top).toMatchObject({ status: "failed", code: "name_conflict" });
+    if (top.status !== "failed") throw new Error("refused above");
+    expect(top.problem.detail).toBe(
+      "'private' is already used where this is kept. Choose another name.",
+    );
+    // Inside the share, the sibling is the editor's to see, so the usual answer names it.
+    expect(await rename(tree.doom.id, "Doom", "funeral")).toMatchObject({
+      problem: { detail: "'Funeral' already exists in Metal. Choose another name." },
+    });
+  });
+
+  test("an editor's Undo doesn't list what of theirs the owner has in Trash", async () => {
+    const { run, tree, records } = setup();
+    // Denis deletes Bleach, which was also in Doom; then Anna deletes Doom and undoes it.
+    expect(
+      code(await run(m("album.delete", { id: records.bleach.id, unitId: uuidv7() }), as(denis))),
+    ).toBe("applied");
+    const unitId = uuidv7();
+    expect(code(await run(m("container.delete", { id: tree.doom.id, unitId })))).toBe("applied");
+    const undone = await run(m("trash.recover", { unitId }));
+    expect(undone).toMatchObject({ status: "applied", result: { skipped: [] } });
+  });
+});
+
 describe("who may edit (FR-07.18, FR-07.20)", () => {
   test("a viewer is told they can only view; a stranger learns nothing", async () => {
     const {

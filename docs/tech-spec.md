@@ -717,6 +717,14 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - **Albums:** an editor's `album.delete` leaves the lists they edit, and trashes the album only when no other list of the owner's holds it. A capture that reuses an album they didn't see reports `created`.
 - **Trash:** a unit records `deleted_by` for an editor's deletion, and `trash.recover` lets that editor, in the app, undo a folder or list deletion back where it was while they can still edit there. Everything else in the owner's Trash answers `not_found`.
 
+*Built in TON-193, after the security review of editors' writes:* **answers that tell an editor nothing outside the share.**
+- **Creates:** a create naming an ID that's already used outside the share answers only "already in use", never the record's values (`createContainer`, `createAlbum`).
+- **The share's own folder or list:** a move is refused before its base is compared, so the folder above it never shows. A rename to a name a sibling has says only that it's taken.
+- **Captures:** an editor's capture never matches an album in the owner's Trash, and saves a new one instead (`findLinkedAlbum` with `activeOnly`, `matchOf`). A choice between albums names only those the editor can edit (`canEditAlbum`, which also leaves out albums in Trash).
+- **Undo:** an editor's Undo lists no albums that didn't come back.
+- **Snapshots:** only an editor's carries the owner's `seq` (TS-24); viewers and guests get 0.
+- **Left, low risk:** a few one-bit answers about whether an album stays in the owner's other lists (TON-198), and a change's collection read before its lock (TON-199).
+
 **TS-31 Hierarchy queries (Decided; FR-01.4, FR-07.8–FR-07.10).**
 
 - The hierarchy is an **adjacency list** (`parent_id`) queried with **recursive CTEs**, not a closure table.

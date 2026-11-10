@@ -17,6 +17,7 @@ import { maxContainerDepth, maxContainers, maxDescriptionLength, maxNameLength }
 import { exceedsLength, findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { forgetPlace } from "./positions";
+import { actingUserId } from "./principals";
 import { z } from "./zod";
 
 export const containerKinds = ["folder", "list"] as const;
@@ -193,7 +194,13 @@ export async function createContainer(
 
   const existing = await store.findContainer(container.id);
   if (existing) {
-    if (existing.ownerId !== ownerId) {
+    // An editor is told only that an ID they can't see is taken, never what holds it (FR-07.20).
+    const actor = actingUserId(context.principal);
+    const unseen =
+      actor !== undefined &&
+      actor !== ownerId &&
+      (await store.editSourcesAbove(actor, existing.id)).length === 0;
+    if (existing.ownerId !== ownerId || unseen) {
       return failure("validation_failed", "This ID is already in use.", [
         { path: "args.id", message: "Already in use" },
       ]);
@@ -261,9 +268,20 @@ export async function renameContainer(
   if (container.name !== base.name) return conflict("name", container.name, renamed, base.name);
   if (renamed === container.name) return applied();
 
-  const { ownerId, parentId } = container;
+  const { ownerId, parentId, access } = container;
   const taken = await siblingConflict(renamed, { ownerId, parentId, selfId: id }, context.store);
-  if (taken) return taken;
+  if (taken) {
+    // The shared folder's or list's siblings are its owner's, outside the share: an editor learns only that the name
+    // is taken, not which one or in which folder (FR-07.20).
+    if (!insideShare(access, id)) {
+      return failure(
+        "name_conflict",
+        `'${renamed}' is already used where this is kept. Choose another name.`,
+        [{ path: "args.name", message: "Already used here" }],
+      );
+    }
+    return taken;
+  }
 
   await context.store.updateContainer(id, { name: renamed });
   const data = containerOf({ ...container, name: renamed });
@@ -283,16 +301,17 @@ export async function moveContainer(
 ): Promise<CommandResult> {
   const container = await changeableContainer(id, context);
   if (isFailure(container)) return container;
+  // An editor moves things only inside one share, never the shared folder or list itself (FR-07.20). Refused before
+  // its base is compared, so the folder above it, which isn't in the share, never shows.
+  const { access } = container;
+  if (!insideShare(access, id)) return shareTopRefusal();
   if (container.parentId !== base.parentId) {
     return conflict("parentId", container.parentId, parentId, base.parentId);
   }
   if (parentId === container.parentId) return applied();
 
   const { store } = context;
-  // An editor moves things only inside one share, never the shared folder or list itself (FR-07.20).
-  const { access } = container;
   if (access.as === "editor") {
-    if (!insideShare(access, id)) return shareTopRefusal();
     const there = parentId === null ? [] : await store.editSourcesAbove(access.userId, parentId);
     if (!access.through.some((top) => top !== id && there.includes(top))) {
       return failure(

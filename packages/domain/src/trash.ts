@@ -382,38 +382,42 @@ export async function recoverUnit(
     // oxlint-disable-next-line no-await-in-loop
     leftUnsorted.push(...(await forgetPlace(store, ownerId, "unsorted", albumId)));
   }
-  // What didn't come back: entries whose album is in Trash, and albums gone for good (FR-01.14).
+  // What didn't come back: entries whose album is in Trash, and albums gone for good (FR-01.14). Not for an editor's
+  // Undo: those albums are in the owner's Trash, or were, which only the owner sees (FR-07.20).
   const result: RecoveryResult = {
-    skipped: [
-      ...entries.flatMap((entry): SkippedEntry[] => {
-        const album = albums.get(entry.albumId);
-        if (!album || album.active) return [];
-        return [
-          {
-            albumId: entry.albumId,
-            title: album.title,
-            artist: album.artist,
-            listId: entry.listId,
-            listName: null,
-            reason: "album_in_trash",
-          },
-        ];
-      }),
-      ...unit.tombstones.flatMap((tombstone): SkippedEntry[] =>
-        tombstone.kind === "list"
-          ? []
-          : [
-              {
-                albumId: tombstone.id,
-                title: tombstone.title,
-                artist: tombstone.artist,
-                listId: null,
-                listName: null,
-                reason: "album_deleted",
-              },
-            ],
-      ),
-    ],
+    skipped:
+      actor !== undefined && actor !== ownerId
+        ? []
+        : [
+            ...entries.flatMap((entry): SkippedEntry[] => {
+              const album = albums.get(entry.albumId);
+              if (!album || album.active) return [];
+              return [
+                {
+                  albumId: entry.albumId,
+                  title: album.title,
+                  artist: album.artist,
+                  listId: entry.listId,
+                  listName: null,
+                  reason: "album_in_trash",
+                },
+              ];
+            }),
+            ...unit.tombstones.flatMap((tombstone): SkippedEntry[] =>
+              tombstone.kind === "list"
+                ? []
+                : [
+                    {
+                      albumId: tombstone.id,
+                      title: tombstone.title,
+                      artist: tombstone.artist,
+                      listId: null,
+                      listName: null,
+                      reason: "album_deleted",
+                    },
+                  ],
+            ),
+          ],
   };
   return {
     status: "applied",

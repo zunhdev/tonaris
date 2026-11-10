@@ -149,6 +149,7 @@ export {
 } from "./invitations";
 export { searchCollection } from "./search";
 export {
+  canEditAlbum,
   canEditContainer,
   canReadContainer,
   captureCollection,

@@ -9,7 +9,14 @@ import type { ShareRole, ShareViewer } from "@tonaris/domain";
 
 import type { Executor } from "./client";
 import { ancestorsCte, descendantsCte } from "./hierarchy";
-import { containers, memberships, savedReferences, shareGrants, shareLinks } from "./schema";
+import {
+  albums,
+  containers,
+  memberships,
+  savedReferences,
+  shareGrants,
+  shareLinks,
+} from "./schema";
 
 /**
  * The live link a token's SHA-256 names, while its folder or list is active (TS-32): Trash suspends a link, as it does
@@ -125,11 +132,15 @@ export async function canEditAlbum(
   userId: string,
   albumId: string,
 ): Promise<boolean> {
+  // An album in Trash keeps its entries until it comes back, but nobody edits it there (TS-13).
   const lists = await db
     .select({ id: memberships.listId })
     .from(memberships)
     .innerJoin(containers, eq(containers.id, memberships.listId))
-    .where(and(eq(memberships.albumId, albumId), isNull(containers.trashedAt)));
+    .innerJoin(albums, eq(albums.id, memberships.albumId))
+    .where(
+      and(eq(memberships.albumId, albumId), isNull(containers.trashedAt), isNull(albums.trashedAt)),
+    );
   for (const { id } of lists) {
     // oxlint-disable-next-line no-await-in-loop
     if (await canEditContainer(db, userId, id)) return true;
