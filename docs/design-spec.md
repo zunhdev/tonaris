@@ -725,7 +725,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - The active mode is always visible in the header. Editing mode also tints the header's bottom border with `accent.solid`.
 - **Edit intent switches the mode.** Pressing an editing shortcut (`C`, `M`, `L`, `⌫`, rename), using an edit command from the palette or context menu, or pasting a link in viewing mode switches to Editing first. A polite live region announces "Editing mode on".
 - **Leaving editing mode** with an inline edit open: a valid value is committed (normal save states apply); an invalid value keeps the editor open with its error, and the mode does not switch until the user fixes or discards it.
-- **No toggle** appears for viewers of shared content (a "View only · Shared by {name}" pill instead) or on mobile.
+- **No toggle** appears for viewers of shared content (a "View only · Shared by {name}" pill instead) or on mobile. Editors of a share get it on the desktop (DS-70).
 
 *As built in TON-37:*
 - **The toggle** is a segmented control labelled "Mode", `View | Edit`, before View options in the header of the root, folders, lists and Unsorted. E switches it, outside text fields.
@@ -1053,6 +1053,10 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - action "Move to Trash".
 - **After confirming:** "'Bleach' moved to Trash", and the inspector closes.
 
+*Planned for editors in P-TON-47 (decided with the creator, 10 November 2026; FR-07.20, FR-07.21):* an editor gets the same feedback inside a share, with Undo where an owner has it (removing an album from a list, deleting a list). Undo runs Trash recovery for them too. The confirmations differ:
+- **A folder:** the consequences add that only its owner can restore it, from their Trash.
+- **An album:** the scope names the share's lists it leaves, and the consequence says it leaves every list in the share, while the owner's other lists keep it. It doesn't say whether it goes to Trash, which the editor can't tell (FR-07.21).
+
 **DS-51 Unsorted placement** *(handoff FR-05.4)*:
 - An album entering Unsorted, whether new or leaving its last list, is placed at the **top** of the owner's Unsorted manual order. Unsorted behaves like an inbox.
 - Positions are not retained when an album leaves and later returns.
@@ -1221,6 +1225,13 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - *TON-67 adds the row menu:* a "More for {name or address}" button opens a menu with **Remove access**, which revokes the invitation, pending or accepted, and reads the dialog again.
 - *TON-66 adds delivery:* a pending row reads "Pending · sending…", "· sent", "· email failed" or "· email not confirmed", with **Resend** for the last two. While anything is sending, the dialog reads again every 1.5 s until it settles.
 
+*Planned in P-TON-47 (decided with the creator, 10 November 2026; FR-07.14, FR-07.15, FR-07.18), built in TON-190:*
+- **Roles:** each person's row has a role picker, Can view or Can edit, beside its status. A change saves at once, pending or accepted.
+- **Inviting:** a role picker beside the address, starting at Can view.
+- **Inherited access** names the higher role: "Also editable through "Metal"" when a folder above gives that person edit access.
+- **The editor disclosure** shows before the first Can edit: what editors can change, and that it stays in the owner's collection.
+- **The link section** is unchanged: links stay view-only.
+
 **DS-66 Invitations inbox.** `/invitations` lists pending invitations: the owner's display name, collection name and type, and date, each with **Accept** and **Decline**.
 - **From email:** the email link lands on `/invitations/:id`, which requires sign-in as the recipient.
 - **Wrong account:** "This invitation is for a different account — sign out and sign in with that email".
@@ -1246,6 +1257,8 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Once per device:** each pending invitation is announced once, those found on load included. On the Invitations pages, new ones are already in view and aren't announced.
 - The email and the sidebar's Invitations stay as they were.
 
+*Planned in P-TON-47 (FR-07.18), built in TON-190:* the inbox row, the email and the notice name the role, and a role changed later reaches the person live.
+
 **DS-67 Shared with me.** The sidebar section and `/shared` index group references by owner display name.
 - **Context menu:** **Leave share…** for invitation-based references, with a small confirmation explaining that the owner must re-invite you; **Remove from Shared with me** for link references.
 - **Inaccessible references:** shown dimmed with "No longer available" and **Remove**.
@@ -1262,6 +1275,8 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Later:** the sidebar's per-owner entries, and opening a reference, come with TON-69.
 
 *As built in TON-130:* the sidebar shows the references in its tree, under Shared with me, without owner rows (DS-31).
+
+*Planned in P-TON-47 (FR-07.18), built in TON-190:* `/shared` and the tree mark the folders and lists the person can edit.
 
 **DS-68 Signed-in visit to a shared link.** A banner reads "Shared by {name} · **Add to Shared with me**". It changes to "In Shared with me" after adding. Adding never happens implicitly. *(FR-07.13)*
 - *As built in TON-68:*
@@ -1299,6 +1314,8 @@ The block never says "private" while another access path remains.
   - recovery adds the destination's, and its own shares resume. Asked without a destination for a unit whose folder is gone or in Trash, it answers 422 `required_missing`, as `trash.recover` asks for a place there (TON-151);
   - an album's adds those of its active lists.
 
+*Planned for editors in P-TON-47 (FR-07.20), built in TON-189:* an editor's previews name no people and no other share. They say the sharing is unchanged, or only that who can see it changes.
+
 **DS-70 Viewer chrome (signed-in).** Same shell. The header shows a "View only · Shared by {name}" pill, has no mode toggle or edit affordances, and offers view options. Desktop viewers can rearrange (DS-49) in their own arrangement. *(FR-05.2, FR-07.17)*
 - *As built in TON-69:*
   - **Where:** `/shared/{id}`, opened from Shared with me, with `?c=` for a folder or list inside the share. The header's breadcrumb is "Shared with me"; breadcrumbs inside the share sit above the content.
@@ -1312,6 +1329,16 @@ The block never says "private" while another access path remains.
   - **When access ends:** the page reads "Not available" and "No longer available. Its owner stopped sharing it with you, or moved it to Trash.", with a link to Shared with me.
   - **Shared with me's** available entries link here.
 - *As built in TON-127:* albums show their services as links, as on guest pages (DS-72), following the viewer's link setting.
+
+**DS-70 for editors** *(planned in P-TON-47, decided with the creator 10 November 2026; FR-07.18–FR-07.21; built in TON-191).* A share the person can edit opens in the same place, with the owner's editing tools on the desktop:
+- **The header:** a pill naming the role and the owner, the View | Edit toggle (DS-45), and View options. There's no Share button.
+- **Editing** works as in the person's own collection (DS-45, DS-49, DS-50), inside the share only:
+  - Move to… offers only the share's folders, and dragging stays inside the share;
+  - the shared folder or list itself can be renamed, described and colored, but not moved or deleted;
+  - Add albums and New album add to the share's lists;
+  - the inspector shows all the owner's fields, used or not, and edits their values, but not the fields themselves.
+- **Unchanged from viewers:** sort, grouping, layout and manual order are the person's own.
+- **Phones:** a share stays view-only, with the viewer's pill.
 
 ---
 
