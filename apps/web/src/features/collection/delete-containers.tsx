@@ -17,7 +17,7 @@ import { trashRetentionDays, type Container } from "@tonaris/domain";
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useViewContainerId } from "./collection-ui";
 import { useCollectionData } from "./data";
-import { useOpenContainer } from "./place";
+import { useCollectionPlace, useOpenContainer } from "./place";
 import { ancestorsOf, type Tree } from "./tree";
 
 /** The containers under `id`, nearest first. */
@@ -30,6 +30,14 @@ function descendants(tree: Tree, id: string): Container[] {
   }
   return found;
 }
+
+/** The owner's Trash, as a share's deletions name it (FR-07.20). */
+const trashOf = (place: { ownerName: string | null }) =>
+  place.ownerName === null ? "its owner's Trash" : `${place.ownerName}'s Trash`;
+
+/** Why the shared folder or list itself can't be moved or deleted by its editor (FR-07.20). */
+export const shareTopRefusal =
+  "Only its owner can move or delete the shared folder or list itself.";
 
 /** Leaves the page on view if it goes with `container`, its own or one inside it, for the nearest folder that stays. */
 function useLeaveGoing(): (container: Container) => void {
@@ -57,10 +65,16 @@ export function useDeleteContainer(): (id: string) => void {
   const { tree } = useCollectionData();
   const { startDelete } = useCollectionDialogs();
   const recover = useRecover();
+  const place = useCollectionPlace();
 
   return (id: string) => {
     const container = tree.byId.get(id);
     if (!client || !container) return;
+    // The shared folder or list itself stays where its owner put it (FR-07.20).
+    if (place.kind === "share" && id === place.rootId) {
+      notify?.info(shareTopRefusal);
+      return;
+    }
     if (container.kind === "folder") {
       startDelete(id);
       return;
@@ -70,7 +84,7 @@ export function useDeleteContainer(): (id: string) => void {
     sent(transaction);
     announce(`Moved ${container.name} to Trash`);
     notify?.undo({
-      title: "1 list moved to Trash",
+      title: place.kind === "share" ? `1 list moved to ${trashOf(place)}` : "1 list moved to Trash",
       onUndo: () => {
         const [unit] = deleted.units;
         if (!unit) return;
@@ -89,6 +103,7 @@ export function useDeleteContainer(): (id: string) => void {
 
 /** The confirmation for deleting a folder (DS-50, DS-28), while one is asked for. */
 export function DeleteFolderDialog() {
+  const place = useCollectionPlace();
   const client = useSyncClient();
   const announce = useAnnounce();
   const leaveGoing = useLeaveGoing();
@@ -117,11 +132,18 @@ export function DeleteFolderDialog() {
         folder && {
           title: `Delete folder '${folder.name}'?`,
           scope: [contents],
-          consequences: [
-            "Albums stay in their other lists or in Unsorted.",
-            `Recoverable from Trash for ${trashRetentionDays} days.`,
-          ],
-          action: `Move ${moved} to Trash`,
+          // An editor's goes to the owner's Trash, which only the owner opens (FR-07.20).
+          consequences:
+            place.kind === "share"
+              ? [
+                  "Albums stay in their other lists.",
+                  `Only ${place.ownerName ?? "its owner"} can restore it, from their Trash.`,
+                ]
+              : [
+                  "Albums stay in their other lists or in Unsorted.",
+                  `Recoverable from Trash for ${trashRetentionDays} days.`,
+                ],
+          action: `Move ${moved} to ${place.kind === "share" ? trashOf(place) : "Trash"}`,
           onConfirm: () => {
             if (!client) return;
             leaveGoing(folder);
@@ -140,6 +162,7 @@ export function DeleteFolderDialog() {
  * list and Unsorted, and Trash keeps it for 30 days.
  */
 export function DeleteAlbumDialog() {
+  const place = useCollectionPlace();
   const client = useSyncClient();
   const notify = useNotify();
   const announce = useAnnounce();
@@ -151,6 +174,40 @@ export function DeleteAlbumDialog() {
     (listId) => tree.byId.get(listId)?.name ?? [],
   );
 
+  // An editor's deletion takes it out of the share only; the owner's other lists keep it (FR-07.21).
+  const share =
+    place.kind === "share" ? (tree.byId.get(place.rootId)?.name ?? "this share") : undefined;
+  if (share !== undefined && place.kind === "share") {
+    return (
+      <ConfirmDialog
+        confirmation={
+          album && {
+            title: `Delete '${album.title}' from '${share}'?`,
+            scope: [
+              `It leaves ${count(lists.length, "list", "lists")}: ${lists.slice(0, 3).join(", ")}${lists.length > 3 ? ", …" : ""}.`,
+            ],
+            consequences: [
+              `Removes it from every list in '${share}'.`,
+              `${place.ownerName ?? "Its owner"}'s other lists keep it.`,
+            ],
+            action: "Delete",
+            onConfirm: () => {
+              if (!client) return;
+              void navigate({
+                to: ".",
+                search: (previous) => ({ ...previous, album: undefined }),
+                resetScroll: false,
+              });
+              sent(client.trash.deleteAlbum(album.id).transaction);
+              announce(`Deleted ${album.title} from ${share}`);
+              notify?.info(`'${album.title}' left '${share}'`);
+            },
+          }
+        }
+        onClose={endDeleteAlbum}
+      />
+    );
+  }
   return (
     <ConfirmDialog
       confirmation={

@@ -82,7 +82,9 @@ const nameOf = (audience: Audience, sameFolder = false) =>
     : `${audience.name}${audience.pending ? " (invited)" : ""}`;
 
 /** The block's lines for an answer. */
-export function impactLines({ added, removed, direct }: SharingImpact): string[] {
+export function impactLines({ added, removed, direct, withheld }: SharingImpact): string[] {
+  // An editor's move: whether who can see it changes, naming nobody (FR-07.20).
+  if (withheld !== undefined) return [withheld ? "Who can see it changes" : "Sharing unchanged"];
   const lines: string[] = [];
   if (added.length > 0) {
     lines.push(`Newly visible to ${sentence(added.map((audience) => nameOf(audience)))}`);

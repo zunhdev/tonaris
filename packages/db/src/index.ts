@@ -156,7 +156,7 @@ export {
   readableContainers,
   roleOn,
 } from "./access";
-export { sharingImpact, type ImpactQuery } from "./sharing-impact";
+export { editorsMoveImpact, sharingImpact, type ImpactQuery } from "./sharing-impact";
 export {
   findShareLink,
   linkReferenceState,

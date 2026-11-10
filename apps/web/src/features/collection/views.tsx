@@ -53,7 +53,7 @@ import { useDeleteContainer } from "./delete-containers";
 import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
 import { ModeSwitch } from "./mode-switch";
-import { NameDialog, type Naming } from "./name-dialog";
+import { useStartNaming } from "./name-dialog";
 import { ContainerLink, useCollectionPlace, useOpenContainer } from "./place";
 import { ancestorsOf } from "./tree";
 import type { ViewMoves } from "./use-rearrange";
@@ -194,8 +194,8 @@ function ViewHeader({
   const offline = useConnection() === "offline";
   const place = useCollectionPlace();
   const inShare = place.kind === "share";
-  // In a share, names are asked for here, as the sidebar shows the person's own collection (TON-191).
-  const [naming, setNaming] = useState<Naming>();
+  // In a share, names are asked for in a dialog, as the sidebar shows the person's own collection (TON-191).
+  const setNaming = useStartNaming();
   return (
     <PageHeader
       title={title}
@@ -281,7 +281,6 @@ function ViewHeader({
           )}
           <ModeSwitch />
           {viewOptions && <ViewOptions key={viewKey} viewKey={viewKey} kind={kind} />}
-          <NameDialog naming={naming} onClose={() => setNaming(undefined)} />
         </>
       }
     />

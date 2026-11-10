@@ -24,6 +24,7 @@ import type { ContainerKind } from "@tonaris/domain";
 import { CollectionDialogsProvider } from "./collection-dialogs";
 import { CollectionModeProvider, useMode } from "./collection-mode";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
+import { useStartNaming } from "./name-dialog";
 import { useCollectionPlace } from "./place";
 import { ancestorsOf, buildTree } from "./tree";
 
@@ -158,10 +159,34 @@ export function useStartEditor(): (editor: Editor | { mode: "new"; kind: Contain
   const client = useSyncClient();
   const ui = useCollectionUi();
   const viewId = useViewContainerId();
+  const inShare = useCollectionPlace().kind === "share";
+  const startNaming = useStartNaming();
   return useCallback(
     (request) => {
       if (!client) return;
       const containers = client.containers;
+      // In a share, the sidebar shows the person's own collection: names are asked for in a dialog (TON-195).
+      if (inShare) {
+        const view = viewId === undefined ? undefined : containers.get(viewId);
+        if (request.mode === "rename") {
+          const container = containers.get(request.id);
+          if (container) startNaming({ mode: "rename", container });
+        } else {
+          const parentId = request.mode === "create" ? request.parentId : placeFor(undefined, view);
+          const parent = parentId === null ? undefined : containers.get(parentId);
+          // A list at the top of the share holds no folders or lists.
+          if (parent?.kind === "folder") {
+            startNaming({
+              mode: "new",
+              kind: request.kind,
+              parentId: parent.id,
+              parentName: parent.name,
+            });
+          }
+        }
+        enterEditing();
+        return;
+      }
       let editor: Editor;
       if (request.mode === "new") {
         const focusedId = ui.focused();
@@ -184,6 +209,6 @@ export function useStartEditor(): (editor: Editor | { mode: "new"; kind: Contain
       enterEditing();
       ui.editing.start(editor);
     },
-    [client, ui, viewId, enterEditing],
+    [client, ui, viewId, enterEditing, inShare, startNaming],
   );
 }

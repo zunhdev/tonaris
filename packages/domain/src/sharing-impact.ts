@@ -41,6 +41,10 @@ export const sharingImpactSchema = z
     direct: z
       .array(audienceSchema)
       .meta({ description: "Shares on it and its contents, which it keeps (or which resume)." }),
+    withheld: z.boolean().optional().meta({
+      description:
+        "For an editor's move inside a share: whether who can see it changes. The audiences are withheld, so an editor learns nobody's access (FR-07.20, DS-69).",
+    }),
   })
   .meta({ description: "A move's or a recovery's sharing consequences (DS-69)." });
 export type SharingImpact = z.infer<typeof sharingImpactSchema>;

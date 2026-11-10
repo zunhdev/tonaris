@@ -1057,6 +1057,12 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
 - **A folder:** the consequences add that only its owner can restore it, from their Trash.
 - **An album:** the scope names the share's lists it leaves, and the consequence says it leaves every list in the share, while the owner's other lists keep it. It doesn't say whether it goes to Trash, which the editor can't tell (FR-07.21).
 
+*As built in TON-195:*
+- **A list:** "1 list moved to Denis's Trash", with Undo.
+- **A folder:** "Albums stay in their other lists." and "Only Denis can restore it, from their Trash.", with "Move 1 folder and 2 lists to Denis's Trash".
+- **An album:** "Delete 'Nightfall' from 'Metal'?", "It leaves 1 list: Doom.", "Removes it from every list in 'Metal'." and "Denis's other lists keep it.", with **Delete**; then "'Nightfall' left 'Metal'".
+- **The shared folder or list itself:** ⌫ on it says "Only its owner can move or delete the shared folder or list itself." and deletes nothing.
+
 **DS-51 Unsorted placement** *(handoff FR-05.4)*:
 - An album entering Unsorted, whether new or leaving its last list, is placed at the **top** of the owner's Unsorted manual order. Unsorted behaves like an inbox.
 - Positions are not retained when an album leaves and later returns.
@@ -1320,7 +1326,7 @@ The block never says "private" while another access path remains.
   - recovery adds the destination's, and its own shares resume. Asked without a destination for a unit whose folder is gone or in Trash, it answers 422 `required_missing`, as `trash.recover` asks for a place there (TON-151);
   - an album's adds those of its active lists.
 
-*Planned for editors in P-TON-47 (FR-07.20), built in TON-189:* an editor's previews name no people and no other share. They say the sharing is unchanged, or only that who can see it changes.
+*Built for editors in TON-195 (FR-07.20):* an editor's previews name no people and no other share: "Sharing unchanged", or "Who can see it changes". `GET /v1/sharing/impact` answers an editor's move inside a share with the audiences withheld (`withheld`).
 
 **DS-70 Viewer chrome (signed-in).** Same shell. The header shows a "View only · Shared by {name}" pill, has no mode toggle or edit affordances, and offers view options. Desktop viewers can rearrange (DS-49) in their own arrangement. *(FR-05.2, FR-07.17)*
 - *As built in TON-69:*
@@ -1354,6 +1360,11 @@ The block never says "private" while another access path remains.
 - **The album panel** edits as the person's own does, with the owner's fields; its lists link inside the share.
 - **Losing access:** the view reads again as the viewer's page and says it's no longer available. Edits not saved by then are reported in a toast: "2 changes weren't saved", "You can no longer edit "Metal"."
 - **The sidebar and the palette** keep the person's own collection, whatever is on screen.
+
+*As built in TON-195:* **the shortcuts and the palette's commands** act on the share on screen.
+- **N, ⇧N and F2** open the name dialog, for the folder on view or the list's folder.
+- **M:** Move to… lists only the share's folders, never Collection. On the shared folder or list itself, it says "Only its owner can move or delete the shared folder or list itself." and offers nowhere.
+- **Dragging** onto the sidebar's folders moves nothing: they're the person's own.
 
 ---
 
