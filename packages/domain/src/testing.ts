@@ -651,7 +651,7 @@ export function memoryStore({
           each.granteeId === granteeId &&
           (each.status === "pending" || each.status === "accepted"),
       );
-      return Promise.resolve(grant && { id: grant.id, status: grant.status });
+      return Promise.resolve(grant && { id: grant.id, status: grant.status, role: grant.role });
     },
     insertGrant(grant) {
       grantRows.set(grant.id, { ...grant });
@@ -663,6 +663,7 @@ export function memoryStore({
         grant && {
           id: grant.id,
           status: grant.status,
+          role: grant.role,
           containerId: grant.containerId,
           granteeId: grant.granteeId,
         },
@@ -673,6 +674,11 @@ export function memoryStore({
       if (grant?.status !== from) return Promise.resolve(false);
       grant.status = to;
       return Promise.resolve(true);
+    },
+    setGrantRole(id, role) {
+      const grant = grantRows.get(id);
+      if (grant) grant.role = role;
+      return Promise.resolve();
     },
     setGrantEmailStatus(id, status) {
       const grant = grantRows.get(id);

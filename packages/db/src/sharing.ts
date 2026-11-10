@@ -18,7 +18,13 @@ import {
   type ShareViewer,
 } from "@tonaris/domain";
 
-import { canReadContainer, linkByTokenHash, readableContainers } from "./access";
+import {
+  canReadContainer,
+  editableContainers,
+  linkByTokenHash,
+  readableContainers,
+  roleOn,
+} from "./access";
 import { readSnapshot, type Database, type Executor, type Transaction } from "./client";
 import {
   albumColumns,
@@ -62,8 +68,9 @@ async function activeSubtree(tx: Transaction, id: string): Promise<string[]> {
 }
 
 /**
- * The container `id` as `viewer` sees it (FR-07.11, FR-07.12): undefined unless they may read it. Read in one
- * repeatable-read transaction, as the bootstrap is, so its parts agree.
+ * The container `id` as `viewer` sees it (FR-07.11, FR-07.12, FR-07.18): undefined unless they may read it, with
+ * their role; an editor gets all the owner's fields. Read in one repeatable-read transaction, as the bootstrap is, so
+ * its parts agree.
  */
 export function sharedSnapshot(
   db: Database,
@@ -71,10 +78,11 @@ export function sharedSnapshot(
   id: string,
 ): Promise<SharedSnapshot | undefined> {
   return readSnapshot(db, async (tx) => {
-    if (!(await canReadContainer(tx, viewer, id))) return undefined;
+    const role = await roleOn(tx, viewer, id);
+    if (role === undefined) return undefined;
     const ids = await activeSubtree(tx, id);
     const [owner] = await tx
-      .select({ displayName: users.displayName })
+      .select({ id: users.id, displayName: users.displayName })
       .from(containers)
       .innerJoin(users, eq(users.id, containers.ownerId))
       .where(eq(containers.id, id));
@@ -108,6 +116,7 @@ export function sharedSnapshot(
     const fieldValues = await valuesOfAlbums(tx, albumIds);
     return {
       rootId: id,
+      role,
       owner: { displayName: owner?.displayName ?? null },
       // The root's parent is a folder the viewer may not know of.
       containers: shown.map((each) =>
@@ -116,10 +125,40 @@ export function sharedSnapshot(
       albums: shownAlbums,
       memberships: entries.map(membershipOf),
       links,
-      fields: await usedFields(tx, fieldValues),
+      fields:
+        role === "edit" && owner
+          ? await allFields(tx, owner.id)
+          : await usedFields(tx, fieldValues),
       fieldValues,
     };
   });
+}
+
+/** All the owner's fields with all their options, for an editor to set (FR-07.20). */
+async function allFields(tx: Transaction, ownerId: string): Promise<CustomField[]> {
+  const definitions = await tx
+    .select({ id: fieldDefinitions.id, name: fieldDefinitions.name, type: fieldDefinitions.type })
+    .from(fieldDefinitions)
+    .where(eq(fieldDefinitions.ownerId, ownerId))
+    .orderBy(asc(fieldDefinitions.id));
+  if (definitions.length === 0) return [];
+  const options = await tx
+    .select({ id: fieldOptions.id, fieldId: fieldOptions.fieldId, label: fieldOptions.label })
+    .from(fieldOptions)
+    .where(
+      inArray(
+        fieldOptions.fieldId,
+        definitions.map(({ id }) => id),
+      ),
+    )
+    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
+  const byField = Map.groupBy(options, (option) => option.fieldId);
+  return definitions.map(({ id, name, type }) => ({
+    id,
+    name,
+    type,
+    options: (byField.get(id) ?? []).map((option) => ({ id: option.id, label: option.label })),
+  }));
 }
 
 /** The fields `values` use, each with only the options they choose (FR-07.12). */
@@ -185,9 +224,11 @@ export function shareSettings(
     const invitations = await tx
       .select({
         id: shareGrants.id,
+        granteeId: shareGrants.granteeId,
         email: shareGrants.invitedEmail,
         displayName: users.displayName,
         status: shareGrants.status,
+        role: shareGrants.role,
         emailStatus: shareGrants.emailStatus,
         updatedAt: shareGrants.updatedAt,
       })
@@ -211,14 +252,36 @@ export function shareSettings(
                 where ${shareGrants.containerId} = up.id and ${inArray(shareGrants.status, [...openGrantStatuses])})::int as people,
               exists (select 1 from ${shareLinks} l where l.container_id = up.id and l.revoked_at is null) as link
             from up join ${containers} c on c.id = up.id order by up.level`);
+    // Each person's nearest folder above, while every folder between is active, with their accepted edit grant.
+    const editors =
+      container.parentId === null
+        ? []
+        : await tx.execute<{ granteeId: string; id: string; name: string }>(sql`
+            with recursive ${ancestorsCte(container.parentId, { active: true })}
+            select g.grantee_id as "granteeId", up.id, c.name
+            from up
+            join ${shareGrants} g on g.container_id = up.id and g.status = 'accepted' and g.role = 'edit'
+            join ${containers} c on c.id = up.id
+            order by up.level`);
+    const editableThrough = new Map<string, { containerId: string; name: string }>();
+    for (const { granteeId, id: containerId, name } of editors) {
+      if (!editableThrough.has(granteeId)) editableThrough.set(granteeId, { containerId, name });
+    }
     return {
       containerId: id,
       ownerDisplayName: owner?.displayName ?? null,
-      invitations: invitations.flatMap(({ updatedAt, emailStatus, ...each }) => {
+      invitations: invitations.flatMap(({ updatedAt, emailStatus, granteeId, ...each }) => {
         const status = openGrantStatuses.find((open) => open === each.status);
         // A send that never reported back is unconfirmed: the server may have stopped (FR-07.5).
         return status
-          ? [{ ...each, status, emailStatus: shownEmailStatus(emailStatus, updatedAt, now) }]
+          ? [
+              {
+                ...each,
+                status,
+                editableThrough: editableThrough.get(granteeId) ?? null,
+                emailStatus: shownEmailStatus(emailStatus, updatedAt, now),
+              },
+            ]
           : [];
       }),
       link: link ?? null,
@@ -275,8 +338,9 @@ export function sharedWithMe(db: Database, viewerId: string): Promise<SharedEntr
       .where(eq(savedReferences.viewerId, viewerId));
     if (rows.length === 0) return [];
     const ids = rows.map((row) => row.containerId);
-    const [readable, grants, links] = await Promise.all([
+    const [readable, editable, grants, links] = await Promise.all([
       readableContainers(tx, { kind: "person", userId: viewerId }),
+      editableContainers(tx, viewerId),
       tx
         .select({ containerId: shareGrants.containerId })
         .from(shareGrants)
@@ -311,6 +375,7 @@ export function sharedWithMe(db: Database, viewerId: string): Promise<SharedEntr
             link: row.linkId !== null && live.has(row.linkId),
           },
           available,
+          role: available ? (editable.has(row.containerId) ? "edit" : "view") : null,
           containers: available ? (inside.get(row.containerId) ?? []) : [],
         };
       })

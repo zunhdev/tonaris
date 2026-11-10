@@ -1,7 +1,7 @@
 // The revocation ledger's events (TS-113, Q-04): every deletion-class change, written off-site as it happens, so a
 // restored backup can be brought forward past it. Only IDs: no names, titles or addresses. A restore replays the
-// events newer than the backup, so a deleted account, a revoked connection, link or grant, a purged Trash unit, a
-// revoked admission or a removed passkey never comes back.
+// events newer than the backup, so a deleted account, a revoked connection, link or grant, a grant's lowered role, a
+// purged Trash unit, a revoked admission or a removed passkey never comes back.
 
 import { z } from "./zod";
 
@@ -32,6 +32,8 @@ export const ledgerEventSchema = z.discriminatedUnion("type", [
     grantId: z.uuid(),
     status: z.enum(["declined", "withdrawn", "revoked"]),
   }),
+  // An invitation's role lowered from edit to view (FR-07.18): a restore never brings edit rights back.
+  z.object({ ...base, type: z.literal("shareGrant.roleLowered"), grantId: z.uuid() }),
   z.object({
     ...base,
     type: z.literal("trash.purged"),

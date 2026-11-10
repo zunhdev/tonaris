@@ -1,7 +1,7 @@
 // The revocation ledger against the local Postgres 18 (TS-113, Q-04): each deletion-class change queues its event in
 // its own transaction; the file store keeps each event once, in order; and the replay applies events to a
 // restored database, idempotently: the account, the connection, the link, the grant, the Trash unit, the
-// admission and the passkey stay gone.
+// admission and the passkey stay gone, and a lowered role stays lowered.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -144,6 +144,48 @@ describe("recording", () => {
   });
 });
 
+describe("roles (FR-07.18)", () => {
+  test("lowering a role from edit to view queues an event; raising it doesn't", async () => {
+    const doom = await list("Doom");
+    const grantId = uuidv7();
+    await t.db.insert(shareGrants).values({
+      id: grantId,
+      containerId: doom,
+      granteeId: ben,
+      invitedEmail: "ben@example.com",
+      status: "accepted",
+    });
+    await run({ mutationId: uuidv7(), name: "share.setRole", args: { grantId, role: "edit" } });
+    expect(await queued()).toEqual([]);
+    await run({ mutationId: uuidv7(), name: "share.setRole", args: { grantId, role: "view" } });
+    expect((await queued()).map(({ id: _id, at: _at, ...event }) => event)).toEqual([
+      { type: "shareGrant.roleLowered", grantId },
+    ]);
+  });
+
+  test("a restore from before a role was lowered keeps it lowered, again and again", async () => {
+    const doom = await list("Doom");
+    const grantId = uuidv7();
+    // As the backup held it: Ben could edit.
+    await t.db.insert(shareGrants).values({
+      id: grantId,
+      containerId: doom,
+      granteeId: ben,
+      invitedEmail: "ben@example.com",
+      status: "accepted",
+      role: "edit",
+    });
+    const events: LedgerEvent[] = [
+      { id: uuidv7(), at: new Date().toISOString(), type: "shareGrant.roleLowered", grantId },
+    ];
+    expect((await replayLedger(t.db, events))["shareGrant.roleLowered"]).toBe(1);
+    const role = async () => (await t.db.select().from(shareGrants))[0]?.role;
+    expect(await role()).toBe("view");
+    await replayLedger(t.db, events);
+    expect(await role()).toBe("view");
+  });
+});
+
 describe("the file store", () => {
   test("keeps each event once, in the order they happened", async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "ledger-"));
@@ -235,6 +277,7 @@ describe("the replay", () => {
       "connection.revoked": 1,
       "shareLink.revoked": 1,
       "shareGrant.ended": 1,
+      "shareGrant.roleLowered": 0,
       "trash.purged": 1,
       "admission.revoked": 1,
       "passkey.removed": 2,

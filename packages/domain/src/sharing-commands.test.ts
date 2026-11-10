@@ -1,6 +1,6 @@
-// Sharing's commands against an in-memory store (FR-07.1, FR-07.4, FR-07.5, FR-07.16, FR-11.3; TS-32, TS-34): invitations
-// for members only, never duplicated or self-made; links on, kept and off for good; the display name needed to share
-// and kept while sharing; and all of it app-only.
+// Sharing's commands against an in-memory store (FR-07.1, FR-07.4, FR-07.5, FR-07.16, FR-07.18, FR-11.3; TS-32, TS-34):
+// invitations for members only, never duplicated or self-made, with their roles; links on, kept and off for good; the
+// display name needed to share and kept while sharing; and all of it app-only.
 
 import { describe, expect, test } from "bun:test";
 
@@ -8,7 +8,7 @@ import { runCommand, type CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
-import { shareTokenHash } from "./sharing";
+import { editableContainers, shareTokenHash, type ShareRole } from "./sharing";
 import { mutationSchema, type Mutation } from "./sync";
 import { memoryStore } from "./testing";
 
@@ -73,7 +73,7 @@ describe("share.invite (FR-07.4, FR-07.5)", () => {
     expect(first).toEqual({
       status: "applied",
       changes: [],
-      result: { grantId, status: "pending", emailing: true },
+      result: { grantId, status: "pending", role: "view", emailing: true },
     });
     expect([...grants.values()]).toEqual([
       {
@@ -82,6 +82,7 @@ describe("share.invite (FR-07.4, FR-07.5)", () => {
         granteeId: annaId,
         invitedEmail: "Anna@Example.com",
         status: "pending",
+        role: "view",
         emailStatus: "sending",
       },
     ]);
@@ -303,6 +304,81 @@ describe("leaving and revoking (FR-07.7, FR-07.15)", () => {
     expect(codeOf(await run(revoke(accepted)))).toBe("applied");
     expect(grants.get(accepted)?.status).toBe("revoked");
     expect(references.size).toBe(1);
+  });
+});
+
+const inviteAs = (role: ShareRole, grantId = uuidv7()): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.invite",
+  args: { grantId, containerId: doom.id, email: "anna@example.com", role },
+});
+const setRole = (grantId: string, role: ShareRole): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.setRole",
+  args: { grantId, role },
+});
+
+describe("roles (FR-07.18)", () => {
+  test("an invitation to edit has its role; one without views; inviting again keeps the open one's role", async () => {
+    const { run, grants } = setup();
+    const grantId = uuidv7();
+    expect(await run(inviteAs("edit", grantId))).toMatchObject({
+      result: { grantId, status: "pending", role: "edit", emailing: true },
+    });
+    expect(grants.get(grantId)?.role).toBe("edit");
+    expect(await run(inviteAs("view"))).toMatchObject({
+      result: { grantId, role: "edit", emailing: false },
+    });
+    expect(grants.get(grantId)?.role).toBe("edit");
+
+    const other = setup();
+    const viewer = uuidv7();
+    await other.run(invite("anna@example.com", viewer));
+    expect(other.grants.get(viewer)?.role).toBe("view");
+  });
+
+  test("the owner changes a role, pending or accepted, and the person doesn't accept again", async () => {
+    const { run, grants, containers } = setup();
+    const grantId = uuidv7();
+    await run(invite("anna@example.com", grantId));
+    expect(codeOf(await run(setRole(grantId, "edit")))).toBe("applied");
+    expect(grants.get(grantId)).toMatchObject({ status: "pending", role: "edit" });
+    await run(answer("share.accept", grantId), anna);
+    expect(codeOf(await run(setRole(grantId, "view")))).toBe("applied");
+    expect(grants.get(grantId)).toMatchObject({ status: "accepted", role: "view" });
+    // Raised again, it gives editing at once (scenario "Raised without a new acceptance").
+    expect(await run(setRole(grantId, "edit"))).toEqual({
+      status: "applied",
+      changes: [],
+      result: { grantId, role: "edit" },
+    });
+    const now = {
+      containers: [...containers.values()].map(({ id, parentId, trashed }) => ({
+        id,
+        parentId,
+        trashed,
+      })),
+      grants: [...grants.values()],
+      links: [],
+      references: [],
+    };
+    expect(editableContainers(now, annaId).has(doom.id)).toBe(true);
+    // The same role again changes nothing.
+    expect(codeOf(await run(setRole(grantId, "edit")))).toBe("applied");
+    expect(grants.get(grantId)?.role).toBe("edit");
+  });
+
+  test('only the owner, in the app, on an open invitation (scenario "Not through MCP")', async () => {
+    const { run, grants } = setup();
+    const grantId = uuidv7();
+    await run(invite("anna@example.com", grantId));
+    expect(codeOf(await run(setRole(grantId, "edit"), agent))).toBe("app_only");
+    expect(codeOf(await run(setRole(grantId, "edit"), anna))).toBe("permission_denied");
+    expect(grants.get(grantId)?.role).toBe("view");
+    expect(codeOf(await run(setRole(uuidv7(), "edit")))).toBe("not_found");
+    await run(revoke(grantId));
+    expect(codeOf(await run(setRole(grantId, "edit")))).toBe("not_found");
+    expect(grants.get(grantId)?.role).toBe("view");
   });
 });
 

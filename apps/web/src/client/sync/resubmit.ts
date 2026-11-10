@@ -324,6 +324,7 @@ function remake(
     case "share.decline":
     case "share.leave":
     case "share.revoke":
+    case "share.setRole":
     case "share.saveLink":
     case "share.removeReference":
     case "account.setDisplayName":

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Read-only sharing of folders and lists: who may read shared content, by accepted invitation grants and by links, through the folder hierarchy and Trash, and what they see of it (FR-07).
+Sharing of folders and lists, to view or to edit: who may read or edit shared content, by accepted invitation grants and their roles and by links, through the folder hierarchy and Trash, and what they see of it (FR-07).
 
 ## Requirements
 

@@ -1,8 +1,10 @@
-// Read-only sharing (FR-07; TS-30 to TS-33): who may read a shared folder or list, and what they see. Access comes
+// Sharing (FR-07; TS-30 to TS-33): who may read or edit a shared folder or list, and what they see. Access comes
 // from a source — a person's accepted grant, a link their saved reference names, or a guest's link — on the
 // container itself or any folder above it, as long as every container from the source down is active: folder shares
 // cover current and future descendants (FR-07.8), follow moves (FR-07.9), and are suspended, not revoked, by Trash
-// (FR-07.10). `readableContainers` is the definition; the database's recursive CTEs are tested against it.
+// (FR-07.10). Editing comes the same way from accepted grants whose role is edit only; links only ever give view
+// (FR-07.18). `readableContainers` and `editableContainers` are the definitions; the database's recursive CTEs are
+// tested against them.
 
 import { emailInputSchema, emailKey } from "./accounts";
 import { syncedAlbumSchema } from "./albums";
@@ -46,6 +48,10 @@ export const endedGrantStatuses = [
   "revoked",
 ] as const satisfies readonly ShareGrantStatus[];
 
+/** What an invitation lets its person do (FR-07.18): view, or edit too. Links only ever give view. */
+export const shareRoles = ["view", "edit"] as const;
+export type ShareRole = (typeof shareRoles)[number];
+
 /** An invitation email's delivery, tracked apart from the invitation (FR-07.5, TS-33). */
 export const emailStatuses = ["sending", "sent", "failed", "unknown"] as const;
 export type EmailStatus = (typeof emailStatuses)[number];
@@ -56,7 +62,12 @@ export type ShareViewer = { kind: "person"; userId: string } | { kind: "link"; l
 /** What access is decided from: the hierarchy, and every grant, link and saved reference. */
 export type SharingState = {
   containers: readonly { id: string; parentId: string | null; trashed: boolean }[];
-  grants: readonly { containerId: string; granteeId: string; status: ShareGrantStatus }[];
+  grants: readonly {
+    containerId: string;
+    granteeId: string;
+    status: ShareGrantStatus;
+    role: ShareRole;
+  }[];
   links: readonly { id: string; containerId: string; revoked: boolean }[];
   references: readonly { viewerId: string; containerId: string; linkId: string | null }[];
 };
@@ -82,32 +93,70 @@ export function sourcesOf(state: SharingState, viewer: ShareViewer): Set<string>
   return sources;
 }
 
+/** The containers `userId` edits through directly: their accepted grants whose role is edit (FR-07.18). */
+export function editSourcesOf(state: SharingState, userId: string): Set<string> {
+  return new Set(
+    state.grants
+      .filter(
+        (grant) =>
+          grant.granteeId === userId && grant.status === "accepted" && grant.role === "edit",
+      )
+      .map((grant) => grant.containerId),
+  );
+}
+
 /**
- * Every container `viewer` may read, each with the sources it is read through (TS-31): down from each active source
- * through active children only. Assumes nothing of the data: an active child under a trashed folder isn't reached
- * through that folder.
+ * Every container reached from `sources`, each with the sources it is reached through (TS-31): down from each active
+ * source through active children only. Assumes nothing of the data: an active child under a trashed folder isn't
+ * reached through that folder.
  */
-export function readableContainers(
-  state: SharingState,
-  viewer: ShareViewer,
-): Map<string, Set<string>> {
+function reachedFrom(state: SharingState, sources: ReadonlySet<string>): Map<string, Set<string>> {
   const active = new Set(state.containers.filter((each) => !each.trashed).map((each) => each.id));
   const children = new Map<string, string[]>();
   for (const { id, parentId } of state.containers) {
     if (parentId !== null) children.set(parentId, [...(children.get(parentId) ?? []), id]);
   }
-  const readable = new Map<string, Set<string>>();
-  for (const source of sourcesOf(state, viewer)) {
+  const reached = new Map<string, Set<string>>();
+  for (const source of sources) {
     if (!active.has(source)) continue;
     const pending = [source];
     for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
-      const through = readable.get(id) ?? new Set();
+      const through = reached.get(id) ?? new Set();
       if (through.has(source)) continue;
-      readable.set(id, through.add(source));
+      reached.set(id, through.add(source));
       pending.push(...(children.get(id) ?? []).filter((child) => active.has(child)));
     }
   }
-  return readable;
+  return reached;
+}
+
+/** Every container `viewer` may read, each with the sources it is read through (TS-31). */
+export function readableContainers(
+  state: SharingState,
+  viewer: ShareViewer,
+): Map<string, Set<string>> {
+  return reachedFrom(state, sourcesOf(state, viewer));
+}
+
+/**
+ * Every container `userId` may edit, each with the grants' containers it is edited through (FR-07.18): read access's
+ * walk, from edit grants only.
+ */
+export function editableContainers(state: SharingState, userId: string): Map<string, Set<string>> {
+  return reachedFrom(state, editSourcesOf(state, userId));
+}
+
+/**
+ * The viewer's role on the container `id` (FR-07.18): edit through an accepted edit grant on it or an active folder
+ * above, else view if they may read it, else none. A link's guest only ever views.
+ */
+export function roleOn(
+  state: SharingState,
+  viewer: ShareViewer,
+  id: string,
+): ShareRole | undefined {
+  if (viewer.kind === "person" && editableContainers(state, viewer.userId).has(id)) return "edit";
+  return readableContainers(state, viewer).has(id) ? "view" : undefined;
 }
 
 const encoder = new TextEncoder();
@@ -136,12 +185,17 @@ export async function shareTokenHash(token: string): Promise<Uint8Array> {
 
 /**
  * What a viewer sees of a shared container (FR-07.11, FR-07.12): its active subtree, the active albums in its lists
- * with their links, and only the custom fields those albums use, with only the options they choose. The root's
- * parent is withheld, so private folders above it stay unknown; the owner is named by display name only (FR-07.3).
+ * with their links, and only the custom fields those albums use, with only the options they choose. An editor sees all
+ * the owner's fields, to set them (FR-07.20). The root's parent is withheld, so private folders above it stay unknown;
+ * the owner is named by display name only (FR-07.3).
  */
 export const sharedSnapshotSchema = z
   .object({
     rootId: z.uuid(),
+    role: z.enum(shareRoles).meta({
+      description:
+        "The reader's role on the root (FR-07.18): edit through an accepted invitation to edit it or a folder above, else view.",
+    }),
     owner: z.object({
       displayName: z.string().nullable(),
     }),
@@ -159,18 +213,29 @@ export const sharedSnapshotSchema = z
     memberships: z.array(membershipSchema),
     links: z.array(serviceLinkSchema),
     fields: z.array(customFieldSchema).meta({
-      description: "The fields the albums use, each with only the options they choose.",
+      description:
+        "For a viewer, the fields the albums use, each with only the options they choose; for an editor, all the owner's fields with all their options (FR-07.12, FR-07.20).",
     }),
     fieldValues: z.array(fieldValueSchema),
   })
   .meta({ description: "A shared folder or list as its viewers see it (FR-07.11, FR-07.12)." });
 export type SharedSnapshot = z.infer<typeof sharedSnapshotSchema>;
 
-/** `share.invite`'s arguments: the grant's ID, chosen by the client (TS-10), and the address as typed. */
+/** `share.invite`'s arguments: the grant's ID, chosen by the client (TS-10), the address as typed, and the role. */
 export const shareInviteArgsSchema = z.object({
   grantId: z.uuid({ version: "v7" }),
   containerId: z.uuid(),
   email: emailInputSchema.meta({ description: "The address to invite, as typed." }),
+  role: z
+    .enum(shareRoles)
+    .optional()
+    .meta({ description: "What the invitation lets them do (FR-07.18); view unless given." }),
+});
+
+/** `share.setRole`'s arguments: the invitation and its new role (FR-07.18). */
+export const shareSetRoleArgsSchema = z.object({
+  grantId: z.uuid(),
+  role: z.enum(shareRoles),
 });
 
 /** `share.setLink`'s arguments: on or off, and the new link's ID, used only when one is made (TS-10). */
@@ -199,6 +264,9 @@ export const setDisplayNameArgsSchema = z.object({
 export const shareInviteResultSchema = z.object({
   grantId: z.uuid(),
   status: z.enum(openGrantStatuses),
+  role: z
+    .enum(shareRoles)
+    .meta({ description: "The invitation's role: the one it had, if open already." }),
   emailing: z
     .boolean()
     .meta({ description: "Whether an email goes out now: for a new invitation." }),
@@ -241,7 +309,7 @@ const named = async ({ store }: CommandContext, ownerId: string) =>
  * the invitation they have. A new one is emailed once it is saved.
  */
 export async function inviteToShare(
-  { grantId, containerId, email }: z.infer<typeof shareInviteArgsSchema>,
+  { grantId, containerId, email, role = "view" }: z.infer<typeof shareInviteArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
   const container = await shareable(containerId, context);
@@ -265,7 +333,7 @@ export async function inviteToShare(
     return {
       status: "applied",
       changes: [],
-      result: { grantId: open.id, status: open.status, emailing: false },
+      result: { grantId: open.id, status: open.status, role: open.role, emailing: false },
     };
   }
   await context.store.insertGrant({
@@ -274,10 +342,15 @@ export async function inviteToShare(
     granteeId: recipient.id,
     invitedEmail: email.trim(),
     status: "pending",
+    role,
     // The API sends the email once this is saved, and records how it went (FR-07.5, TS-72).
     emailStatus: "sending",
   });
-  return { status: "applied", changes: [], result: { grantId, status: "pending", emailing: true } };
+  return {
+    status: "applied",
+    changes: [],
+    result: { grantId, status: "pending", role, emailing: true },
+  };
 }
 
 const unavailable = "This invitation is no longer available.";
@@ -430,6 +503,13 @@ export const shareSettingsSchema = z
             .nullable()
             .meta({ description: "The person's display name, if they set one." }),
           status: z.enum(openGrantStatuses),
+          role: z
+            .enum(shareRoles)
+            .meta({ description: "What the invitation lets them do (FR-07.18)." }),
+          editableThrough: z.object({ containerId: z.uuid(), name: z.string() }).nullable().meta({
+            description:
+              "The nearest folder above through which this person can edit already, by an accepted invitation (FR-07.18); null if none.",
+          }),
           emailStatus: z.enum(emailStatuses).nullable(),
         }),
       )
@@ -499,15 +579,37 @@ export async function revokeGrant(
   return applied();
 }
 
+/**
+ * `share.setRole` (FR-07.15, FR-07.18): the owner changes a pending or accepted invitation's role. The person doesn't
+ * accept again; their access follows from their next read or change. Works in Trash too, as revoking does: a role
+ * set meanwhile holds after recovery. Lowering it is recorded in the revocation ledger by the store (TS-113). App-only
+ * (X-03).
+ */
+export async function setGrantRole(
+  { grantId, role }: z.infer<typeof shareSetRoleArgsSchema>,
+  context: CommandContext,
+): Promise<CommandResult> {
+  const grant = await context.store.findGrant(grantId);
+  if (!grant) return failure("not_found", unavailable);
+  const container = await shareable(grant.containerId, context, { evenInTrash: true });
+  if (isFailure(container)) return container;
+  if (grant.status !== "pending" && grant.status !== "accepted") {
+    return failure("not_found", unavailable);
+  }
+  if (grant.role !== role) await context.store.setGrantRole(grantId, role);
+  return { status: "applied", changes: [], result: { grantId, role } };
+}
+
 /** A pending invitation as its recipient sees it (DS-66): who shares what, and since when. */
 export const invitationSchema = z
   .object({
     id: z.uuid(),
     owner: z.object({ displayName: z.string().nullable() }),
     container: z.object({ id: z.uuid(), name: z.string(), kind: z.enum(containerKinds) }),
+    role: z.enum(shareRoles).meta({ description: "What it lets them do (FR-07.18)." }),
     invitedAt: z.iso.datetime(),
   })
-  .meta({ description: "An invitation to view a folder or list (FR-07.5)." });
+  .meta({ description: "An invitation to view or edit a folder or list (FR-07.5, FR-07.18)." });
 export type Invitation = z.infer<typeof invitationSchema>;
 
 /** `GET /v1/invitations`: the signed-in person's pending invitations to active collections, oldest first. */
@@ -629,6 +731,9 @@ export const sharedEntrySchema = z
       link: z.boolean().meta({ description: "It was saved through a link that still works." }),
     }),
     available: z.boolean().meta({ description: "Whether it can be opened now (FR-07.13)." }),
+    role: z.enum(shareRoles).nullable().meta({
+      description: "The person's role on it while it can be opened (FR-07.18); null once it can't.",
+    }),
     containers: z.array(containerFieldsSchema).meta({
       description:
         "The active folders and lists inside it while it can be opened, each under its parent: it, or a folder inside it (TON-130). Empty for a list, or once it can't be opened.",

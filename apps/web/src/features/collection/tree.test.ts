@@ -124,6 +124,7 @@ describe("Shared with me in the tree (TON-130)", () => {
     kind,
     via: { invitation: true, link: false },
     available: name !== null,
+    role: name === null ? null : "view",
     containers: containers.map(({ id, kind: each, parentId, name: named }) => ({
       id,
       kind: each,

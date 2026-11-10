@@ -54,6 +54,7 @@ function created(mutation: Mutation): string[] {
     case "share.decline":
     case "share.leave":
     case "share.revoke":
+    case "share.setRole":
     case "share.saveLink":
     case "share.removeReference":
     case "account.setDisplayName":
@@ -115,6 +116,7 @@ function referenced(mutation: Mutation): (string | null)[] {
     case "share.accept":
     case "share.decline":
     case "share.revoke":
+    case "share.setRole":
       return [mutation.args.grantId];
     case "link.set":
     case "link.remove":

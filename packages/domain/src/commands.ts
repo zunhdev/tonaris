@@ -38,6 +38,7 @@ import {
   revokeGrant,
   saveLink,
   setDisplayName,
+  setGrantRole,
   setShareLink,
   type Reference,
 } from "./sharing";
@@ -137,6 +138,7 @@ const handlers = {
   "share.removeReference": ({ args }, context) => removeReference(args, context),
   "defaults.setLinkTarget": ({ args, base }, context) => setLinkTarget(args, base, context),
   "defaults.setHiddenServices": ({ args, base }, context) => setHiddenServices(args, base, context),
+  "share.setRole": ({ args }, context) => setGrantRole(args, context),
 } satisfies Handlers;
 
 /** Runs `mutation`'s command; the name ties the mutation to its own handler. */

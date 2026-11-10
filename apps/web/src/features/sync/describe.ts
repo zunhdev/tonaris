@@ -254,6 +254,13 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
     case "share.revoke": {
       return { summary: "Remove someone's access", what: "the removal", subject: "The removal" };
     }
+    case "share.setRole": {
+      return {
+        summary: "Change what someone can do",
+        what: "the change of role",
+        subject: "The change of role",
+      };
+    }
     case "account.setDisplayName": {
       return {
         summary: "Change your display name",

@@ -28,6 +28,7 @@ import { positionSchema } from "./positions";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
 import {
   grantArgsSchema,
+  shareSetRoleArgsSchema,
   leaveArgsSchema,
   referenceSchema,
   removeReferenceArgsSchema,
@@ -462,6 +463,13 @@ export const shareLeaveSchema = z.object({
   args: leaveArgsSchema,
 });
 
+/** `share.setRole`: the owner changes an invitation's role (FR-07.15, FR-07.18). App-only (X-03). */
+export const shareSetRoleSchema = z.object({
+  mutationId,
+  name: z.literal("share.setRole"),
+  args: shareSetRoleArgsSchema,
+});
+
 /** `share.revoke`: the owner revokes an invitation (FR-07.15). App-only (X-03). */
 export const shareRevokeSchema = z.object({
   mutationId,
@@ -534,6 +542,7 @@ export const mutationSchema = z
     defaultsSetLinkTargetSchema,
     defaultsSetHiddenServicesSchema,
     containerSetColorSchema,
+    shareSetRoleSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

@@ -12,7 +12,7 @@ import type { StreamingService } from "./links";
 import type { Membership } from "./memberships";
 import type { Position } from "./positions";
 import type { ViewKind } from "./presentation";
-import type { EmailStatus, ShareGrantStatus } from "./sharing";
+import type { EmailStatus, ShareGrantStatus, ShareRole } from "./sharing";
 import type { StoredTrashUnit, Tombstone } from "./trash";
 import type { AccountDefaults, ViewPrefs } from "./views";
 
@@ -207,6 +207,8 @@ export type CollectionStore = {
   ): Promise<(ShareGrant & { containerId: string; granteeId: string }) | undefined>;
   /** Sets the grant's status if it is still `from`; answers whether it was (TS-33). */
   moveGrant(id: string, from: ShareGrantStatus, to: ShareGrantStatus): Promise<boolean>;
+  /** Sets the grant's role; lowering it to view is recorded in the revocation ledger (FR-07.18, TS-113). */
+  setGrantRole(id: string, role: ShareRole): Promise<void>;
   setGrantEmailStatus(id: string, status: EmailStatus): Promise<void>;
   /**
    * Saves the container to the viewer's references (TS-33, FR-07.13). With `linkId`, the reference points at that
@@ -232,4 +234,4 @@ export type CollectionStore = {
 };
 
 /** A grant as the commands see it. */
-export type ShareGrant = { id: string; status: ShareGrantStatus };
+export type ShareGrant = { id: string; status: ShareGrantStatus; role: ShareRole };
