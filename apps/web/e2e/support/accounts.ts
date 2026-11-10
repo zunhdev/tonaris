@@ -181,6 +181,11 @@ export const accounts = {
   // Roles in the dialog and for the recipient (share-roles.e2e.ts, TON-190): the owner and the person invited.
   roleOwner: at("role-owner"),
   roleInvitee: at("role-invitee"),
+  // Editing a share together (share-editing.e2e.ts, TON-191): the owner and the editor, one pair per test.
+  editOwner: at("edit-owner"),
+  shareEditor: at("share-editor"),
+  revokeOwner: at("revoke-owner"),
+  revokedEditor: at("revoked-editor"),
   // Invitations (invitations.e2e.ts): the owner, the recipient, and someone else.
   invitingOwner: at("inviting-owner"),
   invitedAnna: at("invited-anna"),

@@ -6,6 +6,7 @@
 import { emptyForm } from "@/features/collection/album-form";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { ListField } from "@/features/collection/list-field";
+import { useCollectionPlace } from "@/features/collection/place";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useRef, useState, type FormEvent } from "react";
 
@@ -43,6 +44,7 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
   const [listId, setListId] = useState(initialList);
   const [problem, setProblem] = useState<string>();
   const linksRef = useRef<HTMLTextAreaElement>(null);
+  const inShare = useCollectionPlace().kind === "share";
 
   function submit(event?: FormEvent) {
     event?.preventDefault();
@@ -50,6 +52,11 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
     if (lines.length === 0) {
       setProblem("Paste at least one Spotify, Apple Music, Qobuz, Tidal or YouTube Music link.");
       linksRef.current?.focus();
+      return;
+    }
+    // In a share, they go in one of its lists (TON-191).
+    if (inShare && listId === null) {
+      setProblem("Choose a list in this share.");
       return;
     }
     // At most one batch at once (TS-25).

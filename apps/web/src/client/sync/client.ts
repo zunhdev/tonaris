@@ -8,7 +8,7 @@
 import { createAlbumCollection } from "./albums";
 import { createCaptures, type Captures } from "./captures";
 import { createChangesElsewhere } from "./elsewhere";
-import { createSyncEngine, type Fetch, type SyncEngineOptions } from "./engine";
+import { createSyncEngine, type Fetch, type SyncEngine, type SyncEngineOptions } from "./engine";
 import { createFieldValueCollection } from "./field-values";
 import { createFieldCollection } from "./fields";
 import { createLinkCollection } from "./links";
@@ -34,6 +34,26 @@ export type SyncClientOptions = SyncEngineOptions & {
   persistence?: SyncPersistence;
   /** How often the leading tab looks for gone tabs' unsent writes. */
   adoptEveryMs?: number;
+  /**
+   * The engine to hold content from, instead of the account's own stream: a share's, for a share the person edits
+   * (TS-24, TON-191).
+   */
+  engine?: SyncEngine;
+  /**
+   * The person's own records, kept as they are: their view choices, defaults, manual order, Trash and Shared with me.
+   * A share's client shows the share's content in the person's own presentation (FR-07.17).
+   */
+  personal?: PersonalRecords;
+};
+
+/** The person's own records a share's client keeps from their own (TON-191). */
+export type PersonalRecords = {
+  views: ReturnType<typeof createViewCollection>;
+  defaults: ReturnType<typeof createDefaultsCollection>;
+  positions: ReturnType<typeof createPositionCollection>;
+  trashUnits: ReturnType<typeof createTrashUnitCollection>;
+  references: ReturnType<typeof createReferenceCollection>;
+  arrange: ReturnType<typeof createArrange>;
 };
 
 export type SyncClient = ReturnType<typeof createSyncClient>;
@@ -41,9 +61,11 @@ export type SyncClient = ReturnType<typeof createSyncClient>;
 export function createSyncClient({
   persistence = memoryPersistence(),
   adoptEveryMs = 10_000,
+  engine: given,
+  personal,
   ...options
 }: SyncClientOptions) {
-  const engine = createSyncEngine(options);
+  const engine = given ?? createSyncEngine(options);
   const states = createSaveStates({ persistence });
   let writer: ReturnType<typeof createWriter> | undefined;
   const outbox = createOutbox({
@@ -95,17 +117,23 @@ export function createSyncClient({
     clearInterval(adopting);
     adopting = setInterval(() => void adopt(), adoptEveryMs);
   });
-  const albums = createAlbumCollection({ engine, writer });
+  /** The list each new album is made for, when its form named one in a share (TON-191). */
+  const newAlbumLists = new Map<string, string>();
+  const albums = createAlbumCollection({
+    engine,
+    writer,
+    listOf: (albumId) => newAlbumLists.get(albumId),
+  });
   const containers = createContainerCollection({ engine, writer });
   const memberships = createMembershipCollection({ engine, writer });
   const links = createLinkCollection({ engine, writer });
   const fields = createFieldCollection({ engine, writer });
   const fieldValues = createFieldValueCollection({ engine, writer });
-  const views = createViewCollection({ engine, writer });
-  const defaults = createDefaultsCollection({ engine, writer });
-  const positions = createPositionCollection({ engine });
-  const trashUnits = createTrashUnitCollection({ engine });
-  const references = createReferenceCollection({ engine });
+  const views = personal?.views ?? createViewCollection({ engine, writer });
+  const defaults = personal?.defaults ?? createDefaultsCollection({ engine, writer });
+  const positions = personal?.positions ?? createPositionCollection({ engine });
+  const trashUnits = personal?.trashUnits ?? createTrashUnitCollection({ engine });
+  const references = personal?.references ?? createReferenceCollection({ engine });
   // After the collections, so a listener hears of a change once its record is in them.
   const elsewhere = createChangesElsewhere({ engine, states });
 
@@ -123,11 +151,16 @@ export function createSyncClient({
       links.cleanup(),
       fields.cleanup(),
       fieldValues.cleanup(),
-      views.cleanup(),
-      defaults.cleanup(),
-      positions.cleanup(),
-      trashUnits.cleanup(),
-      references.cleanup(),
+      // The person's own records belong to their own client, which cleans them up.
+      ...(personal
+        ? []
+        : [
+            views.cleanup(),
+            defaults.cleanup(),
+            positions.cleanup(),
+            trashUnits.cleanup(),
+            references.cleanup(),
+          ]),
     ]);
   }
 
@@ -150,10 +183,12 @@ export function createSyncClient({
     /** Moves folders and lists to Trash, and recovers them (TON-55). */
     trash: createTrash({ albums, containers, memberships, trashUnits, writer }),
     /** Writes one move in a view: each item's new key, or null to clear its place (TS-16). */
-    arrange: createArrange({ positions, writer }),
+    arrange: personal?.arrange ?? createArrange({ positions, writer }),
     elsewhere,
     /** Sends captures (TON-45). */
     captures,
+    /** The list a new album is made for, named before inserting it, so it joins that list's collection (TON-191). */
+    newAlbumLists,
     /** Loads the kept conflicts, takes over gone tabs' unsent writes, and connects. */
     start(): void {
       void states.restore();

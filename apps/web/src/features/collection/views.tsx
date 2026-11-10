@@ -53,6 +53,8 @@ import { useDeleteContainer } from "./delete-containers";
 import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
 import { ModeSwitch } from "./mode-switch";
+import { NameDialog, type Naming } from "./name-dialog";
+import { ContainerLink, useCollectionPlace, useOpenContainer } from "./place";
 import { ancestorsOf } from "./tree";
 import type { ViewMoves } from "./use-rearrange";
 import { ViewOptions } from "./view-options";
@@ -190,6 +192,10 @@ function ViewHeader({
   const { runCommand } = useShell();
   const narrow = useNarrowScreen();
   const offline = useConnection() === "offline";
+  const place = useCollectionPlace();
+  const inShare = place.kind === "share";
+  // In a share, names are asked for here, as the sidebar shows the person's own collection (TON-191).
+  const [naming, setNaming] = useState<Naming>();
   return (
     <PageHeader
       title={title}
@@ -198,8 +204,48 @@ function ViewHeader({
       editing={editing}
       actions={
         <>
+          {/* In a share the person edits, who it is from, as a viewer's page says (DS-70). */}
+          {inShare && (
+            <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-subtle px-2.5 text-small text-fg-secondary">
+              Can edit · Shared by {place.ownerName ?? "a Tonaris member"}
+            </span>
+          )}
+          {editing && inShare && container?.kind === "folder" && (
+            <>
+              <Button
+                variant="ghost"
+                disabled={offline}
+                onClick={() =>
+                  setNaming({
+                    mode: "new",
+                    kind: "list",
+                    parentId: container.id,
+                    parentName: title,
+                  })
+                }
+              >
+                <Plus strokeWidth={1.5} aria-hidden />
+                New list
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={offline}
+                onClick={() =>
+                  setNaming({
+                    mode: "new",
+                    kind: "folder",
+                    parentId: container.id,
+                    parentName: title,
+                  })
+                }
+              >
+                <Plus strokeWidth={1.5} aria-hidden />
+                New folder
+              </Button>
+            </>
+          )}
           {/* Sharing is the owner's, on the desktop (DS-65); it waits while offline. */}
-          {container && !narrow && (
+          {container && !narrow && !inShare && (
             <Button
               variant="ghost"
               aria-keyshortcuts="Shift+S"
@@ -210,18 +256,24 @@ function ViewHeader({
               Share
             </Button>
           )}
-          {/* Rename opens the name's editor in the sidebar, as F2 does (TON-117); it waits while offline. */}
+          {/* Rename opens the name's editor in the sidebar, as F2 does (TON-117), or, in a share, here; it waits
+          while offline. */}
           {editing && container && (
             <Button
               variant="ghost"
               disabled={offline}
-              onClick={() => runCommand("rename", { container: container.id })}
+              onClick={() =>
+                inShare
+                  ? setNaming({ mode: "rename", container: { ...container, name: title } })
+                  : runCommand("rename", { container: container.id })
+              }
             >
               <Pencil strokeWidth={1.5} aria-hidden />
               Rename
             </Button>
           )}
-          {editing && container && (
+          {/* The shared folder or list itself stays where its owner put it (FR-07.20). */}
+          {editing && container && !(inShare && container.id === place.rootId) && (
             <Button variant="ghost" onClick={() => deleteContainer(container.id)}>
               <Trash2 strokeWidth={1.5} aria-hidden />
               {container.kind === "folder" ? "Delete folder" : "Delete list"}
@@ -229,6 +281,7 @@ function ViewHeader({
           )}
           <ModeSwitch />
           {viewOptions && <ViewOptions key={viewKey} viewKey={viewKey} kind={kind} />}
+          <NameDialog naming={naming} onClose={() => setNaming(undefined)} />
         </>
       }
     />
@@ -404,7 +457,8 @@ const kindNames: Record<ContainerKind, string> = { folder: "Folder", list: "List
 export function ContainerView({ id, kind }: { id: string; kind: ContainerKind }) {
   const { tree, ready, albumsById, entriesByList } = useCollectionData();
   const { editing } = useMode();
-  const navigate = useNavigate();
+  const open = useOpenContainer();
+  const place = useCollectionPlace();
   const container = tree.byId.get(id);
   const entries = entriesByList.get(id);
   const albums = useMemo(() => addedOrder(entries ?? [], albumsById), [entries, albumsById]);
@@ -413,10 +467,8 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
   // A folder's path given a list, or a list's given a folder, leads to the right one (DS-32).
   useEffect(() => {
     if (!container || container.kind === kind) return;
-    void (container.kind === "folder"
-      ? navigate({ to: "/f/$folderId", params: { folderId: id }, replace: true })
-      : navigate({ to: "/l/$listId", params: { listId: id }, replace: true }));
-  }, [container, kind, id, navigate]);
+    void open(container, { replace: true });
+  }, [container, kind, open]);
 
   if (!container) {
     if (!ready) return <PageHeader title={kindNames[kind]} />;
@@ -425,32 +477,49 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
         <PageHeader title="Not available" />
         <Body>
           <p className="text-fg-secondary">This folder or list isn't available.</p>
-          <Link to="/c" className="text-accent-solid underline-offset-4 hover:underline">
-            Go to your collection
-          </Link>
+          {place.kind === "share" ? (
+            <Link to="/shared" className="text-accent-solid underline-offset-4 hover:underline">
+              Go to Shared with me
+            </Link>
+          ) : (
+            <Link to="/c" className="text-accent-solid underline-offset-4 hover:underline">
+              Go to your collection
+            </Link>
+          )}
         </Body>
       </>
     );
   }
 
   const ancestors = ancestorsOf(tree, id);
-  const path = [
-    toCollection,
-    ...ancestors.map((folder) => ({ to: `/f/${folder.id}`, label: folder.name })),
-  ];
+  // In a share, its path starts at Shared with me (DS-70).
+  const path =
+    place.kind === "share"
+      ? [
+          { to: "/shared", label: "Shared with me" },
+          ...ancestors.map((folder) => ({
+            to: `/shared/${place.rootId}${folder.id === place.rootId ? "" : `?c=${folder.id}`}`,
+            label: folder.name,
+          })),
+        ]
+      : [
+          toCollection,
+          ...ancestors.map((folder) => ({ to: `/f/${folder.id}`, label: folder.name })),
+        ];
   const breadcrumbs = [
-    <Link key="root" to="/c" className="hover:text-fg-primary">
-      Collection
-    </Link>,
-    ...ancestors.map((folder) => (
-      <Link
-        key={folder.id}
-        to="/f/$folderId"
-        params={{ folderId: folder.id }}
-        className="hover:text-fg-primary"
-      >
-        {folder.name}
+    place.kind === "share" ? (
+      <Link key="root" to="/shared" className="hover:text-fg-primary">
+        Shared with me
       </Link>
+    ) : (
+      <Link key="root" to="/c" className="hover:text-fg-primary">
+        Collection
+      </Link>
+    ),
+    ...ancestors.map((folder) => (
+      <ContainerLink key={folder.id} container={folder} className="hover:text-fg-primary">
+        {folder.name}
+      </ContainerLink>
     )),
   ];
 
@@ -461,7 +530,11 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
       inside.length > 0 ? (
         <ContainersBody containers={inside} label={container.name} viewKey={id} />
       ) : (
-        <Empty text="This folder is empty." action={<NewListButton parentId={id} />} />
+        <Empty
+          text="This folder is empty."
+          // In a share, Editing mode's header offers New list (TON-191).
+          action={place.kind === "share" ? undefined : <NewListButton parentId={id} />}
+        />
       );
   } else {
     // Adding: below the rows in Editing mode, and as the empty list's action (DS-47, DS-48). Captures under way

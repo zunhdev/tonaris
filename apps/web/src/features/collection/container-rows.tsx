@@ -15,17 +15,8 @@ import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
-import { Link, useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  type ComponentPropsWithoutRef,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useId, useMemo, useRef } from "react";
 
 import { uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -36,6 +27,7 @@ import { effectiveColor } from "./container-palette";
 import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { ContainerIcon } from "./icons";
+import { ContainerLink, useOpenContainer } from "./place";
 import { useGridFocus, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -79,7 +71,7 @@ export function ContainerRows({
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
+  const open = useOpenContainer();
   // TanStack Virtual re-renders on scroll by design; the app isn't compiled with React Compiler, which the rule is
   // about.
   // oxlint-disable-next-line react/incompatible-library
@@ -111,9 +103,7 @@ export function ContainerRows({
     onActivate: ({ row }) => {
       const container = containers[row];
       if (!container) return false;
-      void (container.kind === "folder"
-        ? navigate({ to: "/f/$folderId", params: { folderId: container.id } })
-        : navigate({ to: "/l/$listId", params: { listId: container.id } }));
+      void open(container);
       return true;
     },
   });
@@ -316,20 +306,5 @@ function ContainerRow({
         </div>
       )}
     </div>
-  );
-}
-
-/** A link opening the folder or list. */
-function ContainerLink({
-  container,
-  ...props
-}: { container: Container; children: ReactNode } & Omit<
-  ComponentPropsWithoutRef<"a">,
-  "href" | "children"
->) {
-  return container.kind === "folder" ? (
-    <Link to="/f/$folderId" params={{ folderId: container.id }} {...props} />
-  ) : (
-    <Link to="/l/$listId" params={{ listId: container.id }} {...props} />
   );
 }

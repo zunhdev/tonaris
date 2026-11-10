@@ -14,6 +14,7 @@ import { CollectionUiProvider } from "@/features/collection/collection-ui";
 import { CollectionDataProvider } from "@/features/collection/data";
 import { TermsScreen } from "@/features/legal/terms-screen";
 import { OpenInProvider } from "@/features/open/open-in";
+import { ActiveCollectionProvider } from "@/features/sharing/editable-share";
 import { SharedEntriesProvider } from "@/features/sharing/shared-entries";
 import { Shell } from "@/features/shell/shell";
 import { SaveStateLayer } from "@/features/sync/save-state-layer";
@@ -53,23 +54,27 @@ function WorkspaceLayout() {
     [account.id, pathname, album],
   );
   if (!account.termsAgreed) return <TermsScreen account={account} />;
+  // A share the person edits takes the screen's collection below `ActiveCollectionProvider`; the sidebar keeps their
+  // own (TON-191).
   return (
     <SyncProvider account={account}>
       <CollectionUiProvider accountId={account.id}>
         <CollectionDataProvider>
-          <SaveStateLayer>
-            <CaptureProvider>
-              <OpenInProvider>
-                <RecoveryProvider>
-                  <SharedEntriesProvider>
-                    <Shell account={account}>
-                      <Outlet />
-                    </Shell>
-                  </SharedEntriesProvider>
-                </RecoveryProvider>
-              </OpenInProvider>
-            </CaptureProvider>
-          </SaveStateLayer>
+          <SharedEntriesProvider>
+            <ActiveCollectionProvider accountId={account.id}>
+              <SaveStateLayer>
+                <CaptureProvider>
+                  <OpenInProvider>
+                    <RecoveryProvider>
+                      <Shell account={account}>
+                        <Outlet />
+                      </Shell>
+                    </RecoveryProvider>
+                  </OpenInProvider>
+                </CaptureProvider>
+              </SaveStateLayer>
+            </ActiveCollectionProvider>
+          </SharedEntriesProvider>
         </CollectionDataProvider>
       </CollectionUiProvider>
     </SyncProvider>

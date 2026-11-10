@@ -1346,6 +1346,15 @@ The block never says "private" while another access path remains.
 - **Unchanged from viewers:** sort, grouping, layout and manual order are the person's own.
 - **Phones:** a share stays view-only, with the viewer's pill.
 
+*As built in TON-191:*
+- **When:** on `/shared/{root}` on the desktop, once Shared with me says the person can edit it; anyone else gets the viewer's page.
+- **The header:** "Can edit · Shared by Denis" in place of Share, then, in Editing mode, Rename and Delete (not on the shared folder or list itself), the View | Edit toggle and View options. The breadcrumbs start at Shared with me.
+- **Naming:** the owner names folders and lists in the sidebar's tree, which keeps showing the person's own collection, so a share's views ask here. In Editing mode a folder's header has **New list** and **New folder**, and Rename opens the same dialog: "New list in "Metal"" or "Rename "Doom"", one Name field, **Create** or **Rename** and **Cancel**. An empty folder's own New list is left out.
+- **Adding albums:** Add albums and New album go into the list chosen, which must be one of the share's: its List field reads "Choose a list in this share" with no Unsorted, and sending without one says "Choose a list in this share."
+- **The album panel** edits as the person's own does, with the owner's fields; its lists link inside the share.
+- **Losing access:** the view reads again as the viewer's page and says it's no longer available. Edits not saved by then are reported in a toast: "2 changes weren't saved", "You can no longer edit "Metal"."
+- **The sidebar and the palette** keep the person's own collection, whatever is on screen.
+
 ---
 
 ## 9. Guest shared pages

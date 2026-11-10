@@ -54,6 +54,7 @@ import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { FormFields } from "./form-fields";
 import { ListField } from "./list-field";
+import { useCollectionPlace } from "./place";
 
 const formFields: readonly FormField[] = [
   "title",
@@ -82,6 +83,7 @@ export function NewAlbumDialog() {
 function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => void }) {
   const client = useSyncClient();
   const announce = useAnnounce();
+  const inShare = useCollectionPlace().kind === "share";
   const actions = useSaveActions();
   const [form, setForm] = useState<AlbumForm>(draft.form);
   // Link fields for the services the person uses, from Settings, and any already filled in (TON-138).
@@ -127,6 +129,12 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       formRef.current?.querySelector<HTMLInputElement>(`[name="${first}"]`)?.focus();
       return;
     }
+    // In a share, it goes in one of its lists, so it joins that list's owner's collection (TON-191).
+    if (inShare && form.listId === null) {
+      announce("Choose a list in this share.");
+      return;
+    }
+    if (inShare && form.listId !== null) client.newAlbumLists.set(album.id, form.listId);
     if (draft.capture?.mode === "details") {
       // Completing a capture: it keeps the link, and the sources of the values left as offered (TS-15).
       // Capture's details are the album's fields; its artwork comes from the Cover Art Archive (TON-48).

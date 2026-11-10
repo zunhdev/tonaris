@@ -17,6 +17,7 @@ import { trashRetentionDays, type Container } from "@tonaris/domain";
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useViewContainerId } from "./collection-ui";
 import { useCollectionData } from "./data";
+import { useOpenContainer } from "./place";
 import { ancestorsOf, type Tree } from "./tree";
 
 /** The containers under `id`, nearest first. */
@@ -32,7 +33,7 @@ function descendants(tree: Tree, id: string): Container[] {
 
 /** Leaves the page on view if it goes with `container`, its own or one inside it, for the nearest folder that stays. */
 function useLeaveGoing(): (container: Container) => void {
-  const navigate = useNavigate();
+  const open = useOpenContainer();
   const viewId = useViewContainerId();
   const { tree } = useCollectionData();
   return (container) => {
@@ -40,9 +41,7 @@ function useLeaveGoing(): (container: Container) => void {
       viewId !== undefined &&
       (viewId === container.id || ancestorsOf(tree, viewId).some((a) => a.id === container.id));
     if (!going) return;
-    void (container.parentId === null
-      ? navigate({ to: "/c" })
-      : navigate({ to: "/f/$folderId", params: { folderId: container.parentId } }));
+    void open(container.parentId === null ? null : { id: container.parentId, kind: "folder" });
   };
 }
 

@@ -52,6 +52,7 @@ import { CoverWash } from "./cover-wash";
 import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { useInlineDraft } from "./inline-draft";
+import { ContainerLink } from "./place";
 import { ancestorsOf } from "./tree";
 
 const addedDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
@@ -391,15 +392,14 @@ function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
             const tint = tintedChip(effectiveColor(list, tree.byId));
             return (
               <li key={list.id} className="flex items-center">
-                <Link
-                  to="/l/$listId"
-                  params={{ listId: list.id }}
+                <ContainerLink
+                  container={list}
                   title={[...path, list.name].join(" › ")}
                   data-color={effectiveColor(list, tree.byId) ?? undefined}
                   className={cn(chip, tint, canEdit && "rounded-r-none pr-1.5")}
                 >
                   {list.name}
-                </Link>
+                </ContainerLink>
                 {canEdit && (
                   <button
                     type="button"
