@@ -4,6 +4,7 @@
 import { signInCode } from "./accounts";
 import { admissionInvitationDays } from "./admission";
 import { containerKinds, type ContainerKind } from "./containers";
+import { shareRoles, type ShareRole } from "./sharing";
 import { z } from "./zod";
 
 /** Each template and the data it needs. */
@@ -30,6 +31,8 @@ export type EmailTemplates = {
     containerName: string;
     kind: ContainerKind;
     link: string;
+    /** What it lets them do (FR-07.18); view for an email queued before roles. */
+    role?: ShareRole;
   };
 };
 export type EmailTemplate = keyof EmailTemplates;
@@ -97,6 +100,7 @@ export const emailDataSchemas: { [T in EmailTemplate]: z.ZodType<EmailTemplates[
     containerName: z.string(),
     kind: z.enum(containerKinds),
     link: z.string(),
+    role: z.enum(shareRoles).optional(),
   }),
   "admission-invitation": z.object({ link: z.string() }),
   "email-change-current": z.object({ code: z.string(), newEmail: z.string() }),
@@ -144,10 +148,10 @@ const renderers: { [T in EmailTemplate]: (data: EmailTemplates[T]) => RenderedEm
       ignoreLine,
     ].join("\n"),
   }),
-  "share-invitation": ({ ownerName, containerName, kind, link }) => ({
-    subject: `${ownerName} invited you to view "${containerName}" on Tonaris`,
+  "share-invitation": ({ ownerName, containerName, kind, link, role = "view" }) => ({
+    subject: `${ownerName} invited you to ${role} "${containerName}" on Tonaris`,
     text: [
-      `${ownerName} invited you to view the ${kind} "${containerName}" on Tonaris.`,
+      `${ownerName} invited you to ${role} the ${kind} "${containerName}" on Tonaris.`,
       "",
       "Open the invitation to accept or decline it:",
       link,

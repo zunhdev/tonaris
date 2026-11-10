@@ -24,6 +24,7 @@ export async function deliverInvitation(
       containerName: invitation.containerName,
       kind: invitation.kind,
       link: invitationUrl(webOrigin, grantId),
+      role: invitation.role,
     },
     { outcome: { kind: "share_grant", id: grantId } },
   );

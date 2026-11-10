@@ -30,7 +30,11 @@ export function InvitationToasts({ accountId }: { accountId: string }) {
     if (!first || onInvitations) return;
     if (fresh.length === 1) {
       const owner = first.owner.displayName ?? "A Tonaris member";
-      notify.notice(`${owner} shared "${first.container.name}" with you`, {
+      const shared =
+        first.role === "edit"
+          ? `${owner} invited you to edit "${first.container.name}"`
+          : `${owner} shared "${first.container.name}" with you`;
+      notify.notice(shared, {
         label: "View",
         onClick: () => void navigate({ to: "/invitations/$id", params: { id: first.id } }),
       });
