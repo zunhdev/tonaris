@@ -136,6 +136,8 @@ describe("executeMutation (TS-20)", () => {
         },
       ],
       replayed: false,
+      // The collection it changed: Anna's own.
+      accountId: anna.userId,
     });
     expect(await headSeq(t.db, anna.userId)).toBe(1);
     const [row] = await t.db.select().from(albums).where(eq(albums.id, args.id));

@@ -181,6 +181,11 @@ export type CollectionStore = {
   viewItems(personId: string, viewKey: string, kind: ViewKind): Promise<Set<string>>;
   /** Whether the person may read someone else's folder or list through sharing (TS-33, FR-07.17). */
   canReadShared(personId: string, containerId: string): Promise<boolean>;
+  /**
+   * The containers the person edits someone else's folder or list through (FR-07.18): their accepted edit grants on it
+   * or on a folder above, while everything from there down is active. Empty when they can't edit it.
+   */
+  editSourcesAbove(personId: string, containerId: string): Promise<string[]>;
   /** Whether the album is in any active list. If not, it is in Unsorted (TS-13). */
   inActiveList(albumId: string): Promise<boolean>;
 

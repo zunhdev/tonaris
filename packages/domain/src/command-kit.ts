@@ -4,7 +4,7 @@
 
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import { failure, type Failure, type FieldConflict, type Outcome } from "./outcomes";
-import { authorizeWrite, type OperationScope } from "./policies";
+import { authorizeShareEdit, authorizeWrite, type OperationScope } from "./policies";
 import { actingUserId } from "./principals";
 
 /** Whether a lookup or check answered a refusal rather than what it looks for. */
@@ -51,6 +51,74 @@ export function actingOwner(
   if (ownerId === undefined) return failure("permission_denied", guestRefusal);
   const decision = authorizeWrite(principal, { ownerId, scope });
   return decision.allowed ? ownerId : failure(decision.code, refusal);
+}
+
+/**
+ * How the principal may change content in a folder or list (TS-30, FR-07.18): as its owner, or as an editor through
+ * the shares listed, the folders or lists their edit grants are on (`through`).
+ */
+export type ContentAccess =
+  | { as: "owner" }
+  | { as: "editor"; userId: string; through: readonly string[] };
+
+/** The refusal of someone who may read a folder or list, or an album in one, but not change it (FR-07.18). */
+export const viewOnly = (what: string) =>
+  failure("permission_denied", `You can view ${what}, but not change it.`);
+
+/**
+ * How the principal may change content in `container` (TS-30, FR-07.18, FR-07.19), or why not. Its owner, under the
+ * policy; a person, or their Manage connection, who edits it through a share; a reader is told they can only view; and
+ * anyone else is answered as if it didn't exist, `missing`, so nobody learns of a private folder (FR-07.20).
+ */
+export async function contentAccess(
+  { principal, store }: CommandContext,
+  container: { id: string; ownerId: string },
+  { refusal, missing, what = "this" }: { refusal: string; missing: string; what?: string },
+): Promise<ContentAccess | Failure> {
+  const userId = actingUserId(principal);
+  if (userId === undefined || userId === container.ownerId) {
+    const decision = authorizeWrite(principal, { ownerId: container.ownerId, scope: "collection" });
+    return decision.allowed ? { as: "owner" } : failure(decision.code, refusal);
+  }
+  const decision = authorizeShareEdit(principal);
+  if (!decision.allowed) return failure(decision.code, refusal);
+  const through = await store.editSourcesAbove(userId, container.id);
+  if (through.length > 0) return { as: "editor", userId, through };
+  if (await store.canReadShared(userId, container.id)) return viewOnly(what);
+  return failure("not_found", missing);
+}
+
+/**
+ * Whether an editor works inside the folder or list `id` rather than on a share's own: through a share above it
+ * (FR-07.20). The owner always does.
+ */
+export const insideShare = (access: ContentAccess, id: string): boolean =>
+  access.as === "owner" || access.through.some((top) => top !== id);
+
+/** The refusal of an editor's move or deletion of a shared folder or list itself (FR-07.20). */
+export const shareTopRefusal = () =>
+  failure(
+    "permission_denied",
+    "Only its owner can move or delete the shared folder or list itself. You can rename it, describe it and color it.",
+  );
+
+/**
+ * Whose collection something new goes in (FR-07.19): the principal's own, or, inside a folder or list someone shared
+ * with them to edit, that owner's. A folder they can't edit answers why; one they don't know of is left to the command's
+ * own destination check, as before.
+ */
+export async function collectionFor(
+  context: CommandContext,
+  containerId: string | null,
+  refusal: string,
+): Promise<string | Failure> {
+  const own = actingOwner(context, "collection", refusal);
+  if (containerId === null) return own;
+  const container = await context.store.findContainer(containerId);
+  if (!container || container.ownerId === actingUserId(context.principal)) return own;
+  const access = await contentAccess(context, container, { refusal, missing: refusal });
+  if (isFailure(access)) return access.code === "not_found" ? own : access;
+  return container.ownerId;
 }
 
 /** The refusal of an update that names no field. */

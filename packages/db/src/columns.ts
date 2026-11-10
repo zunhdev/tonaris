@@ -94,6 +94,7 @@ export const storedUnitColumns = {
   ...trashUnitColumns,
   ownerId: trashUnits.ownerId,
   tombstones: trashUnits.tombstones,
+  deletedBy: trashUnits.deletedBy,
 };
 
 /** A service link's columns as an album's page shows it; clients hold it with `albumId` too (TS-11). */

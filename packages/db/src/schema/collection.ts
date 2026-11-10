@@ -45,6 +45,9 @@ export const trashUnits = table(
     deletedAt: instant().notNull(),
     expiresAt: instant().notNull(),
     tombstones: jsonb().$type<Tombstone[]>().notNull().default([]),
+    // An editor who deleted it, for their Undo (FR-07.20); null when its owner did. No foreign key: an editor's account
+    // may go while the unit stays in the owner's Trash.
+    deletedBy: uuid(),
     ...timestamps,
   },
   (t) => [

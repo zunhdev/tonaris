@@ -11,14 +11,17 @@ import {
   isFailure,
   nothingChanged,
   staleFields,
+  viewOnly,
 } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { base64url } from "./encoding";
-import { maxAlbumTextLength, maxAlbums, maxLinkLength } from "./limits";
+import { maxAlbumTextLength, maxAlbums, maxLinkLength, maxMemberships } from "./limits";
+import { addMembership, changeableList, membershipLimitProblem } from "./memberships";
 import { exceedsLength } from "./names";
 import { failure, type Failure } from "./outcomes";
-import { authorizeWrite } from "./policies";
+import { authorizeShareEdit, authorizeWrite } from "./policies";
 import { placeAtTop } from "./positions";
+import { actingUserId } from "./principals";
 import { z } from "./zod";
 
 /** Null means Unclassified (TS-45). */
@@ -54,6 +57,17 @@ export const albumCreateArgsSchema = albumFieldsSchema
   // The description it had as the record's schema, so the request's contract stays the same (TS-09).
   .meta({ description: "An album record (FR-01.6)." });
 export type AlbumCreateArgs = z.infer<typeof albumCreateArgsSchema>;
+
+/** `album.create`'s arguments: the record, and the list it is made for, if any (FR-07.19). */
+export const albumCreateMutationArgsSchema = albumCreateArgsSchema
+  .extend({
+    listId: z.uuid().optional().meta({
+      description:
+        "A list to put the new album in. In a list someone shared with the person to edit, the album joins that owner's collection (FR-07.19).",
+    }),
+  })
+  .meta({ description: "An album record, and the list it is made for (FR-01.6, FR-07.19)." });
+export type AlbumCreateMutationArgs = z.infer<typeof albumCreateMutationArgsSchema>;
 
 /** An album record as clients hold it: its fields, ID and artwork URL (FR-01.6, FR-03.4). */
 export const albumSchema = albumCreateArgsSchema
@@ -203,16 +217,40 @@ export async function hasAlbumSlot(store: CollectionStore, ownerId: string): Pro
   return (await store.countAlbums(ownerId)) < maxAlbums;
 }
 
-/** The album `id`, in Trash or not, if the principal may change it, or why not (TS-30). */
+/**
+ * The album `id`, if the principal may change it, or why not (TS-30). Its owner may, in Trash or not. An editor may
+ * change an active album in a list they can edit, the lists they can edit it through being `editableLists` (FR-07.19);
+ * one they can only read is view-only, and any other is answered as missing (FR-07.20).
+ */
 export async function changeableAlbum(
   id: string,
   { principal, store }: CommandContext,
-): Promise<StoredAlbum | Failure> {
+): Promise<(StoredAlbum & { editableLists?: readonly string[] }) | Failure> {
   const album = await store.findAlbum(id);
-  if (!album) return failure("not_found", "This album doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
+  const missing = "This album doesn't exist.";
+  if (!album) return failure("not_found", missing);
+  const userId = actingUserId(principal);
+  if (userId === undefined || userId === album.ownerId) {
+    const decision = authorizeWrite(principal, { ownerId: album.ownerId, scope: "collection" });
+    if (!decision.allowed) return failure(decision.code, "You can't change this album.");
+    return album;
+  }
+  const decision = authorizeShareEdit(principal);
   if (!decision.allowed) return failure(decision.code, "You can't change this album.");
-  return album;
+  if (album.trashed) return failure("not_found", missing);
+  const editableLists: string[] = [];
+  let readable = false;
+  for (const { listId } of await store.entriesOfAlbum(id)) {
+    // oxlint-disable-next-line no-await-in-loop
+    const list = await store.findContainer(listId);
+    if (!list || list.trashed) continue;
+    // oxlint-disable-next-line no-await-in-loop
+    if ((await store.editSourcesAbove(userId, listId)).length > 0) editableLists.push(listId);
+    // oxlint-disable-next-line no-await-in-loop
+    else readable ||= await store.canReadShared(userId, listId);
+  }
+  if (editableLists.length > 0) return { ...album, editableLists };
+  return readable ? viewOnly("this album") : failure("not_found", missing);
 }
 
 /** The album as clients hold it, with its artwork (FR-03.4): nothing of its owner, Trash state or identity. */
@@ -241,15 +279,22 @@ export function albumOf({
 }
 
 /**
- * `album.create`: creates an album with the client's ID (TS-10). If that album already exists for the same owner, as
- * when a create is sent again without its idempotency record, nothing is duplicated (FR-13.5): the same values are
- * already saved, and different ones are a conflict.
+ * `album.create`: creates an album with the client's ID (TS-10), in the person's collection, or, made for a list,
+ * in that list's owner's collection and in the list: one someone shared with them to edit, too (FR-07.19). If that
+ * album already exists for the same owner, as when a create is sent again without its idempotency record, nothing is
+ * duplicated (FR-13.5): the same values are already saved, and different ones are a conflict.
  */
 export async function createAlbum(
-  args: AlbumCreateArgs,
+  { listId, ...args }: AlbumCreateMutationArgs,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const ownerId = actingOwner(context, "collection", "You can't add albums here.");
+  const refusal = "You can't add albums here.";
+  let ownerId: string | Failure;
+  if (listId === undefined) ownerId = actingOwner(context, "collection", refusal);
+  else {
+    const list = await changeableList(listId, context);
+    ownerId = isFailure(list) ? list : list.ownerId;
+  }
   if (isFailure(ownerId)) return ownerId;
   const { store } = context;
   const problem = albumProblem(args);
@@ -272,6 +317,14 @@ export async function createAlbum(
   if (!(await hasAlbumSlot(store, ownerId))) return albumCapacityProblem();
   // Its artwork, if any, follows with `album.setArtwork` (TON-48).
   const album: Album = { ...args, artworkUrl: null };
+  if (listId !== undefined) {
+    // Checked before anything is written, so a refusal changes nothing (X-05).
+    if ((await store.countMemberships(ownerId)) >= maxMemberships) return membershipLimitProblem();
+    await store.insertAlbum({ ...album, ownerId });
+    const added = await addMembership({ listId, albumId: args.id }, context, { anyAlbum: true });
+    if (added.status !== "applied") throw new Error(`The checked entry failed: ${added.status}`);
+    return applied({ entity: "album", id: args.id, op: "insert", data: album }, ...added.changes);
+  }
   await store.insertAlbum({ ...album, ownerId });
   // A new album is in no list yet, so it enters Unsorted, at the top (DS-51). Until Unsorted is arranged, its
   // fallback order, newest first, already puts it there.

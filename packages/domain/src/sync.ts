@@ -4,7 +4,7 @@
 // adds joins these unions.
 
 import {
-  albumCreateArgsSchema,
+  albumCreateMutationArgsSchema,
   albumFieldsSchema,
   artworkUrlSchema,
   syncedAlbumSchema,
@@ -95,7 +95,7 @@ const mutationId = z.uuid({ version: "v7" }).meta({
 export const albumCreateSchema = z.object({
   mutationId,
   name: z.literal("album.create"),
-  args: albumCreateArgsSchema,
+  args: albumCreateMutationArgsSchema,
 });
 
 /**

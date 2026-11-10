@@ -307,6 +307,7 @@ describe("album.update: field-level compare-and-set (TS-21)", () => {
       principal: other,
       store,
     });
-    expect(foreign.status === "failed" && foreign.code).toBe("permission_denied");
+    // Unshared, it is answered as missing, so nobody learns of it (FR-07.20).
+    expect(foreign.status === "failed" && foreign.code).toBe("not_found");
   });
 });

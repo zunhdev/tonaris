@@ -2,12 +2,20 @@
 // (TON-26), describe them (TON-54) and color them (TON-175). The albums in lists are memberships.ts.
 
 import type { CollectionStore } from "./collection-store";
-import { actingOwner, applied, conflict, isFailure } from "./command-kit";
+import {
+  applied,
+  collectionFor,
+  conflict,
+  contentAccess,
+  insideShare,
+  isFailure,
+  shareTopRefusal,
+  type ContentAccess,
+} from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { maxContainerDepth, maxContainers, maxDescriptionLength, maxNameLength } from "./limits";
 import { exceedsLength, findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
-import { authorizeWrite } from "./policies";
 import { forgetPlace } from "./positions";
 import { z } from "./zod";
 
@@ -157,15 +165,20 @@ export function nameTakenProblem(takenName: string, parentName: string | null): 
 }
 
 /**
- * Creates a folder or list with the client's ID (TS-10), at the root or in an active folder (FR-01.1). A create
- * sent again without its idempotency record duplicates nothing (FR-13.5): the same values are already saved,
- * and different ones are a conflict.
+ * Creates a folder or list with the client's ID (TS-10), at the root or in an active folder (FR-01.1): the person's
+ * own, or one someone shared with them to edit, whose collection it then joins (FR-07.19). A create sent again without
+ * its idempotency record duplicates nothing (FR-13.5): the same values are already saved, and different ones are a
+ * conflict.
  */
 export async function createContainer(
   args: ContainerFields,
   context: CommandContext,
 ): Promise<CommandResult> {
-  const ownerId = actingOwner(context, "collection", "You can't add folders or lists here.");
+  const ownerId = await collectionFor(
+    context,
+    args.parentId,
+    "You can't add folders or lists here.",
+  );
   if (isFailure(ownerId)) return ownerId;
   const { store } = context;
   // A new folder or list has no description or color until one is set (FR-03.5, TON-175).
@@ -207,19 +220,28 @@ export async function createContainer(
   return applied({ entity: "container", id: container.id, op: "insert", data: container });
 }
 
-/** The owner's active container `id`, or why it can't be changed. */
+/**
+ * The active container `id`, with how the principal may change it: its owner's, or one shared with them to edit
+ * (FR-07.19); or why it can't be changed (TS-30).
+ */
 export async function changeableContainer(
   id: string,
-  { principal, store }: CommandContext,
-): Promise<StoredContainer | Failure> {
-  const container = await store.findContainer(id);
-  if (!container) return failure("not_found", "This folder or list doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: container.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this folder or list.");
+  context: CommandContext,
+): Promise<(StoredContainer & { access: ContentAccess }) | Failure> {
+  const container = await context.store.findContainer(id);
+  const missing = "This folder or list doesn't exist.";
+  if (!container) return failure("not_found", missing);
+  const access = await contentAccess(context, container, {
+    refusal: "You can't change this folder or list.",
+    missing,
+    what: "this folder or list",
+  });
+  if (isFailure(access)) return access;
   if (container.trashed) {
     return failure("trashed", "This folder or list is in Trash. Recover it to change it.");
   }
-  return container;
+  // A copy, so the store's own record never carries the access.
+  return { ...container, access };
 }
 
 /**
@@ -267,6 +289,18 @@ export async function moveContainer(
   if (parentId === container.parentId) return applied();
 
   const { store } = context;
+  // An editor moves things only inside one share, never the shared folder or list itself (FR-07.20).
+  const { access } = container;
+  if (access.as === "editor") {
+    if (!insideShare(access, id)) return shareTopRefusal();
+    const there = parentId === null ? [] : await store.editSourcesAbove(access.userId, parentId);
+    if (!access.through.some((top) => top !== id && there.includes(top))) {
+      return failure(
+        "invalid_destination",
+        "It can only move to a folder inside the share it's in. Choose a folder there.",
+      );
+    }
+  }
   const path = await destinationPath(parentId, container.ownerId, store);
   if (isFailure(path)) return path;
   if (path.includes(id)) {

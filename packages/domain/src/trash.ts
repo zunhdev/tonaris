@@ -10,7 +10,7 @@
 
 import { albumOf, changeableAlbum } from "./albums";
 import type { CollectionStore } from "./collection-store";
-import { actingOwner, applied, isFailure } from "./command-kit";
+import { actingOwner, applied, insideShare, isFailure, shareTopRefusal } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
   changeableContainer,
@@ -28,7 +28,7 @@ import { findNameConflict } from "./names";
 import { failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
 import { forgetPlace, placeAtTop } from "./positions";
-import { actingUserId } from "./principals";
+import { actingUserId, type Principal } from "./principals";
 import { serviceLinkKey } from "./service-links";
 import { z } from "./zod";
 
@@ -88,6 +88,8 @@ export type StoredTrashUnit = {
   deletedAt: Date;
   expiresAt: Date;
   tombstones: Tombstone[];
+  /** Who deleted it, when it wasn't its owner: an editor, who may undo it (FR-07.20). */
+  deletedBy?: string | null;
 };
 
 /** An entry recovery didn't bring back, and why (FR-01.14): its album is in Trash, or gone for good. */
@@ -173,6 +175,23 @@ function depthOf(rootId: string, members: readonly Container[]): number {
   return 1 + Math.max(0, ...below.map((member) => depthOf(member.id, members)));
 }
 
+/**
+ * The answer to a deletion naming a unit that exists already, unless it is this same deletion sent again by whoever
+ * made it: its owner, or the editor who deleted it (FR-07.20).
+ */
+function sentAgain(existing: StoredTrashUnit, rootId: string, principal: Principal) {
+  const actor = actingUserId(principal);
+  const theirs =
+    actor !== undefined && (existing.ownerId === actor || existing.deletedBy === actor);
+  if (existing.rootId === rootId && theirs) {
+    // An editor's resend changes nothing; the owner's still goes through the policy.
+    return existing.ownerId === actor ? undefined : applied();
+  }
+  return failure("validation_failed", "This ID is already in use.", [
+    { path: "args.unitId", message: "Already in use" },
+  ]);
+}
+
 /** Whether the album is active: not in Trash. */
 async function isActive(store: CollectionStore, albumId: string): Promise<boolean> {
   const album = await store.findAlbum(albumId);
@@ -191,12 +210,8 @@ export async function deleteContainer(
   const { store, principal } = context;
   const existing = await store.findTrashUnit(args.unitId);
   if (existing) {
-    const sameUnit = existing.rootId === args.id && existing.ownerId === actingUserId(principal);
-    if (!sameUnit) {
-      return failure("validation_failed", "This ID is already in use.", [
-        { path: "args.unitId", message: "Already in use" },
-      ]);
-    }
+    const resent = sentAgain(existing, args.id, principal);
+    if (resent) return resent;
     // A resend changes nothing, but only for someone who may make the change (TS-30).
     const decision = authorizeWrite(principal, { ownerId: existing.ownerId, scope: "collection" });
     return decision.allowed
@@ -205,6 +220,8 @@ export async function deleteContainer(
   }
   const container = await changeableContainer(args.id, context);
   if (isFailure(container)) return container;
+  // An editor deletes inside a share, never the shared folder or list itself (FR-07.20).
+  if (!insideShare(container.access, container.id)) return shareTopRefusal();
   const { ownerId } = container;
 
   const members = await store.activeSubtree(container.id);
@@ -219,6 +236,8 @@ export async function deleteContainer(
     deletedAt: now,
     expiresAt: new Date(now.getTime() + trashRetentionDays * 86_400_000),
     tombstones: [],
+    // Who may undo it besides its owner: the editor who deleted it (FR-07.20).
+    deletedBy: container.access.as === "editor" ? container.access.userId : null,
   };
   await store.trashContainers(
     unit,
@@ -270,12 +289,27 @@ export async function recoverUnit(
 ): Promise<CommandResult> {
   const { store, principal } = context;
   const unit = await store.findTrashUnit(args.unitId);
-  // Someone else's unit is answered as gone, so nobody can probe for other people's IDs.
-  if (!unit || unit.ownerId !== actingUserId(principal)) {
-    return failure("not_found", "This is no longer in Trash.");
+  const actor = actingUserId(principal);
+  const gone = failure("not_found", "This is no longer in Trash.");
+  if (!unit) return gone;
+  if (unit.ownerId === actor) {
+    const decision = authorizeWrite(principal, { ownerId: unit.ownerId, scope: "collection" });
+    if (!decision.allowed) return failure(decision.code, "You can't recover this from Trash.");
+  } else {
+    // Someone else's unit is answered as gone, so nobody can probe for other people's IDs, except an editor's Undo:
+    // their own deletion of a folder or list, in the app, back where it was while that is still theirs to edit
+    // (FR-07.20). The rest of the owner's Trash stays the owner's.
+    if (principal.kind !== "user" || unit.deletedBy !== actor || unit.kind === "album") return gone;
+    const root = (await store.unitContainers(unit.id)).find(({ id }) => id === unit.rootId);
+    const ownerOnly = failure(
+      "permission_denied",
+      "Only its owner can restore this now, from their Trash.",
+    );
+    if (!root || root.parentId === null || args.parentId !== undefined) return ownerOnly;
+    if ((await store.editSourcesAbove(principal.userId, root.parentId)).length === 0) {
+      return ownerOnly;
+    }
   }
-  const decision = authorizeWrite(principal, { ownerId: unit.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't recover this from Trash.");
   // Expiry is enforced at 30 days, even before the hourly purge removes it (FR-01.17, FR-10.7).
   if (unit.expiresAt.getTime() <= (context.now ?? new Date()).getTime()) {
     return failure(
@@ -427,11 +461,8 @@ export async function deleteAlbum(
   const { store, principal } = context;
   const existing = await store.findTrashUnit(args.unitId);
   if (existing) {
-    if (existing.rootId !== args.id || existing.ownerId !== actingUserId(principal)) {
-      return failure("validation_failed", "This ID is already in use.", [
-        { path: "args.unitId", message: "Already in use" },
-      ]);
-    }
+    const resent = sentAgain(existing, args.id, principal);
+    if (resent) return resent;
     // A resend changes nothing, but only for someone who may make the change (TS-30).
     const decision = authorizeWrite(principal, { ownerId: existing.ownerId, scope: "collection" });
     return decision.allowed ? applied() : failure(decision.code, "You can't change this album.");
@@ -439,7 +470,7 @@ export async function deleteAlbum(
   const album = await changeableAlbum(args.id, context);
   if (isFailure(album)) return album;
   if (album.trashed) return failure("trashed", "This album is already in Trash.");
-  const { ownerId } = album;
+  const { ownerId, editableLists } = album;
 
   const entries = await store.entriesOfAlbum(album.id);
   const active: string[] = [];
@@ -447,6 +478,21 @@ export async function deleteAlbum(
     // oxlint-disable-next-line no-await-in-loop
     const list = await store.findContainer(entry.listId);
     if (list && !list.trashed) active.push(entry.listId);
+  }
+  // An editor's deletion takes the album out of the lists they edit; the owner's other lists keep it, and only with
+  // none does it go to Trash. Either way the editor sees it leave the share, and nothing more (FR-07.21).
+  if (editableLists && active.some((listId) => !editableLists.includes(listId))) {
+    const left: ChangeInput[] = [];
+    for (const listId of editableLists) {
+      // oxlint-disable-next-line no-await-in-loop
+      await store.deleteMembership(listId, album.id);
+      left.push(
+        { entity: "membership", id: membershipKey(listId, album.id), op: "delete", data: null },
+        // oxlint-disable-next-line no-await-in-loop
+        ...(await forgetPlace(store, ownerId, listId, album.id)),
+      );
+    }
+    return applied(...left);
   }
   const unsorted = active.length === 0;
   const now = context.now ?? new Date();
@@ -458,6 +504,7 @@ export async function deleteAlbum(
     deletedAt: now,
     expiresAt: new Date(now.getTime() + trashRetentionDays * 86_400_000),
     tombstones: [],
+    deletedBy: editableLists ? actingUserId(principal) : null,
   };
   await store.trashAlbum(unit, album.id);
   // Its places go: it comes back as new (DS-51).

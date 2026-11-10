@@ -183,7 +183,8 @@ function remake(
   switch (mutation.name) {
     case "album.create": {
       if (albums.has(mutation.args.id)) return "unchanged";
-      planned.albumInserts.push({ ...mutation.args, artworkUrl: null });
+      const { listId: _list, ...album } = mutation.args;
+      planned.albumInserts.push({ ...album, artworkUrl: null });
       return planned.needs("album.insert");
     }
     case "album.setArtwork": {

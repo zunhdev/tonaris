@@ -7710,6 +7710,12 @@
                             "type": "string",
                             "format": "uuid",
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                          },
+                          "listId": {
+                            "description": "A list to put the new album in. In a list someone shared with the person to edit, the album joins that owner's collection (FR-07.19).",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           }
                         },
                         "required": [
@@ -7722,7 +7728,7 @@
                           "recordingYearEnd",
                           "id"
                         ],
-                        "description": "An album record (FR-01.6)."
+                        "description": "An album record, and the list it is made for (FR-01.6, FR-07.19)."
                       }
                     },
                     "required": [
@@ -10174,6 +10180,12 @@
                             "type": "string",
                             "format": "uuid",
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                          },
+                          "listId": {
+                            "description": "A list to put the new album in. In a list someone shared with the person to edit, the album joins that owner's collection (FR-07.19).",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           }
                         },
                         "required": [
@@ -10186,7 +10198,7 @@
                           "recordingYearEnd",
                           "id"
                         ],
-                        "description": "An album record (FR-01.6)."
+                        "description": "An album record, and the list it is made for (FR-01.6, FR-07.19)."
                       }
                     },
                     "required": [
@@ -12638,6 +12650,12 @@
                             "type": "string",
                             "format": "uuid",
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                          },
+                          "listId": {
+                            "description": "A list to put the new album in. In a list someone shared with the person to edit, the album joins that owner's collection (FR-07.19).",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           }
                         },
                         "required": [
@@ -12650,7 +12668,7 @@
                           "recordingYearEnd",
                           "id"
                         ],
-                        "description": "An album record (FR-01.6)."
+                        "description": "An album record, and the list it is made for (FR-01.6, FR-07.19)."
                       }
                     },
                     "required": [
@@ -18530,6 +18548,12 @@
                         "type": "string",
                         "format": "uuid",
                         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+                      },
+                      "listId": {
+                        "description": "A list to put the new album in. In a list someone shared with the person to edit, the album joins that owner's collection (FR-07.19).",
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                       }
                     },
                     "required": [
@@ -18543,7 +18567,7 @@
                       "id"
                     ],
                     "additionalProperties": false,
-                    "description": "An album record (FR-01.6)."
+                    "description": "An album record, and the list it is made for (FR-01.6, FR-07.19)."
                   }
                 },
                 "required": [

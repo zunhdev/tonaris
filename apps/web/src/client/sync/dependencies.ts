@@ -68,6 +68,7 @@ function created(mutation: Mutation): string[] {
 function referenced(mutation: Mutation): (string | null)[] {
   switch (mutation.name) {
     case "album.create":
+      return [mutation.args.listId ?? null];
     case "field.create":
     case "defaults.set":
     case "defaults.setLinkTarget":

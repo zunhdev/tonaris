@@ -23,12 +23,16 @@ const change: Change = {
 /** An announcer on a hub that records what it was told. */
 function recorded() {
   const published: (readonly Change[])[] = [];
+  const publishedTo: string[] = [];
   const notified: string[] = [];
   const announce = announcer({
-    publish: (_, changes) => published.push(changes),
+    publish: (id, changes) => {
+      publishedTo.push(id);
+      published.push(changes);
+    },
     notify: (id) => notified.push(id),
   });
-  return { announce, published, notified };
+  return { announce, published, publishedTo, notified };
 }
 
 const executed = (overrides: Partial<ExecutedMutation> = {}): ExecutedMutation => ({
@@ -44,6 +48,14 @@ describe("announcer (TS-23, TON-70)", () => {
     announce(accountId, executed({ changes: [change] }));
     expect(published).toEqual([[change]]);
     expect(notified).toEqual([]);
+  });
+
+  test("an editor's change to a share goes to its owner's streams (FR-07.19)", () => {
+    const { announce, publishedTo, notified } = recorded();
+    announce(accountId, executed({ changes: [change], accountId: "denis" }));
+    announce(accountId, executed({ accountId: "denis" }));
+    expect(publishedTo).toEqual(["denis"]);
+    expect(notified).toEqual(["denis"]);
   });
 
   test("tells the guest pages about a confirmed write without changes", () => {

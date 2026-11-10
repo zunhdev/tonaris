@@ -87,7 +87,7 @@ describe("album.setArtwork (FR-03.4)", () => {
     });
     expect(
       await runCommand(setArtwork(album.id, null, cover), { principal: ben, store: memory.store }),
-    ).toMatchObject({ status: "failed", code: "permission_denied" });
+    ).toMatchObject({ status: "failed", code: "not_found" });
     expect(memory.albums.get(album.id)?.artworkUrl).toBe(cover);
   });
 

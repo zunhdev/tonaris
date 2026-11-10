@@ -4,13 +4,13 @@
 // owner's arrangement follows (DS-51): an album entering Unsorted goes to its top, and one leaving Unsorted or a list
 // loses its place there, so a new entry lands at the end of the list.
 
-import { applied, isFailure } from "./command-kit";
+import { applied, contentAccess, isFailure, type ContentAccess } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
 import { maxMemberships } from "./limits";
 import { failure, type Failure } from "./outcomes";
-import { authorizeWrite } from "./policies";
 import { forgetPlace, placeAtTop } from "./positions";
+import { actingUserId } from "./principals";
 import type { MembershipAddResult } from "./sync";
 import { z } from "./zod";
 
@@ -28,22 +28,28 @@ export function membershipKey(listId: string, albumId: string): string {
 type EntryArgs = { listId: string; albumId: string };
 
 /**
- * The active list `listId`, if the principal may change its entries, or why not: a missing list is `not_found`, and
- * someone else's gets the policy's code (TS-30). Adding to a list and taking from it, captures included, ask this.
+ * The active list `listId`, with how the principal may change its entries, or why not (TS-30): the owner's, or one
+ * shared with them to edit (FR-07.19). A missing list and one they don't know of are `not_found`. Adding to a list and
+ * taking from it, captures and new albums included, ask this.
  */
 export async function changeableList(
   listId: string,
-  { principal, store }: CommandContext,
-): Promise<StoredContainer | Failure> {
-  const list = await store.findContainer(listId);
-  if (!list) return failure("not_found", "This list doesn't exist.");
-  const decision = authorizeWrite(principal, { ownerId: list.ownerId, scope: "collection" });
-  if (!decision.allowed) return failure(decision.code, "You can't change this list.");
+  context: CommandContext,
+): Promise<(StoredContainer & { access: ContentAccess }) | Failure> {
+  const list = await context.store.findContainer(listId);
+  const missing = "This list doesn't exist.";
+  if (!list) return failure("not_found", missing);
+  const access = await contentAccess(context, list, {
+    refusal: "You can't change this list.",
+    missing,
+    what: "this list",
+  });
+  if (isFailure(access)) return access;
   if (list.kind !== "list") {
     return failure("invalid_destination", "Folders don't hold albums. Choose a list.");
   }
   if (list.trashed) return failure("trashed", "This list is in Trash. Recover it to change it.");
-  return list;
+  return { ...list, access };
 }
 
 /** The refusal of an entry past the account's limit (TS-18): a list entry added, or a capture's. */
@@ -55,18 +61,37 @@ export function membershipLimitProblem(): Failure {
 }
 
 /**
+ * Whether the person sees the album in someone else's collection: it is in an active list they may read. An editor
+ * adds to a list only albums they see, so no other album of the owner's is reached by its ID (FR-07.20).
+ */
+async function seesAlbum(context: CommandContext, userId: string, albumId: string) {
+  for (const { listId } of await context.store.entriesOfAlbum(albumId)) {
+    // oxlint-disable-next-line no-await-in-loop
+    const list = await context.store.findContainer(listId);
+    // oxlint-disable-next-line no-await-in-loop
+    if (list && !list.trashed && (await context.store.canReadShared(userId, listId))) return true;
+  }
+  return false;
+}
+
+/**
  * The owner of the active list and album an entry joins, or why they can't have one. Another person's album and
- * a missing one get the same answer, so nobody can probe for other people's IDs.
+ * a missing one get the same answer, so nobody can probe for other people's IDs; an editor's, too, for an album of
+ * the owner's they don't see, unless it is `anyAlbum`: one a capture or a new album command already chose.
  */
 async function entryOwner(
   { listId, albumId }: EntryArgs,
   context: CommandContext,
+  { anyAlbum = false }: { anyAlbum?: boolean } = {},
 ): Promise<string | Failure> {
   const list = await changeableList(listId, context);
   if (isFailure(list)) return list;
   const album = await context.store.findAlbum(albumId);
-  if (!album || album.ownerId !== list.ownerId) {
-    return failure("not_found", "This album isn't in your collection.");
+  const unknown = failure("not_found", "This album isn't in your collection.");
+  if (!album || album.ownerId !== list.ownerId) return unknown;
+  const userId = actingUserId(context.principal);
+  if (!anyAlbum && userId !== undefined && userId !== album.ownerId) {
+    if (!(await seesAlbum(context, userId, albumId))) return unknown;
   }
   if (album.trashed) {
     return failure("trashed", "This album is in Trash. Recover it to put it in lists.");
@@ -75,14 +100,16 @@ async function entryOwner(
 }
 
 /**
- * Puts an album in a list (FR-01.6). One already there keeps its entry and the time it was added, and is
- * reported as already in the list (FR-01.7). The new entry's time is the server's, one clock for every session.
+ * Puts an album in a list (FR-01.6): the owner's, or an editor's in a share (FR-07.19). One already there keeps its
+ * entry and the time it was added, and is reported as already in the list (FR-01.7). The new entry's time is the
+ * server's, one clock for every session. `anyAlbum` is for a capture's or a new album's own entry.
  */
 export async function addMembership(
   args: EntryArgs,
   context: CommandContext,
+  options: { anyAlbum?: boolean } = {},
 ): Promise<CommandResult> {
-  const ownerId = await entryOwner(args, context);
+  const ownerId = await entryOwner(args, context, options);
   if (isFailure(ownerId)) return ownerId;
   const { store } = context;
   if (await store.findMembership(args.listId, args.albumId)) {

@@ -242,7 +242,7 @@ describe("compare-and-set and ownership (TS-21, X-05)", () => {
     ).toMatchObject({ code: "not_found", problem: { detail: "This field isn't on this album." } });
     expect(
       await runCommand(apply(theirs.id, rating.id), { principal: anna, store: memory.store }),
-    ).toMatchObject({ code: "permission_denied" });
+    ).toMatchObject({ code: "not_found" });
     expect(
       await runCommand(apply(bleach.id, foreign.id), { principal: anna, store: memory.store }),
     ).toMatchObject({ code: "not_found" });

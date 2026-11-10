@@ -5,7 +5,7 @@ import { and, count, eq, inArray, isNull } from "drizzle-orm";
 
 import { endedGrantStatuses, openGrantStatuses, type CollectionStore } from "@tonaris/domain";
 
-import { canReadContainer, linkByTokenHash } from "../access";
+import { canReadContainer, editSourcesAbove, linkByTokenHash } from "../access";
 import type { Transaction } from "../client";
 import { recordInLedger } from "../ledger";
 import { containers, savedReferences, shareGrants, shareLinks, users } from "../schema";
@@ -15,6 +15,9 @@ export function sharingStore(tx: Transaction) {
   return {
     canReadShared(personId, containerId) {
       return canReadContainer(tx, { kind: "person", userId: personId }, containerId);
+    },
+    editSourcesAbove(personId, containerId) {
+      return editSourcesAbove(tx, personId, containerId);
     },
     async findAccountByEmail(key) {
       const [account] = await tx.select({ id: users.id }).from(users).where(eq(users.email, key));

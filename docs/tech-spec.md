@@ -462,7 +462,13 @@ The [TON-20 prototype](spikes/2026-10-20-sync-prototype.md) builds these steps f
 
 A single-owner serializer is deliberate. Per-account write volume is tiny, and serializing it removes whole classes of races: concurrent moves creating cycles, name collisions, capacity counting.
 
-*Planned in P-TON-47 (FR-07.19), built in TON-189:* **an editor's mutation runs under the owner's lock.** The owner is the owner of what it changes, not the editor. Its changes go into the owner's `change_log`, so the owner's devices and the share's viewers update as for the owner's own writes (TS-23). Its `mutations` row, for idempotency, stays the editor's. A batch changes one owner's collection; a batch mixing collections is refused.
+*Built in TON-189 (FR-07.19):* **an editor's mutation runs under the owner's lock.**
+- **The owner** is the owner of what the mutation names (`targetOf` and `collectionOf` in `packages/db/src/sync.ts`): a folder or list, an album, or a Trash unit. Mutations of the actor's own (preferences, references, sharing, the account, Trash purges, custom fields) lock the actor's account, as does anything naming a record that doesn't exist. The switch lists every mutation, so a new one has to be placed.
+- **Its changes** go into the owner's `change_log`, so the owner's devices and the share's viewers update as for the owner's own writes (TS-23). `ExecutedMutation.accountId` names that account for the announcer.
+- **Its `mutations` row**, for idempotency, stays the editor's, so do their capture count and `GET /v1/mutations/{id}`.
+- **Batches** need nothing more: each item runs as its own mutation under its own owner's lock (TS-25), so a batch may span collections.
+- **A claim** (TS-22) records the editor's row under the editor's own lock; the capture then runs under the owner's.
+- The command still decides whether the editor may make the change (TS-30).
 
 **TS-21 Field-level compare-and-set (Decided; FR-09.4).**
 
@@ -697,11 +703,12 @@ Eden types and the OpenAPI document both derive from the same Zod schemas, so th
 
 Every query and command takes a principal (`packages/domain/src/principals.ts`: a signed-in `user` from the web or a native app, an `mcp` grant with its mode, or a link `guest`). Authorization lives in `packages/domain/src/policies.ts`, never in route handlers; it answers `permission_denied` or `app_only` (X-03).
 
-*Planned in P-TON-47 (X-01, FR-07.19, FR-07.20), built in TON-189:* **editors.** Today `actingOwner` takes the owner to be the principal's own account, and `authorizeWrite` allows only the owner. With editors:
-- the owner is found from the target: a create's parent, a list for a capture or an entry, an album's lists;
-- `authorizeWrite` also allows `collection`-scope writes by a person, or their Manage connection, who can edit the target (TS-31). It never allows `sharing`, `trash_purge`, `account` or `connections` for anyone but the owner;
-- each command checks it stays inside the share: moves within one share, the shared folder or list itself only renamed, described or colored, field definitions and Trash left to the owner, except Undo of the editor's own deletion;
-- a refusal outside the share answers `not_found`, as for content the person can't read.
+*Built in TON-189 (X-01, FR-07.19–FR-07.21):* **editors.** `authorizeWrite` still allows only the owner; editors go through `contentAccess` (`packages/domain/src/command-kit.ts`), which every content check asks (`changeableContainer`, `changeableList`, `changeableAlbum`):
+- **Who:** the owner under the policy; else a person, or their Manage connection (`authorizeShareEdit`), whose `editSourcesAbove` is not empty: the shares they edit it through (TS-31). A reader gets `permission_denied`, "You can view this…, but not change it."; anyone else `not_found`, as for a missing record, strangers included.
+- **Whose collection:** a create takes its parent's owner (`collectionFor`), `album.create` and `album.capture` their list's. `album.create` takes an optional `listId` for that.
+- **Inside the share only:** a move needs a share above both the item and the destination, never the item itself (`insideShare`); the shared folder or list itself is only renamed, described or colored. Albums change only through a list the editor edits; `membership.add` takes only albums they see. Field definitions, sharing and Trash purges stay with the owner.
+- **Albums:** an editor's `album.delete` leaves the lists they edit, and trashes the album only when no other list of the owner's holds it. A capture that reuses an album they didn't see reports `created`.
+- **Trash:** a unit records `deleted_by` for an editor's deletion, and `trash.recover` lets that editor, in the app, undo a folder or list deletion back where it was while they can still edit there. Everything else in the owner's Trash answers `not_found`.
 
 **TS-31 Hierarchy queries (Decided; FR-01.4, FR-07.8–FR-07.10).**
 

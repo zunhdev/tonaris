@@ -5,6 +5,7 @@
 // before the lock too (TON-46).
 
 import {
+  captureCollection,
   agreedToTerms,
   findLinkedAlbum,
   mergeCandidates,
@@ -96,13 +97,16 @@ export async function prepareCapture(
   args: CaptureArgs,
 ): Promise<Prepared> {
   if (!deps) return { outcome: unavailable };
-  const ownerId = actingUserId(principal);
-  if (!ownerId) return { outcome: failure("permission_denied", "You can't add albums here.") };
+  const userId = actingUserId(principal);
+  if (!userId) return { outcome: failure("permission_denied", "You can't add albums here.") };
+  // Matched against the collection it saves to: an editor's capture into a share, the owner's (FR-07.19).
+  const ownerId = await captureCollection(db, userId, args.listId);
   try {
     const identification = await deps.identify(args.link, {
       agent: principal.kind === "mcp",
       linked: (service, entityId) => findLinkedAlbum(db, ownerId, service, entityId),
-      mayReadYouTube: () => agreedToTerms(db, ownerId, termsVersion),
+      // The person capturing agreed to YouTube's terms, or didn't (FR-11.14).
+      mayReadYouTube: () => agreedToTerms(db, userId, termsVersion),
     });
     if (identification.status === "failed") return { outcome: identification.failure };
     const { link: parsed } = identification;

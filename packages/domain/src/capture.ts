@@ -39,8 +39,9 @@ import {
   membershipKey,
   membershipLimitProblem,
 } from "./memberships";
-import { failure, type Outcome } from "./outcomes";
+import { failure, type Failure, type Outcome } from "./outcomes";
 import { forgetPlace, placeAtTop } from "./positions";
+import { actingUserId } from "./principals";
 import { serviceLinkKey } from "./service-links";
 import { z } from "./zod";
 
@@ -203,6 +204,19 @@ async function matchOf(
   return merged.find((match) => !match.target.trashed) ?? merged[0];
 }
 
+/** Whether the person sees the owner's album: it is in an active list they may read (FR-07.20). */
+async function seenBy(context: CommandContext, userId: string, albumId: string) {
+  const album = await context.store.findAlbum(albumId);
+  if (!album || album.trashed) return false;
+  for (const { listId } of await context.store.entriesOfAlbum(albumId)) {
+    // oxlint-disable-next-line no-await-in-loop
+    const list = await context.store.findContainer(listId);
+    // oxlint-disable-next-line no-await-in-loop
+    if (list && !list.trashed && (await context.store.canReadShared(userId, listId))) return true;
+  }
+  return false;
+}
+
 /** The change that tells clients an album has `link` (TON-46). */
 const linkInsert = (albumId: string, link: CapturedLink): ChangeInput => ({
   entity: "link",
@@ -242,7 +256,7 @@ async function place(
 ): Promise<{ changes: ChangeInput[]; alreadyInList: boolean }> {
   if (listId !== null) {
     // The destination and the entry limit were checked before anything was written.
-    const added = await addMembership({ listId, albumId }, context);
+    const added = await addMembership({ listId, albumId }, context, { anyAlbum: true });
     if (added.status !== "applied") throw new Error(`The checked entry failed: ${added.status}`);
     const { result } = added;
     const alreadyInList =
@@ -277,12 +291,18 @@ async function entryLimit(
 const fillsClientValues = (plan: EnrichmentPlan) =>
   enrichableFields.some((field) => plan.values[field] !== undefined);
 
+/**
+ * Saves the capture as the owner's album `target`, brought back from Trash if it was there (FR-14.4). `unseen` is an
+ * editor's capture of an album they didn't see: it reads as a new one, so nothing of the owner's other lists or Trash
+ * shows (FR-07.21).
+ */
 async function reuse(
   args: CaptureArgs,
   ownerId: string,
   link: CapturedLink,
   { target, facts }: { target: CaptureTarget; facts?: FoundFacts },
   context: CommandContext,
+  unseen = false,
 ): Promise<CommandResult> {
   const { store } = context;
   const changes: ChangeInput[] = [];
@@ -341,7 +361,7 @@ async function reuse(
   const placed = await place(target.id, ownerId, args.listId, restored, context);
   return captured([...changes, ...linked, ...placed.changes], {
     albumId: target.id,
-    match: restored ? "restored" : "reused",
+    match: unseen ? "created" : restored ? "restored" : "reused",
     alreadyInList: placed.alreadyInList,
     keptLink,
   });
@@ -438,16 +458,28 @@ export async function captureAlbum(
       "Tonaris can't look links up right now. Try again, or enter the details manually.",
     );
   }
-  const ownerId = actingOwner(context, "collection", "You can't add albums here.");
-  if (isFailure(ownerId)) return ownerId;
-  if (args.listId !== null) {
+  // Into the person's own collection, or the list's owner's: an editor's capture into a share saves it there (FR-07.19).
+  let ownerId: string | Failure;
+  if (args.listId === null)
+    ownerId = actingOwner(context, "collection", "You can't add albums here.");
+  else {
     const list = await changeableList(args.listId, context);
-    if (isFailure(list)) return list;
+    ownerId = isFailure(list) ? list : list.ownerId;
   }
+  if (isFailure(ownerId)) return ownerId;
 
   const match = await matchOf(ownerId, source, context);
   const refusal = await entryLimit(args.listId, ownerId, match?.target.id, context);
-  if (match) return refusal ?? reuse(args, ownerId, source.link, match, context);
+  if (match) {
+    if (refusal) return refusal;
+    // An editor learns nothing of the owner's albums they don't see: reusing one of those reads as adding it (FR-07.21).
+    const userId = actingUserId(context.principal);
+    const unseen =
+      userId !== undefined &&
+      userId !== ownerId &&
+      !(await seenBy(context, userId, match.target.id));
+    return reuse(args, ownerId, source.link, match, context, unseen);
+  }
   if (source.kind === "linked") {
     return failure("not_found", "The album with this link is gone. Try adding it again.");
   }
