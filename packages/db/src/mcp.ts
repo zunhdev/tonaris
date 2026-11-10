@@ -12,6 +12,7 @@ import {
   type DeletionTargets,
 } from "@tonaris/domain";
 
+import { canEditAlbum, canEditContainer, editSourcesAbove } from "./access";
 import { albumsOfReleaseGroupIn } from "./album-writes";
 import type { Database, Executor, Transaction } from "./client";
 import { activeListsOf, inActiveList } from "./columns";
@@ -242,6 +243,110 @@ export async function deletionTargets(
     entries,
     state,
   });
+}
+
+/**
+ * What an editor's deletion of `albumIds` and `containerIds` does inside the shares they edit, as they may know it
+ * (FR-07.20, FR-07.21; TON-200): each folder or list inside a share, never a share's own, with what goes with it; and
+ * each album in a list they edit, with only the lists they edit. Who sees it, and which albums end up in the owner's
+ * Unsorted, stay the owner's to know, so neither is named.
+ */
+export async function sharedDeletionTargets(
+  tx: Transaction,
+  {
+    userId,
+    albumIds,
+    containerIds,
+  }: { userId: string; albumIds: readonly string[]; containerIds: readonly string[] },
+): Promise<Pick<DeletionTargets, "albums" | "containers">> {
+  const found =
+    containerIds.length === 0
+      ? []
+      : await tx
+          .select({ id: containers.id, ownerId: containers.ownerId })
+          .from(containers)
+          .where(
+            and(
+              inArray(containers.id, [...containerIds]),
+              not(eq(containers.ownerId, userId)),
+              isNull(containers.trashedAt),
+            ),
+          );
+  const inside = new Map<string, string[]>();
+  for (const { id, ownerId } of found) {
+    // oxlint-disable-next-line no-await-in-loop
+    const through = await editSourcesAbove(tx, userId, id);
+    if (through.some((top) => top !== id))
+      inside.set(ownerId, [...(inside.get(ownerId) ?? []), id]);
+  }
+  const containerTargets: DeletionTargets["containers"][number][] = [];
+  for (const [ownerId, ids] of inside) {
+    // oxlint-disable-next-line no-await-in-loop
+    const owners = await deletionTargets(tx, { ownerId, albumIds: [], containerIds: ids });
+    containerTargets.push(...owners.containers);
+  }
+
+  const shared =
+    albumIds.length === 0
+      ? []
+      : await tx
+          .select({ id: albums.id, title: albums.title, artist: albums.artistCredit })
+          .from(albums)
+          .where(
+            and(
+              inArray(albums.id, [...albumIds]),
+              not(eq(albums.ownerId, userId)),
+              isNull(albums.trashedAt),
+            ),
+          );
+  const lists =
+    shared.length === 0
+      ? []
+      : await activeListsOf(
+          tx,
+          shared.map(({ id }) => id),
+        );
+  const albumTargets: AlbumDeletionTarget[] = [];
+  for (const album of shared) {
+    const editable: { id: string; name: string }[] = [];
+    for (const list of lists.filter((each) => each.albumId === album.id)) {
+      // oxlint-disable-next-line no-await-in-loop
+      if (await canEditContainer(tx, userId, list.id))
+        editable.push({ id: list.id, name: list.name });
+    }
+    if (editable.length > 0) albumTargets.push({ ...album, lists: editable });
+  }
+  return { albums: albumTargets, containers: containerTargets };
+}
+
+/**
+ * Where an editor's confirmed match into the shared list `listId` goes, as they may know it (FR-07.20; TON-200): the
+ * list's name, and the owner's saved album of `releaseGroupId` only when they can edit it already, with only the lists
+ * they edit; otherwise it reads as a new album, as the capture answers. Undefined when it isn't a list they edit.
+ */
+export async function sharedMatchTarget(
+  tx: Transaction,
+  { userId, listId, releaseGroupId }: { userId: string; listId: string; releaseGroupId: string },
+): Promise<{ listName: string; saved: AlbumDeletionTarget | undefined } | undefined> {
+  const [list] = await tx
+    .select({ name: containers.name, ownerId: containers.ownerId })
+    .from(containers)
+    .where(
+      and(eq(containers.id, listId), eq(containers.kind, "list"), isNull(containers.trashedAt)),
+    );
+  if (!list || list.ownerId === userId || !(await canEditContainer(tx, userId, listId))) {
+    return undefined;
+  }
+  const saved = await savedAlbumOfReleaseGroup(tx, { ownerId: list.ownerId, releaseGroupId });
+  if (!saved || !(await canEditAlbum(tx, userId, saved.id))) {
+    return { listName: list.name, saved: undefined };
+  }
+  const editable: { id: string; name: string }[] = [];
+  for (const each of saved.lists) {
+    // oxlint-disable-next-line no-await-in-loop
+    if (await canEditContainer(tx, userId, each.id)) editable.push(each);
+  }
+  return { listName: list.name, saved: { ...saved, lists: editable } };
 }
 
 /** The owner's saved album of `releaseGroupId`, if any, with its active lists: what a confirmed match joins (FR-02.9). */

@@ -301,7 +301,7 @@ describe("organizing (FR-10.4)", () => {
 });
 
 describe("albums (FR-10.4, FR-10.5)", () => {
-  test("adds albums by hand into a list; one missing its year fails alone, and its list step is skipped", async () => {
+  test("adds albums by hand into a list, each made in it; one missing its year fails alone", async () => {
     const { userId, mcp } = await manager();
     const list = await insertList(userId, "Doom");
     const added = await write(mcp, "add_albums", {
@@ -315,12 +315,12 @@ describe("albums (FR-10.4, FR-10.5)", () => {
       {
         item: 0,
         albumId: expect.any(String),
-        outcome: { status: "confirmed", result: { alreadyInList: false } },
+        outcome: expect.objectContaining({ status: "confirmed" }),
       },
       {
         item: 1,
         albumId: expect.any(String),
-        outcome: { status: "skipped", because: "failed", after: 2 },
+        outcome: expect.objectContaining({ status: "failed", code: "required_missing" }),
       },
     ]);
     expect(await titlesIn(mcp, list)).toEqual(["Nightfall"]);

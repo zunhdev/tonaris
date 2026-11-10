@@ -92,6 +92,8 @@ export {
   deletionTargets,
   savedAlbumOfReleaseGroup,
   activeListName,
+  sharedDeletionTargets,
+  sharedMatchTarget,
   type CollectionOverview,
   type ConnectionRow,
 } from "./mcp";

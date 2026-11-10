@@ -565,17 +565,18 @@ export function registerWriteTools(
             targets.push({ item: index, albumId });
             continue;
           }
-          items.push({ name: "album.create", args: { id: albumId, ...emptyAlbum, ...item } });
-          if (listId === null) {
-            targets.push({ item: index, albumId });
-            continue;
-          }
+          // Into the list as it's made, as the app does, so a share's list keeps it in its owner's collection
+          // (FR-07.19; TON-200).
           items.push({
-            name: "membership.add",
-            args: { listId, albumId },
-            after: [items.length - 1],
+            name: "album.create",
+            args: {
+              id: albumId,
+              ...emptyAlbum,
+              ...item,
+              ...(listId === null ? {} : { listId }),
+            },
           });
-          targets.push(undefined, { item: index, albumId });
+          targets.push({ item: index, albumId });
         }
         return { items, targets };
       }),

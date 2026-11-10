@@ -109,7 +109,7 @@ Checked and sound:
 - Read-only connections and guests can't write;
 - retries and mutation IDs stay with the sender.
 
-Two MCP tools that still assumed the agent's own collection were filed as TON-200.
+Three MCP tools that still assumed the agent's own collection (`add_albums` by hand, `delete_items`, `confirm_match`) were fixed in TON-200 (`mcp/shared-editing.test.ts`).
 
 ## The scope review (AC-46)
 
