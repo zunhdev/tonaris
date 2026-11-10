@@ -1266,6 +1266,11 @@ There are deliberately **no** tools for sharing management, Trash purge, export,
 - **Reading:** `list_shared_with_me` gives each share's `role`, and the server's instructions say that shares with role edit take the write tools, inside them only.
 - **Bases:** the values a change is based on when the agent sends none (`albumBase`, `containerBase`, `fieldValueBase`, `linkBase`) are read for content the person edits too (`canEditAlbum`). For content they can't change, `update_album` bases on the attempted values, so the command answers `not_found` rather than a validation failure.
 - **Refused on another owner's content:** the field and option tools (their definitions stay the owner's) and `recover_from_trash` (agents never undo an editor's deletion).
+- *Built in TON-200:* **by hand, deletions and matches.**
+  - `add_albums` makes an album typed in by hand in its list (`album.create` with `listId`), as the app does. In a share, it stays in the owner's collection.
+  - The approvals of `delete_items` and `confirm_match` also cover content in shares the person edits (`sharedDeletionTargets`, `sharedMatchTarget`).
+  - They name only what the person sees: folders and lists inside the share, never its own, and only the lists the person edits. A saved album is named only if they can edit it already.
+  - They never say who sees it, or how many albums go to the owner's Unsorted.
 - **Batches** need no splitting: each item locks its own owner (TS-20). An approved batch runs in one transaction, so it takes every lock it needs first, the agent's own included, in one order (`lockCollections`). Two people approving batches on each other's shares at once never deadlock.
 
 *As built in TON-82:* the ordinary write tools (`apps/api/src/mcp/write-tools.ts`), for Manage collection connections.

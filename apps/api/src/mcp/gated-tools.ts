@@ -15,6 +15,8 @@ import {
   findApproval,
   optionRemovalsIn,
   savedAlbumOfReleaseGroup,
+  sharedDeletionTargets,
+  sharedMatchTarget,
   type Database,
   type Transaction,
 } from "@tonaris/db";
@@ -139,7 +141,18 @@ export function registerGatedTools(
           args,
           missing: "None of these is in the collection; they may already be in Trash.",
           scope: async (tx) => {
-            const targets = await deletionTargets(tx, { ownerId, albumIds, containerIds });
+            const own = await deletionTargets(tx, { ownerId, albumIds, containerIds });
+            // And what the person edits in others' shares, as they may know it (FR-07.20; TON-200).
+            const shared = await sharedDeletionTargets(tx, {
+              userId: ownerId,
+              albumIds,
+              containerIds,
+            });
+            const targets = {
+              ...own,
+              albums: [...own.albums, ...shared.albums],
+              containers: [...own.containers, ...shared.containers],
+            };
             return targets.albums.length + targets.containers.length === 0
               ? undefined
               : itemsDeletionScope(targets);
@@ -321,12 +334,18 @@ export function registerGatedTools(
           missing: "That list isn't in the collection.",
           outsideLock: true,
           scope: async (tx) => {
-            const listName = listId === null ? null : await activeListName(tx, { ownerId, listId });
+            const { releaseGroupId } = args;
+            const own = listId === null ? null : await activeListName(tx, { ownerId, listId });
+            // Or a list of a share the person edits, as they may know it (FR-07.20; TON-200).
+            const target =
+              own === undefined && listId !== null
+                ? await sharedMatchTarget(tx, { userId: ownerId, listId, releaseGroupId })
+                : undefined;
+            const listName = own === undefined ? target?.listName : own;
             if (listName === undefined) return undefined;
-            const saved = await savedAlbumOfReleaseGroup(tx, {
-              ownerId,
-              releaseGroupId: args.releaseGroupId,
-            });
+            const saved = target
+              ? target.saved
+              : await savedAlbumOfReleaseGroup(tx, { ownerId, releaseGroupId });
             return matchScope(
               {
                 link: args.link,
