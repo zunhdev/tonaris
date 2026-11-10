@@ -426,7 +426,7 @@ At a limit, only the new item is rejected, with `capacity_exceeded` (albums) or 
   - `album.create` and a capture making a new record check every album row of the owner, Trash included;
   - reuse, re-addition and restore never create a record, so they work at the limit;
   - the refusal is "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more."
-- **Captures** (`maxCapturesPerHour`): the mutation runner counts the account's `album.capture` mutations received in the last hour, this one excepted. At 100 it answers `rate_limited` before asking any provider: "You've added 100 albums from links in the last hour. Try again later, or enter an album manually."
+- **Captures** (`maxCapturesPerHour`): the mutation runner counts the account's `album.capture` mutations received in the last hour, this one excepted. *Planned in P-TON-47 (FR-07.19):* an editor's captures into a share count against the editor, whose `mutations` rows they are; the album, container and entry limits are the owner's. At 100 it answers `rate_limited` before asking any provider: "You've added 100 albums from links in the last hour. Try again later, or enter an album manually."
 - **MCP's per-grant rates** came with TON-85 (TS-66).
 - **Exports** (`maxExportsPerHour`) came with TON-89 (TS-80): 5 per account per hour, counted in memory like the sign-in limits. The sixth answers `rate_limited` with `Retry-After`: "You've exported your data 5 times in the last hour. Try again in {n} minutes."
 
@@ -461,6 +461,8 @@ type Batch = { batchId: string; items: (Mutation & { dependsOn?: string[] })[] }
 The [TON-20 prototype](spikes/2026-10-20-sync-prototype.md) builds these steps for albums (`executeMutation` in `packages/db/src/sync.ts`). It took the lock with a `SELECT … FOR UPDATE` rather than the `UPDATE … SET seq = seq + 1` first planned, so that `seq` counts changes rather than attempts. Gapless, it lets the stream and the client tell a missed change from a rejected mutation.
 
 A single-owner serializer is deliberate. Per-account write volume is tiny, and serializing it removes whole classes of races: concurrent moves creating cycles, name collisions, capacity counting.
+
+*Planned in P-TON-47 (FR-07.19), built in TON-189:* **an editor's mutation runs under the owner's lock.** The owner is the owner of what it changes, not the editor. Its changes go into the owner's `change_log`, so the owner's devices and the share's viewers update as for the owner's own writes (TS-23). Its `mutations` row, for idempotency, stays the editor's. A batch changes one owner's collection; a batch mixing collections is refused.
 
 **TS-21 Field-level compare-and-set (Decided; FR-09.4).**
 
@@ -580,6 +582,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - The browser's `online` event restarts the window.
   - *Fixed in TON-137:* **only time the page is shown counts.** A phone freezes a hidden page, as Android does an installed app in the background, and its stream drops meanwhile. A window started before then fired the moment the page came back, while the stream still waited out its backoff (up to 30 s), so "Offline" flashed on almost every return to the app. Now a hidden page stops the window, and `visibilitychange` back to shown, or Chrome's `resume` after a freeze, restarts it and reconnects and resends at once, as `online` does.
 - **Viewers.** Shared roots are separate read-only collections, refilled on invalidation.
+- **Editors** *(P-TON-47):* how an editor's client holds a share it can edit, so the editing tools work on it, is decided by the TON-187 spike and recorded here.
 
 **TS-25 Batches (Decided; FR-13.4; built in TON-28).** A batch is a dependency graph, sent to `POST /v1/batches` as `{batchId, items}` and answered with `{batchId, items: [{mutationId, outcome}]}` in the order sent.
 
@@ -667,7 +670,7 @@ Eden types and the OpenAPI document both derive from the same Zod schemas, so th
 
 | Principal | Authenticated by | Can |
 | --- | --- | --- |
-| Session (web) | Better Auth session cookie (TS-08, TS-70) | Owner rights over their own collection. Read rights through accepted grants or saved link references. |
+| Session (web) | Better Auth session cookie (TS-08, TS-70) | Owner rights over their own collection. Read rights through accepted grants or saved link references. Edit rights inside shares where an accepted grant gives Can edit (FR-07.18–FR-07.21). |
 | Native app (later phase) | OAuth 2.1 access token, audience = the API's `/v1`, from the authorization-code flow with PKCE as a public client (RFC 8252: system browser, claimed HTTPS redirect) | Same rights as a session |
 | Link guest | Share token in the URL path, then an `Authorization: Share <token>` header | Read one shared root and its subtree only |
 | MCP grant | OAuth access token (JWT, audience = `/mcp`) bound to a grant with `mode` | Read-only, or Manage collection minus the X-03 operations |
@@ -681,6 +684,12 @@ Eden types and the OpenAPI document both derive from the same Zod schemas, so th
 - Web sessions keep using the cookie.
 
 Every query and command takes a principal (`packages/domain/src/principals.ts`: a signed-in `user` from the web or a native app, an `mcp` grant with its mode, or a link `guest`). Authorization lives in `packages/domain/src/policies.ts`, never in route handlers; it answers `permission_denied` or `app_only` (X-03).
+
+*Planned in P-TON-47 (X-01, FR-07.19, FR-07.20), built in TON-189:* **editors.** Today `actingOwner` takes the owner to be the principal's own account, and `authorizeWrite` allows only the owner. With editors:
+- the owner is found from the target: a create's parent, a list for a capture or an entry, an album's lists;
+- `authorizeWrite` also allows `collection`-scope writes by a person, or their Manage connection, who can edit the target (TS-31). It never allows `sharing`, `trash_purge`, `account` or `connections` for anyone but the owner;
+- each command checks it stays inside the share: moves within one share, the shared folder or list itself only renamed, described or colored, field definitions and Trash left to the owner, except Undo of the editor's own deletion;
+- a refusal outside the share answers `not_found`, as for content the person can't read.
 
 **TS-31 Hierarchy queries (Decided; FR-01.4, FR-07.8–FR-07.10).**
 
@@ -696,6 +705,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
   - every node on the path from A to C is active;
   - the owner exists.
 - **Shared snapshot:** a downward CTE from the root yields active containers and the albums with effective memberships in them, with only the used fields (FR-07.12).
+- **Edit access** *(planned in P-TON-47, FR-07.18; built in TON-188):* a person may edit container C when some ancestor-or-self A of C has an accepted grant for them with `role = 'edit'`, every node from A to C is active, and the owner exists. Links never give it. A person's role on C is the highest such role, else view if they may read C. Like read access, it has a domain model (`editableContainers`) and SQL walks (`editableContainers`, `canEditContainer`), held equal by property tests. An editor's snapshot carries their role, and all the owner's fields with all their options (FR-07.20).
 - The owner's client never needs these queries, because it holds its whole tree.
 - *As built in TON-64:*
   - **The definition** is `readableContainers(state, viewer)` in `packages/domain/src/sharing.ts`. It walks down from each active source through active children only.
@@ -732,6 +742,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 **TS-33 Invitations and grants (Decided; FR-07.4–FR-07.7).**
 
 - **Invite:** a `share_grants` row with `status = pending` plus an email job (TS-72). `email_status` records sending, sent, failed, or unknown separately.
+- **Role** *(planned in P-TON-47, FR-07.18; built in TON-188):* `share_grants.role` is `view` or `edit`, `view` by default, with existing grants `view`. `share.invite` takes it, and `share.setRole {grantId, role}`, owner-only and app-only, changes it on a pending or accepted grant without a new acceptance. A change notifies the grantee's streams as a revocation does.
 - **Accept:** set the grant to `accepted`, upsert `saved_references`, and emit a change to the grantee's stream.
 - **Leave:** set the grant to `withdrawn`, and delete the reference if it has no `link_id`.
 - **Recovery:** active statuses resume after Trash recovery. `withdrawn` and `revoked` never resume (FR-07.10).
@@ -1216,6 +1227,8 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 | References | `save_shared_reference`, `remove_shared_reference` |
 
 There are deliberately **no** tools for sharing management, Trash purge, export, account actions, or administration (X-03).
+
+*Planned in P-TON-47 (FR-10.4, FR-07.19–FR-07.21), built in TON-192:* **editors' agents.** A Manage connection acts as its person does in the app, so the write tools also take folders, lists and albums inside shares the person can edit, under the commands' editor rules (TS-30). The field and option tools and `recover_from_trash` refuse on another owner's content. `get_overview` and `list_shared_with_me` give the person's role on each share. A tool call whose items span two owners' collections runs as a batch per owner.
 
 *As built in TON-82:* the ordinary write tools (`apps/api/src/mcp/write-tools.ts`), for Manage collection connections.
 - **The path.** Each tool plans the app's own mutation envelopes, and `mcpWriter()` runs them as a batch: through the API's mutation runner, by `executeBatch`'s rules, item by item. Each item's changes go to the person's streams as it commits (X-08). A step that needs an earlier one, such as setting a field after applying it, depends on it (TS-25).
@@ -1815,6 +1828,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
   - Trash purge
   - admission-invitation revocation
   - passkey removal (since TON-143)
+  - a grant's role lowered from edit to view (planned in P-TON-47, TON-188), so a restore never brings edit rights back
 - **Restore runbook:**
   1. restore into a new database with both services in maintenance mode, which blocks all access, including guests and MCP;
   2. replay ledger events newer than the restore point;

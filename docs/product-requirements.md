@@ -20,7 +20,7 @@ This document is the source of truth for Tonaris's purpose, scope, user-visible 
 
 | Prefix | Meaning | Example |
 | --- | --- | --- |
-| `FR-NN` | Functional area | FR-07 Read-only sharing |
+| `FR-NN` | Functional area | FR-07 Sharing |
 | `FR-NN.M` | Individual functional rule, the unit referenced by design, tech, Linear, and OpenSpec work | FR-07.9 Sharing on moves |
 | `X-NN` | Cross-cutting rule that applies to every FR | X-05 Rejections change nothing |
 | `Q-NN` | Quality requirement | Q-04 Service disaster recovery |
@@ -60,7 +60,7 @@ This document is the source of truth for Tonaris's purpose, scope, user-visible 
 | Editable metadata, chronology, optional custom fields | FR-03 |
 | Viewing and editing modes; sorting, manual order, release-type grouping | FR-04, FR-05 |
 | Streaming-service links that open the external app | FR-06 |
-| Read-only sharing by account invitation and guest-viewable link | FR-07 |
+| Sharing by account invitation, to view or to edit, and by guest-viewable link | FR-07 |
 | Data export | FR-08 |
 | Automatic synchronization with conflict protection | FR-09 |
 | MCP access for Claude web, ChatGPT web, and Codex desktop | FR-10 |
@@ -117,7 +117,6 @@ The substantial first-version scope is accepted. Work is delivered in increments
 | Synchronization with streaming libraries | Either direction. |
 | Track items and track-level playlists | Track links resolve to their parent release. |
 | Public discovery feeds, follows, comments, public profiles, user discovery | Sharing is selective (FR-07). |
-| Collaborative editing by other users | Sharing is read-only. |
 | Built-in recommendations | External agents keep the ordinary MCP read and search abilities. The MCP server adds no recommendation feature. |
 | Automatic listening-history tracking | Custom fields may hold manually or agent-entered listening information (FR-03.20). |
 | Importing or restoring exports, and merging backups | **Not planned.** Export exists so users own their data (FR-08). |
@@ -153,6 +152,7 @@ These are user-facing concepts, not a data model.
 | Custom field | An account-level field definition that albums can optionally use. Values belong to the album. |
 | Owner | The user who controls a collection and grants access. |
 | Viewer | A person allowed to read shared content: a signed-in account or a guest with a link. |
+| Editor | A signed-in person invited to change a shared folder or list (FR-07.18). What they change stays in the owner's collection. |
 | Shared with me | A signed-in viewer's saved references to collections shared with them. |
 | Authorized agent | An AI agent connected through MCP. It never exceeds the user's permissions. |
 | Export | A downloadable archive of the owner's collection (FR-08). |
@@ -161,7 +161,7 @@ These are user-facing concepts, not a data model.
 
 These rules apply to every functional requirement unless an FR explicitly states an exception.
 
-**X-01 Ownership.** Each collection initially has one owner. Users change only their own collection and their own personal preferences. Edits never change another user's data or a provider's catalog. Viewer and agent access never exceeds the authorizing user's ownership and sharing access.
+**X-01 Ownership.** Each collection has one owner. Users change their own collection, their own personal preferences, and the folders and lists an owner shared with them to edit (FR-07.18–FR-07.21). Edits never change another user's data outside such a share, or a provider's catalog. Viewer, editor and agent access never exceeds the authorizing user's ownership and sharing access.
 
 **X-02 Channel parity.** Collection rules apply identically to the app, link capture, and MCP. These include validation, required information, uniqueness, capacity, matching, enrichment, search scope and matching, sharing effects, Trash behavior, conflict handling, and outcome reporting. MCP adds the connection's permission mode (FR-10.3) and its approval rules (FR-10.6).
 
@@ -380,7 +380,7 @@ Field names and option labels cannot be blank. User-configurable rules (ranges, 
 
 **FR-03.18 Deleting a field.** Permanent deletion is always *confirmed* (X-07), even for unused fields. The warning covers the definition, its options, all album usage and values across the account (including in Trash), the effects on shared views, and that neither Trash nor album restoration can recover them. Deletion removes all usage and values from active and trashed albums, and no album data may reference the deleted field.
 
-**FR-03.19 Shared visibility.** Viewers of a shared album see all custom fields it uses, with their values, including fields applied later (FR-07.12).
+**FR-03.19 Shared visibility.** Viewers of a shared album see all custom fields it uses, with their values, including fields applied later (FR-07.12). Editors see all the owner's fields and options, used or not, and set values (FR-07.20).
 
 **FR-03.20 Listening data.** Automatic listening-history tracking is excluded. Users or Manage collection agents may maintain fields such as "Last listened" or "Listening status" under the ordinary rules. Opening a service link never marks an album as listened or fills fields. Tonaris never imports listening history. Ratings, notes, and status are possible uses, not predefined fields.
 
@@ -388,7 +388,7 @@ Field names and option labels cannot be blank. User-configurable rules (ranges, 
 
 **FR-04.1 Modes.** In the desktop app, users switch between a viewing mode (browsing and opening albums without editing clutter) and an editing mode. Mobile web offers browsing only.
 
-**FR-04.2 Mode safety.** The active mode is always clear, and a mode never grants write access. Leaving editing mode protects unsaved changes or clearly reports them. The controls and whether the mode persists are defined in the design spec.
+**FR-04.2 Mode safety.** The active mode is always clear, and a mode never grants write access: that comes only from owning the content or editing a share (FR-07.18). Leaving editing mode protects unsaved changes or clearly reports them. The controls and whether the mode persists are defined in the design spec.
 
 ### FR-05 — Sorting, grouping, and manual order
 
@@ -450,9 +450,9 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-06.8 No false promises.** Tonaris guarantees nothing about playback, subscriptions, or regional availability, and never presents an unverified cross-service match as the same album.
 
-### FR-07 — Read-only sharing
+### FR-07 — Sharing
 
-**FR-07.1 What can be shared.** Owners share lists and folders read-only, by account invitation, by guest-viewable link, or both. The root is not shareable. Collaborative editing, discovery feeds, follows, and comments are excluded. Without link sharing, a forwarded page URL grants no access; only accepted grants or valid links do. Notion is a reference for the experience.
+**FR-07.1 What can be shared.** Owners share lists and folders by account invitation, to view or to edit (FR-07.18), by guest-viewable link, which is view-only, or both. The root is not shareable. Discovery feeds, follows, and comments are excluded. Without link sharing, a forwarded page URL grants no access; only accepted grants or valid links do. Notion is a reference for the experience.
 
 **FR-07.2 Private by default.** New lists and folders have no audience unless they are created inside a shared folder, in which case they inherit its audience (FR-07.8). Sharing beyond inherited access requires an explicit owner action in the app.
 
@@ -471,7 +471,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-07.6 Acceptance.** Pending and declined invitations grant nothing. The signed-in intended recipient accepts or declines in the app.
 
-- Acceptance grants read access to the current shared scope, including a shared folder's descendants.
+- Acceptance grants the invitation's role (FR-07.18) on the current shared scope, including a shared folder's descendants.
 - It adds the live collection to Shared with me, reusing an existing reference. Nothing is copied and no slots are used.
 - An invitation that has become invalid grants nothing.
 - Declining never revokes access that comes from other grants or valid links.
@@ -501,7 +501,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-07.11 Live content.** Viewers always see current saved content within scope, including additions, removals, metadata, descriptions, and display-name changes, without the owner republishing.
 
-**FR-07.12 Shared information.** Viewers see standard album information and every custom field the shared albums use (names and values), including fields applied later. They never see albums outside the scope or unused field definitions.
+**FR-07.12 Shared information.** Viewers see standard album information and every custom field the shared albums use (names and values), including fields applied later. They never see albums outside the scope or unused field definitions. Editors also see the owner's unused fields and options, so they can set them (FR-07.20).
 
 **FR-07.13 Saved link-shared references.** A signed-in viewer can explicitly add a valid link-shared list or folder to Shared with me, in the app or through a Manage collection agent. Opening a link alone saves nothing.
 
@@ -515,11 +515,12 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 **FR-07.14 Informed sharing.**
 
 - **Before sending an invitation or enabling a link,** Tonaris explains that viewers see all fields the shared albums use, including fields added later. For folders, it explains that current and future descendants are included. For links, it explains that anyone with the link can view.
+- **Before someone becomes an editor,** Tonaris explains what editors can change, and that what they add or change stays in the owner's collection.
 - **Desktop moves and container or album recovery** show the effective sharing consequences before they apply: newly inherited audiences and preserved direct shares. They never imply content becomes private while another access path remains.
 - **MCP** reports sharing effects and includes them in confirmations that are already required. Ordinary moves and recovery need no extra approval.
 - No field-level privacy controls are added.
 
-**FR-07.15 Managing access.** Owners inspect and revoke invitations, direct grants, and link settings (app-only, X-03). Revoking one path keeps the others. Revocation blocks future access but cannot retract copies already made. Moves and recovery through MCP still apply FR-07.9 and FR-07.10.
+**FR-07.15 Managing access.** Owners inspect and revoke invitations, direct grants, and link settings, and change invitations' roles (app-only, X-03). Revoking one path keeps the others. Revocation blocks future access but cannot retract copies already made. Moves and recovery through MCP still apply FR-07.9 and FR-07.10.
 
 **FR-07.16 Link revocation.** Disabling link sharing invalidates the current link, including descendant access through it. Re-enabling creates a new link; old links never work again.
 
@@ -527,7 +528,40 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 - A viewer who has the new link can add it again, which reuses the same reference.
 - Trash suspension is not revocation.
 
-**FR-07.17 Personal views of shared content.** Viewers choose their own sorting, grouping, and arrangement (FR-05.2). The owner's preferences are not shared.
+**FR-07.17 Personal views of shared content.** Viewers and editors choose their own sorting, grouping, and arrangement (FR-05.2). The owner's preferences are not shared, and an editor's arrangement never changes the owner's or anyone else's.
+
+**FR-07.18 Roles.** Each invitation gives one of two roles: **Can view** or **Can edit**.
+
+- The owner picks the role when inviting, Can view unless changed, and may change it at any time while the invitation is pending or accepted. The person doesn't accept again.
+- One folder or list may have viewers and editors at the same time, each by their own invitation.
+- Links are always view-only.
+- A person's role on a folder or list is the highest among their accepted invitations to it and to its active folders above. For example, Anna, invited to edit "Metal" and to view "Doom" inside it, can edit "Doom". The owner's dialog for "Doom" says so.
+- A lowered role or revoked invitation applies to the person's next change, and their open views follow it. Trash suspends and recovery resumes roles, as it does access (FR-07.10).
+
+**FR-07.19 Editing a share.** Inside a folder or list they can edit, an editor makes the collection edits that FR-01–FR-03, FR-06 and FR-14 give owners, under the same rules, validation, conflicts and confirmations, in the app (desktop, X-04) or through a Manage collection agent (FR-10.4):
+
+- create, rename, describe, color, move, and delete folders and lists;
+- add albums from links or manual data, remove them from lists, and edit their metadata and service links;
+- set values of the owner's custom fields.
+
+Their changes are made in the owner's collection. They count toward the owner's limits (FR-15), and deletions go to the owner's Trash. What an editor added stays when they leave or lose access, and goes if the owner deletes their account (FR-11.11). The hourly limit on link captures counts against the editor (TS-18). The owner and the share's viewers see the changes live (X-08).
+
+**FR-07.20 What stays with the owner.** An editor never:
+
+- manages sharing (invitations, roles, links), or learns who else has access;
+- creates, renames, retypes, or deletes custom fields or their options. Editors see all the owner's fields and options, used or not;
+- moves or deletes the shared folder or list itself, though they rename, describe, and color it;
+- moves content out of the share, into it from elsewhere, or between two shares;
+- opens the owner's Trash. Editors undo a change they just made where owners can (DS-50); the owner restores everything else;
+- reads or changes anything outside the share. Refusals, previews, and capture results reveal nothing outside it.
+
+**FR-07.21 Albums and editors.** An editor's edits to an album apply wherever it appears in the owner's collection (FR-01.6). An editor's deletion of an album is *confirmed* (X-07) and removes it from every list inside the share:
+
+- the owner's lists outside the share keep it;
+- if none does, it goes to the owner's Trash (FR-14.1);
+- the editor sees the same outcome either way.
+
+Adding an album the owner already has reuses the owner's record (FR-02.9) without naming any list outside the share. An album an editor adds goes at the end of the owner's manual order.
 
 ### FR-08 — Data export
 
@@ -585,7 +619,7 @@ The distinctions between *unknown*, *unused*, and *applied-empty* are preserved.
 
 Resolution is a deliberate choice based on current state, under the usual permissions, scope, validation, and confirmations. There is no silent last-write-wins and no blind retry. Independent, non-overlapping changes proceed (FR-13.4). The policy covers collection content and personal preferences. Detection mechanisms are defined in the tech spec, and the review interaction in the design spec.
 
-**FR-09.5 Synchronization target.** Changes reach another session of the same account within 1 s, and a viewer or guest within 2.5 s (p95; Q-01, approved 21 October 2026). Synchronization does not imply collaborative editing.
+**FR-09.5 Synchronization target.** Changes reach another session of the same account within 1 s, and a viewer or guest within 2.5 s (p95; Q-01, approved 21 October 2026). An editor's change reaches the owner's sessions as the owner's own would, and the share's other viewers and editors within the viewer target (FR-07.19).
 
 ### FR-10 — AI agent access through MCP
 
@@ -596,7 +630,7 @@ Resolution is a deliberate choice based on current state, under the usual permis
 - Tonaris provides connection instructions, including client prerequisites.
 - There is no built-in chat interface.
 
-**FR-10.2 Connection scope.** A connection covers the user's whole collection: albums, folders, lists, custom-field definitions, Unsorted, Trash, and saved shared references. There are no per-folder or per-list scopes. Access to other owners' content follows FR-07. Agents act within the user's requested task.
+**FR-10.2 Connection scope.** A connection covers the user's whole collection: albums, folders, lists, custom-field definitions, Unsorted, Trash, and saved shared references. There are no per-folder or per-list scopes. Access to other owners' content follows FR-07, including editing shares the user can edit (FR-07.19–FR-07.21). Agents act within the user's requested task.
 
 **FR-10.3 Permission modes.** The user picks a mode per connection when authorizing it, and can inspect or revoke the connection in the app.
 
@@ -619,6 +653,7 @@ An approval never elevates a Read-only connection or enables an app-only operati
 - Recover from Trash (FR-10.7).
 - Change the user's personal presentation and manual order.
 - Save or remove the user's shared references.
+- Make these changes inside other owners' shares the user can edit, within FR-07.19–FR-07.21. Field-definition and option changes and Trash recovery stay with the owner (FR-07.20).
 
 Batch size alone never triggers confirmation.
 
@@ -637,9 +672,9 @@ Before asking, the agent presents the targets and consequences: shared-view effe
 - An approval covers only the described scope; an expanded scope needs a new approval.
 - Unapproved, declined, or cancelled operations change nothing.
 - Permission alone never substitutes for approval.
-- Tonaris must be able to verify the approval itself rather than trust an agent's claim. The owner approves the exact scope in Tonaris, on a page the agent links to. The operation runs only while its scope is unchanged, once, and within 30 minutes. This was verified in all three required clients on 21 October 2026 (G3).
+- Tonaris must be able to verify the approval itself rather than trust an agent's claim. The connection's user approves the exact scope in Tonaris, on a page the agent links to. The operation runs only while its scope is unchanged, once, and within 30 minutes. This was verified in all three required clients on 21 October 2026 (G3).
 
-**FR-10.7 Trash through MCP.** Both modes can inspect Trash. Manage collection connections recover albums, lists, and hierarchies within the retention window under the app's rules (FR-01.13–FR-01.16, FR-07.10, FR-14), including asking the owner for a destination when needed. Expired or purged items are reported as unavailable, not recreated. Permanent removal stays app-only.
+**FR-10.7 Trash through MCP.** Both modes can inspect Trash. Manage collection connections recover albums, lists, and hierarchies within the retention window under the app's rules (FR-01.13–FR-01.16, FR-07.10, FR-14), including asking the owner for a destination when needed. Expired or purged items are reported as unavailable, not recreated. Permanent removal stays app-only. An editor's agent can't recover the owner's Trash (FR-07.20).
 
 **FR-10.8 Client confirmation boundary.** "No extra app approval" does not guarantee prompt-free execution, because clients may add their own prompts. Clients can never bypass permission modes, approvals, or app-only restrictions. These boundaries are verified in each required client (G3).
 
@@ -773,7 +808,7 @@ Other users' collections are untouched, and their references to the deleted cont
 
 ### FR-14 — Album deletion and recovery
 
-**FR-14.1 Delete from the collection.** "Delete album from collection" is *confirmed* (X-07) and is distinct from removing a membership. The confirmation explains that the album leaves every list and Unsorted and goes to Trash for 30 days. A deleted album leaves active views and sharing. Its metadata, artwork reference, links, field usage and values, and former memberships are preserved during the window.
+**FR-14.1 Delete from the collection.** "Delete album from collection" is *confirmed* (X-07) and is distinct from removing a membership. The confirmation explains that the album leaves every list and Unsorted and goes to Trash for 30 days. A deleted album leaves active views and sharing. Its metadata, artwork reference, links, field usage and values, and former memberships are preserved during the window. An editor's deletion follows FR-07.21.
 
 **FR-14.2 Restore.** The owner restores the album with its information intact.
 
@@ -879,7 +914,7 @@ The assistive-technology, browser, and device matrix is defined in the tech spec
 
 **Q-05 Untrusted input.** Supplied URLs, provider metadata, artwork, descriptions, custom-field text, and agent input are untrusted. They can never grant access, execute code, disclose credentials, or override authorization or approvals. Collection text given to agents is data, not instructions from Tonaris, and server-side checks enforce permissions whatever the text says. The tech spec covers safe URL fetching and redirects, safe rendering, secrets, and abuse limits for authentication, sharing, capture, MCP, and export. These are validated with adversarial inputs. Tonaris cannot guarantee that external AI clients resist prompt injection.
 
-**Q-06 Security and privacy.** Ownership and read-only access are enforced across the app, MCP, and sharing. Defaults are private and agent authorization is explicit. Credentials are excluded from shared content and exports, and retention and deletion behavior is clear. The tech spec contains the threat model.
+**Q-06 Security and privacy.** Ownership, editing rights, and read-only access are enforced across the app, MCP, and sharing. Defaults are private and agent authorization is explicit. Credentials are excluded from shared content and exports, and retention and deletion behavior is clear. The tech spec contains the threat model.
 
 **Q-07 Reliability.** Saving, moving, recovering, and deleting never lose data silently. The FR-09 and FR-13 behaviors and the Trash recovery conflict rules (FR-01.15, FR-01.16, FR-14.3) are validated.
 
@@ -945,6 +980,10 @@ The first version's results, with the evidence for each check and what waits for
 | AC-44 | Recover the hosted service | Protected automated backups are in place. A documented restore drill meets the approved objectives, with no revived deletions or access, and backup deletion treatment is disclosed. | Q-04 |
 | AC-45 | Reject hostile input | URL fetching and redirects, rendered content, authorization, secrets, and abuse limits are tested. Metadata and agent input cannot bypass permissions, approvals, or app-only rules. | Q-05 |
 | AC-46 | Language and scope boundaries | The English UI preserves multilingual saved text. The service stays an online, creator-hosted album organizer with external playback. Exclusions hold, and listening fields stay manual. | Sections 2.3–2.6, FR-03.20 |
+| AC-47 | Roles | One list has a viewer and an editor at once. Invitations start at Can view, and the owner changes a role without a new acceptance. A person who can edit "Metal" and is invited to view "Doom" inside it can edit "Doom", and the owner's dialog says so. Links stay view-only. | FR-07.18 |
+| AC-48 | Edit a share | Inside the share, an editor creates, renames, describes, colors, moves, and deletes folders and lists, adds and edits albums, and sets field values, in the app and through a Manage agent. The owner and viewers see it live, limits are the owner's, and conflicting changes are kept for review. | FR-07.19, FR-09, FR-10.4 |
+| AC-49 | What editors can't do | An editor can't share, change fields or options, move or delete the shared folder or list, move content across the share's edge, or open the owner's Trash beyond Undo. Nothing outside the share is readable or changeable, and refusals and previews reveal nothing of it. A lowered role or revoked invitation refuses the next change. | FR-07.18, FR-07.20, X-03 |
+| AC-50 | Editors and albums | An editor's album edit shows in every list. Their confirmed deletion removes it from the share's lists, keeps it in the owner's lists outside, and otherwise moves it to the owner's Trash, with the same outcome shown either way. | FR-07.21 |
 
 **Product evaluation.** Verify the creator's real workflows: saving, organizing, search, sharing, Trash recovery, export, and agents. Check usability and performance at the capacity limit, and review operating costs. Commercial adoption is not a release criterion.
 
@@ -1116,6 +1155,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (1 November 2026), a feedback board** (TON-132), from the creator's manual testing: members reach a public feedback board from the account menu, signed in through Tonaris. It is Fider Cloud's free plan, which receives their name and email so it can tell them about replies, and requests reach planning by hand. **Added** FR-11.15.
 - **Decision (5 November 2026), singles** (TON-164), from the creator's manual testing: Single is a release type, no different from EP. It can be chosen and set by agents, singles get it from MusicBrainz on capture, and grouping shows a Single group after EP. Singles saved earlier keep no type until someone sets one. This replaces the 17 and 24 October 2026 decisions that made singles Unclassified. **Updated** FR-02.3, FR-05.7, FR-05.9 and the glossary.
 - **Decision (7 November 2026), folder and list colors** (TON-175), from the creator's design review: owners color folders and lists from a fixed set, contents without their own color show their folder's, viewers of a share see them, agents can set them, and exports carry them. **Added** FR-01.19; **updated** FR-10.4.
+- **Decision (10 November 2026), editing shared folders and lists** (P-TON-47, TON-186), from the creator's manual testing: an owner can let chosen people edit a shared folder or list. Each invitation is Can view or Can edit, and links stay view-only. Through folders, the higher role wins. Editors change content, albums and field values inside the share, in the app and through Manage agents. Their changes stay in the owner's collection. Sharing, field definitions, the share's own place, and the owner's Trash beyond Undo stay with the owner. An editor's album deletion leaves the owner's other lists untouched, and an editor's manual order is their own. **Removed** the exclusion "Collaborative editing by other users" (section 2.6). **Added** the Editor concept, FR-07.18–FR-07.21 and AC-47–AC-50; **updated** section 2.1, X-01, FR-03.19, FR-04.2, FR-07's title, FR-07.1, FR-07.6, FR-07.12, FR-07.14, FR-07.15, FR-07.17, FR-09.5, FR-10.2, FR-10.4, FR-10.6, FR-10.7, FR-14.1 and Q-06.
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);
