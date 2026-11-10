@@ -36,6 +36,8 @@ import {
 import { pendingInvitations } from "./invitations";
 import {
   albumServiceLinks,
+  changeLog,
+  mutations,
   containers,
   savedReferences,
   shareGrants,
@@ -506,6 +508,70 @@ describe("roles in what reads say (FR-07.18)", () => {
       { name: "Doom", role: "edit" },
       { name: "Metal", role: "view" },
     ]);
+  });
+});
+
+describe("an editor's writes (FR-07.19, TS-20)", () => {
+  test("go into the owner's collection and change log, and their outcome is the editor's", async () => {
+    const denis = await newPrincipal("Denis");
+    const anna = await newPrincipal("Anna");
+    const cleo = await newPrincipal();
+    const metal = await made(denis, "folder", "Metal");
+    const doom = await made(denis, "list", "Doom", metal.id);
+    await grant(metal.id, anna.userId, "accepted", "edit");
+    const ownerLog = async () =>
+      (await t.db.select().from(changeLog).where(eq(changeLog.accountId, denis.userId))).length;
+    const before = await ownerLog();
+
+    const renamed = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "container.rename",
+      args: { id: doom.id, name: "Doom Metal" },
+      base: { name: "Doom" },
+    });
+    expect(renamed.result.outcome).toMatchObject({ status: "confirmed", seq: before + 1 });
+    expect(renamed.accountId).toBe(denis.userId);
+    expect(renamed.changes.map(({ entity, id }) => ({ entity, id }))).toEqual([
+      { entity: "container", id: doom.id },
+    ]);
+    expect(await ownerLog()).toBe(before + 1);
+    const [stored] = await t.db
+      .select({ accountId: mutations.accountId })
+      .from(mutations)
+      .where(eq(mutations.id, renamed.result.mutationId));
+    expect(stored?.accountId).toBe(anna.userId);
+
+    // Something new inside the share is the owner's; something new at the top is the editor's own.
+    const sludge = uuidv7();
+    const made1 = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "container.create",
+      args: { id: sludge, kind: "list", parentId: metal.id, name: "Sludge" },
+    });
+    expect(made1.accountId).toBe(denis.userId);
+    const mine = uuidv7();
+    const made2 = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "container.create",
+      args: { id: mine, kind: "list", parentId: null, name: "Mine" },
+    });
+    expect(made2.accountId).toBe(anna.userId);
+    const owners = await t.db
+      .select({ id: containers.id, ownerId: containers.ownerId })
+      .from(containers);
+    expect(owners.find(({ id }) => id === sludge)?.ownerId).toBe(denis.userId);
+    expect(owners.find(({ id }) => id === mine)?.ownerId).toBe(anna.userId);
+
+    // A stranger is answered as missing, and nothing is logged.
+    const logged = await ownerLog();
+    const refused = await executeMutation(t.db, cleo, {
+      mutationId: uuidv7(),
+      name: "container.rename",
+      args: { id: doom.id, name: "Mine now" },
+      base: { name: "Doom Metal" },
+    });
+    expect(refused.result.outcome).toMatchObject({ status: "failed", code: "not_found" });
+    expect(await ownerLog()).toBe(logged);
   });
 });
 

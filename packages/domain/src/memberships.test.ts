@@ -251,15 +251,14 @@ describe("only active albums in active lists the owner has (FR-01.6, X-05)", () 
       containers: [favorites, bensList],
     });
 
-    expect(codeOf(await run(add(bensList.id, kindOfBlue.id)))).toBe("permission_denied");
-    expect(codeOf(await run(add(bensList.id, bensAlbum.id)))).toBe("permission_denied");
+    // Ben's list, unshared, is answered as missing, as everything of his is (FR-07.20).
+    expect(codeOf(await run(add(bensList.id, kindOfBlue.id)))).toBe("not_found");
+    expect(codeOf(await run(add(bensList.id, bensAlbum.id)))).toBe("not_found");
     // Ben's album and a missing one get the same answer.
     expect(codeOf(await run(add(favorites.id, bensAlbum.id)))).toBe("not_found");
     expect(codeOf(await run(add(favorites.id, uuidv7())))).toBe("not_found");
     expect(codeOf(await run(add(uuidv7(), kindOfBlue.id)))).toBe("not_found");
-    expect(codeOf(await run(add(favorites.id, kindOfBlue.id), benPrincipal))).toBe(
-      "permission_denied",
-    );
+    expect(codeOf(await run(add(favorites.id, kindOfBlue.id), benPrincipal))).toBe("not_found");
     expect(memberships.size).toBe(0);
   });
 

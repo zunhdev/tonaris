@@ -93,6 +93,7 @@ export {
   albumSchema,
   syncedAlbumSchema,
   albumCreateArgsSchema,
+  albumCreateMutationArgsSchema,
   type AlbumCreateArgs,
   releaseTypes,
   type Album,

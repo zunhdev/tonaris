@@ -198,7 +198,8 @@ describe("setting a link (FR-06.2, FR-06.3)", () => {
       store: memory.store,
       link: parsed(bleachSpotify),
     });
-    expect(theirs.status === "failed" && theirs.code).toBe("permission_denied");
+    // Someone else's album, unshared, is answered as missing, so nobody learns of it (FR-07.20).
+    expect(theirs.status === "failed" && theirs.code).toBe("not_found");
     const unread = await runCommand(set(bleach.id, "spotify", bleachSpotify.url, null), {
       principal: anna,
       store: memory.store,
@@ -266,7 +267,7 @@ describe("removing a link (FR-06.3)", () => {
       principal: benPrincipal,
       store: memory.store,
     });
-    expect(result.status === "failed" && result.code).toBe("permission_denied");
+    expect(result.status === "failed" && result.code).toBe("not_found");
     expect(memory.links.size).toBe(1);
   });
 });

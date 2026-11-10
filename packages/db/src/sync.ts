@@ -138,27 +138,125 @@ async function storedMutation(tx: Transaction, id: string): Promise<StoredMutati
   return stored;
 }
 
+/** What a mutation names whose owner it changes (FR-07.19): a folder or list, an album, or a Trash unit. */
+type Target = { kind: "container" | "album" | "unit"; id: string };
+
+/** A folder or list a mutation names, if it names one. */
+const container = (id: string | null | undefined): Target | undefined =>
+  id === null || id === undefined ? undefined : { kind: "container", id };
+const album = (id: string): Target => ({ kind: "album", id });
+
+/**
+ * The record whose owner's collection `mutation` changes, for the collection's content; none for what is the actor's
+ * own: their preferences, references, sharing and account, Trash purges, and custom fields, which only their owner
+ * changes (FR-07.20). Every mutation is listed, so a new one has to be placed here.
+ */
+function targetOf(mutation: Mutation): Target | undefined {
+  switch (mutation.name) {
+    case "container.create":
+      return container(mutation.args.parentId);
+    case "container.rename":
+    case "container.move":
+    case "container.describe":
+    case "container.setColor":
+    case "container.delete":
+      return container(mutation.args.id);
+    case "album.create":
+    case "album.capture":
+      return container(mutation.args.listId);
+    case "membership.add":
+    case "membership.remove":
+      return container(mutation.args.listId);
+    case "album.update":
+    case "album.setArtwork":
+    case "album.delete":
+      return album(mutation.args.id);
+    case "link.set":
+    case "link.remove":
+    case "fieldValue.apply":
+    case "fieldValue.set":
+    case "fieldValue.remove":
+      return album(mutation.args.albumId);
+    case "trash.recover":
+      return { kind: "unit", id: mutation.args.unitId };
+    case "field.create":
+    case "field.rename":
+    case "field.changeType":
+    case "field.addOption":
+    case "field.renameOption":
+    case "field.removeOption":
+    case "field.delete":
+    case "trash.purge":
+    case "view.set":
+    case "defaults.set":
+    case "defaults.setLinkTarget":
+    case "defaults.setHiddenServices":
+    case "order.set":
+    case "share.invite":
+    case "share.setLink":
+    case "share.setRole":
+    case "share.resendInvitation":
+    case "share.accept":
+    case "share.decline":
+    case "share.leave":
+    case "share.revoke":
+    case "share.saveLink":
+    case "share.removeReference":
+    case "account.setDisplayName":
+      return undefined;
+    default:
+      return mutation satisfies never;
+  }
+}
+
+/**
+ * Whose collection `mutation` changes, so its write lock and change log are that account's (TS-20, FR-07.19): the
+ * owner of what it names, as an editor changes a share in its owner's collection, and the actor's own otherwise,
+ * also when what it names doesn't exist. The command still decides whether the actor may make the change.
+ */
+async function collectionOf(tx: Transaction, mutation: Mutation, actorId: string): Promise<string> {
+  const target = targetOf(mutation);
+  if (!target) return actorId;
+  const table =
+    target.kind === "container" ? containers : target.kind === "album" ? albums : trashUnits;
+  const [row] = await tx
+    .select({ ownerId: table.ownerId })
+    .from(table)
+    .where(eq(table.id, target.id));
+  return row?.ownerId ?? actorId;
+}
+
 /**
  * What running and claiming a mutation start with (TS-20 steps 2–3): a guest's is `refused`; anyone else's runs `then`
- * in one transaction under the write lock of the account it acts for, with its `seq` and the mutation's stored row.
+ * in one transaction under the write lock of the collection it changes (`ownerId`, the actor's own unless an editor
+ * changes someone's share), with that account's `seq`, and the mutation's stored row, which is the actor's.
  */
 function underLock<T>(
   db: Executor,
   principal: Principal,
-  mutationId: string,
+  mutation: Mutation,
   refused: (failure: Failure) => T,
   then: (locked: {
     tx: Transaction;
     accountId: string;
+    ownerId: string;
     seq: number;
     stored: StoredMutation | undefined;
   }) => Promise<T>,
+  { ownCollection = false }: { ownCollection?: boolean } = {},
 ): Promise<T> {
   const accountId = actingUserId(principal);
   if (!accountId) return Promise.resolve(refused(guestMutationRefusal));
   return db.transaction(async (tx) => {
-    const seq = await lockAccount(tx, accountId);
-    return then({ tx, accountId, seq, stored: await storedMutation(tx, mutationId) });
+    const ownerId = ownCollection ? accountId : await collectionOf(tx, mutation, accountId);
+    const seq = await lockAccount(tx, ownerId);
+    return then({
+      tx,
+      accountId,
+      ownerId,
+      seq,
+      stored: await storedMutation(tx, mutation.mutationId),
+    });
   });
 }
 
@@ -168,6 +266,11 @@ export type ExecutedMutation = {
   changes: Change[];
   /** Whether the outcome is the stored one of an earlier copy of this mutation (TS-22). */
   replayed: boolean;
+  /**
+   * The account whose collection it changed and whose streams hear of it: the owner, for an editor's change to a
+   * share (FR-07.19); absent when nothing ran, and the sender's account is meant.
+   */
+  accountId?: string;
 };
 
 /**
@@ -211,34 +314,42 @@ export async function executeMutation(
     replayed,
   });
 
-  return underLock(db, principal, mutationId, answer, async ({ tx, accountId, seq, stored }) => {
-    if (stored?.result && stored.accountId === accountId) {
-      return answer(outcomeSchema.parse(stored.result), [], true);
-    }
-    if (stored && (stored.accountId !== accountId || !claimed)) return answer(mutationIdInUse);
-    const tooOld = mutationTooOld(mutationId, now);
-    if (tooOld) return answer(tooOld);
+  return underLock(
+    db,
+    principal,
+    mutation,
+    answer,
+    async ({ tx, accountId, ownerId, seq, stored }) => {
+      if (stored?.result && stored.accountId === accountId) {
+        return answer(outcomeSchema.parse(stored.result), [], true);
+      }
+      if (stored && (stored.accountId !== accountId || !claimed)) return answer(mutationIdInUse);
+      const tooOld = mutationTooOld(mutationId, now);
+      if (tooOld) return answer(tooOld);
 
-    const result = await runCommand(mutation, {
-      principal,
-      store: collectionStore(tx),
-      now,
-      ...(capture ? { capture } : {}),
-      ...(link ? { link } : {}),
-      ...(shareLink ? { shareLink } : {}),
-    });
-    let changes: Change[] = [];
-    const reported = result.status === "applied" ? (result.result ?? null) : null;
-    let outcome: Outcome =
-      result.status === "applied" ? { status: "confirmed", seq, result: reported } : result;
-    if (result.status === "applied" && result.changes.length > 0) {
-      changes = await logChanges(tx, accountId, seq, result.changes, mutationId);
-      outcome = { status: "confirmed", seq: seq + changes.length, result: reported };
-    }
+      const result = await runCommand(mutation, {
+        principal,
+        store: collectionStore(tx),
+        now,
+        ...(capture ? { capture } : {}),
+        ...(link ? { link } : {}),
+        ...(shareLink ? { shareLink } : {}),
+      });
+      let changes: Change[] = [];
+      const reported = result.status === "applied" ? (result.result ?? null) : null;
+      let outcome: Outcome =
+        result.status === "applied" ? { status: "confirmed", seq, result: reported } : result;
+      if (result.status === "applied" && result.changes.length > 0) {
+        // Into the log of the collection it changed: the owner's, for an editor's change to a share (FR-07.19).
+        changes = await logChanges(tx, ownerId, seq, result.changes, mutationId);
+        outcome = { status: "confirmed", seq: seq + changes.length, result: reported };
+      }
 
-    await recordOutcome(tx, accountId, principal, mutation, outcome, now);
-    return answer(outcome, changes);
-  });
+      // The outcome is the sender's, for their retries and `GET /v1/mutations/{id}` (TS-22).
+      await recordOutcome(tx, accountId, principal, mutation, outcome, now);
+      return { ...answer(outcome, changes), accountId: ownerId };
+    },
+  );
 }
 
 /** Stores `outcome` under the mutation's ID, completing its claim if it has one. */
@@ -297,29 +408,37 @@ export async function claimMutation(
     executed: { result: { mutationId, outcome }, changes: [], replayed },
   });
 
-  return underLock(db, principal, mutationId, answered, async ({ tx, accountId, stored }) => {
-    if (stored) {
-      if (stored.accountId !== accountId) return answered(mutationIdInUse);
-      if (stored.result) return answered(outcomeSchema.parse(stored.result), true);
-      if (stored.receivedAt.getTime() > now.getTime() - claimTimeoutMs) {
-        return { status: "in_progress" };
+  return underLock(
+    db,
+    principal,
+    mutation,
+    answered,
+    async ({ tx, accountId, stored }) => {
+      if (stored) {
+        if (stored.accountId !== accountId) return answered(mutationIdInUse);
+        if (stored.result) return answered(outcomeSchema.parse(stored.result), true);
+        if (stored.receivedAt.getTime() > now.getTime() - claimTimeoutMs) {
+          return { status: "in_progress" };
+        }
+        await tx.update(mutations).set({ receivedAt: now }).where(eq(mutations.id, mutationId));
+        return { status: "claimed" };
       }
-      await tx.update(mutations).set({ receivedAt: now }).where(eq(mutations.id, mutationId));
+      const tooOld = mutationTooOld(mutationId, now);
+      if (tooOld) return answered(tooOld);
+      await tx.insert(mutations).values({
+        id: mutationId,
+        accountId,
+        principal: principalLabel(principal),
+        name: mutation.name,
+        status: "running",
+        result: null,
+        receivedAt: now,
+      });
       return { status: "claimed" };
-    }
-    const tooOld = mutationTooOld(mutationId, now);
-    if (tooOld) return answered(tooOld);
-    await tx.insert(mutations).values({
-      id: mutationId,
-      accountId,
-      principal: principalLabel(principal),
-      name: mutation.name,
-      status: "running",
-      result: null,
-      receivedAt: now,
-    });
-    return { status: "claimed" };
-  });
+    },
+    // A claim only records the sender's mutation row, under their own lock (TS-22).
+    { ownCollection: true },
+  );
 }
 
 /** Stores the outcome of a claimed mutation decided before the lock, such as a link that needs details. */

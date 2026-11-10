@@ -146,7 +146,10 @@ async function run(
  * the display name, still tells the account's guest pages to read again (TS-23, TON-70).
  */
 export function announcer(hub: Pick<SyncHub, "publish" | "notify">) {
-  return (accountId: string, { result, changes, replayed }: ExecutedMutation): void => {
+  return (sender: string, executed: ExecutedMutation): void => {
+    const { result, changes, replayed } = executed;
+    // The collection it changed: the owner's, for an editor's change to a share, whose viewers hear of it too (FR-07.19).
+    const accountId = executed.accountId ?? sender;
     if (changes.length > 0) hub.publish(accountId, changes);
     else if (!replayed && result.outcome.status === "confirmed") hub.notify(accountId);
   };

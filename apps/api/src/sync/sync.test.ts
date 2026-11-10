@@ -570,7 +570,8 @@ describe("folders and lists (FR-01.1–FR-01.5)", () => {
       args: { id: jazz.id, name: "Mine" },
       base: { name: "Jazz" },
     });
-    expect(result.outcome).toMatchObject({ status: "failed", code: "permission_denied" });
+    // Unshared, it is answered as missing, so Ben learns nothing of it (FR-07.20).
+    expect(result.outcome).toMatchObject({ status: "failed", code: "not_found" });
     expect((await bootstrap(anna.cookie)).containers).toEqual([jazz]);
   });
 });
@@ -659,7 +660,7 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
     ]);
     expect(
       outcomes.map(({ outcome }) => (outcome.status === "failed" ? outcome.code : outcome.status)),
-    ).toEqual(["invalid_destination", "not_found", "permission_denied"]);
+    ).toEqual(["invalid_destination", "not_found", "not_found"]);
 
     // A later change arrives first on the stream: the rejections sent nothing.
     await post(anna.cookie, entry("membership.add", favorites.id, kindOfBlue.id));
@@ -899,7 +900,7 @@ describe("batches (TS-25, FR-13.4)", () => {
       anna.cookie,
       batchOf(entry("membership.add", bensList.id, kindOfBlue.id)),
     );
-    expect(statusesOf(result)).toEqual(["permission_denied"]);
+    expect(statusesOf(result)).toEqual(["not_found"]);
   });
 
   test("a batch sent again replays every outcome and applies nothing twice", async () => {

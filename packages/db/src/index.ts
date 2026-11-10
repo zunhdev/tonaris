@@ -151,6 +151,7 @@ export { searchCollection } from "./search";
 export {
   canEditContainer,
   canReadContainer,
+  captureCollection,
   editableContainers,
   readableContainers,
   roleOn,

@@ -628,8 +628,8 @@ describe("album.capture: refusals change nothing (X-05)", () => {
     const theirs = list("Theirs", { ownerId: uuidv7() });
     const t = setup({ containers: [theirs] });
     expect(await t.run(capture(theirs.id), identified(bleachFacts))).toMatchObject({
-      code: "permission_denied",
-      problem: { detail: "You can't change this list." },
+      code: "not_found",
+      problem: { detail: "This list doesn't exist." },
     });
     expect(t.albums.size).toBe(0);
   });
@@ -683,5 +683,51 @@ describe("album.capture at the album limit (FR-15.2, FR-15.3, AC-32)", () => {
     const { t, bleach } = atLimit(true);
     const result = applied(await t.run(capture(null), identified(bleachFacts)));
     expect(result.result).toMatchObject({ albumId: bleach.id, match: "restored" });
+  });
+});
+
+describe("album.capture by an editor (FR-07.19, FR-07.21)", () => {
+  test("into a share it saves to the owner's collection, and reusing an album the editor didn't see reads as new", async () => {
+    const editor: Principal = { kind: "user", userId: uuidv7(), role: "user", client: "web" };
+    // The owner's Bleach is in no list: the editor can't see it.
+    const bleach = saved("Bleach", { releaseGroupId: bleachId });
+    const shared = list("Grunge");
+    const other = list("Seattle");
+    const t = setup({ albums: [bleach], containers: [shared, other] });
+    const grantId = uuidv7();
+    t.grants.set(grantId, {
+      id: grantId,
+      containerId: shared.id,
+      granteeId: editor.userId,
+      invitedEmail: "editor@example.com",
+      status: "accepted",
+      role: "edit",
+      emailStatus: "sent",
+    });
+    const asEditor = (mutation: Mutation) =>
+      runCommand(mutation, {
+        principal: editor,
+        store: t.store,
+        now,
+        capture: identified(bleachFacts),
+      });
+
+    const first = applied(await asEditor(capture(shared.id)));
+    expect(first.result).toMatchObject({
+      albumId: bleach.id,
+      match: "created",
+      alreadyInList: false,
+    });
+    expect(t.albums.size).toBe(1);
+    expect(t.listsOf(bleach.id)).toEqual([shared.id]);
+    // Now that the editor sees it, adding it again says so.
+    const again = applied(await asEditor(capture(shared.id)));
+    expect(again.result).toMatchObject({
+      albumId: bleach.id,
+      match: "reused",
+      alreadyInList: true,
+    });
+    // A list of the owner's they can't edit is answered as missing.
+    expect(await asEditor(capture(other.id))).toMatchObject({ code: "not_found" });
   });
 });

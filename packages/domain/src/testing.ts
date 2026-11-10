@@ -13,7 +13,12 @@ import type { StoredField } from "./fields";
 import { streamingServices } from "./links";
 import { membershipKey, type Membership } from "./memberships";
 import { positionKey, type Position } from "./positions";
-import { readableContainers, type EmailStatus, type SharingState } from "./sharing";
+import {
+  editableContainers,
+  readableContainers,
+  type EmailStatus,
+  type SharingState,
+} from "./sharing";
 import type { StoredTrashUnit } from "./trash";
 import type { AccountDefaults, ViewDefaults, ViewPrefs } from "./views";
 
@@ -154,6 +159,17 @@ export function memoryStore({
     string,
     { id: string; containerId: string; tokenHash: Uint8Array; revokedAt: Date | null }
   >();
+  /** Who may read and edit what, as the sharing model sees the rows now (TS-31). */
+  const sharingState = (): SharingState => ({
+    containers: [...containerRows.values()],
+    grants: [...grantRows.values()],
+    links: [...shareLinkRows.values()].map((link) => ({
+      id: link.id,
+      containerId: link.containerId,
+      revoked: link.revokedAt !== null,
+    })),
+    references: [...referenceRows.values()],
+  });
   const ownedBy = (ownerId: string, containerId: string) =>
     containerRows.get(containerId)?.ownerId === ownerId;
   const inActiveList = (albumId: string) =>
@@ -607,21 +623,12 @@ export function memoryStore({
       );
     },
     inActiveList: (albumId) => Promise.resolve(inActiveList(albumId)),
-    canReadShared: (personId, containerId) => {
-      const state: SharingState = {
-        containers: [...containerRows.values()],
-        grants: [...grantRows.values()],
-        links: [...shareLinkRows.values()].map((link) => ({
-          id: link.id,
-          containerId: link.containerId,
-          revoked: link.revokedAt !== null,
-        })),
-        references: [...referenceRows.values()],
-      };
-      return Promise.resolve(
-        readableContainers(state, { kind: "person", userId: personId }).has(containerId),
-      );
-    },
+    canReadShared: (personId, containerId) =>
+      Promise.resolve(
+        readableContainers(sharingState(), { kind: "person", userId: personId }).has(containerId),
+      ),
+    editSourcesAbove: (personId, containerId) =>
+      Promise.resolve([...(editableContainers(sharingState(), personId).get(containerId) ?? [])]),
 
     findAccountByEmail: (key) => {
       const account = [...accountRows.values()].find((each) => each.email === key);

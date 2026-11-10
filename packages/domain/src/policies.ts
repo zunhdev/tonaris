@@ -1,6 +1,7 @@
 // Authorization (TS-30): decided here and in the sharing model, never in route handlers or MCP tools. Here: owned
-// content and the app-only rules. Reads through sharing (grants, saved links, guests) follow the hierarchy, as
-// `readableContainers` in sharing.ts defines them (TS-31).
+// content, editors' content, and the app-only rules. Reads through sharing (grants, saved links, guests) and edits
+// through editors' grants follow the hierarchy, as `readableContainers` and `editableContainers` in sharing.ts define
+// them (TS-31).
 
 import type { ErrorCode } from "./outcomes";
 import { actingUserId, type Principal } from "./principals";
@@ -38,6 +39,18 @@ export function authorizeWrite(
     if (principal.mode !== "manage") return deny("permission_denied");
   }
   return actingUserId(principal) === ownerId ? allow : deny("permission_denied");
+}
+
+/**
+ * Whether `principal` may change someone else's content where it has an editor's role (FR-07.18, FR-07.19, FR-10.4):
+ * a signed-in person, or their Manage collection connection; never a guest or a Read-only connection. Only `collection`
+ * operations: sharing, Trash purges, accounts and connections stay the owner's (FR-07.20). The role itself comes from
+ * the sharing model (TS-31).
+ */
+export function authorizeShareEdit(principal: Principal): Decision {
+  if (principal.kind === "guest") return deny("permission_denied");
+  if (principal.kind === "mcp" && principal.mode !== "manage") return deny("permission_denied");
+  return allow;
 }
 
 /** Admission administration: the creator, in the app only (FR-11.6, X-03, TS-30). */

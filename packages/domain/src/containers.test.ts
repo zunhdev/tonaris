@@ -498,8 +498,9 @@ describe("rejections change nothing (X-05)", () => {
     const jazz = folder("Jazz");
     const rock = folder("Rock");
     const { run, containers } = setup(jazz, rock);
-    expect(codeOf(await run(rename(jazz.id, "Mine", "Jazz"), other))).toBe("permission_denied");
-    expect(codeOf(await run(move(jazz.id, rock.id, null), other))).toBe("permission_denied");
+    // Someone else's, unshared, is answered as missing, so nobody learns of it (FR-07.20).
+    expect(codeOf(await run(rename(jazz.id, "Mine", "Jazz"), other))).toBe("not_found");
+    expect(codeOf(await run(move(jazz.id, rock.id, null), other))).toBe("not_found");
     expect(codeOf(await run(rename(jazz.id, "Mine", "Jazz"), readOnlyAgent))).toBe(
       "permission_denied",
     );
