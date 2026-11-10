@@ -12,6 +12,7 @@ import { createShareEngine } from "@/client/sync/share-engine";
 import { useNarrowScreen } from "@/common/media";
 import { apiUrl } from "@/config";
 import { ActiveCollectionData } from "@/features/collection/data";
+import { NamingProvider } from "@/features/collection/name-dialog";
 import { CollectionPlaceContext, type CollectionPlace } from "@/features/collection/place";
 import { useNotify } from "@/features/sync/notify";
 import { ActiveSyncProvider, useOwnSyncClient } from "@/features/sync/sync-provider";
@@ -105,7 +106,9 @@ export function ActiveCollectionProvider({
     <LostContext value={loss}>
       <CollectionPlaceContext value={place}>
         <ActiveSyncProvider client={active?.client}>
-          <ActiveCollectionData client={active?.client}>{children}</ActiveCollectionData>
+          <ActiveCollectionData client={active?.client}>
+            <NamingProvider>{children}</NamingProvider>
+          </ActiveCollectionData>
         </ActiveSyncProvider>
       </CollectionPlaceContext>
     </LostContext>

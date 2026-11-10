@@ -52,6 +52,7 @@ import {
   sharedSnapshot,
   sharedWithMe,
 } from "./sharing";
+import { editorsMoveImpact } from "./sharing-impact";
 import { executeMutation, headSeq } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
@@ -574,6 +575,47 @@ describe("an editor's writes (FR-07.19, TS-20)", () => {
     });
     expect(refused.result.outcome).toMatchObject({ status: "failed", code: "not_found" });
     expect(await ownerLog()).toBe(logged);
+  });
+});
+
+describe("an editor's move preview (FR-07.20, DS-69)", () => {
+  test("says whether who can see it changes, naming nobody, and only for a move the editor may make", async () => {
+    const denis = await newPrincipal("Denis");
+    const anna = await newPrincipal("Anna");
+    const ben = await newPrincipal("Ben");
+    const metal = await made(denis, "folder", "Metal");
+    const doom = await made(denis, "list", "Doom", metal.id);
+    const funeral = await made(denis, "folder", "Funeral", metal.id);
+    const plain = await made(denis, "folder", "Plain", metal.id);
+    const priv = await made(denis, "folder", "Private");
+    await grant(metal.id, anna.userId, "accepted", "edit");
+    await grant(funeral.id, ben.userId, "accepted", "view");
+
+    expect(await editorsMoveImpact(t.db, anna.userId, { id: doom.id, to: funeral.id })).toEqual({
+      added: [],
+      removed: [],
+      direct: [],
+      withheld: true,
+    });
+    expect(await editorsMoveImpact(t.db, anna.userId, { id: doom.id, to: plain.id })).toEqual({
+      added: [],
+      removed: [],
+      direct: [],
+      withheld: false,
+    });
+    // Out of the share, the share's own folder, someone else's move, or their own: nothing to preview here.
+    expect(await editorsMoveImpact(t.db, anna.userId, { id: doom.id, to: priv.id })).toBe(
+      "not_found",
+    );
+    expect(await editorsMoveImpact(t.db, anna.userId, { id: metal.id, to: plain.id })).toBe(
+      "not_found",
+    );
+    expect(await editorsMoveImpact(t.db, ben.userId, { id: doom.id, to: plain.id })).toBe(
+      "not_found",
+    );
+    expect(await editorsMoveImpact(t.db, denis.userId, { id: doom.id, to: plain.id })).toBe(
+      "not_found",
+    );
   });
 });
 

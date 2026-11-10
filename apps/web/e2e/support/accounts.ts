@@ -186,6 +186,9 @@ export const accounts = {
   shareEditor: at("share-editor"),
   revokeOwner: at("revoke-owner"),
   revokedEditor: at("revoked-editor"),
+  // An editor's shortcuts, Move to and deletions inside a share (share-editing.e2e.ts, TON-195).
+  toolsOwner: at("tools-owner"),
+  toolsEditor: at("tools-editor"),
   // Invitations (invitations.e2e.ts): the owner, the recipient, and someone else.
   invitingOwner: at("inviting-owner"),
   invitedAnna: at("invited-anna"),

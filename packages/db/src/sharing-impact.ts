@@ -12,6 +12,7 @@ import {
   type SharingImpact,
 } from "@tonaris/domain";
 
+import { editSourcesAbove } from "./access";
 import { readSnapshot, type Database, type Transaction } from "./client";
 import { activeListsOf } from "./columns";
 import { containers, shareGrants, shareLinks, trashUnits, users } from "./schema";
@@ -72,6 +73,34 @@ export async function impactState(
   return {
     state,
     folders: new Set(rows.filter((row) => row.kind === "folder").map((row) => row.id)),
+  };
+}
+
+/**
+ * An editor's preview of a move inside a share (FR-07.20, DS-69): whether who can see it changes, with the audiences
+ * withheld, so an editor learns nobody's access. Only for a move the editor may make: from a share they edit to a
+ * folder inside the same share, never the share's own folder or list.
+ */
+export async function editorsMoveImpact(
+  db: Database,
+  userId: string,
+  { id, to }: { id: string; to: string | null },
+): Promise<SharingImpact | "not_found" | "invalid" | "needs_destination"> {
+  const [row] = await db
+    .select({ ownerId: containers.ownerId })
+    .from(containers)
+    .where(eq(containers.id, id));
+  if (!row || row.ownerId === userId || to === null) return "not_found";
+  const through = await editSourcesAbove(db, userId, id);
+  const there = await editSourcesAbove(db, userId, to);
+  if (!through.some((top) => top !== id && there.includes(top))) return "not_found";
+  const impact = await sharingImpact(db, row.ownerId, { kind: "move", id, to });
+  if (typeof impact === "string") return impact;
+  return {
+    added: [],
+    removed: [],
+    direct: [],
+    withheld: impact.added.length > 0 || impact.removed.length > 0,
   };
 }
 

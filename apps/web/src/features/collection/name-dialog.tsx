@@ -5,7 +5,7 @@
 
 import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
-import { useState, type FormEvent } from "react";
+import { createContext, useContext, useState, type FormEvent, type ReactNode } from "react";
 
 import {
   clipLength,
@@ -28,6 +28,24 @@ import { Input } from "@tonaris/ui/components/input";
 export type Naming =
   | { mode: "new"; kind: ContainerKind; parentId: string; parentName: string }
   | { mode: "rename"; container: Pick<Container, "id" | "kind" | "name"> };
+
+const NamingContext = createContext<(naming: Naming) => void>(() => {});
+
+/** Asks for a name in a share: what the header's buttons and the shortcuts and palette open there (TON-195). */
+export function useStartNaming(): (naming: Naming) => void {
+  return useContext(NamingContext);
+}
+
+/** Holds the name dialog for what is below, on the collection on screen. */
+export function NamingProvider({ children }: { children: ReactNode }) {
+  const [naming, setNaming] = useState<Naming>();
+  return (
+    <NamingContext value={setNaming}>
+      {children}
+      <NameDialog naming={naming} onClose={() => setNaming(undefined)} />
+    </NamingContext>
+  );
+}
 
 export function NameDialog({
   naming,

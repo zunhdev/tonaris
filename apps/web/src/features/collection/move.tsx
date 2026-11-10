@@ -25,8 +25,10 @@ import { pinnedDialogClass } from "@tonaris/ui/lib/floating";
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useCollectionUi } from "./collection-ui";
 import { useCollectionData } from "./data";
+import { shareTopRefusal } from "./delete-containers";
 import { FolderFinder } from "./folder-finder";
 import { folderChoices } from "./folder-picker";
+import { useCollectionPlace } from "./place";
 import { ancestorsOf, canMoveInto } from "./tree";
 
 /** Moves the folder or list `id` into `parentId`, null being the root; answers whether it went. */
@@ -93,16 +95,30 @@ function MovePicker({
   const { endMove } = useCollectionDialogs();
   const { tree } = useCollectionData();
   const move = useMoveContainer();
-  const choices = useMemo(() => folderChoices(tree, { moving: id }), [tree, id]);
+  const place = useCollectionPlace();
+  // In a share, only its folders: never the top level, and never the shared folder or list itself (FR-07.20).
+  const inShare = place.kind === "share";
+  const top = inShare && id === place.rootId;
+  const choices = useMemo(
+    () =>
+      top
+        ? []
+        : folderChoices(tree, { moving: id }).filter(
+            (choice) => !inShare || choice.parentId !== null,
+          ),
+    [tree, id, top, inShare],
+  );
 
   return (
     <>
       <DialogHeader>
         <DialogTitle>Move '{name}' to…</DialogTitle>
         <DialogDescription>
-          {choices.length > 0
-            ? "It moves with everything in it."
-            : "There's nowhere else to move it yet. Create a folder first."}
+          {top
+            ? shareTopRefusal
+            : choices.length > 0
+              ? "It moves with everything in it."
+              : "There's nowhere else to move it yet. Create a folder first."}
         </DialogDescription>
       </DialogHeader>
       {choices.length > 0 && (

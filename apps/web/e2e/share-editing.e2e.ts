@@ -134,3 +134,69 @@ test("an editor whose access ends while editing is told it's no longer available
     timeout: 10_000,
   });
 });
+
+test("inside a share, shortcuts, Move to and deletions keep to the share and its owner's Trash (TON-195)", async ({
+  page: owner,
+  browser,
+}) => {
+  const {
+    page: editor,
+    metal,
+    doom,
+    nightfall,
+  } = await sharedToEdit(owner, browser, accounts.toolsOwner, accounts.toolsEditor);
+  const funeral = container("folder", "Funeral", metal.id);
+  const secret = container("list", "Secret");
+  await insert(owner, funeral, secret);
+  await saved(owner);
+  await send(owner, "membership.add", { listId: secret.id, albumId: nightfall.id });
+
+  // N in the shared folder asks for the new list's name, here rather than in the sidebar.
+  await editor.goto(`/shared/${metal.id}`);
+  // Editable once Shared with me says so; until then it's the viewer's page.
+  await expect(editor.getByText("Can edit · Shared by Denis")).toBeVisible();
+  await editor.keyboard.press("n");
+  const naming = editor.getByRole("dialog", { name: `New list in "Metal"` });
+  await naming.getByRole("textbox", { name: "Name" }).fill("Sludge");
+  await naming.getByRole("button", { name: "Create" }).click();
+  await expect(naming).toHaveCount(0);
+  await expect(editor.getByRole("main").getByText("Sludge")).toBeVisible();
+
+  // M on the shared folder itself: it stays where its owner put it.
+  await editor.keyboard.press("m");
+  const pinned = editor.getByRole("dialog", { name: "Move 'Metal' to…" });
+  await expect(pinned).toContainText(
+    "Only its owner can move or delete the shared folder or list itself.",
+  );
+  await expect(pinned.getByRole("option")).toHaveCount(0);
+  await editor.keyboard.press("Escape");
+  await expect(pinned).toHaveCount(0);
+
+  // M on a list inside: only the share's folders, previewed without naming anyone.
+  await editor.goto(`/shared/${metal.id}?c=${doom.id}`);
+  await expect(editor.getByText("Can edit · Shared by Denis")).toBeVisible();
+  await editor.keyboard.press("m");
+  const picker = editor.getByRole("dialog", { name: "Move 'Doom' to…" });
+  await expect(picker.getByRole("option", { name: "Collection", exact: true })).toHaveCount(0);
+  await expect(picker.getByRole("option", { name: "Private", exact: true })).toHaveCount(0);
+  const funeralPlace = picker.getByRole("option", { name: "Metal › Funeral" });
+  await funeralPlace.hover();
+  await expect(picker.getByRole("status", { name: "Sharing" })).toHaveText("Sharing unchanged");
+  await funeralPlace.click();
+  await expect(picker).toHaveCount(0);
+  await expect(editor.getByRole("main").getByRole("navigation")).toContainText("Funeral");
+
+  // Deleting an album asks first, and leaves the owner's other lists alone.
+  await editor.goto(`/shared/${metal.id}?c=${doom.id}&album=${nightfall.id}`);
+  await expect(editor.getByText("Can edit · Shared by Denis")).toBeVisible();
+  await editor.keyboard.press("e");
+  await editor.keyboard.press("ControlOrMeta+Backspace");
+  const confirm = editor.getByRole("alertdialog", { name: "Delete 'Nightfall' from 'Metal'?" });
+  await expect(confirm).toContainText("Denis's other lists keep it.");
+  await confirm.getByRole("button", { name: "Delete" }).click();
+  await expect(confirm).toHaveCount(0);
+  await expect(editor.getByRole("main").getByText("Nightfall")).toHaveCount(0);
+  await owner.goto(`/l/${secret.id}`);
+  await live(owner);
+  await expect(owner.getByRole("main").getByText("Nightfall")).toBeVisible();
+});

@@ -4249,6 +4249,10 @@
                         "description": "Someone who sees content: an invited person, or anyone with a link."
                       },
                       "description": "Shares on it and its contents, which it keeps (or which resume)."
+                    },
+                    "withheld": {
+                      "description": "For an editor's move inside a share: whether who can see it changes. The audiences are withheld, so an editor learns nobody's access (FR-07.20, DS-69).",
+                      "type": "boolean"
                     }
                   },
                   "required": [
