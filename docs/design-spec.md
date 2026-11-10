@@ -1330,7 +1330,7 @@ The block never says "private" while another access path remains.
   - **Shared with me's** available entries link here.
 - *As built in TON-127:* albums show their services as links, as on guest pages (DS-72), following the viewer's link setting.
 
-**DS-70 for editors** *(planned in P-TON-47, decided with the creator 10 November 2026; FR-07.18–FR-07.21; built in TON-191).* A share the person can edit opens in the same place, with the owner's editing tools on the desktop:
+**DS-70 for editors** *(planned in P-TON-47, decided with the creator 10 November 2026; FR-07.18–FR-07.21; built in TON-191 and TON-195).* A share the person can edit opens in the same place, with the owner's editing tools on the desktop:
 - **The header:** a pill naming the role and the owner, the View | Edit toggle (DS-45), and View options. There's no Share button.
 - **Editing** works as in the person's own collection (DS-45, DS-49, DS-50), inside the share only:
   - Move to… offers only the share's folders, and dragging stays inside the share;
