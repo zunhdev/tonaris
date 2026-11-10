@@ -1,7 +1,8 @@
-// The sharing dialog (DS-65; FR-07.1–FR-07.4, FR-07.14, FR-11.3), the owner's, on the desktop: disclosures always at
-// the top, so they are read before anything is shared; invitations by email, each with its status; access from
-// folders above, read-only, each opening its own dialog; and the link switch, with the link to copy and an inline
-// confirmation before turning it off, for good. Without a display name, a field to add one replaces Invite and the
+// The sharing dialog (DS-65; FR-07.1–FR-07.4, FR-07.14, FR-07.18, FR-11.3), the owner's, on the desktop: disclosures
+// always at the top, so they are read before anything is shared, what editors may do among them; invitations by email,
+// each with its role, Can view or Can edit, and its status; access from folders above, read-only, each opening its own
+// dialog; and the link switch, view-only, with the link to copy and an inline confirmation before turning it off, for
+// good. Without a display name, a field to add one replaces Invite and the
 // switch. Sharing is online-only: the dialog sends its mutations straight to the API and reloads what it shows after
 // each, with no outbox, and waits while offline (DS-81).
 
@@ -14,7 +15,13 @@ import { useConnection } from "@/features/sync/sync-provider";
 import { Check, Copy, Ellipsis, Folder } from "lucide-react";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 
-import { clipLength, maxNameLength, uuidv7, type ShareSettings } from "@tonaris/domain";
+import {
+  clipLength,
+  maxNameLength,
+  uuidv7,
+  type ShareRole,
+  type ShareSettings,
+} from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -31,6 +38,7 @@ import {
 } from "@tonaris/ui/components/dropdown-menu";
 import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
+import { Select } from "@tonaris/ui/components/select";
 import { Switch } from "@tonaris/ui/components/switch";
 
 export function ShareDialog() {
@@ -105,11 +113,13 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
         <DialogTitle>
           Share "{name}" · {kind}
         </DialogTitle>
-        {/* Always shown first, before anything is shared (FR-07.14). */}
+        {/* Always shown first, before anything is shared, or anyone may edit (FR-07.14). */}
         <DialogDescription>
           Viewers see every custom field these albums use, including ones you add later.
           {kind === "folder" &&
-            " Sharing a folder includes everything inside it, now and in the future."}
+            " Sharing a folder includes everything inside it, now and in the future."}{" "}
+          People who can edit also add, change, move and delete what's inside, and what they add
+          stays in your collection.
         </DialogDescription>
       </DialogHeader>
       {offline && (
@@ -182,9 +192,39 @@ function deliveryOf(status: ShareSettings["invitations"][number]["emailStatus"])
   return "";
 }
 
+/** The roles an invitation gives (FR-07.18), as the dialog names them. */
+const roleNames: Record<ShareRole, string> = { view: "Can view", edit: "Can edit" };
+
+/** Pick a role (FR-07.18): Can view or Can edit. */
+function RolePicker({
+  role,
+  label,
+  disabled,
+  onChange,
+}: {
+  role: ShareRole;
+  label: string;
+  disabled: boolean;
+  onChange: (role: ShareRole) => void;
+}) {
+  return (
+    <Select
+      aria-label={label}
+      value={role}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value === "edit" ? "edit" : "view")}
+      className="shrink-0"
+    >
+      <option value="view">{roleNames.view}</option>
+      <option value="edit">{roleNames.edit}</option>
+    </Select>
+  );
+}
+
 /**
- * A person with access (DS-65): who, their invitation's status, Resend while its email didn't go, and their menu. A
- * write that didn't go through says why under the row; either way the dialog reads again.
+ * A person with access (DS-65): who, their invitation's status, its role, which a change saves at once, Resend while
+ * its email didn't go, and their menu. A view invitation under a folder they already edit says so (FR-07.18). A write
+ * that didn't go through says why under the row; either way the dialog reads again.
  */
 function PersonRow({
   invitation,
@@ -197,6 +237,8 @@ function PersonRow({
 }) {
   const { run, busy, error } = useSend();
   const send = (mutation: Unsent) => void run(mutation).then(onChanged);
+  const who = invitation.displayName ?? invitation.email;
+  const through = invitation.role === "view" ? invitation.editableThrough : null;
   return (
     <li className="flex flex-col gap-1">
       <div className="flex items-center gap-3 text-base">
@@ -211,6 +253,16 @@ function PersonRow({
             ? "Accepted"
             : `Pending${deliveryOf(invitation.emailStatus)}`}
         </span>
+        <RolePicker
+          role={invitation.role}
+          label={`Role for ${who}`}
+          disabled={disabled || busy}
+          onChange={(role) => {
+            if (role !== invitation.role) {
+              send({ name: "share.setRole", args: { grantId: invitation.id, role } });
+            }
+          }}
+        />
         {invitation.status === "pending" &&
           (invitation.emailStatus === "failed" || invitation.emailStatus === "unknown") && (
             <Button
@@ -225,11 +277,14 @@ function PersonRow({
             </Button>
           )}
         <RowMenu
-          who={invitation.displayName ?? invitation.email}
+          who={who}
           disabled={disabled}
           onRevoke={() => send({ name: "share.revoke", args: { grantId: invitation.id } })}
         />
       </div>
+      {through && (
+        <p className="text-small text-fg-secondary">Also editable through "{through.name}"</p>
+      )}
       {error !== undefined && (
         <p role="alert" className="text-small text-status-danger">
           {error}
@@ -328,13 +383,15 @@ function InviteForm({
 }) {
   const id = useId();
   const [email, setEmail] = useState("");
+  // Can view unless the owner picks Can edit (FR-07.18); kept for the next invitation.
+  const [role, setRole] = useState<ShareRole>("view");
   const { run, busy, error, setError } = useSend();
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (email.trim() === "") return;
     const reason = await run({
       name: "share.invite",
-      args: { grantId: uuidv7(), containerId, email },
+      args: { grantId: uuidv7(), containerId, email, role },
     });
     if (reason === undefined) {
       setEmail("");
@@ -355,6 +412,12 @@ function InviteForm({
             setEmail(event.target.value);
             setError(undefined);
           }}
+        />
+        <RolePicker
+          role={role}
+          label="Role for the invitation"
+          disabled={disabled || busy}
+          onChange={setRole}
         />
         <Button type="submit" disabled={disabled || busy}>
           Invite

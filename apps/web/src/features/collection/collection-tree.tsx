@@ -22,6 +22,7 @@ import {
   Ellipsis,
   Inbox,
   MailOpen,
+  Pencil,
   ShieldCheck,
   Trash2,
   Users,
@@ -568,6 +569,12 @@ function SharedRow({
       <span className="min-w-0 truncate">{name}</span>
       {item.parentId === null && (
         <span className="max-w-[45%] shrink-0 truncate text-fg-tertiary">· {item.owner}</span>
+      )}
+      {item.parentId === null && item.editable && (
+        <>
+          <Pencil strokeWidth={1.5} aria-hidden className="size-3.5 shrink-0 text-fg-tertiary" />
+          <span className="sr-only">, you can edit this</span>
+        </>
       )}
     </Link>
   );

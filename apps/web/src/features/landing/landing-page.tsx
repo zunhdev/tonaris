@@ -298,8 +298,8 @@ function Features() {
       </div>
       <div className="mt-4 grid gap-4 md:grid-cols-3">
         <Feature icon={Share2} title="Share a folder or a list" picture={<SharingPicture />}>
-          View-only, with people you invite or anyone with the link. The rest stays private. Stop
-          sharing whenever you want.
+          With people you invite, to view or to build it with you, or with anyone who has the link,
+          to view. The rest stays private. Stop sharing whenever you want.
         </Feature>
         <Feature icon={Download} title="Your data stays yours" picture={<ExportPicture />}>
           Download everything, Trash included, as JSON and Markdown, any time. Readable by people

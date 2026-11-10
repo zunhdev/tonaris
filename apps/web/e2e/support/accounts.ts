@@ -178,6 +178,9 @@ export const accounts = {
   paletteRecent: at("palette-recent"),
   // The sharing dialog (sharing-dialog.e2e.ts).
   sharingDialog: at("sharing-dialog"),
+  // Roles in the dialog and for the recipient (share-roles.e2e.ts, TON-190): the owner and the person invited.
+  roleOwner: at("role-owner"),
+  roleInvitee: at("role-invitee"),
   // Invitations (invitations.e2e.ts): the owner, the recipient, and someone else.
   invitingOwner: at("inviting-owner"),
   invitedAnna: at("invited-anna"),

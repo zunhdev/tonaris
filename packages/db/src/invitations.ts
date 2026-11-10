@@ -93,7 +93,13 @@ export async function invitationToDeliver(
   db: Database,
   grantId: string,
 ): Promise<
-  | { to: string; ownerName: string | null; containerName: string; kind: "folder" | "list" }
+  | {
+      to: string;
+      ownerName: string | null;
+      containerName: string;
+      kind: "folder" | "list";
+      role: "view" | "edit";
+    }
   | undefined
 > {
   const [row] = await db
@@ -102,6 +108,7 @@ export async function invitationToDeliver(
       ownerName: owners.displayName,
       containerName: containers.name,
       kind: containers.kind,
+      role: shareGrants.role,
     })
     .from(shareGrants)
     .innerJoin(users, eq(users.id, shareGrants.granteeId))

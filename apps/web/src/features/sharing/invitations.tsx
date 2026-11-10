@@ -17,14 +17,15 @@ import { useSend } from "./send";
 
 const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
 
-/** "Doom", a list from Denis, invited 29 Oct 2026. */
+/** "Doom", a list from Denis, to edit if so (FR-07.18), invited 29 Oct 2026. */
 function Summary({ invitation }: { invitation: Invitation }) {
   const owner = invitation.owner.displayName ?? "Someone";
   return (
     <span className="flex min-w-0 flex-col">
       <span className="truncate text-fg-primary">"{invitation.container.name}"</span>
       <span className="text-small text-fg-secondary">
-        A {invitation.container.kind} from {owner} ·{" "}
+        A {invitation.container.kind} from {owner}
+        {invitation.role === "edit" ? ", to edit" : ""} ·{" "}
         {dateFormat.format(new Date(invitation.invitedAt))}
       </span>
     </span>

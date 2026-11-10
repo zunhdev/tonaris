@@ -86,6 +86,7 @@ function SharedRow({ entry, onChanged }: { entry: SharedEntry; onChanged: () => 
                   entry.kind === "folder" ? "Folder" : "List",
                   entry.via.invitation ? "by invitation" : undefined,
                   entry.via.link ? "from a link" : undefined,
+                  entry.role === "edit" ? "you can edit" : undefined,
                 ]
                   .filter(Boolean)
                   .join(" · ")

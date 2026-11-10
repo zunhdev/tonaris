@@ -63,6 +63,8 @@ export type SharedItem = {
   /** Its owner's display name, shown after a top one. */
   owner: string | undefined;
   available: boolean;
+  /** Whether the person can edit it (FR-07.18), as a top one is marked. */
+  editable: boolean;
 };
 
 /** A folder or list inside a share, which can always be opened. */
@@ -93,6 +95,7 @@ export function buildSharedTree(
       name: entry.name,
       owner: entry.owner.displayName ?? "A Tonaris member",
       available: entry.available,
+      editable: entry.role === "edit",
     }))
     .toSorted(
       (a, b) =>
@@ -113,6 +116,7 @@ export function buildSharedTree(
         name,
         owner: undefined,
         available: true,
+        editable: entry.role === "edit",
       };
       byId.set(id, item);
       children.set(parentId, [...(children.get(parentId) ?? []), item]);

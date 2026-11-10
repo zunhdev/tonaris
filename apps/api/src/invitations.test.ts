@@ -96,6 +96,26 @@ describe("delivery (FR-07.5, TS-72)", () => {
     expect(await delivery(doom)).toBe("sent");
   });
 
+  test("an invitation to edit says so (FR-07.18)", async () => {
+    await send({ name: "account.setDisplayName", args: { displayName: "Denis" } }, denis);
+    const doom = uuidv7();
+    await send(
+      { name: "container.create", args: { id: doom, kind: "list", parentId: null, name: "Doom" } },
+      denis,
+    );
+    const arrived = t.email.next(annaEmail);
+    await send(
+      {
+        name: "share.invite",
+        args: { grantId: uuidv7(), containerId: doom, email: annaEmail, role: "edit" },
+      },
+      denis,
+    );
+    const email = await arrived;
+    expect(email.subject).toBe(`Denis invited you to edit "Doom" on Tonaris`);
+    expect(email.text).toContain(`Denis invited you to edit the list "Doom" on Tonaris.`);
+  });
+
   test("a failed email keeps the invitation, and Resend sends it again; a replay sends nothing", async () => {
     t.email.failing.add(annaEmail);
     const { doom, grantId } = await shared();

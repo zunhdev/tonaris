@@ -1225,11 +1225,11 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - *TON-67 adds the row menu:* a "More for {name or address}" button opens a menu with **Remove access**, which revokes the invitation, pending or accepted, and reads the dialog again.
 - *TON-66 adds delivery:* a pending row reads "Pending · sending…", "· sent", "· email failed" or "· email not confirmed", with **Resend** for the last two. While anything is sending, the dialog reads again every 1.5 s until it settles.
 
-*Planned in P-TON-47 (decided with the creator, 10 November 2026; FR-07.14, FR-07.15, FR-07.18), built in TON-190:*
-- **Roles:** each person's row has a role picker, Can view or Can edit, beside its status. A change saves at once, pending or accepted.
-- **Inviting:** a role picker beside the address, starting at Can view.
-- **Inherited access** names the higher role: "Also editable through "Metal"" when a folder above gives that person edit access.
-- **The editor disclosure** shows before the first Can edit: what editors can change, and that it stays in the owner's collection.
+*As built in TON-190 (decided with the creator, 10 November 2026; FR-07.14, FR-07.15, FR-07.18):*
+- **Roles:** each person's row has a role select, "Can view" or "Can edit", named "Role for {name or address}", after its status. A change saves at once, pending or accepted, and the dialog reads again.
+- **Inviting:** a role select beside the address, "Role for the invitation", starting at Can view and kept for the next invitation.
+- **Inherited edit access:** a view invitation whose person already edits through a folder above reads "Also editable through "Metal"" under the row, from the settings' `editableThrough`.
+- **The editor disclosure** is part of the always-visible description, so it is read before anyone is invited: "People who can edit also add, change, move and delete what's inside, and what they add stays in your collection."
 - **The link section** is unchanged: links stay view-only.
 
 **DS-66 Invitations inbox.** `/invitations` lists pending invitations: the owner's display name, collection name and type, and date, each with **Accept** and **Decline**.
@@ -1257,7 +1257,11 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - **Once per device:** each pending invitation is announced once, those found on load included. On the Invitations pages, new ones are already in view and aren't announced.
 - The email and the sidebar's Invitations stay as they were.
 
-*Planned in P-TON-47 (FR-07.18), built in TON-190:* the inbox row, the email and the notice name the role, and a role changed later reaches the person live.
+*As built in TON-190 (FR-07.18):* an invitation to edit says so.
+- **The inbox row:** "A folder from Denis, to edit · 10 Nov 2026".
+- **The notice:** "Denis invited you to edit "Doom"".
+- **The email:** subject "Denis invited you to edit "Doom" on Tonaris"; text "Denis invited you to edit the list "Doom" on Tonaris.".
+- **A role changed later** shows wherever the share is read again: an open shared view after each of the owner's saves, an open shared folder in the tree, and Shared with me when the window regains focus.
 
 **DS-67 Shared with me.** The sidebar section and `/shared` index group references by owner display name.
 - **Context menu:** **Leave share…** for invitation-based references, with a small confirmation explaining that the owner must re-invite you; **Remove from Shared with me** for link references.
@@ -1276,7 +1280,9 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 
 *As built in TON-130:* the sidebar shows the references in its tree, under Shared with me, without owner rows (DS-31).
 
-*Planned in P-TON-47 (FR-07.18), built in TON-190:* `/shared` and the tree mark the folders and lists the person can edit.
+*As built in TON-190 (FR-07.18):* a share the person can edit is marked.
+- **`/shared`:** "Folder · by invitation · you can edit".
+- **The tree:** a top entry ends with a pencil glyph, read as ", you can edit this".
 
 **DS-68 Signed-in visit to a shared link.** A banner reads "Shared by {name} · **Add to Shared with me**". It changes to "In Shared with me" after adding. Adding never happens implicitly. *(FR-07.13)*
 - *As built in TON-68:*
@@ -1731,7 +1737,7 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **Four features,** each a Lucide icon in `accent.solid`, a title and a line:
   - "Your AI agents, through MCP": Claude, ChatGPT and Codex search and organize the collection, and destructive actions wait for approval;
   - "Folders within folders, and lists": nesting up to 32 levels (TS-18), and an album in any number of lists;
-  - "Share a folder or a list": view-only, by invitation or link, stoppable at any time;
+  - "Share a folder or a list": view-only, by invitation or link, stoppable at any time; *changed in TON-190 on the landing page (DS-120):* "With people you invite, to view or to build it with you, or with anyone who has the link, to view. The rest stays private. Stop sharing whenever you want.";
   - "Your data stays yours": export everything, Trash included, as JSON and Markdown.
 - **Last:** "Tonaris is invitation-only for now." in `fg.tertiary`.
 - **Only the sign-in steps** have it. Other pages in the same frame, such as approvals and account deletion, don't.
