@@ -582,7 +582,19 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - The browser's `online` event restarts the window.
   - *Fixed in TON-137:* **only time the page is shown counts.** A phone freezes a hidden page, as Android does an installed app in the background, and its stream drops meanwhile. A window started before then fired the moment the page came back, while the stream still waited out its backoff (up to 30 s), so "Offline" flashed on almost every return to the app. Now a hidden page stops the window, and `visibilitychange` back to shown, or Chrome's `resume` after a freeze, restarts it and reconnects and resends at once, as `online` does.
 - **Viewers.** Shared roots are separate read-only collections, refilled on invalidation.
-- **Editors** *(P-TON-47):* how an editor's client holds a share it can edit, so the editing tools work on it, is decided by the TON-187 spike and recorded here.
+- **Editors** *(decided in the TON-187 spike, 10 November 2026; built in TON-191 and TON-195):* **a share the person can edit is held like their own collection, by a second sync client.**
+  - **Why.** The editing tools (rename, Move to, Add albums, the inspector, Delete and Undo, conflicts) are built on the sync client's TanStack DB collections, read through `useCollectionData` in 39 files. Keeping the read-only snapshot and sending commands beside it would rewire every tool to a second data source anyway, and each edit would show up only after the next read. A second client reuses the tools and keeps edits optimistic.
+  - **The share engine** has the sync engine's interface (`register`, `start`, `stop`, `awaitSeq`, `onStatus`, `onLead`, `reconnect`) over the share's own endpoints:
+    - it bootstraps from `GET /v1/shared/{id}`, mapped to a `Bootstrap` of the share's containers, entries, albums, links, fields and values;
+    - on each `shared-invalidate` from `GET /v1/shared/{id}/stream`, it reads the share again and hands the consumers a `reset`. Nothing finer is needed at this scale, and content moving into or out of the share, or access ending, needs no special case;
+    - its `seq` is the owner's: the snapshot gains the owner's `seq`, read in the same transaction, and `awaitSeq(n)` resolves once a read reaches `n`. An editor's write is confirmed by the owner's `seq` its outcome carries (TS-20), so the optimistic value gives way to the saved one without a flicker, as for the owner.
+  - **The share client** is `createSyncClient`'s outbox, writer, save states, captures and content collections on that engine. Its unsent writes are kept apart from the person's own, keyed by the share. It has no tab coordination: each tab reads the share itself, as viewers' pages do.
+  - **The view** mounts its own providers under the shared route: the share client as the sync client, and a `CollectionDataProvider` whose content is the share's while views, defaults and manual order stay the person's own (FR-07.17). Save states, conflicts and captures follow the share client.
+  - **What follows from it** (TON-191, TON-195):
+    - links to folders and lists come from a context, so a share's link to `/shared/{root}?c={id}` instead of `/f/{id}` and `/l/{id}`;
+    - the shell's shortcuts and the palette's commands act on the open view's client, not always the person's own;
+    - Move to, dragging, the share's own folder or list, and deletion confirmations apply the editor rules (FR-07.20, DS-50).
+  - **Viewers** keep the read-only snapshot. A viewer whose role becomes Can edit switches to the share client when the view reads again.
 
 **TS-25 Batches (Decided; FR-13.4; built in TON-28).** A batch is a dependency graph, sent to `POST /v1/batches` as `{batchId, items}` and answered with `{batchId, items: [{mutationId, outcome}]}` in the order sent.
 
