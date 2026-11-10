@@ -302,7 +302,13 @@ export async function createAlbum(
 
   const existing = await store.findAlbum(args.id);
   if (existing) {
-    if (existing.ownerId !== ownerId) {
+    // An editor is told only that an ID they can't change is taken, never the album's values (FR-07.20).
+    const actor = actingUserId(context.principal);
+    const unseen =
+      actor !== undefined &&
+      actor !== ownerId &&
+      isFailure(await changeableAlbum(args.id, context));
+    if (existing.ownerId !== ownerId || unseen) {
       return failure("validation_failed", "This album ID is already in use.", [
         { path: "args.id", message: "Already in use" },
       ]);

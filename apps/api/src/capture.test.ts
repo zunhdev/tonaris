@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { mutations, provenanceOf, readChanges, trashUnits } from "@tonaris/db";
+import { mutations, provenanceOf, readChanges, shareGrants, trashUnits } from "@tonaris/db";
 import {
   batchResultSchema,
   bootstrapSchema,
@@ -403,6 +403,78 @@ describe("re-addition from Trash (FR-14.4, AC-07)", () => {
     expect(listsOf(await bootstrap(), saved.albumId)).toEqual([lateNight]);
     const [row] = await t.db.$client`select trashed_at from albums where id = ${saved.albumId}`;
     expect(row?.trashed_at).toBeNull();
+  });
+});
+
+/** Anna's "Doom", shared with Ben to edit; her "Secret" isn't. */
+async function sharedWithBen() {
+  const doom = await newList("Doom");
+  const secret = await newList("Secret");
+  const ben = await t.signIn("ben@example.com");
+  await t.db.insert(shareGrants).values({
+    id: uuidv7(),
+    containerId: doom,
+    granteeId: ben.id,
+    invitedEmail: "ben@example.com",
+    status: "accepted",
+    role: "edit",
+  });
+  const asBen = async (mutation: Mutation) => {
+    const response = await t.call("/v1/mutations", {
+      json: mutation,
+      headers: { cookie: ben.cookie },
+    });
+    return mutationResultSchema.parse(await response.json()).outcome;
+  };
+  return { doom, secret, asBen };
+}
+
+describe("an editor's capture into a share (FR-07.19, FR-07.20; TON-193)", () => {
+  test("a choice between albums names only the albums the editor sees", async () => {
+    const { doom, secret, asBen } = await sharedWithBen();
+    const inDoom = result(
+      (await send(capture(links.lastInLineTidal, doom, { releaseGroupId: ids.lastInLine })))
+        .outcome,
+    );
+    result(
+      (await send(capture(links.lastInLineTidal, secret, { releaseGroupId: ids.holyDiver })))
+        .outcome,
+    );
+    // Saved without the link, so the link asks which album it is.
+    await t.db.$client`delete from album_service_links`;
+    expect(await asBen(capture(links.lastInLineTidal, doom))).toEqual({
+      status: "needs_input",
+      need: "match",
+      candidates: [
+        { releaseGroupId: ids.lastInLine, title: "The Last in Line", albumId: inDoom.albumId },
+        // Anna's Holy Diver is only in her private list.
+        { releaseGroupId: ids.holyDiver, title: "Holy Diver", albumId: null },
+      ],
+    });
+  });
+
+  test("an album in the owner's Trash stays there: the editor's capture adds a new one", async () => {
+    const { doom, secret, asBen } = await sharedWithBen();
+    const bleach = result((await send(capture(links.bleachSpotify, secret))).outcome);
+    const deleted = await send({
+      mutationId: uuidv7(),
+      name: "album.delete",
+      args: { id: bleach.albumId, unitId: uuidv7() },
+    });
+    expect(deleted.outcome.status).toBe("confirmed");
+
+    const mutation = capture(links.bleachSpotify, doom);
+    const added = await asBen(mutation);
+    expect(added).toMatchObject({
+      status: "confirmed",
+      result: { albumId: mutation.args.albumId, match: "created" },
+    });
+    const [row] = await t.db.$client`select trashed_at from albums where id = ${bleach.albumId}`;
+    expect(row?.trashed_at).not.toBeNull();
+    // Still in "Secret", for when Anna restores it.
+    const [entry] = await t.db
+      .$client`select list_id from memberships where album_id = ${bleach.albumId}`;
+    expect(entry?.list_id).toBe(secret);
   });
 });
 

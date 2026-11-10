@@ -87,13 +87,15 @@ export function sharedSnapshot(
       .from(containers)
       .innerJoin(users, eq(users.id, containers.ownerId))
       .where(eq(containers.id, id));
-    // In the same snapshot as the content, so the content is current at exactly this position (TS-24).
-    const [sync] = owner
-      ? await tx
-          .select({ seq: accountSync.seq })
-          .from(accountSync)
-          .where(eq(accountSync.accountId, owner.id))
-      : [];
+    // In the same snapshot as the content, so the content is current at exactly this position (TS-24). Only for an
+    // editor, whose writes it waits for: a viewer or a guest would learn how much the owner changes elsewhere.
+    const [sync] =
+      owner && role === "edit"
+        ? await tx
+            .select({ seq: accountSync.seq })
+            .from(accountSync)
+            .where(eq(accountSync.accountId, owner.id))
+        : [];
     const shown = await tx
       .select(containerColumns)
       .from(containers)

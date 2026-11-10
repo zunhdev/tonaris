@@ -730,4 +730,42 @@ describe("album.capture by an editor (FR-07.19, FR-07.21)", () => {
     // A list of the owner's they can't edit is answered as missing.
     expect(await asEditor(capture(other.id))).toMatchObject({ code: "not_found" });
   });
+
+  test("an album in the owner's Trash stays there: the editor's capture saves a new one (TON-193)", async () => {
+    const editor: Principal = { kind: "user", userId: uuidv7(), role: "user", client: "web" };
+    const shared = list("Grunge");
+    const secret = list("Secret");
+    const bleach = saved("Bleach", { trashed: true });
+    const t = setup({
+      albums: [bleach],
+      containers: [shared, secret],
+      memberships: [
+        { listId: secret.id, albumId: bleach.id, addedAt: now.toISOString(), ownerId: owner },
+      ],
+    });
+    const grantId = uuidv7();
+    t.grants.set(grantId, {
+      id: grantId,
+      containerId: shared.id,
+      granteeId: editor.userId,
+      invitedEmail: "editor@example.com",
+      status: "accepted",
+      role: "edit",
+      emailStatus: "sent",
+    });
+    const mutation = capture(shared.id);
+    const result = applied(
+      await runCommand(mutation, {
+        principal: editor,
+        store: t.store,
+        now,
+        capture: identified(bleachFacts),
+      }),
+    );
+    expect(result.result).toMatchObject({ albumId: mutation.args.albumId, match: "created" });
+    expect(t.listsOf(mutation.args.albumId)).toEqual([shared.id]);
+    // The owner's stays in Trash, still in "Secret" for when the owner restores it.
+    expect(t.albums.get(bleach.id)?.trashed).toBe(true);
+    expect(t.listsOf(bleach.id)).toEqual([secret.id]);
+  });
 });

@@ -1,7 +1,7 @@
 // Albums by their service links (TS-11, TS-41 step 1). Capture and link edits write links (TON-44, TON-46);
 // `entity_id` holds `linkEntityId()` of the link, so a link is found again whatever form it was pasted in.
 
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 
 import type { StreamingService } from "@tonaris/domain";
 
@@ -14,6 +14,7 @@ export async function findLinkedAlbum(
   ownerId: string,
   service: StreamingService,
   entityId: string,
+  { activeOnly = false }: { activeOnly?: boolean } = {},
 ): Promise<string | undefined> {
   const [row] = await db
     .select({ albumId: albumServiceLinks.albumId })
@@ -24,6 +25,7 @@ export async function findLinkedAlbum(
         eq(albumServiceLinks.ownerId, ownerId),
         eq(albumServiceLinks.service, service),
         eq(albumServiceLinks.entityId, entityId),
+        activeOnly ? isNull(albums.trashedAt) : undefined,
       ),
     )
     .orderBy(sql`${albums.trashedAt} is not null`, asc(albums.id))
