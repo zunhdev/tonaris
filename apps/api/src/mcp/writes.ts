@@ -10,7 +10,7 @@ import {
   claimOperation,
   executeBatch,
   executeMutation,
-  lockAccount,
+  lockCollections,
   useApproval,
   type Database,
   type ExecutedMutation,
@@ -206,7 +206,8 @@ export function mcpWriter({
         | { status: "approved" }
         | { status: "ran"; items: MutationResult[] };
       const answer = await db.transaction(async (tx): Promise<Answer> => {
-        await lockAccount(tx, principal.userId);
+        // Every account the batch changes, the agent's own included, in one order (TON-192).
+        await lockCollections(tx, principal.userId, batch.items);
         const now = await scope(tx);
         const use = await useApproval(tx, {
           id: approvalId,

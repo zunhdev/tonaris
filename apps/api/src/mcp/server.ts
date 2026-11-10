@@ -31,7 +31,7 @@ export function createMcpServer({ db, principal, limiter, writer, webOrigin }: M
     { name: "tonaris", title: "Tonaris", version: "0.1.0" },
     {
       instructions:
-        "Tonaris is the user's music collection: albums in lists, lists in folders, Unsorted for albums in no list, and Trash. Start with get_overview.",
+        "Tonaris is the user's music collection: albums in lists, lists in folders, Unsorted for albums in no list, and Trash. Start with get_overview. Folders and lists others share with the user are in list_shared_with_me; where its role is edit, the write tools change it as the user can in the app, inside that share only: its custom fields, sharing and Trash stay its owner's.",
     },
   );
   // Every tool takes a call from the connection's budget first (TS-66).

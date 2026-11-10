@@ -10,6 +10,7 @@ import {
   changeSchema,
   guestMutationRefusal,
   mutationIdInUse,
+  mutationSchema,
   mutationTooOld,
   outcomeSchema,
   purgeUnit,
@@ -224,6 +225,29 @@ async function collectionOf(tx: Transaction, mutation: Mutation, actorId: string
     .from(table)
     .where(eq(table.id, target.id));
   return row?.ownerId ?? actorId;
+}
+
+/**
+ * Takes the write locks of the actor's account and of every collection `mutations` change, in one order (TS-20): for a
+ * batch run inside one transaction, as an approved MCP batch is, so two people's batches on each other's shares never
+ * wait on each other (TON-192). Each item's own lock is then one this transaction holds already.
+ */
+export async function lockCollections(
+  tx: Transaction,
+  actorId: string,
+  batch: readonly unknown[],
+): Promise<void> {
+  const accounts = new Set([actorId]);
+  for (const item of batch) {
+    // An item that isn't a mutation is refused when it runs, and changes nothing.
+    const parsed = mutationSchema.safeParse(item);
+    // oxlint-disable-next-line no-await-in-loop
+    if (parsed.success) accounts.add(await collectionOf(tx, parsed.data, actorId));
+  }
+  for (const accountId of [...accounts].toSorted()) {
+    // oxlint-disable-next-line no-await-in-loop
+    await lockAccount(tx, accountId);
+  }
 }
 
 /**

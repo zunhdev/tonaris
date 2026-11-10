@@ -81,7 +81,7 @@ export type { ReplayReport } from "./ledger-replay";
 export { reconcileRestored, type ReconcileReport } from "./reconcile";
 export { operationsStatus, type OperationsStatus } from "./operations";
 export { findFieldIn } from "./field-values";
-export { lockAccount, purgeExpiredTrash } from "./sync";
+export { lockAccount, lockCollections, purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
 export {
   collectionOverview,
