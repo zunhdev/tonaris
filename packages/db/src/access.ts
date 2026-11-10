@@ -9,7 +9,7 @@ import type { ShareRole, ShareViewer } from "@tonaris/domain";
 
 import type { Executor } from "./client";
 import { ancestorsCte, descendantsCte } from "./hierarchy";
-import { containers, savedReferences, shareGrants, shareLinks } from "./schema";
+import { containers, memberships, savedReferences, shareGrants, shareLinks } from "./schema";
 
 /**
  * The live link a token's SHA-256 names, while its folder or list is active (TS-32): Trash suspends a link, as it does
@@ -117,6 +117,24 @@ export async function editSourcesAbove(
     ${ancestorsCte(id, { active: true })}
     select up.id from up join sources on sources.id = up.id order by up.level`);
   return rows.map((row) => row.id);
+}
+
+/** Whether `userId` may edit the album `albumId` through sharing (FR-07.19): it is in an active list they edit. */
+export async function canEditAlbum(
+  db: Executor,
+  userId: string,
+  albumId: string,
+): Promise<boolean> {
+  const lists = await db
+    .select({ id: memberships.listId })
+    .from(memberships)
+    .innerJoin(containers, eq(containers.id, memberships.listId))
+    .where(and(eq(memberships.albumId, albumId), isNull(containers.trashedAt)));
+  for (const { id } of lists) {
+    // oxlint-disable-next-line no-await-in-loop
+    if (await canEditContainer(db, userId, id)) return true;
+  }
+  return false;
 }
 
 /**

@@ -11,7 +11,8 @@ import type {
   ViewPrefsFields,
 } from "@tonaris/domain";
 
-import { readSnapshot, type Database } from "./client";
+import { canEditAlbum, canEditContainer } from "./access";
+import { readSnapshot, type Database, type Executor } from "./client";
 import { findFieldIn } from "./field-values";
 import { viewItemIds } from "./mcp-reads";
 import { mcpOperations, positions } from "./schema";
@@ -63,24 +64,39 @@ export async function findOperation(
   return found;
 }
 
-/** The owner's album's values now, Trash or not, for a change's `base`. */
+/**
+ * Whether `userId` may change the album: theirs, or one in a list someone shared with them to edit (FR-07.19). The
+ * command still decides; this only keeps the base readers from answering for content they can't see.
+ */
+async function mayChangeAlbum(
+  db: Executor,
+  userId: string,
+  album: { id: string; ownerId: string },
+) {
+  return album.ownerId === userId || canEditAlbum(db, userId, album.id);
+}
+
+/** The album's values now, Trash or not, for a change's `base`: the person's own, or one they edit in a share. */
 export async function albumBase(
   db: Database,
   { ownerId, albumId }: { ownerId: string; albumId: string },
 ) {
   const found = await findAlbumIn(db, albumId);
-  if (found?.ownerId !== ownerId) return undefined;
+  if (!found || !(await mayChangeAlbum(db, ownerId, found))) return undefined;
   const { ownerId: _owner, trashed: _trashed, ...album } = found;
   return album;
 }
 
-/** The owner's folder's or list's values now, for a change's `base`. */
+/** A folder's or list's values now, for a change's `base`: the person's own, or one they edit in a share. */
 export async function containerBase(
   db: Database,
   { ownerId, containerId }: { ownerId: string; containerId: string },
 ) {
   const found = await findContainerIn(db, containerId);
-  if (found?.ownerId !== ownerId) return undefined;
+  if (!found) return undefined;
+  if (found.ownerId !== ownerId && !(await canEditContainer(db, ownerId, containerId))) {
+    return undefined;
+  }
   return {
     name: found.name,
     parentId: found.parentId,
@@ -106,11 +122,12 @@ export function fieldValueBase(
   db: Database,
   { ownerId, albumId, fieldId }: { ownerId: string; albumId: string; fieldId: string },
 ): Promise<FieldValueData | undefined> {
-  return readSnapshot(db, async (tx) =>
-    (await findAlbumIn(tx, albumId))?.ownerId === ownerId
+  return readSnapshot(db, async (tx) => {
+    const album = await findAlbumIn(tx, albumId);
+    return album && (await mayChangeAlbum(tx, ownerId, album))
       ? findFieldValueIn(tx, albumId, fieldId)
-      : undefined,
-  );
+      : undefined;
+  });
 }
 
 /** The owner's album's link for `service` now, null without one, or for an album that isn't theirs. */
@@ -118,11 +135,12 @@ export function linkBase(
   db: Database,
   { ownerId, albumId, service }: { ownerId: string; albumId: string; service: StreamingService },
 ): Promise<string | null> {
-  return readSnapshot(db, async (tx) =>
-    (await findAlbumIn(tx, albumId))?.ownerId === ownerId
+  return readSnapshot(db, async (tx) => {
+    const album = await findAlbumIn(tx, albumId);
+    return album && (await mayChangeAlbum(tx, ownerId, album))
       ? ((await findServiceLinkIn(tx, albumId, service))?.url ?? null)
-      : null,
-  );
+      : null;
+  });
 }
 
 /** The person's choices for a view now, each null when not made (FR-11.7). */

@@ -1254,7 +1254,11 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 
 There are deliberately **no** tools for sharing management, Trash purge, export, account actions, or administration (X-03).
 
-*Planned in P-TON-47 (FR-10.4, FR-07.19–FR-07.21), built in TON-192:* **editors' agents.** A Manage connection acts as its person does in the app, so the write tools also take folders, lists and albums inside shares the person can edit, under the commands' editor rules (TS-30). The field and option tools and `recover_from_trash` refuse on another owner's content. `get_overview` and `list_shared_with_me` give the person's role on each share. A tool call whose items span two owners' collections runs as a batch per owner.
+*Built in TON-192 (FR-10.4, FR-07.19–FR-07.21):* **editors' agents.** A Manage connection acts as its person does in the app (`authorizeShareEdit`, TS-30), so the write tools also take folders, lists and albums inside shares the person can edit, under the commands' editor rules.
+- **Reading:** `list_shared_with_me` gives each share's `role`, and the server's instructions say that shares with role edit take the write tools, inside them only.
+- **Bases:** the values a change is based on when the agent sends none (`albumBase`, `containerBase`, `fieldValueBase`, `linkBase`) are read for content the person edits too (`canEditAlbum`). For content they can't change, `update_album` bases on the attempted values, so the command answers `not_found` rather than a validation failure.
+- **Refused on another owner's content:** the field and option tools (their definitions stay the owner's) and `recover_from_trash` (agents never undo an editor's deletion).
+- **Batches** need no splitting: each item locks its own owner (TS-20). An approved batch runs in one transaction, so it takes every lock it needs first, the agent's own included, in one order (`lockCollections`). Two people approving batches on each other's shares at once never deadlock.
 
 *As built in TON-82:* the ordinary write tools (`apps/api/src/mcp/write-tools.ts`), for Manage collection connections.
 - **The path.** Each tool plans the app's own mutation envelopes, and `mcpWriter()` runs them as a batch: through the API's mutation runner, by `executeBatch`'s rules, item by item. Each item's changes go to the person's streams as it commits (X-08). A step that needs an earlier one, such as setting a field after applying it, depends on it (TS-25).

@@ -28,6 +28,7 @@ import {
   approvalState,
   approvalSummary,
   containerKinds,
+  shareRoles,
   fieldTypes,
   maxAlbums,
   maxContainers,
@@ -478,7 +479,7 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
     "list_shared_with_me",
     {
       title: "List Shared with me",
-      description: `The folders and lists others share with the user and they keep in Shared with me: whose each is, whether an invitation or a link shares it, and whether it can be opened now. Read one with list_container. ${userData}`,
+      description: `The folders and lists others share with the user and they keep in Shared with me: whose each is, whether an invitation or a link shares it, whether it can be opened now, and whether the user can edit it (role edit), which a Manage collection connection then does with the write tools, inside it only. Read one with list_container. ${userData}`,
       inputSchema: z.object({}),
       outputSchema: z.object({
         entries: z.array(
@@ -489,6 +490,10 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
             sharedBy: z.string(),
             via: z.object({ invitation: z.boolean(), link: z.boolean() }),
             available: z.boolean().describe("Whether it can be opened now."),
+            role: z
+              .enum(shareRoles)
+              .nullable()
+              .describe("view or edit (FR-07.18) while it can be opened; null once it can't."),
           }),
         ),
       }),
@@ -504,6 +509,7 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
           sharedBy: entry.owner.displayName ?? "a Tonaris member",
           via: entry.via,
           available: entry.available,
+          role: entry.role,
         })),
       });
     },

@@ -427,6 +427,8 @@ describe("Unsorted, Trash, fields and Shared with me (TS-63)", () => {
           sharedBy: "Denis",
           via: { invitation: true, link: false },
           available: true,
+          // Invited to view, as invitations are unless the owner says edit (FR-07.18).
+          role: "view",
         },
       ],
     });

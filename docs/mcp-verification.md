@@ -33,6 +33,7 @@ One prompt at a time, as `fixtures.ts` prints them:
 | 7 | Remove the option "Vinyl" | Approval: cleared from 1 album, can't be undone |
 | 8 | Empty Trash permanently; share "Verify" | Refused: no tool; it stays in the app |
 | 9 | Revoke in Settings; show the overview | The client is refused and asks to reconnect |
+| 10 | *Added in TON-192 (P-TON-47):* as a second member, a **Manage** connection on a list shared with them to edit: list Shared with me, rename the list, change an album's title, then rename the owner's list that isn't shared | Shared with me says role edit; the rename and the title land in the owner's collection, live in the owner's app; the unshared list is not found |
 
 ## Results
 

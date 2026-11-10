@@ -602,7 +602,10 @@ export function registerWriteTools(
       const base: Partial<AlbumFields> = {};
       for (const field of changed) {
         const given = args.base?.[field];
-        Object.assign(base, { [field]: given === undefined ? (current?.[field] ?? null) : given });
+        // An album the person can't change has no values to read: the command answers it as missing, before any
+        // compare-and-set, whatever the base says (FR-07.20).
+        const now = current ? current[field] : args.values[field];
+        Object.assign(base, { [field]: given === undefined ? (now ?? null) : given });
       }
       return run("update_album", args, () =>
         each(
