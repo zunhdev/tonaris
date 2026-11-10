@@ -1,10 +1,20 @@
 // design-system spec: the dark theme and typography, as a browser renders them (DS-11, DS-13), with frosted menus and
 // filled fields (DS-16, DS-20; TON-168).
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
+
+/**
+ * A page with nobody signed in. The project signs the creator in, and `/sign-in` sends a signed-in person on to the app
+ * once it knows (TON-185), which under load lands in the middle of a test (TON-194).
+ */
+async function signedOutPage(browser: Browser): Promise<Page> {
+  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  return context.newPage();
+}
 
 for (const path of ["/c", "/sign-in"]) {
-  test(`${path} loads dark`, async ({ page }) => {
+  test(`${path} loads dark`, async ({ page: signedIn, browser }) => {
+    const page = path === "/sign-in" ? await signedOutPage(browser) : signedIn;
     await page.goto(path);
     const html = page.locator("html");
     await expect(html).toHaveAttribute("data-theme", "dark");
@@ -26,7 +36,8 @@ for (const path of ["/c", "/sign-in"]) {
   });
 }
 
-test("Inter Variable loads from the app's own origin", async ({ page, baseURL }) => {
+test("Inter Variable loads from the app's own origin", async ({ browser, baseURL }) => {
+  const page = await signedOutPage(browser);
   const fonts: string[] = [];
   page.on("request", (request) => {
     if (request.resourceType() === "font") fonts.push(request.url());
@@ -56,8 +67,7 @@ const computedColor = (page: Page, value: string) =>
 test("fields are filled, with a faint edge that strengthens on hover (DS-20, TON-168)", async ({
   browser,
 }) => {
-  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
-  const page = await context.newPage();
+  const page = await signedOutPage(browser);
   await page.goto("/sign-in");
   const field = page.getByLabel("Email");
   // A headless browser refuses the passkey prompt, which marks the field invalid, with an edge of its own: once it has,
@@ -76,7 +86,7 @@ test("fields are filled, with a faint edge that strengthens on hover (DS-20, TON
     "border-top-color",
     await computedColor(page, "oklch(0.53 0.03 274)"),
   );
-  await context.close();
+  await page.context().close();
 });
 
 test("menus and the palette are frosted (DS-16, TON-168)", async ({ page }) => {
@@ -99,7 +109,8 @@ test("menus and the palette are frosted (DS-16, TON-168)", async ({ page }) => {
   );
 });
 
-test("text falls back to system fonts for scripts Inter lacks", async ({ page }) => {
+test("text falls back to system fonts for scripts Inter lacks", async ({ browser }) => {
+  const page = await signedOutPage(browser);
   await page.goto("/sign-in");
   // WebKit reports the family without the quotes Chromium keeps.
   const family = (await page.evaluate(() => getComputedStyle(document.body).fontFamily)).replaceAll(
@@ -111,7 +122,8 @@ test("text falls back to system fonts for scripts Inter lacks", async ({ page })
   expect(family).toContain("sans-serif");
 });
 
-test("the keyboard focus ring shows: a 2px solid focus outline (DS-115)", async ({ page }) => {
+test("the keyboard focus ring shows: a 2px solid focus outline (DS-115)", async ({ browser }) => {
+  const page = await signedOutPage(browser);
   await page.goto("/sign-in");
   await page.getByLabel("Email").fill("someone@example.com");
   await page.keyboard.press("Tab");
@@ -124,8 +136,7 @@ test("the keyboard focus ring shows: a 2px solid focus outline (DS-115)", async 
 test("typed text in an input is fg.primary at 14px, 16px on a phone (DS-13, DS-110; TON-101)", async ({
   browser,
 }) => {
-  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
-  const page = await context.newPage();
+  const page = await signedOutPage(browser);
   await page.goto("/sign-in");
   const field = page.getByRole("textbox").first();
   await field.fill("someone@example.com");
@@ -141,5 +152,5 @@ test("typed text in an input is fg.primary at 14px, 16px on a phone (DS-13, DS-1
   await expect(field).toHaveCSS("font-size", "14px");
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(field).toHaveCSS("font-size", "16px");
-  await context.close();
+  await page.context().close();
 });
