@@ -4,7 +4,7 @@
 import { sql } from "drizzle-orm";
 import { bytea, check, index, primaryKey, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
-import { emailStatuses, shareGrantStatuses } from "@tonaris/domain";
+import { emailStatuses, shareGrantStatuses, shareRoles } from "@tonaris/domain";
 
 import { users } from "./auth";
 import { containers } from "./collection";
@@ -29,9 +29,9 @@ export const shareLinks = table(
   ],
 );
 
-export { emailStatuses, shareGrantStatuses };
+export { emailStatuses, shareGrantStatuses, shareRoles };
 
-/** Invitations to view a container; delivery is tracked apart from the grant's status (TS-33). */
+/** Invitations to view or edit a container; delivery is tracked apart from the grant's status (TS-33, FR-07.18). */
 export const shareGrants = table(
   "share_grants",
   {
@@ -45,6 +45,8 @@ export const shareGrants = table(
     // The address the owner typed, which their dialog shows (DS-65, DS-69); the grantee's may change later.
     invitedEmail: text().notNull(),
     status: text({ enum: shareGrantStatuses }).notNull(),
+    // What the invitation lets its person do (FR-07.18); invitations made before roles view.
+    role: text({ enum: shareRoles }).notNull().default("view"),
     emailStatus: text({ enum: emailStatuses }),
     ...timestamps,
   },
@@ -56,6 +58,7 @@ export const shareGrants = table(
     index().on(t.granteeId),
     check("share_grants_status_check", oneOf(t.status, shareGrantStatuses)),
     check("share_grants_email_status_check", oneOf(t.emailStatus, emailStatuses)),
+    check("share_grants_role_check", oneOf(t.role, shareRoles)),
   ],
 );
 

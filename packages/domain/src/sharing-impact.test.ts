@@ -168,6 +168,7 @@ describe("as a property, against the access rules", () => {
             containerId: each.on.id,
             granteeId: each.who,
             status: each.pending ? "pending" : "accepted",
+            role: "view",
           })),
           links: [],
           references: [],

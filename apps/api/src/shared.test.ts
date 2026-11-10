@@ -96,6 +96,7 @@ test("saving a link keeps it once, copying nothing; opening it alone adds nothin
       kind: "list",
       via: { invitation: false, link: true },
       available: true,
+      role: "view",
       containers: [],
     },
   ]);

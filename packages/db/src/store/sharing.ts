@@ -52,7 +52,7 @@ export function sharingStore(tx: Transaction) {
     },
     async findOpenGrant(containerId, granteeId) {
       const [grant] = await tx
-        .select({ id: shareGrants.id, status: shareGrants.status })
+        .select({ id: shareGrants.id, status: shareGrants.status, role: shareGrants.role })
         .from(shareGrants)
         .where(
           and(
@@ -71,6 +71,7 @@ export function sharingStore(tx: Transaction) {
         .select({
           id: shareGrants.id,
           status: shareGrants.status,
+          role: shareGrants.role,
           containerId: shareGrants.containerId,
           granteeId: shareGrants.granteeId,
         })
@@ -89,6 +90,16 @@ export function sharingStore(tx: Transaction) {
       if (moved.length > 0 && ended)
         await recordInLedger(tx, { type: "shareGrant.ended", grantId: id, status: ended });
       return moved.length > 0;
+    },
+    async setGrantRole(id, role) {
+      const [before] = await tx
+        .select({ role: shareGrants.role })
+        .from(shareGrants)
+        .where(eq(shareGrants.id, id));
+      await tx.update(shareGrants).set({ role }).where(eq(shareGrants.id, id));
+      // A lowered role stays lowered after a restore (FR-07.18, TS-113); a raise needs no record.
+      if (before?.role === "edit" && role === "view")
+        await recordInLedger(tx, { type: "shareGrant.roleLowered", grantId: id });
     },
     async setGrantEmailStatus(id, status) {
       await tx.update(shareGrants).set({ emailStatus: status }).where(eq(shareGrants.id, id));

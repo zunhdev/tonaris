@@ -1,6 +1,6 @@
 // A restore's reconciliation (TS-113, Q-04): the ledger's events newer than the backup, applied in order to the
 // restored database before it serves anyone, so a deleted account, a revoked connection, link, grant or admission,
-// a removed passkey and a purged Trash unit stay gone. Each event is applied as its change was, and applying it again changes nothing.
+// a grant's lowered role, a removed passkey and a purged Trash unit stay gone. Each event is applied as its change was, and applying it again changes nothing.
 
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
@@ -23,6 +23,7 @@ export async function replayLedger(
     "connection.revoked": 0,
     "shareLink.revoked": 0,
     "shareGrant.ended": 0,
+    "shareGrant.roleLowered": 0,
     "trash.purged": 0,
     "admission.revoked": 0,
     "passkey.removed": 0,
@@ -69,6 +70,9 @@ async function apply(db: Database, event: LedgerEvent): Promise<void> {
             inArray(shareGrants.status, [...openGrantStatuses]),
           ),
         );
+      return;
+    case "shareGrant.roleLowered":
+      await db.update(shareGrants).set({ role: "view" }).where(eq(shareGrants.id, event.grantId));
       return;
     case "trash.purged":
       await db.transaction((tx) => purgeRows(tx, event));

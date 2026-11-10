@@ -4374,6 +4374,36 @@
                               "accepted"
                             ]
                           },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ],
+                            "description": "What the invitation lets them do (FR-07.18)."
+                          },
+                          "editableThrough": {
+                            "description": "The nearest folder above through which this person can edit already, by an accepted invitation (FR-07.18); null if none.",
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "containerId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "containerId",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          },
                           "emailStatus": {
                             "type": [
                               "string",
@@ -4393,6 +4423,8 @@
                           "email",
                           "displayName",
                           "status",
+                          "role",
+                          "editableThrough",
                           "emailStatus"
                         ],
                         "additionalProperties": false
@@ -4580,6 +4612,14 @@
                             ],
                             "additionalProperties": false
                           },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ],
+                            "description": "What it lets them do (FR-07.18)."
+                          },
                           "invitedAt": {
                             "type": "string",
                             "format": "date-time",
@@ -4590,10 +4630,11 @@
                           "id",
                           "owner",
                           "container",
+                          "role",
                           "invitedAt"
                         ],
                         "additionalProperties": false,
-                        "description": "An invitation to view a folder or list (FR-07.5)."
+                        "description": "An invitation to view or edit a folder or list (FR-07.5, FR-07.18)."
                       }
                     }
                   },
@@ -4712,6 +4753,14 @@
                               ],
                               "additionalProperties": false
                             },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "view",
+                                "edit"
+                              ],
+                              "description": "What it lets them do (FR-07.18)."
+                            },
                             "invitedAt": {
                               "type": "string",
                               "format": "date-time",
@@ -4722,10 +4771,11 @@
                             "id",
                             "owner",
                             "container",
+                            "role",
                             "invitedAt"
                           ],
                           "additionalProperties": false,
-                          "description": "An invitation to view a folder or list (FR-07.5)."
+                          "description": "An invitation to view or edit a folder or list (FR-07.5, FR-07.18)."
                         }
                       },
                       "required": [
@@ -4790,6 +4840,14 @@
                               ],
                               "additionalProperties": false
                             },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "view",
+                                "edit"
+                              ],
+                              "description": "What it lets them do (FR-07.18)."
+                            },
                             "invitedAt": {
                               "type": "string",
                               "format": "date-time",
@@ -4800,10 +4858,11 @@
                             "id",
                             "owner",
                             "container",
+                            "role",
                             "invitedAt"
                           ],
                           "additionalProperties": false,
-                          "description": "An invitation to view a folder or list (FR-07.5)."
+                          "description": "An invitation to view or edit a folder or list (FR-07.5, FR-07.18)."
                         }
                       },
                       "required": [
@@ -6367,6 +6426,18 @@
                             "type": "boolean",
                             "description": "Whether it can be opened now (FR-07.13)."
                           },
+                          "role": {
+                            "description": "The person's role on it while it can be opened (FR-07.18); null once it can't.",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "view",
+                              "edit",
+                              null
+                            ]
+                          },
                           "containers": {
                             "type": "array",
                             "items": {
@@ -6415,6 +6486,7 @@
                           "kind",
                           "via",
                           "available",
+                          "role",
                           "containers"
                         ],
                         "additionalProperties": false,
@@ -6486,6 +6558,14 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "view",
+                        "edit"
+                      ],
+                      "description": "The reader's role on the root (FR-07.18): edit through an accepted invitation to edit it or a folder above, else view."
                     },
                     "owner": {
                       "type": "object",
@@ -6775,7 +6855,7 @@
                         "additionalProperties": false,
                         "description": "An account-level custom field (FR-03.6)."
                       },
-                      "description": "The fields the albums use, each with only the options they choose."
+                      "description": "For a viewer, the fields the albums use, each with only the options they choose; for an editor, all the owner's fields with all their options (FR-07.12, FR-07.20)."
                     },
                     "fieldValues": {
                       "type": "array",
@@ -6829,6 +6909,7 @@
                   },
                   "required": [
                     "rootId",
+                    "role",
                     "owner",
                     "containers",
                     "albums",
@@ -7082,6 +7163,14 @@
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                     },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "view",
+                        "edit"
+                      ],
+                      "description": "The reader's role on the root (FR-07.18): edit through an accepted invitation to edit it or a folder above, else view."
+                    },
                     "owner": {
                       "type": "object",
                       "properties": {
@@ -7370,7 +7459,7 @@
                         "additionalProperties": false,
                         "description": "An account-level custom field (FR-03.6)."
                       },
-                      "description": "The fields the albums use, each with only the options they choose."
+                      "description": "For a viewer, the fields the albums use, each with only the options they choose; for an editor, all the owner's fields with all their options (FR-07.12, FR-07.20)."
                     },
                     "fieldValues": {
                       "type": "array",
@@ -7424,6 +7513,7 @@
                   },
                   "required": [
                     "rootId",
+                    "role",
                     "owner",
                     "containers",
                     "albums",
@@ -9442,6 +9532,14 @@
                             "minLength": 1,
                             "maxLength": 320,
                             "description": "The address to invite, as typed."
+                          },
+                          "role": {
+                            "description": "What the invitation lets them do (FR-07.18); view unless given.",
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ]
                           }
                         },
                         "required": [
@@ -9956,6 +10054,47 @@
                       "name",
                       "args",
                       "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "share.setRole"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "grantId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "grantId",
+                          "role"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
                     ]
                   }
                 ],
@@ -11857,6 +11996,14 @@
                             "minLength": 1,
                             "maxLength": 320,
                             "description": "The address to invite, as typed."
+                          },
+                          "role": {
+                            "description": "What the invitation lets them do (FR-07.18); view unless given.",
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ]
                           }
                         },
                         "required": [
@@ -12371,6 +12518,47 @@
                       "name",
                       "args",
                       "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "share.setRole"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "grantId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "grantId",
+                          "role"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
                     ]
                   }
                 ],
@@ -14272,6 +14460,14 @@
                             "minLength": 1,
                             "maxLength": 320,
                             "description": "The address to invite, as typed."
+                          },
+                          "role": {
+                            "description": "What the invitation lets them do (FR-07.18); view unless given.",
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ]
                           }
                         },
                         "required": [
@@ -14786,6 +14982,47 @@
                       "name",
                       "args",
                       "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "share.setRole"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "grantId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "grantId",
+                          "role"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
                     ]
                   }
                 ],
@@ -20275,6 +20512,14 @@
                         "minLength": 1,
                         "maxLength": 320,
                         "description": "The address to invite, as typed."
+                      },
+                      "role": {
+                        "description": "What the invitation lets them do (FR-07.18); view unless given.",
+                        "type": "string",
+                        "enum": [
+                          "view",
+                          "edit"
+                        ]
                       }
                     },
                     "required": [
@@ -20827,6 +21072,49 @@
                   "name",
                   "args",
                   "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "share.setRole"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "grantId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "view",
+                          "edit"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "grantId",
+                      "role"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
                 ],
                 "additionalProperties": false
               }

@@ -8,10 +8,12 @@ import { eq } from "drizzle-orm";
 import * as fc from "fast-check";
 
 import {
+  editableContainers as modelEditable,
   nameKey,
   readableContainers as modelReadable,
   searchKey,
   shareGrantStatuses,
+  shareRoles,
   shareToken,
   shareTokenHash,
   trashRetentionDays,
@@ -20,11 +22,18 @@ import {
   type Mutation,
   type Principal,
   type ShareGrantStatus,
+  type ShareRole,
   type ShareViewer,
   type SharingState,
 } from "@tonaris/domain";
 
-import { canReadContainer, readableContainers } from "./access";
+import {
+  canEditContainer,
+  canReadContainer,
+  editableContainers,
+  readableContainers,
+} from "./access";
+import { pendingInvitations } from "./invitations";
 import {
   albumServiceLinks,
   containers,
@@ -34,7 +43,13 @@ import {
   trashUnits,
   users,
 } from "./schema";
-import { findShareLink, linkReferenceState, sharedSnapshot } from "./sharing";
+import {
+  findShareLink,
+  linkReferenceState,
+  shareSettings,
+  sharedSnapshot,
+  sharedWithMe,
+} from "./sharing";
 import { executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
@@ -113,10 +128,13 @@ async function grant(
   containerId: string,
   granteeId: string,
   status: ShareGrantStatus = "accepted",
+  role: ShareRole = "view",
 ) {
+  const id = uuidv7();
   await t.db
     .insert(shareGrants)
-    .values({ id: uuidv7(), containerId, granteeId, invitedEmail: "someone@example.com", status });
+    .values({ id, containerId, granteeId, invitedEmail: "someone@example.com", status, role });
+  return id;
 }
 
 const secret = "test secret";
@@ -145,6 +163,7 @@ describe("the CTEs agree with the model (TS-31)", () => {
         pick: fc.nat(),
         anna: fc.boolean(),
         status: fc.constantFrom(...shareGrantStatuses),
+        role: fc.constantFrom(...shareRoles),
       }),
       { maxLength: 5 },
     ),
@@ -153,7 +172,7 @@ describe("the CTEs agree with the model (TS-31)", () => {
     }),
   });
 
-  test("readable containers and the read check, for people and links", async () => {
+  test("readable and editable containers, and the read and edit checks, for people and links", async () => {
     const owner = await newPrincipal();
     const anna = await newPrincipal();
     const ben = await newPrincipal();
@@ -199,6 +218,7 @@ describe("the CTEs agree with the model (TS-31)", () => {
             containerId: pickId(each.pick),
             granteeId: each.anna ? anna.userId : ben.userId,
             status: each.status,
+            role: each.role,
           };
           if (
             open(row.status) &&
@@ -268,6 +288,18 @@ describe("the CTEs agree with the model (TS-31)", () => {
           // oxlint-disable-next-line no-await-in-loop
           const checks = await Promise.all(
             tree.map(({ id }) => canReadContainer(t.db, viewer, id)),
+          );
+          expect(checks).toEqual(tree.map(({ id }) => expected.has(id)));
+        }
+        for (const userId of [anna.userId, ben.userId]) {
+          const expected = modelEditable(state, userId);
+          // oxlint-disable-next-line no-await-in-loop
+          const found = await editableContainers(t.db, userId);
+          const ours = new Map([...found].filter(([id]) => tree.some((each) => each.id === id)));
+          expect(ours).toEqual(expected);
+          // oxlint-disable-next-line no-await-in-loop
+          const checks = await Promise.all(
+            tree.map(({ id }) => canEditContainer(t.db, userId, id)),
           );
           expect(checks).toEqual(tree.map(({ id }) => expected.has(id)));
         }
@@ -389,6 +421,27 @@ describe("the shared snapshot (FR-07.11, FR-07.12)", () => {
       { id: mood, name: "Mood", type: "single_choice", options: [{ id: heavy, label: "Heavy" }] },
     ]);
     expect(snapshot?.fieldValues).toEqual([{ albumId: nightfall.id, fieldId: mood, value: heavy }]);
+    expect(snapshot?.role).toBe("view");
+
+    // An editor sees all the owner's fields, used or not, with all their options (FR-07.20, "An unused field").
+    const cleo = await newPrincipal();
+    await grant(metal.id, cleo.userId, "accepted", "edit");
+    const edited = await sharedSnapshot(t.db, person(cleo), metal.id);
+    expect(edited?.role).toBe("edit");
+    expect(edited?.fields).toEqual([
+      {
+        id: mood,
+        name: "Mood",
+        type: "single_choice",
+        options: [
+          { id: calm, label: "Calm" },
+          { id: heavy, label: "Heavy" },
+        ],
+      },
+      { id: rating, name: "Rating", type: "number", options: [] },
+      { id: era, name: "Era", type: "text", options: [] },
+    ]);
+    expect(edited?.fieldValues).toEqual(snapshot?.fieldValues);
 
     // A list shared on its own: its private parent stays unknown.
     const ben = await newPrincipal();
@@ -398,6 +451,61 @@ describe("the shared snapshot (FR-07.11, FR-07.12)", () => {
     // Nothing for someone without access, nor for the unshared list.
     expect(await sharedSnapshot(t.db, person(ben), metal.id)).toBeUndefined();
     expect(await sharedSnapshot(t.db, person(anna), unshared.id)).toBeUndefined();
+  });
+});
+
+describe("roles in what reads say (FR-07.18)", () => {
+  test("the owner's dialog gives each invitation's role, and the folder above it edits through", async () => {
+    const owner = await newPrincipal("Denis");
+    const anna = await newPrincipal("Anna");
+    const ben = await newPrincipal();
+    const metal = await made(owner, "folder", "Metal");
+    const doom = await made(owner, "list", "Doom", metal.id);
+    await grant(metal.id, anna.userId, "accepted", "edit");
+    await grant(metal.id, ben.userId, "pending", "edit");
+    const annaOnDoom = await grant(doom.id, anna.userId, "accepted", "view");
+    const benOnDoom = await grant(doom.id, ben.userId, "pending", "edit");
+    const settings = await shareSettings(t.db, owner.userId, doom.id);
+    expect(
+      settings?.invitations.map(({ id, role, editableThrough }) => ({ id, role, editableThrough })),
+    ).toEqual([
+      { id: annaOnDoom, role: "view", editableThrough: { containerId: metal.id, name: "Metal" } },
+      // Ben's invitation to "Metal" is still pending: it gives nothing yet.
+      { id: benOnDoom, role: "edit", editableThrough: null },
+    ]);
+    // Moved out of "Metal", "Doom" has no folder above to edit through.
+    await run(owner, {
+      name: "container.move",
+      args: { id: doom.id, parentId: null },
+      base: { parentId: metal.id },
+    });
+    expect(
+      (await shareSettings(t.db, owner.userId, doom.id))?.invitations[0]?.editableThrough,
+    ).toBeNull();
+  });
+
+  test("the recipient's invitations and Shared with me give the role", async () => {
+    const owner = await newPrincipal("Denis");
+    const anna = await newPrincipal();
+    const doom = await made(owner, "list", "Doom");
+    const metal = await made(owner, "folder", "Metal");
+    const pending = await grant(doom.id, anna.userId, "pending", "edit");
+    expect(
+      (await pendingInvitations(t.db, anna.userId)).map(({ id, role }) => ({ id, role })),
+    ).toEqual([{ id: pending, role: "edit" }]);
+    await run(
+      { kind: "user", userId: anna.userId, role: "user", client: "web" },
+      { name: "share.accept", args: { grantId: pending } },
+    );
+    await grant(metal.id, anna.userId, "accepted", "view");
+    await t.db
+      .insert(savedReferences)
+      .values({ viewerId: anna.userId, containerId: metal.id, linkId: null });
+    const entries = await sharedWithMe(t.db, anna.userId);
+    expect(entries.map(({ name, role }) => ({ name, role }))).toEqual([
+      { name: "Doom", role: "edit" },
+      { name: "Metal", role: "view" },
+    ]);
   });
 });
 

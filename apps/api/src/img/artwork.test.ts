@@ -126,6 +126,7 @@ describe("artwork signatures (TS-103)", () => {
     const without = album(null);
     const snapshot: SharedSnapshot = {
       rootId: uuidv7(),
+      role: "view",
       owner: { displayName: "Anna" },
       containers: [],
       albums: [withArtwork, without],

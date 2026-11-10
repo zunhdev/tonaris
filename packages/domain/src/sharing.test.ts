@@ -1,6 +1,6 @@
-// Read access through sharing (FR-07.6, FR-07.8–FR-07.10, FR-07.16; TS-31, TS-32): link tokens, the sources a
-// viewer reads through, and, as properties over random trees run through the real commands, inheritance across
-// moves, Trash suspension and recovery, and revocations that stay in effect.
+// Access through sharing (FR-07.6, FR-07.8–FR-07.10, FR-07.16, FR-07.18; TS-31, TS-32): link tokens, the sources a
+// viewer reads through, the role a person edits with, and, as properties over random trees run through the real
+// commands, inheritance across moves, Trash suspension and recovery, and revocations that stay in effect.
 
 import { describe, expect, test } from "bun:test";
 
@@ -11,8 +11,12 @@ import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
 import type { Principal } from "./principals";
 import {
+  editableContainers,
+  editSourcesOf,
   readableContainers,
+  roleOn,
   shareGrantStatuses,
+  shareRoles,
   shareToken,
   shareTokenHash,
   shareTokenSchema,
@@ -33,12 +37,19 @@ const node = (id: string, parentId: string | null = null, trashed = false) => ({
   parentId,
   trashed,
 });
-const state = (values: Partial<SharingState>): SharingState => ({
+type Grant = SharingState["grants"][number];
+/** A state from what a test names; a grant without a role views, as invitations did before roles. */
+const state = ({
+  grants = [],
+  ...values
+}: Partial<Omit<SharingState, "grants">> & {
+  grants?: readonly (Omit<Grant, "role"> & { role?: Grant["role"] })[];
+}): SharingState => ({
   containers: [],
-  grants: [],
   links: [],
   references: [],
   ...values,
+  grants: grants.map((grant) => ({ role: "view", ...grant })),
 });
 
 describe("link tokens (TS-32)", () => {
@@ -133,6 +144,63 @@ describe("the access model (FR-07.6, FR-07.8, FR-07.10, FR-07.16)", () => {
   });
 });
 
+describe("the role model (FR-07.18)", () => {
+  const [metal, doom, other] = [uuidv7(), uuidv7(), uuidv7()];
+  const tree = [node(metal), node(doom, metal), node(other)];
+  const editMetal = {
+    containerId: metal,
+    granteeId: anna,
+    status: "accepted" as const,
+    role: "edit" as const,
+  };
+
+  test("only accepted grants whose role is edit are edit sources", () => {
+    for (const status of shareGrantStatuses) {
+      for (const role of shareRoles) {
+        const sources = editSourcesOf(
+          state({ grants: [{ containerId: metal, granteeId: anna, status, role }] }),
+          anna,
+        );
+        expect([status, role, [...sources]]).toEqual([
+          status,
+          role,
+          status === "accepted" && role === "edit" ? [metal] : [],
+        ]);
+      }
+    }
+  });
+
+  test("edit through a folder wins over a view invitation inside it", () => {
+    const viewDoom = { containerId: doom, granteeId: anna, status: "accepted" as const };
+    const now = state({ containers: tree, grants: [editMetal, viewDoom] });
+    expect(new Set(editableContainers(now, anna).keys())).toEqual(new Set([metal, doom]));
+    expect(roleOn(now, annaViews, doom)).toBe("edit");
+    expect(roleOn(now, annaViews, other)).toBeUndefined();
+    expect(roleOn(now, { kind: "person", userId: ben }, doom)).toBeUndefined();
+  });
+
+  test("a view invitation, or a link, reads only", () => {
+    const linkId = uuidv7();
+    const now = state({
+      containers: tree,
+      grants: [{ containerId: metal, granteeId: anna, status: "accepted" }],
+      links: [{ id: linkId, containerId: other, revoked: false }],
+      references: [{ viewerId: anna, containerId: other, linkId }],
+    });
+    expect(editableContainers(now, anna).size).toBe(0);
+    expect(roleOn(now, annaViews, doom)).toBe("view");
+    expect(roleOn(now, annaViews, other)).toBe("view");
+    expect(roleOn(now, { kind: "link", linkId }, other)).toBe("view");
+  });
+
+  test("Trash suspends a role, as it suspends access", () => {
+    const trashed = [node(metal, null, true), node(doom, metal), node(other)];
+    const now = state({ containers: trashed, grants: [editMetal] });
+    expect(editableContainers(now, anna).size).toBe(0);
+    expect(roleOn(now, annaViews, doom)).toBeUndefined();
+  });
+});
+
 /**
  * The upward reading of the same rule, which the database's read check uses (TS-31): from the container up while
  * every node is active, is any of them a source?
@@ -140,6 +208,17 @@ describe("the access model (FR-07.6, FR-07.8, FR-07.10, FR-07.16)", () => {
 function readsUpward(sharing: SharingState, viewer: ShareViewer, id: string): boolean {
   const byId = new Map(sharing.containers.map((each) => [each.id, each]));
   const sources = sourcesOf(sharing, viewer);
+  for (let at = byId.get(id); at && !at.trashed;) {
+    if (sources.has(at.id)) return true;
+    at = at.parentId === null ? undefined : byId.get(at.parentId);
+  }
+  return false;
+}
+
+/** The upward reading of the edit rule, which the database's edit check uses: is any active node up an edit source? */
+function editsUpward(sharing: SharingState, userId: string, id: string): boolean {
+  const byId = new Map(sharing.containers.map((each) => [each.id, each]));
+  const sources = editSourcesOf(sharing, userId);
   for (let at = byId.get(id); at && !at.trashed;) {
     if (sources.has(at.id)) return true;
     at = at.parentId === null ? undefined : byId.get(at.parentId);
@@ -177,13 +256,14 @@ describe("access across moves, Trash and revocation, as properties", () => {
       }
       return made;
     });
-  /** Grants to Anna and Ben of every status, and links, each on a random container. */
+  /** Grants to Anna and Ben of every status and role, and links, each on a random container. */
   const shares = fc.record({
     grants: fc.array(
       fc.record({
         pick: fc.nat(),
         anna: fc.boolean(),
         status: fc.constantFrom(...shareGrantStatuses),
+        role: fc.constantFrom(...shareRoles),
       }),
       { maxLength: 4 },
     ),
@@ -191,7 +271,7 @@ describe("access across moves, Trash and revocation, as properties", () => {
   });
   const steps = fc.array(
     fc.record({
-      kind: fc.constantFrom("move", "trash", "revoke"),
+      kind: fc.constantFrom("move", "trash", "revoke", "lower"),
       pick: fc.nat(),
       to: fc.option(fc.nat(), { nil: null }),
     }),
@@ -213,10 +293,11 @@ describe("access across moves, Trash and revocation, as properties", () => {
         };
         const ids = tree.map((each) => each.id);
         const pickId = (pick: number) => ids[pick % ids.length]!;
-        const grants = plan.grants.map((each) => ({
+        const grants: Grant[] = plan.grants.map((each) => ({
           containerId: pickId(each.pick),
           granteeId: each.anna ? anna : ben,
           status: each.status,
+          role: each.role,
         }));
         const links = plan.links.map((each) => ({
           id: uuidv7(),
@@ -243,11 +324,24 @@ describe("access across moves, Trash and revocation, as properties", () => {
         ];
         const readableNow = () =>
           viewers.map((viewer) => [...readableContainers(snapshot(), viewer).keys()].toSorted());
+        const editableNow = () =>
+          [anna, ben].map((userId) =>
+            [...editableContainers(snapshot(), userId).keys()].toSorted(),
+          );
         const checkUpward = () => {
           const now = snapshot();
           for (const viewer of viewers) {
             const readable = readableContainers(now, viewer);
             for (const id of ids) expect(readable.has(id)).toBe(readsUpward(now, viewer, id));
+          }
+          for (const userId of [anna, ben]) {
+            const editable = editableContainers(now, userId);
+            const readable = readableContainers(now, { kind: "person", userId });
+            for (const id of ids) {
+              expect(editable.has(id)).toBe(editsUpward(now, userId, id));
+              // Whoever may edit may read.
+              if (editable.has(id)) expect(readable.has(id)).toBe(true);
+            }
           }
         };
 
@@ -281,6 +375,7 @@ describe("access across moves, Trash and revocation, as properties", () => {
             }
           } else if (step.kind === "trash" && !target.trashed) {
             const before = readableNow();
+            const editableBefore = editableNow();
             const unitId = uuidv7();
             // oxlint-disable-next-line no-await-in-loop
             const deleted = await run({
@@ -289,9 +384,12 @@ describe("access across moves, Trash and revocation, as properties", () => {
               args: { id: target.id, unitId },
             });
             expect(deleted.status).toBe("applied");
-            // Nothing in Trash is readable (FR-07.10).
+            // Nothing in Trash is readable or editable (FR-07.10, FR-07.18).
             for (const viewer of viewers) {
               expect(readableContainers(snapshot(), viewer).has(target.id)).toBe(false);
+            }
+            for (const userId of [anna, ben]) {
+              expect(editableContainers(snapshot(), userId).has(target.id)).toBe(false);
             }
             // Recovery to where it was resumes exactly what was readable before.
             // oxlint-disable-next-line no-await-in-loop
@@ -302,6 +400,17 @@ describe("access across moves, Trash and revocation, as properties", () => {
             });
             expect(recovered.status).toBe("applied");
             expect(readableNow()).toEqual(before);
+            expect(editableNow()).toEqual(editableBefore);
+          } else if (step.kind === "lower") {
+            // Lowering a role to view takes editing away and leaves reading as it was.
+            const before = readableNow();
+            const editableBefore = editableNow();
+            const grant = grants[step.pick % Math.max(grants.length, 1)];
+            if (grant) grant.role = "view";
+            expect(readableNow()).toEqual(before);
+            for (const [at, editable] of editableNow().entries()) {
+              for (const id of editable) expect(editableBefore[at]).toContain(id);
+            }
           } else if (step.kind === "revoke") {
             // Revoking a link, or withdrawing a grant, never gives anyone more.
             const before = readableNow();
@@ -336,8 +445,18 @@ describe("access across moves, Trash and revocation, as properties", () => {
     const run = (mutation: Mutation) =>
       runCommand(mutationSchema.parse(mutation), { principal, store, now: new Date() });
     const link = { id: uuidv7(), containerId: metal.id, revoked: false };
-    const pending = { containerId: metal.id, granteeId: ben, status: "pending" as const };
-    const accepted = { containerId: metal.id, granteeId: anna, status: "accepted" as const };
+    const pending = {
+      containerId: metal.id,
+      granteeId: ben,
+      status: "pending" as const,
+      role: "view" as const,
+    };
+    const accepted = {
+      containerId: metal.id,
+      granteeId: anna,
+      status: "accepted" as const,
+      role: "edit" as const,
+    };
     const now = (): SharingState => ({
       containers: [...containers.values()].map(({ id, parentId, trashed }) =>
         node(id, parentId, trashed),
@@ -350,8 +469,9 @@ describe("access across moves, Trash and revocation, as properties", () => {
     await run({ mutationId: uuidv7(), name: "container.delete", args: { id: metal.id, unitId } });
     link.revoked = true;
     await run({ mutationId: uuidv7(), name: "trash.recover", args: { unitId } });
-    // The accepted grant resumes; the pending one stays pending; the revoked link stays dead.
+    // The accepted grant resumes, its role with it; the pending one stays pending; the revoked link stays dead.
     expect(readableContainers(now(), annaViews).has(metal.id)).toBe(true);
+    expect(editableContainers(now(), anna).has(metal.id)).toBe(true);
     expect(readableContainers(now(), { kind: "person", userId: ben }).size).toBe(0);
     expect(readableContainers(now(), { kind: "link", linkId: link.id }).size).toBe(0);
   });

@@ -25,6 +25,7 @@ const invitationColumns = {
   containerId: containers.id,
   containerName: containers.name,
   kind: containers.kind,
+  role: shareGrants.role,
   trashedAt: containers.trashedAt,
 };
 
@@ -35,12 +36,14 @@ type InvitationRow = {
   containerId: string;
   containerName: string;
   kind: "folder" | "list";
+  role: "view" | "edit";
 };
 
 const invitationOf = (row: InvitationRow): Invitation => ({
   id: row.id,
   owner: { displayName: row.ownerName },
   container: { id: row.containerId, name: row.containerName, kind: row.kind },
+  role: row.role,
   invitedAt: row.createdAt.toISOString(),
 });
 

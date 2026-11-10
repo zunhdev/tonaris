@@ -148,7 +148,13 @@ export {
   recordInvitationEmail,
 } from "./invitations";
 export { searchCollection } from "./search";
-export { canReadContainer, readableContainers } from "./access";
+export {
+  canEditContainer,
+  canReadContainer,
+  editableContainers,
+  readableContainers,
+  roleOn,
+} from "./access";
 export { sharingImpact, type ImpactQuery } from "./sharing-impact";
 export {
   findShareLink,
