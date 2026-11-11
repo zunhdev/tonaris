@@ -8,7 +8,7 @@ import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/cli
 import { z } from "zod";
 
 import { albums, containers, memberships } from "@tonaris/db";
-import { mcpScopes, nameKey, searchKey, type McpMode } from "@tonaris/domain";
+import { latinKey, mcpScopes, nameKey, type McpMode } from "@tonaris/domain";
 
 import type { createTestApp } from "../testing";
 
@@ -161,8 +161,8 @@ export function mcpHarness(current: () => TestApp) {
         title,
         artistCredit,
         originalYear: year,
-        searchTitleKey: searchKey(title),
-        searchArtistKey: searchKey(artistCredit),
+        searchTitleKey: latinKey(title),
+        searchArtistKey: latinKey(artistCredit),
       });
     return id;
   }
@@ -179,7 +179,7 @@ export function mcpHarness(current: () => TestApp) {
         parentId: null,
         name,
         nameKey: nameKey(name),
-        searchNameKey: searchKey(name),
+        searchNameKey: latinKey(name),
       });
     if (albumIds.length > 0) {
       await current()

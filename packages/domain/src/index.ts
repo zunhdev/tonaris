@@ -266,7 +266,18 @@ export {
   type Place,
   type Position,
 } from "./positions";
-export { matchRange, nameKey, searchKey, searchTier, type SearchTier } from "./normalize";
+export {
+  latinKey,
+  matchRange,
+  nameKey,
+  searchKey,
+  searchMatches,
+  searchParts,
+  searchText,
+  searchTier,
+  type SearchText,
+  type SearchTier,
+} from "./normalize";
 export {
   conflictOutcomeSchema,
   errorCodes,

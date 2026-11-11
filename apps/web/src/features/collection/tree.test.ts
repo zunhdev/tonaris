@@ -105,6 +105,7 @@ describe("the sidebar tree (DS-27)", () => {
     expect(names(typeAhead(rows, 1, "du"))).toBe("Dub");
     expect(names(typeAhead(rows, 0, "dr"))).toBe("drone");
     expect(names(typeAhead(rows, 0, "oxa"))).toBe("Öxabäck");
+    expect(names(typeAhead(rows, 0, "oexa"))).toBe("Öxabäck");
     expect(names(typeAhead(rows, 0, "un"))).toBe("Unsorted");
     expect(typeAhead(rows, 0, "zz")).toBeUndefined();
   });

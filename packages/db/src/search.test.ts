@@ -5,13 +5,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import { eq, sql } from "drizzle-orm";
 
-import {
-  defaultSearchLimit,
-  nameKey,
-  searchKey,
-  trashRetentionDays,
-  uuidv7,
-} from "@tonaris/domain";
+import { defaultSearchLimit, latinKey, nameKey, trashRetentionDays, uuidv7 } from "@tonaris/domain";
 import normalize from "@tonaris/domain/fixtures/normalize.json";
 import parity from "@tonaris/domain/fixtures/search.json";
 
@@ -63,7 +57,7 @@ async function insertContainer(
     parentId: values.parentId ?? null,
     name: values.name,
     nameKey: nameKey(values.name),
-    searchNameKey: searchKey(values.name),
+    searchNameKey: latinKey(values.name),
   });
   return id;
 }
@@ -76,8 +70,8 @@ const albumRow = (ownerId: string, title: string, artistCredit: string, id = uui
   releaseType: "album" as const,
   isLive: false,
   originalYear: 1990,
-  searchTitleKey: searchKey(title),
-  searchArtistKey: searchKey(artistCredit),
+  searchTitleKey: latinKey(title),
+  searchArtistKey: latinKey(artistCredit),
 });
 
 async function insertAlbum(ownerId: string, title: string, artistCredit: string) {
@@ -111,7 +105,7 @@ describe("the parity fixture (X-02, TS-50)", () => {
         parentId: each.parent === null ? null : idOf(each.parent),
         name: each.name,
         nameKey: nameKey(each.name),
-        searchNameKey: searchKey(each.name),
+        searchNameKey: latinKey(each.name),
         description: "description" in each ? each.description : null,
         ...(await trashed("list", each.ref, each.trashed)),
       })),
@@ -201,6 +195,44 @@ test("the migrate command fills in container keys the migration left empty (TS-1
   const [row] = await t.db.select().from(containers).where(eq(containers.id, id));
   expect(row?.searchNameKey).toBe("bjork favorites");
   expect(await fillSearchKeys(t.db)).toBe(0);
+});
+
+test("the migrate command fills in album keys the TON-201 migration emptied, in Latin spellings", async () => {
+  const ownerId = await newOwner();
+  const id = await insertAlbum(ownerId, "Икра", "Мумий Тролль");
+  await t.db
+    .update(albums)
+    .set({ searchTitleKey: "", searchArtistKey: "" })
+    .where(eq(albums.id, id));
+  expect(await fillSearchKeys(t.db)).toBe(1);
+  const [row] = await t.db.select().from(albums).where(eq(albums.id, id));
+  expect([row?.searchTitleKey, row?.searchArtistKey]).toEqual(["ikra", "mumiy troll"]);
+  expect(await fillSearchKeys(t.db)).toBe(0);
+});
+
+test("finds names by other spellings, ranked and located as the app does (TON-201)", async () => {
+  const ownerId = await newOwner();
+  const folder = await insertContainer(ownerId, { kind: "folder", name: "Русский рок" });
+  await insertContainer(ownerId, { kind: "list", name: "Кино", parentId: folder });
+  await insertContainer(ownerId, { kind: "list", name: "Kinoband" });
+  await insertAlbum(ownerId, "Икра", "Мумий Тролль");
+  await insertAlbum(ownerId, "Unplugged", "Die Ärzte");
+  const kino = await searchCollection(t.db, { ownerId, query: "kino", limit: 10 });
+  expect(kino.lists.items.map(({ name, location }) => ({ name, location }))).toEqual([
+    { name: "Кино", location: ["Русский рок"] },
+    { name: "Kinoband", location: [] },
+  ]);
+  const found = async (query: string) =>
+    (await searchCollection(t.db, { ownerId, query, limit: 10 })).albums.items.map(
+      ({ title }) => title,
+    );
+  expect(await found("mumii troll")).toEqual(["Икра"]);
+  expect(await found("aerzte")).toEqual(["Unplugged"]);
+  expect(await found("arzte")).toEqual(["Unplugged"]);
+  expect(await found("russkiy")).toEqual([]);
+  expect(
+    (await searchCollection(t.db, { ownerId, query: "russkii rok", limit: 10 })).folders.total,
+  ).toBe(1);
 });
 
 test("substring matches can use the trigram indexes (TS-50)", async () => {

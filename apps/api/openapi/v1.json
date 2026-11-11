@@ -3037,7 +3037,7 @@
     "/v1/search": {
       "get": {
         "summary": "Search the collection",
-        "description": "Folders, lists and albums matching `q` by folder or list name, album title or artist credit, ignoring case and accents, with no typo tolerance (FR-12.4, FR-12.5). Each group is ordered as the app orders it: names that start with the query, then those with a word that does, then the rest. Trash isn't searched (FR-12.1).",
+        "description": "Folders, lists and albums matching `q` by folder or list name, album title or artist credit, ignoring case and accents, with no typo tolerance (FR-12.4, FR-12.5). Names in other alphabets also match their common Latin spellings: \"kino\" finds \"Кино\", and \"aerzte\" and \"arzte\" both find \"Ärzte\". Each group is ordered as the app orders it: names that start with the query, then those with a word that does, then the rest. Trash isn't searched (FR-12.1).",
         "tags": [
           "search"
         ],
@@ -3051,7 +3051,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 200,
-              "description": "The text to find, matched as a substring ignoring case and accents."
+              "description": "The text to find, matched as a substring ignoring case and accents, in any common Latin spelling."
             }
           },
           {
@@ -3069,7 +3069,7 @@
         ],
         "responses": {
           "200": {
-            "description": "The caller's active folders, lists and albums matching the query by name, title or artist, ignoring case and accents, best first, then what's shared with them (FR-12, TS-50).",
+            "description": "The caller's active folders, lists and albums matching the query by name, title or artist, ignoring case and accents and in any common Latin spelling, best first, then what's shared with them (FR-12, TS-50).",
             "content": {
               "application/json": {
                 "schema": {
@@ -3674,7 +3674,7 @@
                     "shared"
                   ],
                   "additionalProperties": false,
-                  "description": "The caller's active folders, lists and albums matching the query by name, title or artist, ignoring case and accents, best first, then what's shared with them (FR-12, TS-50)."
+                  "description": "The caller's active folders, lists and albums matching the query by name, title or artist, ignoring case and accents and in any common Latin spelling, best first, then what's shared with them (FR-12, TS-50)."
                 }
               }
             }

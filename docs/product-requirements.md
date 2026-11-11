@@ -776,7 +776,13 @@ Other users' collections are untouched, and their references to the deleted cont
 
 **FR-12.4 Matched fields.** Search matches only folder names, list names, album artist credits as saved, and album titles. It does not match descriptions, custom-field names, values, or options, or other metadata. Results identify the content and its accessible location. Streaming catalogs are not searched.
 
-**FR-12.5 Matching.** Matching is case- and accent-insensitive and partial: "metal" matches "Metallica", and "bjork" matches "Björk". Results display the original spelling. There is no typo tolerance.
+**FR-12.5 Matching.** Matching is case- and accent-insensitive and partial: "metal" matches "Metallica", and "bjork" matches "Björk". Names can also be typed in plain Latin letters, in any common spelling of each letter (TON-201, 11 November 2026):
+
+- letters with no accent-free form: "royksopp" matches "Røyksopp", and "lona" matches "Łona";
+- spelled-out umlauts and å: "aerzte" and "arzte" both match "Die Ärzte";
+- Cyrillic and Greek: "kino" matches "Кино", and "mumiy troll" and "mumii troll" both match "Мумий Тролль".
+
+Typing in the original alphabet still works. A Latin letter matches only itself, so "jes" doesn't match "Yes". Chinese, Japanese and Korean match only as written. Sorting elsewhere is unaffected. Results display the original spelling. There is no typo tolerance.
 
 **FR-12.6 Performance.** Search stays responsive at 5,000 owned albums plus representative shared content: quick search updates within 50 ms p95 per keystroke (Q-01, approved 29 October 2026).
 

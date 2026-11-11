@@ -94,6 +94,19 @@ describe("search", () => {
     expect(names(search(index, "BJÖRK").albums)).toEqual(["Homogenic"]);
   });
 
+  test("finds names typed in plain Latin letters (TON-201)", () => {
+    const kino = container("list", "Кино");
+    const kinoband = container("list", "Kinoband");
+    const troll = album("Икра", "Мумий Тролль");
+    const aerzte = album("Unplugged", "Die Ärzte");
+    const latin = indexOf([kino, kinoband], [troll, aerzte], []);
+    expect(names(search(latin, "kino").lists)).toEqual(["Кино", "Kinoband"]);
+    expect(names(search(latin, "КИНО").lists)).toEqual(["Кино", "Kinoband"]);
+    expect(names(search(latin, "mumii troll").albums)).toEqual(["Икра"]);
+    expect(names(search(latin, "aerzte").albums)).toEqual(["Unplugged"]);
+    expect(names(search(latin, "arzte").albums)).toEqual(["Unplugged"]);
+  });
+
   test("doesn't match descriptions, and has no typo tolerance", () => {
     expect(names(search(index, "heavy").lists)).toEqual([]);
     expect(names(search(index, "metalica").albums)).toEqual([]);
@@ -135,7 +148,20 @@ describe("locations", () => {
 });
 
 test("builds and answers within 50 ms a keystroke at 5,000 albums", () => {
-  const words = ["doom", "black", "sabbath", "metal", "blue", "kind", "of", "björk", "straße"];
+  const words = [
+    "doom",
+    "black",
+    "sabbath",
+    "metal",
+    "blue",
+    "kind",
+    "of",
+    "björk",
+    "straße",
+    "Кино",
+    "Мумий",
+    "Ärzte",
+  ];
   const many = Array.from({ length: 5_000 }, (_, n) =>
     album(
       `${words[n % words.length]} ${words[(n * 7) % words.length]} ${n}`,
@@ -151,7 +177,23 @@ test("builds and answers within 50 ms a keystroke at 5,000 albums", () => {
   const big = indexOf(lists, many, entries);
   const built = performance.now() - started;
   const slowest = Math.max(
-    ...["d", "do", "doo", "doom", "b", "bj", "bjo", "s", "1", "artist"].map((query) => {
+    ...[
+      "d",
+      "do",
+      "doo",
+      "doom",
+      "b",
+      "bj",
+      "bjo",
+      "s",
+      "1",
+      "artist",
+      "k",
+      "ki",
+      "kino",
+      "mumii",
+      "ae",
+    ].map((query) => {
       const start = performance.now();
       search(big, query);
       return performance.now() - start;

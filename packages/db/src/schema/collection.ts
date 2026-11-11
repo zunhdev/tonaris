@@ -71,7 +71,7 @@ export const containers = table(
     parentId: uuid(),
     name: text().notNull(),
     nameKey: text().notNull(),
-    // searchKey() of the name, stored like the albums' keys so the server searches as the app does (TS-12, TS-50).
+    // latinKey() of the name, stored like the albums' keys so the server searches as the app does (TS-12, TS-50).
     searchNameKey: text().notNull(),
     description: text(),
     /** Its own color (TON-175), null for none: its contents without one take it. */
@@ -129,7 +129,7 @@ export const albums = table(
     mbReleaseGroupId: uuid(),
     trashedAt: instant(),
     trashUnitId: uuid().references(() => trashUnits.id),
-    // searchKey() of title and artist credit, stored so app, MCP and export search alike (TS-12).
+    // latinKey() of title and artist credit, stored so app, MCP and export search alike (TS-12).
     searchTitleKey: text().notNull(),
     searchArtistKey: text().notNull(),
     ...timestamps,

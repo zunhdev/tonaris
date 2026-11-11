@@ -4,7 +4,7 @@
 
 import { and, asc, eq, exists, inArray, isNull, sql, type SQL } from "drizzle-orm";
 
-import { nameKey, searchKey, trashUnitOf, type Membership, type TrashUnit } from "@tonaris/domain";
+import { latinKey, nameKey, trashUnitOf, type Membership, type TrashUnit } from "@tonaris/domain";
 
 import type { Executor, Transaction } from "./client";
 import {
@@ -103,7 +103,7 @@ export const serviceLinkColumns = {
   url: albumServiceLinks.url,
 };
 
-/** The stored keys of an album's title and artist credit (TS-12): one for each of them `values` gives. */
+/** The stored search keys of an album's title and artist credit (TS-12, TS-50): one for each of them `values` gives. */
 export function albumSearchKeys(values: { title: string; artistCredit: string }): {
   searchTitleKey: string;
   searchArtistKey: string;
@@ -114,17 +114,17 @@ export function albumSearchKeys(values: { title?: string; artistCredit?: string 
 };
 export function albumSearchKeys(values: { title?: string; artistCredit?: string }) {
   return {
-    ...(values.title === undefined ? {} : { searchTitleKey: searchKey(values.title) }),
+    ...(values.title === undefined ? {} : { searchTitleKey: latinKey(values.title) }),
     ...(values.artistCredit === undefined
       ? {}
-      : { searchArtistKey: searchKey(values.artistCredit) }),
+      : { searchArtistKey: latinKey(values.artistCredit) }),
   };
 }
 
 /** The stored keys of a folder's or list's name: the unique-name key and the search key (TS-12). */
 export const containerNameKeys = (name: string) => ({
   nameKey: nameKey(name),
-  searchNameKey: searchKey(name),
+  searchNameKey: latinKey(name),
 });
 
 /** Whether the album `albumId` has an entry in an active list: it is in Unsorted while it has none (FR-01.9, TS-13). */

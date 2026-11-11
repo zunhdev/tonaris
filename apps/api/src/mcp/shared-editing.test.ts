@@ -14,7 +14,7 @@ import {
   savedReferences,
   shareGrants,
 } from "@tonaris/db";
-import { nameKey, searchKey } from "@tonaris/domain";
+import { latinKey, nameKey } from "@tonaris/domain";
 
 import { fixtureCapture, fixtureLinks } from "../capture-fixtures";
 import { createTestApp } from "../testing";
@@ -99,7 +99,7 @@ async function sharedWithAnna() {
     name,
     ownerId: denis,
     nameKey: nameKey(name),
-    searchNameKey: searchKey(name),
+    searchNameKey: latinKey(name),
   });
   await t.db
     .insert(containers)

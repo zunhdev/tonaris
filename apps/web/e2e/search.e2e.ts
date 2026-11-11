@@ -1,7 +1,7 @@
 // The search palette in a real browser (FR-12.1, FR-12.2, FR-12.4, FR-12.5; DS-75, AC-25 for owned content): ⌘K
-// from a text field and the sidebar's Search item; results grouped, located and highlighted in the original spelling;
-// "Show all"; Trash and descriptions left out; opening folders, lists and albums, on their own with ⌘Enter; and the
-// full-screen sheet on a narrow screen. Each test has its own account.
+// from a text field and the sidebar's Search item; results grouped, located and highlighted in the original spelling,
+// Cyrillic found by Latin letters; "Show all"; Trash and descriptions left out; opening folders, lists and albums, on
+// their own with ⌘Enter; and the full-screen sheet on a narrow screen. Each test has its own account.
 
 import { expect, test, type Page } from "@playwright/test";
 
@@ -47,7 +47,10 @@ test("results are grouped, located and highlighted; Trash and descriptions aren'
     },
     { listId: favorites.id, albumId: bleach.id, addedAt: new Date().toISOString() },
   );
-  await added(page, [album("Homogenic", { artistCredit: "Björk", originalYear: 1997 })]);
+  await added(page, [
+    album("Homogenic", { artistCredit: "Björk", originalYear: 1997 }),
+    album("Группа крови", { artistCredit: "Кино", originalYear: 1988 }),
+  ]);
   await added(
     page,
     Array.from({ length: 10 }, (_, n) => album(`Epicus ${n + 1}`)),
@@ -87,6 +90,13 @@ test("results are grouped, located and highlighted; Trash and descriptions aren'
   await expect(homogenic).toContainText("Homogenic");
   await expect(homogenic).toContainText("1997");
   await expect(homogenic).toContainText("Unsorted");
+
+  // Typed in Latin letters, found in Cyrillic, highlighted in it (TON-201).
+  await field(page).fill("kino");
+  const kino = group(page, "Albums").getByRole("option");
+  await expect(kino).toHaveCount(1);
+  await expect(kino.locator("mark")).toHaveText("Кино");
+  await expect(kino).toContainText("Группа крови");
 
   // An album in two lists shows the first path, and how many more.
   await field(page).fill("nirv");

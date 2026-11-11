@@ -4,13 +4,13 @@
 
 import path from "node:path";
 
-import { eq, sql } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 
-import { searchKey } from "@tonaris/domain";
+import { latinKey } from "@tonaris/domain";
 
 import type { Database } from "./client";
-import { containers } from "./schema";
+import { albums, containers } from "./schema";
 
 /**
  * Next to `src/`. The production bundle keeps that layout (`bin/` beside `migrations/`), so this holds there
@@ -29,23 +29,40 @@ export async function migrateDatabase(
 
 const chunk = 500;
 
+/** `rows` in slices of `chunk`, for updates of bounded size. */
+const chunked = <T>(rows: readonly T[]): T[][] =>
+  Array.from({ length: Math.ceil(rows.length / chunk) }, (_, n) =>
+    rows.slice(n * chunk, (n + 1) * chunk),
+  );
+
 /**
- * Sets each container's search key that is still empty, as the TON-62 migration left them (TS-12). Idempotent, so
- * an interrupted run finishes on the next; a name whose key really is empty is only ever rewritten as it was.
+ * Sets every search key that is still empty (TS-12): the TON-62 migration left containers' empty, and the TON-201
+ * one emptied them all when the keys gained Latin spellings. Idempotent, so an interrupted run finishes on the next;
+ * a text whose key really is empty is only ever rewritten as it was.
  */
 export async function fillSearchKeys(db: Database): Promise<number> {
-  const missing = await db
-    .select({ id: containers.id, name: containers.name })
-    .from(containers)
-    .where(eq(containers.searchNameKey, ""));
-  const keyed = missing
-    .map(({ id, name }) => ({ id, key: searchKey(name) }))
+  const [names, records] = await Promise.all([
+    db
+      .select({ id: containers.id, name: containers.name })
+      .from(containers)
+      .where(eq(containers.searchNameKey, "")),
+    db
+      .select({ id: albums.id, title: albums.title, artistCredit: albums.artistCredit })
+      .from(albums)
+      .where(or(eq(albums.searchTitleKey, ""), eq(albums.searchArtistKey, ""))),
+  ]);
+  const keyedNames = names
+    .map(({ id, name }) => ({ id, key: latinKey(name) }))
     .filter(({ key }) => key !== "");
-  const chunks = Array.from({ length: Math.ceil(keyed.length / chunk) }, (_, n) =>
-    keyed.slice(n * chunk, (n + 1) * chunk),
-  );
-  await Promise.all(
-    chunks.map((rows) => {
+  const keyedAlbums = records
+    .map(({ id, title, artistCredit }) => ({
+      id,
+      title: latinKey(title),
+      artist: latinKey(artistCredit),
+    }))
+    .filter(({ title, artist }) => title !== "" || artist !== "");
+  await Promise.all([
+    ...chunked(keyedNames).map((rows) => {
       const values = sql.join(
         rows.map(({ id, key }) => sql`(${id}::uuid, ${key})`),
         sql`, `,
@@ -56,6 +73,17 @@ export async function fillSearchKeys(db: Database): Promise<number> {
         where ${containers.id} = v.id
       `);
     }),
-  );
-  return keyed.length;
+    ...chunked(keyedAlbums).map((rows) => {
+      const values = sql.join(
+        rows.map(({ id, title, artist }) => sql`(${id}::uuid, ${title}, ${artist})`),
+        sql`, `,
+      );
+      return db.execute(sql`
+        update ${albums} set search_title_key = v.title, search_artist_key = v.artist
+        from (values ${values}) as v (id, title, artist)
+        where ${albums.id} = v.id
+      `);
+    }),
+  ]);
+  return keyedNames.length + keyedAlbums.length;
 }
