@@ -107,6 +107,12 @@ describe("findByPath", () => {
     expect(findByPath(choices, "doom jazz").total).toBe(0);
   });
 
+  test("words match in plain Latin letters (TON-201)", () => {
+    expect(paths(findByPath(choices, "russkii zemf").shown)).toEqual([
+      "Русский рок › 4 2000-2010-е › Земфира",
+    ]);
+  });
+
   test("names matching the whole text come first, prefix before word before the rest", () => {
     const withMetalDoom = listChoices(
       buildTree([metal, doom, classicDoom, list("Doomsday"), list("Kaboom")]),
@@ -144,5 +150,6 @@ describe("matchedParts", () => {
     ]);
     expect(matchedParts("Doom", termsOf("do oo"))).toEqual([[0, 3]]);
     expect(matchedParts("Doom", termsOf("jazz"))).toEqual([]);
+    expect(matchedParts("Земфира", termsOf("zemf"))).toEqual([[0, 4]]);
   });
 });

@@ -4,7 +4,7 @@
 
 import { and, asc, count, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 
-import { maxMergeCandidates, searchKey } from "@tonaris/domain";
+import { latinKey, maxMergeCandidates } from "@tonaris/domain";
 
 import type { Database } from "./client";
 import { albums, mutations } from "./schema";
@@ -46,7 +46,7 @@ export async function mergeCandidates(
     artistCredit,
   }: { releaseGroupId: string; title: string; artistCredit: string },
 ): Promise<{ albumId: string; releaseGroupId: string }[]> {
-  const titleKey = searchKey(title);
+  const titleKey = latinKey(title);
   if (titleKey === "") return [];
   const rows = await db
     .select({ albumId: albums.id, releaseGroupId: albums.mbReleaseGroupId })
@@ -56,7 +56,7 @@ export async function mergeCandidates(
         eq(albums.ownerId, ownerId),
         isNotNull(albums.mbReleaseGroupId),
         ne(albums.mbReleaseGroupId, releaseGroupId),
-        eq(albums.searchArtistKey, searchKey(artistCredit)),
+        eq(albums.searchArtistKey, latinKey(artistCredit)),
         or(
           sql`strpos(${albums.searchTitleKey}, ${titleKey}) > 0`,
           sql`strpos(${titleKey}, ${albums.searchTitleKey}) > 0`,

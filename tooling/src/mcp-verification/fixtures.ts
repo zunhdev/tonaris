@@ -21,7 +21,7 @@ import {
   memberships,
   trashUnits,
 } from "@tonaris/db";
-import { emailKey, nameKey, searchKey, uuidv7 } from "@tonaris/domain";
+import { emailKey, latinKey, nameKey, uuidv7 } from "@tonaris/domain";
 
 const email = process.argv[2] ?? "workload@tonaris.test";
 const artist = "Verify Fixture";
@@ -64,7 +64,7 @@ try {
       parentId,
       name,
       nameKey: nameKey(name),
-      searchNameKey: searchKey(name),
+      searchNameKey: latinKey(name),
     });
     return id;
   }
@@ -91,8 +91,8 @@ try {
       title,
       artistCredit: artist,
       originalYear: 2026,
-      searchTitleKey: searchKey(title),
-      searchArtistKey: searchKey(artist),
+      searchTitleKey: latinKey(title),
+      searchArtistKey: latinKey(artist),
     });
     return id;
   }

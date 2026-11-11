@@ -1,17 +1,21 @@
 // Server search (FR-12.1, FR-12.3–FR-12.5, X-02; TS-50), for the API, MCP and the palette's shared results: the
-// owner's active folders, lists and albums whose stored search keys contain the query's, found through their pg_trgm
-// indexes, and then what others share with them, as the access rules decide it (access.ts). The matches are ranked by
-// the same functions as the app's (`rankNames`, `rankAlbums`), so both list the same things in the same order; SQL
-// can't promise JavaScript's word boundaries. Each group keeps its total and its first `limit`, with where each result
+// owner's active folders, lists and albums whose stored search keys contain the parts of the query every match has,
+// found through their pg_trgm indexes, and then what others share with them, as the access rules decide it
+// (access.ts). Those rows are then matched and ranked by the same functions as the app's (`rankNames`, `rankAlbums`),
+// so both list the same things in the same order: SQL can't try each letter's other spellings (TON-201), nor
+// JavaScript's word boundaries. Each group keeps its total and its first `limit`, with where each result
 // is. A shared result is located from the highest shared folder or list the person can see, so a private ancestor is
 // never named. Trash, and anything not shared with them, never match.
 
 import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import {
+  latinKey,
   rankAlbums,
   rankNames,
   searchKey,
+  searchParts,
+  searchText,
   type SearchAlbum,
   type SearchContainer,
   type SearchResults,
@@ -50,9 +54,9 @@ export async function searchCollection(
   db: Database,
   { ownerId, query, limit }: { ownerId: string; query: string; limit: number },
 ): Promise<SearchResults> {
-  const key = searchKey(query);
+  const key = latinKey(query);
   if (key === "") return nothing;
-  const pattern = `%${likeLiteral(key)}%`;
+  const pattern = `%${searchParts(key).map(likeLiteral).join("%")}%`;
 
   const [places, matchedContainers, matchedAlbums, shared] = await Promise.all([
     db
@@ -65,7 +69,7 @@ export async function searchCollection(
       .from(containers)
       .where(and(eq(containers.ownerId, ownerId), isNull(containers.trashedAt))),
     db
-      .select({ id: containers.id, key: containers.searchNameKey })
+      .select({ id: containers.id, name: containers.name })
       .from(containers)
       .where(
         and(
@@ -75,7 +79,7 @@ export async function searchCollection(
         ),
       ),
     db
-      .select({ id: albums.id, title: albums.searchTitleKey, artist: albums.searchArtistKey })
+      .select({ id: albums.id, title: albums.title, artistCredit: albums.artistCredit })
       .from(albums)
       .where(
         and(
@@ -94,7 +98,7 @@ export async function searchCollection(
   const ranked = rankNames(
     matchedContainers,
     key,
-    (row) => row.key,
+    (row) => searchText(row.name),
     (row) => row.id,
   );
   const containerGroup = (kind: Place["kind"]) => {
@@ -115,7 +119,7 @@ export async function searchCollection(
   const rankedAlbums = rankAlbums(
     matchedAlbums,
     key,
-    (row) => row,
+    (row) => ({ title: searchText(row.title), artist: searchText(row.artistCredit) }),
     (row) => row.id,
   );
   const shownIds = rankedAlbums.slice(0, limit).map(({ id }) => id);
@@ -158,14 +162,14 @@ async function sharedResults(
       .innerJoin(users, eq(users.id, containers.ownerId))
       .where(inArray(containers.id, ids)),
     db
-      .select({ id: containers.id, key: containers.searchNameKey })
+      .select({ id: containers.id, name: containers.name })
       .from(containers)
       .where(and(inArray(containers.id, ids), sql`${containers.searchNameKey} like ${pattern}`)),
     db
       .selectDistinct({
         id: albums.id,
-        title: albums.searchTitleKey,
-        artist: albums.searchArtistKey,
+        title: albums.title,
+        artistCredit: albums.artistCredit,
       })
       .from(albums)
       .innerJoin(memberships, eq(memberships.albumId, albums.id))
@@ -201,7 +205,7 @@ async function sharedResults(
   const ranked = rankNames(
     matchedContainers,
     key,
-    (row) => row.key,
+    (row) => searchText(row.name),
     (row) => row.id,
   );
   const containerGroup = (kind: Place["kind"]) => {
@@ -227,7 +231,7 @@ async function sharedResults(
   const rankedAlbums = rankAlbums(
     matchedAlbums,
     key,
-    (row) => row,
+    (row) => ({ title: searchText(row.title), artist: searchText(row.artistCredit) }),
     (row) => row.id,
   );
   const shown = await albumsOf(

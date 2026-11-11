@@ -2,47 +2,49 @@
 // ranking for both, so the same query lists the same things in the same order wherever it runs: names that start
 // with the query, then those with a word that does, then any other match, each tier by search key, then ID (decided
 // with the creator, 28 October 2026). An album ranks by the better of its title and its artist, ties going by
-// title, then artist.
+// title, then artist. Names match in any of their Latin spellings (TON-201) and tie by their `latinKey`.
 
 import { albumFieldsSchema } from "./albums";
 import { containerKinds } from "./containers";
-import { searchTier, type SearchTier } from "./normalize";
+import { searchTier, type SearchText, type SearchTier } from "./normalize";
 import { byBytes } from "./order";
 import { z } from "./zod";
 
-/** The entries whose key matches `queryKey`, a search key, best first. */
+/** The entries whose name matches `queryKey`, a query's `latinKey`, best first. */
 export function rankNames<T>(
   entries: Iterable<T>,
   queryKey: string,
-  keyOf: (entry: T) => string,
+  textOf: (entry: T) => SearchText,
   idOf: (entry: T) => string,
 ): T[] {
   const matched: { entry: T; key: string; id: string; tier: SearchTier }[] = [];
   for (const entry of entries) {
-    const key = keyOf(entry);
-    const tier = searchTier(queryKey, key);
-    if (tier !== undefined) matched.push({ entry, key, id: idOf(entry), tier });
+    const text = textOf(entry);
+    const tier = searchTier(queryKey, text);
+    if (tier !== undefined) matched.push({ entry, key: text.key, id: idOf(entry), tier });
   }
   return matched
     .toSorted((a, b) => a.tier - b.tier || byBytes(a.key, b.key) || byBytes(a.id, b.id))
     .map(({ entry }) => entry);
 }
 
-/** The albums whose title or artist key matches `queryKey`, best first. */
+/** The albums whose title or artist matches `queryKey`, a query's `latinKey`, best first. */
 export function rankAlbums<T>(
   entries: Iterable<T>,
   queryKey: string,
-  keysOf: (entry: T) => { title: string; artist: string },
+  textsOf: (entry: T) => { title: SearchText; artist: SearchText },
   idOf: (entry: T) => string,
 ): T[] {
   const matched: { entry: T; title: string; artist: string; id: string; tier: SearchTier }[] = [];
   for (const entry of entries) {
-    const { title, artist } = keysOf(entry);
+    const { title, artist } = textsOf(entry);
     const byTitle = searchTier(queryKey, title);
     const byArtist = searchTier(queryKey, artist);
     const tier =
       byTitle === undefined || (byArtist !== undefined && byArtist < byTitle) ? byArtist : byTitle;
-    if (tier !== undefined) matched.push({ entry, title, artist, id: idOf(entry), tier });
+    if (tier !== undefined) {
+      matched.push({ entry, title: title.key, artist: artist.key, id: idOf(entry), tier });
+    }
   }
   return matched
     .toSorted(
@@ -140,6 +142,6 @@ export const searchResultsSchema = z
   })
   .meta({
     description:
-      "The caller's active folders, lists and albums matching the query by name, title or artist, ignoring case and accents, best first, then what's shared with them (FR-12, TS-50).",
+      "The caller's active folders, lists and albums matching the query by name, title or artist, ignoring case and accents and in any common Latin spelling, best first, then what's shared with them (FR-12, TS-50).",
   });
 export type SearchResults = z.infer<typeof searchResultsSchema>;

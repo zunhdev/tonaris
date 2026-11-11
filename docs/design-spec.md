@@ -1429,7 +1429,7 @@ The block never says "private" while another access path remains.
 - **Every result shows its location.**
   - Owned: "Metal › Doom".
   - Shared: an owner badge plus the accessible path only, e.g. "Anna K. · Doom (shared folder)". Private ancestors are never shown.
-- **Highlighting:** the matched substring is highlighted, mapped through accent and case folding, so "bjork" highlights "Björk".
+- **Highlighting:** the matched substring is highlighted, mapped through accent and case folding and Latin spellings, so "bjork" highlights "Björk", and "kino" highlights "Кино" (TON-201).
 - **Opening results:** Enter opens a result; for albums, it opens the containing view with the inspector. ⌘Enter opens an album standalone.
 - **Empty query:** recent items and frequent commands.
 - **Mobile:** a search icon opens a full-screen search sheet with the same groups.

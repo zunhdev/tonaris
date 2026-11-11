@@ -283,12 +283,17 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `email_changes` | `user_id` (PK, cascades), `new_email_key`, `stage` (`current`\|`new`), `code_hash bytea`, `attempts`, `expires_at` | One sign-in email change per account; starting again replaces it, and the swap deletes it (TON-77) | FR-11.4 |
 | Better Auth tables | `user`, `session`, `account`, `verification`, `passkey` (TON-143); later OAuth clients, consents, tokens, `jwks` | `user.email` holds the email key (TS-70) and is unique. `user.role` (`creator`\|`user`), with a partial unique index so there is one creator. `user.display_name` is nullable (Better Auth's `name`). `user.deleting_at` is set while the account is being deleted (TS-74). `account` stays empty for email codes, but Better Auth requires it. The owner, account, person, grantee, and viewer columns above reference `user.id` with `NO ACTION`: account deletion removes owned rows first and the user last (TS-74). `session` and `account` cascade. | FR-11 |
 
-**TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/src/normalize.ts` exports two functions, and the same code runs on the server, the client, and in migrations:
+**TS-12 Name keys and normalization (Decided; X-06, FR-12.5).** `packages/domain/src/normalize.ts` exports these keys, and the same code runs on the server, the client, and in migrations:
 
 - `nameKey(s)`: trim, then NFC, then full Unicode case-fold. It is case-insensitive only, as X-06 requires; accents still distinguish names.
-- `searchKey(s)`: NFKD, then strip combining marks (`\p{M}`), then case-fold (ß→ss), then collapse whitespace. Marks the fold introduces (as from "İ") are stripped again.
+- `searchKey(s)`: NFKD, then strip combining marks (`\p{M}`), then case-fold (ß→ss), then collapse whitespace. Marks the fold introduces (as from "İ") are stripped again. Since TON-201 it orders names (views, paths, the tree) and no longer matches searches.
+- `latinKey(s)` (TON-201): `searchKey`, with each letter in `packages/domain/src/spellings.ts` in its first Latin spelling: "Røyksopp" → "royksopp", "Кино" → "kino". It is the stored search key, and a query's key.
+- **Matching** (TON-201): `spellings.ts` gives letters several spellings: ä is "a" or "ae", й is "y", "i" or "j", щ is "shch", "sch" or "sht". The soft and hard signs are dropped.
+  - `searchText(s)` is a text ready to match: its `latinKey`, plus its letters' spellings when one has a choice.
+  - A query's `latinKey` matches when it spells consecutive letters in any of their spellings, starting or ending inside one.
+  - Letters are looked up precomposed, before accents are stripped, so й keeps its spellings.
 - **Case folding** is per code point: lower, then upper, then lower case. That matches Unicode's `CaseFolding.txt` (full folding) for every character the JavaScript engine knows, except that it would merge the Turkish dotless "ı" into "i", so "ı" is left alone. A test checks this against the committed Unicode 18 table.
-- **Parity fixtures** live in `packages/domain/fixtures/normalize.json` (exported as `@tonaris/domain/fixtures/normalize.json`): name keys, same and different names, search keys, matches and non-matches, and case-only renames. Every implementation runs them, including the server search (TS-50).
+- **Parity fixtures** live in `packages/domain/fixtures/normalize.json` (exported as `@tonaris/domain/fixtures/normalize.json`): name keys, same and different names, search keys, Latin keys, matches and non-matches, and case-only renames. Every implementation runs them, including the server search (TS-50).
 
 Keys are stored rather than computed in SQL so that app, MCP, and export behave identically. The rejected alternative is Postgres `unaccent`/`lower`, whose tables differ from the JavaScript ones and would break FR-12 parity.
 
@@ -1173,6 +1178,17 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
     - A `location` lists the names from the top of the collection down to the folder or list that holds the item.
   - **MCP's `search` tool** takes its albums from `searchCollection()`, in the app's order. Folders and lists join it with TON-81.
   - **Parity:** `packages/domain/fixtures/search.json` is a collection, with content in Trash, and queries with their expected groups, order, totals and locations. The web index's tests run its active part; the server's tests insert all of it. The server also runs `normalize.json`'s search cases.
+- **As built in TON-201 (Latin spellings; FR-12.5):**
+  - **Stored keys** are `latinKey`. The `latin_search_keys` migration empties them, and `fillSearchKeys` refills both containers' and albums' after migrating.
+  - **The query:**
+    - `searchParts(queryKey)` gives the parts every matching key contains, in order. Any stretch that may be another letter's other spelling is left out, including partial ones at either end.
+    - The server looks for `LIKE '%part%part%'`, then matches the rows' names, titles and artists with `searchText`, and ranks them with `rankNames` and `rankAlbums` as the app does.
+    - Results within a tier tie by `latinKey`.
+    - A property test checks that every substring of every spelling of sample names matches, and that its parts occur in order in the key.
+  - **Capture's merge candidates** compare `latinKey`s.
+  - **Measured** (this Mac, one run each):
+    - The app's index at 5,000 all-Cyrillic albums: built in 11 ms, slowest query 6 ms.
+    - The server on the 5,000-album workload: "e" 52 ms with 4,813 albums matching, "a" 34 ms, others 3–19 ms. The target is 300 ms.
   - **Measured** (local Postgres 18, this Mac, the 5,000-album workload account, one run per query after a warm-up): the slowest was "a", 27 ms with 4,519 albums matching; "e" took 22 ms; "do", "the" and "live" 5–8 ms; longer queries 1–4 ms. The target is 300 ms.
 - **As built in TON-72 (shared content; FR-12.3):**
   - **The plan changed.** The creator chose server search for shared content over the per-root index in the bootstrap (29 October 2026). Owned search stays on the device and instant; shared search is online-only, and always as current as access.

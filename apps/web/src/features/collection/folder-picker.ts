@@ -3,9 +3,9 @@
 // things into, then others by path, 8 folders in all (decided with the creator, 8 November 2026). Typing finds folders
 // as "Find a list" finds lists (`findByPath`), and Collection by its name. Pure, so the rules are tested without a DOM.
 
-import { byBytes, searchKey } from "@tonaris/domain";
+import { byBytes } from "@tonaris/domain";
 
-import { suggestedCount, type PathChoice } from "./list-picker";
+import { pathKeys, suggestedCount, type PathChoice } from "./list-picker";
 import { ancestorsOf, destinations, type Tree } from "./tree";
 
 /** A place to move to: a folder with the folders above it, or Collection, whose `parentId` is null. */
@@ -20,12 +20,7 @@ export function folderChoices(tree: Tree, { moving }: { moving?: string } = {}):
   for (const { parentId, name } of destinations(tree, { moving })) {
     const path =
       parentId === null ? [name] : [...ancestorsOf(tree, parentId).map((each) => each.name), name];
-    const choice = {
-      parentId,
-      path,
-      pathKey: searchKey(path.join(" › ")),
-      nameKey: searchKey(name),
-    };
+    const choice = { parentId, path, ...pathKeys(path) };
     if (parentId === null) collection = choice;
     else choices.push(choice);
   }

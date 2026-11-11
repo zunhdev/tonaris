@@ -3,7 +3,7 @@
 import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 
-import { nameKey, searchKey } from "@tonaris/domain";
+import { latinKey, nameKey } from "@tonaris/domain";
 
 import { generateWorkload, referenceWorkload } from "./generate";
 import { Random } from "./random";
@@ -127,8 +127,8 @@ describe("generateWorkload", () => {
 
   test("stores search keys, and the applicable year every album needs (TS-12, FR-02.6)", () => {
     for (const album of rows.albums) {
-      expect(album.searchTitleKey).toBe(searchKey(album.title));
-      expect(album.searchArtistKey).toBe(searchKey(album.artistCredit));
+      expect(album.searchTitleKey).toBe(latinKey(album.title));
+      expect(album.searchArtistKey).toBe(latinKey(album.artistCredit));
       const hasYear =
         album.originalYear != null || (album.isLive === true && album.recordingYearStart != null);
       expect(hasYear).toBe(true);

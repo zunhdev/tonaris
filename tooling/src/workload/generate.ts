@@ -22,7 +22,7 @@ import type {
   shareLinks,
   users,
 } from "@tonaris/db";
-import { nameKey, searchKey } from "@tonaris/domain";
+import { latinKey, nameKey, searchKey } from "@tonaris/domain";
 
 import { Random } from "./random";
 import {
@@ -296,7 +296,7 @@ function buildTree(b: Builder, shape: CollectionShape): { root?: Container; list
       parentId,
       name,
       nameKey: nameKey(name),
-      searchNameKey: searchKey(name),
+      searchNameKey: latinKey(name),
       ...stamps(createdAt),
     });
     return container;
@@ -421,8 +421,8 @@ function buildAlbums(b: Builder, count: number): Album[] {
       id: album.id,
       ownerId: b.ownerId,
       ...description,
-      searchTitleKey: searchKey(description.title),
-      searchArtistKey: searchKey(description.artistCredit),
+      searchTitleKey: latinKey(description.title),
+      searchArtistKey: latinKey(description.artistCredit),
       ...stamps(createdAt),
     });
     addServiceLinks(b, rng, album, description.title);

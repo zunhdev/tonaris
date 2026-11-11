@@ -18,7 +18,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { ChevronRight, Disc3, FolderClosed, ListMusic } from "lucide-react";
 import { useEffect, useId, useState, type KeyboardEvent } from "react";
 
-import { purgeResultSchema, searchKey, type TrashUnit } from "@tonaris/domain";
+import { latinKey, purgeResultSchema, searchMatches, type TrashUnit } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Input } from "@tonaris/ui/components/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
@@ -75,8 +75,8 @@ export function TrashView() {
   }, []);
 
   const all = (units.data ?? []).toSorted((a, b) => b.deletedAt.localeCompare(a.deletedAt));
-  const key = searchKey(filter);
-  const shown = key === "" ? all : all.filter((unit) => searchKey(unit.name).includes(key));
+  const shown =
+    latinKey(filter) === "" ? all : all.filter((unit) => searchMatches(filter, unit.name));
 
   function purge(ids: string[], done: string) {
     if (!client) return;

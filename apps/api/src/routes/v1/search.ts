@@ -1,6 +1,7 @@
 // Search (FR-12.1, FR-12.4, FR-12.5, X-02; TS-50): the signed-in account's active folders, lists and albums whose
-// names, titles or artists contain the query, ignoring case and accents, in the order the app shows them. Each
-// group answers its total and its first `limit`, located. Trash and other accounts' content never appear.
+// names, titles or artists contain the query, ignoring case and accents and in any common Latin spelling (TON-201), in
+// the order the app shows them. Each group answers its total and its first `limit`, located. Trash and other accounts'
+// content never appear.
 
 import { Elysia } from "elysia";
 import { z } from "zod";
@@ -17,12 +18,10 @@ import {
 import type { SessionGuard } from "../../auth/plugin";
 
 const searchQuery = z.object({
-  q: z
-    .string()
-    .trim()
-    .min(1)
-    .max(maxSearchQueryLength)
-    .meta({ description: "The text to find, matched as a substring ignoring case and accents." }),
+  q: z.string().trim().min(1).max(maxSearchQueryLength).meta({
+    description:
+      "The text to find, matched as a substring ignoring case and accents, in any common Latin spelling.",
+  }),
   limit: z.coerce
     .number()
     .int()
@@ -42,7 +41,7 @@ export function searchRoutes(session: SessionGuard, { db }: { db: Database }) {
       detail: {
         summary: "Search the collection",
         description:
-          "Folders, lists and albums matching `q` by folder or list name, album title or artist credit, ignoring case and accents, with no typo tolerance (FR-12.4, FR-12.5). Each group is ordered as the app orders it: names that start with the query, then those with a word that does, then the rest. Trash isn't searched (FR-12.1).",
+          'Folders, lists and albums matching `q` by folder or list name, album title or artist credit, ignoring case and accents, with no typo tolerance (FR-12.4, FR-12.5). Names in other alphabets also match their common Latin spellings: "kino" finds "Кино", and "aerzte" and "arzte" both find "Ärzte". Each group is ordered as the app orders it: names that start with the query, then those with a word that does, then the rest. Trash isn\'t searched (FR-12.1).',
         tags: ["search"],
         operationId: "search",
       },

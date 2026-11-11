@@ -47,10 +47,11 @@ import {
 } from "react";
 
 import {
+  latinKey,
   matchRange,
   maxSearchLimit,
   maxSearchQueryLength,
-  searchKey,
+  searchText,
   searchTier,
   type Album,
   type Container,
@@ -131,12 +132,12 @@ const rowKey = (row: Row): string => {
 
 /** Commands matching `text` by label or title, best match first, then in list order; all of them for no text. */
 function matchCommands(rows: readonly CommandRow[], text: string): CommandRow[] {
-  const key = searchKey(text);
+  const key = latinKey(text);
   if (key === "") return [...rows];
   const matched: { row: CommandRow; at: number; tier: SearchTier }[] = [];
   for (const [at, row] of rows.entries()) {
-    const byLabel = searchTier(key, searchKey(row.label));
-    const byTitle = searchTier(key, searchKey(row.command.title));
+    const byLabel = searchTier(key, searchText(row.label));
+    const byTitle = searchTier(key, searchText(row.command.title));
     const tier =
       byLabel === undefined || (byTitle !== undefined && byTitle < byLabel) ? byTitle : byLabel;
     if (tier !== undefined) matched.push({ row, at, tier });

@@ -9,9 +9,9 @@ import * as fc from "fast-check";
 
 import {
   editableContainers as modelEditable,
+  latinKey,
   nameKey,
   readableContainers as modelReadable,
-  searchKey,
   shareGrantStatuses,
   shareRoles,
   shareToken,
@@ -209,7 +209,7 @@ describe("the CTEs agree with the model (TS-31)", () => {
             // Unique across runs, which share the owner.
             name: id,
             nameKey: nameKey(id),
-            searchNameKey: searchKey(id),
+            searchNameKey: latinKey(id),
             ...(trashed ? { trashedAt: new Date(), trashUnitId: unitId } : {}),
           })),
         );

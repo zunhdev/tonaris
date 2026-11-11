@@ -306,7 +306,7 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
     "search",
     {
       title: "Search the collection",
-      description: `Finds the user's folders and lists by name, and albums by title or artist, ignoring case and accents, best first, as the app's search does; then the same in what others share with the user. Each group gives its total and at most limit matches. ${userData}`,
+      description: `Finds the user's folders and lists by name, and albums by title or artist, ignoring case and accents, best first, as the app's search does. Names in other alphabets are found by their Latin spelling too: "kino" finds "Кино", "aerzte" finds "Ärzte". Then it finds the same in what others share with the user. Each group gives its total and at most limit matches. ${userData}`,
       inputSchema: z.object({
         query: z.string().trim().min(1).max(maxSearchQueryLength).describe("Text to find."),
         limit: z.number().int().min(1).max(50).default(20).describe("At most this many per group."),

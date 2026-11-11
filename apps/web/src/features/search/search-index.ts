@@ -1,16 +1,25 @@
 // Search over the owned collection on this device (FR-12.1, FR-12.4, FR-12.5; TS-50): folder and list names, album
-// titles and artist credits, matched as substrings of their search keys. The client holds only active content, so
+// titles and artist credits, matched as `searchText` matches, in any Latin spelling (TON-201). The client holds only active content, so
 // Trash is never searched, and Unsorted is. Results come in DS-75's groups, in the order the server gives too
 // (`rankNames` and `rankAlbums`, X-02). Locations are worked out only for the results shown. Pure, so the rules are
 // tested without a DOM; the shared parity fixture runs against it (TON-62).
 
-import { rankAlbums, rankNames, searchKey, type Album, type Container } from "@tonaris/domain";
+import {
+  latinKey,
+  rankAlbums,
+  rankNames,
+  searchKey,
+  searchText,
+  type Album,
+  type Container,
+  type SearchText,
+} from "@tonaris/domain";
 
 import type { CollectionData } from "../collection/data";
 import { ancestorsOf, type Tree } from "../collection/tree";
 
-type ContainerEntry = { container: Container; key: string };
-type AlbumEntry = { album: Album; title: string; artist: string };
+type ContainerEntry = { container: Container; text: SearchText };
+type AlbumEntry = { album: Album; title: SearchText; artist: SearchText };
 
 export type SearchIndex = {
   folders: ContainerEntry[];
@@ -21,22 +30,22 @@ export type SearchIndex = {
   listsByAlbum: ReadonlyMap<string, readonly string[]>;
 };
 
-type AlbumKeys = { from: [string, string]; title: string; artist: string };
+type AlbumTexts = { from: [string, string]; title: SearchText; artist: SearchText };
 
-/** Album keys by row, with the text they came from, so a rebuild recomputes only the albums whose text changed. */
-const albumKeys = new WeakMap<Album, AlbumKeys>();
+/** Album texts by row, with the text they came from, so a rebuild recomputes only the albums whose text changed. */
+const albumTexts = new WeakMap<Album, AlbumTexts>();
 
-function keysOf(album: Album): { title: string; artist: string } {
-  let keys = albumKeys.get(album);
-  if (keys?.from[0] !== album.title || keys.from[1] !== album.artistCredit) {
-    keys = {
+function textsOf(album: Album): { title: SearchText; artist: SearchText } {
+  let texts = albumTexts.get(album);
+  if (texts?.from[0] !== album.title || texts.from[1] !== album.artistCredit) {
+    texts = {
       from: [album.title, album.artistCredit],
-      title: searchKey(album.title),
-      artist: searchKey(album.artistCredit),
+      title: searchText(album.title),
+      artist: searchText(album.artistCredit),
     };
-    albumKeys.set(album, keys);
+    albumTexts.set(album, texts);
   }
-  return { title: keys.title, artist: keys.artist };
+  return { title: texts.title, artist: texts.artist };
 }
 
 export function buildSearchIndex({
@@ -49,12 +58,12 @@ export function buildSearchIndex({
   for (const container of tree.byId.values()) {
     (container.kind === "folder" ? folders : lists).push({
       container,
-      key: searchKey(container.name),
+      text: searchText(container.name),
     });
   }
   const albums: AlbumEntry[] = [];
   for (const album of albumsById.values()) {
-    const { title, artist } = keysOf(album);
+    const { title, artist } = textsOf(album);
     albums.push({ album, title, artist });
   }
   return { folders, lists, albums, tree, listsByAlbum };
@@ -72,13 +81,13 @@ const containersOf = (entries: readonly ContainerEntry[], query: string) =>
   rankNames(
     entries,
     query,
-    (entry) => entry.key,
+    (entry) => entry.text,
     (entry) => entry.container.id,
   ).map(({ container }) => container);
 
 /** Everything `query` matches, in DS-75's groups, each fully ordered; nothing for a blank query. */
 export function search(index: SearchIndex, query: string): SearchResults {
-  const key = searchKey(query);
+  const key = latinKey(query);
   if (key === "") return noResults;
   return {
     folders: containersOf(index.folders, key),

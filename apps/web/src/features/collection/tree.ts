@@ -6,7 +6,15 @@
 // holds the folders and lists shared with the person, each with what's inside it (TON-130). Pure, so the tree's rules
 // are tested without a DOM.
 
-import { searchKey, type Container, type ContainerKind, type SharedEntry } from "@tonaris/domain";
+import {
+  latinKey,
+  searchKey,
+  searchText,
+  searchTier,
+  type Container,
+  type ContainerKind,
+  type SharedEntry,
+} from "@tonaris/domain";
 
 export type Tree = {
   /** The root's folders and lists, in order. */
@@ -232,15 +240,15 @@ const nameOf = (row: TreeRow) =>
       : row.name;
 
 /**
- * The next row after `from` whose name starts with `typed`, ignoring case and accents (DS-27, FR-12.5), wrapping
- * around to the start. A single repeated letter cycles through the rows starting with it.
+ * The next row after `from` whose name starts with `typed`, ignoring case and accents and in any Latin spelling
+ * (DS-27, FR-12.5), wrapping around to the start. A single repeated letter cycles through the rows starting with it.
  */
 export function typeAhead(
   rows: readonly TreeRow[],
   from: number,
   typed: string,
 ): number | undefined {
-  const key = searchKey(typed);
+  const key = latinKey(typed);
   if (!key) return undefined;
   // One letter, or the same letter typed again and again.
   const repeated = /^(.)\1*$/u.exec(key)?.[1];
@@ -250,8 +258,7 @@ export function typeAhead(
     const index = (start + offset) % rows.length;
     const row = rows[index];
     if (!row) continue;
-    const name = searchKey(nameOf(row));
-    if (name.startsWith(repeated ?? key)) return index;
+    if (searchTier(repeated ?? key, searchText(nameOf(row))) === 0) return index;
   }
   return undefined;
 }
