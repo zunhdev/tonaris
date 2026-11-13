@@ -79,7 +79,10 @@ test("a write the server saved, whose answer was lost, is sent again after a rel
   });
   const args = album("Kind of Blue");
   await page.evaluate((value) => {
-    window.tonarisSync?.albums.insert(value).isPersisted.promise.catch(() => {});
+    window.tonarisSync?.albums
+      .insert(value)
+      .when("settled")
+      .catch(() => {});
   }, args);
   const mutationId = await reached.promise;
 
@@ -101,7 +104,10 @@ test("a write made while the API can't be reached survives a reload, and is appl
 
   const args = album("Blue Train");
   await page.evaluate((value) => {
-    window.tonarisSync?.albums.insert(value).isPersisted.promise.catch(() => {});
+    window.tonarisSync?.albums
+      .insert(value)
+      .when("settled")
+      .catch(() => {});
   }, args);
   await expect.poll(() => page.evaluate(() => window.tonarisSync?.outbox.queued.length)).toBe(1);
 
@@ -138,8 +144,8 @@ test("edits made offline wait, never as saved, then go out in order once back on
   await page.evaluate(
     async ([value, container]) => {
       const client = window.tonarisSync;
-      await client?.albums.insert(value).isPersisted.promise;
-      await client?.containers.insert(container).isPersisted.promise;
+      await client?.albums.insert(value).when("settled");
+      await client?.containers.insert(container).when("settled");
     },
     [args, list] as const,
   );
@@ -158,10 +164,12 @@ test("edits made offline wait, never as saved, then go out in order once back on
         .update(listId, (draft) => {
           draft.name = "Favorites";
         })
-        .isPersisted.promise.catch(() => {});
+        .when("settled")
+        .catch(() => {});
       client?.memberships
         .insert({ listId, albumId, addedAt: new Date().toISOString() })
-        .isPersisted.promise.catch(() => {});
+        .when("settled")
+        .catch(() => {});
     },
     [list.id, args.id] as const,
   );
@@ -207,7 +215,7 @@ test("two tabs share one stream, and a write in either is saved in both", async 
 
   const args = album("Kind of Blue");
   await second.evaluate(async (value) => {
-    await window.tonarisSync?.albums.insert(value).isPersisted.promise;
+    await window.tonarisSync?.albums.insert(value).when("settled");
   }, args);
   await expect
     .poll(() => page.evaluate((id) => window.tonarisSync?.albums.has(id), args.id))
@@ -289,7 +297,10 @@ test("signing out with unsent changes asks first, and then clears the browser's 
   const { id: accountId } = accountSchema.parse(await me.json());
   await page.route(`${apiUrl}/v1/mutations`, (route) => route.abort("internetdisconnected"));
   await page.evaluate((value) => {
-    window.tonarisSync?.albums.insert(value).isPersisted.promise.catch(() => {});
+    window.tonarisSync?.albums
+      .insert(value)
+      .when("settled")
+      .catch(() => {});
   }, album("Kind of Blue"));
   await expect.poll(() => page.evaluate(() => window.tonarisSync?.unsent)).toBe(1);
 

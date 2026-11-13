@@ -35,7 +35,7 @@ async function seeded(page: Page) {
   const dopesmoker = album("Dopesmoker", { artistCredit: "Sleep", originalYear: 1999 });
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [metal, doom],
   );
@@ -43,7 +43,7 @@ async function seeded(page: Page) {
   await added(page, [album("Holy Mountain", { artistCredit: "Sleep", originalYear: 1992 })]);
   await page.evaluate(
     async (link) => {
-      await window.tonarisSync?.links.insert(link).isPersisted.promise;
+      await window.tonarisSync?.links.insert(link).when("settled");
     },
     { albumId: dopesmoker.id, service: "spotify" as const, url: spotify },
   );
@@ -433,7 +433,7 @@ test("a list's cards label a live album, open a link by tap, and leave no hover 
   await added(page, [roadburn, album("Nightfall", { originalYear: 1987 })], doom.id);
   await page.evaluate(
     async (link) => {
-      await window.tonarisSync?.links.insert(link).isPersisted.promise;
+      await window.tonarisSync?.links.insert(link).when("settled");
     },
     { albumId: roadburn.id, service: "spotify" as const, url: spotify },
   );
@@ -501,7 +501,7 @@ test("a list opened from far down a folder opens at its top, and Back returns to
   }));
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [shelf, ...lists],
   );

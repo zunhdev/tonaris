@@ -641,7 +641,7 @@ describe("tabs sharing one stream (TS-23)", () => {
     first.network.faults.dropAnswers = 1_000;
     const args = album();
     const tx = first.albums.insert(args);
-    tx.isPersisted.promise.catch(() => {});
+    tx.when("settled").catch(() => {});
     await until(() => first.network.sent.length > 0, 3_000, "the send");
     await first.stop();
     expect(await persistence.entries()).toHaveLength(1);
@@ -1081,14 +1081,16 @@ describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
     await web.containers.insert([later, doom]).when("settled");
     const sent = web.network.sent.length;
 
-    await web.arrange(
-      "root",
-      new Map([
-        [later.id, "a0"],
-        [doom.id, "Zz"],
-      ]),
-    ).isPersisted.promise;
-    await web.arrange("root", new Map([[later.id, "Zy"]])).isPersisted.promise;
+    await web
+      .arrange(
+        "root",
+        new Map([
+          [later.id, "a0"],
+          [doom.id, "Zz"],
+        ]),
+      )
+      .when("settled");
+    await web.arrange("root", new Map([[later.id, "Zy"]])).when("settled");
     expect(orderWrites(web, sent)).toEqual([
       {
         args: { viewKey: "root", keys: { [later.id]: "a0", [doom.id]: "Zz" } },
@@ -1124,9 +1126,12 @@ describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
     await until(() => phone.containers.has(doom.id));
     phone.network.faults.noStream = true;
     phone.network.cutStreams();
-    await web.arrange("root", new Map([[doom.id, "a0"]])).isPersisted.promise;
+    await web.arrange("root", new Map([[doom.id, "a0"]])).when("settled");
 
-    await phone.arrange("root", new Map([[doom.id, "Zz"]])).isPersisted.promise.catch(() => {});
+    await phone
+      .arrange("root", new Map([[doom.id, "Zz"]]))
+      .when("settled")
+      .catch(() => {});
     const [conflict] = phone.states.conflicts();
     expect(conflict?.outcome).toEqual({
       status: "conflict",
@@ -1163,16 +1168,18 @@ describe("links (FR-06.2, FR-06.3, FR-09.1)", () => {
     const { id: albumId } = await saved(web);
     const key = serviceLinkKey(albumId, "spotify");
 
-    await web.links.insert({ albumId, service: "spotify", url: variant }).isPersisted.promise;
+    await web.links.insert({ albumId, service: "spotify", url: variant }).when("settled");
     expect(web.links.get(key)?.url).toBe(canonical);
     await until(() => phone.links.get(key)?.url === canonical, 3_000, "the link on the phone");
 
     const other = "https://open.spotify.com/album/6jD6Wl5TgtrC8GJkplOtW9";
-    await web.links.update(key, (draft) => {
-      draft.url = other;
-    }).isPersisted.promise;
+    await web.links
+      .update(key, (draft) => {
+        draft.url = other;
+      })
+      .when("settled");
     await until(() => phone.links.get(key)?.url === other, 3_000, "the replacement");
-    await web.links.delete(key).isPersisted.promise;
+    await web.links.delete(key).when("settled");
     await until(() => !phone.links.has(key), 3_000, "the removal");
   });
 
@@ -1182,20 +1189,21 @@ describe("links (FR-06.2, FR-06.3, FR-09.1)", () => {
     await Promise.all([web.links.preload(), phone.links.preload()]);
     const { id: albumId } = await saved(web);
     const key = serviceLinkKey(albumId, "spotify");
-    await web.links.insert({ albumId, service: "spotify", url: canonical }).isPersisted.promise;
+    await web.links.insert({ albumId, service: "spotify", url: canonical }).when("settled");
     await until(() => phone.links.has(key), 3_000, "the link on the phone");
 
     phone.network.faults.noStream = true;
     phone.network.cutStreams();
     const other = "https://open.spotify.com/album/6jD6Wl5TgtrC8GJkplOtW9";
-    await web.links.update(key, (draft) => {
-      draft.url = other;
-    }).isPersisted.promise;
+    await web.links
+      .update(key, (draft) => {
+        draft.url = other;
+      })
+      .when("settled");
     await phone.links
       .delete(key)
-      .isPersisted.promise.catch((error: unknown) =>
-        expect(error).toBeInstanceOf(MutationRejected),
-      );
+      .when("settled")
+      .catch((error: unknown) => expect(error).toBeInstanceOf(MutationRejected));
     const [conflict] = phone.states.conflicts();
     expect(conflict?.outcome).toMatchObject({
       status: "conflict",
@@ -1236,11 +1244,11 @@ describe("captures (TON-45, TS-22)", () => {
     };
     const created = web.containers.insert(doom);
     const [capture] = web.captures.send([{ link: links.slow, listId: doom.id }]);
-    await created.isPersisted.promise;
+    await created.when("settled");
     const renamed = web.containers.update(doom.id, (draft) => {
       draft.name = "Heavy";
     });
-    await renamed.isPersisted.promise;
+    await renamed.when("settled");
     // The rename is saved while the capture still waits on MusicBrainz.
     expect(capture && web.states.get(capture.mutationId)?.status).toBe("pending");
 
@@ -1357,13 +1365,14 @@ describe("custom fields (FR-03.6, FR-03.11, FR-09.1)", () => {
       { id: uuidv7(), label: "Calm" },
       { id: uuidv7(), label: "Loud" },
     ];
-    await web.fields.insert({ id, name: "Mood", type: "single_choice", options }).isPersisted
-      .promise;
+    await web.fields.insert({ id, name: "Mood", type: "single_choice", options }).when("settled");
     await until(() => phone.fields.get(id)?.name === "Mood", 3_000, "the field on the phone");
     expect(phone.fields.get(id)?.options).toEqual(options);
-    await web.fields.update(id, (draft) => {
-      draft.name = "Feel";
-    }).isPersisted.promise;
+    await web.fields
+      .update(id, (draft) => {
+        draft.name = "Feel";
+      })
+      .when("settled");
     await until(() => phone.fields.get(id)?.name === "Feel", 3_000, "the rename on the phone");
   });
 });
@@ -1379,17 +1388,20 @@ describe("custom field values (FR-03.7, FR-03.8, FR-09.1)", () => {
     ]);
     const { id: albumId } = await saved(web);
     const fieldId = uuidv7();
-    await web.fields.insert({ id: fieldId, name: "Rating", type: "number", options: [] })
-      .isPersisted.promise;
+    await web.fields
+      .insert({ id: fieldId, name: "Rating", type: "number", options: [] })
+      .when("settled");
     const key = `${albumId}:${fieldId}`;
     // Applied with a value: `fieldValue.apply`, then `fieldValue.set`, in one request.
-    await web.fieldValues.insert({ albumId, fieldId, value: "4.5" }).isPersisted.promise;
+    await web.fieldValues.insert({ albumId, fieldId, value: "4.5" }).when("settled");
     await until(() => phone.fieldValues.get(key)?.value === "4.5", 3_000, "the value");
-    await web.fieldValues.update(key, (draft) => {
-      draft.value = null;
-    }).isPersisted.promise;
+    await web.fieldValues
+      .update(key, (draft) => {
+        draft.value = null;
+      })
+      .when("settled");
     await until(() => phone.fieldValues.get(key)?.value === null, 3_000, "applied-empty");
-    await web.fieldValues.delete(key).isPersisted.promise;
+    await web.fieldValues.delete(key).when("settled");
     await until(() => !phone.fieldValues.has(key), 3_000, "the removal");
   });
 });
@@ -1406,23 +1418,27 @@ describe("custom field options (FR-03.15 to FR-03.17, TS-14)", () => {
     ]);
     const { id: albumId } = await saved(web);
     const [fieldId, calm, loud, odd] = [uuidv7(), uuidv7(), uuidv7(), uuidv7()];
-    await web.fields.insert({
-      id: fieldId,
-      name: "Mood",
-      type: "single_choice",
-      options: [
-        { id: calm, label: "Calm" },
-        { id: loud, label: "Loud" },
-      ],
-    }).isPersisted.promise;
-    await web.fieldValues.insert({ albumId, fieldId, value: calm }).isPersisted.promise;
+    await web.fields
+      .insert({
+        id: fieldId,
+        name: "Mood",
+        type: "single_choice",
+        options: [
+          { id: calm, label: "Calm" },
+          { id: loud, label: "Loud" },
+        ],
+      })
+      .when("settled");
+    await web.fieldValues.insert({ albumId, fieldId, value: calm }).when("settled");
 
-    await web.fields.update(fieldId, (draft) => {
-      draft.options = [
-        { id: calm, label: "Quiet" },
-        { id: odd, label: "Odd" },
-      ];
-    }).isPersisted.promise;
+    await web.fields
+      .update(fieldId, (draft) => {
+        draft.options = [
+          { id: calm, label: "Quiet" },
+          { id: odd, label: "Odd" },
+        ];
+      })
+      .when("settled");
     const labels = () =>
       phone.fields
         .get(fieldId)
@@ -1436,13 +1452,11 @@ describe("custom field options (FR-03.15 to FR-03.17, TS-14)", () => {
       `${server.url}/v1/fields/${fieldId}/options/${calm}/removal`,
     );
     const { scopeHash } = optionRemovalSchema.parse(await response.json());
-    await web.fields.update(
-      fieldId,
-      { metadata: { confirmed: { [calm]: scopeHash } } },
-      (draft) => {
+    await web.fields
+      .update(fieldId, { metadata: { confirmed: { [calm]: scopeHash } } }, (draft) => {
         draft.options = [{ id: odd, label: "Odd" }];
-      },
-    ).isPersisted.promise;
+      })
+      .when("settled");
     await until(() => labels() === "Odd", 3_000, "the removal");
     await until(
       () => phone.fieldValues.get(`${albumId}:${fieldId}`)?.value === null,
@@ -1464,9 +1478,10 @@ describe("deleting a custom field (FR-03.18, TS-14)", () => {
     ]);
     const { id: albumId } = await saved(web);
     const fieldId = uuidv7();
-    await web.fields.insert({ id: fieldId, name: "Rating", type: "number", options: [] })
-      .isPersisted.promise;
-    await web.fieldValues.insert({ albumId, fieldId, value: "4" }).isPersisted.promise;
+    await web.fields
+      .insert({ id: fieldId, name: "Rating", type: "number", options: [] })
+      .when("settled");
+    await web.fieldValues.insert({ albumId, fieldId, value: "4" }).when("settled");
     const key = `${albumId}:${fieldId}`;
     await until(() => phone.fieldValues.has(key), 3_000, "the value");
 
@@ -1474,8 +1489,9 @@ describe("deleting a custom field (FR-03.18, TS-14)", () => {
     const response = await session.fetch(`${server.url}/v1/fields/${fieldId}/deletion`);
     const { scopeHash, albums } = fieldDeletionSchema.parse(await response.json());
     expect(albums).toBe(1);
-    await web.fields.delete(fieldId, { metadata: { confirmed: { [fieldId]: scopeHash } } })
-      .isPersisted.promise;
+    await web.fields
+      .delete(fieldId, { metadata: { confirmed: { [fieldId]: scopeHash } } })
+      .when("settled");
     await until(() => !phone.fields.has(fieldId), 3_000, "the deletion");
     await until(() => !phone.fieldValues.has(key), 3_000, "the value's removal");
   });
@@ -1488,22 +1504,26 @@ describe("folder and list descriptions (FR-03.5, FR-09.1)", () => {
     await Promise.all([web.containers.preload(), phone.containers.preload()]);
     const id = uuidv7();
     // Created with a description: `container.create`, then `container.describe`, in one request.
-    await web.containers.insert({
-      id,
-      kind: "list",
-      parentId: null,
-      name: "Grunge",
-      description: "Seattle",
-      color: null,
-    }).isPersisted.promise;
+    await web.containers
+      .insert({
+        id,
+        kind: "list",
+        parentId: null,
+        name: "Grunge",
+        description: "Seattle",
+        color: null,
+      })
+      .when("settled");
     await until(
       () => phone.containers.get(id)?.description === "Seattle",
       3_000,
       "the description",
     );
-    await web.containers.update(id, (draft) => {
-      draft.description = null;
-    }).isPersisted.promise;
+    await web.containers
+      .update(id, (draft) => {
+        draft.description = null;
+      })
+      .when("settled");
     await until(() => phone.containers.get(id)?.description === null, 3_000, "the cleared one");
   });
 });
@@ -1521,23 +1541,26 @@ describe("Trash (FR-01.11, FR-01.13, TON-55)", () => {
       phone.trashUnits.preload(),
     ]);
     const listId = uuidv7();
-    await web.containers.insert({
-      id: listId,
-      kind: "list",
-      parentId: null,
-      name: "Doom",
-      description: null,
-      color: null,
-    }).isPersisted.promise;
+    await web.containers
+      .insert({
+        id: listId,
+        kind: "list",
+        parentId: null,
+        name: "Doom",
+        description: null,
+        color: null,
+      })
+      .when("settled");
     const { id: albumId } = await saved(web);
-    await web.memberships.insert({ listId, albumId, addedAt: new Date().toISOString() }).isPersisted
-      .promise;
+    await web.memberships
+      .insert({ listId, albumId, addedAt: new Date().toISOString() })
+      .when("settled");
     const entry = `${listId}:${albumId}`;
     await until(() => phone.memberships.has(entry), 3_000, "the entry");
 
     const { transaction, deleted } = web.trash.deleteContainers([listId]);
     expect(web.containers.has(listId)).toBe(false);
-    await transaction.isPersisted.promise;
+    await transaction.when("settled");
     await until(
       () => !phone.containers.has(listId) && !phone.memberships.has(entry),
       3_000,
@@ -1547,8 +1570,9 @@ describe("Trash (FR-01.11, FR-01.13, TON-55)", () => {
     await until(() => phone.trashUnits.get(unit?.unitId ?? "")?.name === "Doom", 3_000, "the unit");
 
     const [made] = deleted.units;
-    await web.trash.recover(made ?? { unitId: "", rootId: listId }, {}, deleted).transaction
-      .isPersisted.promise;
+    await web.trash
+      .recover(made ?? { unitId: "", rootId: listId }, {}, deleted)
+      .transaction.when("settled");
     await until(
       () => phone.containers.has(listId) && phone.memberships.has(entry),
       3_000,
@@ -1571,23 +1595,26 @@ describe("albums in Trash (FR-14.1, FR-14.2, TON-57)", () => {
       phone.trashUnits.preload(),
     ]);
     const listId = uuidv7();
-    await web.containers.insert({
-      id: listId,
-      kind: "list",
-      parentId: null,
-      name: "Doom",
-      description: null,
-      color: null,
-    }).isPersisted.promise;
+    await web.containers
+      .insert({
+        id: listId,
+        kind: "list",
+        parentId: null,
+        name: "Doom",
+        description: null,
+        color: null,
+      })
+      .when("settled");
     const { id: albumId } = await saved(web);
-    await web.memberships.insert({ listId, albumId, addedAt: new Date().toISOString() }).isPersisted
-      .promise;
+    await web.memberships
+      .insert({ listId, albumId, addedAt: new Date().toISOString() })
+      .when("settled");
     const entry = `${listId}:${albumId}`;
     await until(() => phone.memberships.has(entry), 3_000, "the entry");
 
     const { transaction, unitId } = web.trash.deleteAlbum(albumId);
     expect(web.albums.has(albumId)).toBe(false);
-    await transaction.isPersisted.promise;
+    await transaction.when("settled");
     await until(
       () => !phone.albums.has(albumId) && !phone.memberships.has(entry),
       3_000,
@@ -1595,7 +1622,7 @@ describe("albums in Trash (FR-14.1, FR-14.2, TON-57)", () => {
     );
     await until(() => phone.trashUnits.get(unitId)?.kind === "album", 3_000, "the unit");
 
-    await web.trash.recover({ unitId, rootId: albumId }).transaction.isPersisted.promise;
+    await web.trash.recover({ unitId, rootId: albumId }).transaction.when("settled");
     await until(
       () => phone.albums.has(albumId) && phone.memberships.has(entry),
       3_000,
@@ -1604,9 +1631,9 @@ describe("albums in Trash (FR-14.1, FR-14.2, TON-57)", () => {
 
     // Deleted again and purged for good (FR-14.5): the unit leaves the other session too.
     const again = web.trash.deleteAlbum(albumId);
-    await again.transaction.isPersisted.promise;
+    await again.transaction.when("settled");
     await until(() => phone.trashUnits.has(again.unitId), 3_000, "the second unit");
-    await web.trash.purge([again.unitId]).transaction.isPersisted.promise;
+    await web.trash.purge([again.unitId]).transaction.when("settled");
     await until(() => !phone.trashUnits.has(again.unitId), 3_000, "the purge");
   });
 
@@ -1615,12 +1642,12 @@ describe("albums in Trash (FR-14.1, FR-14.2, TON-57)", () => {
     await web.trashUnits.preload();
     const { id: albumId } = await saved(web);
     const deleted = web.trash.deleteAlbum(albumId);
-    await deleted.transaction.isPersisted.promise;
+    await deleted.transaction.when("settled");
     await until(() => web.trashUnits.has(deleted.unitId), 3_000, "the unit");
     // One unit in Trash, and more IDs than a purge takes of units another session already emptied.
     const goneIds = Array.from({ length: maxPurgeUnits }, () => uuidv7());
     const { transaction, mutationIds } = web.trash.purge([deleted.unitId, ...goneIds]);
-    await transaction.isPersisted.promise;
+    await transaction.when("settled");
     const results = mutationIds.map((mutationId) => {
       const outcome = web.states.get(mutationId)?.outcome;
       if (outcome?.status !== "confirmed") return outcome?.status;

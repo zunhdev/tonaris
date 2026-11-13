@@ -58,7 +58,7 @@ const icons = { folder: FolderClosed, list: ListMusic, album: Disc3 } as const;
 export function TrashView() {
   const client = useSyncClient();
   const narrow = useNarrowScreen();
-  const units = useLiveQuery(() => client?.trashUnits, [client]);
+  const units = useLiveQuery(() => client?.trashUnits);
   const notify = useNotify();
   const announce = useAnnounce();
   const recover = useRecover();
@@ -84,7 +84,7 @@ export function TrashView() {
     announce(done);
     void (async () => {
       try {
-        await transaction.isPersisted.promise;
+        await transaction.when("settled");
       } catch {
         // The save-state layer reports a removal that wasn't made.
         return;

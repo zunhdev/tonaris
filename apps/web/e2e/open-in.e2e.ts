@@ -35,7 +35,7 @@ async function linked(
   await page.evaluate(async (links) => {
     const sync = window.tonarisSync;
     if (!sync) throw new Error("No sync client on the page.");
-    await sync.links.insert(links).isPersisted.promise;
+    await sync.links.insert(links).when("settled");
   }, rows);
   await page.goto(`/l/${list.id}`);
   await live(page);

@@ -115,7 +115,7 @@ export function RecoveryProvider({ children }: { children: ReactNode }) {
     announce(`Restored ${name}`);
     void (async () => {
       try {
-        await transaction.isPersisted.promise;
+        await transaction.when("settled");
       } catch {
         // A restore that would duplicate an active album asks here (FR-14.3), rather than in Activity.
         const asked = client.states.get(mutationId)?.outcome;

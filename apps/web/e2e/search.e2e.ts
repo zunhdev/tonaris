@@ -43,7 +43,7 @@ test("results are grouped, located and highlighted; Trash and descriptions aren'
   await added(page, [bleach], nineties.id);
   await page.evaluate(
     async (entry) => {
-      await window.tonarisSync?.memberships.insert(entry).isPersisted.promise;
+      await window.tonarisSync?.memberships.insert(entry).when("settled");
     },
     { listId: favorites.id, albumId: bleach.id, addedAt: new Date().toISOString() },
   );
