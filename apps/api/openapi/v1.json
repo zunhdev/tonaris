@@ -3864,7 +3864,7 @@
     "/v1/export": {
       "get": {
         "summary": "Download your data",
-        "description": "The signed-in owner's whole collection as a ZIP (FR-08, TS-80): `tonaris-export.json` (format 1.0), `tonaris-export.schema.json`, `collection.md` and `README.md`, read in one consistent snapshot. Unsorted and Trash are included; sharing, Shared with me and the account's profile are not. Five exports an hour; over that, `429` with `Retry-After`.",
+        "description": "The signed-in owner's whole collection as a ZIP (FR-08, TS-80): `tonaris-export.json` (format 1.2), `tonaris-export.schema.json`, `collection.md` and `README.md`, read in one consistent snapshot. Unsorted and Trash are included; sharing, Shared with me and the account's profile are not. 5 exports an hour; over that, `429` with `Retry-After`.",
         "tags": [
           "export"
         ],

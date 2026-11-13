@@ -13,6 +13,7 @@ import {
   albumServiceLinks,
   changeLog,
   containers,
+  closeDatabase,
   createDatabase,
   type Database,
   databaseUrl,
@@ -159,6 +160,6 @@ if (import.meta.main) {
     console.log(`Seeded the TS-120 reference workload into ${redact(url)} in ${seconds} s.\n`);
     console.log(describeWorkload(workload));
   } finally {
-    await db.$client.end();
+    await closeDatabase(db);
   }
 }

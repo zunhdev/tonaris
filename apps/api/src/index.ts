@@ -3,7 +3,7 @@
 // graceful stop doesn't wait on them and clients reconnect to the new instance (TS-23). Jobs in progress finish
 // before the database closes.
 
-import { createDatabase, ledgerStore } from "@tonaris/db";
+import { closeDatabase, createDatabase, ledgerStore } from "@tonaris/db";
 
 import { maxRequestBodySize } from "./app";
 import { syncFeedbackClient } from "./auth/feedback";
@@ -50,7 +50,7 @@ async function stop() {
   await schedules.stop();
   await app.stop();
   await worker.stop();
-  await db.$client.end();
+  await closeDatabase(db);
   process.exit(0);
 }
 process.once("SIGTERM", () => void stop());

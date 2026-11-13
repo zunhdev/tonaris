@@ -58,6 +58,7 @@ import {
   type SearchTier,
   type SharedSearchAlbum,
   type SharedSearchContainer,
+  ownerLabel,
 } from "@tonaris/domain";
 import { CommandDialog, CommandDialogContent } from "@tonaris/ui/components/command";
 import { Input } from "@tonaris/ui/components/input";
@@ -171,9 +172,7 @@ function useSharedSearch(text: string, wanted: boolean) {
 
 /** "Shared by {name}", then the path the person can see (DS-29). */
 const sharedPlace = (owner: { displayName: string | null }, location: readonly string[]) =>
-  [`Shared by ${owner.displayName ?? "a Tonaris member"}`, location.join(" › ")]
-    .filter(Boolean)
-    .join(" · ");
+  [`Shared by ${ownerLabel(owner.displayName)}`, location.join(" › ")].filter(Boolean).join(" · ");
 
 export function SearchPalette({
   open,

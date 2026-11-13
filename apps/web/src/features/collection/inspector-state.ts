@@ -3,6 +3,7 @@
 // as it is: these navigations leave scrolling alone (`resetScroll: false`). Otherwise the router writes back the scroll
 // offsets it recorded for the view's scroll container, found by its place in the page, which rows and cards share: a
 // card's click could put the grid at the rows' offset, and a jump under way back there (TON-118).
+// Open and close the inspector through `useInspector` only, never with a navigation of your own (DRIFT-026).
 
 import { isTextField } from "@/common/shortcuts";
 import { useNavigate, useSearch } from "@tanstack/react-router";

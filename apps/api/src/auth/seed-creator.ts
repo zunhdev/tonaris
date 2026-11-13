@@ -2,6 +2,7 @@
 // way to the creator role. It is idempotent, so the host's pre-deploy step can run it on every deploy (TS-110).
 
 import {
+  closeDatabase,
   createDatabase,
   databaseUrl,
   type Database,
@@ -60,6 +61,6 @@ if (import.meta.main) {
     console.error(error.message);
     process.exitCode = 1;
   } finally {
-    await db.$client.end();
+    await closeDatabase(db);
   }
 }

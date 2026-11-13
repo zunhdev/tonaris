@@ -105,7 +105,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 | `text.micro` | 11 / 16 | 500 | Badges, key hints, group counts |
 | `text.small` | 12 / 16 | 400–500 | Secondary metadata, table headers |
 | `text.base` | 13 / 20 | 400–500 | Default UI text, rows, menus |
-| `text.input` | 14 / 20 | 400 | Form inputs; 16 on mobile to prevent iOS zoom |
+| `text.control` | 14 / 20 | 400 | Form controls; 16 on mobile to prevent iOS zoom. Named `text.input` until 13 November 2026: Tailwind read `text-input` as the `input` color (TON-101) |
 | `text.title` | 15 / 22 | 600 | Section titles, dialog titles |
 | `text.brand` | 17 / 24 | 600, −0.01em | The wordmark's name in the sidebar and on guest pages (TON-114) |
 | `text.page` | 20 / 28 | 600 | Full-page messages, such as "Not available" (the desktop header's name moved to `text.base` in TON-107) |

@@ -61,7 +61,7 @@ export {
   type ApprovalUse,
 } from "./approvals";
 export { albumsSeenBy, capturesSince, mergeCandidates, savedAlbumsOf } from "./capture";
-export { createDatabase, type Database, type Transaction } from "./client";
+export { closeDatabase, createDatabase, type Database, type Transaction } from "./client";
 export {
   fieldDeletionIn,
   optionRemovalsIn,

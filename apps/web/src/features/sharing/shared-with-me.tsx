@@ -10,7 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { Link2, Users } from "lucide-react";
 import { useState } from "react";
 
-import type { SharedEntry } from "@tonaris/domain";
+import { ownerLabel, type SharedEntry } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { cn } from "@tonaris/ui/lib/utils";
 
@@ -21,7 +21,7 @@ export function SharedWithMeView() {
   const { entries, reread } = useSharedEntries();
   const groups = new Map<string, SharedEntry[]>();
   for (const entry of entries ?? []) {
-    const owner = entry.owner.displayName ?? "A Tonaris member";
+    const owner = ownerLabel(entry.owner.displayName, { start: true });
     groups.set(owner, [...(groups.get(owner) ?? []), entry]);
   }
   return (

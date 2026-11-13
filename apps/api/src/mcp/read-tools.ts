@@ -36,6 +36,7 @@ import {
   maxMemberships,
   maxSearchQueryLength,
   outcomeSchema,
+  ownerLabel,
   releaseTypes,
   streamingServices,
   trashUnitKinds,
@@ -93,7 +94,7 @@ const sharedBy = z
   .string()
   .nullable()
   .describe(
-    "Who shares it with the user, for someone else's content; null for the user's own. Their display name, or 'a Tonaris member' without one.",
+    `Who shares it with the user, for someone else's content; null for the user's own. Their display name, or '${ownerLabel(null)}' without one.`,
   );
 
 const searchContainer = containerSchema.extend({ location: locationSchema });
@@ -112,7 +113,7 @@ const located = ({ id, kind, name, parentId, location }: SearchContainer): Searc
 
 const summary = (album: SourcedAlbum) => agentAlbum(album, summaryKeys);
 const ownerName = (owner: { displayName: string | null } | null) =>
-  owner ? (owner.displayName ?? "a Tonaris member") : null;
+  owner ? ownerLabel(owner.displayName) : null;
 
 const countOf = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
@@ -506,7 +507,7 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
           containerId: entry.containerId,
           kind: entry.kind,
           name: entry.name,
-          sharedBy: entry.owner.displayName ?? "a Tonaris member",
+          sharedBy: ownerName(entry.owner),
           via: entry.via,
           available: entry.available,
           role: entry.role,

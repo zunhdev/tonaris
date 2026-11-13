@@ -8,7 +8,7 @@ import { Elysia } from "elysia";
 import { strToU8, Zip, ZipDeflate } from "fflate";
 
 import { exportSource, type Database } from "@tonaris/db";
-import { buildExport, exportFiles, maxExportsPerHour } from "@tonaris/domain";
+import { buildExport, exportFiles, exportFormatVersion, maxExportsPerHour } from "@tonaris/domain";
 import { policy } from "@tonaris/providers";
 
 import type { SessionGuard } from "../../auth/plugin";
@@ -55,8 +55,8 @@ export function exportRoutes(
       signedIn: true,
       detail: {
         summary: "Download your data",
-        description:
-          "The signed-in owner's whole collection as a ZIP (FR-08, TS-80): `tonaris-export.json` (format 1.0), `tonaris-export.schema.json`, `collection.md` and `README.md`, read in one consistent snapshot. Unsorted and Trash are included; sharing, Shared with me and the account's profile are not. Five exports an hour; over that, `429` with `Retry-After`.",
+        // The format and the hourly limit come from the domain, so the contract can't name stale ones (DRIFT-012).
+        description: `The signed-in owner's whole collection as a ZIP (FR-08, TS-80): \`tonaris-export.json\` (format ${exportFormatVersion}), \`tonaris-export.schema.json\`, \`collection.md\` and \`README.md\`, read in one consistent snapshot. Unsorted and Trash are included; sharing, Shared with me and the account's profile are not. ${maxExportsPerHour} exports an hour; over that, \`429\` with \`Retry-After\`.`,
         tags: ["export"],
         operationId: "exportData",
         responses: {

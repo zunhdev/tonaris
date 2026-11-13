@@ -157,8 +157,9 @@
   --text-small--line-height: 1rem;
   --text-base: 0.8125rem;
   --text-base--line-height: 1.25rem;
-  --text-input: 0.875rem;
-  --text-input--line-height: 1.25rem;
+  /* Form controls. Not `input`: Tailwind would read `text-input` as the `input` color (TON-101, DRIFT-027). */
+  --text-control: 0.875rem;
+  --text-control--line-height: 1.25rem;
   --text-title: 0.9375rem;
   --text-title--line-height: 1.375rem;
   --text-title--font-weight: 600;

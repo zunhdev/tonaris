@@ -3,7 +3,7 @@
 
 import { and, desc, eq, gt, lte } from "drizzle-orm";
 
-import { invitationStatus, type AdmissionRefusal, type EmailStatus } from "@tonaris/domain";
+import { admissionRefusal, type AdmissionRefusal, type EmailStatus } from "@tonaris/domain";
 
 import type { Database, Executor, Transaction } from "./client";
 import { recordInLedger } from "./ledger";
@@ -196,16 +196,14 @@ export async function admitAccount(
     .from(serviceState)
     .where(eq(serviceState.id, 1))
     .for("share");
-  if (state?.paused) return { admitted: false, refusal: "paused" };
-
   const [invitation] = await tx
     .select()
     .from(admissionInvitations)
     .where(eq(admissionInvitations.id, invitationId))
     .for("update");
-  if (!invitation) return { admitted: false, refusal: "invalid" };
-  const status = invitationStatus(invitation, now);
-  if (status !== "available") return { admitted: false, refusal: status };
+  // The same refusal, in the same order, as the join page and the code request show (TS-71).
+  const refusal = admissionRefusal(invitation, state?.paused ?? false, now);
+  if (refusal || !invitation) return { admitted: false, refusal: refusal ?? "invalid" };
 
   const [existing] = await tx
     .select({ id: users.id })

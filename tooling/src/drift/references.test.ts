@@ -1,7 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 
-import { bunRunCommands, checkReferences, definedIds, repositoryPath } from "./references";
+import {
+  bunRunCommands,
+  checkReferences,
+  definedIds,
+  errorCodeDrift,
+  repositoryPath,
+  specErrorCodes,
+} from "./references";
 
 const rootDir = path.resolve(import.meta.dir, "../../..");
 
@@ -47,8 +54,38 @@ describe("bunRunCommands", () => {
   });
 });
 
+describe("specErrorCodes", () => {
+  test("reads the codes each bullet names outside parentheses and before a colon, and stops after the list", () => {
+    const spec = [
+      "Statuses: `failed`, `conflict`.",
+      "",
+      "Error `code`s:",
+      "",
+      "- `validation_failed`, `required_missing`",
+      "- `unauthenticated` (401: no valid session or `token`), `permission_denied`",
+      "- `internal_error`: an unexpected fault, unlike `not_a_code`",
+      "",
+      "- `after_the_list`",
+    ].join("\n");
+    expect(specErrorCodes(spec)).toEqual([
+      "validation_failed",
+      "required_missing",
+      "unauthenticated",
+      "permission_denied",
+      "internal_error",
+    ]);
+    expect(specErrorCodes("No list here.")).toBeUndefined();
+  });
+
+  test("errorCodeDrift names a code on either side only", () => {
+    expect(
+      errorCodeDrift(["a", "b"], ["a", "c"]).map(({ detail }) => detail.split(" ")[0]),
+    ).toEqual(["c", "b"]);
+  });
+});
+
 describe("repository", () => {
-  test("has no IDs, paths, scripts or OpenSpec changes that point nowhere", async () => {
+  test("has no IDs, paths, scripts, OpenSpec changes or error codes that point nowhere", async () => {
     expect(await checkReferences(rootDir)).toEqual([]);
   });
 });

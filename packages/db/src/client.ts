@@ -1,6 +1,7 @@
 // Database connections: Drizzle over Bun.SQL, Bun's own Postgres client (TS-11). It replaced postgres.js once its
-// JSONB and timestamp bugs no longer reproduced on Bun 1.4.4; going back to postgres.js is this file, the migrator's
-// import and `postgres-errors.ts` (tech spec stack review).
+// JSONB and timestamp bugs no longer reproduced on Bun 1.4.4. Every connection opens and closes here, so going back to
+// postgres.js is this file, the migrator's import and `postgres-errors.ts` (tech spec stack review), plus the tests'
+// raw `db.$client` queries.
 
 import { SQL } from "bun";
 import { drizzle } from "drizzle-orm/bun-sql";
@@ -23,10 +24,23 @@ export function readSnapshot<T>(db: Database, read: (tx: Transaction) => Promise
   return db.transaction(read, { isolationLevel: "repeatable read", accessMode: "read only" });
 }
 
-/** Opens a connection pool. Close it with `db.$client.end()`. */
-export function createDatabase(
-  url: string = databaseUrl(),
-  options: Omit<SQL.PostgresOrMySQLOptions, "url" | "adapter"> = {},
-) {
-  return drizzle({ client: new SQL(url, options) });
+/** A pool's settings, such as `max` connections or the `connection` parameters. */
+export type ConnectionOptions = Omit<SQL.PostgresOrMySQLOptions, "url" | "adapter">;
+
+/**
+ * A plain connection pool, without Drizzle, for maintenance work that runs outside any schema: creating databases,
+ * extensions and the tests' schemas. Close it with `end()`.
+ */
+export function openConnection(url: string, options: ConnectionOptions = {}): SQL {
+  return new SQL(url, options);
+}
+
+/** Opens a connection pool. Close it with `closeDatabase`. */
+export function createDatabase(url: string = databaseUrl(), options: ConnectionOptions = {}) {
+  return drizzle({ client: openConnection(url, options) });
+}
+
+/** Closes `db`'s connection pool once its queries in flight finish. */
+export async function closeDatabase(db: Database): Promise<void> {
+  await db.$client.end();
 }

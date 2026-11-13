@@ -1,9 +1,7 @@
 // Integration-test databases: each test gets a fresh schema with every migration applied, in the test database
 // on the local Postgres (TS-121). Import from `@tonaris/db/testing`; never from production code.
 
-import { SQL } from "bun";
-
-import { createDatabase, type Database } from "./client";
+import { closeDatabase, createDatabase, openConnection, type Database } from "./client";
 import { redact, testDatabaseUrl } from "./config";
 import { ensureDatabase } from "./create-database";
 import { migrateDatabase } from "./migrations";
@@ -17,7 +15,7 @@ export { ensureDatabase };
  * two migrations creating it at once would collide. One that loses a race finds it made.
  */
 async function ensureExtensions(url: string): Promise<void> {
-  const admin = new SQL(url, { max: 1 });
+  const admin = openConnection(url, { max: 1 });
   try {
     await admin`create extension if not exists pg_trgm with schema public`;
   } catch (error) {
@@ -66,11 +64,11 @@ export async function createTestDatabase(): Promise<TestDatabase> {
   }
 
   const schema = `test_${Bun.randomUUIDv7().replaceAll("-", "")}`;
-  const admin = new SQL(url, { max: 1 });
+  const admin = openConnection(url, { max: 1 });
   await admin`create schema ${admin(schema)}`;
   const db = createDatabase(url, { max: 4, connection: { search_path: schema } });
   const drop = async () => {
-    await db.$client.end();
+    await closeDatabase(db);
     await admin`drop schema if exists ${admin(schema)} cascade`;
     await admin.end();
   };

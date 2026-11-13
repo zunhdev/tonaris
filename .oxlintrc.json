@@ -110,10 +110,6 @@
                 "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
               },
               {
-                "name": "postgres",
-                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
-              },
-              {
                 "name": "bun",
                 "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
               },
@@ -194,10 +190,6 @@
               },
               {
                 "name": "drizzle-orm",
-                "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
-              },
-              {
-                "name": "postgres",
                 "message": "packages/domain is framework-free and runtime-neutral (TS-02): no framework, database or app imports."
               },
               {
