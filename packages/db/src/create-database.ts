@@ -2,9 +2,10 @@
 // Production databases come from the host and are never created here.
 // Run with `bun run db:create`; the integration tests call ensureDatabase themselves.
 
-import postgres from "postgres";
+import { SQL } from "bun";
 
 import { databaseUrl, redact, testDatabaseUrl } from "./config";
+import { sqlState } from "./postgres-errors";
 
 /** Creates the database named in `url` unless it exists. Returns whether it was created. */
 export async function ensureDatabase(url: string): Promise<boolean> {
@@ -14,7 +15,7 @@ export async function ensureDatabase(url: string): Promise<boolean> {
 
   const maintenance = new URL(url);
   maintenance.pathname = "/postgres";
-  const sql = postgres(maintenance.href, { max: 1, onnotice: () => {} });
+  const sql = new SQL(maintenance.href, { max: 1 });
   try {
     const [existing] = await sql`select 1 from pg_database where datname = ${name}`;
     if (existing) return false;
@@ -23,7 +24,7 @@ export async function ensureDatabase(url: string): Promise<boolean> {
       return true;
     } catch (error) {
       // Another process created it between the check and the create.
-      if (error instanceof postgres.PostgresError && error.code === "42P04") return false;
+      if (sqlState(error) === "42P04") return false;
       throw error;
     }
   } finally {

@@ -4,11 +4,12 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
+import { SQL } from "bun";
 import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/bun-sql";
 
 import { uuidv7, type Mutation, type Principal } from "@tonaris/domain";
 
-import { createDatabase } from "./client";
 import { testDatabaseUrl } from "./config";
 import { albumFieldValues, albums, fieldDefinitions, trashUnits, users } from "./schema";
 import { collectionStore } from "./store";
@@ -76,11 +77,13 @@ describe("the store's fields (FR-03.6, FR-03.9)", () => {
   test("an owner's fields come as the bootstrap has them, in as many queries however many there are", async () => {
     const anna = await newPrincipal();
     let queries = 0;
-    const counted = createDatabase(testDatabaseUrl(), {
-      max: 1,
-      connection: { search_path: t.schema },
-      debug: () => {
-        queries += 1;
+    // Drizzle's logger sees each query it sends.
+    const counted = drizzle({
+      client: new SQL(testDatabaseUrl(), { max: 1, connection: { search_path: t.schema } }),
+      logger: {
+        logQuery: () => {
+          queries += 1;
+        },
       },
     });
     const read = async () => {

@@ -1,8 +1,9 @@
-// Database connections: Drizzle over postgres.js (TS-11). postgres.js rather than Bun.SQL until Bun.SQL's
-// JSONB and timestamp bugs are fixed; switching back is this file only (tech spec stack review).
+// Database connections: Drizzle over Bun.SQL, Bun's own Postgres client (TS-11). It replaced postgres.js once its
+// JSONB and timestamp bugs no longer reproduced on Bun 1.4.4; going back to postgres.js is this file, the migrator's
+// import and `postgres-errors.ts` (tech spec stack review).
 
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { SQL } from "bun";
+import { drizzle } from "drizzle-orm/bun-sql";
 
 import { databaseUrl } from "./config";
 
@@ -23,7 +24,9 @@ export function readSnapshot<T>(db: Database, read: (tx: Transaction) => Promise
 }
 
 /** Opens a connection pool. Close it with `db.$client.end()`. */
-export function createDatabase(url: string = databaseUrl(), options: postgres.Options<{}> = {}) {
-  const client = postgres(url, { onnotice: () => {}, ...options });
-  return drizzle({ client });
+export function createDatabase(
+  url: string = databaseUrl(),
+  options: Omit<SQL.PostgresOrMySQLOptions, "url" | "adapter"> = {},
+) {
+  return drizzle({ client: new SQL(url, options) });
 }

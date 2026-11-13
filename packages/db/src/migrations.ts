@@ -5,7 +5,7 @@
 import path from "node:path";
 
 import { eq, or, sql } from "drizzle-orm";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { migrate } from "drizzle-orm/bun-sql/migrator";
 
 import { latinKey } from "@tonaris/domain";
 
