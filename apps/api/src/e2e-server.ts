@@ -15,6 +15,7 @@ import { fixtureCapture, fixtureCovers, fixtureImageFetch } from "./capture-fixt
 import { apiConfig } from "./config";
 import { smtpEmail } from "./email/smtp";
 import { memoryLedger } from "./jobs/ledger";
+import { createRequestLimiter, relaxedRequestLimits } from "./request-limits";
 import { createRuntime } from "./runtime";
 import { insertUser } from "./testing";
 
@@ -49,6 +50,9 @@ const { hub, worker, app } = createRuntime({
     perEmail: signInLimits.perEmail,
     perIp: { ...signInLimits.perIp, max: 10_000 },
   }),
+  // Every test writes and opens shared links from 127.0.0.1, often as one shared account, so the mutation and
+  // guest-view limits would count the whole suite as one person (TS-104); the API tests check them.
+  requestLimiter: createRequestLimiter(relaxedRequestLimits),
   // Captures and artwork are answered from fixtures, not MusicBrainz or image hosts (TON-45, TON-48).
   capture: fixtureCapture(),
   imageFetch: fixtureImageFetch,

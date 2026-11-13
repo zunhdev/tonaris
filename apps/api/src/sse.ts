@@ -97,16 +97,23 @@ export type InvalidateEvent = SSEPayload<SharedInvalidate, "shared-invalidate"> 
 
 /**
  * `shared-invalidate` events for `rootId`, one after each of `ownerId`'s writes, so the page reads the share again
- * (TS-23). The stream stops watching the owner when it ends.
+ * (TS-23). The stream stops watching the owner when it ends. A signed-in `viewer`'s stream also ends with the session
+ * that opened it, as their own streams do; a guest's has none.
  */
 export function invalidationStream(
   hub: Pick<SyncHub, "watch" | "signal">,
-  { ownerId, rootId }: { ownerId: string; rootId: string },
+  {
+    ownerId,
+    rootId,
+    viewer,
+  }: { ownerId: string; rootId: string; viewer?: { accountId: string; sessionId: string } },
   context: Omit<EventStreamOptions, "signal">,
 ): AsyncGenerator<InvalidateEvent | Comment, void> {
   const channel = eventChannel<InvalidateEvent>(() => stop());
-  const stop = hub.watch(ownerId, () =>
-    channel.push({ event: "shared-invalidate", data: { rootId } }),
+  const stop = hub.watch(
+    ownerId,
+    () => channel.push({ event: "shared-invalidate", data: { rootId } }),
+    viewer && { ...viewer, end: () => channel.end() },
   );
   return eventStream(channel, { ...context, signal: hub.signal });
 }

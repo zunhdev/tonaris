@@ -96,7 +96,7 @@ The Blueprint has already added `api.tonaris.app` and `tonaris.app` (and `www`) 
 
 2. In Render, open each service → **Settings** → **Custom Domains**, and select **Verify** next to each domain. Wait until each shows its certificate as issued.
 3. Back in Cloudflare, switch all three records to **Proxied**.
-4. In Render, open each service → **Settings** → **Custom Domains**, and set **Render Subdomain** to **Disabled**. Now nothing reaches the services except through Cloudflare. That's also what makes `CLIENT_IP_HEADER=CF-Connecting-IP` trustworthy for the sign-in limits (TS-104).
+4. In Render, open each service → **Settings** → **Custom Domains**, and set **Render Subdomain** to **Disabled**. Now nothing reaches the services except through Cloudflare. That's also what makes `CLIENT_IP_HEADER=CF-Connecting-IP` trustworthy for the rate limits (TS-104).
 
 ### 5. Cloudflare's settings
 
@@ -151,7 +151,7 @@ To redeploy by hand, open the service → **Manual Deploy** → **Deploy latest 
 | api | `BETTER_AUTH_SECRET` | Generated once by Render. It also derives share links' tokens (TS-32): changing it signs everyone out **and breaks every share link**, which owners then turn off and on again for new ones. |
 | api | `RESEND_API_KEY`, `EMAIL_FROM` | Resend's key, and `Tonaris <no-reply@mail.tonaris.app>` |
 | api | `SUPPORT_EMAIL`, `CREATOR_EMAIL` | Asked for when the Blueprint is created |
-| api | `CLIENT_IP_HEADER` | `CF-Connecting-IP`: the visitor's address, which Cloudflare sets (TS-104) |
+| api, web | `CLIENT_IP_HEADER` | `CF-Connecting-IP`: the visitor's address, which Cloudflare sets (TS-104). The web app passes it on with its own API reads, such as a guest page's, so the API's limits count the visitor. |
 | api | `LEDGER_URL`, `S3_*` | `s3://tonaris-ledger/events`, with R2's endpoint, key and region `auto` (TS-113) |
 | api, web | `PORT` | 3001 and 3000 |
 | web | `API_URL` | `https://api.tonaris.app`, read at start-up and given to browsers |

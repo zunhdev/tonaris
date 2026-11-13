@@ -276,6 +276,57 @@ describe("streams and their sessions (TS-23)", () => {
     otherAccount.end();
   });
 
+  test("a signed-in viewer's watch ends with their session; a guest's watch doesn't (DRIFT-006)", async () => {
+    const memory = memoryLog();
+    const live = memorySessions("viewer-web", "viewer-phone");
+    const hub = createSyncHub({ log: memory.log, sessions: live.sessions, sessionCheckMs: 10 });
+    const ended: string[] = [];
+    // Ending a watch's stream stops the watch, as `invalidationStream` does.
+    const watchAs = (sessionId: string) => {
+      const stop = hub.watch(accountId, () => {}, {
+        accountId: "ben",
+        sessionId,
+        end: () => {
+          ended.push(sessionId);
+          stop();
+        },
+      });
+    };
+    watchAs("viewer-web");
+    watchAs("viewer-phone");
+    let guestEvents = 0;
+    hub.watch(accountId, () => (guestEvents += 1));
+
+    live.end("viewer-web");
+    await Bun.sleep(40);
+    expect(ended).toEqual(["viewer-web"]);
+
+    // A recovery or a deletion of the viewer's account ends the rest at once; the guest still hears the owner.
+    hub.endSessionsOf("ben");
+    expect(ended).toEqual(["viewer-web", "viewer-phone"]);
+    hub.publish(accountId, memory.commit());
+    expect(guestEvents).toBe(1);
+    hub.close();
+  });
+
+  test("a stopped watch leaves the session checks", async () => {
+    const memory = memoryLog();
+    const live = memorySessions("viewer-web");
+    const hub = createSyncHub({ log: memory.log, sessions: live.sessions, sessionCheckMs: 5 });
+    const stop = hub.watch(accountId, () => {}, {
+      accountId: "ben",
+      sessionId: "viewer-web",
+      end: () => {},
+    });
+    await Bun.sleep(30);
+    expect(live.checks).toBeGreaterThan(0);
+    stop();
+    stop();
+    const after = live.checks;
+    await Bun.sleep(30);
+    expect(live.checks).toBe(after);
+  });
+
   test("check only while streams are open", async () => {
     const memory = memoryLog();
     const live = memorySessions("web");

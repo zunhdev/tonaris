@@ -546,6 +546,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - While streams are open, the hub checks all their sessions every 30 s, in one query, and ends the streams of those that no longer exist or have expired.
   - The stream just ends, with no `reset`. The client's reconnect gets `401`, which it treats as signed out.
   - *Built in TON-147:* the revocations that can't wait end the account's streams at once, with `hub.endSessionsOf(accountId, keep)`: an email change ends all but its own session's, and a recovery and an account deletion end all of them (TS-73, TS-74).
+  - *Since TON-207* (DRIFT-006): a signed-in viewer's stream of a share (`GET /v1/shared/{id}/stream`) is one of the account's streams too, so it ends the same ways. A guest's stream has no session and ends with its connection, or once a read of the link fails.
 - **Contract.** A stream route documents `text/event-stream` in `detail.responses`, pointing at its event schema registered as a component of the OpenAPI document. It declares no `response` schema: on a generator route, that breaks Eden's types and validates nothing. *As built in TON-147:* `streamResponses()` (`apps/api/src/openapi.ts`) writes that block, with the problems a stream answers before it starts, such as `401`, `404` and `422`.
 - **The web client reads the stream with `fetch`, not EventSource** ([TON-20](spikes/2026-10-20-sync-prototype.md)). With `fetch` it sees a refused stream's status (401), reconnects when nothing arrives for 45 s, spreads its reconnects with jittered backoff, and runs in tests. It sends the cursor in the query: a `Last-Event-ID` header makes a cross-origin request need a CORS preflight, which the API's rules refuse (TS-102), and Chromium then fails the fetch. An EventSource client would need `last-event-id` on the CORS allowlist.
 - **One stream per browser (web client only).** A leader tab, elected through BroadcastChannel and the Web Locks API, holds the single stream and fans events out to other tabs. This avoids HTTP/1.1 connection limits; most hosts terminate HTTP/2 at the edge regardless. It is a web-client optimization, not part of the protocol (TS-28). Built in TON-30 (`apps/web/src/client/sync/tabs.ts`, `engine.ts`):
@@ -1782,20 +1783,26 @@ There is no resizing in v1.
   - It answers the bytes with the cache header above, or a bodiless 404 with `no-store`.
 - **No server-side image cache:** HTTP caching, and a CDN if the creator adds one, absorb repeats.
 
-**TS-104 Rate limits (captures and exports Decided in TS-18, sign-in approved 18 October 2026; the rest Proposed).**
+**TS-104 Rate limits (captures and exports Decided in TS-18, sign-in approved 18 October 2026, mutations and guest share views decided 13 November 2026).**
 
 - Rate limits use in-memory token buckets in the single instance, moving to Postgres if the service scales out.
 - Sign-in uses a Tonaris limiter in front of the auth endpoints (`apps/api/src/auth/sign-in-limits.ts`), with sliding windows. Better Auth's own limiter is off: it can't key by email, and without a trusted client address it falls back to one bucket shared by everyone.
-- A refused sign-in answers `429` `rate_limited` with `Retry-After`; it sends nothing and stores nothing. The auth endpoints sit outside `/v1`, so they don't carry the `RateLimit` headers that TS-09 asks of `/v1` responses.
+- A refused sign-in answers `429` `rate_limited` with `Retry-After`; it sends nothing and stores nothing.
 - The client address is the socket address. Behind the host's proxy, `CLIENT_IP_HEADER` names the header to read instead; for `X-Forwarded-For` that is its last entry. In production it is `CF-Connecting-IP`: every request arrives through Cloudflare, and Render's own subdomains are off (TON-108).
 
 | Endpoint | Limit |
 | --- | --- |
 | Sign-in | Code requests: 5 per email per 15 min. Code requests, code submissions, and passkey sign-ins' starts and finishes together: 20 per IP per 15 min (passkeys since TON-143, decided 31 October 2026). |
-| Mutations | 30 per second per account (burst) |
+| Mutations | 30 per second per account (burst): `POST /v1/mutations` and `POST /v1/batches`, a batch counting once |
 | Captures | 100 per hour per account (TS-18) |
-| Guest share views | 120 per minute per IP |
+| Guest share views | 120 per minute per IP: `GET /v1/s/{token}` and its stream, counted before the link is looked up |
 | Export | 5 per hour (TS-18) |
+
+*As built in TON-207* (DRIFT-007): **mutations and guest share views.**
+- `apps/api/src/request-limits.ts` holds both, in token buckets (`apps/api/src/token-buckets.ts`, which MCP's limits use too). A refused request runs nothing and answers `429` `rate_limited` with `Retry-After`.
+- The web app's outbox reads a 429 as no answer and sends the same envelopes again after a pause (TS-22). A burst is slowed, never lost; its writes show as unconfirmed meanwhile.
+- A guest page is first read by the web server, over the private network (TS-03). That read names the visitor's address in `CLIENT_IP_HEADER`, which the web service is given too, so the limit counts the visitor rather than the server. A request with no address, which only an in-process test makes, isn't counted.
+- The browser tests and the client tests send their writes and views from one address, often as one account, so their servers raise both limits (`relaxedRequestLimits`). The API tests check the real ones.
 
 **TS-105 Secrets.**
 

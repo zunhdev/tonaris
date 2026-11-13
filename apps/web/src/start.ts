@@ -1,10 +1,10 @@
 // Start's request pipeline (TS-03): every response gets the security headers (TS-101), with a fresh CSP nonce
 // that the router renders onto its scripts and styles (`getRouter`). A signed-out visit to `/` goes to the landing
-// page (TON-155).
+// page (TON-155). The visitor's address, as the host's proxy names it, is kept for the loaders' API reads (TS-104).
 
 import { createMiddleware, createStart } from "@tanstack/react-start";
 
-import { apiUrl, sentryDsn } from "./config";
+import { apiUrl, clientIpHeader, sentryDsn } from "./config";
 import { hasSessionCookie } from "./features/landing/session-cookie";
 import { createNonce, securityHeaders } from "./security/headers";
 
@@ -39,6 +39,13 @@ const landingMiddleware = createMiddleware().server(({ next, request, pathname }
   });
 });
 
+// The visitor's address, when the host's proxy gives it (`CLIENT_IP_HEADER`), for `visitorHeaders` (src/api.ts).
+const visitorMiddleware = createMiddleware().server(({ next, request }) =>
+  next({
+    context: { visitor: (clientIpHeader && request.headers.get(clientIpHeader)) || undefined },
+  }),
+);
+
 export const startInstance = createStart(() => ({
-  requestMiddleware: [securityHeadersMiddleware, landingMiddleware],
+  requestMiddleware: [securityHeadersMiddleware, landingMiddleware, visitorMiddleware],
 }));

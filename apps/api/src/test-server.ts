@@ -5,6 +5,7 @@
 
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
 import { fixtureCapture } from "./capture-fixtures";
+import { createRequestLimiter, relaxedRequestLimits } from "./request-limits";
 import { createTestApp } from "./testing";
 
 const count = Number(process.env.TEST_ACCOUNTS ?? 1);
@@ -13,6 +14,8 @@ const count = Number(process.env.TEST_ACCOUNTS ?? 1);
 const unlimited = { max: 10_000, windowMs: signInLimits.perIp.windowMs };
 const t = await createTestApp({
   limiter: createSignInLimiter({ perEmail: unlimited, perIp: unlimited }),
+  // The client tests send bursts of writes on purpose, faster than the mutation limit allows (TS-104).
+  requestLimiter: createRequestLimiter(relaxedRequestLimits),
   // Captures are answered from fixtures, not MusicBrainz (TON-45).
   capture: fixtureCapture(),
 });
