@@ -33,7 +33,7 @@ export function useSharedEntries(): SharedEntries {
 
 export function SharedEntriesProvider({ children }: { children: ReactNode }) {
   const client = useSyncClient();
-  const references = useLiveQuery(() => client?.references, [client]);
+  const references = useLiveQuery(() => client?.references);
   // Which collections are kept, as text: a change here or on another device reads the list again.
   const kept = (references.data ?? [])
     .map((reference) => reference.containerId)

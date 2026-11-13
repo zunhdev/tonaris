@@ -200,7 +200,7 @@ test("new items take DS-51's places, and rearranging changes no list or parent",
 
   // An album leaving its last list arrives at the top of Unsorted (DS-51).
   await page.evaluate(async (key) => {
-    await window.tonarisSync?.memberships.delete(key).isPersisted.promise;
+    await window.tonarisSync?.memberships.delete(key).when("settled");
   }, `${doom.id}:${nightfall.id}`);
   await expect(names(page, "Unsorted")).toHaveText([
     "NNightfall",
@@ -234,7 +234,7 @@ test("folders and lists move with M and by dragging onto the tree, and the root 
   const doom = list("Doom");
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [metal, funeral, archive, doom],
   );

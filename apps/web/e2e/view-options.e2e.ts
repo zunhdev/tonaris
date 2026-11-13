@@ -286,7 +286,7 @@ test("the root sorts folders first, the tree follows it, and Created shows the d
   const archive: Container = { ...list("Archive"), kind: "folder" };
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [later, metal, archive],
   );

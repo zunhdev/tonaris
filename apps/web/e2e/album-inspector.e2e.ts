@@ -331,11 +331,13 @@ test("Editing mode edits the chronology everywhere, and refuses leaving an album
   await added(page, [rainbow, evil], doom.id);
   await page.evaluate(
     async ({ listId, albumId }) => {
-      await window.tonarisSync?.memberships.insert({
-        listId,
-        albumId,
-        addedAt: new Date().toISOString(),
-      }).isPersisted.promise;
+      await window.tonarisSync?.memberships
+        .insert({
+          listId,
+          albumId,
+          addedAt: new Date().toISOString(),
+        })
+        .when("settled");
     },
     { listId: concerts.id, albumId: rainbow.id },
   );
@@ -402,11 +404,13 @@ test("the inspector takes an album out of its only list with Undo, and L adds it
   await lists(page).getByRole("link", { name: "Unsorted" }).waitFor();
   await page.evaluate(
     async ({ listId, albumId }) => {
-      await window.tonarisSync?.memberships.insert({
-        listId,
-        albumId,
-        addedAt: new Date().toISOString(),
-      }).isPersisted.promise;
+      await window.tonarisSync?.memberships
+        .insert({
+          listId,
+          albumId,
+          addedAt: new Date().toISOString(),
+        })
+        .when("settled");
     },
     { listId: doom.id, albumId: nightfall.id },
   );
@@ -447,7 +451,7 @@ test("Add to a list suggests recent lists, and finds the others by typing their 
     async (levels) => {
       for (const level of levels) {
         // oxlint-disable-next-line no-await-in-loop
-        await window.tonarisSync?.containers.insert(level).isPersisted.promise;
+        await window.tonarisSync?.containers.insert(level).when("settled");
       }
     },
     [
@@ -616,7 +620,10 @@ test("the form saves into the list on view, and live albums need only their reco
   // A failed save's Edit opens the form as it was entered; saving it makes the failure go.
   await page.evaluate(
     (yearless) => {
-      window.tonarisSync?.albums.insert(yearless).isPersisted.promise.catch(() => {});
+      window.tonarisSync?.albums
+        .insert(yearless)
+        .when("settled")
+        .catch(() => {});
     },
     album("Epicus", { releaseType: null, originalYear: null }),
   );

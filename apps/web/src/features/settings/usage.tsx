@@ -15,7 +15,7 @@ export type AlbumUsage = { active: number; trashed: number; total: number; limit
 export function useAlbumUsage(): AlbumUsage {
   const client = useSyncClient();
   const { albums } = useCollectionData();
-  const units = useLiveQuery(() => client?.trashUnits, [client]);
+  const units = useLiveQuery(() => client?.trashUnits);
   const trashed = (units.data ?? []).filter((unit) => unit.kind === "album").length;
   return { active: albums, trashed, total: albums + trashed, limit: maxAlbums };
 }

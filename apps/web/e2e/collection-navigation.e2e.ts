@@ -155,7 +155,7 @@ test("the tree and the sidebar's width are remembered on the device, and / retur
   const metal = { ...list("Metal"), kind: "folder" as const };
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [metal, { ...list("Doom"), parentId: metal.id }],
   );
@@ -165,12 +165,14 @@ test("the tree and the sidebar's width are remembered on the device, and / retur
   const albums = [album("Epicus Doomicus Metallicus"), album("Nightfall"), album("Ancient Dreams")];
   await page.evaluate(
     async ({ list: listId, owned }) => {
-      await window.tonarisSync?.albums.insert(owned).isPersisted.promise;
-      await window.tonarisSync?.memberships.insert(
-        owned
-          .slice(0, 2)
-          .map((each) => ({ listId, albumId: each.id, addedAt: new Date().toISOString() })),
-      ).isPersisted.promise;
+      await window.tonarisSync?.albums.insert(owned).when("settled");
+      await window.tonarisSync?.memberships
+        .insert(
+          owned
+            .slice(0, 2)
+            .map((each) => ({ listId, albumId: each.id, addedAt: new Date().toISOString() })),
+        )
+        .when("settled");
     },
     { list: doomId, owned: albums },
   );

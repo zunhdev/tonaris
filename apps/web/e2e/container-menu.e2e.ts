@@ -23,7 +23,7 @@ async function folderAndList(page: Page) {
   const doom = list("Doom");
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [folder, doom],
   );
@@ -141,7 +141,7 @@ test("a folder's menu makes a new list inside it, a list's a folder beside it, a
   const doom = { ...list("Doom"), parentId: folder.id };
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [folder, doom],
   );
@@ -192,7 +192,7 @@ test("a folder's color from the ⋯ menu shows on it and what's inside; ⌘K's C
   const doom = { ...list("Doom"), parentId: metal.id };
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [metal, doom],
   );

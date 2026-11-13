@@ -26,8 +26,7 @@ test("the inspector shows an album's links, and Editing mode adds, replaces and 
   await added(page, [record], grunge.id);
   await page.evaluate(
     async ({ albumId, url }) => {
-      await window.tonarisSync?.links.insert({ albumId, service: "spotify", url }).isPersisted
-        .promise;
+      await window.tonarisSync?.links.insert({ albumId, service: "spotify", url }).when("settled");
     },
     { albumId: record.id, url: bleach },
   );
@@ -142,11 +141,13 @@ test("the services turned off in Settings leave the panel and New album, while s
   await added(page, [record], grunge.id);
   await page.evaluate(
     async ({ albumId }) => {
-      await window.tonarisSync?.links.insert({
-        albumId,
-        service: "tidal",
-        url: "https://tidal.com/album/1663133",
-      }).isPersisted.promise;
+      await window.tonarisSync?.links
+        .insert({
+          albumId,
+          service: "tidal",
+          url: "https://tidal.com/album/1663133",
+        })
+        .when("settled");
     },
     { albumId: record.id },
   );

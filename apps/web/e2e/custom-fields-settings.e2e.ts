@@ -18,7 +18,7 @@ async function defined(page: Page, fields: CustomField[]) {
   await page.evaluate(async (rows) => {
     const sync = window.tonarisSync;
     if (!sync) throw new Error("No sync client on the page.");
-    await sync.fields.insert(rows).isPersisted.promise;
+    await sync.fields.insert(rows).when("settled");
   }, fields);
 }
 
@@ -28,7 +28,7 @@ async function applied(page: Page, albumId: string, fieldId: string, value: stri
     async (row) => {
       const sync = window.tonarisSync;
       if (!sync) throw new Error("No sync client on the page.");
-      await sync.fieldValues.insert(row).isPersisted.promise;
+      await sync.fieldValues.insert(row).when("settled");
     },
     { albumId, fieldId, value },
   );

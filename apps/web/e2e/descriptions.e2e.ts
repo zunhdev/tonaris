@@ -84,9 +84,11 @@ test("a description is written, shown in the header and rows, kept through a mov
   // Moved to another folder, and reloaded, it keeps it.
   await page.evaluate(
     async ({ id, parentId }) => {
-      await window.tonarisSync?.containers.update(id, (draft) => {
-        draft.parentId = parentId;
-      }).isPersisted.promise;
+      await window.tonarisSync?.containers
+        .update(id, (draft) => {
+          draft.parentId = parentId;
+        })
+        .when("settled");
     },
     { id: grunge.id, parentId: other.id },
   );

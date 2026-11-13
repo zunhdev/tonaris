@@ -47,7 +47,7 @@ export async function savedNames(page: Page): Promise<string[]> {
 export async function created(page: Page, name: string): Promise<Container> {
   const value = list(name);
   await page.evaluate(async (container) => {
-    await window.tonarisSync?.containers.insert(container).isPersisted.promise;
+    await window.tonarisSync?.containers.insert(container).when("settled");
   }, value);
   return value;
 }
@@ -55,7 +55,10 @@ export async function created(page: Page, name: string): Promise<Container> {
 /** Writes without waiting for the outcome, as the interface does. */
 export async function insert(page: Page, ...values: Container[]): Promise<void> {
   await page.evaluate((containers) => {
-    window.tonarisSync?.containers.insert(containers).isPersisted.promise.catch(() => {});
+    window.tonarisSync?.containers
+      .insert(containers)
+      .when("settled")
+      .catch(() => {});
   }, values);
 }
 
@@ -66,7 +69,8 @@ export async function rename(page: Page, id: string, name: string): Promise<void
         .update(listId, (draft) => {
           draft.name = to;
         })
-        .isPersisted.promise.catch(() => {});
+        .when("settled")
+        .catch(() => {});
     },
     [id, name] as const,
   );
@@ -194,14 +198,14 @@ export async function added(page: Page, albums: Album[], listId?: string): Promi
     async ({ owned, listId: into }) => {
       const sync = window.tonarisSync;
       if (!sync) throw new Error("No sync client on the page.");
-      await sync.albums.insert(owned).isPersisted.promise;
+      await sync.albums.insert(owned).when("settled");
       if (into) {
         const entries = owned.map((each) => ({
           listId: into,
           albumId: each.id,
           addedAt: new Date().toISOString(),
         }));
-        await sync.memberships.insert(entries).isPersisted.promise;
+        await sync.memberships.insert(entries).when("settled");
       }
     },
     { owned: albums, listId },
@@ -216,9 +220,11 @@ export async function foldersAsRows(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const sync = window.tonarisSync;
     if (!sync) throw new Error("No sync client on the page.");
-    await sync.defaults.update("defaults", (draft) => {
-      draft.folderLayout = "rows";
-    }).isPersisted.promise;
+    await sync.defaults
+      .update("defaults", (draft) => {
+        draft.folderLayout = "rows";
+      })
+      .when("settled");
   });
 }
 
