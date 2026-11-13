@@ -49,6 +49,18 @@ describe("agentAlbum (TS-15)", () => {
   });
 });
 
+describe("write answers and the policy (TS-15, DRIFT-020)", () => {
+  test("every source is agent-visible, which write answers rely on", () => {
+    // Conflicts carry the album's current values and match questions their candidates, unfiltered by provenance
+    // (`agentOutcome`). That is safe only while agents may see every source. Before turning `agentVisible` off for
+    // one, filter those values by `album_provenance` as `agentAlbum` does, then relax this test.
+    const hidden = Object.entries(policy)
+      .filter(([, flags]) => !flags.agentVisible)
+      .map(([source]) => source);
+    expect(hidden).toEqual([]);
+  });
+});
+
 describe("cursors (TS-65)", () => {
   test("a cursor stands for the next page's offset, until the last page", () => {
     const cursor = nextCursor(0, 200, 205);

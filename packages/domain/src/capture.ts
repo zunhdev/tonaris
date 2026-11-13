@@ -18,6 +18,7 @@ import {
   hasAlbumSlot,
   type AlbumFields,
 } from "./albums";
+import type { CollectionStore } from "./collection-store";
 import { actingOwner, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
@@ -207,15 +208,23 @@ async function matchOf(
   return merged.find((match) => !match.target.trashed) ?? merged[0];
 }
 
-/** Whether the person sees the owner's album: it is in an active list they may read (FR-07.20). */
-async function seenBy(context: CommandContext, userId: string, albumId: string) {
-  const album = await context.store.findAlbum(albumId);
+/**
+ * Whether the person sees the owner's album: it is in an active list they may read (FR-07.20). What an editor's
+ * capture shows and reports of the owner's albums follows it, before the lock (apps/api/src/capture.ts, through
+ * `albumsSeenBy` in packages/db) and under it, so the two agree (DRIFT-019).
+ */
+export async function albumSeenBy(
+  store: Pick<CollectionStore, "findAlbum" | "entriesOfAlbum" | "findContainer" | "canReadShared">,
+  userId: string,
+  albumId: string,
+): Promise<boolean> {
+  const album = await store.findAlbum(albumId);
   if (!album || album.trashed) return false;
-  for (const { listId } of await context.store.entriesOfAlbum(albumId)) {
+  for (const { listId } of await store.entriesOfAlbum(albumId)) {
     // oxlint-disable-next-line no-await-in-loop
-    const list = await context.store.findContainer(listId);
+    const list = await store.findContainer(listId);
     // oxlint-disable-next-line no-await-in-loop
-    if (list && !list.trashed && (await context.store.canReadShared(userId, listId))) return true;
+    if (list && !list.trashed && (await store.canReadShared(userId, listId))) return true;
   }
   return false;
 }
@@ -478,7 +487,7 @@ export async function captureAlbum(
   if (match) {
     if (refusal) return refusal;
     // An editor learns nothing of the owner's albums they don't see: reusing one of those reads as adding it (FR-07.21).
-    const unseen = editor && !(await seenBy(context, userId, match.target.id));
+    const unseen = editor && !(await albumSeenBy(context.store, userId, match.target.id));
     return reuse(args, ownerId, source.link, match, context, unseen);
   }
   if (source.kind === "linked") {

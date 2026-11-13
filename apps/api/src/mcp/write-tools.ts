@@ -15,7 +15,7 @@ import {
   fieldBase,
   fieldValueBase,
   linkBase,
-  sharingImpact,
+  previewSharing,
   viewPrefsBase,
   viewSequence,
   type Database,
@@ -141,12 +141,17 @@ const agentAudience = (audience: Audience) =>
     : { kind: "link", via: audience.via.name };
 
 /**
- * What a move or a recovery does to sharing (FR-07.14), as the app previews it: who newly sees it, who no longer sees
- * it through the folders it leaves, and the shares it keeps. Undefined when there is nothing to say.
+ * What a move or a recovery does to sharing (FR-07.14), from the app's own preview (X-02): who newly sees it, who no
+ * longer sees it through the folders it leaves, and the shares it keeps. An editor's move inside a share says only
+ * whether who can see it changes, as the app tells them, with nobody's access named (FR-07.20, DRIFT-017). Undefined
+ * when there is nothing to say.
  */
-async function sharingEffects(db: Database, ownerId: string, query: ImpactQuery) {
-  const impact = await sharingImpact(db, ownerId, query);
+async function sharingEffects(db: Database, userId: string, query: ImpactQuery) {
+  const impact = await previewSharing(db, userId, query);
   if (typeof impact === "string") return undefined;
+  if (impact.withheld !== undefined) {
+    return impact.withheld ? { whoCanSeeItChanges: true, audiencesWithheld: true } : undefined;
+  }
   const effects = {
     newlySeenBy: impact.added.map(agentAudience),
     noLongerSeenBy: impact.removed.map(agentAudience),
@@ -249,7 +254,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const current = await containerBase(db, { ownerId: userId, containerId: args.containerId });
+      const current = await containerBase(db, { userId, containerId: args.containerId });
       const base = args.base ?? { name: current?.name ?? "" };
       return run("rename_container", args, () =>
         each(
@@ -273,7 +278,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const current = await containerBase(db, { ownerId: userId, containerId: args.containerId });
+      const current = await containerBase(db, { userId, containerId: args.containerId });
       const base = args.base ?? { color: current?.color ?? null };
       return run("set_color", args, () =>
         each(
@@ -297,7 +302,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const current = await containerBase(db, { ownerId: userId, containerId: args.containerId });
+      const current = await containerBase(db, { userId, containerId: args.containerId });
       const base = args.base ?? { description: current?.description ?? null };
       return run("set_description", args, () =>
         each(
@@ -319,7 +324,7 @@ export function registerWriteTools(
     {
       title: "Move folders and lists",
       description:
-        "Moves folders and lists into a folder, or to the top level with parentId null, with everything inside them. Each moves on its own: one that can't, such as a folder into itself or a name already there, fails alone. Each reports its sharing effects: who newly sees it, who no longer does through the folders it leaves, and the shares it keeps.",
+        "Moves folders and lists into a folder, or to the top level with parentId null, with everything inside them. Each moves on its own: one that can't, such as a folder into itself or a name already there, fails alone. Each reports its sharing effects: who newly sees it, who no longer does through the folders it leaves, and the shares it keeps. Inside a share the user edits, it says only whether who can see it changes, as the app does.",
       inputSchema: z.object({
         containerIds: ids(maxBatchItems),
         parentId: uuid.nullable().describe("The folder to move them into; null for the top level."),
@@ -331,9 +336,7 @@ export function registerWriteTools(
     async (args) => {
       const [bases, effects] = await Promise.all([
         Promise.all(
-          args.containerIds.map((containerId) =>
-            containerBase(db, { ownerId: userId, containerId }),
-          ),
+          args.containerIds.map((containerId) => containerBase(db, { userId, containerId })),
         ),
         // As the app shows them before a move (FR-07.14), reported with each outcome.
         Promise.all(
@@ -598,7 +601,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const current = await albumBase(db, { ownerId: userId, albumId: args.albumId });
+      const current = await albumBase(db, { userId, albumId: args.albumId });
       const changed = albumFields.filter((field) => args.values[field] !== undefined);
       const base: Partial<AlbumFields> = {};
       for (const field of changed) {
@@ -632,7 +635,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const current = await albumBase(db, { ownerId: userId, albumId: args.albumId });
+      const current = await albumBase(db, { userId, albumId: args.albumId });
       const base = args.base ?? { artworkUrl: current?.artworkUrl ?? null };
       return run("set_artwork", args, () =>
         each(
@@ -666,7 +669,7 @@ export function registerWriteTools(
     },
     async (args) => {
       const url = await linkBase(db, {
-        ownerId: userId,
+        userId,
         albumId: args.albumId,
         service: args.service,
       });
@@ -700,7 +703,7 @@ export function registerWriteTools(
     },
     async (args) => {
       const url = await linkBase(db, {
-        ownerId: userId,
+        userId,
         albumId: args.albumId,
         service: args.service,
       });
@@ -750,7 +753,7 @@ export function registerWriteTools(
         args.changes.map((change) =>
           change.action === "set" || change.action === "clear"
             ? fieldValueBase(db, {
-                ownerId: userId,
+                userId,
                 albumId: change.albumId,
                 fieldId: change.fieldId,
               })
@@ -847,7 +850,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const field = await fieldBase(db, { ownerId: userId, fieldId: args.fieldId });
+      const field = await fieldBase(db, { userId, fieldId: args.fieldId });
       const base = args.base ?? { name: field?.name ?? "" };
       return run("rename_field", args, () =>
         each(
@@ -869,7 +872,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const field = await fieldBase(db, { ownerId: userId, fieldId: args.fieldId });
+      const field = await fieldBase(db, { userId, fieldId: args.fieldId });
       return run("change_field_type", args, () =>
         each(
           [
@@ -930,7 +933,7 @@ export function registerWriteTools(
       annotations: writes,
     },
     async (args) => {
-      const field = await fieldBase(db, { ownerId: userId, fieldId: args.fieldId });
+      const field = await fieldBase(db, { userId, fieldId: args.fieldId });
       const option = field?.options.find((candidate) => candidate.id === args.optionId);
       const base = args.base ?? { label: option?.label ?? "" };
       return run("rename_option", args, () =>

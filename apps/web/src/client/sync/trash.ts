@@ -9,6 +9,9 @@ import { createTransaction } from "@tanstack/db";
 import {
   maxPurgeUnits,
   membershipKey,
+  rootsAmong,
+  subtreeOf,
+  treeOf,
   uuidv7,
   type Container,
   type Membership,
@@ -57,35 +60,22 @@ export function createTrash({
   trashUnits: TrashUnitCollection;
   writer: Writer;
 }) {
-  /** The folder or list and its descendants this client holds, itself first. */
-  function subtree(rootId: string): Container[] {
-    const root = containers.get(rootId);
-    if (!root) return [];
-    const found = [root];
-    for (let index = 0; index < found.length; index += 1) {
-      const parent = found[index]?.id;
-      for (const row of containers.values()) if (row.parentId === parent) found.push(row);
-    }
-    return found;
-  }
-
   return {
     /**
      * Moves each folder or list in `ids`, with what is inside it, to Trash: each one its own unit (FR-01.13). A
      * descendant of another one in `ids` goes with it. Answers what it took out, for an undo.
      */
     deleteContainers(ids: readonly string[]) {
-      const roots = ids.filter((id) => {
-        // Inside another root being deleted, it goes with that one.
-        let parent = containers.get(id)?.parentId ?? null;
-        while (parent !== null) {
-          if (ids.includes(parent)) return false;
-          parent = containers.get(parent)?.parentId ?? null;
-        }
-        return containers.has(id);
-      });
+      // The domain's walks, as `delete_items`' approval reads a deletion: one inside another root goes with it.
+      const walks = treeOf([...containers.values()]);
+      const roots = rootsAmong(walks, ids);
       const units = roots.map((rootId) => ({ unitId: uuidv7(), rootId }));
-      const removed = roots.flatMap(subtree);
+      const removed = roots.flatMap((rootId) =>
+        subtreeOf(walks, rootId).flatMap((id): Container[] => {
+          const row = containers.get(id);
+          return row ? [row] : [];
+        }),
+      );
       const lists = new Set(removed.filter((row) => row.kind === "list").map((row) => row.id));
       const entries = [...memberships.values()].filter((entry) => lists.has(entry.listId));
       const deleted: Deleted = { units, containers: removed, entries };

@@ -79,7 +79,8 @@ export function registerGatedTools(
   server: McpServer,
   { db, principal, writer, webOrigin }: GatedToolsContext,
 ): void {
-  const { userId: ownerId } = principal;
+  // The person acting. Their own collection is `ownerId: userId`; a share's is its owner's (DRIFT-024).
+  const { userId } = principal;
   const context = { db, principal, writer, webOrigin };
 
   /** Answers a gated tool: its approval to ask for, or the changes it made with their outcomes. */
@@ -141,10 +142,10 @@ export function registerGatedTools(
           args,
           missing: "None of these is in the collection; they may already be in Trash.",
           scope: async (tx) => {
-            const own = await deletionTargets(tx, { ownerId, albumIds, containerIds });
+            const own = await deletionTargets(tx, { ownerId: userId, albumIds, containerIds });
             // And what the person edits in others' shares, as they may know it (FR-07.20; TON-200).
             const shared = await sharedDeletionTargets(tx, {
-              userId: ownerId,
+              userId,
               albumIds,
               containerIds,
             });
@@ -192,7 +193,7 @@ export function registerGatedTools(
           args,
           missing: "There is no such custom field.",
           scope: async (tx) => {
-            const deletion = await fieldDeletionIn(tx, ownerId, args.fieldId);
+            const deletion = await fieldDeletionIn(tx, userId, args.fieldId);
             return deletion && fieldDeletionApprovalScope(deletion);
           },
           plan: (_, approved) => [
@@ -208,7 +209,7 @@ export function registerGatedTools(
 
   /** The scope of removing `optionIds`, read in `tx`; undefined if any isn't an option of the owner's field. */
   const removalScope = async (tx: Transaction, fieldId: string, optionIds: readonly string[]) => {
-    const found = await optionRemovalsIn(tx, ownerId, fieldId, optionIds);
+    const found = await optionRemovalsIn(tx, userId, fieldId, optionIds);
     return found && optionsRemovalScope(found.field, found.removals);
   };
 
@@ -335,17 +336,18 @@ export function registerGatedTools(
           outsideLock: true,
           scope: async (tx) => {
             const { releaseGroupId } = args;
-            const own = listId === null ? null : await activeListName(tx, { ownerId, listId });
+            const own =
+              listId === null ? null : await activeListName(tx, { ownerId: userId, listId });
             // Or a list of a share the person edits, as they may know it (FR-07.20; TON-200).
             const target =
               own === undefined && listId !== null
-                ? await sharedMatchTarget(tx, { userId: ownerId, listId, releaseGroupId })
+                ? await sharedMatchTarget(tx, { userId, listId, releaseGroupId })
                 : undefined;
             const listName = own === undefined ? target?.listName : own;
             if (listName === undefined) return undefined;
             const saved = target
               ? target.saved
-              : await savedAlbumOfReleaseGroup(tx, { ownerId, releaseGroupId });
+              : await savedAlbumOfReleaseGroup(tx, { ownerId: userId, releaseGroupId });
             return matchScope(
               {
                 link: args.link,

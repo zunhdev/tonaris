@@ -7,13 +7,17 @@
 // are tested without a DOM.
 
 import {
+  chainOf,
   latinKey,
+  moveProblem,
   searchKey,
   searchText,
   searchTier,
   type Container,
   type ContainerKind,
   type SharedEntry,
+  treeOf,
+  type Tree as Walks,
 } from "@tonaris/domain";
 
 export type Tree = {
@@ -22,6 +26,8 @@ export type Tree = {
   /** Each folder's folders and lists, in order. */
   children: Map<string, Container[]>;
   byId: Map<string, Container>;
+  /** The same folders and lists for the domain's walks, so moves are checked by the commands' rules (X-02). */
+  walks: Walks<Container>;
 };
 
 const byCreation = (a: Container, b: Container) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -42,7 +48,7 @@ export function buildTree(
     else children.set(container.parentId, [...(children.get(container.parentId) ?? []), container]);
   }
   for (const [parentId, siblings] of children) children.set(parentId, order(siblings, parentId));
-  return { roots: order(roots, null), children, byId };
+  return { roots: order(roots, null), children, byId, walks: treeOf([...byId.values()]) };
 }
 
 /** The places below the folders and lists, in order (DS-31). */
@@ -220,16 +226,10 @@ export function visibleRows(
 
 /** The folders above the container `id`, from the root down; empty for a root container or an unknown ID. */
 export function ancestorsOf(tree: Tree, id: string): Container[] {
-  const path: Container[] = [];
-  let parentId = tree.byId.get(id)?.parentId ?? null;
-  // A parent never repeats in a sound tree; the guard stops on data that would loop.
-  while (parentId !== null && path.length <= tree.byId.size) {
-    const parent = tree.byId.get(parentId);
-    if (!parent) break;
-    path.unshift(parent);
-    parentId = parent.parentId;
-  }
-  return path;
+  // The domain's walk up, which stops at a cycle in damaged data, nearest first.
+  return chainOf(tree.walks, tree.byId.get(id)?.parentId ?? null)
+    .flatMap((at) => tree.byId.get(at) ?? [])
+    .toReversed();
 }
 
 const nameOf = (row: TreeRow) =>
@@ -265,15 +265,14 @@ export function typeAhead(
 
 /**
  * Whether the folder or list `id` can move into `parentId`, null being the root (FR-01.4, FR-01.5): a folder, not
- * the item itself nor anything under it, and not where it is already. The domain still checks names and depth.
+ * where it is already, and none the command would refuse as a cycle or as too deep (`moveProblem`, DRIFT-021). The
+ * command still checks names and shares.
  */
 export function canMoveInto(tree: Tree, id: string, parentId: string | null): boolean {
   const item = tree.byId.get(id);
   if (!item || item.parentId === parentId) return false;
-  if (parentId === null) return true;
-  const parent = tree.byId.get(parentId);
-  if (!parent || parent.kind !== "folder" || parentId === id) return false;
-  return !ancestorsOf(tree, parentId).some((folder) => folder.id === id);
+  if (parentId !== null && tree.byId.get(parentId)?.kind !== "folder") return false;
+  return moveProblem(tree.walks, id, parentId) === undefined;
 }
 
 /** The folders and lists under `parentId`, null being the root: a new or recovered one's siblings. */

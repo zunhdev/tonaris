@@ -89,11 +89,29 @@ export async function contentAccess(
 }
 
 /**
+ * Whether an editor whose edit access to the folder or list `id` comes through the shared tops `through` works inside
+ * a share rather than on a share's own top (FR-07.20). Commands ask it through `insideShare`; previews and approval
+ * scopes in packages/db ask it directly, so the rule is written once (DRIFT-018).
+ */
+export const editsInsideShare = (through: readonly string[], id: string): boolean =>
+  through.some((top) => top !== id);
+
+/**
+ * Whether an editor's move of `id`, edited through `through`, under a folder edited through `there` stays inside one
+ * of the shares it is in (FR-07.20): never out of a share, nor into another.
+ */
+export const moveStaysInShare = (
+  through: readonly string[],
+  id: string,
+  there: readonly string[],
+): boolean => through.some((top) => top !== id && there.includes(top));
+
+/**
  * Whether an editor works inside the folder or list `id` rather than on a share's own: through a share above it
  * (FR-07.20). The owner always does.
  */
 export const insideShare = (access: ContentAccess, id: string): boolean =>
-  access.as === "owner" || access.through.some((top) => top !== id);
+  access.as === "owner" || editsInsideShare(access.through, id);
 
 /** The refusal of an editor's move or deletion of a shared folder or list itself (FR-07.20). */
 export const shareTopRefusal = () =>

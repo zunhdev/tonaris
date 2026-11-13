@@ -13,8 +13,9 @@ import {
   memberships,
   savedReferences,
   shareGrants,
+  shareLinks,
 } from "@tonaris/db";
-import { latinKey, nameKey } from "@tonaris/domain";
+import { containerColors, latinKey, nameKey } from "@tonaris/domain";
 
 import { fixtureCapture, fixtureLinks } from "../capture-fixtures";
 import { createTestApp } from "../testing";
@@ -163,6 +164,35 @@ describe("an editor's agent (FR-10.4, FR-07.19)", () => {
     ).toEqual([expect.objectContaining({ status: "confirmed" })]);
   });
 
+  test("moving inside the share is told whether who can see it changes, as the app tells the editor (DRIFT-017)", async () => {
+    const { denis, metal, doom } = await sharedWithAnna();
+    // "Inner", in Metal, has a link of its own, so moving Doom in shows Doom to more people.
+    const inner = id();
+    await t.db.insert(containers).values({
+      id: inner,
+      kind: "folder",
+      parentId: metal,
+      name: "Inner",
+      ownerId: denis,
+      nameKey: nameKey("Inner"),
+      searchNameKey: latinKey("Inner"),
+    });
+    await t.db
+      .insert(shareLinks)
+      .values({ id: id(), containerId: inner, tokenHash: Buffer.from("inner") });
+    const { mcp } = await agentOf("anna@example.com", "manage");
+    const answer = await mcp.callTool({
+      name: "move_items",
+      arguments: { containerIds: [doom], parentId: inner },
+    });
+    const [item] = z
+      .object({ items: z.array(z.looseObject({ sharing: z.unknown().optional() })) })
+      .parse(answer.structuredContent).items;
+    // Nobody's access is named: the audiences stay the owner's to know (FR-07.20, DS-69).
+    expect(item?.sharing).toEqual({ whoCanSeeItChanges: true, audiencesWithheld: true });
+    expect(item).toMatchObject({ outcome: { status: "confirmed" } });
+  });
+
   test("adds an album by hand to a shared list, in the owner's collection (TON-200)", async () => {
     const { denis, doom } = await sharedWithAnna();
     const { mcp } = await agentOf("anna@example.com", "manage");
@@ -258,5 +288,148 @@ describe("an editor's agent (FR-10.4, FR-07.19)", () => {
     expect(tools.map((tool) => tool.name)).not.toContain("rename_container");
     const listed = await mcp.callTool({ name: "list_container", arguments: { containerId: doom } });
     expect(listed.isError).toBeFalsy();
+  });
+});
+
+/**
+ * What an editor's agent gets from each write tool inside a share: the change made, an approval to ask for, or a
+ * refusal on what stays the owner's (FR-10.4, FR-07.19, FR-07.20). Four PRs fixed paths that assumed the person acting
+ * owns the collection (TON-192, TON-193, TON-195, TON-200); every write tool is listed here, so a new one fails this
+ * test until it is run as an editor too (DRIFT-024).
+ */
+describe("every write tool, as an editor's agent inside a share (DRIFT-024)", () => {
+  type Answer = "confirmed" | "asks" | "refused";
+
+  /** The tool's answer, reduced to what the table expects, and its items. */
+  async function answerOf(mcp: Mcp, name: string, args: Record<string, unknown>) {
+    const result = await mcp.callTool({ name, arguments: args });
+    if (result.isError) return { answer: "refused" as Answer, items: [] };
+    const structured = z
+      .looseObject({ status: z.string().optional() })
+      .parse(result.structuredContent);
+    if (structured.status === "needs_approval") return { answer: "asks" as Answer, items: [] };
+    const { items } = z
+      .object({ items: z.array(z.looseObject({ outcome: z.looseObject({ status: z.string() }) })) })
+      .parse(structured);
+    const statuses = items.map((item) => item.outcome.status);
+    const answer: string = statuses.every((status) => status === "confirmed")
+      ? "confirmed"
+      : statuses.includes("failed")
+        ? "refused"
+        : statuses.join(", ");
+    return { answer, items };
+  }
+
+  test("each changes what's inside the share, asks for approval, or keeps the owner's own", async () => {
+    const { denis, cookie: _cookie, nightfall, metal, doom, rating } = await sharedWithAnna();
+    // A second list inside the share, for moves between lists.
+    const sludge = id();
+    await t.db.insert(containers).values({
+      id: sludge,
+      kind: "list",
+      parentId: metal,
+      name: "Sludge",
+      ownerId: denis,
+      nameKey: nameKey("Sludge"),
+      searchNameKey: latinKey("Sludge"),
+    });
+    const { mcp } = await agentOf("anna@example.com", "manage");
+    const offered = await write(mcp, "add_albums", {
+      listId: doom,
+      items: [{ link: fixtureLinks.ambiguousApple }],
+    });
+    const [choice] = z
+      .object({ candidates: z.array(z.object({ releaseGroupId: z.string() })) })
+      .parse(offered[0]).candidates;
+
+    const made: { inner?: string; typed?: string } = {};
+    const table: [name: string, args: () => Record<string, unknown>, expected: Answer][] = [
+      ["create_container", () => ({ kind: "folder", name: "Inner", parentId: metal }), "confirmed"],
+      ["rename_container", () => ({ containerId: doom, name: "Doom II" }), "confirmed"],
+      ["set_color", () => ({ containerId: doom, color: containerColors[0] }), "confirmed"],
+      ["set_description", () => ({ containerId: doom, description: "Slow" }), "confirmed"],
+      ["move_items", () => ({ containerIds: [doom], parentId: made.inner }), "confirmed"],
+      [
+        "add_albums",
+        () => ({
+          listId: doom,
+          items: [{ title: "Typed", artistCredit: "Someone", originalYear: 2000 }],
+        }),
+        "confirmed",
+      ],
+      ["add_to_lists", () => ({ albumIds: [made.typed], listIds: [sludge] }), "confirmed"],
+      [
+        "move_albums",
+        () => ({ albumIds: [nightfall], fromListId: doom, toListId: sludge }),
+        "confirmed",
+      ],
+      ["remove_from_lists", () => ({ albumIds: [made.typed], listIds: [sludge] }), "confirmed"],
+      ["set_order", () => ({ view: sludge, itemIds: [nightfall], place: "top" }), "confirmed"],
+      ["set_view_preferences", () => ({ view: sludge, layout: "grid" }), "confirmed"],
+      [
+        "update_album",
+        () => ({ albumId: nightfall, values: { title: "Nightfall!" } }),
+        "confirmed",
+      ],
+      ["set_artwork", () => ({ albumId: nightfall, artworkUrl: null }), "confirmed"],
+      [
+        "set_link",
+        () => ({ albumId: nightfall, service: "spotify", url: fixtureLinks.bleachSpotify }),
+        "confirmed",
+      ],
+      ["remove_link", () => ({ albumId: nightfall, service: "spotify" }), "confirmed"],
+      // Editors set the owner's fields' values on shared albums (FR-07.20).
+      [
+        "set_album_fields",
+        () => ({ changes: [{ albumId: nightfall, fieldId: rating, action: "set", value: "4" }] }),
+        "confirmed",
+      ],
+      // A new field is the agent's person's own.
+      ["create_field", () => ({ name: "Mood", type: "text" }), "confirmed"],
+      // The owner's fields' definitions stay the owner's (FR-07.20).
+      ["rename_field", () => ({ fieldId: rating, name: "Score" }), "refused"],
+      ["change_field_type", () => ({ fieldId: rating, type: "text" }), "refused"],
+      ["add_options", () => ({ fieldId: rating, labels: ["High"] }), "refused"],
+      ["rename_option", () => ({ fieldId: rating, optionId: id(), label: "High" }), "refused"],
+      ["remove_options", () => ({ fieldId: rating, optionIds: [id()] }), "refused"],
+      ["delete_field", () => ({ fieldId: rating }), "refused"],
+      ["delete_items", () => ({ containerIds: [sludge] }), "asks"],
+      [
+        "confirm_match",
+        () => ({
+          link: fixtureLinks.ambiguousApple,
+          releaseGroupId: choice?.releaseGroupId,
+          listId: doom,
+        }),
+        "asks",
+      ],
+      // Agents never undo an editor's deletion; the owner's Trash is the owner's (TON-192).
+      ["recover_from_trash", () => ({ items: [{ unitId: id() }] }), "refused"],
+      [
+        "save_shared_reference",
+        () => ({ url: `https://tonaris.app/s/${"x".repeat(43)}` }),
+        "refused",
+      ],
+      ["remove_shared_reference", () => ({ containerId: metal }), "confirmed"],
+    ];
+
+    const { tools } = await mcp.listTools();
+    const writeTools = tools
+      .filter((tool) => tool.annotations?.readOnlyHint !== true)
+      .map((tool) => tool.name);
+    // A write tool missing here was never run as an editor: add it, with what an editor's agent should get.
+    expect(table.map(([name]) => name).toSorted()).toEqual(writeTools.toSorted());
+
+    const answers: Record<string, string> = {};
+    for (const [name, args, _expected] of table) {
+      // oxlint-disable-next-line no-await-in-loop
+      const { answer, items } = await answerOf(mcp, name, args());
+      answers[name] = answer;
+      if (name === "create_container") made.inner = z.string().parse(items[0]?.containerId);
+      if (name === "add_albums") made.typed = z.string().parse(items[0]?.albumId);
+    }
+    expect(answers).toEqual(
+      Object.fromEntries(table.map(([name, , expected]) => [name, expected])),
+    );
   });
 });

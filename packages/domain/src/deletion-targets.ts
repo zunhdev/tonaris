@@ -3,7 +3,7 @@
 // stops seeing it, and which IDs name nothing active of the owner's. Pure, over what storage reads in the transaction.
 
 import type { AlbumDeletionTarget, DeletionTargets } from "./approvals";
-import { chainOf, subtreeOf, treeOf } from "./container-tree";
+import { rootsAmong, subtreeOf, treeOf } from "./container-tree";
 import type { ContainerKind } from "./containers";
 import { deletionImpact, type ImpactState } from "./sharing-impact";
 
@@ -22,9 +22,7 @@ export type DeletionPlace = {
 function deletionOf(places: readonly DeletionPlace[], containerIds: readonly string[]) {
   const tree = treeOf(places);
   const asked = new Set(containerIds.filter((id) => tree.byId.has(id)));
-  const roots = [...asked].filter(
-    (id) => !chainOf(tree, tree.byId.get(id)?.parentId ?? null).some((at) => asked.has(at)),
-  );
+  const roots = rootsAmong(tree, containerIds);
   const deleted = new Set(roots.flatMap((id) => subtreeOf(tree, id)));
   return { tree, asked, roots, deleted };
 }

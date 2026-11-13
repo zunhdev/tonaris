@@ -453,6 +453,39 @@ describe("an editor's capture into a share (FR-07.19, FR-07.20; TON-193)", () =>
     });
   });
 
+  test("an album the editor only views counts as seen, as the command reports it (DRIFT-019)", async () => {
+    const { doom, asBen } = await sharedWithBen();
+    const viewed = await newList("Viewed");
+    const ben = await t.signIn("ben@example.com");
+    await t.db.insert(shareGrants).values({
+      id: uuidv7(),
+      containerId: viewed,
+      granteeId: ben.id,
+      invitedEmail: "ben@example.com",
+      status: "accepted",
+      role: "view",
+    });
+    const holyDiver = result(
+      (await send(capture(links.lastInLineTidal, viewed, { releaseGroupId: ids.holyDiver })))
+        .outcome,
+    );
+    await t.db.$client`delete from album_service_links`;
+    // Ben sees Holy Diver in "Viewed", so the choice names it, though he can't edit it there.
+    const offered = await asBen(capture(links.lastInLineTidal, doom));
+    expect(offered).toMatchObject({
+      status: "needs_input",
+      need: "match",
+      candidates: expect.arrayContaining([
+        { releaseGroupId: ids.holyDiver, title: "Holy Diver", albumId: holyDiver.albumId },
+      ]),
+    });
+    // And choosing it reuses the album he was shown, as the command reports it.
+    const chosen = await asBen(
+      capture(links.lastInLineTidal, doom, { releaseGroupId: ids.holyDiver }),
+    );
+    expect(result(chosen)).toMatchObject({ albumId: holyDiver.albumId, match: "reused" });
+  });
+
   test("an album in the owner's Trash stays there: the editor's capture adds a new one", async () => {
     const { doom, secret, asBen } = await sharedWithBen();
     const bleach = result((await send(capture(links.bleachSpotify, secret))).outcome);

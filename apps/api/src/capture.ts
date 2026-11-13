@@ -5,7 +5,7 @@
 // before the lock too (TON-46).
 
 import {
-  canEditAlbum,
+  albumsSeenBy,
   captureCollection,
   agreedToTerms,
   findLinkedAlbum,
@@ -162,11 +162,12 @@ export async function prepareCapture(
         ownerId,
         candidates.map((candidate) => candidate.releaseGroupId),
       );
-      // An editor is shown only the albums they can see already, never the owner's others (FR-07.20).
+      // An editor is shown only the albums they see already, never the owner's others: the command's rule, so a
+      // candidate shown as new isn't then reported as reused (FR-07.20, DRIFT-019).
       if (editor) {
+        const seen = await albumsSeenBy(db, userId, [...saved.values()]);
         for (const [releaseGroupId, albumId] of saved) {
-          // oxlint-disable-next-line no-await-in-loop
-          if (!(await canEditAlbum(db, userId, albumId))) saved.delete(releaseGroupId);
+          if (!seen.has(albumId)) saved.delete(releaseGroupId);
         }
       }
       return {
