@@ -44,6 +44,7 @@ import type { ApiConfig } from "../config";
 import type { LogError } from "../observability";
 import { feedbackScopes, feedbackUserInfoClaims } from "./feedback";
 import { recordingTransactions } from "./transaction";
+import { userVerifiedIn } from "./user-verification";
 
 const day = 24 * 60 * 60;
 
@@ -67,10 +68,12 @@ const signInPath = "/sign-in/email-otp";
 
 /** Adding a passkey, after the browser created it (TON-143). */
 const passkeyRegistrationPath = "/passkey/verify-registration";
+/** Signing in with a passkey (TON-143). */
+const passkeySignInPath = "/passkey/verify-authentication";
 
 /**
  * A passkey must verify the person, with a face, fingerprint or PIN, since it stands in for the emailed code. The
- * plugin accepts a touch alone, so registration and sign-in refuse that (TON-143).
+ * plugin refuses a touch alone too since 1.7.16, but only this error says why (user-verification.ts, TON-143).
  */
 const userVerificationRequired = () =>
   APIError.from("BAD_REQUEST", {
@@ -195,6 +198,13 @@ export function createAuth({
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        if (
+          (ctx.path === passkeyRegistrationPath || ctx.path === passkeySignInPath) &&
+          userVerifiedIn(ctx.body?.response) === false
+        ) {
+          // The plugin would refuse it too, but without saying why (user-verification.ts).
+          throw userVerificationRequired();
+        }
         if (ctx.path === passkeyRegistrationPath) {
           // Tonaris names the passkey (below) and renames it through /v1, and adding one never starts a second
           // session. The context merges into the body, so both are overwritten rather than left out.

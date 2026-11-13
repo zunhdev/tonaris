@@ -89,7 +89,7 @@ jobs:
   #   # The same services as local development (TS-06), here as containers on the runner.
   #   services:
   #     postgres:
-  #       image: postgres:18.4
+  #       image: postgres:18.7
   #       env:
   #         # Like the local install: user `postgres`, no password.
   #         POSTGRES_HOST_AUTH_METHOD: trust
@@ -100,7 +100,7 @@ jobs:
   #         --health-timeout 5s
   #         --health-retries 20
   #     mailpit:
-  #       image: axllent/mailpit:v1.31.6
+  #       image: axllent/mailpit:v1.33.1
   #       ports: ["1025:1025", "8025:8025"]
   #       options: >-
   #         --health-cmd "/mailpit readyz"
@@ -115,7 +115,7 @@ jobs:
   #     # Playwright's test runner needs Node.
   #     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
   #       with:
-  #         node-version: 24
+  #         node-version: 26
   #     - name: Install
   #       run: bun install --frozen-lockfile
   #     - name: Unit and integration tests (bun test, Postgres 18)

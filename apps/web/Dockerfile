@@ -6,7 +6,7 @@
 #   pre-deploy: wait for the API (TS-01)    docker run -e API_URL=… tonaris-web bun wait-for-api.ts
 # API_URL is read at start-up, so one image serves any host.
 
-FROM oven/bun:1.4.3 AS build
+FROM oven/bun:1.4.4 AS build
 WORKDIR /repo
 # Every workspace manifest, so the frozen lockfile matches; then the web app's dependencies, build tools included.
 COPY package.json bun.lock bunfig.toml ./
@@ -26,7 +26,7 @@ COPY packages/ui packages/ui
 COPY apps/web apps/web
 RUN bun run --cwd apps/web build
 
-FROM oven/bun:1.4.3-slim
+FROM oven/bun:1.4.4-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
 COPY --from=build --chown=bun:bun /repo/apps/web/dist ./dist

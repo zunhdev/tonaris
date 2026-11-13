@@ -56,7 +56,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:18.4
+        image: postgres:18.7
         env:
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: tonaris
@@ -67,7 +67,7 @@ jobs:
           --health-timeout 5s
           --health-retries 20
       mailpit:
-        image: axllent/mailpit:v1.31.6
+        image: axllent/mailpit:v1.33.1
         ports: ["1025:1025", "8025:8025"]
         options: >-
           --health-cmd "/mailpit readyz"
@@ -136,7 +136,7 @@ jobs:
           grep -qi "content-security-policy: .*connect-src 'self' https://api.tonaris.example" "$RUNNER_TEMP/web-headers"
       - name: Reconcile a restored database (TS-113), and the API's shell has its ~/.ssh
         run: |
-          docker run --rm --network host postgres:18.4 createdb -h localhost -U postgres tonaris_restored
+          docker run --rm --network host postgres:18.7 createdb -h localhost -U postgres tonaris_restored
           restored=postgres://postgres@localhost:5432/tonaris_restored
           docker run --rm --network host --env-file "$RUNNER_TEMP/api.env" -e DATABASE_URL="$restored" \
             tonaris-api bun bin/migrate.js

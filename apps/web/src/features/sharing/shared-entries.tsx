@@ -37,7 +37,7 @@ export function SharedEntriesProvider({ children }: { children: ReactNode }) {
   // Which collections are kept, as text: a change here or on another device reads the list again.
   const kept = (references.data ?? [])
     .map((reference) => reference.containerId)
-    .toSorted()
+    .toSorted((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     .join(",");
   const [revision, setRevision] = useState(0);
   const reread = useCallback(() => setRevision((count) => count + 1), []);

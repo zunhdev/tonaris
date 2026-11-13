@@ -151,7 +151,9 @@ export function albumStore(tx: Transaction) {
     async addTombstone(unitId, tombstone) {
       await tx
         .update(trashUnits)
-        .set({ tombstones: sql`${trashUnits.tombstones} || ${JSON.stringify([tombstone])}::jsonb` })
+        // The array goes as one JSON parameter: since Drizzle 1.0 rc.5, a string cast to jsonb arrives as a JSON
+        // string, so `JSON.stringify` here would append a string instead of the tombstone (TON-203).
+        .set({ tombstones: sql`${trashUnits.tombstones} || ${sql.param([tombstone])}::jsonb` })
         .where(eq(trashUnits.id, unitId));
     },
     async purgeContainers(unitId, ids) {

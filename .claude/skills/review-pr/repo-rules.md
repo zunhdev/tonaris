@@ -19,6 +19,7 @@ The rules a change must follow, beyond what `bun run check` enforces. Each cites
 ## Data
 
 - A schema change ships with its generated migration, whose SQL was read. A merged migration is never edited. Changes follow expand and contract, so a deploy never breaks the running version (TS-17).
+- A JSON value in a raw `sql` template goes as `sql.param(value)`, cast to `jsonb` where needed, never as `JSON.stringify(value)`: since Drizzle 1.0 rc.5 the string arrives as a JSON string (TON-203).
 - Job claims take one row with a scalar subquery, `id = (SELECT … LIMIT 1 FOR UPDATE SKIP LOCKED)`. With `IN (…)` the planner can lease several rows (TON-118).
 
 ## Sharing and privacy

@@ -2,7 +2,7 @@
 // The workload lives in accounts of its own, workload@tonaris.test and three sharers. Every run replaces their
 // data in one transaction, so it is safe to repeat and never touches anyone else's.
 
-import { type InferInsertModel, inArray, or } from "drizzle-orm";
+import { inArray, or } from "drizzle-orm";
 import type { PgInsertValue, PgTable } from "drizzle-orm/pg-core";
 
 import {
@@ -40,12 +40,12 @@ const batchSize = 1_000;
 async function insert<T extends PgTable>(
   tx: Transaction,
   table: T,
-  rows: readonly InferInsertModel<T>[],
+  rows: readonly PgInsertValue<T>[],
 ): Promise<void> {
   for (let i = 0; i < rows.length; i += batchSize) {
     // A transaction runs one statement at a time.
     // oxlint-disable-next-line no-await-in-loop
-    await tx.insert(table).values(rows.slice(i, i + batchSize) as PgInsertValue<T>[]);
+    await tx.insert(table).values(rows.slice(i, i + batchSize));
   }
 }
 
