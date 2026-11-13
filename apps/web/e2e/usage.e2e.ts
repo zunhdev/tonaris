@@ -18,7 +18,7 @@ test("the meter counts active albums and albums in Trash", async ({ page }) => {
   ];
   await added(page, [dopesmoker, holy]);
   await page.evaluate(async (id) => {
-    await window.tonarisSync?.trash.deleteAlbum(id).transaction.isPersisted.promise;
+    await window.tonarisSync?.trash.deleteAlbum(id).transaction.when("settled");
   }, holy.id);
   await saved(page);
 

@@ -125,15 +125,15 @@ export function useOwnCollectionData(): CollectionData {
 
 /** What the views read of `client`'s collections, live. */
 function useCollectionDataOf(client: SyncClient | undefined): CollectionData {
-  const containers = useLiveQuery(() => client?.containers, [client]);
-  const memberships = useLiveQuery(() => client?.memberships, [client]);
-  const albums = useLiveQuery(() => client?.albums, [client]);
-  const links = useLiveQuery(() => client?.links, [client]);
-  const fieldRows = useLiveQuery(() => client?.fields, [client]);
-  const valueRows = useLiveQuery(() => client?.fieldValues, [client]);
-  const viewRows = useLiveQuery(() => client?.views, [client]);
-  const defaultRows = useLiveQuery(() => client?.defaults, [client]);
-  const positionRows = useLiveQuery(() => client?.positions, [client]);
+  const containers = useLiveQuery(() => client?.containers);
+  const memberships = useLiveQuery(() => client?.memberships);
+  const albums = useLiveQuery(() => client?.albums);
+  const links = useLiveQuery(() => client?.links);
+  const fieldRows = useLiveQuery(() => client?.fields);
+  const valueRows = useLiveQuery(() => client?.fieldValues);
+  const viewRows = useLiveQuery(() => client?.views);
+  const defaultRows = useLiveQuery(() => client?.defaults);
+  const positionRows = useLiveQuery(() => client?.positions);
   // The rows themselves, which change only when the collections do.
   const containerData = containers.data;
   const membershipData = memberships.data;

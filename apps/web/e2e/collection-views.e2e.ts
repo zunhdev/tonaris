@@ -344,7 +344,7 @@ test("a folder shows its folders and lists as rows, opened by keyboard", async (
   const doom: Container = { ...list("Doom"), parentId: metal.id };
   await page.evaluate(
     async (containers) => {
-      await window.tonarisSync?.containers.insert(containers).isPersisted.promise;
+      await window.tonarisSync?.containers.insert(containers).when("settled");
     },
     [metal, funeral, doom],
   );

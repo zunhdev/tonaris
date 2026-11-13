@@ -89,7 +89,7 @@ test("an album comes back reporting a list in Trash; deleting for good and empty
   await added(page, [dopesmoker, holy], doom.id);
   await page.evaluate(
     async (entry) => {
-      await window.tonarisSync?.memberships.insert(entry).isPersisted.promise;
+      await window.tonarisSync?.memberships.insert(entry).when("settled");
     },
     { listId: later.id, albumId: dopesmoker.id, addedAt: new Date().toISOString() },
   );
@@ -99,7 +99,7 @@ test("an album comes back reporting a list in Trash; deleting for good and empty
   for (const each of [dopesmoker, holy]) {
     // oxlint-disable-next-line no-await-in-loop
     await page.evaluate(async (id) => {
-      await window.tonarisSync?.trash.deleteAlbum(id).transaction.isPersisted.promise;
+      await window.tonarisSync?.trash.deleteAlbum(id).transaction.when("settled");
     }, each.id);
   }
   await item(page, "Later").focus();
