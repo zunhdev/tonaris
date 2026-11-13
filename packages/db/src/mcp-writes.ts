@@ -76,25 +76,28 @@ async function mayChangeAlbum(
   return album.ownerId === userId || canEditAlbum(db, userId, album.id);
 }
 
-/** The album's values now, Trash or not, for a change's `base`: the person's own, or one they edit in a share. */
+/**
+ * The album's values now, Trash or not, for a change's `base`: one `userId` may change, their own or one they edit in
+ * a share. `userId` is the person acting, never assumed to own it (DRIFT-024).
+ */
 export async function albumBase(
   db: Database,
-  { ownerId, albumId }: { ownerId: string; albumId: string },
+  { userId, albumId }: { userId: string; albumId: string },
 ) {
   const found = await findAlbumIn(db, albumId);
-  if (!found || !(await mayChangeAlbum(db, ownerId, found))) return undefined;
+  if (!found || !(await mayChangeAlbum(db, userId, found))) return undefined;
   const { ownerId: _owner, trashed: _trashed, ...album } = found;
   return album;
 }
 
-/** A folder's or list's values now, for a change's `base`: the person's own, or one they edit in a share. */
+/** A folder's or list's values now, for a change's `base`: one `userId` may change, their own or one in a share. */
 export async function containerBase(
   db: Database,
-  { ownerId, containerId }: { ownerId: string; containerId: string },
+  { userId, containerId }: { userId: string; containerId: string },
 ) {
   const found = await findContainerIn(db, containerId);
   if (!found) return undefined;
-  if (found.ownerId !== ownerId && !(await canEditContainer(db, ownerId, containerId))) {
+  if (found.ownerId !== userId && !(await canEditContainer(db, userId, containerId))) {
     return undefined;
   }
   return {
@@ -105,39 +108,42 @@ export async function containerBase(
   };
 }
 
-/** The owner's field, with its options in order, for a change's `base`. */
+/**
+ * The person's own field, with its options in order, for a change's `base`. Fields stay their owner's: an editor
+ * changes none of the owner's (FR-07.20).
+ */
 export async function fieldBase(
   db: Database,
-  { ownerId, fieldId }: { ownerId: string; fieldId: string },
+  { userId, fieldId }: { userId: string; fieldId: string },
 ): Promise<StoredField | undefined> {
   const found = await findFieldIn(db, fieldId);
-  return found?.ownerId === ownerId ? found : undefined;
+  return found?.ownerId === userId ? found : undefined;
 }
 
 /**
- * The owner's album's value for the field now: undefined when the field isn't applied, null when applied-empty, and
- * undefined for an album that isn't theirs.
+ * An album's value for the field now, for an album `userId` may change: undefined when the field isn't applied, null
+ * when applied-empty, and undefined for an album they can't change.
  */
 export function fieldValueBase(
   db: Database,
-  { ownerId, albumId, fieldId }: { ownerId: string; albumId: string; fieldId: string },
+  { userId, albumId, fieldId }: { userId: string; albumId: string; fieldId: string },
 ): Promise<FieldValueData | undefined> {
   return readSnapshot(db, async (tx) => {
     const album = await findAlbumIn(tx, albumId);
-    return album && (await mayChangeAlbum(tx, ownerId, album))
+    return album && (await mayChangeAlbum(tx, userId, album))
       ? findFieldValueIn(tx, albumId, fieldId)
       : undefined;
   });
 }
 
-/** The owner's album's link for `service` now, null without one, or for an album that isn't theirs. */
+/** An album's link for `service` now, for an album `userId` may change; null without one, or for one they can't. */
 export function linkBase(
   db: Database,
-  { ownerId, albumId, service }: { ownerId: string; albumId: string; service: StreamingService },
+  { userId, albumId, service }: { userId: string; albumId: string; service: StreamingService },
 ): Promise<string | null> {
   return readSnapshot(db, async (tx) => {
     const album = await findAlbumIn(tx, albumId);
-    return album && (await mayChangeAlbum(tx, ownerId, album))
+    return album && (await mayChangeAlbum(tx, userId, album))
       ? ((await findServiceLinkIn(tx, albumId, service))?.url ?? null)
       : null;
   });

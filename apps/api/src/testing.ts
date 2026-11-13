@@ -22,6 +22,7 @@ import { apiConfig } from "./config";
 import type { ImageFetch } from "./img/artwork";
 import { memoryLedger } from "./jobs/ledger";
 import type { McpLimiter } from "./mcp/limits";
+import type { RequestLimiter } from "./request-limits";
 import type { CoverFinder } from "./routes/v1/covers";
 import { createRuntime } from "./runtime";
 import { databaseHub, type SyncHubOptions } from "./sync/hub";
@@ -108,6 +109,8 @@ export type LocalAppOptions = {
   covers?: CoverFinder;
   /** MCP's per-connection limits, such as on a test's clock (TS-66). */
   mcpLimiter?: McpLimiter;
+  /** The mutation and guest-view limits (TS-104); the production ones otherwise. */
+  requestLimiter?: RequestLimiter;
 };
 
 /**
@@ -134,6 +137,7 @@ export function localApp(db: Database, options: LocalAppOptions = {}) {
     imageFetch: options.imageFetch,
     covers: options.covers,
     mcpLimiter: options.mcpLimiter,
+    requestLimiter: options.requestLimiter,
   });
 
   /** Calls the app as the web app's browser would: from the web origin, with JSON bodies. */

@@ -6981,7 +6981,7 @@
     "/v1/shared/{id}/stream": {
       "get": {
         "summary": "Stream a shared folder's or list's invalidations",
-        "description": "Server-sent `shared-invalidate` events (TS-23) whenever its owner saves a change, so the viewer's page reads it again; a read that fails means access ended. Comment lines keep the connection alive.",
+        "description": "Server-sent `shared-invalidate` events (TS-23) whenever its owner saves a change, so the viewer's page reads it again; a read that fails means access ended. Comment lines keep the connection alive. The stream ends with the session that opened it: within 30 s of a sign-out or an expiry, and at once on a recovery or an account's deletion.",
         "tags": [
           "sharing"
         ],
@@ -7143,7 +7143,7 @@
     "/v1/s/{token}": {
       "get": {
         "summary": "Get a shared link's content",
-        "description": "The folder or list a link shares, as its guests see it (FR-07.11, FR-07.12): its active folders and lists, their albums with links, and only the fields those albums use. No session is needed. An unknown, turned-off or suspended link is `404`, whatever the reason (DS-72).",
+        "description": "The folder or list a link shares, as its guests see it (FR-07.11, FR-07.12): its active folders and lists, their albums with links, and only the fields those albums use. No session is needed. An unknown, turned-off or suspended link is `404`, whatever the reason (DS-72). Over 120 reads and streams a minute from one address, `429` with `Retry-After` (TS-104).",
         "tags": [
           "sharing"
         ],
@@ -7566,6 +7566,16 @@
               }
             }
           },
+          "429": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "default": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
@@ -7582,7 +7592,7 @@
     "/v1/s/{token}/stream": {
       "get": {
         "summary": "Stream a shared link's invalidations",
-        "description": "Server-sent `shared-invalidate` events (TS-23) whenever the owner saves a change, so the guest page reads the link again; a read that fails means the link stopped working. Comment lines keep the connection alive.",
+        "description": "Server-sent `shared-invalidate` events (TS-23) whenever the owner saves a change, so the guest page reads the link again; a read that fails means the link stopped working. Comment lines keep the connection alive. Opening it counts as a view toward 120 a minute from one address; over them, `429` with `Retry-After` (TS-104).",
         "tags": [
           "sharing"
         ],
@@ -7609,6 +7619,16 @@
             }
           },
           "422": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
               "application/problem+json": {
@@ -7646,7 +7666,7 @@
     "/v1/mutations": {
       "post": {
         "summary": "Run a mutation",
-        "description": "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22). An `album.capture` still running answers `409 in_progress`.",
+        "description": "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22). An `album.capture` still running answers `409 in_progress`. Over 30 mutation requests a second from one account, counted with batches, answer `429` with `Retry-After` and run nothing (TS-104).",
         "tags": [
           "sync"
         ],
@@ -15386,6 +15406,16 @@
               }
             }
           },
+          "429": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "default": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
@@ -15402,7 +15432,7 @@
     "/v1/batches": {
       "post": {
         "summary": "Run a batch of mutations",
-        "description": "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice. An `album.capture` item still running in another request answers the batch `409 in_progress`: the items before it stay saved, and sending the batch again replays them.",
+        "description": "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice. An `album.capture` item still running in another request answers the batch `409 in_progress`: the items before it stay saved, and sending the batch again replays them. A batch counts as one request toward the account's 30 a second; over them, `429` with `Retry-After`, and nothing runs (TS-104).",
         "tags": [
           "sync"
         ],
@@ -15859,6 +15889,16 @@
             }
           },
           "422": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
               "application/problem+json": {

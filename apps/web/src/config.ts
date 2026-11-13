@@ -29,6 +29,14 @@ export const apiUrl: string = readApiUrl();
 export const serverApiUrl: string =
   typeof document === "undefined" ? internalUrl(process.env.API_INTERNAL_URL) || apiUrl : apiUrl;
 
+/**
+ * The header the host's proxy puts the visitor's address in (`CLIENT_IP_HEADER`, TS-104), on the server only. The
+ * server's own reads pass the visitor's address on to the API in it, so the API's per-address limits count the
+ * visitor rather than this server (`visitorHeaders`).
+ */
+export const clientIpHeader: string | undefined =
+  typeof document === "undefined" ? process.env.CLIENT_IP_HEADER?.trim() || undefined : undefined;
+
 function internalUrl(value: string | undefined): string | undefined {
   if (!value) return undefined;
   return /^[a-z][a-z\d+.-]*:\/\//i.test(value) ? value : `http://${value}`;

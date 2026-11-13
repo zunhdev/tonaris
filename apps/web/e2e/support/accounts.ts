@@ -251,6 +251,8 @@ export const accounts = {
   guide: at("a11y-guide"),
   // Passkeys (passkeys.e2e.ts, TON-143).
   passkeyHolder: at("passkey-holder"),
+  // Worst-case text at every width (worst-case.e2e.ts, DRIFT-025).
+  worstCase: at("worst-case"),
 } as const;
 
 /** An address with no account. */

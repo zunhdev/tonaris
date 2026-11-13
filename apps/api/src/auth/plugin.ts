@@ -75,12 +75,12 @@ const discoveryPaths = new Map([
 type Server = { requestIP(request: Request): { address: string } | null } | null;
 
 /**
- * The client's address for the sign-in limits: the socket address, or the header the host's proxy sets
+ * The client's address for the rate limits (TS-104): the socket address, or the header the host's proxy sets
  * (`CLIENT_IP_HEADER`). `X-Forwarded-For` lists every hop; its last entry is the one the proxy saw.
  */
 export function clientIp(
   request: Request,
-  server: Server,
+  server: Server | null,
   header: string | undefined,
 ): string | undefined {
   const forwarded = header ? request.headers.get(header) : null;

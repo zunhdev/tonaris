@@ -28,7 +28,7 @@ Also cover what one dataset can't: an empty list, Unsorted and Trash; exactly on
 
 ## 3. Break it
 
-Run the throwaway test alone: `bunx playwright test worst-case.tmp --project=chromium`, from `apps/web`. It screenshots each state with `page.screenshot()` at 1440 px, 412 px (a Pixel 7) and 320 px, set with `page.setViewportSize()`. It also takes one at 200 % zoom, through `page.evaluate(() => { document.documentElement.style.zoom = "2"; })`; the CSP allows styles set through the DOM. Look for:
+Run the throwaway test alone: `bunx playwright test worst-case.tmp --project=chromium`, from `apps/web`. It screenshots each state with `page.screenshot()` at 1440 px, 412 px (a Pixel 7) and 320 px, set with `page.setViewportSize()`, and asks `textProblems(page)` (`e2e/support/text-fit.ts`) at each one: it names text that runs out of its box, is cut off without an ellipsis, or overlaps other text, and a page that scrolls sideways. It also takes one at 200 % zoom, through `page.evaluate(() => { document.documentElement.style.zoom = "2"; })`; the CSP allows styles set through the DOM. Look for:
 
 | What you see | Usual cause | Fix |
 | --- | --- | --- |
@@ -54,6 +54,6 @@ Decide per field whether to wrap or truncate. Wrap what identifies something (ti
 
 Severity is **Broken** (unreadable, unreachable or wrong), **Ugly** (readable but visibly wrong) or **Fragile** (fine now, one realistic step from breaking).
 
-Then add "Decisions for you" (one line each, with a recommendation) and "What held up". Say where the screenshots are. Keep the throwaway test until fixes are done. A break worth guarding becomes a real browser test; then delete the `.tmp` file.
+Then add "Decisions for you" (one line each, with a recommendation) and "What held up". Say where the screenshots are. Keep the throwaway test until fixes are done. A break worth guarding becomes a step in the permanent `e2e/worst-case.e2e.ts`, which already walks the list, the album panel and sheet, the Add albums dialog and the account menu at the three widths (DRIFT-025); then delete the `.tmp` file.
 
 *Adapted from Emil Kowalski's `break-ui` skill (MIT); see `../THIRD_PARTY_NOTICES.md`.*

@@ -5,6 +5,7 @@
 
 import type { McpServer } from "@modelcontextprotocol/server";
 
+import { TokenBuckets } from "../token-buckets";
 import { failed } from "./results";
 
 export const mcpLimits = {
@@ -18,9 +19,6 @@ export const mcpLimits = {
 
 export type CallKind = "read" | "write";
 
-/** A bucket of `capacity` tokens, refilled evenly over a minute. */
-type Bucket = { tokens: number; at: number };
-
 export type McpLimiter = {
   /** Takes a call from the connection's budget, or answers the seconds to wait; a refusal takes nothing. */
   take(grantId: string, kind: CallKind): number | undefined;
@@ -29,23 +27,16 @@ export type McpLimiter = {
 };
 
 export function createMcpLimiter(now: () => number = Date.now): McpLimiter {
-  const buckets = new Map<string, Bucket>();
+  // One bucket per connection and kind: as many as there are connections.
+  const buckets = {
+    read: new TokenBuckets({ capacity: mcpLimits.reads, refillMs: 60_000 }, now),
+    write: new TokenBuckets({ capacity: mcpLimits.writes, refillMs: 60_000 }, now),
+  };
   const inFlight = new Map<string, number>();
   return {
     take(grantId, kind) {
-      const capacity = kind === "read" ? mcpLimits.reads : mcpLimits.writes;
-      const perMs = capacity / 60_000;
-      const key = `${kind}:${grantId}`;
-      const at = now();
-      const bucket = buckets.get(key) ?? { tokens: capacity, at };
-      const tokens = Math.min(capacity, bucket.tokens + (at - bucket.at) * perMs);
-      if (tokens < 1) {
-        buckets.set(key, { tokens, at });
-        return Math.ceil((1 - tokens) / perMs / 1000);
-      }
-      // One bucket per connection and kind: as many as there are connections.
-      buckets.set(key, { tokens: tokens - 1, at });
-      return undefined;
+      const waitMs = buckets[kind].take(grantId);
+      return waitMs === undefined ? undefined : Math.ceil(waitMs / 1000);
     },
     enter(grantId) {
       const count = inFlight.get(grantId) ?? 0;

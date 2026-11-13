@@ -12,6 +12,7 @@ import { albumOf, changeableAlbum } from "./albums";
 import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, insideShare, isFailure, shareTopRefusal } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
+import { exceedsMaxDepth } from "./container-tree";
 import {
   changeableContainer,
   containerKinds,
@@ -22,7 +23,7 @@ import {
   type Container,
 } from "./containers";
 import { fieldValueKey } from "./field-values";
-import { maxContainerDepth, maxPurgeUnits, trashRetentionDays } from "./limits";
+import { maxPurgeUnits, trashRetentionDays } from "./limits";
 import { membershipKey, type Membership } from "./memberships";
 import { findNameConflict } from "./names";
 import { failure } from "./outcomes";
@@ -340,7 +341,7 @@ export async function recoverUnit(
   }
   const path = await destinationPath(parentId, ownerId, store);
   if (isFailure(path)) return path;
-  if (path.length + depthOf(root.id, members) > maxContainerDepth) return tooDeep();
+  if (exceedsMaxDepth(path.length, depthOf(root.id, members))) return tooDeep();
   const problem = containerNameProblem(name);
   if (problem) return problem;
   if (findNameConflict(name, await store.activeChildren(ownerId, parentId))) {

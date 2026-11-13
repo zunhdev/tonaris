@@ -92,17 +92,21 @@ export function sharedRoutes(
         detail: {
           summary: "Stream a shared folder's or list's invalidations",
           description:
-            "Server-sent `shared-invalidate` events (TS-23) whenever its owner saves a change, so the viewer's page reads it again; a read that fails means access ended. Comment lines keep the connection alive.",
+            "Server-sent `shared-invalidate` events (TS-23) whenever its owner saves a change, so the viewer's page reads it again; a read that fails means access ended. Comment lines keep the connection alive. The stream ends with the session that opened it: within 30 s of a sign-out or an expiry, and at once on a recovery or an account's deletion.",
           tags: ["sharing"],
           operationId: "streamShared",
           responses: streamResponses(invalidationEvents, [401, 404, 422]),
         },
       },
-      async function* ({ params, account, request, server }) {
+      async function* ({ params, account, sessionId, request, server }) {
         const ownerId = await sharedOwner(db, { kind: "person", userId: account.id }, params.id);
         if (ownerId === undefined) throw unavailable();
-        // The page follows its owner's writes.
-        yield* invalidationStream(hub, { ownerId, rootId: params.id }, { request, server });
+        // The page follows its owner's writes, until the viewer's session ends (TS-23).
+        yield* invalidationStream(
+          hub,
+          { ownerId, rootId: params.id, viewer: { accountId: account.id, sessionId } },
+          { request, server },
+        );
       },
     )
     .get(

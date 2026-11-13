@@ -6,6 +6,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import {
   impactOf,
+  moveStaysInShare,
   openGrantStatuses,
   type ImpactQuery,
   type ImpactState,
@@ -93,7 +94,7 @@ export async function editorsMoveImpact(
   if (!row || row.ownerId === userId || to === null) return "not_found";
   const through = await editSourcesAbove(db, userId, id);
   const there = await editSourcesAbove(db, userId, to);
-  if (!through.some((top) => top !== id && there.includes(top))) return "not_found";
+  if (!moveStaysInShare(through, id, there)) return "not_found";
   const impact = await sharingImpact(db, row.ownerId, { kind: "move", id, to });
   if (typeof impact === "string") return impact;
   return {
@@ -138,4 +139,19 @@ export function sharingImpact(
       memberIds: members.map((row) => row.id),
     });
   });
+}
+
+/**
+ * A move's or a recovery's preview as `userId` sees it, for the app and MCP alike (X-02, FR-07.14): the owner's, with
+ * who newly sees it, who no longer does and the shares it keeps; or, for an editor's move inside a share, only whether
+ * who can see it changes (FR-07.20, DS-69).
+ */
+export async function previewSharing(
+  db: Database,
+  userId: string,
+  query: ImpactQuery,
+): Promise<SharingImpact | "not_found" | "invalid" | "needs_destination"> {
+  const impact = await sharingImpact(db, userId, query);
+  if (impact !== "not_found" || query.kind !== "move") return impact;
+  return editorsMoveImpact(db, userId, query);
 }

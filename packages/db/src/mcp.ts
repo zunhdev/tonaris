@@ -8,6 +8,7 @@ import { and, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 import {
   deletedListsOf,
   deletionTargetsOf,
+  editsInsideShare,
   type AlbumDeletionTarget,
   type DeletionTargets,
 } from "@tonaris/domain";
@@ -276,8 +277,8 @@ export async function sharedDeletionTargets(
   for (const { id, ownerId } of found) {
     // oxlint-disable-next-line no-await-in-loop
     const through = await editSourcesAbove(tx, userId, id);
-    if (through.some((top) => top !== id))
-      inside.set(ownerId, [...(inside.get(ownerId) ?? []), id]);
+    // Inside a share, never a share's own top, as `trash.deleteContainer` decides (FR-07.20).
+    if (editsInsideShare(through, id)) inside.set(ownerId, [...(inside.get(ownerId) ?? []), id]);
   }
   const containerTargets: DeletionTargets["containers"][number][] = [];
   for (const [ownerId, ids] of inside) {

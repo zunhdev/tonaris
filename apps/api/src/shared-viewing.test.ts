@@ -124,6 +124,29 @@ test("the stream says to read again after the owner saves, and when access ends"
   await reading;
 });
 
+test("signing out ends the viewer's stream, as it ends their own (TS-23, DRIFT-006)", async () => {
+  await t.drop();
+  // Sessions are checked often, so a signed-out session's stream ends within a test.
+  t = await createTestApp({ hub: { sessionCheckMs: 50 } });
+  base = t.listen();
+  ({ cookie: denis } = await t.signIn("denis@example.com"));
+  ({ cookie: anna } = await t.signIn("anna@example.com"));
+  const { doom } = await sharedDoom();
+  const response = await fetch(`${base}/v1/shared/${doom}/stream`, { headers: { cookie: anna } });
+  expect(response.status).toBe(200);
+  const reading = (async () => {
+    for await (const _ of response.body ?? []) {
+      // Read until the server ends the stream.
+    }
+    return "ended" as const;
+  })();
+  const signedOut = await t.call("/auth/sign-out", { json: {}, headers: { cookie: anna } });
+  expect(signedOut.status).toBe(200);
+  expect(await Promise.race([reading, Bun.sleep(2_000).then(() => "still open" as const)])).toBe(
+    "ended",
+  );
+});
+
 /** The person's own synced state. */
 const snapshotOf = async (as: string) =>
   bootstrapSchema.parse(

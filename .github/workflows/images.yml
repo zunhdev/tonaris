@@ -134,6 +134,22 @@ jobs:
           page=$(curl -fsS -D "$RUNNER_TEMP/web-headers" http://localhost:3000/sign-in)
           grep -q '<meta name="tonaris:api-url" content="https://api.tonaris.example"' <<< "$page"
           grep -qi "content-security-policy: .*connect-src 'self' https://api.tonaris.example" "$RUNNER_TEMP/web-headers"
+          # Every build file the page names is served, with its type: an unstyled page (TON-126) and lost scripts
+          # (TON-179) both reached production while the browser tests passed on `vite preview` (DRIFT-028).
+          assets=$(grep -oE '(href|src)="/assets/[^"]+"' <<< "$page" | sed -E 's/^(href|src)="//; s/"$//' | sort -u)
+          [ -n "$assets" ]
+          for asset in $assets; do
+            type=$(curl -fsS -o /dev/null -w '%{content_type}' "http://localhost:3000$asset")
+            echo "$asset: $type"
+            case "$asset" in
+              *.js) [[ "$type" == *javascript* ]] ;;
+              *.css) [[ "$type" == text/css* ]] ;;
+            esac
+          done
+          # A missing one is a 404 that no cache keeps, so the next deploy's page loads (TON-179).
+          missing=$(curl -s -D - -o /dev/null http://localhost:3000/assets/missing-build-file.js)
+          grep -q '^HTTP/[0-9.]* 404' <<< "$missing"
+          grep -qi '^cache-control: no-store' <<< "$missing"
       - name: Reconcile a restored database (TS-113), and the API's shell has its ~/.ssh
         run: |
           docker run --rm --network host postgres:18.7 createdb -h localhost -U postgres tonaris_restored

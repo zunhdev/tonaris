@@ -95,25 +95,25 @@ describe("a change's base (TS-21)", () => {
       entityId: "1",
     });
 
-    expect(await albumBase(t.db, { ownerId: anna.userId, albumId })).toMatchObject({
+    expect(await albumBase(t.db, { userId: anna.userId, albumId })).toMatchObject({
       id: albumId,
       title: "Bleach",
     });
-    expect(await containerBase(t.db, { ownerId: anna.userId, containerId: listId })).toEqual({
+    expect(await containerBase(t.db, { userId: anna.userId, containerId: listId })).toEqual({
       name: "Grunge",
       parentId: null,
       description: null,
       color: null,
     });
-    expect(await fieldBase(t.db, { ownerId: anna.userId, fieldId })).toMatchObject({
+    expect(await fieldBase(t.db, { userId: anna.userId, fieldId })).toMatchObject({
       id: fieldId,
       name: "Rating",
     });
-    expect(await fieldValueBase(t.db, { ownerId: anna.userId, albumId, fieldId })).toBe("4.5");
-    expect(await linkBase(t.db, { ownerId: anna.userId, albumId, service: "spotify" })).toBe(
+    expect(await fieldValueBase(t.db, { userId: anna.userId, albumId, fieldId })).toBe("4.5");
+    expect(await linkBase(t.db, { userId: anna.userId, albumId, service: "spotify" })).toBe(
       "https://open.spotify.com/album/1",
     );
-    expect(await linkBase(t.db, { ownerId: anna.userId, albumId, service: "tidal" })).toBeNull();
+    expect(await linkBase(t.db, { userId: anna.userId, albumId, service: "tidal" })).toBeNull();
     expect(await viewPrefsBase(t.db, { personId: anna.userId, viewKey: listId })).toEqual({
       sortMode: null,
       sortDir: null,
@@ -121,7 +121,8 @@ describe("a change's base (TS-21)", () => {
       layout: null,
     });
 
-    const theirs = { ownerId: ben.userId };
+    // Someone who neither owns nor edits it.
+    const theirs = { userId: ben.userId };
     expect(await albumBase(t.db, { ...theirs, albumId })).toBeUndefined();
     expect(await containerBase(t.db, { ...theirs, containerId: listId })).toBeUndefined();
     expect(await fieldBase(t.db, { ...theirs, fieldId })).toBeUndefined();

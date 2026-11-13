@@ -1,8 +1,9 @@
 // A shared link (DS-72, TS-03, TS-32): public and server-rendered, so a guest sees the share on the first paint and a
 // link preview has its words. The share is read once per visit and per change, server-side through the API's internal
-// URL; `?c=` picks a folder or list inside it, on the client. The token never leaves in a Referer (security/headers.ts).
+// URL, naming the visitor's address so the API's limit counts them (TS-104); `?c=` picks a folder or list inside it, on
+// the client. The token never leaves in a Referer (security/headers.ts).
 
-import { createApiClient } from "@/api";
+import { createApiClient, visitorHeaders } from "@/api";
 import { count } from "@/common/words";
 import { serverApiUrl } from "@/config";
 import { GuestPage, UnavailableShare } from "@/features/guest/guest-page";
@@ -23,7 +24,9 @@ export const Route = createFileRoute("/s/$token")({
   validateSearch: containerSearch,
   loader: async ({ params }): Promise<Loaded> => {
     try {
-      const { data } = await createApiClient(serverApiUrl).v1.s({ token: params.token }).get();
+      const { data } = await createApiClient(serverApiUrl)
+        .v1.s({ token: params.token })
+        .get({ headers: visitorHeaders() });
       return { snapshot: data ?? undefined };
     } catch {
       return { snapshot: undefined };

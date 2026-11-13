@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { uuidv7, type Container, type SharedEntry } from "@tonaris/domain";
+import { maxContainerDepth, uuidv7, type Container, type SharedEntry } from "@tonaris/domain";
 
 import {
   ancestorsOf,
@@ -205,6 +205,20 @@ describe("moving folders and lists (FR-01.4, FR-01.5)", () => {
     expect(canMoveInto(tree, funeral.id, metal.id)).toBe(false);
     expect(canMoveInto(tree, funeral.id, null)).toBe(true);
     expect(canMoveInto(tree, later.id, funeral.id)).toBe(true);
+  });
+
+  test("a folder can't move where the command would refuse it as too deep (FR-01.4, DRIFT-021)", () => {
+    // Folders nested to one short of the limit, and a folder holding one list: two levels.
+    const chain: Container[] = [];
+    for (let level = 0; level < maxContainerDepth - 1; level += 1) {
+      chain.push(folder(`Level ${level}`, chain.at(-1)?.id ?? null));
+    }
+    const box = folder("Box");
+    const inside = { ...folder("Inside", box.id), kind: "list" as const };
+    const tree = buildTree([...chain, box, inside]);
+    expect(canMoveInto(tree, box.id, chain.at(-1)?.id ?? null)).toBe(false);
+    expect(canMoveInto(tree, box.id, chain.at(-2)?.id ?? null)).toBe(true);
+    expect(canMoveInto(tree, inside.id, chain.at(-1)?.id ?? null)).toBe(true);
   });
 
   test("the picker offers Collection and the folders that can take the item, in tree order", () => {
