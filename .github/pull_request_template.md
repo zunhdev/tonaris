@@ -1,20 +1,9 @@
-## What
+Closes TON-
 
-<!-- One sentence: the intent of this change. -->
+<!-- One or two sentences: what changes for the person, and why. Then 2 to 4 bullets a reviewer needs.
+At most 80 words for a Bug, Chore or Spike, 120 for a Feature or Design: `bun run pr:budget <file> --type <type>`. -->
 
-## Trace
+Verified: `bun run check` passed locally.
+Not verified:
 
-- Linear: TON-
-- Implements: FR-
-- Design: DS-
-- Tech: TS-
-- Verifies: AC-
-- OpenSpec change: <!-- the change name for Feature and Design issues; "none" for chores, spikes and bugs -->
-
-## Verification
-
-- [ ] `bun run check` (format, lint, typecheck, workspace rules, tests)
-
-## Notes
-
-<!-- Follow-ups, decisions taken, anything a reviewer should know. -->
+OpenSpec change: <!-- the change's name, archived in this PR, for a Feature or Design; "none (<Type>)" otherwise -->

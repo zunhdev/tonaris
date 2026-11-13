@@ -260,7 +260,7 @@ docker build -f apps/api/Dockerfile -t tonaris-api .
 docker build -f apps/web/Dockerfile -t tonaris-web .
 ```
 
-Both use `oven/bun:1.4.3-slim`, run as the unprivileged `bun` user, and declare a health check on `/healthz`. Neither contains `node_modules`. CI builds and smoke-tests both (`.github/workflows/images.yml`). Without Docker, with Bun 1.4.3 installed:
+Both use the `oven/bun` slim image of the release in `.bun-version`, run as the unprivileged `bun` user, and declare a health check on `/healthz`. Neither contains `node_modules`. CI builds and smoke-tests both (`.github/workflows/images.yml`). Without Docker, with that Bun release installed:
 
 ```sh
 bun install --frozen-lockfile

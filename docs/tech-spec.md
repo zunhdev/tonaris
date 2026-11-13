@@ -202,12 +202,19 @@ docs/                      PRD, design spec, tech spec, audits, runbooks
 
 **TS-06 Local development (Decided).** Postgres 18 and Mailpit run natively on the developer's machine; Docker is used only for deployment builds (TS-110). Postgres listens on `localhost:5432` with `pg_trgm` available (the creator uses DBngin). Mailpit, installed with Homebrew, captures email, with SMTP on 1025 and its inbox on 8025. One `bun dev` script starts two processes: `apps/api` (`bun --watch`, port 3001) and `apps/web` (Vite with Start HMR, run as `bun --bun vite`, port 3000). The web app calls the API cross-origin under the same CORS and cookie rules as production, with `http://localhost:3000` on the allowlist (TS-102). There is deliberately no Vite proxy, so cross-origin bugs surface locally rather than in production. Seeds come from `tooling/` and include the 5,000-album workload (TS-120).
 
-**TS-07 Dependency policy (Decided; Q-06).**
+**TS-07 Dependency policy (Decided; Q-06; updates through skills since 13 November 2026, TON-202).**
 
-- Every version is pinned exactly in `bun.lock`.
-- Renovate opens weekly batched PRs, with security updates on the same day.
-- Security advisories are watched for Better Auth, TanStack Start, Elysia, Bun, and the MCP SDK.
-- No `latest` or ranges.
+- Every version is pinned exactly in the manifests and `bun.lock`. No `latest` or ranges. `bun run check:workspace` enforces this, and keeps Bun's release in `.bun-version`, `packageManager`, `@types/bun` and the Docker images in step.
+- **Updates** are Chore PRs made with two Claude Code skills in `.claude/skills/`:
+  - `update-packages`: npm packages and the GitHub Actions pins, found with taze (`bun run deps:check`, configured in `taze.config.ts`);
+  - `update-tooling`: Bun, Node (`mise.toml`), and the Postgres and Mailpit images.
+- **Cooldown.** A release waits 7 days before it is used, unless it fixes a security advisory.
+- **Advisories** come from two sources:
+  - `bun audit` reads GitHub's reviewed advisory database, transitive dependencies included;
+  - `bun run deps:advisories` reads what each direct dependency's own GitHub repository publishes. Those reach the shared database late or never: Better Auth's batch of 3 November 2026 never did, so neither `bun audit` nor Dependabot reported it.
+
+  High and critical fixes ship the same day.
+- *Changed in TON-202:* Renovate was planned here but never set up, and dependencies fell behind security fixes. The skills replace it.
 
 **TS-08 Domains (Decided; Q-06).**
 
@@ -363,7 +370,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 **TS-15 Provenance and policy flags (Decided; policy values decided 19 October 2026 in the [G1 terms review](spikes/2026-10-19-g1-terms-review.md)).**
 
 - Every metadata write records `album_provenance(field, source)`.
-- `packages/providers/policy.ts` maps each source to the flags `{store, agentVisible, exportable, attribution}`.
+- `packages/providers/src/policy.ts` maps each source to the flags `{store, agentVisible, exportable, attribution}`.
 - The MCP serializer and the export builder call `policy.filter(album)`.
 - A field withheld by policy is replaced with an explicit marker such as `"withheld": "provider-policy"`. It is never silently dropped (FR-08.8).
 - **Policy values.** No current source withholds anything. The marker stays for sources added later.
@@ -405,7 +412,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 - The host's pre-deploy step runs `bun run db:migrate` (TS-110). It applies all pending migrations in one transaction.
 - `bun run db:check` runs `drizzle-kit check` (snapshots readable, no migration conflicts) and `drizzle-kit generate --explain`, which must report no changes. Neither needs a database. CI runs it (TS-124).
 
-**TS-18 Resource limits (Decided 17 October 2026; FR-15.1, FR-15.3, FR-15.4).** Approved by the creator. Each value is one constant in `packages/domain/limits.ts`, checked under the owner's write lock (TS-20).
+**TS-18 Resource limits (Decided 17 October 2026; FR-15.1, FR-15.3, FR-15.4).** Approved by the creator. Each value is one constant in `packages/domain/src/limits.ts`, checked under the owner's write lock (TS-20).
 
 | Resource | Limit |
 | --- | --- |
@@ -1831,7 +1838,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
 
 | Need | Detail |
 | --- | --- |
-| Runtime | Bun 1.4 (pinned) natively, or the per-app Docker images (`oven/bun:1.4.3` base) built in CI |
+| Runtime | Bun 1.4 (pinned) natively, or the per-app Docker images (`oven/bun` base, the release in `.bun-version`) built in CI |
 | Two processes | `tonaris-web` and `tonaris-api` (TS-01), reachable from each other over a private network or on the same host (`API_INTERNAL_URL`). Only the API connects to the database. |
 | Database | Postgres 18 with `pg_trgm` |
 | Streaming | Long-lived streaming HTTP responses for SSE (TS-23), with no proxy buffering |
@@ -1845,7 +1852,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
 - **Built in TON-12** (deploy steps: `docs/deploy.md`):
   - `apps/api/Dockerfile`: `apps/api/build.ts` bundles the server, the migration, the creator seed and the pre-deploy step that runs both into single files, `bin/server.js`, `bin/migrate.js`, `bin/seed-creator.js` and `bin/predeploy.js`, next to `migrations/`. A script guard (`import.meta.main`) is allowed only in an entry file, and the build fails if a bundled library module has one.
   - `apps/web/Dockerfile`: the server build bundles its dependencies, and `apps/web/server.ts` (`Bun.serve`) serves the built client files and passes everything else to Start.
-  - Neither image contains `node_modules`. Both run on `oven/bun:1.4.3-slim` as the `bun` user, with a health check on `/healthz`.
+  - Neither image contains `node_modules`. Both run on the `oven/bun` slim image of the `.bun-version` release as the `bun` user, with a health check on `/healthz`.
   - The web app reads the API origin, `API_URL`, at start-up and renders it into each page for the browser, so one image serves any host.
   - *Fixed in TON-126:* the build context has no `.gitignore`, so Tailwind's automatic source detection, which skips what `.gitignore` lists, scanned the client build's output during the server build. The server then linked a stylesheet the client build never wrote, and server-rendered pages were unstyled until the browser added the right one. `globals.css` now names its sources (`source(none)`), so both builds read the same files.
   - *Fixed in TON-179:* during a deploy, the old and new web servers both take requests for a moment, so a page from one can ask the other for a build file it doesn't have. `server.ts` answered that miss with the app's "Page not found" page and no `Cache-Control`. Cloudflare kept the 404 at the edge for minutes and gave it its default browser lifetime of 4 hours, so the page stayed broken long after the deploy. A missing file under `/assets/` now answers a plain 404 with `Cache-Control: no-store`. The page's head also has an inline script that reloads the page when one of its build files fails to load, at most once a minute (`src/common/build-file-reload.ts`). Later navigation inside the app already reloads the same way when a route's code fails to load (TanStack Router's `lazyRouteComponent`).

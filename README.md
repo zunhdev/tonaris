@@ -46,7 +46,7 @@ Installs are *isolated*, so a package can import only what it declares; an undec
 
 ## Development
 
-Requires Bun 1.4.3 (see `.bun-version`).
+Requires the Bun release in `.bun-version`; with [mise](https://mise.jdx.dev), `mise install` sets up Bun and Node (`mise.toml`).
 
 ```sh
 bun install --frozen-lockfile   # install exactly what bun.lock records
@@ -54,7 +54,8 @@ bun run check                   # everything below, in order; run before opening
 bun run format:check            # oxfmt (bun run format to fix)
 bun run lint                    # oxlint with type-aware rules (bun run lint:fix to fix)
 bun run typecheck               # TypeScript 7 `tsc --noEmit` in every package
-bun run check:workspace         # layering and pinning rules
+bun run check:workspace         # layering and pinning rules, Bun's release in step everywhere
+bun run check:refs              # rule IDs, paths and scripts that point nowhere; unarchived OpenSpec changes
 bun run check:specs             # openspec validate --all --strict
 bun run db:check                # migrations match the schema (drizzle-kit check, no-diff generate)
 bun run openapi:check           # the committed OpenAPI document matches the API routes
@@ -70,7 +71,13 @@ Production builds, the Docker images and the deploy steps are in [docs/deploy.md
 
 Tooling: oxlint (`.oxlintrc.json`), oxfmt (`.oxfmtrc.json`; Markdown is not auto-formatted), TypeScript 7 with a shared `tsconfig.base.json` that each package extends. Recommended editor extensions are listed in `.vscode/extensions.json`.
 
-New dependencies are added with `bun add <name>` inside the package that uses them; `bunfig.toml` makes Bun write the exact version.
+New dependencies are added with `bun add <name>` inside the package that uses them; `bunfig.toml` makes Bun write the exact version. Updates follow TS-07, through the `update-packages` and `update-tooling` skills (see [Claude Code skills](#claude-code-skills)):
+
+```sh
+bun run deps:check              # newer versions, through taze (taze.config.ts: 7-day cooldown, majors listed)
+bun run deps:advisories         # advisories each dependency's own GitHub repository publishes
+bun audit                       # advisories in GitHub's reviewed database, transitive dependencies included
+```
 
 The browser tests run Playwright's test runner, which needs Node 20.19 or later and Chromium: `bunx playwright install chromium` once. They build the web app and serve it with `vite preview` on port 3100, next to an API on port 3101 (`apps/api/src/e2e-server.ts`) that runs on a fresh schema of `tonaris_test`. They sign in with codes from Mailpit, so **Postgres and Mailpit must be running** (see [Running locally](#running-locally)).
 
@@ -162,6 +169,24 @@ Notes:
 - The CLI is pinned as a devDependency. Outside Claude Code, run it as `bunx openspec …`.
 - In Claude Code, a SessionStart hook in `.claude/settings.json` puts `node_modules/.bin` on PATH, so the generated commands and skills can call `openspec` directly. That needs Node 20.19 or later on PATH; `bun run check:specs` works without Node.
 - After upgrading `@fission-ai/openspec`, run `bunx openspec update` and commit the regenerated `.claude/commands/opsx/` and `.claude/skills/openspec-*` files.
+
+### Claude Code skills
+
+Besides OpenSpec's, `.claude/skills/` holds the repository's own skills (TON-202). Claude Code uses them when a request matches, or you can call one by name, such as `/publish-pr`.
+
+| Skill | What it does |
+| --- | --- |
+| `update-packages` | Upgrades npm packages and the GitHub Actions pins in one Chore PR: taze, a 7-day cooldown, and both advisory sources (TS-07) |
+| `update-tooling` | Upgrades Bun, Node (`mise.toml`), and the Postgres and Mailpit images, with every pin in step |
+| `publish-pr` | Runs the pre-push checks and opens the PR. Its description must pass `bun run pr:budget`: at most 80 words for a Bug, Chore or Spike, 120 for a Feature or Design |
+| `review-pr` | Reviews a PR on three axes (spec, repository rules, correctness beyond the diff), using fresh reviewers whose findings need evidence |
+| `audit-drift` | On request, finds drift between the specs, architecture and code, and repeated mistakes. Records it in [docs/audits/drift-ledger.md](docs/audits/drift-ledger.md) and files the confirmed findings in Linear |
+| `diagnose` | Builds a loop that fails on a bug before guessing at causes, using the lessons of the flaky-test hunts |
+| `break-ui` | Fills a screen with realistic worst-case data, then reports what breaks |
+| `mobile-polish` | Phone-browser symptoms, their causes and fixes |
+| `plain-writing` | Rules for plain, specific prose in PRs, issues and docs |
+
+Some are adapted from public MIT collections; see `.claude/skills/THIRD_PARTY_NOTICES.md`.
 
 ## Working conventions
 

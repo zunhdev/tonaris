@@ -11,6 +11,7 @@ export type PackageJson = {
   type?: string;
   packageManager?: string;
   workspaces?: string[];
+  scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
@@ -82,6 +83,39 @@ export function checkRoot(manifest: PackageJson, bunVersion: string): string[] {
   return problems;
 }
 
+/** "1.4.3" → "1.4". */
+function minor(version: string): string {
+  return version.split(".").slice(0, 2).join(".");
+}
+
+/**
+ * Bun's version is set once, in `.bun-version` (the update-tooling skill): CI and mise read it, and the Docker
+ * images and Bun's types must name the same release. `@types/bun` may lag a patch release, so only its
+ * major and minor must match.
+ */
+export function checkBunPins(
+  bunVersion: string,
+  dockerfiles: { file: string; text: string }[],
+  typesBun: string | undefined,
+): string[] {
+  const version = bunVersion.trim();
+  const problems: string[] = [];
+  for (const { file, text } of dockerfiles) {
+    for (const match of text.matchAll(/^FROM oven\/bun:(\S+)/gm)) {
+      const tag = match[1]?.replace(/-(?:slim|alpine|distroless|debian)$/, "");
+      if (tag !== version) {
+        problems.push(`${file}: oven/bun:${match[1]} must use Bun ${version} from .bun-version`);
+      }
+    }
+  }
+  if (typesBun !== undefined && minor(typesBun) !== minor(version)) {
+    problems.push(
+      `root: @types/bun ${typesBun} must match Bun ${minor(version)}.x from .bun-version`,
+    );
+  }
+  return problems;
+}
+
 export function checkPackage({ dir, manifest }: WorkspacePackage): string[] {
   const name = manifest.name ?? `(unnamed package in ${dir})`;
   const allowed = allowedInternalDependencies[name];
@@ -143,7 +177,16 @@ export async function loadWorkspace(
 export async function checkWorkspace(rootDir: string): Promise<string[]> {
   const { root, packages } = await loadWorkspace(rootDir);
   const bunVersion = await Bun.file(path.join(rootDir, ".bun-version")).text();
-  const problems = [...checkRoot(root, bunVersion), ...packages.flatMap(checkPackage)];
+  const dockerfiles = await Promise.all(
+    (await Array.fromAsync(new Bun.Glob("apps/*/Dockerfile").scan({ cwd: rootDir }))).map(
+      async (file) => ({ file, text: await Bun.file(path.join(rootDir, file)).text() }),
+    ),
+  );
+  const problems = [
+    ...checkRoot(root, bunVersion),
+    ...checkBunPins(bunVersion, dockerfiles, root.devDependencies?.["@types/bun"]),
+    ...packages.flatMap(checkPackage),
+  ];
 
   const present = new Set(packages.map((pkg) => pkg.manifest.name));
   for (const expected of Object.keys(allowedInternalDependencies)) {
