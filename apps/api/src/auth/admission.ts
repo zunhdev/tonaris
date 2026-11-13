@@ -17,11 +17,11 @@ import {
 } from "@tonaris/db";
 import {
   admissionInvitationDays,
+  admissionRefusal,
   admissionRefusalDetails,
   type AdmissionRefusal,
   emailKey,
   type EmailPort,
-  invitationStatus,
   joinCodeRequestSchema,
   joinSchema,
   termsVersion,
@@ -108,16 +108,12 @@ function refused(refusal: AdmissionRefusal): ProblemError {
   return new ProblemError(status, code, admissionRefusalDetails[refusal]);
 }
 
-/** Why `invitation` can't create an account now, if it can't. */
+/** Why `invitation` can't create an account now, if it can't, as the admission itself decides (TS-71). */
 async function refusalOf(
   db: Database,
   invitation: AdmissionInvitationRow | undefined,
 ): Promise<AdmissionRefusal | undefined> {
-  if (!invitation) return "invalid";
-  const status = invitationStatus(invitation);
-  if (status !== "available") return status;
-  if (await admissionsPaused(db)) return "paused";
-  return undefined;
+  return admissionRefusal(invitation, await admissionsPaused(db));
 }
 
 /** The body of Better Auth's error responses. */

@@ -235,9 +235,9 @@ docs/                      PRD, design spec, tech spec, audits, runbooks
 - **Compatibility.** Within v1, changes are additive only: new endpoints, new optional fields, new enum values, and new members of a response's `oneOf`, such as a new entity on the change stream. Clients must tolerate all of them, so `oasdiff` reports a new `oneOf` member (TON-26) and a new response enum value (TON-28) as warnings (`apps/api/openapi/oasdiff-levels.txt`). A removal or semantic change needs `/v2`. One-time exceptions the creator approves are listed in `apps/api/openapi/oasdiff-ignore.txt`, which matches only the change it names: the first was TON-83's, when the approval scope's single `operation` value became an enum of the gated operations, with the web app's approval page its only reader. v1 stays available for a deprecation window, at least 6 months once native apps exist (they can't be force-updated), signalled with `Deprecation` and `Sunset` headers.
 - **Conventions:**
   - errors are RFC 9457 `application/problem+json` carrying the TS-27 `code`: `type` is `about:blank`, `title` is the status phrase, `instance` is the request path, and `validation_failed` problems list each invalid input in `errors` (`{path, message}`). Invalid input answers 422 and an unparsable body 400. Unexpected errors answer 500 `internal_error` with no details in any environment;
-  - lists use opaque cursor pagination (`?cursor=…&limit=…` → `nextCursor`);
-  - every write carries a `mutationId` and is idempotent (TS-22);
-  - rate-limited responses carry the IETF `RateLimit` headers, plus `Retry-After` on 429 (TS-104);
+  - a list that can outgrow one response uses opaque cursor pagination (`?cursor=…&limit=…` → `nextCursor`). *As built:* no `/v1` list does yet. Collection content reaches clients through the sync bootstrap and stream (TS-24), and the REST lists (connections, passkeys, members, invitations, approvals) are bounded small. MCP's `list_container` pages its own way (TS-63);
+  - every collection write goes through the sync envelope (`POST /v1/mutations`, `/v1/batches`), carries a `mutationId` and is idempotent (TS-22). *As built:* the account and administration routes (connections, passkeys, email change, account deletion, terms, approvals' decisions, admissions, members' recovery) carry none. Most are idempotent by state, such as agreeing to the terms again. A few answer a retry differently: a second `DELETE` of a connection is `404`, and inviting the same address again is refused;
+  - a refused, rate-limited request answers `429` `rate_limited` with `Retry-After` (TS-104). *Dropped 13 November 2026:* the IETF `RateLimit` headers, which are still a draft;
   - timestamps are ISO 8601 UTC, and IDs are UUIDv7 strings.
 - **Scope.** The sync endpoints (`/v1/sync/*`, `/v1/mutations`) belong to the same contract (TS-28).
 
@@ -530,7 +530,8 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 - **Owner stream.** `GET /v1/sync/stream` (the web client sends its session cookie, and native clients send a bearer token) sends `id: <seq>`, `event: change` and `data: <change>` for the account's own `change_log`. That log covers owned content, personal preferences (including on shared content), saved references, and account settings. A client names its cursor with `Last-Event-ID`, as EventSource does on reconnect, or with `?after=<seq>`; the server replays changes after that `seq`.
 - **Delivery.** After commit, a mutation's changes go to the account's open streams. A stream takes them only if they continue its cursor. On connect, after a gap, or when a slow client has 1,000 changes waiting, it reads the log instead. A lost or out-of-order publish is therefore harmless, and a client that stops reading costs no memory ([TON-20](spikes/2026-10-20-sync-prototype.md)).
 - **Too old.** If the cursor predates retention, the server sends `event: reset` with `{reason: "cursor_expired"}` and ends the stream; a cursor ahead of the log gets `cursor_unknown`. The client re-bootstraps.
-- **Viewer invalidation.** When a change touches a shared subtree, the server publishes `event: shared-invalidate {rootId, ownerSeq}` to the viewer subscriptions for that root. Affected roots are found from the changed entity's lists and their ancestors (TS-31). The viewer client debounces for 250 ms, then refetches that root's snapshot. This is simple and correct at this scale; per-root deltas are a later optimization.
+- **Viewer invalidation.** When a change touches a shared subtree, the server publishes `event: shared-invalidate {rootId}` to the viewer subscriptions for that root (`GET /v1/shared/{id}/stream`). The viewer client debounces for 250 ms, then refetches that root's snapshot. This is simple and correct at this scale; per-root deltas are a later optimization.
+  - *As built in TON-69:* every confirmed write of the owner's fires it, as for guests below. Narrowing to the affected roots, found from the changed entity's lists and their ancestors (TS-31), and an `ownerSeq` in the event are not built.
 - **Guests** subscribe at `GET /v1/s/:token/stream`, receiving the same invalidations for their single root.
   - *As built in TON-70:*
     - **What triggers an event:** a guest stream watches its link's owner in the hub (`hub.watch`). Every confirmed write of theirs triggers `shared-invalidate {rootId}`: `publish` for writes with changes, `notify` for those without, such as sharing and the display name. Narrowing to the affected root (TS-31) is left for later.
@@ -576,9 +577,9 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - Entries stay a flat list. Grouped by list, the reference bootstrap would be 1.90 MB instead of 2.32 MB raw, but 0.454 MB instead of 0.446 MB gzipped, so grouping gains nothing once compressed (TON-29).
   - The API gzips it, as every JSON response of 1 KB or more, for clients that accept gzip (TS-120).
 - **TanStack DB loading.** Each entity type is a custom sync collection, fed by one sync engine per client: it bootstraps, writes the snapshot to every collection and calls `markReady()`, then streams from the snapshot's `seq`. The stream replays the log from that cursor, so nothing has to be buffered, unlike the documented pattern for streams without replay ([TON-20](spikes/2026-10-20-sync-prototype.md)).
-- **Optimistic writes.** Collection handlers (`onInsert`, `onUpdate`, `onDelete`) or `createOptimisticAction` enqueue envelopes. Each handler resolves only after the stream has delivered `seq ≥ result.seq`, through our `awaitSeq`. After 15 s without that, the mutation shows as `unconfirmed`, and the handler keeps waiting, so the person's value stays on screen, marked, until it is reconciled. This avoids flicker. It is also how TanStack DB's 1.0 RC wants handlers: they return nothing and wait inside ([PR #2171](https://github.com/TanStack/db/pull/2171)). The pinned 0.15.1 accepts both.
+- **Optimistic writes.** Collection handlers (`onInsert`, `onUpdate`, `onDelete`) or `createOptimisticAction` enqueue envelopes. Each handler resolves only after the stream has delivered `seq ≥ result.seq`, through our `awaitSeq`. After 15 s without that, the mutation shows as `unconfirmed`, and the handler keeps waiting, so the person's value stays on screen, marked, until it is reconciled. This avoids flicker. It is also how TanStack DB's 1.0 RC, pinned since 13 November 2026, wants handlers: they return nothing and wait inside ([PR #2171](https://github.com/TanStack/db/pull/2171)).
 - **TanStack DB holds a collection's synced writes while any of its transactions persists** ([TON-20](spikes/2026-10-20-sync-prototype.md)). `awaitSeq` follows the engine's cursor, not TanStack DB's state, so a handler never waits on the change it holds. But a write that stays unconfirmed, as when offline, keeps other sessions' changes to that collection out of view until it settles. Offline there are none to show; back online the outbox retries at once. Keep one collection per entity type, so a stuck album write doesn't hold the containers.
-- **A later pending edit carries an earlier rejected value** ([TON-20](spikes/2026-10-20-sync-prototype.md)). A transaction's optimistic row is the whole record as it saw it. After a conflict on the title, a pending edit to the year of the same album keeps showing the rejected title, marked pending, until the year edit settles and the saved values replace it. TanStack DB 0.15.1 rolls back only later transactions that are still `pending`, and a handler's are already `persisting`.
+- **A later pending edit carries an earlier rejected value** ([TON-20](spikes/2026-10-20-sync-prototype.md)). A transaction's optimistic row is the whole record as it saw it. After a conflict on the title, a pending edit to the year of the same album keeps showing the rejected title, marked pending, until the year edit settles and the saved values replace it. TanStack DB rolls back only later transactions that are still `pending`, and a handler's are already `persisting` (re-read in 1.0.0-rc.1.4's `rollbackConflictingTransactions`, 13 November 2026).
   - TON-30 rolls back the record's other `persisting` transactions when one is rejected (`writer.ts`).
   - Their writes still go out and settle in the save states, and their saved values come back through the stream.
   - Rebasing them onto the current row, to avoid that brief disappearance, can come later without changing the store's contract.
@@ -591,7 +592,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
   - **Kept.** Once one isn't, the report is kept until dismissed. The account's database went to version 3 for a `batches` store, written on each change from then on.
   - **What the record holds:** the writes that have an outcome, failures and conflicts included, which are then not kept on their own. Writes still underway are the outbox's.
   - **After a reload mid-flight,** the outbox's adopted writes form a batch of their own, so the grouping of a batch cut short is lost but none of its writes.
-  - **Retrying into the report.** A retry makes the failed writes again, with those skipped because of them, as one collection call per collection and operation, inside `states.within(report)`, so the new writes join the report. That relies on TanStack DB 0.15.1 calling a collection's handler synchronously, which the browser test that retries inside a report checks.
+  - **Retrying into the report.** A retry makes the failed writes again, with those skipped because of them, as one collection call per collection and operation, inside `states.within(report)`, so the new writes join the report. That relies on TanStack DB calling a collection's handler synchronously, as 1.0.0-rc.1.4 still does (`commit()` calls it before its first `await`), which the browser test that retries inside a report checks.
 - **Changes from elsewhere** (DS-82; TON-31). Each change on the stream names the `mutationId` that made it. One that isn't among this tab's writes came from another session, tab or agent, and the client tells that record's listeners, so the views can highlight it (`elsewhere.ts`).
 - **Connection states.** The engine reports `connecting`, `live`, `reconnecting` and `signed_out`; on `signed_out` the workspace goes to sign-in. The browser's `online` event cuts the reconnect delay short.
 - **Reconnecting or offline** (DS-81; built in TON-31, `connection.ts`). The workspace counts as offline when the browser reports no network, or when the stream has been down for 15 s; until then a drop is *reconnecting*.
@@ -676,6 +677,8 @@ Error `code`s:
 - `uncertain_match`, `unsupported_link`, `provider_unavailable`
 - `rate_limited`, `expired`
 - `in_progress` (409): a mutation still running outside the lock, such as a capture (TS-22; added in TON-44)
+- `recipient_not_found` (422): an invitation's address has no Tonaris account (TS-34; added in TON-65)
+- `display_name_required` (409): sharing needs the owner's display name first (TS-34; added in TON-65)
 - `internal_error`: an unexpected server fault, answered without details
 
 **TS-28 Client-agnostic sync contract (Decided; FR-09, FR-13, PRD section 2.2 later platforms).** Bootstrap, the stream, and mutations form one documented protocol that any client implements. The web app is its first implementation.
@@ -709,7 +712,7 @@ Eden types and the OpenAPI document both derive from the same Zod schemas, so th
 | --- | --- | --- |
 | Session (web) | Better Auth session cookie (TS-08, TS-70) | Owner rights over their own collection. Read rights through accepted grants or saved link references. Edit rights inside shares where an accepted grant gives Can edit (FR-07.18–FR-07.21). |
 | Native app (later phase) | OAuth 2.1 access token, audience = the API's `/v1`, from the authorization-code flow with PKCE as a public client (RFC 8252: system browser, claimed HTTPS redirect) | Same rights as a session |
-| Link guest | Share token in the URL path, then an `Authorization: Share <token>` header | Read one shared root and its subtree only |
+| Link guest | Share token in the URL path (`/v1/s/{token}`) | Read one shared root and its subtree only |
 | MCP grant | OAuth access token (JWT, audience = `/mcp`) bound to a grant with `mode` | Read-only, or Manage collection minus the X-03 operations |
 | Creator | Session with `role = creator` | Admission administration only. No access to other users' data. |
 
@@ -991,7 +994,7 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
     - Messages name the path, never the query.
   - **The Cover Art Archive** is asked with `HEAD …/release-group/{mbid}/front-500` and redirects not followed. A redirect means a front, kept as that stable address. It is archive.org's service, outside MusicBrainz's limit, so it isn't queued.
   - Every outbound request in the chain has a timeout: MusicBrainz, Spotify, iTunes Lookup and the store pages.
-  - Capture shows a pending enrichment state, and batches enrich progressively.
+  - A capture shows as pending until MusicBrainz has answered and the album is saved, since a capture saves nothing without it (TS-42). A batch's albums arrive one by one as their captures finish, and the capture panel counts them (DS-48).
   - A self-hosted MusicBrainz mirror (nightly CC0 dumps) is the scale-out path.
 
 *Spike M1-G1 measures*, on about 150 of the creator's real albums:
@@ -1279,7 +1282,7 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 | Organize | `create_container`, `rename_container`, `set_description`, `move_items`, `add_to_lists`, `remove_from_lists`, `set_order`, `set_view_preferences` |
 | Albums | `add_albums` (batch of links or manual data, destination optional), `update_album` (with `base` for CAS), `set_album_fields` (apply, set, clear, remove) |
 | Fields | `create_field`, `rename_field`, `change_field_type`, `add_options`, `rename_option`, `remove_options` (gated if the options are in use) |
-| Gated (`destructiveHint`) | `delete_items` (to Trash), `delete_field`, `remove_options` (when used), `confirm_match` |
+| Gated (`destructiveHint`, but `confirm_match`, which adds an album) | `delete_items` (to Trash), `delete_field`, `remove_options` (when used), `confirm_match` |
 | Trash | `recover_from_trash` (may return `needs_input`) |
 | References | `save_shared_reference`, `remove_shared_reference` |
 
@@ -1542,7 +1545,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   The route then wakes the worker, and notifies the hub, so guest pages and viewers re-read and find nothing.
 - **The job** (`deleteAccountData`) removes the albums 500 to a transaction, then the rest in one: memberships, containers, Trash units, fields, the account's grants and references, preferences, approvals, mutations, the change log, and the user row. It is idempotent. Its end marks the deletion `deleted`; burial marks it `failed`.
 - **Progress:** the confirmation answers a random token. Then `POST /auth/account-deletion/progress {token}` answers the status, and `…/retry` queues a failed deletion again. Both are public, since the session is gone. `prune-account-deletions` removes finished ones after 7 days.
-- **Not yet:** TS-113's ledger events, which M11-06 builds for every deletion-class event.
+- **The ledger** gets `account.deleted` in the confirming transaction (TS-113), so a restore never brings the account back.
 
 **TS-134 Agreement to the terms (Decided 31 October 2026; FR-11.14, TON-131).**
 
@@ -1671,7 +1674,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 | Job | Schedule | Rules |
 | --- | --- | --- |
 | Trash expiry sweep | hourly (`trash-expiry`, TON-58), publishing each owner's changes after commit | FR-01.17, FR-14.5 |
-| MusicBrainz enrichment queue | continuous, 1 req/s global, in the API process (TON-41) | TS-41 |
+| MusicBrainz request queue | continuous, 1 req/s global, in the API process (TON-41) | TS-41 |
 | Expire provider answers (> 7 d) | daily (`prune-provider-cache`) | TS-41 |
 | Spotify bridge health check | daily (`spotify-health`), while the bridge is on (TON-42) | TS-41 |
 | Email send and retry | on demand | FR-07.5, FR-11.6 |
@@ -1734,11 +1737,12 @@ Findings and their fixes. None high or critical remains open:
 
 - **CORS.** The API allows credentialed requests (`Access-Control-Allow-Credentials: true`) only from the exact web origin, plus `http://localhost:3000` in development. There is no wildcard. Preflights are cached for 10 minutes. Guest share endpoints (`/v1/s/*`) are called without credentials.
 - **Cookie.** The session cookie is `__Secure-`, `HttpOnly`, `SameSite=Lax`, and scoped to the parent domain (TS-08, TS-70).
-- **CSRF** (`apps/api/src/security.ts`). It applies to every non-GET request under `/v1` and `/auth`:
-  - It must send `Content-Type: application/json`, otherwise it gets `415` `validation_failed`. A cross-site HTML form can't send JSON, and JSON forces a CORS preflight. This holds without cookies too, which also stops login CSRF.
+- **CSRF** (`apps/api/src/security.ts`). It applies to every write (any method but GET, HEAD and OPTIONS) under `/v1` and `/auth`:
+  - A POST must send `Content-Type: application/json`, otherwise it gets `415` `validation_failed`. A cross-site HTML form can't send JSON, and JSON forces a CORS preflight. This holds without cookies too, which also stops login CSRF. DELETE, PATCH and PUT are always preflighted, with or without a body, so they need no content type.
   - If it carries cookies, its `Origin` must be the web origin, otherwise it gets `403` `permission_denied`. A missing `Origin` is refused as well.
   - GET requests never mutate.
-- **Bearer principals ignore cookies.** A request carrying `Authorization: Bearer` (native app or MCP) is authenticated by the token alone, and any cookie is ignored: the `signedIn` guard never reads the session for it, and the origin rule doesn't apply to it on `/v1`. Until native-app and MCP tokens exist, no bearer token is valid (`401`). `/mcp` never reads cookies.
+  - *Exempt:* `/auth/oauth2/token` and `/auth/oauth2/revoke`, which MCP clients post forms to (RFC 6749, RFC 7009). They authenticate the client and its code or token and never read the session, so the rule has nothing to protect there. Holding them to JSON would break every client's token refresh.
+- **Bearer principals ignore cookies.** A request carrying `Authorization: Bearer` (native app or MCP) is authenticated by the token alone, and any cookie is ignored: the `signedIn` guard never reads the session for it, and the origin rule doesn't apply to it on `/v1`. MCP tokens are for `/mcp` only (TS-62) and native-app tokens don't exist yet, so no bearer token is valid on `/v1` (`401`). `/mcp` never reads cookies.
 
 **TS-103 SSRF guard and image proxy (Decided; the guard built in TON-40; Q-05, FR-03.4).** One `safeFetch` (`packages/providers/src/safe-fetch.ts`) is used for every outbound call: short links, MusicBrainz, CAA, iTunes Lookup, Spotify, the Qobuz and Tidal store pages, and the image proxy.
 
@@ -1786,7 +1790,7 @@ There is no resizing in v1.
 
 - Rate limits use in-memory token buckets in the single instance, moving to Postgres if the service scales out.
 - Sign-in uses a Tonaris limiter in front of the auth endpoints (`apps/api/src/auth/sign-in-limits.ts`), with sliding windows. Better Auth's own limiter is off: it can't key by email, and without a trusted client address it falls back to one bucket shared by everyone.
-- A refused sign-in answers `429` `rate_limited` with `Retry-After`; it sends nothing and stores nothing. The auth endpoints sit outside `/v1`, so they don't carry the `RateLimit` headers that TS-09 asks of `/v1` responses.
+- A refused sign-in answers `429` `rate_limited` with `Retry-After`; it sends nothing and stores nothing.
 - The client address is the socket address. Behind the host's proxy, `CLIENT_IP_HEADER` names the header to read instead; for `X-Forwarded-For` that is its last entry. In production it is `CF-Connecting-IP`: every request arrives through Cloudflare, and Render's own subdomains are off (TON-108).
 
 | Endpoint | Limit |
@@ -1894,7 +1898,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
   - Trash purge
   - admission-invitation revocation
   - passkey removal (since TON-143)
-  - a grant's role lowered from edit to view (planned in P-TON-47, TON-188), so a restore never brings edit rights back
+  - a grant's role lowered from edit to view (since TON-188), so a restore never brings edit rights back
 - **Restore runbook:**
   1. restore into a new database with both services in maintenance mode, which blocks all access, including guests and MCP;
   2. replay ledger events newer than the restore point;
@@ -1914,6 +1918,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
     - `trash.purged`, by hand or by the expiry;
     - `admission.revoked`;
     - `passkey.removed` (TON-143), for one removed in Settings, or for every passkey of an account at a recovery. A deletion's replay removes them through `account.deleted`.
+    - `shareGrant.roleLowered` (TON-188), when an owner lowers a grant from Can edit to Can view. A raise needs no record.
   - **Writing:** the API's worker appends each event to `LEDGER_URL`, which production requires, with the queue's retries.
     - `file:` writes monthly JSON-lines files.
     - `s3://bucket/prefix` writes one object per event, since objects can't be appended to.

@@ -11,7 +11,7 @@ import { uuidSearch } from "@/search";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCallback } from "react";
 
-import type { SharedSnapshot } from "@tonaris/domain";
+import { ownerLabel, type SharedSnapshot } from "@tonaris/domain";
 
 type Loaded = { snapshot: SharedSnapshot } | { snapshot: undefined };
 
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/s/$token")({
         meta: [{ title: "Not available · Tonaris" }, { name: "robots", content: "noindex" }],
       };
     }
-    const owner = snapshot.owner.displayName ?? "a Tonaris member";
+    const owner = ownerLabel(snapshot.owner.displayName);
     const description = `Shared by ${owner} · ${count(snapshot.albums.length, "album", "albums")}`;
     // Text only: no artwork in previews (DS-72).
     return {

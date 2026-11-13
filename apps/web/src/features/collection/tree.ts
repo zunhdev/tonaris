@@ -14,6 +14,7 @@ import {
   type Container,
   type ContainerKind,
   type SharedEntry,
+  ownerLabel,
 } from "@tonaris/domain";
 
 export type Tree = {
@@ -101,7 +102,7 @@ export function buildSharedTree(
       parentId: null,
       kind: entry.kind,
       name: entry.name,
-      owner: entry.owner.displayName ?? "A Tonaris member",
+      owner: ownerLabel(entry.owner.displayName, { start: true }),
       available: entry.available,
       editable: entry.role === "edit",
     }))

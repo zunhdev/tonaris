@@ -8,6 +8,8 @@ import { useNotify } from "@/features/sync/notify";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+import { ownerLabel } from "@tonaris/domain";
+
 import { usePendingInvitationList } from "./pending-invitations";
 
 export function InvitationToasts({ accountId }: { accountId: string }) {
@@ -29,7 +31,7 @@ export function InvitationToasts({ accountId }: { accountId: string }) {
     const [first] = fresh;
     if (!first || onInvitations) return;
     if (fresh.length === 1) {
-      const owner = first.owner.displayName ?? "A Tonaris member";
+      const owner = ownerLabel(first.owner.displayName, { start: true });
       const shared =
         first.role === "edit"
           ? `${owner} invited you to edit "${first.container.name}"`

@@ -16,7 +16,7 @@ import { LegalLinks } from "@/features/legal/legal-page";
 import { ClientOnly, Link } from "@tanstack/react-router";
 import { useCallback, useMemo, type ReactNode } from "react";
 
-import { unavailableLink, type Container, type SharedSnapshot } from "@tonaris/domain";
+import { ownerLabel, unavailableLink, type Container, type SharedSnapshot } from "@tonaris/domain";
 import { Wordmark } from "@tonaris/ui/components/logo";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
 
@@ -98,7 +98,7 @@ export function GuestPage({
     tree.byId.get(snapshot.rootId);
   if (!current) return <UnavailableShare />;
   const path = ancestorsOf(tree, current.id);
-  const owner = snapshot.owner.displayName ?? "a Tonaris member";
+  const owner = ownerLabel(snapshot.owner.displayName);
 
   return (
     <GuestFrame>

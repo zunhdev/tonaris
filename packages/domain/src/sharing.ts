@@ -52,6 +52,17 @@ export const endedGrantStatuses = [
 export const shareRoles = ["view", "edit"] as const;
 export type ShareRole = (typeof shareRoles)[number];
 
+/**
+ * What the app, MCP and emails call the owner of something shared (DS-72): their display name, or "a Tonaris member"
+ * without one. `start` capitalizes the fallback for the start of a sentence or a label.
+ */
+export function ownerLabel(
+  displayName: string | null | undefined,
+  { start = false }: { start?: boolean } = {},
+): string {
+  return displayName ?? (start ? "A Tonaris member" : "a Tonaris member");
+}
+
 /** An invitation email's delivery, tracked apart from the invitation (FR-07.5, TS-33). */
 export const emailStatuses = ["sending", "sent", "failed", "unknown"] as const;
 export type EmailStatus = (typeof emailStatuses)[number];

@@ -29,7 +29,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 
-import { presentationOf, type Container, type SharedSnapshot } from "@tonaris/domain";
+import { ownerLabel, presentationOf, type Container, type SharedSnapshot } from "@tonaris/domain";
 
 import { useShareStream } from "./use-share-stream";
 
@@ -104,7 +104,7 @@ function SharedContent({
   useDocumentTitle(title);
   if (!current) return <NoLongerAvailable />;
   const ancestors = ancestorsOf(tree, current.id);
-  const owner = snapshot.owner.displayName ?? "a Tonaris member";
+  const owner = ownerLabel(snapshot.owner.displayName);
   const kind = current.kind === "folder" ? "containers" : "albums";
   return (
     <>

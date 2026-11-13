@@ -6,7 +6,7 @@
 
 import path from "node:path";
 
-import { createDatabase, migrateDatabase, redact } from "@tonaris/db";
+import { closeDatabase, createDatabase, migrateDatabase, redact } from "@tonaris/db";
 import { ensureDatabase } from "@tonaris/db/testing";
 
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
@@ -52,7 +52,7 @@ console.log(`perf API on ${app.listen(port)}, database ${redact(url)}`);
 
 async function stop() {
   await app.stop();
-  await db.$client.end();
+  await closeDatabase(db);
   process.exit(0);
 }
 process.once("SIGTERM", () => void stop());

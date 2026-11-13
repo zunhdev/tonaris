@@ -8,7 +8,7 @@
 
 import { parseArgs } from "node:util";
 
-import { createDatabase, ledgerStore, reconcileRestored, redact } from "@tonaris/db";
+import { closeDatabase, createDatabase, ledgerStore, reconcileRestored, redact } from "@tonaris/db";
 
 if (import.meta.main) {
   const { values } = parseArgs({
@@ -44,6 +44,6 @@ if (import.meta.main) {
       "Next, by hand (docs/runbooks/restore.md): point the API at it, reopen, and smoke-test.",
     );
   } finally {
-    await db.$client.end();
+    await closeDatabase(db);
   }
 }

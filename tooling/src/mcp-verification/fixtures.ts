@@ -14,6 +14,7 @@ import {
   albumFieldValues,
   albums,
   containers,
+  closeDatabase,
   createDatabase,
   fieldDefinitions,
   fieldOptions,
@@ -174,5 +175,5 @@ The script (docs/mcp-verification.md), one prompt at a time:
   9. Revoke the connection in Settings → Connections, then:
      Using Tonaris, show me my collection overview.`);
 } finally {
-  await db.$client.end();
+  await closeDatabase(db);
 }

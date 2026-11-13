@@ -192,12 +192,23 @@ describe("components use semantic tokens only (DS-10)", () => {
 });
 
 describe("text sizes (DS-13)", () => {
-  test("the class merging knows every size tokens.css declares, but input, which Tailwind reads as a color", async () => {
+  test("the class merging knows every size tokens.css declares", async () => {
     const css = await Bun.file(tokensPath).text();
     const declared = new Set<string>(
       [...css.matchAll(/--text-([a-z]+):/g)].map(([, name]) => name ?? ""),
     );
-    declared.delete("input");
     expect(new Set<string>(textSizes)).toEqual(declared);
+  });
+
+  test("no size shares a color's name, which Tailwind would read as the color (TON-101)", async () => {
+    const css = await Bun.file(tokensPath).text();
+    const colors = new Set([...css.matchAll(/--color-([a-z-]+):/g)].map(([, name]) => name ?? ""));
+    const clashes = [...css.matchAll(/--text-([a-z]+):/g)]
+      .map(([, name]) => name ?? "")
+      .filter((name) => colors.has(name))
+      .map(
+        (name) => `--text-${name} names the --color-${name} color as text-${name}: rename the size`,
+      );
+    expect(clashes).toEqual([]);
   });
 });

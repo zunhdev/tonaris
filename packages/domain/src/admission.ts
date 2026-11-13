@@ -28,6 +28,23 @@ export type AdmissionRefusal =
   | "invalid"
   | "paused";
 
+/**
+ * Why `invitation` can't create an account at `now`, if it can't (TS-71): an unknown link, then the invitation's own
+ * status, then paused admissions. The status comes first because "paused" promises the invitation works again when
+ * admissions reopen, which an expired, used or withdrawn one never does. The join page, the code request and the
+ * admission itself all ask this, so they agree.
+ */
+export function admissionRefusal(
+  invitation: { status: AdmissionInvitationStatus; expiresAt: Date } | undefined,
+  paused: boolean,
+  now = new Date(),
+): AdmissionRefusal | undefined {
+  if (!invitation) return "invalid";
+  const status = invitationStatus(invitation, now);
+  if (status !== "available") return status;
+  return paused ? "paused" : undefined;
+}
+
 /** One plain sentence for each refusal (DS-91). */
 export const admissionRefusalDetails: Record<AdmissionRefusal, string> = {
   invalid: "This invitation link isn't valid.",

@@ -4,6 +4,7 @@ import {
   admissionAdminRefusalDetails,
   admissionInvitationSchema,
   admissionInviteSchema,
+  admissionRefusal,
   invitationStatus,
   type AdmissionInvitation,
 } from "./admission";
@@ -20,6 +21,25 @@ describe("invitation status (TS-71)", () => {
   test("a used or revoked invitation keeps its status after its expiry", () => {
     expect(invitationStatus({ status: "redeemed", expiresAt: now }, later)).toBe("redeemed");
     expect(invitationStatus({ status: "revoked", expiresAt: now }, later)).toBe("revoked");
+  });
+});
+
+describe("admission refusal (TS-71)", () => {
+  const now = new Date("2026-10-21T12:00:00Z");
+  const later = new Date("2026-11-04T12:00:00Z");
+  const available = { status: "available" as const, expiresAt: later };
+
+  test("admits an available invitation while admissions are open", () => {
+    expect(admissionRefusal(available, false, now)).toBeUndefined();
+  });
+
+  test("refuses an unknown link, then the invitation's own status, then a pause", () => {
+    expect(admissionRefusal(undefined, true, now)).toBe("invalid");
+    // Paused would promise it works again; an expired one never does (DRIFT-022).
+    expect(admissionRefusal({ status: "available", expiresAt: now }, true, now)).toBe("expired");
+    expect(admissionRefusal({ status: "redeemed", expiresAt: later }, true, now)).toBe("redeemed");
+    expect(admissionRefusal({ status: "revoked", expiresAt: later }, true, now)).toBe("revoked");
+    expect(admissionRefusal(available, true, now)).toBe("paused");
   });
 });
 

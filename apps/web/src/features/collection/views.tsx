@@ -28,6 +28,7 @@ import {
   type Container,
   type ContainerKind,
   type Membership,
+  ownerLabel,
 } from "@tonaris/domain";
 import { Button, buttonVariants } from "@tonaris/ui/components/button";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
@@ -207,7 +208,7 @@ function ViewHeader({
           {/* In a share the person edits, who it is from, as a viewer's page says (DS-70). */}
           {inShare && (
             <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-subtle px-2.5 text-small text-fg-secondary">
-              Can edit · Shared by {place.ownerName ?? "a Tonaris member"}
+              Can edit · Shared by {ownerLabel(place.ownerName)}
             </span>
           )}
           {editing && inShare && container?.kind === "folder" && (

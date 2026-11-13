@@ -3,7 +3,7 @@
 // (TS-90), and its job records on the grant how it went: sent, failed, or unknown when it couldn't be confirmed.
 
 import { invitationToDeliver, type Database } from "@tonaris/db";
-import type { EmailPort } from "@tonaris/domain";
+import { ownerLabel, type EmailPort } from "@tonaris/domain";
 
 /** The invitation's page, which the email links to (DS-66). */
 export const invitationUrl = (webOrigin: string, grantId: string) =>
@@ -20,7 +20,7 @@ export async function deliverInvitation(
     invitation.to,
     {
       // Sharing needs a display name (TS-34), so there is one.
-      ownerName: invitation.ownerName ?? "A Tonaris member",
+      ownerName: ownerLabel(invitation.ownerName, { start: true }),
       containerName: invitation.containerName,
       kind: invitation.kind,
       link: invitationUrl(webOrigin, grantId),

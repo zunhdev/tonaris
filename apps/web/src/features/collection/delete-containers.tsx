@@ -10,13 +10,13 @@ import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useRecover } from "@/features/trash/recovery";
-import { useNavigate } from "@tanstack/react-router";
 
 import { trashRetentionDays, type Container } from "@tonaris/domain";
 
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useViewContainerId } from "./collection-ui";
 import { useCollectionData } from "./data";
+import { useInspector } from "./inspector-state";
 import { useCollectionPlace, useOpenContainer } from "./place";
 import { ancestorsOf, type Tree } from "./tree";
 
@@ -166,7 +166,8 @@ export function DeleteAlbumDialog() {
   const client = useSyncClient();
   const notify = useNotify();
   const announce = useAnnounce();
-  const navigate = useNavigate();
+  // The inspector showing it closes, leaving the view's scrolling alone (inspector-state.ts, TON-118).
+  const { close: closeInspector } = useInspector();
   const { albumsById, listsByAlbum, tree } = useCollectionData();
   const { deletingAlbum, endDeleteAlbum } = useCollectionDialogs();
   const album = deletingAlbum === undefined ? undefined : albumsById.get(deletingAlbum);
@@ -193,11 +194,7 @@ export function DeleteAlbumDialog() {
             action: "Delete",
             onConfirm: () => {
               if (!client) return;
-              void navigate({
-                to: ".",
-                search: (previous) => ({ ...previous, album: undefined }),
-                resetScroll: false,
-              });
+              closeInspector();
               sent(client.trash.deleteAlbum(album.id).transaction);
               announce(`Deleted ${album.title} from ${share}`);
               notify?.info(`'${album.title}' left '${share}'`);
@@ -225,12 +222,7 @@ export function DeleteAlbumDialog() {
           action: "Move to Trash",
           onConfirm: () => {
             if (!client) return;
-            // The inspector showing it closes, leaving the view's scrolling alone (inspector-state.ts).
-            void navigate({
-              to: ".",
-              search: (previous) => ({ ...previous, album: undefined }),
-              resetScroll: false,
-            });
+            closeInspector();
             sent(client.trash.deleteAlbum(album.id).transaction);
             announce(`Moved ${album.title} to Trash`);
             notify?.info(`'${album.title}' moved to Trash`);

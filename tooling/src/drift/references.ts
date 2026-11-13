@@ -3,14 +3,21 @@
 // - Repository paths named in docs, OpenSpec specs, skills and code comments that no longer exist.
 // - `bun run <script>` commands in the docs with no such script.
 // - OpenSpec changes left unarchived (TS-132: a change is archived in its own PR).
+// - TS-27's list of error codes, when it differs from `errorCodes` in packages/domain (DRIFT-015).
 // Run with `bun run check:refs`; `bun run check` runs it too, so these can't drift again.
 
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 
+import { errorCodes } from "@tonaris/domain";
+
 import { loadWorkspace, type PackageJson } from "../workspace-check";
 
-export type Finding = { kind: "id" | "path" | "script" | "change"; where: string; detail: string };
+export type Finding = {
+  kind: "id" | "path" | "script" | "change" | "code";
+  where: string;
+  detail: string;
+};
 
 /**
  * The documents that define rule IDs: a heading (`### FR-01 — …`), a bold `**ID Title.**` paragraph, or a
@@ -82,6 +89,52 @@ export function bunRunCommands(text: string): { script: string; cwd: string | un
     if (script) commands.push({ script, cwd });
   }
   return commands;
+}
+
+/**
+ * The error codes TS-27 lists: the backticked names in the bullets under its "Error `code`s:" line, outside
+ * parentheses and before a colon, up to the blank line after them. Undefined when the tech spec has no such list.
+ */
+export function specErrorCodes(techSpec: string): string[] | undefined {
+  const lines = techSpec.split("\n");
+  const start = lines.findIndex((line) => line.trim() === "Error `code`s:");
+  if (start === -1) return undefined;
+  const codes: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (!line.startsWith("- ")) {
+      if (codes.length > 0) break;
+      continue;
+    }
+    // A bullet names its codes before any explanation: "- `a`, `b`", "- `c` (401: …), `d`" or "- `e` (409): …".
+    const names =
+      line
+        .slice(2)
+        .replaceAll(/\([^)]*\)/g, "")
+        .split(":", 1)[0] ?? "";
+    for (const match of names.matchAll(/`([a-z_]+)`/g)) if (match[1]) codes.push(match[1]);
+  }
+  return codes;
+}
+
+/** Where TS-27's list and the domain's `errorCodes` disagree. */
+export function errorCodeDrift(listed: readonly string[], defined: readonly string[]): Finding[] {
+  const where = "docs/tech-spec.md (TS-27)";
+  return [
+    ...defined
+      .filter((code) => !listed.includes(code))
+      .map((code) => ({
+        kind: "code" as const,
+        where,
+        detail: `${code} is in errorCodes (packages/domain/src/outcomes.ts) but not in TS-27's list; add it there`,
+      })),
+    ...listed
+      .filter((code) => !defined.includes(code))
+      .map((code) => ({
+        kind: "code" as const,
+        where,
+        detail: `${code} is in TS-27's list but not in errorCodes; add it to outcomes.ts or remove it from the list`,
+      })),
+  ];
 }
 
 function lineOf(text: string, index: number): number {
@@ -166,6 +219,15 @@ export async function checkReferences(rootDir: string): Promise<Finding[]> {
       }
     }
   }
+
+  const listed = specErrorCodes(await readText(rootDir, "docs/tech-spec.md"));
+  if (listed === undefined) {
+    findings.push({
+      kind: "code",
+      where: "docs/tech-spec.md (TS-27)",
+      detail: 'no "Error `code`s:" list found',
+    });
+  } else findings.push(...errorCodeDrift(listed, errorCodes));
 
   const changes = path.join(rootDir, "openspec/changes");
   for (const entry of readdirSync(changes, { withFileTypes: true })) {
