@@ -524,6 +524,8 @@ Typed confirmation is reserved for account deletion (DS-97).
 
 *As built in TON-107* (decided with the creator, 30 October 2026): **the header's name is the breadcrumbs' size.** It is 13 px (`text.base`) in medium weight and `fg.primary`, after the `fg.secondary` crumbs, as in Linear: "Collection › Metal › Thrash › **Metallica**". Before, it was 20 px `text.page`. This holds in every desktop header: folders, lists, Unsorted, Trash, Shared with me, Settings and Admin. The phone's top bar keeps `text.title` (DS-110).
 
+*As built in TON-209* (DRIFT-025): **a tight header shortens every crumb, and drops none.** Each crumb keeps at least its first letter and an ellipsis, with its `›` after it: "Co… › Best of … › **Мумий Тролль, В…**". Before, a crumb could shrink to nothing and leave its `›` alone, as with a 200-character folder name beside an open album panel in Edit mode.
+
 *As built in TON-124* (from the creator's manual testing, 31 October 2026): **the inspector is resizable,** as the sidebar is. Its left edge is a window splitter, "Resize album panel": drag it, or focus it and use ← (wider) and → (narrower), 16 px a step, and Home and End. The width runs from 320 to 560 px, 380 by default, and is kept per device. It applies beside the view and over it alike. The sidebar and the inspector share the splitter component.
 
 **DS-31 Sidebar contents, top to bottom.** *(FR-01.9, FR-01.12, FR-07.6, FR-07.13, FR-11.6, FR-12.2)*
