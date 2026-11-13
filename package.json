@@ -37,13 +37,13 @@
     "ui:add": "bun run --cwd packages/ui ui:add"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "1.14.3",
-    "@types/bun": "1.4.3",
-    "oxfmt": "0.73.0",
-    "oxlint": "1.88.0",
-    "oxlint-tsgolint": "7.0.2004",
+    "@fission-ai/openspec": "1.16.0",
+    "@types/bun": "1.4.4",
+    "oxfmt": "0.77.0",
+    "oxlint": "1.92.0",
+    "oxlint-tsgolint": "7.0.2006",
     "taze": "21.3.0",
     "typescript": "7.0.2"
   },
-  "packageManager": "bun@1.4.3"
+  "packageManager": "bun@1.4.4"
 }

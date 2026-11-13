@@ -54,13 +54,17 @@ export function NameEditor({
       }),
     [registerEditor],
   );
+  // `cancel` and `save` are function declarations below, hoisted, and the effect runs after render, when they
+  // exist; oxlint's React rule reads them as used before they're declared.
   useEffect(() => {
     commit.current = () => {
       if (!editor || closed.current) return true;
       if (name.trim() === "") {
+        // oxlint-disable-next-line react/immutability
         cancel();
         return true;
       }
+      // oxlint-disable-next-line react/immutability
       return save();
     };
   });

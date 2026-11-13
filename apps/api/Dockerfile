@@ -8,7 +8,7 @@
 #   after a restore (TS-113)         bun bin/reconcile.js --into … --restored-to …, in the host's shell
 # Settings come from the environment (.env.example); production refuses to start without its secrets.
 
-FROM oven/bun:1.4.3 AS build
+FROM oven/bun:1.4.4 AS build
 WORKDIR /repo
 # Every workspace manifest, so the frozen lockfile matches; then the API's runtime dependencies only.
 COPY package.json bun.lock bunfig.toml ./
@@ -27,7 +27,7 @@ COPY packages/providers packages/providers
 COPY apps/api apps/api
 RUN bun run --cwd apps/api build
 
-FROM oven/bun:1.4.3-slim
+FROM oven/bun:1.4.4-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3001
 COPY --from=build --chown=bun:bun /repo/apps/api/dist ./

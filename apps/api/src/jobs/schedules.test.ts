@@ -122,7 +122,7 @@ describe("schedules (TS-90)", () => {
       runSchedule(t.db, slow.schedule),
       runSchedule(t.db, slow.schedule),
     ]);
-    expect(ran.toSorted()).toEqual([false, true]);
+    expect(ran.toSorted((a, b) => Number(a) - Number(b))).toEqual([false, true]);
     expect(slow.runs).toBe(1);
   });
 
