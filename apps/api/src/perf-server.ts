@@ -10,6 +10,7 @@ import { createDatabase, migrateDatabase, redact } from "@tonaris/db";
 import { ensureDatabase } from "@tonaris/db/testing";
 
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
+import { createRequestLimiter, relaxedRequestLimits } from "./request-limits";
 import { localApp } from "./testing";
 
 const url = process.env.PERF_DATABASE_URL ?? "postgres://postgres@localhost:5432/tonaris_perf";
@@ -37,6 +38,8 @@ const app = localApp(db, {
     WEB_ORIGIN: process.env.WEB_ORIGIN ?? "http://localhost:3200",
   },
   limiter: createSignInLimiter({ perEmail: unlimited, perIp: unlimited }),
+  // The performance runs write in bursts on purpose (TS-104).
+  requestLimiter: createRequestLimiter(relaxedRequestLimits),
 });
 
 const owner = "workload@tonaris.test";

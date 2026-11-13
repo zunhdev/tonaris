@@ -8,7 +8,8 @@
 // Postgres LISTEN/NOTIFY later. A cursor the log no longer reaches, or one it never had, ends with `reset`.
 // A stream also ends once the session that opened it is signed out, revoked or expired: while streams are open,
 // the hub checks their sessions every 30 s. An email change, a recovery and an account's deletion end the account's
-// other sessions' streams at once instead (TS-73, TS-74).
+// other sessions' streams at once instead (TS-73, TS-74). A signed-in viewer's watch of a share ends the same way;
+// a guest's has no session, and lasts as long as its connection (DRIFT-006).
 
 import type { SSEPayload } from "elysia";
 
@@ -59,6 +60,17 @@ export type SyncHubOptions = {
 };
 
 type StreamSettings = Required<Pick<SyncHubOptions, "log" | "pageSize" | "bufferLimit">>;
+
+/** Who opened a watch, when signed in: it ends with their session, as their own streams do (TS-23). */
+export type Watcher = {
+  accountId: string;
+  sessionId: string;
+  /** Ends the watch's stream. */
+  end(): void;
+};
+
+/** A watch on an account's writes: its listener, and its signed-in watcher, if it has one. */
+type Watch = { listener: () => void; by: Watcher | undefined };
 
 type Result = IteratorResult<SyncEvent, undefined>;
 const done: Result = { done: true, value: undefined };
@@ -189,24 +201,36 @@ export function createSyncHub(options: SyncHubOptions) {
   } = options;
   const settings: StreamSettings = { pageSize: 500, bufferLimit: 1_000, ...rest };
   const streams = new Map<string, Set<Subscription>>();
-  /** Who watches an account's writes without streaming its changes: guests of its shares (TS-23). */
-  const watchers = new Map<string, Set<() => void>>();
+  /** Who watches an account's writes without streaming its changes: guests and viewers of its shares (TS-23). */
+  const watchers = new Map<string, Set<Watch>>();
   const notify = (accountId: string) => {
-    for (const listener of watchers.get(accountId) ?? []) listener();
+    for (const { listener } of watchers.get(accountId) ?? []) listener();
   };
   const shutdown = new AbortController();
   let checks: ReturnType<typeof setInterval> | undefined;
 
-  const openStreams = () =>
-    [...streams.values()].flatMap((subscriptions) => Array.from(subscriptions));
-  const endWhere = (ends: (subscription: Subscription) => boolean) => {
-    for (const subscription of openStreams().filter(ends)) subscription.end();
+  /** Every open stream that ends with a session: the account's own streams, and signed-in viewers' watches. */
+  const sessionStreams = (): {
+    accountId: string;
+    sessionId: string | undefined;
+    end(): void;
+  }[] => [
+    ...[...streams.values()].flatMap((subscriptions) => Array.from(subscriptions)),
+    ...[...watchers.values()].flatMap((watches) =>
+      Array.from(watches).flatMap(({ by }) => (by ? [by] : [])),
+    ),
+  ];
+  const endWhere = (
+    ends: (stream: { accountId: string; sessionId: string | undefined }) => boolean,
+  ) => {
+    for (const stream of sessionStreams().filter(ends)) stream.end();
   };
+  let signedInWatches = 0;
 
   /** Ends the streams whose sessions are no longer live. */
   async function checkSessions(): Promise<void> {
     const ids = [
-      ...new Set(openStreams().flatMap(({ sessionId }) => (sessionId ? [sessionId] : []))),
+      ...new Set(sessionStreams().flatMap(({ sessionId }) => (sessionId ? [sessionId] : []))),
     ];
     if (!sessions || ids.length === 0) return;
     let active: Set<string>;
@@ -219,9 +243,9 @@ export function createSyncHub(options: SyncHubOptions) {
     endWhere(({ sessionId }) => sessionId !== undefined && !active.has(sessionId));
   }
 
-  /** Checks sessions only while streams are open. */
+  /** Checks sessions only while streams, or signed-in watches, are open. */
   function scheduleChecks(): void {
-    const any = streams.size > 0;
+    const any = streams.size > 0 || signedInWatches > 0;
     if (sessions && any && !checks) {
       checks = setInterval(() => void checkSessions(), sessionCheckMs);
     } else if (!any && checks) {
@@ -241,13 +265,24 @@ export function createSyncHub(options: SyncHubOptions) {
     /** Tells the account's watchers it wrote something the change log doesn't carry, such as sharing (TON-70). */
     notify,
 
-    /** Calls `listener` after each of the account's writes; answers how to stop. */
-    watch(accountId: string, listener: () => void): () => void {
+    /**
+     * Calls `listener` after each of the account's writes; answers how to stop. A watch `by` someone signed in ends
+     * with their session, as their own streams do: at the next check, or at once with `endSessionsOf`.
+     */
+    watch(accountId: string, listener: () => void, by?: Watcher): () => void {
+      const watch: Watch = { listener, by };
       const account = watchers.get(accountId) ?? new Set();
-      watchers.set(accountId, account.add(listener));
+      watchers.set(accountId, account.add(watch));
+      if (by) signedInWatches += 1;
+      scheduleChecks();
+      let stopped = false;
       return () => {
-        account.delete(listener);
+        if (stopped) return;
+        stopped = true;
+        account.delete(watch);
         if (account.size === 0) watchers.delete(accountId);
+        if (by) signedInWatches -= 1;
+        scheduleChecks();
       };
     },
 
@@ -280,9 +315,9 @@ export function createSyncHub(options: SyncHubOptions) {
      */
     endSessionsOf(accountId: string, keepSessionId?: string): void {
       endWhere(
-        (subscription) =>
-          subscription.accountId === accountId &&
-          (keepSessionId === undefined || subscription.sessionId !== keepSessionId),
+        (stream) =>
+          stream.accountId === accountId &&
+          (keepSessionId === undefined || stream.sessionId !== keepSessionId),
       );
     },
 

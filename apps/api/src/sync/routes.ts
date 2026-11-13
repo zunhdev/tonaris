@@ -25,6 +25,7 @@ import type { SessionGuard } from "../auth/plugin";
 import { presentBootstrap, presentChange, type ArtworkSigner } from "../img/artwork";
 import { streamResponses } from "../openapi";
 import { ProblemError } from "../problem";
+import type { RequestLimiter } from "../request-limits";
 import { eventStream, type StreamSource } from "../sse";
 import type { SyncEvent, SyncHub } from "./hub";
 import { MutationInProgressError, mutationStatus, type Mutations } from "./runner";
@@ -85,12 +86,15 @@ export function syncRoutes(
     hub,
     artwork,
     mutations: { run, announce },
+    limiter,
   }: {
     db: Database;
     hub: SyncHub;
     artwork: ArtworkSigner;
     /** Runs each mutation and announces its changes, as MCP's writes do (X-02). */
     mutations: Mutations;
+    /** Counts each account's mutation requests (TS-104). */
+    limiter: RequestLimiter;
   },
 ) {
   return new Elysia()
@@ -105,16 +109,18 @@ export function syncRoutes(
           401: problemSchema,
           409: problemSchema,
           422: problemSchema,
+          429: problemSchema,
         },
         detail: {
           summary: "Run a mutation",
           description:
-            "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22). An `album.capture` still running answers `409 in_progress`.",
+            "Runs one mutation envelope (TS-20) and answers with its outcome (TS-27). Sending the same `mutationId` again returns the stored outcome without running it twice (TS-22). An `album.capture` still running answers `409 in_progress`. Over 30 mutation requests a second from one account, counted with batches, answer `429` with `Retry-After` and run nothing (TS-104).",
           tags: ["sync"],
           operationId: "postMutation",
         },
       },
       async ({ body, principal, account, request, server }) => {
+        limiter.mutation(account.id);
         keepOpen(request, server, [body]);
         try {
           const executed = await run(principal, body);
@@ -136,16 +142,18 @@ export function syncRoutes(
           401: problemSchema,
           409: problemSchema,
           422: problemSchema,
+          429: problemSchema,
         },
         detail: {
           summary: "Run a batch of mutations",
           description:
-            "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice. An `album.capture` item still running in another request answers the batch `409 in_progress`: the items before it stay saved, and sending the batch again replays them.",
+            "Runs up to 200 `BatchItem`s in order, each on its own, so a success stays whatever happens to later items (TS-25). An item runs only once every item it `dependsOn` is confirmed; otherwise it is `skipped`. Each item is validated and made idempotent by its `mutationId` as a single mutation is, so sending the batch again applies nothing twice. An `album.capture` item still running in another request answers the batch `409 in_progress`: the items before it stay saved, and sending the batch again replays them. A batch counts as one request toward the account's 30 a second; over them, `429` with `Retry-After`, and nothing runs (TS-104).",
           tags: ["sync"],
           operationId: "postBatch",
         },
       },
       async ({ body, principal, account, request, server }) => {
+        limiter.mutation(account.id);
         keepOpen(request, server, body.items);
         try {
           return await executeBatch(db, principal, body, {

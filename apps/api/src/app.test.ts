@@ -147,7 +147,7 @@ describe("OpenAPI", () => {
     const streams = {
       "/v1/sync/stream": [401, 422],
       "/v1/shared/{id}/stream": [401, 404, 422],
-      "/v1/s/{token}/stream": [404, 422],
+      "/v1/s/{token}/stream": [404, 422, 429],
     };
     for (const [path, statuses] of Object.entries(streams)) {
       expect({ path, get: paths[path]?.get }).toMatchObject({

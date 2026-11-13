@@ -24,14 +24,19 @@ import {
   type ViewPrefs,
 } from "@tonaris/domain";
 
+import { createRequestLimiter, relaxedRequestLimits } from "../request-limits";
 import { createTestApp } from "../testing";
 
 let t: Awaited<ReturnType<typeof createTestApp>>;
 let base: string;
 
 beforeEach(async () => {
-  // Sessions are checked often, so a signed-out session's stream ends within a test.
-  t = await createTestApp({ hub: { sessionCheckMs: 50 } });
+  // Sessions are checked often, so a signed-out session's stream ends within a test. The tests send their writes
+  // faster than the mutation limit allows, which request-limits.test.ts checks (TS-104).
+  t = await createTestApp({
+    hub: { sessionCheckMs: 50 },
+    requestLimiter: createRequestLimiter(relaxedRequestLimits),
+  });
   base = t.listen();
 });
 

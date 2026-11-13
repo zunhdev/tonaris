@@ -1,9 +1,10 @@
 // A shared link, for anyone holding it (DS-72; FR-07.1, FR-07.11, FR-11.9; TS-23, TS-32): the shared folder or list
 // as its guests see it, and a stream that says when to read it again. No session: the token in the path is the
 // credential, found by its hash. Every way a link can fail answers the same, so nothing is revealed about the
-// content. Tokens appear only on `/v1/s/` paths, and the error log hides them (problem.ts).
+// content. Tokens appear only on `/v1/s/` paths, and the error log hides them (problem.ts). Reads and streams count
+// toward 120 a minute per client address (TS-104), before the link is looked up.
 
-import { Elysia } from "elysia";
+import { Elysia, type Server } from "elysia";
 import { z } from "zod";
 
 import { findShareLink, sharedSnapshot, type Database } from "@tonaris/db";
@@ -14,9 +15,11 @@ import {
   unavailableLink,
 } from "@tonaris/domain";
 
+import { clientIp } from "../../auth/plugin";
 import { presentSnapshot, type ArtworkSigner } from "../../img/artwork";
 import { invalidationEvents, streamResponses } from "../../openapi";
 import { ProblemError } from "../../problem";
+import type { RequestLimiter } from "../../request-limits";
 import { invalidationStream } from "../../sse";
 import type { SyncHub } from "../../sync/hub";
 
@@ -28,11 +31,21 @@ export function guestRoutes({
   db,
   hub,
   artwork,
+  limiter,
+  clientIpHeader,
 }: {
   db: Database;
   hub: SyncHub;
   artwork: ArtworkSigner;
+  /** Counts guests' views per client address (TS-104). */
+  limiter: RequestLimiter;
+  /** The header that names the client's address behind the host's proxy (TS-104). */
+  clientIpHeader: string | undefined;
 }) {
+  /** Counts a guest's view, refusing it over the limit. */
+  const counted = (request: Request, server: Server | null) =>
+    limiter.guestView(clientIp(request, server, clientIpHeader));
+
   /** The link and its owner, while the link works: live, and its folder or list readable (not in Trash). */
   async function working(value: string) {
     const link = await findShareLink(db, value);
@@ -47,16 +60,22 @@ export function guestRoutes({
       "/s/:token",
       {
         params: z.object({ token }),
-        response: { 200: sharedSnapshotSchema, 404: problemSchema, 422: problemSchema },
+        response: {
+          200: sharedSnapshotSchema,
+          404: problemSchema,
+          422: problemSchema,
+          429: problemSchema,
+        },
         detail: {
           summary: "Get a shared link's content",
           description:
-            "The folder or list a link shares, as its guests see it (FR-07.11, FR-07.12): its active folders and lists, their albums with links, and only the fields those albums use. No session is needed. An unknown, turned-off or suspended link is `404`, whatever the reason (DS-72).",
+            "The folder or list a link shares, as its guests see it (FR-07.11, FR-07.12): its active folders and lists, their albums with links, and only the fields those albums use. No session is needed. An unknown, turned-off or suspended link is `404`, whatever the reason (DS-72). Over 120 reads and streams a minute from one address, `429` with `Retry-After` (TS-104).",
           tags: ["sharing"],
           operationId: "getSharedLink",
         },
       },
-      async ({ params }) => {
+      async ({ params, request, server }) => {
+        counted(request, server);
         const { snapshot } = await working(params.token);
         // Its artwork shows through the API's image proxy (TS-103).
         return presentSnapshot(artwork, snapshot);
@@ -69,13 +88,14 @@ export function guestRoutes({
         detail: {
           summary: "Stream a shared link's invalidations",
           description:
-            "Server-sent `shared-invalidate` events (TS-23) whenever the owner saves a change, so the guest page reads the link again; a read that fails means the link stopped working. Comment lines keep the connection alive.",
+            "Server-sent `shared-invalidate` events (TS-23) whenever the owner saves a change, so the guest page reads the link again; a read that fails means the link stopped working. Comment lines keep the connection alive. Opening it counts as a view toward 120 a minute from one address; over them, `429` with `Retry-After` (TS-104).",
           tags: ["sharing"],
           operationId: "streamSharedLink",
-          responses: streamResponses(invalidationEvents, [404, 422]),
+          responses: streamResponses(invalidationEvents, [404, 422, 429]),
         },
       },
       async function* ({ params, request, server }) {
+        counted(request, server);
         const { link } = await working(params.token);
         // The page follows its owner's writes.
         yield* invalidationStream(

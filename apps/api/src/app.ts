@@ -25,6 +25,7 @@ import { mcpRoutes } from "./mcp/routes";
 import type { LogError } from "./observability";
 import { openApiJson } from "./openapi";
 import { problemDetails, type ProblemDetailsOptions } from "./problem";
+import { createRequestLimiter, type RequestLimiter } from "./request-limits";
 import { accountDeletionRoutes } from "./routes/v1/account-deletion";
 import { admissionAdminRoutes } from "./routes/v1/admissions";
 import { approvalRoutes } from "./routes/v1/approvals";
@@ -78,13 +79,16 @@ function v1(
     /** Sends invitations, recoveries and email changes' codes (TS-72). */
     email: EmailPort;
     limiter: SignInLimiter;
+    requestLimiter: RequestLimiter;
     wakeJobs: () => void;
     covers?: CoverFinder | undefined;
     artwork: ArtworkSigner;
     logError: LogError;
   },
 ) {
-  const { config, db, hub, mutations, email, limiter, wakeJobs, covers, artwork, logError } = deps;
+  const { config, db, hub, mutations, email, limiter, requestLimiter, wakeJobs, covers, artwork } =
+    deps;
+  const { logError } = deps;
   const { webOrigin, clientIpHeader, commit } = config;
   return new Elysia({ prefix: "/v1" })
     .use(openApiJson)
@@ -113,8 +117,8 @@ function v1(
     .use(memberAdminRoutes(session, { db, email, webOrigin }))
     .use(operationsRoutes(session, { db }))
     .use(sharedRoutes(session, { db, hub, artwork }))
-    .use(guestRoutes({ db, hub, artwork }))
-    .use(syncRoutes(session, { db, hub, artwork, mutations }));
+    .use(guestRoutes({ db, hub, artwork, limiter: requestLimiter, clientIpHeader }))
+    .use(syncRoutes(session, { db, hub, artwork, mutations, limiter: requestLimiter }));
 }
 
 export type AppOptions = ProblemDetailsOptions & {
@@ -137,6 +141,8 @@ export type AppOptions = ProblemDetailsOptions & {
   covers?: CoverFinder | undefined;
   /** MCP's per-connection limits; the default holds the TS-66 limits for this process. */
   mcpLimiter?: McpLimiter | undefined;
+  /** The mutation and guest-view limits; the default holds the TS-104 limits for this process. */
+  requestLimiter?: RequestLimiter | undefined;
 };
 
 export function createApp({
@@ -151,6 +157,7 @@ export function createApp({
   imageFetch,
   covers,
   mcpLimiter,
+  requestLimiter = createRequestLimiter(),
   ...problemOptions
 }: AppOptions) {
   const artwork = artworkSigner(config.authSecret);
@@ -202,6 +209,7 @@ export function createApp({
           mutations,
           email,
           limiter,
+          requestLimiter,
           wakeJobs,
           covers,
           artwork,

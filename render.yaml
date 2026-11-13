@@ -95,6 +95,10 @@ services:
           property: hostport
       - key: SENTRY_DSN
         sync: false
+      # The visitor's address, which Cloudflare sets: the server's own API reads pass it on, so the API's
+      # per-address limits count the visitor rather than this service (TS-104).
+      - key: CLIENT_IP_HEADER
+        value: CF-Connecting-IP
       # The feedback board, for the account menu (FR-11.15).
       - key: FEEDBACK_URL
         value: https://feedback.tonaris.app
