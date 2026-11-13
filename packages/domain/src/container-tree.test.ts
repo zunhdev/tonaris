@@ -3,7 +3,15 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { chainOf, subtreeOf, treeOf } from "./container-tree";
+import {
+  chainOf,
+  moveProblem,
+  rootsAmong,
+  subtreeDepthOf,
+  subtreeOf,
+  treeOf,
+} from "./container-tree";
+import { maxContainerDepth } from "./limits";
 
 const node = (id: string, parentId: string | null, trashed = false) => ({ id, parentId, trashed });
 
@@ -33,5 +41,42 @@ describe("container walks (TS-31)", () => {
     const loop = treeOf([node("a", "b"), node("b", "a")]);
     expect(chainOf(loop, "a")).toEqual(["a", "b"]);
     expect(subtreeOf(loop, "a")).toEqual(["a", "b"]);
+  });
+});
+
+describe("moves and deletions, as the commands decide them (FR-01.4, FR-01.5, DRIFT-021)", () => {
+  const tree = treeOf([
+    node("metal", null),
+    node("doom", "metal"),
+    node("epic", "doom"),
+    node("sludge", "metal"),
+    node("jazz", null),
+  ]);
+
+  test("a subtree's depth counts its levels, 1 for a leaf, 0 for none", () => {
+    expect(subtreeDepthOf(tree, "metal")).toBe(3);
+    expect(subtreeDepthOf(tree, "epic")).toBe(1);
+    expect(subtreeDepthOf(tree, "gone")).toBe(0);
+  });
+
+  test("a move into itself or below itself is a cycle; elsewhere it passes", () => {
+    expect(moveProblem(tree, "metal", "metal")).toBe("cycle");
+    expect(moveProblem(tree, "metal", "doom")).toBe("cycle");
+    expect(moveProblem(tree, "doom", "jazz")).toBeUndefined();
+    expect(moveProblem(tree, "doom", null)).toBeUndefined();
+  });
+
+  test("a move past the nesting limit is too deep, counting the folder's own levels", () => {
+    // A chain of folders exactly at the limit, and a two-level folder to put under it.
+    const deep = Array.from({ length: maxContainerDepth }, (_, level) =>
+      node(`level-${level}`, level === 0 ? null : `level-${level - 1}`),
+    );
+    const nested = treeOf([...deep, node("box", null), node("inside", "box")]);
+    expect(moveProblem(nested, "box", `level-${maxContainerDepth - 2}`)).toBe("too_deep");
+    expect(moveProblem(nested, "box", `level-${maxContainerDepth - 3}`)).toBeUndefined();
+  });
+
+  test("deleting several takes only the ones inside none of the others as roots", () => {
+    expect(rootsAmong(tree, ["epic", "metal", "jazz", "gone"])).toEqual(["metal", "jazz"]);
   });
 });

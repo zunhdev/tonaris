@@ -8,11 +8,13 @@ import {
   conflict,
   contentAccess,
   insideShare,
+  moveStaysInShare,
   isFailure,
   shareTopRefusal,
   type ContentAccess,
 } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
+import { exceedsMaxDepth } from "./container-tree";
 import { maxContainerDepth, maxContainers, maxDescriptionLength, maxNameLength } from "./limits";
 import { exceedsLength, findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
@@ -213,7 +215,7 @@ export async function createContainer(
 
   const path = await destinationPath(container.parentId, ownerId, store);
   if (isFailure(path)) return path;
-  if (path.length + 1 > maxContainerDepth) return tooDeep();
+  if (exceedsMaxDepth(path.length, 1)) return tooDeep();
   const taken = await siblingConflict(container.name, { ...container, ownerId }, store);
   if (taken) return taken;
   if ((await store.countContainers(ownerId)) >= maxContainers) {
@@ -313,7 +315,7 @@ export async function moveContainer(
   const { store } = context;
   if (access.as === "editor") {
     const there = parentId === null ? [] : await store.editSourcesAbove(access.userId, parentId);
-    if (!access.through.some((top) => top !== id && there.includes(top))) {
+    if (!moveStaysInShare(access.through, id, there)) {
       return failure(
         "invalid_destination",
         "It can only move to a folder inside the share it's in. Choose a folder there.",
@@ -325,7 +327,7 @@ export async function moveContainer(
   if (path.includes(id)) {
     return failure("cycle", "A folder can't move into itself or a folder inside it.");
   }
-  if (path.length + (await store.subtreeDepth(id)) > maxContainerDepth) return tooDeep();
+  if (exceedsMaxDepth(path.length, await store.subtreeDepth(id))) return tooDeep();
   const { ownerId, name } = container;
   const taken = await siblingConflict(name, { ownerId, parentId, selfId: id }, store);
   if (taken) return taken;

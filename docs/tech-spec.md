@@ -1294,6 +1294,7 @@ There are deliberately **no** tools for sharing management, Trash purge, export,
   - The approvals of `delete_items` and `confirm_match` also cover content in shares the person edits (`sharedDeletionTargets`, `sharedMatchTarget`).
   - They name only what the person sees: folders and lists inside the share, never its own, and only the lists the person edits. A saved album is named only if they can edit it already.
   - They never say who sees it, or how many albums go to the owner's Unsorted.
+- *Since TON-208* (DRIFT-017): **moves' sharing effects.** `move_items` reports them from the app's own preview (`previewSharing`, packages/db), so an editor's move inside a share says `{whoCanSeeItChanges: true, audiencesWithheld: true}` when the app would say "Who can see it changes", and names nobody's access.
 - **Batches** need no splitting: each item locks its own owner (TS-20). An approved batch runs in one transaction, so it takes every lock it needs first, the agent's own included, in one order (`lockCollections`). Two people approving batches on each other's shares at once never deadlock.
 
 *As built in TON-82:* the ordinary write tools (`apps/api/src/mcp/write-tools.ts`), for Manage collection connections.
@@ -1376,6 +1377,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - *As built in TON-81* (`apps/api/src/mcp/results.ts`):
   - **Pages** hold 200, with an opaque `nextCursor`, `base64url("o<offset>")`, and the `total`. A cursor the server didn't make is `validation_failed`.
   - **Album values** pass `filterFields(…, "agent")` through `agentAlbum()`, with their sources from `album_provenance`. The sources never leave the server, and each value's schema accepts the `withheld` marker.
+  - **Write answers** don't: a conflict's current values and a match question's candidates go out as the commands give them. That holds while every source is agent-visible, which a test in `results.test.ts` keeps true; turning one off means filtering those values first (DRIFT-020).
   - **Failures** are `{status: "failed", code, message}` with `isError`. The SDK checks only successful results against a tool's `outputSchema`.
 
 **TS-66 Abuse limits (Decided 17 October 2026; FR-15.4).** The MCP limits from TS-18, enforced per grant with a token bucket:

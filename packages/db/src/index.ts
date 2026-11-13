@@ -60,7 +60,7 @@ export {
   type ApprovalRow,
   type ApprovalUse,
 } from "./approvals";
-export { capturesSince, mergeCandidates, savedAlbumsOf } from "./capture";
+export { albumsSeenBy, capturesSince, mergeCandidates, savedAlbumsOf } from "./capture";
 export { createDatabase, type Database, type Transaction } from "./client";
 export {
   fieldDeletionIn,
@@ -159,7 +159,7 @@ export {
   readableContainers,
   roleOn,
 } from "./access";
-export { editorsMoveImpact, sharingImpact, type ImpactQuery } from "./sharing-impact";
+export { previewSharing, type ImpactQuery } from "./sharing-impact";
 export {
   findShareLink,
   linkReferenceState,

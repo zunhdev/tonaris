@@ -6,7 +6,7 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { editorsMoveImpact, shareSettings, sharingImpact, type Database } from "@tonaris/db";
+import { previewSharing, shareSettings, type Database } from "@tonaris/db";
 import {
   problemSchema,
   shareSettingsSchema,
@@ -67,17 +67,14 @@ export function sharingRoutes(
       },
       async ({ query, account }) => {
         const to = query.to === undefined ? undefined : query.to === "root" ? null : query.to;
-        let impact = await sharingImpact(
+        // The owner's preview, or an editor's inside a share, with the audiences withheld (FR-07.20), as MCP's.
+        const impact = await previewSharing(
           db,
           account.id,
           query.move === undefined
             ? { kind: "recover", unitId: query.recover ?? "", ...(to === undefined ? {} : { to }) }
             : { kind: "move", id: query.move, to: to ?? null },
         );
-        // Someone else's: an editor's move inside a share, with the audiences withheld (FR-07.20).
-        if (impact === "not_found" && query.move !== undefined) {
-          impact = await editorsMoveImpact(db, account.id, { id: query.move, to: to ?? null });
-        }
         if (impact === "not_found") {
           throw new ProblemError(404, "not_found", "This folder, list or album isn't available.");
         }

@@ -4,10 +4,11 @@
 
 import { and, asc, count, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 
-import { latinKey, maxMergeCandidates } from "@tonaris/domain";
+import { albumSeenBy, latinKey, maxMergeCandidates } from "@tonaris/domain";
 
-import type { Database } from "./client";
+import { readSnapshot, type Database } from "./client";
 import { albums, mutations } from "./schema";
+import { collectionStore } from "./store";
 
 /**
  * The owner's album saved as each of `releaseGroupIds`, Trash included, preferring an active one: what a `match`
@@ -29,6 +30,26 @@ export async function savedAlbumsOf(
     if (releaseGroupId && !saved.has(releaseGroupId)) saved.set(releaseGroupId, albumId);
   }
   return saved;
+}
+
+/**
+ * Which of `albumIds` the person sees, by the domain's rule (`albumSeenBy`, FR-07.20): an editor's capture shows the
+ * owner's albums among its candidates only if so, as the command reports reusing them only if so.
+ */
+export function albumsSeenBy(
+  db: Database,
+  userId: string,
+  albumIds: readonly string[],
+): Promise<Set<string>> {
+  return readSnapshot(db, async (tx) => {
+    const store = collectionStore(tx);
+    const seen = new Set<string>();
+    for (const albumId of albumIds) {
+      // oxlint-disable-next-line no-await-in-loop
+      if (await albumSeenBy(store, userId, albumId)) seen.add(albumId);
+    }
+    return seen;
+  });
 }
 
 /**
