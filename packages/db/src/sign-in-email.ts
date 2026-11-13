@@ -5,11 +5,11 @@
 import { timingSafeEqual } from "node:crypto";
 
 import { and, eq, ne, sql, type SQL } from "drizzle-orm";
-import postgres from "postgres";
 
 import { codeRefusal, type CodeRefusal } from "@tonaris/domain";
 
 import type { Executor, Transaction } from "./client";
+import { sqlState } from "./postgres-errors";
 import { emailChanges, emailRecoveries, sessions, users } from "./schema";
 
 /** The account other than `userId` whose sign-in email key is `key`, if any. */
@@ -77,12 +77,7 @@ export async function swapSignInEmail(
   return { from: account.email };
 }
 
-/** A unique violation, as postgres.js reports it, whether or not Drizzle wrapped it: an account took the key. */
+/** A unique violation, whether or not Drizzle wrapped it: an account took the key. */
 export function isUniqueViolation(error: unknown): boolean {
-  let current: unknown = error;
-  while (current instanceof Error) {
-    if (current instanceof postgres.PostgresError && current.code === "23505") return true;
-    current = current.cause;
-  }
-  return false;
+  return sqlState(error) === "23505";
 }

@@ -17,8 +17,7 @@
   },
   "dependencies": {
     "@tonaris/domain": "workspace:*",
-    "drizzle-orm": "1.0.0-rc.5",
-    "postgres": "3.4.9"
+    "drizzle-orm": "1.0.0-rc.5"
   },
   "devDependencies": {
     "drizzle-kit": "1.0.0-rc.5",

@@ -4,8 +4,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import { eq, sql } from "drizzle-orm";
-import postgres from "postgres";
 
+import { postgresError } from "./postgres-errors";
 import {
   accountSettings,
   accountSync,
@@ -49,9 +49,8 @@ async function violation(query: PromiseLike<unknown>): Promise<string | undefine
   try {
     await query;
   } catch (error) {
-    const cause = error instanceof Error ? error.cause : undefined;
-    if (cause instanceof postgres.PostgresError && cause.constraint_name)
-      return cause.constraint_name;
+    const constraint = postgresError(error)?.constraint;
+    if (constraint) return constraint;
     throw error;
   }
   return undefined;
