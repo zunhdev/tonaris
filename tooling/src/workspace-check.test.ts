@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import path from "node:path";
 
 import {
+  checkBunPins,
   checkPackage,
   checkRoot,
   checkWorkspace,
@@ -113,5 +114,26 @@ describe("checkRoot", () => {
         "1.4.3",
       ),
     ).toEqual(['root: @types/bun must be pinned to an exact version, found "~1.4.3" (TS-07)']);
+  });
+});
+
+function dockerfile(tag: string, slim: string) {
+  return {
+    file: "apps/api/Dockerfile",
+    text: `FROM oven/bun:${tag} AS build\nRUN bun install\nFROM oven/bun:${slim}\n`,
+  };
+}
+
+describe("checkBunPins", () => {
+  test("passes when the images and Bun's types follow .bun-version", () => {
+    expect(checkBunPins("1.4.4\n", [dockerfile("1.4.4", "1.4.4-slim")], "1.4.4")).toEqual([]);
+    expect(checkBunPins("1.4.4", [], "1.4.3")).toEqual([]);
+  });
+
+  test("names each image and a types release from another minor", () => {
+    expect(checkBunPins("1.4.4", [dockerfile("1.4.3", "1.4.4-slim")], "1.3.9")).toEqual([
+      "apps/api/Dockerfile: oven/bun:1.4.3 must use Bun 1.4.4 from .bun-version",
+      "root: @types/bun 1.3.9 must match Bun 1.4.x from .bun-version",
+    ]);
   });
 });

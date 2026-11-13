@@ -1,0 +1,7 @@
+# Tool versions for this repository (the update-tooling skill). Bun comes from `.bun-version`, which CI, the
+# Docker images and the workspace check also follow; Node runs Playwright's test runner and the OpenSpec CLI.
+[settings]
+idiomatic_version_file_enable_tools = ["bun"]
+
+[tools]
+node = "24.22.3"
