@@ -140,11 +140,13 @@ export function PageHeader({
         <nav aria-label="Breadcrumbs" className="min-w-0 shrink">
           <ol className="flex min-w-0 items-center gap-1.5 text-fg-secondary">
             {breadcrumbs.map((crumb, index) => (
-              // The crumbs are the path, so their positions are their identity.
+              // A crumb keeps a letter and its ellipsis, and its item never narrows past its separator, so a tight
+              // header never shows a separator alone (DRIFT-025). The crumbs are the path, so their positions are their
+              // identity.
               // oxlint-disable-next-line react/no-array-index-key
-              <li key={index} className="flex min-w-0 items-center gap-1.5">
+              <li key={index} className="flex min-w-10 items-center gap-1.5">
                 <span className="min-w-0 truncate">{crumb}</span>
-                <span aria-hidden className="text-fg-tertiary">
+                <span aria-hidden className="shrink-0 text-fg-tertiary">
                   ›
                 </span>
               </li>
