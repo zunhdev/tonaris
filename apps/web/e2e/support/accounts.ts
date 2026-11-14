@@ -189,6 +189,9 @@ export const accounts = {
   // An editor's unsent writes across a reload and a sign-out (share-editing.e2e.ts, TON-212).
   unsentOwner: at("unsent-owner"),
   unsentEditor: at("unsent-editor"),
+  // Pasting, Share and Delete inside a share (share-editing.e2e.ts, TON-213).
+  pasteOwner: at("paste-owner"),
+  pasteEditor: at("paste-editor"),
   // An editor's shortcuts, Move to and deletions inside a share (share-editing.e2e.ts, TON-195).
   toolsOwner: at("tools-owner"),
   toolsEditor: at("tools-editor"),

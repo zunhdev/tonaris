@@ -6,6 +6,7 @@
 // on a failed save reopens it as it was entered. Opened from a capture, it says why, and either completes the capture
 // with the album's details, the link kept, or adds the album with the pasted link in its field (DS-48).
 
+import type { NewAlbumMetadata } from "@/client/sync/albums";
 import { sent } from "@/client/sync/writer";
 import { shownLink } from "@/features/capture/outcomes";
 import { CapacityNotice } from "@/features/settings/usage";
@@ -134,7 +135,6 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       announce("Choose a list in this share.");
       return;
     }
-    if (inShare && form.listId !== null) client.newAlbumLists.set(album.id, form.listId);
     if (draft.capture?.mode === "details") {
       // Completing a capture: it keeps the link, and the sources of the values left as offered (TS-15).
       // Capture's details are the album's fields; its artwork comes from the Cover Art Archive (TON-48).
@@ -148,7 +148,14 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
       onDone();
       return;
     }
-    sent(client.albums.insert(album));
+    sent(
+      client.albums.insert(
+        album,
+        inShare && form.listId !== null
+          ? { metadata: { listId: form.listId } satisfies NewAlbumMetadata }
+          : undefined,
+      ),
+    );
     // The links go after the album, in one transaction; the server reads each (TS-40).
     const links = linksOfForm(form, album.id);
     // Its custom fields follow it, applied with their values (FR-03.7).

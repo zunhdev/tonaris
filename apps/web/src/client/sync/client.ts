@@ -117,13 +117,7 @@ export function createSyncClient({
     clearInterval(adopting);
     adopting = setInterval(() => void adopt(), adoptEveryMs);
   });
-  /** The list each new album is made for, when its form named one in a share (TON-191). */
-  const newAlbumLists = new Map<string, string>();
-  const albums = createAlbumCollection({
-    engine,
-    writer,
-    listOf: (albumId) => newAlbumLists.get(albumId),
-  });
+  const albums = createAlbumCollection({ engine, writer });
   const containers = createContainerCollection({ engine, writer });
   const memberships = createMembershipCollection({ engine, writer });
   const links = createLinkCollection({ engine, writer });
@@ -187,8 +181,6 @@ export function createSyncClient({
     elsewhere,
     /** Sends captures (TON-45). */
     captures,
-    /** The list a new album is made for, named before inserting it, so it joins that list's collection (TON-191). */
-    newAlbumLists,
     /** Loads the kept conflicts, takes over gone tabs' unsent writes, and connects. */
     start(): void {
       void states.restore();

@@ -113,12 +113,12 @@ export const moveStaysInShare = (
 export const insideShare = (access: ContentAccess, id: string): boolean =>
   access.as === "owner" || editsInsideShare(access.through, id);
 
+/** Why an editor can't move or delete a shared folder or list itself (FR-07.20), in the app's words too. */
+export const shareTopSentence =
+  "Only its owner can move or delete the shared folder or list itself. You can rename it, describe it and color it.";
+
 /** The refusal of an editor's move or deletion of a shared folder or list itself (FR-07.20). */
-export const shareTopRefusal = () =>
-  failure(
-    "permission_denied",
-    "Only its owner can move or delete the shared folder or list itself. You can rename it, describe it and color it.",
-  );
+export const shareTopRefusal = () => failure("permission_denied", shareTopSentence);
 
 /**
  * Whose collection something new goes in (FR-07.19): the principal's own, or, inside a folder or list someone shared

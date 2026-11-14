@@ -187,6 +187,51 @@ test("an editor's unsent rename is counted at sign-out, sent after a reload, and
   expect(databases.filter((name) => name.startsWith("tonaris-sync:"))).toEqual([]);
 });
 
+test("inside a share, pasted links go in its list on view, Share is the owner's, and Delete waits offline (TON-213)", async ({
+  page: owner,
+  browser,
+}) => {
+  const {
+    page: editor,
+    metal,
+    doom,
+  } = await sharedToEdit(owner, browser, accounts.pasteOwner, accounts.pasteEditor);
+  await editor.goto(`/shared/${metal.id}?c=${doom.id}`);
+  await expect(editor.getByText("Can edit · Shared by Denis")).toBeVisible();
+
+  // ⌘V on the shared list: the album joins it, in the owner's collection, not the editor's Unsorted.
+  await editor.evaluate((pasted) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", pasted);
+    document.body.dispatchEvent(
+      new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }),
+    );
+  }, "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv");
+  await expect(editor.getByRole("main").getByText("Bleach")).toBeVisible({ timeout: 10_000 });
+  await owner.goto(`/l/${doom.id}`);
+  await expect(owner.getByRole("main").getByText("Bleach")).toBeVisible();
+
+  // Add albums starts with the list on view.
+  await editor.keyboard.press("c");
+  const adding = editor.getByRole("dialog", { name: "Add albums" });
+  await expect(adding.getByRole("combobox", { name: "List", exact: true })).toHaveText(
+    "Metal › Doom",
+  );
+  await editor.keyboard.press("Escape");
+  await expect(adding).toHaveCount(0);
+
+  // Sharing is the owner's: ⇧S opens nothing here.
+  await editor.keyboard.press("Shift+S");
+  await expect(editor.getByRole("dialog", { name: /^Share/ })).toHaveCount(0);
+
+  // Offline, Delete list waits like every other edit.
+  const remove = editor.getByRole("main").getByRole("button", { name: "Delete list" });
+  await expect(remove).toBeEnabled();
+  await editor.context().setOffline(true);
+  await expect(remove).toBeDisabled();
+  await editor.context().setOffline(false);
+});
+
 test("inside a share, shortcuts, Move to and deletions keep to the share and its owner's Trash (TON-195)", async ({
   page: owner,
   browser,

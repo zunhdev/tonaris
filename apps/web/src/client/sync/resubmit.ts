@@ -30,6 +30,7 @@ import {
   type ViewPrefs,
 } from "@tonaris/domain";
 
+import type { NewAlbumMetadata } from "./albums";
 import type { SyncClient } from "./client";
 import type { FieldWriteMetadata } from "./fields";
 import type { SaveState } from "./save-states";
@@ -92,7 +93,8 @@ function plan() {
   const order: Call[] = [];
   return {
     order,
-    albumInserts: [] as Album[],
+    /** New albums, each with the list a share's new album is made for (DRIFT-045). */
+    albumInserts: [] as { album: Album; listId: string | undefined }[],
     albumUpdates: new Map<string, Partial<Album>>(),
     containerInserts: [] as Container[],
     containerUpdates: new Map<string, Partial<Container>>(),
@@ -183,8 +185,8 @@ function remake(
   switch (mutation.name) {
     case "album.create": {
       if (albums.has(mutation.args.id)) return "unchanged";
-      const { listId: _list, ...album } = mutation.args;
-      planned.albumInserts.push({ ...album, artworkUrl: null });
+      const { listId, ...album } = mutation.args;
+      planned.albumInserts.push({ album: { ...album, artworkUrl: null }, listId });
       return planned.needs("album.insert");
     }
     case "album.setArtwork": {
@@ -474,8 +476,20 @@ function make(
   call: Call,
 ): void {
   switch (call) {
-    case "album.insert":
-      return sent(albums.insert(planned.albumInserts));
+    case "album.insert": {
+      // One insert per list, each naming its list as the form did.
+      const byList = Map.groupBy(planned.albumInserts, ({ listId }) => listId);
+      for (const [listId, inserts] of byList) {
+        const made = inserts.map(({ album }) => album);
+        sent(
+          albums.insert(
+            made,
+            listId === undefined ? undefined : { metadata: { listId } satisfies NewAlbumMetadata },
+          ),
+        );
+      }
+      return;
+    }
     case "album.update":
       return sent(albums.update([...planned.albumUpdates.keys()], applyTo(planned.albumUpdates)));
     case "container.insert":

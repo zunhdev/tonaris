@@ -8,16 +8,16 @@ import { ConfirmDialog } from "@/common/confirm-dialog";
 import { count } from "@/common/words";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
-import { useSyncClient } from "@/features/sync/sync-provider";
+import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { useRecover } from "@/features/trash/recovery";
 
-import { trashRetentionDays, type Container } from "@tonaris/domain";
+import { shareTopSentence, trashRetentionDays, type Container } from "@tonaris/domain";
 
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useViewContainerId } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useInspector } from "./inspector-state";
-import { useCollectionPlace, useOpenContainer } from "./place";
+import { useCollectionPlace, useIsShareTop, useOpenContainer } from "./place";
 import { ancestorsOf, type Tree } from "./tree";
 
 /** The containers under `id`, nearest first. */
@@ -34,10 +34,6 @@ function descendants(tree: Tree, id: string): Container[] {
 /** The owner's Trash, as a share's deletions name it (FR-07.20). */
 const trashOf = (place: { ownerName: string | null }) =>
   place.ownerName === null ? "its owner's Trash" : `${place.ownerName}'s Trash`;
-
-/** Why the shared folder or list itself can't be moved or deleted by its editor (FR-07.20). */
-export const shareTopRefusal =
-  "Only its owner can move or delete the shared folder or list itself.";
 
 /** Leaves the page on view if it goes with `container`, its own or one inside it, for the nearest folder that stays. */
 function useLeaveGoing(): (container: Container) => void {
@@ -66,13 +62,17 @@ export function useDeleteContainer(): (id: string) => void {
   const { startDelete } = useCollectionDialogs();
   const recover = useRecover();
   const place = useCollectionPlace();
+  const isShareTop = useIsShareTop();
+
+  const offline = useConnection() === "offline";
 
   return (id: string) => {
     const container = tree.byId.get(id);
-    if (!client || !container) return;
+    // Like every edit, it waits while offline (DS-81).
+    if (!client || !container || offline) return;
     // The shared folder or list itself stays where its owner put it (FR-07.20).
-    if (place.kind === "share" && id === place.rootId) {
-      notify?.info(shareTopRefusal);
+    if (isShareTop(id)) {
+      notify?.info(shareTopSentence);
       return;
     }
     if (container.kind === "folder") {

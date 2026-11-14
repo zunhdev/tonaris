@@ -55,7 +55,13 @@ import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
 import { ModeSwitch } from "./mode-switch";
 import { useStartNaming } from "./name-dialog";
-import { ContainerLink, useCollectionPlace, useOpenContainer } from "./place";
+import {
+  ContainerLink,
+  sharingRefusal,
+  useCollectionPlace,
+  useIsShareTop,
+  useOpenContainer,
+} from "./place";
 import { ancestorsOf } from "./tree";
 import type { ViewMoves } from "./use-rearrange";
 import { ViewOptions } from "./view-options";
@@ -195,6 +201,7 @@ function ViewHeader({
   const offline = useConnection() === "offline";
   const place = useCollectionPlace();
   const inShare = place.kind === "share";
+  const isShareTop = useIsShareTop();
   // In a share, names are asked for in a dialog, as the sidebar shows the person's own collection (TON-191).
   const setNaming = useStartNaming();
   return (
@@ -246,7 +253,7 @@ function ViewHeader({
             </>
           )}
           {/* Sharing is the owner's, on the desktop (DS-65); it waits while offline. */}
-          {container && !narrow && !inShare && (
+          {container && sharingRefusal(place, narrow) === undefined && (
             <Button
               variant="ghost"
               aria-keyshortcuts="Shift+S"
@@ -274,8 +281,12 @@ function ViewHeader({
             </Button>
           )}
           {/* The shared folder or list itself stays where its owner put it (FR-07.20). */}
-          {editing && container && !(inShare && container.id === place.rootId) && (
-            <Button variant="ghost" onClick={() => deleteContainer(container.id)}>
+          {editing && container && !isShareTop(container.id) && (
+            <Button
+              variant="ghost"
+              disabled={offline}
+              onClick={() => deleteContainer(container.id)}
+            >
               <Trash2 strokeWidth={1.5} aria-hidden />
               {container.kind === "folder" ? "Delete folder" : "Delete list"}
             </Button>
