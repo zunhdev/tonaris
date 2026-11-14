@@ -230,6 +230,31 @@ describe("buildExport", () => {
     });
   });
 
+  test("choices and order on other owners' content stay out (FR-08.4)", () => {
+    const [mine, theirs] = [album("Mine"), album("Theirs")];
+    const jazz = list("Jazz");
+    const sharedList = uuidv7();
+    const choices = { sortMode: "manual" as const, sortDir: null, grouped: null, layout: null };
+    const source = {
+      ...empty(),
+      albums: [mine],
+      containers: [jazz],
+      views: [
+        { viewKey: jazz.id, ...choices },
+        { viewKey: sharedList, ...choices },
+      ],
+      positions: [
+        { viewKey: jazz.id, itemId: mine.id, key: "a0" },
+        { viewKey: sharedList, itemId: theirs.id, key: "a0" },
+        { viewKey: "root", itemId: sharedList, key: "a1" },
+      ],
+    };
+    const text = JSON.stringify(buildExport(source, everything));
+    expect(text).not.toContain(sharedList);
+    expect(text).not.toContain(theirs.id);
+    expect(exportSchema.parse(JSON.parse(text)).personal.views[jazz.id]?.order).toEqual([mine.id]);
+  });
+
   test("a value from a source the policy refuses is marked, and the others stay", () => {
     const kind = album("Kind of Blue", { artworkUrl: "https://coverartarchive.org/1.jpg" });
     const source = {

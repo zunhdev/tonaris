@@ -2,7 +2,7 @@
 // connections, and purging a Trash unit's rows. The live paths record their ledger events around these; the replay
 // applies the events with them, bare, and applying one again changes nothing.
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 
 import type { Transaction } from "./client";
 import {
@@ -13,6 +13,7 @@ import {
   oauthRefreshTokens,
   positions,
   trashUnits,
+  viewPrefs,
 } from "./schema";
 
 /**
@@ -36,8 +37,8 @@ export async function endConnections(
 
 /**
  * Purges a Trash unit's rows for good (FR-01.17): its folders and lists, whose entries cascade, its albums, whose
- * entries, links, values and provenance cascade, and the unit (TS-11). Places don't refer to an album by key, so
- * its positions go too.
+ * entries, links, values and provenance cascade, and the unit (TS-11). View choices and places refer to a folder,
+ * list or album by ID, not by key, so every person's choices for a purged view and places of a purged item go too.
  */
 export async function purgeRows(
   tx: Transaction,
@@ -48,7 +49,12 @@ export async function purgeRows(
   }: { unitId: string; containerIds: readonly string[]; albumIds: readonly string[] },
 ): Promise<void> {
   if (containerIds.length > 0) {
-    await tx.delete(containers).where(inArray(containers.id, [...containerIds]));
+    const ids = [...containerIds];
+    await tx.delete(viewPrefs).where(inArray(viewPrefs.viewKey, ids));
+    await tx
+      .delete(positions)
+      .where(or(inArray(positions.viewKey, ids), inArray(positions.itemId, ids)));
+    await tx.delete(containers).where(inArray(containers.id, ids));
   }
   if (albumIds.length > 0) {
     await tx.delete(positions).where(inArray(positions.itemId, [...albumIds]));

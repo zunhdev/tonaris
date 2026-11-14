@@ -13,6 +13,15 @@ describe("redactText", () => {
     ).toBe("Bearer [redacted] for [email] at /s/[token]?code=[redacted]&page=2, [jwt]");
   });
 
+  test("replaces percent-encoded emails and codes after # in the sign-in and join links", () => {
+    expect(
+      redactText(
+        "https://tonaris.app/sign-in/verify?email=anna%2Btag%40example.com&redirect=%2Fc#code=123456",
+      ),
+    ).toBe("https://tonaris.app/sign-in/verify?email=[email]&redirect=%2Fc#code=[redacted]");
+    expect(redactText("/join/abc#code=123456")).toBe("/join/abc#code=[redacted]");
+  });
+
   test("leaves IDs and ordinary text as they are", () => {
     const text = "Album 01a189cf-b245-739e-8bea-db457b4d59c4 couldn't be saved";
     expect(redactText(text)).toBe(text);

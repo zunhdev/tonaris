@@ -1,6 +1,6 @@
 // What may leave in logs and error reports (TS-115, Q-06): no token, secret, cookie, code or email address. Values
 // under a key that names one are replaced; in free text, bearer tokens, JWTs, emails, the tokens in share, join and
-// recovery paths, and the values of token-like query parameters are. Titles and descriptions are kept out by not
+// recovery paths, and the values of token-like query and fragment parameters are. Titles and descriptions are kept out by not
 // sending request bodies at all: the reporters attach none.
 
 const sensitiveKey = /token|secret|password|passwd|cookie|authorization|^code$|otp|e-?mail/i;
@@ -8,9 +8,11 @@ const sensitiveKey = /token|secret|password|passwd|cookie|authorization|^code$|o
 const patterns: [RegExp, string][] = [
   [/Bearer\s+[\w.~+/=-]+/gi, "Bearer [redacted]"],
   [/\b[\w-]{12,}\.[\w-]{12,}\.[\w-]{12,}\b/g, "[jwt]"],
-  [/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, "[email]"],
+  // An email in a URL is percent-encoded: `anna%40example.com`, `anna%2Btag%40example.com`.
+  [/[\w.+%-]+(?:@|%40)[\w-]+(\.[\w-]+)+/gi, "[email]"],
   [/\/(s|join|recover)\/[\w-]{16,}/g, "/$1/[token]"],
-  [/([?&](?:token|code|otp|key|secret|signature|state)=)[^&#\s]*/gi, "$1[redacted]"],
+  // The sign-in and join links carry their code after `#` (`#code=123456`), not only in the query.
+  [/([?&#](?:token|code|otp|key|secret|signature|state)=)[^&#\s]*/gi, "$1[redacted]"],
 ];
 
 /** `text` with whatever would identify a person or let someone in replaced. */

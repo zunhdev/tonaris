@@ -1618,6 +1618,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 - **The app's own names** replace the sketch above.
   - Albums keep `recordingYearStart` and `recordingYearEnd`. The defaults are the account's `listSortMode`, `listSortDir`, `folderSortMode`, `folderSortDir`, `grouped`, `layout` and, since TON-174, `folderLayout`.
   - A view keeps `sortMode`, `sortDir`, `grouped` and `layout`, null where it follows the default, and `order`: the manual order's item IDs.
+  - Only the person's own views and items: the root, Unsorted and their own folders and lists. Their choices and order on content others share with them stay out, since those name the other owner's IDs (TON-215).
 - **Albums** also carry:
   - `identifiers.musicbrainzRelease` and `identifiers.musicbrainzReleaseGroup`;
   - `status` and `trashUnitId`;
@@ -1956,7 +1957,7 @@ The "30 days" matches the backup retention the creator set (Q-04).
 *As built in TON-91* (runbook: `docs/runbooks/monitoring.md`):
 - **Redaction:** `redact` and `redactText` (`packages/domain/src/telemetry.ts`) are shared by the API and the web app.
   - **Under a key:** values named token, secret, password, cookie, authorization, code, otp or email are replaced.
-  - **In free text:** bearer tokens, JWTs, email addresses, the tokens in `/s/`, `/join/` and `/recover/` paths, and token-like query values are replaced.
+  - **In free text:** bearer tokens, JWTs, email addresses (percent-encoded ones too, as in `anna%40example.com`), the tokens in `/s/`, `/join/` and `/recover/` paths, and token-like query and fragment values (`#code=` in the sign-in and join links) are replaced (TON-215).
   - **Titles and descriptions** stay out because request bodies are never sent.
 - **Logs:** the API writes JSON lines (`apps/api/src/observability.ts`) from every error path: requests, jobs, schedules, auth and the stream hub.
 - **Sentry**, on when `SENTRY_DSN` is set:

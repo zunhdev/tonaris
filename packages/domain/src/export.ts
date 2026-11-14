@@ -15,6 +15,7 @@ import type { Position } from "./positions";
 import type { ServiceLink } from "./service-links";
 import { trashUnitKinds, type TrashUnitKind } from "./trash";
 import {
+  containerOfView,
   viewDefaultsSchema,
   viewKeySchema,
   viewPrefsFieldsSchema,
@@ -237,7 +238,22 @@ export function buildExport(
   const valuesOf = groupBy(source.values, (value) => value.albumId);
   const sourcesOf = groupBy(source.provenance, (entry) => entry.albumId);
   const entriesOf = groupBy(source.memberships, (entry) => entry.listId);
-  const positionsOf = groupBy(source.positions, (position) => position.viewKey);
+  // Only the person's own views and items: their choices and order on content others share with them name those
+  // owners' folders, lists and albums, which an export never carries (FR-08.4).
+  const owned = new Set([
+    ...source.albums.map((album) => album.id),
+    ...source.containers.map((container) => container.id),
+  ]);
+  const isOwnView = (viewKey: string) => {
+    const container = containerOfView(viewKey);
+    return container === undefined || owned.has(container);
+  };
+  const positionsOf = groupBy(
+    source.positions.filter(
+      (position) => isOwnView(position.viewKey) && owned.has(position.itemId),
+    ),
+    (position) => position.viewKey,
+  );
   const containersOf = groupBy(
     source.containers.filter((container) => container.trashUnitId !== null),
     (container) => container.trashUnitId ?? "",
@@ -291,7 +307,7 @@ export function buildExport(
   });
 
   const views: TonarisExport["personal"]["views"] = {};
-  for (const prefs of source.views) {
+  for (const prefs of source.views.filter((view) => isOwnView(view.viewKey))) {
     const { viewKey, ...choices } = prefs;
     views[viewKey] = { ...choices, order: [] };
   }
