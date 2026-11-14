@@ -61,6 +61,14 @@ test("albums are selected by key and checkbox, and added, removed and deleted to
   await expect(rowOf(page, "Doom", "Dopesmoker")).toHaveAttribute("aria-selected", "false");
   await expect(page).not.toHaveURL(/album=/);
 
+  // With nothing selected, a checkbox shows only on its album's hover or focus (TON-232).
+  const box = (name: string) => rowOf(page, "Doom", name).getByRole("checkbox").locator("..");
+  await page.mouse.move(0, 0);
+  await expect(box("Jerusalem")).toHaveCSS("opacity", "1");
+  await expect(box("Volume One")).toHaveCSS("opacity", "0");
+  await rowOf(page, "Doom", "Volume One").hover();
+  await expect(box("Volume One")).toHaveCSS("opacity", "1");
+
   // A checkbox, then ⇧-click on another, selects the albums between.
   await rowOf(page, "Doom", "Holy Mountain").getByRole("checkbox").click();
   await rowOf(page, "Doom", "Volume One")
@@ -68,6 +76,9 @@ test("albums are selected by key and checkbox, and added, removed and deleted to
     .click({ modifiers: ["Shift"] });
   await expect(bar(page)).toContainText("3 albums selected");
   await expect(rowOf(page, "Doom", "Dopesmoker")).toHaveAttribute("aria-selected", "false");
+  // Once some are selected, every checkbox shows.
+  await page.mouse.move(0, 0);
+  await expect(box("Dopesmoker")).toHaveCSS("opacity", "1");
 
   // Add to list… adds all three to Stoner at once, with Undo.
   await bar(page).getByRole("button", { name: "Add to list…" }).click();

@@ -144,6 +144,7 @@ export function AlbumCards({
                     col={col}
                     open={album.id === albumId}
                     selected={selecting ? selection.has(album.id) : undefined}
+                    anySelected={selecting && selection.ids.length > 0}
                     onSelect={(extend) => {
                       if (!selection) return;
                       const anchor = selection.ids.at(-1);
@@ -168,6 +169,7 @@ function AlbumCard({
   col,
   open,
   selected,
+  anySelected,
   onSelect,
   ...cell
 }: {
@@ -178,6 +180,8 @@ function AlbumCard({
   open: boolean;
   /** Whether it is selected, while albums can be selected (TON-231). */
   selected: boolean | undefined;
+  /** Whether any album is selected, which shows every checkbox (TON-232). */
+  anySelected: boolean;
   onSelect: (extend: boolean) => void;
 } & ReturnType<ReturnType<typeof useGridFocus>["cellProps"]>) {
   const ref = useRef<HTMLDivElement>(null);
@@ -194,7 +198,7 @@ function AlbumCard({
       aria-selected={selected}
       data-open={open || undefined}
       className={cn(
-        "relative isolate flex flex-col gap-1 rounded-md focus-ring outline-none",
+        "group/card relative isolate flex flex-col gap-1 rounded-md focus-ring outline-none",
         // Selected, the surface behind it stays, in the selected color.
         "aria-selected:before:bg-selected",
         // The raised surface under a hovering pointer, behind the card and half the gap outside it. It takes no
@@ -242,9 +246,18 @@ function AlbumCard({
       </span>
       {/* Over the cover's corner, but last, so the card's name starts with its title. */}
       {selected !== undefined && (
-        <span className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-sm bg-raised shadow-floating">
-          <SelectBox title={album.title} checked={selected} onSelect={onSelect} />
-        </span>
+        <SelectBox
+          title={album.title}
+          checked={selected}
+          onSelect={onSelect}
+          variant="card"
+          className={cn(
+            "absolute top-2 left-2",
+            // Only on the card's hover or focus until albums are selected (TON-232).
+            !anySelected &&
+              "opacity-0 group-focus-within/card:opacity-100 group-hover/card:opacity-100",
+          )}
+        />
       )}
     </div>
   );
