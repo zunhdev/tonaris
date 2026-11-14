@@ -40,7 +40,7 @@ async function signedIn(browser: Browser, address: string): Promise<Page> {
 const item = (page: Page, name: string) =>
   page.getByRole("tree").getByRole("treeitem", { name: new RegExp(`^${name}`) });
 
-test("moves and recovery say who would see the content before they happen", async ({
+test("moves and recovery say who would see the content before they happen, and ask when it changes", async ({
   page,
   browser,
 }) => {
@@ -78,7 +78,19 @@ test("moves and recovery say who would see the content before they happen", asyn
   await place("Heavy").hover();
   await expect(preview).toHaveText("Sharing unchanged");
   expect(await violations(page, '[role="dialog"]')).toEqual([]);
+  // Anna would see it there, so the move asks first, naming her (TON-226); Cancel leaves it where it was.
   await place("Metal").click();
+  const confirm = page.getByRole("alertdialog", { name: "Move 'Doom' to 'Metal'?" });
+  await expect(confirm).toContainText("Newly visible to Anna");
+  await expect(confirm.getByRole("button", { name: "Cancel" })).toBeFocused();
+  expect(await violations(page, '[role="alertdialog"]')).toEqual([]);
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toHaveCount(0);
+  await expect(item(page, "Doom")).toHaveAttribute("aria-level", "1");
+  await item(page, "Doom").focus();
+  await page.keyboard.press("m");
+  await place("Metal").click();
+  await confirm.getByRole("button", { name: "Move" }).click();
   await expect(item(page, "Doom")).toHaveAttribute("aria-level", "2");
   await saved(page);
 

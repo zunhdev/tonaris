@@ -139,6 +139,7 @@ describe("each gated operation's words (DS-87, FR-10.6)", () => {
       options: [],
       albums: 10,
       inTrash: 2,
+      shared: 0,
       scopeHash: "x",
     });
     expect(approvalSummary(deletion)).toBe('Delete the field "Format" for good');
@@ -152,12 +153,14 @@ describe("each gated operation's words (DS-87, FR-10.6)", () => {
         option: { id: b, label: "CD" },
         albums: 1,
         inTrash: 0,
+        shared: 3,
         scopeHash: "y",
       },
     ]);
     expect(approvalSummary(removal)).toBe('Remove the option "CD" from "Format"');
     expect(approvalConsequences(removal)).toEqual([
       "It is cleared from 1 album.",
+      "Some of these albums are in what you share: the people you share them with stop seeing it.",
       "This can't be undone.",
     ]);
   });

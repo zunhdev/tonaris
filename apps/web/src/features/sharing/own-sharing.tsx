@@ -93,6 +93,26 @@ export function useSharingOf(containerId: string): (Kinds & { inherited: boolean
   };
 }
 
+/**
+ * How what goes with `rootId` is shared: the folder or list itself, by itself or through a folder above, and anything
+ * inside it shared by itself (DS-50; TON-226). Undefined when none of it is.
+ */
+export function useSharingWithin(rootId: string | undefined): Kinds | undefined {
+  const sharing = useOwnSharing();
+  const { tree } = useCollectionData();
+  if (rootId === undefined) return undefined;
+  const ids = [rootId];
+  for (let at = 0; at < ids.length; at += 1) {
+    for (const child of tree.children.get(ids[at] ?? "") ?? []) ids.push(child.id);
+  }
+  const kinds = [
+    ...ids.flatMap((id) => sharing.get(id) ?? []),
+    ...ancestorsOf(tree, rootId).flatMap((folder) => sharing.get(folder.id) ?? []),
+  ];
+  if (kinds.length === 0) return undefined;
+  return { people: kinds.some((each) => each.people), link: kinds.some((each) => each.link) };
+}
+
 /** The words for the glyph, which is its accessible name and its tooltip. */
 export function sharingWords({ people, link, inherited }: Kinds & { inherited: boolean }): string {
   const how = people && link ? "with people and by link" : people ? "with people" : "by link";

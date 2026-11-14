@@ -5,6 +5,8 @@
 
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
+import type { SharingImpact } from "@tonaris/domain";
+
 import type { AlbumForm } from "./album-form";
 
 /**
@@ -29,11 +31,23 @@ export type NewAlbumDraft = {
   capture?: CaptureEntry;
 };
 
+/** A move that would change who sees what, waiting for the owner's word (DS-49, FR-07.14; TON-226). */
+export type MoveToConfirm = {
+  id: string;
+  to: string | null;
+  /** What it does to sharing, or `failed` when that couldn't be read. */
+  impact: SharingImpact | "failed";
+};
+
 type CollectionDialogs = {
   /** The folder or list "Move to…" is open for, if it is open (DS-49). */
   moving: string | undefined;
   startMove: (id: string) => void;
   endMove: () => void;
+  /** The move being confirmed, if one is (TON-226). */
+  confirmingMove: MoveToConfirm | undefined;
+  startConfirmMove: (move: MoveToConfirm) => void;
+  endConfirmMove: () => void;
   /** The folder or list ⌘K's "Color…" is open for, if it is open (TON-175). */
   coloring: string | undefined;
   startColor: (id: string) => void;
@@ -72,6 +86,7 @@ const CollectionDialogsContext = createContext<CollectionDialogs | undefined>(un
 
 export function CollectionDialogsProvider({ children }: { children: ReactNode }) {
   const [moving, setMoving] = useState<string | undefined>(undefined);
+  const [confirmingMove, setConfirmingMove] = useState<MoveToConfirm | undefined>(undefined);
   const [coloring, setColoring] = useState<string | undefined>(undefined);
   const [sharing, setSharing] = useState<string | undefined>(undefined);
   const [deleting, setDeleting] = useState<string | undefined>(undefined);
@@ -86,6 +101,9 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
       moving,
       startMove: setMoving,
       endMove: () => setMoving(undefined),
+      confirmingMove,
+      startConfirmMove: setConfirmingMove,
+      endConfirmMove: () => setConfirmingMove(undefined),
       coloring,
       startColor: setColoring,
       endColor: () => setColoring(undefined),
@@ -113,6 +131,7 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
     }),
     [
       moving,
+      confirmingMove,
       coloring,
       sharing,
       deleting,
