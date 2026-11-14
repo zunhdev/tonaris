@@ -28,6 +28,7 @@ import { useInspector } from "@/features/collection/inspector-state";
 import { MoveDialog } from "@/features/collection/move";
 import { NewAlbumDialog } from "@/features/collection/new-album";
 import { OwnCollection } from "@/features/collection/own-collection";
+import { PositionDialog } from "@/features/collection/position-dialog";
 import { SearchPalette } from "@/features/search/search-palette";
 import { LostShareEdits } from "@/features/sharing/editable-share";
 import { InvitationToasts } from "@/features/sharing/invitation-toasts";
@@ -182,6 +183,7 @@ export function Shell({ account, children }: { account: Account; children: React
         />
       </OwnCollection>
       <MoveDialog />
+      <PositionDialog />
       <ColorDialog />
       <ShareDialog />
       <InvitationToasts accountId={account.id} />

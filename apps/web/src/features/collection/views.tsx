@@ -64,6 +64,7 @@ import {
   useIsShareTop,
   useOpenContainer,
 } from "./place";
+import { usePositioner } from "./position-dialog";
 import { ancestorsOf } from "./tree";
 import type { ViewMoves } from "./use-rearrange";
 import { ViewOptions } from "./view-options";
@@ -102,6 +103,7 @@ function ContainersBody({
     [manual, editing, arranged],
   );
   useDropHandler(viewKey, moves.drop);
+  usePositioner(moves);
   const childCounts = (folderId: string) => tree.children.get(folderId)?.length ?? 0;
   // Cards by default, rows as chosen (TON-174).
   if (presentation.layout === "grid") {
@@ -165,6 +167,7 @@ function AlbumsBody({
     [manual, editing, arranged],
   );
   useDropHandler(viewKey, moves.drop);
+  usePositioner(moves);
   const [collapsed, toggle] = useCollapsedGroups(viewKey);
   const { layout } = presentation;
   const props = { sections, label, viewKey, collapsed, onToggle: toggle, moves };
