@@ -1904,6 +1904,12 @@
                               "minimum": -9007199254740991,
                               "maximum": 9007199254740991,
                               "description": "Albums in Trash affected."
+                            },
+                            "shared": {
+                              "description": "Of the albums outside Trash, how many are in what the owner shares, counted once per option (FR-07.14).",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             }
                           },
                           "required": [
@@ -2456,6 +2462,12 @@
                               "minimum": -9007199254740991,
                               "maximum": 9007199254740991,
                               "description": "Albums in Trash affected."
+                            },
+                            "shared": {
+                              "description": "Of the albums outside Trash, how many are in what the owner shares, counted once per option (FR-07.14).",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             }
                           },
                           "required": [
@@ -2825,6 +2837,12 @@
                       "maximum": 9007199254740991,
                       "description": "Albums in Trash applying the field."
                     },
+                    "shared": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Of the active ones, how many are in folders or lists the owner shares, by an open invitation or a live link: the people they share with stop seeing it on them (FR-03.17, FR-03.18, FR-07.14)."
+                    },
                     "scopeHash": {
                       "type": "string",
                       "description": "Confirms exactly this scope: pass it to `field.delete`. The deletion is refused if the field or the albums applying it changed meanwhile."
@@ -2835,6 +2853,7 @@
                     "options",
                     "albums",
                     "inTrash",
+                    "shared",
                     "scopeHash"
                   ],
                   "additionalProperties": false,
@@ -2973,6 +2992,12 @@
                       "maximum": 9007199254740991,
                       "description": "Albums in Trash choosing the option."
                     },
+                    "shared": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Of the active ones, how many are in folders or lists the owner shares, by an open invitation or a live link: the people they share with stop seeing it on them (FR-03.17, FR-03.18, FR-07.14)."
+                    },
                     "scopeHash": {
                       "type": "string",
                       "description": "Confirms exactly this scope: pass it to `field.removeOption`. The removal is refused if the albums choosing the option changed meanwhile."
@@ -2983,6 +3008,7 @@
                     "option",
                     "albums",
                     "inTrash",
+                    "shared",
                     "scopeHash"
                   ],
                   "additionalProperties": false,

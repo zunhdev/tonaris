@@ -261,21 +261,23 @@ describe("options in Postgres (FR-03.14 to FR-03.17, X-09, TS-14)", () => {
   });
 });
 
+/** A folder or list of Anna's, made through the domain. */
+async function container(kind: "folder" | "list", name: string, parentId: string | null) {
+  const id = uuidv7();
+  await confirmed({
+    mutationId: uuidv7(),
+    name: "container.create",
+    args: { id, kind, parentId, name },
+  });
+  return id;
+}
+
 describe("what a removal does to sharing (FR-03.17, FR-03.18, TON-226)", () => {
   test("albums in a list shared directly or through a folder above count once; others and Trash don't", async () => {
     const mood = await defined("single_choice", ["Calm"]);
     const [calm] = mood.options;
     const other = uuidv7();
     await t.db.insert(users).values({ id: other, email: `${other}@example.com` });
-    const container = async (kind: "folder" | "list", name: string, parentId: string | null) => {
-      const id = uuidv7();
-      await confirmed({
-        mutationId: uuidv7(),
-        name: "container.create",
-        args: { id, kind, parentId, name },
-      });
-      return id;
-    };
     const metal = await container("folder", "Metal", null);
     const doom = await container("list", "Doom", metal);
     const stoner = await container("list", "Stoner", null);

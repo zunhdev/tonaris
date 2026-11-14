@@ -48,6 +48,19 @@ type Usage = { albums: number; inTrash: number };
 
 const albums = (n: number) => count(n, "album", "albums");
 
+/**
+ * What a removal does to what the person shares (FR-03.17, FR-03.18, FR-07.14; TON-226): the people they share
+ * albums with stop seeing `what` on them. Nothing when none of the albums is shared.
+ */
+function sharedEffect(shared: number, what: string): string[] {
+  if (shared === 0) return [];
+  return [
+    shared === 1
+      ? `1 of these albums is in what you share: the people you share it with stop seeing ${what} on it.`
+      : `${shared} of these albums are in what you share: the people you share them with stop seeing ${what} on them.`,
+  ];
+}
+
 /** "Used by 214 albums · 3 in Trash", "Unused", or "—" before the counts arrive (DS-60). */
 function usageText(usage: Usage | undefined): string {
   if (!usage) return "—";
@@ -291,7 +304,10 @@ function FieldPanel({
           ? "No album uses it"
           : `Values on ${albums(total)}${data.inTrash > 0 ? `, ${data.inTrash} of them in Trash` : ""}`,
       ],
-      consequences: ["This can't be undone — Trash and album restore won't bring it back."],
+      consequences: [
+        ...sharedEffect(data.shared, "this field"),
+        "This can't be undone — Trash and album restore won't bring it back.",
+      ],
       action: "Delete field",
       onConfirm: () => {
         if (!client) return;
@@ -555,6 +571,7 @@ function OptionsEditor({
         field.type === "single_choice"
           ? "Those albums keep the field, empty."
           : "Those albums keep their other options.",
+        ...sharedEffect(data.shared, `'${label}'`),
         "This can't be undone.",
       ],
       action: `Remove from ${albums(total)}`,
