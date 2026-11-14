@@ -6,15 +6,25 @@ import { count, eq, sql } from "drizzle-orm";
 
 import {
   fieldDeletion,
+  openGrantStatuses,
   optionRemoval,
   type FieldDeletion,
   type FieldUsageList,
   type OptionRemoval,
+  type OptionUser,
 } from "@tonaris/domain";
 
 import { readSnapshot, type Database, type Executor, type Transaction } from "./client";
 import { fieldUsersIn, findFieldIn, optionUsersIn } from "./field-values";
-import { albumFieldValues, albums, fieldDefinitions } from "./schema";
+import {
+  albumFieldValues,
+  albums,
+  containers,
+  fieldDefinitions,
+  memberships,
+  shareGrants,
+  shareLinks,
+} from "./schema";
 
 /** The removal of the option, if it is an option of `accountId`'s field; undefined otherwise. */
 export async function readOptionRemoval(
@@ -49,7 +59,11 @@ export async function optionRemovalsIn(
     const option = field.options.find((each) => each.id === optionId);
     if (!option) return undefined;
     // oxlint-disable-next-line no-await-in-loop -- one option at a time, in the caller's transaction
-    removals.push(await optionRemoval(field, option, await optionUsersIn(tx, fieldId, optionId)));
+    const users = await optionUsersIn(tx, fieldId, optionId);
+    // oxlint-disable-next-line no-await-in-loop -- as above
+    const shared = await sharedAmong(tx, accountId, users);
+    // oxlint-disable-next-line no-await-in-loop -- as above
+    removals.push(await optionRemoval(field, option, users, shared));
   }
   return { field, removals };
 }
@@ -62,7 +76,41 @@ export async function fieldDeletionIn(
 ): Promise<FieldDeletion | undefined> {
   const field = await findFieldIn(tx, fieldId);
   if (!field || field.ownerId !== accountId) return undefined;
-  return fieldDeletion(field, await fieldUsersIn(tx, fieldId));
+  const users = await fieldUsersIn(tx, fieldId);
+  return fieldDeletion(field, users, await sharedAmong(tx, accountId, users));
+}
+
+/**
+ * How many of the active `users` are in what `ownerId` shares (FR-03.17, FR-03.18; TON-226): in a list outside Trash
+ * that has, or is under a folder that has, an open invitation or a live link.
+ */
+async function sharedAmong(
+  tx: Executor,
+  ownerId: string,
+  users: readonly OptionUser[],
+): Promise<number> {
+  const active = users.filter((user) => !user.trashed).map((user) => user.id);
+  if (active.length === 0) return 0;
+  const [row] = await tx.execute<{ n: number }>(sql`
+    with recursive reach as (
+      select c.id from ${containers} c
+      where c.owner_id = ${ownerId} and c.trashed_at is null and (
+        exists (select 1 from ${shareGrants} g
+          where g.container_id = c.id and g.status in (${sql.join(
+            openGrantStatuses.map((status) => sql`${status}`),
+            sql`, `,
+          )}))
+        or exists (select 1 from ${shareLinks} l where l.container_id = c.id and l.revoked_at is null))
+      union
+      select c.id from ${containers} c join reach r on c.parent_id = r.id where c.trashed_at is null
+    )
+    select count(distinct m.album_id)::int as n
+    from ${memberships} m join reach r on r.id = m.list_id
+    where m.album_id in (${sql.join(
+      active.map((id) => sql`${id}`),
+      sql`, `,
+    )})`);
+  return row?.n ?? 0;
 }
 
 /** The deletion of the field, if it is `accountId`'s; undefined otherwise. */

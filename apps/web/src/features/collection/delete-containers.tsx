@@ -6,6 +6,7 @@
 import { sent } from "@/client/sync/writer";
 import { ConfirmDialog } from "@/common/confirm-dialog";
 import { count } from "@/common/words";
+import { useSharingWithin } from "@/features/sharing/own-sharing";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
@@ -110,6 +111,16 @@ export function DeleteFolderDialog() {
   const folders = inside.filter((each) => each.kind === "folder").length;
   const lists = inside.length - folders;
   const names = inside.slice(0, 3).map((each) => each.name);
+  // Its sharing pauses while it's in Trash, which the owner hears before (DS-28, DS-50; TON-226).
+  const sharing = useSharingWithin(place.kind === "share" ? undefined : folder?.id);
+  const who =
+    sharing === undefined
+      ? undefined
+      : sharing.people && sharing.link
+        ? "the people it's shared with and anyone with a link to it"
+        : sharing.people
+          ? "the people it's shared with"
+          : "anyone with a link to it";
 
   const contents =
     inside.length === 0
@@ -137,6 +148,11 @@ export function DeleteFolderDialog() {
                 ]
               : [
                   "Albums stay in their other lists or in Unsorted.",
+                  ...(who === undefined
+                    ? []
+                    : [
+                        `While it's in Trash, ${who} can't open it or anything inside; recovering it gives them access again.`,
+                      ]),
                   `Recoverable from Trash for ${trashRetentionDays} days.`,
                 ],
           action: `Move ${moved} to ${place.kind === "share" ? trashOf(place) : "Trash"}`,

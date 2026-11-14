@@ -63,7 +63,7 @@ const remove = (id: string, scopeHash: string): Mutation => ({
 async function confirmedHash(context: ReturnType<typeof memoryStore>, id: string) {
   const stored = context.fields.get(id);
   if (!stored) throw new Error("No such field");
-  return (await fieldDeletion(stored, await context.store.fieldUsers(id))).scopeHash;
+  return (await fieldDeletion(stored, await context.store.fieldUsers(id), 0)).scopeHash;
 }
 
 const failedWith = (result: CommandResult) =>
@@ -93,7 +93,7 @@ describe("deleting a field (FR-03.18, X-09, TS-14; AC-12)", () => {
         { albumId: trashed.id, fieldId: mood.id, value: null },
       ],
     });
-    const deletion = await fieldDeletion(mood, await context.store.fieldUsers(mood.id));
+    const deletion = await fieldDeletion(mood, await context.store.fieldUsers(mood.id), 0);
     expect(deletion).toMatchObject({
       field: { id: mood.id, name: "Mood", type: "multiple_choice" },
       options: mood.options,

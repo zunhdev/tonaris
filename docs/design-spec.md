@@ -994,6 +994,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - **Adding albums to lists:** `L`, "Add to list…". In a list, albums can also be dragged onto another list in the sidebar, which adds a membership and doesn't remove the current one; holding ⌥ moves them instead (remove here, add there).
   - **Sharing preview:** the picker footer and drag-hover tooltip show the destination's SharingImpact (DS-69) before anything applies.
   - **When effective sharing would change**, a confirmation popover lists the change ("Will become visible to 2 people and anyone with the 'Metal' link"), with Move and Cancel. When nothing changes, the move applies immediately.
+    - *As built in TON-226 (decided by the creator, 14 November 2026):* Move to… and drops onto the tree read the move's SharingImpact first (the dialog's preview has usually read it already). When someone newly sees it or stops seeing it, or, for an editor, when who sees it changes, the standard confirmation (DS-28) "Move '{name}' to '{destination}'?" opens, with "The folder and everything in it" or "The list", the preview's lines, and Move, Cancel focused. Unreadable, it says "Its sharing effects couldn't be checked." Otherwise the move applies at once.
   - *(FR-01.4, FR-01.5, FR-07.9, FR-07.14)*
 
 *As built in TON-35:*
@@ -1040,7 +1041,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
 | --- | --- |
 | Remove album from list (`⌫`) | Immediate, with undo toast "Removed from {list} · Undo" (8s) |
 | Delete list (single or multi-select) | Immediate move to Trash, with undo toast "{n} lists moved to Trash · Undo". Undo runs Trash recovery. |
-| Delete folder | Standard confirmation dialog: hierarchy counts and the first names, "albums stay in other lists or Unsorted", sharing effects |
+| Delete folder | Standard confirmation dialog: hierarchy counts and the first names, "albums stay in other lists or Unsorted", sharing effects (*as built in TON-226:* when it, anything inside or a folder above is shared, "While it's in Trash, {the people it's shared with / anyone with a link to it / both} can't open it or anything inside; recovering it gives them access again.") |
 | Delete album from collection (`⌘⌫`) | Standard confirmation dialog: "Removes it from every list and Unsorted; recoverable from Trash for 30 days" |
 
 *As built in TON-55:*
@@ -1185,6 +1186,7 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
   - Removing an **unused** option is immediate, with no dialog.
   - Removing a **used** option opens the standard confirmation dialog with the field, the option, affected album counts (active and Trash), and "Changes are visible in {n} shared lists" when relevant. *(FR-03.17)*
 - **Delete field** always opens the standard confirmation dialog, even when unused. It lists the definition, options, and values across active and Trash albums, shared-view effects, and "This can't be undone — Trash and album restore won't bring it back". *(FR-03.18)*
+  - *As built in TON-226:* **the shared-view effect,** for both removing a used option and deleting a field, when some of the albums outside Trash are in what the owner shares: "{n} of these albums are in what you share: the people you share them with stop seeing {'Calm' / this field} on them." (one: "1 of these albums is in what you share: the people you share it with stop seeing … on it."). AI clients' approvals say "Some of these albums are in what you share: the people you share them with stop seeing it."
 - **Applying fields to albums** happens in the inspector (DS-46). The "+ Add field" menu also has "Create field…", which opens the create dialog and then applies the new field.
 
 *As built in TON-53:*

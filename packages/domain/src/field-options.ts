@@ -111,6 +111,10 @@ export const optionRemovalSchema = z
     option: z.object({ id: z.uuid(), label: z.string() }),
     albums: z.int().nonnegative().meta({ description: "Active albums choosing the option." }),
     inTrash: z.int().nonnegative().meta({ description: "Albums in Trash choosing the option." }),
+    shared: z.int().nonnegative().meta({
+      description:
+        "Of the active ones, how many are in folders or lists the owner shares, by an open invitation or a live link: the people they share with stop seeing it on them (FR-03.17, FR-03.18, FR-07.14).",
+    }),
     scopeHash: z.string().meta({
       description:
         "Confirms exactly this scope: pass it to `field.removeOption`. The removal is refused if the albums choosing the option changed meanwhile.",
@@ -124,6 +128,8 @@ export async function optionRemoval(
   field: CustomField,
   option: FieldOption,
   users: readonly OptionUser[],
+  /** How many of the active ones are in what the owner shares. */
+  shared: number,
 ): Promise<OptionRemoval> {
   const trashed = users.filter((user) => user.trashed).length;
   return {
@@ -131,6 +137,7 @@ export async function optionRemoval(
     option: { id: option.id, label: option.label },
     albums: users.length - trashed,
     inTrash: trashed,
+    shared,
     scopeHash: await optionRemovalHash(optionRemovalScope(field.id, option.id, users)),
   };
 }

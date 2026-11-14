@@ -330,7 +330,7 @@ describe("removing options (FR-03.17, X-09, TS-14; AC-12)", () => {
   test("a scope that grew after confirming is refused", async () => {
     const { context, mood, calm, second } = choices();
     const users = await context.store.optionUsers(mood.id, calm);
-    const confirmed = (await optionRemoval(mood, { id: calm, label: "Calm" }, users)).scopeHash;
+    const confirmed = (await optionRemoval(mood, { id: calm, label: "Calm" }, users, 0)).scopeHash;
     // Another album chooses "Calm" before the removal runs.
     await run(context, {
       mutationId: uuidv7(),
@@ -354,6 +354,7 @@ describe("removing options (FR-03.17, X-09, TS-14; AC-12)", () => {
       mood,
       { id: calm, label: "Calm" },
       await context.store.optionUsers(mood.id, calm),
+      0,
     );
     expect(removal).toMatchObject({
       field: { id: mood.id, name: "Mood" },

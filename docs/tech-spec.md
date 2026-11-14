@@ -359,7 +359,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
   - **The scope** is `{operation: "remove_option", fieldId, optionId, albums: [{id, trashed}]}`, the albums by ID, hashed as `sha256(canonical(scope))`.
   - **Confirmation:** `GET /v1/fields/{fieldId}/options/{optionId}/removal` returns the counts and the hash, never the IDs. `field.removeOption` recomputes the scope under the owner's lock and removes a chosen option only if `scopeHash` matches.
   - **Clearing values:** deleting the option does it through the foreign keys. `album_field_values.option_id` is set null, and `album_field_multi` rows cascade, their `album_field_values` row staying applied.
-  - **Shared-view effects** join the scope with sharing (M7).
+  - **Shared-view effects** join the scope with sharing (M7). *Built in TON-226:* the removal read, and the deletion read below, also count `shared`: how many of the affected albums outside Trash are in a list outside Trash that has, or is under a folder that has, an open invitation or a live link. It isn't part of the scope's hash, and approvals carry it as `field.shared`.
 - **New options** take a key after the field's last (`generateKeyBetween(last, null)`).
 
 *As built in TON-52:*

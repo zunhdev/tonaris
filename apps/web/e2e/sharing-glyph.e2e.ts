@@ -1,6 +1,6 @@
 // The glyph on the person's shared folders and lists in a real browser (DS-27, DS-31, DS-41; TON-227): a link turned
 // on in the sharing dialog shows on the folder in the tree and in views, dimmer on what it holds, and stays after a
-// reload; what isn't shared has none.
+// reload; what isn't shared has none. Deleting the shared folder names what its sharing loses (TON-226).
 
 import { uuidv7, type Container } from "@tonaris/domain";
 
@@ -67,4 +67,14 @@ test("a shared folder carries a glyph, and what it holds a dimmer one", async ({
   await page.reload();
   await live(page);
   await expect(glyph(page, "Metal")).toHaveAttribute("title", "Shared by link");
+
+  // Deleting the folder says its link stops working while it's in Trash (DS-50, TON-226); Cancel keeps it.
+  await treeItem(page, "Metal").focus();
+  await page.keyboard.press("Backspace");
+  const confirm = page.getByRole("alertdialog", { name: "Delete folder 'Metal'?" });
+  await expect(confirm).toContainText(
+    "While it's in Trash, anyone with a link to it can't open it or anything inside; recovering it gives them access again.",
+  );
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toHaveCount(0);
 });
