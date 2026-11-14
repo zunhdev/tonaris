@@ -1619,6 +1619,8 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **Opened at a report.** A report's toast opens Activity at that report, with its header focused.
 - **"{n} need review"** also counts skipped writes and those needing a choice.
 
+*As built in TON-225 (decided by the creator, 14 November 2026):* **with a share open,** the sidebar's indicator and Activity report that share's writes: its pending, failed and unconfirmed ones and its batch reports, so a share's "View report" opens an Activity that has the report. They follow the collection on screen, as its toasts and their Retry and Dismiss do (`ScreenSyncProvider`).
+
 **DS-82 Live updates from elsewhere.** *(FR-09.1, FR-07.11)*
 - Rows changed by another session, agent, or owner get a 1.2s `accent.soft` background fade.
 - New rows appear without motion when off-screen.
@@ -1630,6 +1632,10 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **Telling changes apart.** The client tells a change from elsewhere by the mutation that made it: one this tab didn't write.
 - **The highlight.** `useLiveHighlight(key, ref)` puts the `.live-update` class on the row for each such change: a 1.2 s fade, or a static tint under reduced motion.
 - **The rows** wire it in with their issues (TON-33, TON-34).
+
+*As built in TON-225 (decided by the creator, 14 November 2026):*
+- **Focus follows the item.** A grid keeps its roving focus on the album, folder or list it was on: when a change from elsewhere draws it in another cell, the focus moves with it (`useGridFocus`).
+- **Editors get no highlight** of the owner's changes in a share, as guests already don't: a share's reads replace its records as a whole, so there is no single change to point at.
 
 **DS-83 Announcements.** A polite `aria-live` region announces mode switches, moves and reorders, batch completion summaries, and restores. An assertive region announces failures, conflicts, and going offline. Routine confirmed saves are not announced. Pending items set `aria-busy` on their row. *(Q-02)*
 

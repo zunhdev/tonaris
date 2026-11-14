@@ -14,6 +14,7 @@ import { CollectionTree } from "@/features/collection/collection-tree";
 import { useStartEditor } from "@/features/collection/collection-ui";
 import { useDestination } from "@/features/collection/drag";
 import { SyncIndicator } from "@/features/sync/sync-indicator";
+import { ScreenSyncProvider } from "@/features/sync/sync-provider";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { PanelLeftClose, Plus, Search } from "lucide-react";
@@ -98,7 +99,10 @@ export function Sidebar({
         </div>
       </ScrollArea>
       <div className="shrink-0 border-t border-subtle p-2">
-        <SyncIndicator />
+        {/* The collection on screen's writes, a share's while one is open (DRIFT-091). */}
+        <ScreenSyncProvider>
+          <SyncIndicator />
+        </ScreenSyncProvider>
       </div>
       <ResizeHandle
         label="Resize sidebar"
