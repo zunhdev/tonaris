@@ -1022,7 +1022,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - **Dragging** a folder or list from its row or the tree onto a folder in the tree, or onto Collection, moves it.
   - **After a move,** the destination opens in the tree, and "Moved {name} to {destination}" is announced. The item follows its new parent's arranged items, in creation order among the rest.
   - **While offline,** M does nothing and the tree takes no drops (DS-81). A refused move is reported like any failed write (DS-107).
-  - **Since built:** L, "Add to list…", came with TON-38 (DS-46), and SharingImpact previews with TON-71 (DS-69). Dragging albums onto a list in the sidebar isn't built: an album's drag only rearranges its own view (*corrected in TON-224*).
+  - **Since built:** L, "Add to list…", came with TON-38 (DS-46), and SharingImpact previews with TON-71 (DS-69). Dragging albums onto a list in the sidebar came with TON-229 (below).
 
 *As built in TON-229 (decided by the creator, 14 November 2026):*
 - **Albums drag onto lists in the sidebar.** In Editing mode on a computer, an album row's handle shows in the person's own lists and Unsorted whatever the sort; under Manual it still rearranges too. Cards have no handle; L is the keyboard's way.
