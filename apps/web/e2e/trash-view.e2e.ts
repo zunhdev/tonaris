@@ -108,6 +108,14 @@ test("an album comes back reporting a list in Trash; deleting for good and empty
   await page.goto("/trash");
   await live(page);
   await expect(unitRow(page, "Dopesmoker")).toContainText("Album");
+  // The name has the room the other columns don't need: the whole title and artist show (TON-233).
+  const name = unitRow(page, "Dopesmoker").getByRole("rowheader");
+  await expect(name).toHaveText(/Dopesmoker\s*Sleep/);
+  const shown = await name
+    .locator("span.truncate")
+    .first()
+    .evaluate((each) => each.scrollWidth <= each.clientWidth);
+  expect(shown).toBe(true);
   await expect(unitRow(page, "Dopesmoker")).toContainText("Sleep");
 
   await unitRow(page, "Dopesmoker").getByRole("button", { name: "Restore" }).click();
