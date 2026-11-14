@@ -1,4 +1,5 @@
-// Textarea (DS-20): text over several lines, with Input's look (`border.strong` edge, 3:1, DS-14; 16px text below
+// Textarea (DS-20): text over several lines, with Input's look (`controlClass`: a `border.subtle` edge, `border.strong`
+// on hover, DS-14; 16px text below
 // 768px, DS-110), full width, with 6px above and below the text.
 
 import type * as React from "react";

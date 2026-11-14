@@ -372,7 +372,7 @@ function NewListButton({ parentId }: { parentId: string | null }) {
 function PhoneRootLinks() {
   const { unsortedAlbums } = useCollectionData();
   const row =
-    "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus";
+    "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-ring-flush";
   return (
     <nav aria-label="More" className="shrink-0 border-t border-subtle px-4 py-2">
       <Link to="/unsorted" className={row}>

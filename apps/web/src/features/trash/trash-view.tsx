@@ -321,7 +321,7 @@ function UnitRows({
               aria-expanded={open}
               aria-controls={contentsId}
               onClick={onToggle}
-              className="flex w-full min-w-0 items-center gap-2 rounded-sm py-1 text-left text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+              className="flex w-full min-w-0 items-center gap-2 rounded-sm py-1 text-left text-fg-primary focus-ring-flush outline-none"
             >
               <ChevronRight
                 aria-hidden
@@ -353,7 +353,7 @@ function UnitRows({
                 <span tabIndex={0} />
               }
               className={cn(
-                "rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+                "rounded-sm focus-ring-flush outline-none",
                 soon ? "text-status-warning" : "text-fg-secondary",
               )}
             >

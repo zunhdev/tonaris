@@ -160,7 +160,7 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
                       Also visible through{" "}
                       <button
                         type="button"
-                        className="text-fg-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+                        className="text-fg-primary underline-offset-2 focus-ring-flush hover:underline"
                         onClick={() => startShare(above.containerId)}
                       >
                         "{above.name}"

@@ -17,7 +17,7 @@ import { useSaveActions } from "./save-actions";
 import { SaveStateItem } from "./save-state-item";
 
 const disclosure =
-  "flex min-w-0 items-start gap-1 rounded-sm text-left outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-focus";
+  "flex min-w-0 items-start gap-1 rounded-sm text-left outline-none hover:text-fg-primary focus-ring";
 
 export function BatchOutcomeReport({ report }: { report: BatchReport }) {
   const actions = useSaveActions();

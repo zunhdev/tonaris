@@ -57,7 +57,7 @@ export function Sidebar({
         <Link
           to="/c"
           aria-label="Tonaris, go to Collection"
-          className="-ml-1.5 flex h-8 items-center rounded-md px-1.5 outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+          className="-ml-1.5 flex h-8 items-center rounded-md px-1.5 focus-ring-flush outline-none hover:bg-hover"
         >
           <Wordmark />
         </Link>
@@ -171,7 +171,7 @@ function CollectionLink() {
       ref={setNodeRef}
       to="/c"
       className={cn(
-        "flex h-7 min-w-0 flex-1 items-center rounded-md px-2 text-small font-medium text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-[current=page]:text-fg-primary",
+        "flex h-7 min-w-0 flex-1 items-center rounded-md px-2 text-small font-medium text-fg-tertiary focus-ring-flush outline-none hover:text-fg-primary aria-[current=page]:text-fg-primary",
         over && "bg-accent-soft text-fg-primary",
       )}
     >

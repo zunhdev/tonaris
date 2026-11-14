@@ -47,7 +47,7 @@ function Part({ title, children }: { title: string; children: React.ReactNode })
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((was) => !was)}
-        className="flex w-full items-center gap-1.5 rounded-sm text-left text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
+        className="flex w-full items-center gap-1.5 rounded-sm text-left text-fg-primary focus-ring outline-none"
       >
         <ChevronRight
           aria-hidden

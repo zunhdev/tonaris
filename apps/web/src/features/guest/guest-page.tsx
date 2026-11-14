@@ -1,12 +1,11 @@
 // A shared link's page (DS-72; FR-07.1, FR-07.3, FR-07.11, FR-11.9, FR-06.5), rendered on the server: the Tonaris
 // wordmark, the folder's or list's name, "Shared by {name}" and its description; a folder's breadcrumbs and its
-// folders and lists, each opened with `?c=` inside the share; a list's albums as rows or a grid, each with an Open
-// chooser of its services, whose links leave with no referrer (TS-32). View options last the visit (guest-view.ts).
+// folders and lists, each opened with `?c=` inside the share; a list's albums as rows or a grid, each with its services'
+// links (TON-127), whose links leave with no referrer (TS-32). View options last the visit (guest-view.ts).
 // The page follows the owner's saves through the link's stream, reading the share again after each, and turns into
 // DS-72's unavailable sentence once the link stops working. No search; "Sign in", the terms and the privacy notice
 // at the foot (TON-131).
 
-import { count } from "@/common/words";
 import { artworkSrc } from "@/features/collection/artwork";
 import { coversIn } from "@/features/collection/container-covers";
 import { effectiveColor } from "@/features/collection/container-palette";
@@ -29,6 +28,7 @@ import {
   linksByAlbum,
   ShareBreadcrumbs,
   type LinkTo,
+  itemContents,
 } from "./share-content";
 
 /** The page for a link that doesn't work, whatever the reason (DS-72). */
@@ -54,7 +54,7 @@ function GuestFrame({ children }: { children: ReactNode }) {
         <Link
           to="/welcome"
           aria-label="Tonaris, what it is"
-          className="-mx-1.5 flex h-8 items-center rounded-md px-1.5 outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+          className="-mx-1.5 flex h-8 items-center rounded-md px-1.5 focus-ring-flush outline-none hover:bg-hover"
         >
           <Wordmark />
         </Link>
@@ -166,10 +166,7 @@ function FolderContents({
       }).map((album) => ({ id: album.id, title: album.title, src: artworkSrc(album) })),
     [snapshot, tree, view.sort, view.dir, view.grouped],
   );
-  const contentsOf = (item: Container) =>
-    item.kind === "list"
-      ? count(albumsIn(snapshot, item.id).length, "album", "albums")
-      : count(tree.children.get(item.id)?.length ?? 0, "folder or list", "folders and lists");
+  const contentsOf = (item: Container) => itemContents(snapshot, tree.children, item);
   return (
     <>
       <ClientOnly fallback={<div className="h-7.5" />}>

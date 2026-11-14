@@ -1,5 +1,5 @@
-// The manual entry form (DS-47, FR-02.4): "New album", every album field in order, with custom fields shown as coming
-// later (M4), the artwork's URL (FR-03.4), a link per service (FR-06.3), and a destination list. Title, artist and the applicable year are required (FR-02.6); fields are checked
+// The manual entry form (DS-47, FR-02.4): "New album", every album field in order, the custom fields to apply
+// (FR-03.7), the artwork's URL (FR-03.4), a link per service (FR-06.3), and a destination list. Title, artist and the applicable year are required (FR-02.6); fields are checked
 // when left and on submit, each error shown at its field and, on submit, summarized at the top. Nothing incomplete is
 // saved and nothing invented (AC-08). ⌘Enter saves; Esc or closing asks before discarding what was typed. Saving
 // creates the album, then its links, then its entry in the list, through the collections, so save states apply; Edit

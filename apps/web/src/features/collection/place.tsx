@@ -36,6 +36,11 @@ export function OwnPlace({ children }: { children: ReactNode }) {
   return <CollectionPlaceContext value={own}>{children}</CollectionPlaceContext>;
 }
 
+/** The shared folder or list a path opens, `/shared/{root}`, if it opens one: the routes' shape, read in one place. */
+export function sharedRootOf(pathname: string): string | undefined {
+  return /^\/shared\/([^/]+)$/.exec(pathname)?.[1];
+}
+
 /**
  * Where a folder or list inside a share opens: `/shared/{root}`, with `?c=` for anything below its top (TON-191).
  * Every link and navigation into a share is built here, checked by the router (DRIFT-050).

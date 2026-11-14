@@ -307,7 +307,8 @@ export function createSyncEngine({
         if (cursor === undefined) await bootstrap(signal);
         // oxlint-disable-next-line no-await-in-loop
         await stream(signal);
-        // An ended stream (a deploy, a reset) is reconnected at once; a failing one backs off below.
+        // A reset bootstraps again at once. Any other end, such as a deploy's, waits a short random pause below, so
+        // reconnects spread out (TS-23), and longer while connecting keeps failing.
         if (cursor === undefined) continue;
       } catch (error) {
         if (signal.aborted) break;

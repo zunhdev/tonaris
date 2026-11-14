@@ -408,7 +408,7 @@ function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
                     aria-label={`Remove from ${list.name}`}
                     onClick={() => remove(list.id, list.name)}
                     className={cn(
-                      "flex h-6 items-center rounded-r-full border border-l-0 border-subtle bg-raised px-1.5 text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+                      "flex h-6 items-center rounded-r-full border border-l-0 border-subtle bg-raised px-1.5 text-fg-tertiary focus-ring-flush outline-none hover:text-fg-primary",
                       tint,
                     )}
                   >
@@ -437,4 +437,4 @@ function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
 }
 
 const chip =
-  "flex h-6 items-center rounded-full border border-subtle bg-raised px-2.5 text-small text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid";
+  "flex h-6 items-center rounded-full border border-subtle bg-raised px-2.5 text-small text-fg-primary outline-none hover:bg-hover focus-ring-flush";

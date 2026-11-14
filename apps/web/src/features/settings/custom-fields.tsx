@@ -200,7 +200,7 @@ function FieldRows({
             aria-expanded={open}
             aria-controls={panelId}
             onClick={onToggle}
-            className="flex min-w-0 items-center gap-1.5 rounded-sm py-1 text-left text-fg-primary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+            className="flex min-w-0 items-center gap-1.5 rounded-sm py-1 text-left text-fg-primary focus-ring-flush outline-none hover:text-fg-primary"
           >
             <ChevronRight
               aria-hidden

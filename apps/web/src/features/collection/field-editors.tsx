@@ -180,7 +180,7 @@ function MultipleChoiceEditor({ field, value, onSave, label, disabled = false }:
               aria-label={`Remove ${option.label}`}
               disabled={disabled}
               onClick={() => save(chosen.filter((id) => id !== option.id))}
-              className="flex size-4 items-center justify-center rounded-full text-fg-tertiary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+              className="flex size-4 items-center justify-center rounded-full text-fg-tertiary focus-ring-flush outline-none hover:text-fg-primary"
             >
               <X aria-hidden strokeWidth={1.5} className="size-3" />
             </button>

@@ -8,7 +8,7 @@ import { cn } from "@tonaris/ui/lib/utils";
 
 /** A form control's look, without its height or width: Input's, Select's and Textarea's. */
 const controlClass =
-  "min-w-0 rounded-md border border-subtle bg-field px-2.5 text-control text-fg-primary transition-colors duration-100 ease-enter outline-none placeholder:text-fg-tertiary hover:border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid disabled:pointer-events-none disabled:text-fg-disabled disabled:opacity-50 aria-invalid:border-status-danger max-md:text-[1rem]";
+  "min-w-0 rounded-md border border-subtle bg-field px-2.5 text-control text-fg-primary transition-colors duration-100 ease-enter outline-none placeholder:text-fg-tertiary hover:border-strong focus-ring disabled:pointer-events-none disabled:text-fg-disabled disabled:opacity-50 aria-invalid:border-status-danger max-md:text-[1rem]";
 
 function Input({ className, type, ...props }: InputPrimitive.Props) {
   return (

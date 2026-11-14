@@ -41,7 +41,7 @@ import { useDestination, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
 import { ContainerIcon } from "./icons";
 import { NameEditor } from "./name-editor";
-import { shareLocation } from "./place";
+import { shareLocation, sharedRootOf } from "./place";
 import {
   ancestorsOf,
   buildSharedTree,
@@ -142,7 +142,7 @@ function withEditor(rows: TreeRow[], editor: Editor | undefined): Row[] {
 }
 
 const rowClass =
-  "relative flex h-7 min-w-0 items-center gap-1.5 rounded-md pr-2 text-fg-secondary outline-none hover:bg-hover hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-focus aria-selected:bg-selected aria-selected:text-fg-primary";
+  "relative flex h-7 min-w-0 items-center gap-1.5 rounded-md pr-2 text-fg-secondary outline-none hover:bg-hover hover:text-fg-primary focus-ring-inset aria-selected:bg-selected aria-selected:text-fg-primary";
 
 /** The left padding that shows an item's level. */
 const indent = (level: number) => ({ paddingLeft: `${4 + (level - 1) * 12}px` });
@@ -157,7 +157,7 @@ export function CollectionTree() {
   const inShare = useLocation({ select: (location) => (location.search as { c?: unknown }).c });
   const viewId = useViewContainerId();
   // A shared view's folder or list: `/shared/{root}`, with `?c=` inside the share.
-  const sharedRoot = /^\/shared\/([^/]+)$/.exec(pathname)?.[1];
+  const sharedRoot = sharedRootOf(pathname);
   const sharedView =
     sharedRoot === undefined ? undefined : typeof inShare === "string" ? inShare : sharedRoot;
   const selected = viewId ?? sharedView ?? placeAt(pathname);

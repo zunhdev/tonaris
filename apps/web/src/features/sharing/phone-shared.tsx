@@ -17,7 +17,7 @@ import { usePendingInvitations } from "./pending-invitations";
 import { useSharedEntries } from "./shared-entries";
 
 const row =
-  "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus";
+  "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-ring-flush";
 
 export function PhoneShared() {
   const { entries } = useSharedEntries();

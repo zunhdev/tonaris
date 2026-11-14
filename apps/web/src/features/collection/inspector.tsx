@@ -1,7 +1,7 @@
 // The album inspector (DS-46, DS-30): the album named by `?album=` beside the view, or over it on a narrow window, as
 // wide as its left edge was dragged, 380 px at first (TON-124). On a phone it is a sheet over the view, read-only as phones are, with an Open button for each
 // service (DS-110); it takes the focus when it opens. Esc closes it, unless a field, dialog, popover or menu has the
-// keys; so does Close. An album that is gone says so (DS-83's "removed elsewhere" pattern, until Trash says more).
+// keys; so does Close. An album that is gone says so (DS-82's "removed elsewhere" pattern).
 // The shell slides it in and out (inspector-slide.ts, TON-159); while it slides out it is inert, and beside the view it
 // floats at the window's edge, so the view has its width back at once. In Editing mode its header has "Delete from
 // collection…", beside Close, always in view (TON-162).

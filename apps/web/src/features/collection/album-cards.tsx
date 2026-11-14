@@ -171,7 +171,7 @@ function AlbumCard({
       aria-busy={isUnderway(status) || undefined}
       data-open={open || undefined}
       className={cn(
-        "relative isolate flex flex-col gap-1 rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid",
+        "relative isolate flex flex-col gap-1 rounded-md focus-ring outline-none",
         // The raised surface under a hovering pointer, behind the card and half the gap outside it. It takes no
         // clicks, and `hover:` matches only a pointer that hovers, so a tap on a phone leaves none behind.
         "before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:transition-colors before:duration-100 before:ease-enter hover:before:bg-hover",

@@ -135,7 +135,7 @@ export function FindArtwork({
               <li key={cover.releaseGroupId}>
                 <button
                   type="button"
-                  className="flex w-full flex-col gap-1 rounded-md p-1 text-left outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+                  className="flex w-full flex-col gap-1 rounded-md p-1 text-left focus-ring-flush outline-none hover:bg-hover"
                   onClick={() => {
                     setOpen(false);
                     onChoose(cover.artworkUrl);

@@ -91,7 +91,7 @@ export function GroupHeader({
       type="button"
       aria-expanded={!collapsed}
       onClick={() => onToggle(group)}
-      className="flex h-full min-w-0 items-center gap-1.5 rounded-sm pr-2 text-small text-fg-secondary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
+      className="flex h-full min-w-0 items-center gap-1.5 rounded-sm pr-2 text-small text-fg-secondary focus-ring-inset outline-none hover:text-fg-primary"
       {...cell}
     >
       <Icon aria-hidden strokeWidth={1.5} className="size-3.5" />

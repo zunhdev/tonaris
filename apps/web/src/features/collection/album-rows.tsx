@@ -281,8 +281,7 @@ export function AlbumRows({
   );
 }
 
-const cell =
-  "flex min-w-0 items-center rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-focus";
+const cell = "flex min-w-0 items-center rounded-sm outline-none focus-ring-inset";
 
 function AlbumRow({
   album,
@@ -523,7 +522,7 @@ function CellEditor({
         // A double-click inside the field selects text; it doesn't reopen the editor.
         onDoubleClick={(event) => event.stopPropagation()}
         className={cn(
-          "h-7 min-w-0 flex-1 rounded-sm border border-strong bg-panel px-1.5 text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid",
+          "h-7 min-w-0 flex-1 rounded-sm border border-strong bg-panel px-1.5 text-fg-primary focus-ring-flush outline-none",
           edit.refusal !== undefined && "border-status-danger",
         )}
       />

@@ -158,8 +158,7 @@ export function ContainerRows({
   );
 }
 
-const focusable =
-  "outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-focus";
+const focusable = "outline-none focus-ring-inset";
 
 function ContainerRow({
   container,

@@ -63,7 +63,7 @@ export function ColorDialog() {
                     if (item) setColor(item.id, color);
                     endColor();
                   }}
-                  className="flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-left text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
+                  className="flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-left text-fg-primary focus-ring-inset outline-none hover:bg-hover"
                 >
                   <ColorSwatch color={color} />
                   <span className="flex-1">{color === null ? "None" : colorNames[color]}</span>

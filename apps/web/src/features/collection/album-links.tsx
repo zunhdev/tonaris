@@ -179,7 +179,7 @@ function LinkRow({
         <ServiceAnchor
           link={link}
           title={link.url}
-          className="group/link flex min-w-0 flex-1 items-center gap-0.5 text-accent-solid outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+          className="group/link flex min-w-0 flex-1 items-center gap-0.5 text-accent-solid focus-ring-flush outline-none"
         >
           <span className="sr-only">Open in {name}: </span>
           {/* Tonaris's link style, with an underline that firms up on hover (TON-123). */}

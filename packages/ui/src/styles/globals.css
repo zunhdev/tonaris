@@ -7,6 +7,36 @@
 @import "@fontsource-variable/inter";
 @import "./tokens.css";
 
+/*
+ * The focus ring (DS-14): a solid 2px `focus` outline when the keyboard has the focus, outside the control or, for
+ * what fills its place, inside. One utility each, so the class lists that draw it can't drift (DRIFT-088).
+ */
+@utility focus-ring {
+  &:focus-visible {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-color: var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+@utility focus-ring-flush {
+  &:focus-visible {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-color: var(--color-focus);
+  }
+}
+
+@utility focus-ring-inset {
+  &:focus-visible {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-color: var(--color-focus);
+    outline-offset: -2px;
+  }
+}
+
 /* Dark-only in v1 (DS-11): `dark:` follows the document's data-theme. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

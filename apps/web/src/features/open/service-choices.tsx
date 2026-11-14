@@ -40,7 +40,7 @@ export function ServiceChoices({
               link={link}
               ref={index === 0 ? first : undefined}
               onClick={onClose}
-              className="flex h-8 items-center gap-2 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+              className="flex h-8 items-center gap-2 rounded-md px-2 text-fg-primary focus-ring-flush outline-none hover:bg-hover"
             >
               Open in {serviceNames[link.service]}
               <ExternalLink aria-hidden strokeWidth={1.5} className="size-3.5 text-fg-tertiary" />
