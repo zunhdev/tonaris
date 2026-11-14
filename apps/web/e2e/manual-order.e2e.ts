@@ -314,3 +314,83 @@ test("a move made in another browser shows without reloading", async ({ page, br
   await expect(names(other, "Doom")).toHaveText(["AAncient Dreams", "NNightfall"]);
   await otherContext.close();
 });
+
+test("albums dragged onto a list in the tree join it, and with ⌥ move there, with Undo (TON-229)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.albumDrag);
+  await live(page);
+  const doom = await created(page, "Doom");
+  const stoner = await created(page, "Stoner");
+  await added(page, [album("Dopesmoker"), album("Holy Mountain")], doom.id);
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  const tree = page.getByRole("tree");
+  const target = tree.getByRole("treeitem", { name: /^Stoner/ });
+  // In Editing mode, rows have handles in any sort: here, by year.
+  await page.getByRole("radiogroup", { name: "Mode" }).getByRole("radio", { name: "Edit" }).click();
+  await expect(grid(page, "Doom").locator('[data-slot="drag-handle"]')).toHaveCount(2);
+
+  // A drop adds it, and it stays in Doom.
+  await rowOf(page, "Doom", "Dopesmoker").hover();
+  await dragOver(
+    page,
+    rowOf(page, "Doom", "Dopesmoker").locator('[data-slot="drag-handle"]'),
+    target,
+  );
+  await expect(page.getByText("Add to Stoner", { exact: true })).toBeVisible();
+  await expect(target).toHaveClass(/bg-accent-soft/);
+  await page.mouse.up();
+  await expect(announcements(page).first()).toHaveText("Added Dopesmoker to Stoner");
+  await expect(grid(page, "Doom").getByRole("row")).toHaveCount(3);
+  await saved(page);
+
+  // Over a list it is already in, nothing is highlighted, and a drop changes nothing.
+  await rowOf(page, "Doom", "Dopesmoker").hover();
+  await dragOver(
+    page,
+    rowOf(page, "Doom", "Dopesmoker").locator('[data-slot="drag-handle"]'),
+    target,
+  );
+  await expect(target).not.toHaveClass(/bg-accent-soft/);
+  await page.mouse.up();
+
+  // With ⌥, it moves: out of Doom, into Stoner, with Undo.
+  await rowOf(page, "Doom", "Holy Mountain").hover();
+  await dragOver(
+    page,
+    rowOf(page, "Doom", "Holy Mountain").locator('[data-slot="drag-handle"]'),
+    target,
+  );
+  await page.keyboard.down("Alt");
+  await page.mouse.move(...(await centre(target)), { steps: 2 });
+  await expect(page.getByText("Move to Stoner", { exact: true })).toBeVisible();
+  await page.mouse.up();
+  await page.keyboard.up("Alt");
+  await expect(rowOf(page, "Doom", "Holy Mountain")).toHaveCount(0);
+  const notifications = page.getByRole("region", { name: "Notifications" });
+  await expect(notifications.getByText("Moved to Stoner")).toBeVisible();
+  await notifications.getByRole("button", { name: "Undo" }).click();
+  await expect(rowOf(page, "Doom", "Holy Mountain")).toHaveCount(1);
+  await saved(page);
+
+  await page.goto(`/l/${stoner.id}`);
+  await live(page);
+  await expect(grid(page, "Stoner").getByRole("row")).toHaveCount(2);
+  await expect(rowOf(page, "Stoner", "Dopesmoker")).toHaveCount(1);
+});
+
+async function centre(locator: Locator): Promise<[number, number]> {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error("Nothing to point at.");
+  return [box.x + box.width / 2, box.y + box.height / 2];
+}
+
+/** Starts dragging `from` and holds it over `to`, the button still down. */
+async function dragOver(page: Page, from: Locator, to: Locator): Promise<void> {
+  const [x, y] = await centre(from);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y + 10, { steps: 3 });
+  await page.mouse.move(...(await centre(to)), { steps: 12 });
+}
