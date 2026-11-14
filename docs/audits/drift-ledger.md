@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 4 | 81 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 3 | 82 | 0 |
 
 ## Areas
 
