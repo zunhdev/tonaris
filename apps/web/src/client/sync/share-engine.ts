@@ -4,7 +4,8 @@
 // collections a `reset` each time: a share is small, and a read also covers content moving into or out of it. Its
 // `seq` is the owner's, which the read carries, so the writer confirms an editor's writes as it confirms the owner's
 // (TS-20). A read answered 404 means access ended: it stops, and says so. One tab reads its share itself, as a
-// viewer's page does: there's no tab coordination.
+// viewer's page does: there's no tab coordination. Its stream is the tab's one stream of that share, shared with the
+// sidebar's tree (follow-stream.ts), which also brings it back after a phone sleeps.
 
 import {
   appAccountDefaults,
@@ -15,7 +16,7 @@ import {
 } from "@tonaris/domain";
 
 import type { ConnectionStatus, Fetch, SyncConsumer, SyncEngine } from "./engine";
-import { readEventStream } from "./event-stream";
+import { followStream, resumeStreams } from "./follow-stream";
 
 /** What each read says of the share besides its content: the person's role on it, and its owner's name. */
 export type ShareRead = { role: ShareRole; ownerName: string | null };
@@ -83,6 +84,10 @@ export function createShareEngine({
   let reading: Promise<void> | undefined;
   let again = false;
   let gone = false;
+  /** Stops following the share's stream. */
+  let unfollow: (() => void) | undefined;
+  /** Whether a read has succeeded since the start: until then, the share isn't live. */
+  let firstRead = false;
 
   const setStatus = (next: ConnectionStatus) => {
     if (next === status) return;
@@ -103,6 +108,7 @@ export function createShareEngine({
     if (gone) return;
     gone = true;
     clearTimeout(timer);
+    unfollow?.();
     running?.abort();
     running = undefined;
     setStatus("stopped");
@@ -171,57 +177,29 @@ export function createShareEngine({
     nap = undefined;
   }
 
-  /** Follows the share's notices until the connection ends. */
-  async function stream(signal: AbortSignal): Promise<void> {
-    const connection = new AbortController();
-    const stop = () => connection.abort();
-    signal.addEventListener("abort", stop, { once: true });
-    let silence: ReturnType<typeof setTimeout> | undefined;
-    const heard = () => {
-      clearTimeout(silence);
-      silence = setTimeout(() => connection.abort(), silenceMs);
-    };
-    try {
-      heard();
-      const response = await fetch(`${apiUrl}/v1/shared/${rootId}/stream`, {
-        signal: connection.signal,
-      });
-      if (response.status === 401) throw new SignedOut();
-      if (response.status === 404) throw new Unavailable();
-      if (!response.ok || !response.body) throw new Error(`the stream answered ${response.status}`);
-      setStatus("live");
-      attempt = 0;
-      for await (const event of readEventStream(response.body, heard)) {
-        if (event.event === "shared-invalidate") readSoon();
-      }
-    } finally {
-      clearTimeout(silence);
-      signal.removeEventListener("abort", stop);
-      connection.abort();
-    }
-  }
+  /** The person signed out: stop, and say so. */
+  const signedOut = () => {
+    clearTimeout(timer);
+    unfollow?.();
+    running?.abort();
+    running = undefined;
+    setStatus("signed_out");
+  };
 
-  async function run(signal: AbortSignal): Promise<void> {
+  /** The first read, retried with growing pauses until it lands, the session ends or access does. */
+  async function readFirst(signal: AbortSignal): Promise<void> {
     while (!signal.aborted) {
       try {
-        // Read first, then follow: what changed while disconnected is in the read.
         // oxlint-disable-next-line no-await-in-loop
         await read(signal);
-        // oxlint-disable-next-line no-await-in-loop
-        await stream(signal);
+        attempt = 0;
+        firstRead = true;
+        return;
       } catch (error) {
-        if (signal.aborted) break;
-        if (error instanceof SignedOut) {
-          setStatus("signed_out");
-          return;
-        }
-        if (error instanceof Unavailable) {
-          endAccess();
-          return;
-        }
+        if (signal.aborted) return;
+        if (error instanceof SignedOut) return signedOut();
+        if (error instanceof Unavailable) return endAccess();
       }
-      if (signal.aborted) break;
-      setStatus("reconnecting");
       // oxlint-disable-next-line no-await-in-loop
       await backOff(signal);
     }
@@ -236,21 +214,47 @@ export function createShareEngine({
     start(): void {
       if (running || gone) return;
       running = new AbortController();
+      const { signal } = running;
       setStatus("connecting");
       // It holds its stream itself, as a tab that leads does.
       for (const listener of leadListeners) listener();
-      void run(running.signal);
+      let open = false;
+      const live = () => {
+        if (open && firstRead && !signal.aborted) setStatus("live");
+      };
+      void readFirst(signal).then(live);
+      unfollow = followStream(
+        `${apiUrl}/v1/shared/${rootId}/stream`,
+        {
+          onEvent: (event) => {
+            if (event.event === "shared-invalidate") readSoon();
+          },
+          onState: (state, missed) => {
+            open = state === "open";
+            if (state === "retrying") setStatus("reconnecting");
+            // What changed while it was away is in a read.
+            if (missed) readSoon();
+            live();
+          },
+          onEnd: (refused) => (refused === 401 ? signedOut() : endAccess()),
+        },
+        { fetch, backoff, silenceMs },
+      );
     },
 
     stop(): void {
       clearTimeout(timer);
+      unfollow?.();
+      unfollow = undefined;
       running?.abort();
       running = undefined;
+      firstRead = false;
       setStatus("stopped");
     },
 
     reconnect(): void {
       nap?.abort();
+      resumeStreams();
     },
 
     onLead(listener: () => void): () => void {

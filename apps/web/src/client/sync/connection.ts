@@ -153,3 +153,25 @@ export function watchConnection({
     },
   };
 }
+
+/**
+ * Calls `resume` when the network is back, or the page is shown again after a phone froze it (TON-137): a client then
+ * connects and resends at once rather than after its current pause. Answers how to stop.
+ */
+export function resumeWhenBack(
+  resume: () => void,
+  network: Network = browserNetwork(),
+  page: PageVisibility = browserPage(),
+): () => void {
+  const shown = () => {
+    if (!page.hidden) resume();
+  };
+  network.addEventListener("online", resume);
+  page.addEventListener("visibilitychange", shown);
+  page.addEventListener("resume", shown);
+  return () => {
+    network.removeEventListener("online", resume);
+    page.removeEventListener("visibilitychange", shown);
+    page.removeEventListener("resume", shown);
+  };
+}

@@ -91,7 +91,7 @@ describe("owner streams (TS-23)", () => {
     const memory = memoryLog();
     const hub = createSyncHub({ log: memory.log });
     memory.commit(3);
-    const stream = hub.subscribe(accountId, 1);
+    const stream = hub.subscribe(accountId, 1, "web");
     expect(seqs(await take(stream, 2))).toEqual([2, 3]);
 
     hub.publish(accountId, memory.commit(2));
@@ -103,7 +103,7 @@ describe("owner streams (TS-23)", () => {
     const memory = memoryLog();
     const hub = createSyncHub({ log: memory.log });
     const committed = memory.commit();
-    const events = await take(hub.subscribe(accountId, 0), 1);
+    const events = await take(hub.subscribe(accountId, 0, "web"), 1);
     expect(events).toEqual(
       committed.map((change) => ({ id: String(change.seq), event: "change", data: change })),
     );
@@ -112,7 +112,7 @@ describe("owner streams (TS-23)", () => {
   test("skip changes they already handed out", async () => {
     const memory = memoryLog();
     const hub = createSyncHub({ log: memory.log });
-    const stream = hub.subscribe(accountId, 0);
+    const stream = hub.subscribe(accountId, 0, "web");
     const committed = memory.commit(2);
     expect(seqs(await take(stream, 2))).toEqual([1, 2]);
     hub.publish(accountId, committed);
@@ -123,7 +123,7 @@ describe("owner streams (TS-23)", () => {
   test("read the log when a publish skips ahead, as when commits publish out of order", async () => {
     const memory = memoryLog();
     const hub = createSyncHub({ log: memory.log });
-    const stream = hub.subscribe(accountId, 0);
+    const stream = hub.subscribe(accountId, 0, "web");
     const events = take(stream, 2);
     await Bun.sleep(5);
     const [first, second] = [memory.commit(), memory.commit()];
@@ -137,7 +137,7 @@ describe("owner streams (TS-23)", () => {
     const hub = createSyncHub({ log: memory.log });
     memory.commit(2);
     const release = memory.holdReads();
-    const stream = hub.subscribe(accountId, 0);
+    const stream = hub.subscribe(accountId, 0, "web");
     const reading = take(stream, 4);
     await Bun.sleep(10);
     hub.publish(accountId, memory.commit(2));
@@ -148,7 +148,7 @@ describe("owner streams (TS-23)", () => {
   test("hold no more than the buffer limit for a slow client, and catch up from the log", async () => {
     const memory = memoryLog();
     const hub = createSyncHub({ log: memory.log, bufferLimit: 5, pageSize: 4 });
-    const stream = hub.subscribe(accountId, 0);
+    const stream = hub.subscribe(accountId, 0, "web");
     const first = stream.next();
     await Bun.sleep(5);
     // Published faster than the client reads: more than the buffer holds.
@@ -165,7 +165,7 @@ describe("owner streams (TS-23)", () => {
     const hub = createSyncHub({ log: memory.log });
     memory.commit(5);
     memory.prune(3);
-    const stream = hub.subscribe(accountId, 2);
+    const stream = hub.subscribe(accountId, 2, "web");
     expect(await take(stream, 2)).toEqual([{ event: "reset", data: { reason: "cursor_expired" } }]);
     expect(hub.size).toBe(0);
   });
@@ -174,7 +174,7 @@ describe("owner streams (TS-23)", () => {
     const memory = memoryLog();
     const hub = createSyncHub({ log: memory.log });
     memory.commit(2);
-    expect(await take(hub.subscribe(accountId, 7), 2)).toEqual([
+    expect(await take(hub.subscribe(accountId, 7, "web"), 2)).toEqual([
       { event: "reset", data: { reason: "cursor_unknown" } },
     ]);
   });
@@ -184,7 +184,7 @@ describe("owner streams (TS-23)", () => {
     const hub = createSyncHub({ log: memory.log });
     memory.commit(3);
     memory.prune(3);
-    const stream = hub.subscribe(accountId, 3);
+    const stream = hub.subscribe(accountId, 3, "web");
     hub.publish(accountId, memory.commit());
     expect(seqs(await take(stream, 1))).toEqual([4]);
   });
@@ -192,7 +192,7 @@ describe("owner streams (TS-23)", () => {
   test("hand each account only its own changes", async () => {
     const anna = memoryLog();
     const hub = createSyncHub({ log: anna.log });
-    const stream = hub.subscribe(accountId, 0);
+    const stream = hub.subscribe(accountId, 0, "web");
     const events = take(stream, 1);
     await Bun.sleep(5);
     hub.publish("ben", [
@@ -207,7 +207,7 @@ describe("owner streams (TS-23)", () => {
   test("end a waiting reader at once and leave the hub", async () => {
     const memory = memoryLog();
     const hub = createSyncHub({ log: memory.log });
-    const stream = hub.subscribe(accountId, 0);
+    const stream = hub.subscribe(accountId, 0, "web");
     const waiting = stream.next();
     await Bun.sleep(5);
     expect(hub.size).toBe(1);
@@ -295,7 +295,7 @@ describe("streams and their sessions (TS-23)", () => {
     watchAs("viewer-web");
     watchAs("viewer-phone");
     let guestEvents = 0;
-    hub.watch(accountId, () => (guestEvents += 1));
+    hub.watch(accountId, () => (guestEvents += 1), "guest");
 
     live.end("viewer-web");
     await Bun.sleep(40);

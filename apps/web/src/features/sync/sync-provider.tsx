@@ -7,6 +7,7 @@ import { browserFetch, createSyncClient, type SyncClient } from "@/client/sync/c
 import {
   browserNetwork,
   browserPage,
+  resumeWhenBack,
   watchConnection,
   type Connection,
   type ConnectionWatch,
@@ -36,7 +37,7 @@ declare global {
   }
 }
 
-type Sync = { client: SyncClient; connection: ConnectionWatch };
+export type Sync = { client: SyncClient; connection: ConnectionWatch };
 
 /** The client of the collection on screen: the person's own, or a share's they edit (TON-191). */
 const SyncContext = createContext<Sync | undefined>(undefined);
@@ -66,13 +67,7 @@ export function SyncProvider({ account, children }: { account: Account; children
     });
     // Back online, or back on screen after the phone froze the page (TON-137), connect and resend at once rather
     // than after the current delay: captures too, which would otherwise wait out a backoff of up to 30 s.
-    const online = () => created.resume();
-    const shown = () => {
-      if (!document.hidden) online();
-    };
-    window.addEventListener("online", online);
-    document.addEventListener("visibilitychange", shown);
-    document.addEventListener("resume", shown);
+    const unwatch = resumeWhenBack(() => created.resume());
     created.start();
     if (testHooks) window.tonarisSync = created;
     // The client holds locks, a channel and timers, so it is made here rather than during render, which may run
@@ -80,9 +75,7 @@ export function SyncProvider({ account, children }: { account: Account; children
     // oxlint-disable-next-line react/set-state-in-effect
     setSync({ client: created, connection });
     return () => {
-      window.removeEventListener("online", online);
-      document.removeEventListener("visibilitychange", shown);
-      document.removeEventListener("resume", shown);
+      unwatch();
       off();
       connection.stop();
       void created.stop();
@@ -102,17 +95,15 @@ export function SyncProvider({ account, children }: { account: Account; children
  * the own client passes through, so the tree below stays the same either way.
  */
 export function ActiveSyncProvider({
-  client,
+  active,
   children,
 }: {
-  client: SyncClient | undefined;
+  /** The share's client and its connection, as the workspace reports it (DS-81). */
+  active: Sync | undefined;
   children: ReactNode;
 }) {
   const own = useContext(OwnSyncContext);
-  const value = useMemo(
-    () => (client && own ? { client, connection: own.connection } : own),
-    [client, own],
-  );
+  const value = useMemo(() => active ?? own, [active, own]);
   return <SyncContext value={value}>{children}</SyncContext>;
 }
 

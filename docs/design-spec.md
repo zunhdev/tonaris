@@ -1398,6 +1398,7 @@ The block never says "private" while another access path remains.
 - **Open:** a popover of the album's services. Each opens in a new tab with `rel="noopener noreferrer"`. An album without links has none.
 - **Live:** changes simply appear; DS-82's highlight isn't applied yet.
 - **Unavailable:** the title "Not available" and DS-72's sentence.
+- **Busy** (TON-211): when the first read is refused for now (the guests' view limit) or fails, the title "Busy right now" and "This page tries again in a moment." It does, after the API's `Retry-After`. A later read that fails keeps the share on screen.
 - **Previews:**
   - the page title is "{name} · Tonaris";
   - `og:title` is the name;

@@ -100,7 +100,7 @@ export function guestRoutes({
         // The page follows its owner's writes.
         yield* invalidationStream(
           hub,
-          { ownerId: link.ownerId, rootId: link.containerId },
+          { ownerId: link.ownerId, rootId: link.containerId, viewer: "guest" },
           { request, server },
         );
       },
