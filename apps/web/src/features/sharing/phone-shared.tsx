@@ -5,6 +5,7 @@
 import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
 import { ContainerIcon } from "@/features/collection/icons";
+import { shareLocation } from "@/features/collection/place";
 import { buildSharedTree } from "@/features/collection/tree";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, MailOpen, Users } from "lucide-react";
@@ -41,8 +42,7 @@ export function PhoneShared() {
           {items.map((item) => (
             <li key={item.id}>
               <Link
-                to="/shared/$containerId"
-                params={{ containerId: item.id }}
+                {...shareLocation(item.id)}
                 className={cn(row, !item.available && "opacity-60")}
               >
                 {item.kind ? (

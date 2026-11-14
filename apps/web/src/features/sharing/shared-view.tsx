@@ -16,6 +16,7 @@ import { coversIn } from "@/features/collection/container-covers";
 import { effectiveColor } from "@/features/collection/container-palette";
 import { useCollectionData } from "@/features/collection/data";
 import { sections as sectionsOf, sortAlbums, sortContainers } from "@/features/collection/order";
+import { shareHref, shareLocation } from "@/features/collection/place";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
 import { ViewOptions } from "@/features/collection/view-options";
 import {
@@ -89,14 +90,7 @@ function SharedContent({
   const current =
     (containerId === undefined ? undefined : tree.byId.get(containerId)) ?? tree.byId.get(rootId);
   const linkTo = useCallback<LinkTo>(
-    (id, props) => (
-      <Link
-        to="/shared/$containerId"
-        params={{ containerId: rootId }}
-        search={id === rootId ? {} : { c: id }}
-        {...props}
-      />
-    ),
+    (id, props) => <Link {...shareLocation(rootId, id)} {...props} />,
     [rootId],
   );
   const narrow = useNarrowScreen();
@@ -119,7 +113,7 @@ function SharedContent({
         path={[
           { to: "/c?show=shared", label: "Collection" },
           ...ancestors.map((folder) => ({
-            to: folder.id === rootId ? `/shared/${rootId}` : `/shared/${rootId}?c=${folder.id}`,
+            to: shareHref(rootId, folder.id),
             label: folder.name,
           })),
         ]}

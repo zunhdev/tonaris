@@ -37,6 +37,7 @@ import { useCollectionUi } from "@/features/collection/collection-ui";
 import { useCollectionData } from "@/features/collection/data";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology } from "@/features/collection/order";
+import { shareLocation } from "@/features/collection/place";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { defaultRangeExtractor, useVirtualizer } from "@tanstack/react-virtual";
@@ -435,11 +436,7 @@ function PaletteBody({
       // In the viewer page, from its shared root; an album in its first list there.
       const place = row.type === "shared-container" ? row.item : row.item.lists[0];
       if (!place) return;
-      void navigate({
-        to: "/shared/$containerId",
-        params: { containerId: place.rootId },
-        search: place.id === place.rootId ? {} : { c: place.id },
-      });
+      void navigate(shareLocation(place.rootId, place.id));
       return;
     }
     if (row.type === "container") {

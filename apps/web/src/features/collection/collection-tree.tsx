@@ -41,6 +41,7 @@ import { useDestination, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
 import { ContainerIcon } from "./icons";
 import { NameEditor } from "./name-editor";
+import { shareLocation } from "./place";
 import {
   ancestorsOf,
   buildSharedTree,
@@ -219,11 +220,7 @@ export function CollectionTree() {
     }
     const item = sharedTree.byId.get(key);
     if (item && sharedViewPath?.split("/").slice(0, -1).includes(key)) {
-      void navigate({
-        to: "/shared/$containerId",
-        params: { containerId: item.rootId },
-        search: item.id === item.rootId ? {} : { c: item.id },
-      });
+      void navigate(shareLocation(item.rootId, item.id));
     }
   }
 
@@ -535,9 +532,7 @@ function SharedRow({
   return (
     <Link
       ref={register}
-      to="/shared/$containerId"
-      params={{ containerId: item.rootId }}
-      search={item.id === item.rootId ? {} : { c: item.id }}
+      {...shareLocation(item.rootId, item.id)}
       role="treeitem"
       data-key={item.id}
       aria-level={row.level}

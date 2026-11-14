@@ -57,6 +57,7 @@ import { ModeSwitch } from "./mode-switch";
 import { useStartNaming } from "./naming";
 import {
   ContainerLink,
+  shareHref,
   sharingRefusal,
   useCollectionPlace,
   useIsShareTop,
@@ -509,7 +510,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
       ? [
           { to: "/shared", label: "Shared with me" },
           ...ancestors.map((folder) => ({
-            to: `/shared/${place.rootId}${folder.id === place.rootId ? "" : `?c=${folder.id}`}`,
+            to: shareHref(place.rootId, folder.id),
             label: folder.name,
           })),
         ]
