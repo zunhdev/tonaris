@@ -74,6 +74,15 @@ export function githubRepository(repository: unknown): string | undefined {
   return match?.[1];
 }
 
+/** Whether a version's order against a bound meets the bound's operator. */
+const holds = new Map<string, (order: number) => boolean>([
+  ["<", (order) => order < 0],
+  ["<=", (order) => order <= 0],
+  [">", (order) => order > 0],
+  [">=", (order) => order >= 0],
+  ["=", (order) => order === 0],
+]);
+
 /**
  * Whether `version` is in GitHub's `vulnerable_version_range` (">= 1.0.0, < 1.7.16"). An advisory without a
  * range counts as a hit, so a person reads it.
@@ -88,18 +97,7 @@ export function isAffected(version: string, range: string | null): boolean {
     const match = /^\s*(<=|>=|<|>|=)?\s*v?(\S+)\s*$/.exec(bound);
     if (!match?.[2]) return Bun.semver.satisfies(version, bound.trim());
     const order = Bun.semver.order(version, match[2]);
-    switch (match[1]) {
-      case "<":
-        return order < 0;
-      case "<=":
-        return order <= 0;
-      case ">":
-        return order > 0;
-      case ">=":
-        return order >= 0;
-      default:
-        return order === 0;
-    }
+    return holds.get(match[1] ?? "=")?.(order) ?? false;
   });
 }
 
