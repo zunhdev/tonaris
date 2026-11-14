@@ -77,10 +77,30 @@ export function githubRepository(repository: unknown): string | undefined {
 /**
  * Whether `version` is in GitHub's `vulnerable_version_range` (">= 1.0.0, < 1.7.16"). An advisory without a
  * range counts as a hit, so a person reads it.
+ *
+ * Each bound is compared in semver order. A range check (`satisfies`) would match a pre-release only against bounds
+ * of its own release, so a release candidate such as `2.0.0-rc.4` would never be found in "< 2.0.0", the advisory
+ * fixed in the final release (DRIFT-109).
  */
 export function isAffected(version: string, range: string | null): boolean {
   if (!range) return true;
-  return Bun.semver.satisfies(version, range.replaceAll(",", " "));
+  return range.split(",").every((bound) => {
+    const match = /^\s*(<=|>=|<|>|=)?\s*v?(\S+)\s*$/.exec(bound);
+    if (!match?.[2]) return Bun.semver.satisfies(version, bound.trim());
+    const order = Bun.semver.order(version, match[2]);
+    switch (match[1]) {
+      case "<":
+        return order < 0;
+      case "<=":
+        return order <= 0;
+      case ">":
+        return order > 0;
+      case ">=":
+        return order >= 0;
+      default:
+        return order === 0;
+    }
+  });
 }
 
 export function findHits(

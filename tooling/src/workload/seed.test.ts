@@ -5,8 +5,17 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import { eq, sql } from "drizzle-orm";
 
-import { albums, containers, memberships, savedReferences, sessions, users } from "@tonaris/db";
+import {
+  accountSettings,
+  albums,
+  containers,
+  memberships,
+  savedReferences,
+  sessions,
+  users,
+} from "@tonaris/db";
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
+import { appViewDefaults } from "@tonaris/domain";
 
 import { generateWorkload } from "./generate";
 import { seedWorkload } from "./seed";
@@ -78,9 +87,14 @@ describe("seedWorkload", () => {
         searchTitleKey: "extra",
         searchArtistKey: "someone",
       });
+      // A saved default refers to the account (DRIFT-104).
+      await t.db
+        .insert(accountSettings)
+        .values({ accountId: workload.owner.id, ...appViewDefaults });
       await seedWorkload(t.db, workload);
 
       expect(await t.db.$count(albums)).toBe(workload.rows.albums.length);
+      expect(await t.db.$count(accountSettings)).toBe(0);
       expect(await t.db.$count(sessions)).toBe(0);
       expect(await t.db.select({ id: users.id }).from(users).where(eq(users.id, otherId))).toEqual([
         { id: otherId },
