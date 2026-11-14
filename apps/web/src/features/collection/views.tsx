@@ -29,6 +29,7 @@ import {
   type ContainerKind,
   type Membership,
   ownerLabel,
+  servicesSentence,
 } from "@tonaris/domain";
 import { Button, buttonVariants } from "@tonaris/ui/components/button";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
@@ -565,7 +566,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
           </>
         ) : (
           <Empty
-            text="No albums yet. Paste a Spotify, Apple Music, Qobuz, Tidal or YouTube Music link."
+            text={`No albums yet. Paste a ${servicesSentence("or")} link.`}
             action={<AddAlbumButton variant="primary" />}
           />
         )}

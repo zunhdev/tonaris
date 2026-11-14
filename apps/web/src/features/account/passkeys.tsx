@@ -12,6 +12,7 @@ import {
 } from "@/features/account/auth-client";
 import { resendLabel, useCodeEntry } from "@/features/account/code-entry";
 import { CodeField, useResendCountdown } from "@/features/account/code-field";
+import { unreachable } from "@/features/sync/problems";
 import { browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { useRouter } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useId, useState } from "react";
@@ -20,7 +21,6 @@ import type { Account, Passkey } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import { Input } from "@tonaris/ui/components/input";
 
-const unreachable = "Couldn't reach Tonaris. Try again.";
 const date = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
 /** Where adding stands: as usual, waiting for the confirming code, or confirmed and ready to add. */

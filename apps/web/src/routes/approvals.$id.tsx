@@ -8,6 +8,7 @@ import { count } from "@/common/words";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
 import { fieldTypeNames } from "@/features/collection/field-types";
 import { refreshPendingApprovals } from "@/features/connections/pending-approvals";
+import { unreachable } from "@/features/sync/problems";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useId, useState } from "react";
@@ -217,7 +218,7 @@ function ApprovalPage() {
       loading: "Loading the request…",
       "other-account": "This request belongs to another account.",
       missing: "There is no such request. It may have been removed with its connection.",
-      unreachable: "Couldn't reach Tonaris. Check your connection and try again.",
+      unreachable,
     }[load.kind];
     return (
       <SignInCard>

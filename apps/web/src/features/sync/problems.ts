@@ -2,7 +2,10 @@
 // and blameless, with one way forward. The server's own explanation comes first; a code's sentence is for when it
 // gives none.
 
-import type { ErrorCode, Problem } from "@tonaris/domain";
+import { servicesSentence, type ErrorCode, type Problem } from "@tonaris/domain";
+
+/** What any request says when Tonaris didn't answer (DS-91): one sentence for the whole app (DRIFT-085). */
+export const unreachable = "Couldn't reach Tonaris. Check your connection and try again.";
 
 /**
  * What each failure means when the server gives no explanation (FR-13.1, DS-107): plain and blameless, with one
@@ -24,8 +27,7 @@ const codeReasons: Record<ErrorCode, string> = {
   invalid_destination: "That place isn't available. Choose another folder or the top level.",
   field_in_use: "This field is still used. Remove it from its albums first.",
   uncertain_match: "Tonaris isn't sure this is the same album. Choose whether it is.",
-  unsupported_link:
-    "This doesn't look like a Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track link.",
+  unsupported_link: `This doesn't look like a ${servicesSentence("or")} album or track link.`,
   provider_unavailable:
     "Couldn't reach the music service. Try again, or enter the details manually.",
   rate_limited: "Too many changes at once. Wait a moment, then retry.",

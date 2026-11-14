@@ -8,6 +8,7 @@ import { authFailureMessage, signOut } from "@/features/account/auth-client";
 import { forgetSignIn } from "@/features/account/pending-sign-in";
 import { forgetAccount } from "@/features/account/session";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
+import { unreachable } from "@/features/sync/problems";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -34,7 +35,7 @@ export function TermsScreen({ account }: { account: Account }) {
       forgetAccount();
       await router.invalidate();
     } catch {
-      setError("Couldn't reach Tonaris. Try again.");
+      setError(unreachable);
     } finally {
       setBusy(false);
     }

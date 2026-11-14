@@ -20,6 +20,15 @@ export const serviceNames: Record<StreamingService, string> = {
   "youtube-music": "YouTube Music",
 };
 
+/**
+ * Every streaming service, as a sentence names them: "Spotify, Apple Music, Qobuz, Tidal or YouTube Music". Copy that
+ * lists the services says it through here, so a new service reaches every sentence (DRIFT-086).
+ */
+export function servicesSentence(joiner: "or" | "and"): string {
+  const names = streamingServices.map((service) => serviceNames[service]);
+  return `${names.slice(0, -1).join(", ")} ${joiner} ${names.at(-1) ?? ""}`;
+}
+
 /** What a link names. A track link stands for the album it belongs to (FR-02.3). */
 export const linkKinds = ["album", "track"] as const;
 export type LinkKind = (typeof linkKinds)[number];
