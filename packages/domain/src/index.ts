@@ -574,6 +574,16 @@ export { invitationStateFor, shownEmailStatus } from "./invitations";
 export { maxMergeCandidates } from "./limits";
 export { endedGrantStatuses, fieldsShownWith, openGrantStatuses } from "./sharing";
 export {
+  copySummary,
+  planShareCopy,
+  shareCopyArgsSchema,
+  shareCopyPreviewSchema,
+  shareCopyResultSchema,
+  type ShareCopyArgs,
+  type ShareCopyPlan,
+  type ShareCopyPreview,
+} from "./share-copy";
+export {
   chainOf,
   exceedsMaxDepth,
   moveCheck,

@@ -16,6 +16,7 @@ import {
   serviceLinkColumns,
   storedUnitColumns,
 } from "../columns";
+import { valuesOfAlbums } from "../field-values";
 import { recordInLedger } from "../ledger";
 import { recordUserValues, userEntries, writeProvenance } from "../provenance";
 import {
@@ -53,6 +54,50 @@ export async function findServiceLinkIn(db: Executor, albumId: string, service: 
 export function albumStore(tx: Transaction) {
   return {
     findAlbum: (id) => findAlbumIn(tx, id),
+    // A copy of a share's albums (FR-07.22): those outside Trash, with release groups, links and values.
+    async copyAlbums(albumIds) {
+      if (albumIds.length === 0) return { albums: [], links: [], values: [] };
+      const ids = [...albumIds];
+      const rows = await tx
+        .select({ ...albumColumns, releaseGroupId: albums.mbReleaseGroupId })
+        .from(albums)
+        .where(and(inArray(albums.id, ids), isNull(albums.trashedAt)))
+        .orderBy(asc(albums.id));
+      const active = rows.map((row) => row.id);
+      if (active.length === 0) return { albums: [], links: [], values: [] };
+      const links = await tx
+        .select({
+          albumId: albumServiceLinks.albumId,
+          service: albumServiceLinks.service,
+          url: albumServiceLinks.url,
+          entityId: albumServiceLinks.entityId,
+        })
+        .from(albumServiceLinks)
+        .where(inArray(albumServiceLinks.albumId, active));
+      return { albums: rows, links, values: await valuesOfAlbums(tx, active) };
+    },
+    // The owner's albums outside Trash as TS-44 knows them.
+    async albumIdentities(ownerId) {
+      const rows = await tx
+        .select({ id: albums.id, releaseGroupId: albums.mbReleaseGroupId })
+        .from(albums)
+        .where(and(eq(albums.ownerId, ownerId), isNull(albums.trashedAt)));
+      const links = await tx
+        .select({
+          albumId: albumServiceLinks.albumId,
+          service: albumServiceLinks.service,
+          entityId: albumServiceLinks.entityId,
+        })
+        .from(albumServiceLinks)
+        .innerJoin(albums, eq(albums.id, albumServiceLinks.albumId))
+        .where(and(eq(albumServiceLinks.ownerId, ownerId), isNull(albums.trashedAt)));
+      const byAlbum = Map.groupBy(links, (link) => link.albumId);
+      return rows.map(({ id, releaseGroupId }) => ({
+        id,
+        releaseGroupId,
+        links: (byAlbum.get(id) ?? []).map(({ service, entityId }) => ({ service, entityId })),
+      }));
+    },
     async insertAlbum({ ownerId, id, ...values }, origin) {
       await tx.insert(albums).values({
         id,

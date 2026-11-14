@@ -3,7 +3,7 @@
 
 import { generateNKeysBetween } from "fractional-indexing";
 
-import type { Album, StoredAlbum } from "./albums";
+import { albumOf, type Album, type StoredAlbum } from "./albums";
 import type { CapturedLink, CaptureTarget } from "./capture";
 import type { CollectionStore, ShareGrant } from "./collection-store";
 import { containerOf, type Container, type StoredContainer } from "./containers";
@@ -187,6 +187,39 @@ export function memoryStore({
 
   const store: CollectionStore = {
     findAlbum: (id) => Promise.resolve(albumRows.has(id) ? { ...albumRows.get(id)! } : undefined),
+    copyAlbums: (albumIds) => {
+      const active = [...albumRows.values()]
+        .filter((album) => albumIds.includes(album.id) && !album.trashed)
+        .toSorted((a, b) => (a.id < b.id ? -1 : 1));
+      const ids = new Set(active.map((album) => album.id));
+      return Promise.resolve({
+        albums: active.map((album) =>
+          Object.assign(albumOf(album), {
+            releaseGroupId: identityRows.get(album.id)?.releaseGroupId ?? null,
+          }),
+        ),
+        links: [...linkRows.entries()].flatMap(([key, link]) => {
+          const albumId = key.slice(0, key.indexOf(":"));
+          return ids.has(albumId) ? [{ albumId, ...link }] : [];
+        }),
+        values: [...valueRows.entries()].flatMap(([key, value]) => {
+          const [albumId = "", fieldId = ""] = key.split(":");
+          return ids.has(albumId) ? [{ albumId, fieldId, value }] : [];
+        }),
+      });
+    },
+    albumIdentities: (ownerId) =>
+      Promise.resolve(
+        [...albumRows.values()]
+          .filter((album) => album.ownerId === ownerId && !album.trashed)
+          .map((album) => ({
+            id: album.id,
+            releaseGroupId: identityRows.get(album.id)?.releaseGroupId ?? null,
+            links: [...linkRows.entries()].flatMap(([key, { service, entityId }]) =>
+              key.startsWith(`${album.id}:`) ? [{ service, entityId }] : [],
+            ),
+          })),
+      ),
     insertAlbum: (album, origin) => {
       albumRows.set(album.id, { ...album, trashed: false });
       identityRows.set(album.id, { releaseGroupId: origin?.releaseGroupId ?? null });

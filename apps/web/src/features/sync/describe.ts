@@ -241,6 +241,13 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
         subject: "Adding to Shared with me",
       };
     }
+    case "share.copy": {
+      return {
+        summary: `Copy '${mutation.args.name}' to your collection`,
+        what: `copying '${mutation.args.name}' to your collection`,
+        subject: `Copying '${mutation.args.name}'`,
+      };
+    }
     case "share.removeReference": {
       return {
         summary: "Remove from Shared with me",

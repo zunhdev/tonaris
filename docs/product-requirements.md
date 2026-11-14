@@ -563,6 +563,14 @@ Their changes are made in the owner's collection. They count toward the owner's 
 
 Adding an album the owner already has reuses the owner's record (FR-02.9) without naming any list outside the share. An album an editor adds goes at the end of the owner's manual order.
 
+**FR-07.22 Copying a share.** Anyone who can open a shared folder or list, by invitation or a saved link, can copy it into their own collection, with the folders, lists and albums inside it. The copy is theirs: a one-time snapshot, with no link to the original and no record of where it came from. The share stays in Shared with me.
+
+- **Where:** they choose Collection or one of their folders. A name taken there is asked about, never changed on its own (X-06).
+- **What:** names, descriptions and colors; the albums with their details, service links and artwork; the lists' albums; and their own manual order of the share's views, where they have one.
+- **Albums they already have** are never duplicated: an album with the same MusicBrainz release group, else the same service link, joins the copied lists and keeps its own details (TS-44). An album with neither is copied as a new one.
+- **Custom fields** map onto theirs by name and type. A missing one is created, with the options the copied albums use; one of the same name but another type isn't copied, and the copy says so first.
+- **All or nothing:** before copying, it says what it adds. If that exceeds a limit (FR-15), it says which and by how much, and copies nothing. It is *confirmed* through MCP (FR-10.6).
+
 ### FR-08 — Data export
 
 *Replaces iteration 5's "Future backup compatibility" (see change log).*
@@ -990,6 +998,7 @@ The first version's results, with the evidence for each check and what waits for
 | AC-48 | Edit a share | Inside the share, an editor creates, renames, describes, colors, moves, and deletes folders and lists, adds and edits albums, and sets field values, in the app and through a Manage agent. The owner and viewers see it live, limits are the owner's, and conflicting changes are kept for review. | FR-07.19, FR-09, FR-10.4 |
 | AC-49 | What editors can't do | An editor can't share, change fields or options, move or delete the shared folder or list, move content across the share's edge, or open the owner's Trash beyond Undo. Nothing outside the share is readable or changeable, and refusals and previews reveal nothing of it. A lowered role or revoked invitation refuses the next change. | FR-07.18, FR-07.20, X-03 |
 | AC-50 | Editors and albums | An editor's album edit shows in every list. Their confirmed deletion removes it from the share's lists, keeps it in the owner's lists outside, and otherwise moves it to the owner's Trash, with the same outcome shown either way. | FR-07.21 |
+| AC-51 | Copy a share | A viewer or editor copies a shared folder into a folder of theirs: its folders, lists and albums arrive; albums they had join the lists instead of being duplicated; fields map by name and type; over a limit, nothing is copied. The original and Shared with me are unchanged. | FR-07.22 |
 
 **Product evaluation.** Verify the creator's real workflows: saving, organizing, search, sharing, Trash recovery, export, and agents. Check usability and performance at the capacity limit, and review operating costs. Commercial adoption is not a release criterion.
 
@@ -1167,6 +1176,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (7 November 2026), folder and list colors** (TON-175), from the creator's design review: owners color folders and lists from a fixed set, contents without their own color show their folder's, viewers of a share see them, agents can set them, and exports carry them. **Added** FR-01.19; **updated** FR-10.4.
 - **Decision (10 November 2026), editing shared folders and lists** (P-TON-47, TON-186), from the creator's manual testing: an owner can let chosen people edit a shared folder or list. Each invitation is Can view or Can edit, and links stay view-only. Through folders, the higher role wins. Editors change content, albums and field values inside the share, in the app and through Manage agents. Their changes stay in the owner's collection. Sharing, field definitions, the share's own place, and the owner's Trash beyond Undo stay with the owner. An editor's album deletion leaves the owner's other lists untouched, and an editor's manual order is their own. **Removed** the exclusion "Collaborative editing by other users" (section 2.6). **Added** the Editor concept, FR-07.18–FR-07.21 and AC-47–AC-50; **updated** section 2.1, X-01, FR-03.19, FR-04.2, FR-07's title, FR-07.1, FR-07.6, FR-07.12, FR-07.14, FR-07.15, FR-07.17, FR-09.5, FR-10.2, FR-10.4, FR-10.6, FR-10.7, FR-14.1 and Q-06.
 - **Decision (11 November 2026), Latin spellings in search** (TON-201): names can be searched in plain Latin letters, in any common spelling of each letter: "royksopp" finds "Røyksopp", "aerzte" finds "Die Ärzte", and "kino" finds "Кино". A Latin letter matches only itself, and Chinese, Japanese and Korean match only as written. Recorded here on 14 November 2026 (TON-224). **Updated** FR-12.5.
+- **Decision (14 November 2026), copying a share** (TON-133), from the creator's manual testing: anyone who can open a shared folder or list can copy it into their own collection (FR-07.22, AC-51). Fields map onto theirs by name and type, created when missing; albums they have are reused by release group or link, and albums with neither are copied as new; they choose where it goes; it is all or nothing within their limits; nothing records where it came from; MCP can copy too, after approval.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

@@ -1,0 +1,38 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e2a839f3-292c-4c50-bb20-4a7425eb0ea4",
+  "prevIds": [
+    "b754738d-e3c3-48ad-99a9-a260647e8b5c"
+  ],
+  "footprints": [
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "approvals"
+      ],
+      "writes": [
+        "s|ck|public.approvals.approvals_operation_check"
+      ],
+      "reads": [
+        "n|tbl|public.approvals",
+        "n|sch|public",
+        "n|col|public.approvals.operation",
+        "e|col|public.approvals.operation"
+      ],
+      "sqlHash": "8fae2960b07f6a16"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"approvals\",\"approvals_operation_check\"]",
+      "set": {
+        "value": "\"operation\" in ('delete_albums', 'delete_items', 'delete_field', 'remove_options', 'confirm_match', 'copy_share')"
+      }
+    }
+  ]
+}

@@ -330,6 +330,7 @@ function remake(
     case "share.setRole":
     case "share.saveLink":
     case "share.removeReference":
+    case "share.copy":
     case "account.setDisplayName":
       return "unchanged";
     case "trash.purge": {

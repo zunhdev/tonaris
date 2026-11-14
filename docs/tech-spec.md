@@ -1299,7 +1299,7 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 | Organize | `create_container`, `rename_container`, `set_description`, `move_items`, `add_to_lists`, `remove_from_lists`, `set_order`, `set_view_preferences` |
 | Albums | `add_albums` (batch of links or manual data, destination optional), `update_album` (with `base` for CAS), `set_album_fields` (apply, set, clear, remove) |
 | Fields | `create_field`, `rename_field`, `change_field_type`, `add_options`, `rename_option`, `remove_options` (gated if the options are in use) |
-| Gated (`destructiveHint`, but `confirm_match`, which adds an album) | `delete_items` (to Trash), `delete_field`, `remove_options` (when used), `confirm_match` |
+| Gated (`destructiveHint`, but `confirm_match`, which adds an album, and `copy_shared`) | `delete_items` (to Trash), `delete_field`, `remove_options` (when used), `confirm_match`, `copy_shared` (FR-07.22, TON-133) |
 | Trash | `recover_from_trash` (may return `needs_input`) |
 | References | `save_shared_reference`, `remove_shared_reference` |
 
@@ -1368,6 +1368,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 *As built in TON-83* (`apps/api/src/mcp/approvals.ts`, `gated-tools.ts`): `delete_items`, `delete_field`, `remove_options` and `confirm_match`, over the app's own commands.
 - **One scope shape** (`approvalScopeSchema`) serves every operation: `operation`, the affected `albums`, `recoverableDays` (0 when it can't be undone), and optional parts.
   - The parts: `containers`, `unsorted`, `sharing`, `field`, `options`, `checks` and `match`. The `GET /v1/approvals/{id}` response only gained properties.
+  - *Added in TON-133:* `copy_share`, for `copy_shared`, with the part `copy`: the share's name, kind and owner, the copy's name and destination, and the preview of what it adds (`shareCopyPreviewSchema`). A copy that can't be made, or wouldn't fit, fails before any approval is asked for; a share that changes after approval asks again, as its preview is part of the scope.
   - `checks` holds the in-app confirmations' scope hashes (TS-14). A field or option gaining an album therefore changes the approval's hash too.
 - **Atomic use.** The approved batch runs in one transaction:
   1. the owner's write lock (TS-20);

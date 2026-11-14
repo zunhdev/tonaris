@@ -154,6 +154,7 @@ export {
   recordInvitationEmail,
 } from "./invitations";
 export { searchCollection } from "./search";
+export { copyApprovalScope, previewShareCopy, readCopyApprovalScope } from "./share-copy";
 export { previewSharing, type ImpactQuery } from "./sharing-impact";
 export {
   findShareLink,

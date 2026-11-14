@@ -277,7 +277,12 @@ function ApprovalPage() {
             </Button>
             <Button
               size="lg"
-              variant={approval.scope.operation === "confirm_match" ? "primary" : "danger"}
+              variant={
+                approval.scope.operation === "confirm_match" ||
+                approval.scope.operation === "copy_share"
+                  ? "primary"
+                  : "danger"
+              }
               disabled={busy}
               onClick={() => void decide("approve")}
             >

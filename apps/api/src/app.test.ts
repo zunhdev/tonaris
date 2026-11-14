@@ -110,6 +110,7 @@ describe("OpenAPI", () => {
       "/v1/admin/operations",
       "/v1/shared",
       "/v1/shared/{id}",
+      "/v1/shared/{id}/copy",
       "/v1/shared/{id}/stream",
       "/v1/s/{token}/reference",
       "/v1/s/{token}",

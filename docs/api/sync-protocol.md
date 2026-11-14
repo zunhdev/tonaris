@@ -151,10 +151,10 @@ The server ends a stream in four cases:
   - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
   - `fieldValue.apply`, `fieldValue.set`, `fieldValue.remove`;
   - `view.set`, `defaults.set`, `defaults.setLinkTarget`, `defaults.setHiddenServices`;
-  - `share.invite`, `share.setLink`, `share.setRole`, `share.resendInvitation`, `share.accept`, `share.decline`, `share.leave`, `share.revoke`, `share.saveLink`, `share.removeReference`, `account.setDisplayName`;
+  - `share.invite`, `share.setLink`, `share.setRole`, `share.resendInvitation`, `share.accept`, `share.decline`, `share.leave`, `share.revoke`, `share.saveLink`, `share.removeReference`, `share.copy`, `account.setDisplayName`;
   - `order.set`.
 
-  That is 43. The OpenAPI document has each one's `args` and `base`.
+  That is 44. The OpenAPI document has each one's `args` and `base`.
 - **`album.capture`** saves the album a pasted link names (FR-02.1, TS-44): `{albumId, link, listId}`, where `albumId` is the ID a new album gets and `listId` may be `null` for Unsorted.
   - **It may reuse an album** of the owner's, in Trash or not, and its `confirmed` result says so: `{albumId, match: "created" | "reused" | "restored", alreadyInList, keptLink}`.
   - **It may need input** (TS-26): `match` with candidate albums, or `details` with a prefill. Resubmit as a new mutation with `releaseGroupId` or `details` added.
@@ -204,6 +204,7 @@ The server ends a stream in four cases:
     - **`share.removeReference`** `{containerId}` drops one, accessible or not, and revokes no grant.
     - **Through MCP,** a Manage connection may send these two, as part of the person's collection (FR-10.4). A Read-only one may not.
     - **The changes:** these, `share.accept` and `share.leave` log `reference` changes (`data: {containerId}` or null). The bootstrap carries `references`.
+  - **Copying a share** (FR-07.22, TON-133): **`share.copy`** `{containerId, copyId, parentId, name}` copies a folder or list the person can open into their collection under `parentId` (null for the top level), its top named `name` with the client's `copyId`. It logs inserts of the folders and lists, the new albums with their links, the fields created or given options, the values, the entries, and the person's positions and view choices carried over. Albums they have already (release group, then link, TS-44) aren't inserted again. It is all or nothing: over a limit it fails `limit_exceeded`, a taken name `name_conflict`, and the same `copyId` again changes nothing. `GET /v1/shared/{id}/copy?to=` previews it. Through MCP, `copy_shared` sends it after the person's approval.
     - **The reads:** `GET /v1/shared` lists the entries, each with its owner, `via` (invitation, link), `available`, and the name only while available. `GET /v1/s/{token}/reference` tells a signed-in visitor `{saved, own}`.
   - **Signed-in viewers** (TON-69): `GET /v1/shared/{id}` gives a folder or list the person reads through sharing, in the guest page's shape with their `role` and a `seq` (see [Editors](#editors)); anything else, their own included, is `404`. `GET /v1/shared/{id}/stream` sends `shared-invalidate` after each of the owner's saves, revoking access included, so the page reads again.
   - **Guests** (TON-70), with no session:

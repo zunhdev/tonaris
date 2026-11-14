@@ -1,0 +1,1 @@
+ALTER TABLE "approvals" DROP CONSTRAINT "approvals_operation_check", ADD CONSTRAINT "approvals_operation_check" CHECK ("operation" in ('delete_albums', 'delete_items', 'delete_field', 'remove_options', 'confirm_match', 'copy_share'));

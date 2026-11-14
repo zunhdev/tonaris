@@ -28,6 +28,7 @@ import type { Outcome } from "./outcomes";
 import { setOrder, type Position } from "./positions";
 import type { Principal } from "./principals";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
+import { copyShare } from "./share-copy";
 import {
   acceptInvitation,
   declineInvitation,
@@ -165,6 +166,7 @@ export function mutationTarget(mutation: Mutation): MutationTarget | undefined {
     case "share.revoke":
     case "share.saveLink":
     case "share.removeReference":
+    case "share.copy":
     case "account.setDisplayName":
       return undefined;
     default:
@@ -217,6 +219,7 @@ const handlers = {
   "defaults.setLinkTarget": ({ args, base }, context) => setLinkTarget(args, base, context),
   "defaults.setHiddenServices": ({ args, base }, context) => setHiddenServices(args, base, context),
   "share.setRole": ({ args }, context) => setGrantRole(args, context),
+  "share.copy": ({ args }, context) => copyShare(args, context),
 } satisfies Handlers;
 
 /** Every mutation's name, in the order of `mutationSchema`: for tests that must cover each one. */
