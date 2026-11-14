@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 76 | 9 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 75 | 10 | 0 |
 
 ## Areas
 
@@ -99,7 +99,7 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-066 | spec | Four as-built notes no longer hold: TS-42 artwork, TS-33 accepting, TS-18 editors' captures, TS-24's per-root search index | `docs/tech-spec.md` | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-067 | spec | TS-11's table outline misses the editor model's columns (`role`, `deleted_by`) and others | `docs/tech-spec.md` TS-11; `packages/db/src/schema` | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-068 | spec | Small contract statements: `approvalId` in TS-20, `pending` in TS-25, TS-11's value CHECK, two "App-only" comments | `docs/tech-spec.md`; `packages/domain/src/sync.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
-| DRIFT-069 | spec | An editor's unsent writes in a share are never sent again, and outlive sign-out and account deletion (TS-22) | `apps/web/src/features/sharing/editable-share.tsx`; `apps/web/src/client/sync/outbox.ts`, `persistence.ts` | filed TON-212 | 2026-11-13 | 2026-11-13 |
+| DRIFT-069 | spec | An editor's unsent writes in a share are never sent again, and outlive sign-out and account deletion (TS-22) | `apps/web/src/features/sharing/editable-share.tsx`; `apps/web/src/client/sync/outbox.ts`, `persistence.ts` | fixed (TON-212) | 2026-11-13 | 2026-11-13 |
 | DRIFT-070 | spec | A move applies at once, before its sharing preview, with no confirmation (DS-49, FR-07.14) | `apps/web/src/features/collection/drag.tsx`, `move.tsx` | filed TON-225 | 2026-11-13 | 2026-11-13 |
 | DRIFT-071 | spec | The sharing glyph on the owner's shared folders and lists was never built (DS-27, DS-31, DS-41) | `apps/web/src/features/collection/container-rows.tsx`, `collection-tree.tsx` | filed TON-225 | 2026-11-13 | 2026-11-13 |
 | DRIFT-072 | spec | ⌫ doesn't remove an album from the list on view (DS-45, DS-50, DS-78) | `apps/web/src/features/shell/use-shortcuts.ts` | filed TON-225 | 2026-11-13 | 2026-11-13 |
