@@ -51,6 +51,7 @@ import {
 import {
   findShareLink,
   linkReferenceState,
+  ownSharing,
   shareSettings,
   sharedSnapshot,
   sharedWithMe,
@@ -935,5 +936,37 @@ describe("AC-20 and AC-30 through the commands", () => {
     await run(owner, { name: "trash.recover", args: { unitId: unit2 } });
     expect(await findShareLink(t.db, kept.token)).toBeUndefined();
     expect(await canReadContainer(t.db, { kind: "link", linkId: kept.id }, metal.id)).toBe(false);
+  });
+});
+
+describe("what the owner shares (DS-31, TON-227)", () => {
+  test("their own folders and lists with an open invitation or a live link, none in Trash", async () => {
+    const owner = await newPrincipal("Denis");
+    const anna = await newPrincipal();
+    const metal = await made(owner, "folder", "Metal");
+    const doom = await made(owner, "list", "Doom", metal.id);
+    const stoner = await made(owner, "list", "Stoner");
+    const sludge = await made(owner, "list", "Sludge");
+    const gone = await made(owner, "list", "Gone");
+    const theirs = await made(anna, "list", "Theirs");
+    await grant(metal.id, anna.userId, "pending");
+    await link(metal.id);
+    await grant(doom.id, anna.userId, "accepted");
+    await link(stoner.id);
+    // A revoked invitation and a turned-off link share nothing.
+    await grant(sludge.id, anna.userId, "revoked");
+    const off = await link(sludge.id);
+    await t.db.update(shareLinks).set({ revokedAt: new Date() }).where(eq(shareLinks.id, off.id));
+    await link(gone.id);
+    await run(owner, { name: "container.delete", args: { id: gone.id, unitId: uuidv7() } });
+    await link(theirs.id);
+
+    expect(await ownSharing(t.db, owner.userId)).toEqual(
+      [
+        { containerId: metal.id, people: true, link: true },
+        { containerId: doom.id, people: true, link: false },
+        { containerId: stoner.id, people: false, link: true },
+      ].toSorted((a, b) => a.containerId.localeCompare(b.containerId)),
+    );
   });
 });

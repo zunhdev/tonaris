@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { admissionInvitations, findShareLink, users } from "@tonaris/db";
 import {
   mutationResultSchema,
+  ownSharingSchema,
   shareSettingsSchema,
   uuidv7,
   type Mutation,
@@ -177,6 +178,35 @@ describe("sharing (DS-65)", () => {
       { containerId: funeral, name: "Funeral", people: 2, link: false },
       { containerId: metal, name: "Metal", people: 0, link: true },
     ]);
+  });
+
+  test("what the person shares, for the glyph beside each; signed out, nothing", async () => {
+    await named();
+    await t.signIn("anna@example.com");
+    const metal = await made("folder", "Metal");
+    await made("list", "Doom", metal);
+    const stoner = await made("list", "Stoner");
+    await send({
+      name: "share.invite",
+      args: { grantId: uuidv7(), containerId: metal, email: "anna@example.com" },
+    });
+    await send({
+      name: "share.setLink",
+      args: { containerId: stoner, linkId: uuidv7(), enabled: true },
+    });
+    const response = await t.call("/v1/sharing", { headers: { cookie } });
+    expect(response.status).toBe(200);
+    expect(
+      ownSharingSchema
+        .parse(await response.json())
+        .shared.toSorted((a, b) => a.containerId.localeCompare(b.containerId)),
+    ).toEqual(
+      [
+        { containerId: metal, people: true, link: false },
+        { containerId: stoner, people: false, link: true },
+      ].toSorted((a, b) => a.containerId.localeCompare(b.containerId)),
+    );
+    expect((await t.call("/v1/sharing")).status).toBe(401);
   });
 
   test("the display name stays while sharing", async () => {

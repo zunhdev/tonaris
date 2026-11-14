@@ -1,13 +1,15 @@
 // A folder's or list's sharing, for its owner's dialog (DS-65; FR-07.1, FR-07.14): the open invitations, the link that
 // is on with its URL, derived again from the server's secret each time (TS-32), and access inherited from folders
 // above. Changes go through the sharing mutations. Anyone else's container answers 404, as if it didn't exist. Also
-// the preview of what a move or a recovery would do to sharing (DS-69).
+// the preview of what a move or a recovery would do to sharing (DS-69), and the list of what a person shares, for the
+// glyph beside each (DS-31, TON-227).
 
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { previewSharing, shareSettings, type Database } from "@tonaris/db";
+import { ownSharing, previewSharing, shareSettings, type Database } from "@tonaris/db";
 import {
+  ownSharingSchema,
   problemSchema,
   shareSettingsSchema,
   sharingImpactSchema,
@@ -46,6 +48,21 @@ export function sharingRoutes(
 
   return new Elysia()
     .use(session)
+    .get(
+      "/sharing",
+      {
+        signedIn: true,
+        response: { 200: ownSharingSchema, 401: problemSchema },
+        detail: {
+          summary: "List what the person shares",
+          description:
+            "Their folders and lists outside Trash that they share themselves, by an invitation that is pending or accepted or by a link that is on, for the glyph beside each (DS-31, DS-41). What reaches one through a folder above is the tree's to work out. Changes nothing.",
+          tags: ["sharing"],
+          operationId: "listOwnSharing",
+        },
+      },
+      async ({ account }) => ({ shared: await ownSharing(db, account.id) }),
+    )
     .get(
       "/sharing/impact",
       {

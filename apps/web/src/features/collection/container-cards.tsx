@@ -10,6 +10,7 @@
 
 import { isUnderway } from "@/client/sync/save-states";
 import { pageScroll } from "@/common/page-scroll";
+import { SharingGlyph } from "@/features/sharing/own-sharing";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -185,6 +186,7 @@ function ContainerCard({
       <span className="mt-1.5 flex min-w-0 items-center gap-1.5">
         <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
         <span className="truncate font-medium text-fg-primary">{container.name}</span>
+        <SharingGlyph containerId={container.id} />
       </span>
       <span className="truncate text-small text-fg-tertiary">{contents}</span>
     </>

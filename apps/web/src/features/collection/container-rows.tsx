@@ -13,6 +13,7 @@ import { isUnderway } from "@/client/sync/save-states";
 import { useNarrowScreen } from "@/common/media";
 import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
+import { SharingGlyph } from "@/features/sharing/own-sharing";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -258,6 +259,7 @@ function ContainerRow({
             <span className="flex min-w-0 flex-col">
               <span id={nameId} className="flex min-w-0 items-center gap-2.5 text-fg-primary">
                 <span className="truncate">{container.name}</span>
+                <SharingGlyph containerId={container.id} />
                 <SaveStateMarker status={status} />
               </span>
               <span id={descriptionId} className="truncate text-small text-fg-tertiary">
@@ -276,6 +278,7 @@ function ContainerRow({
           >
             {icon}
             <span className="truncate">{container.name}</span>
+            <SharingGlyph containerId={container.id} />
             <SaveStateMarker status={status} />
           </ContainerLink>
           {/* The description's first line, after the name (DS-41); the link's description for assistive technology. */}

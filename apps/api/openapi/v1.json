@@ -3914,6 +3914,83 @@
         }
       }
     },
+    "/v1/sharing": {
+      "get": {
+        "summary": "List what the person shares",
+        "description": "Their folders and lists outside Trash that they share themselves, by an invitation that is pending or accepted or by a link that is on, for the glyph beside each (DS-31, DS-41). What reaches one through a folder above is the tree's to work out. Changes nothing.",
+        "tags": [
+          "sharing"
+        ],
+        "operationId": "listOwnSharing",
+        "responses": {
+          "200": {
+            "description": "What the person shares themselves (DS-31).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "shared": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "containerId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "people": {
+                            "type": "boolean",
+                            "description": "It has an invitation that is pending or accepted."
+                          },
+                          "link": {
+                            "type": "boolean",
+                            "description": "Its link is on."
+                          }
+                        },
+                        "required": [
+                          "containerId",
+                          "people",
+                          "link"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "shared"
+                  ],
+                  "additionalProperties": false,
+                  "description": "What the person shares themselves (DS-31)."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sharing/impact": {
       "get": {
         "summary": "Preview a move's or a recovery's sharing consequences",
