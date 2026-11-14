@@ -84,6 +84,12 @@ export type CommandContext = {
   link?: PreparedLink;
   /** For `share.setLink` turning a link on: its token's hash, prepared with the server's secret (TS-32). */
   shareLink?: { hash: Uint8Array };
+  /**
+   * The account whose write lock the change holds, when it was chosen without the record the mutation names, which
+   * didn't exist yet (TS-20). Content of another's collection that appeared meanwhile is refused with
+   * `lockedElsewhere`, and the database runs the change again under that collection's lock (TON-199).
+   */
+  lockedGuess?: string;
 };
 
 /** Each mutation, by its name. */

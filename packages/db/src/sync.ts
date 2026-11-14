@@ -9,6 +9,7 @@ import {
   appAccountDefaults,
   changeSchema,
   guestMutationRefusal,
+  lockedElsewhere,
   mutationRefusal,
   mutationTarget,
   mutationIdInUse,
@@ -165,17 +166,36 @@ async function storedMutation(tx: Transaction, id: string): Promise<StoredMutati
  * also when what it names doesn't exist. The command still decides whether the actor may make the change.
  */
 async function collectionOf(tx: Transaction, mutation: Mutation, actorId: string): Promise<string> {
+  return (await lockFor(tx, mutation, actorId)).ownerId;
+}
+
+/**
+ * `collectionOf`, and whether it was a guess: the mutation names a record that doesn't exist yet, so the actor's own
+ * collection stands in. A change made at the same moment can make that record in another's collection before the
+ * command reads it; the command then answers `lockedElsewhere`, and the change runs again (TON-199).
+ */
+async function lockFor(
+  tx: Transaction,
+  mutation: Mutation,
+  actorId: string,
+): Promise<{ ownerId: string; guessed: boolean }> {
   // Which record decides it is the domain's rule (`mutationTarget`); here, only whose that record is (DRIFT-055).
   const target = mutationTarget(mutation);
-  if (!target) return actorId;
+  if (!target) return { ownerId: actorId, guessed: false };
   const table =
     target.kind === "container" ? containers : target.kind === "album" ? albums : trashUnits;
   const [row] = await tx
     .select({ ownerId: table.ownerId })
     .from(table)
     .where(eq(table.id, target.id));
-  return row?.ownerId ?? actorId;
+  return row ? { ownerId: row.ownerId, guessed: false } : { ownerId: actorId, guessed: true };
 }
+
+/** Thrown to roll a change back and run it again under the lock its content needs (TON-199). */
+class LockedElsewhere extends Error {}
+
+/** How many times a change runs again for `LockedElsewhere` before it is answered with it. */
+const lockRetries = 2;
 
 /**
  * Takes the write locks of the actor's account and of every collection `mutations` change, in one order (TS-20): for a
@@ -214,6 +234,8 @@ function underLock<T>(
     tx: Transaction;
     accountId: string;
     ownerId: string;
+    /** The account locked when it was a guess, for the command to check (`lockedGuess`, TON-199). */
+    lockedGuess: string | undefined;
     seq: number;
     stored: StoredMutation | undefined;
   }) => Promise<T>,
@@ -223,17 +245,28 @@ function underLock<T>(
   const refusal = mutationRefusal(principal);
   const accountId = actingUserId(principal);
   if (refusal || !accountId) return Promise.resolve(refused(refusal ?? guestMutationRefusal));
-  return db.transaction(async (tx) => {
-    const ownerId = ownCollection ? accountId : await collectionOf(tx, mutation, accountId);
-    const seq = await lockAccount(tx, ownerId);
-    return then({
-      tx,
-      accountId,
-      ownerId,
-      seq,
-      stored: await storedMutation(tx, mutation.mutationId),
-    });
-  });
+  const attempt = (retries: number): Promise<T> =>
+    db
+      .transaction(async (tx) => {
+        const { ownerId, guessed } = ownCollection
+          ? { ownerId: accountId, guessed: false }
+          : await lockFor(tx, mutation, accountId);
+        const seq = await lockAccount(tx, ownerId);
+        return then({
+          tx,
+          accountId,
+          ownerId,
+          lockedGuess: guessed ? ownerId : undefined,
+          seq,
+          stored: await storedMutation(tx, mutation.mutationId),
+        });
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof LockedElsewhere)) throw error;
+        // What it names now exists: its owner's lock is known.
+        return retries > 0 ? attempt(retries - 1) : refused(lockedElsewhere);
+      });
+  return attempt(lockRetries);
 }
 
 export type ExecutedMutation = {
@@ -295,7 +328,7 @@ export async function executeMutation(
     principal,
     mutation,
     answer,
-    async ({ tx, accountId, ownerId, seq, stored }) => {
+    async ({ tx, accountId, ownerId, lockedGuess, seq, stored }) => {
       if (stored?.result && stored.accountId === accountId) {
         return answer(outcomeSchema.parse(stored.result), [], true);
       }
@@ -306,11 +339,14 @@ export async function executeMutation(
       const result = await runCommand(mutation, {
         principal,
         store: collectionStore(tx),
+        lockedGuess,
         now,
         ...(capture ? { capture } : {}),
         ...(link ? { link } : {}),
         ...(shareLink ? { shareLink } : {}),
       });
+      // Rolled back, and run again under the lock of what it reached (TON-199).
+      if (result === lockedElsewhere) throw new LockedElsewhere();
       let changes: Change[] = [];
       const reported = result.status === "applied" ? (result.result ?? null) : null;
       let outcome: Outcome =
