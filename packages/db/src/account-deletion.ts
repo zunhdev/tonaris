@@ -7,6 +7,7 @@ import { and, eq, inArray, isNull, lt } from "drizzle-orm";
 
 import {
   accountDeletionJobKind,
+  accountDeletionRefusal,
   openGrantStatuses,
   type AccountDeletionStatus,
 } from "@tonaris/domain";
@@ -103,8 +104,8 @@ export async function beginAccountDeletion(
       .where(eq(users.id, userId))
       .for("update");
     if (!account) return "missing";
-    if (account.role === "creator") return "creator";
-    if (account.deletingAt) return "deleting";
+    const refusal = accountDeletionRefusal(account);
+    if (refusal) return refusal;
 
     await endAccountAccess(tx, userId, now);
     // Off-site too, so a restored backup deletes it again (TS-113).
