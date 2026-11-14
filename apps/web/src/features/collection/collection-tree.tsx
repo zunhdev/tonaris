@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
-import type { ContainerKind } from "@tonaris/domain";
+import { pathOf, type ContainerKind } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionUi, useEditor, useStartEditor, useViewContainerId } from "./collection-ui";
@@ -91,15 +91,9 @@ function parentKey(row: Row): string | undefined {
   return undefined;
 }
 
-/** The shared items from the top of their share down to `id`, by ID. */
+/** The shared items from the top of their share down to `id`, by ID: the domain's walk (`pathOf`). */
 function sharedPath(tree: SharedTree, id: string): string[] {
-  const path: string[] = [];
-  let item = tree.byId.get(id);
-  while (item && path.length <= tree.byId.size) {
-    path.unshift(item.id);
-    item = item.parentId === null ? undefined : tree.byId.get(item.parentId);
-  }
-  return path;
+  return pathOf({ byId: tree.byId, children: new Map() }, id).map((item) => item.id);
 }
 
 const placePaths: Record<

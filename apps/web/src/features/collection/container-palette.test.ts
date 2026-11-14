@@ -4,13 +4,13 @@ import type { Container } from "@tonaris/domain";
 
 import { effectiveColor, tintedChip } from "./container-palette";
 
-type Node = Pick<Container, "color" | "parentId">;
+type Node = Pick<Container, "id" | "color" | "parentId">;
 
 describe("a folder's or list's color (TON-175)", () => {
   const byId = new Map<string, Node>([
-    ["rock", { color: "orange", parentId: null }],
-    ["classic", { color: null, parentId: "rock" }],
-    ["prog", { color: "violet", parentId: "rock" }],
+    ["rock", { id: "rock", color: "orange", parentId: null }],
+    ["classic", { id: "classic", color: null, parentId: "rock" }],
+    ["prog", { id: "prog", color: "violet", parentId: "rock" }],
   ]);
 
   test("its own, else the nearest folder's above it", () => {
