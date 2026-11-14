@@ -6,7 +6,7 @@
 | Updated | 20 October 2026 |
 | Implements | [Product requirements](product-requirements.md) iteration 6 (`FR-`, `X-`, `Q-`, `AC-`, `G-` IDs) |
 | Companion | [Design spec](design-spec.md) (`DS-` IDs) |
-| Hosting | Creator-owned (current preference: Render, Frankfurt); see [section 13](#13-hosting-and-operations-creator-owned) |
+| Hosting | Creator-owned: Render, Frankfurt, behind Cloudflare (decided 30 October 2026, TON-108); see [section 13](#13-hosting-and-operations-creator-owned) |
 
 ## How to read this document
 
@@ -110,8 +110,8 @@ flowchart LR
 
 | Service | Runs | Serves |
 | --- | --- | --- |
-| `tonaris-web` | TanStack Start. The production build's fetch handler is wrapped in `Bun.serve` per Start's Bun hosting reference; static assets come from `dist/client`. | `tonaris.<tld>`: the SPA shell, SSR public pages (TS-03), and the sign-in, OAuth consent, and approval pages |
-| `tonaris-api` | Standalone Elysia 2 on the Bun adapter (`app.listen`) | `api.tonaris.<tld>`: REST `/v1` (TS-09), the SSE stream (TS-23), MCP at `/mcp` (TS-60), Better Auth and the OAuth 2.1 authorization server (TS-61), the image proxy (TS-103), and the job runner (TS-90) |
+| `tonaris-web` | TanStack Start. The production build's fetch handler is wrapped in `Bun.serve` per Start's Bun hosting reference; static assets come from `dist/client`. | `tonaris.app`: the SPA shell, SSR public pages (TS-03), and the sign-in, OAuth consent, and approval pages |
+| `tonaris-api` | Standalone Elysia 2 on the Bun adapter (`app.listen`) | `api.tonaris.app`: REST `/v1` (TS-09), the SSE stream (TS-23), MCP at `/mcp` (TS-60), Better Auth and the OAuth 2.1 authorization server (TS-61), the image proxy (TS-103), and the job runner (TS-90) |
 
 - **Why separate.** The same API will serve native iOS and Android clients, so it needs its own contract, deploy cadence, and scaling, independent of the web build. The web app is one client among several, with no privileged in-process path.
 - **Trade-offs accepted:**
@@ -167,7 +167,7 @@ SSR loaders call the API over the host's private network (`API_INTERNAL_URL`) wi
   - 1,000 SSE streams ran for 67 s with no drop;
   - the bump from beta.32 took 5 minutes.
 
-  The criteria stay in force until the end of M2.
+  The criteria stayed in force until the end of M2, which passed with no fallback.
 
 **TS-05 Repository layout (Decided; Q-09).** Use a Bun workspace with few packages:
 
@@ -220,11 +220,11 @@ docs/                      PRD, design spec, tech spec, audits, runbooks
 
 | Host | Service |
 | --- | --- |
-| `tonaris.<tld>` (apex; placeholder until the domain is registered) | `tonaris-web` |
-| `api.tonaris.<tld>` | `tonaris-api`: `/v1`, `/auth`, `/.well-known`, `/mcp`, `/img` |
+| `tonaris.app` (apex, registered at Spaceship; [deploy guide](deploy.md)) | `tonaris-web` |
+| `api.tonaris.app` | `tonaris-api`: `/v1`, `/auth`, `/.well-known`, `/mcp`, `/img` |
 
 - **Same site.** Both hosts share one registrable domain, so they are same-site. The session cookie (TS-70) is scoped to the parent domain with `SameSite=Lax`. It travels with the web app's credentialed `fetch` and EventSource calls to the API, and with SSR requests that forward it, while Lax still blocks cross-site form CSRF (TS-102).
-- **MCP URL.** MCP lives at `https://api.tonaris.<tld>/mcp`, the URL users paste into Claude, ChatGPT, and Codex (DS-86).
+- **MCP URL.** MCP lives at `https://api.tonaris.app/mcp`, the URL users paste into Claude, ChatGPT, and Codex (DS-86).
 - **Environments.** Production and local development only; there is no staging for now. If a pre-production environment is added later, it gets a separate registrable domain so production cookies never reach it.
 - **CORS.** Native apps and MCP authenticate with bearer tokens and need no CORS. The web origin is the only credentialed CORS origin.
 
@@ -245,7 +245,7 @@ docs/                      PRD, design spec, tech spec, audits, runbooks
 
 ## 3. Data model
 
-This is an outline. The Drizzle schema in `packages/db` is authoritative. All tables carry `created_at` and `updated_at`, and ownership columns are indexed. Timestamps are `timestamptz(3)`: millisecond precision matches JS `Date` and the API's ISO strings, so a value read back compares equal to the stored one.
+This is an outline. The Drizzle schema in `packages/db` is authoritative. All tables but `audit_log`, which has its own `at`, carry `created_at` and `updated_at`, and ownership columns are indexed. Timestamps are `timestamptz(3)`: millisecond precision matches JS `Date` and the API's ISO strings, so a value read back compares equal to the stored one.
 
 **TS-10 Identifiers (Decided; FR-09.3, FR-13.5).**
 
@@ -268,24 +268,24 @@ This is an outline. The Drizzle schema in `packages/db` is authoritative. All ta
 | `memberships` | `list_id`, `album_id`, `owner_id`, `added_at`. PK `(list_id, album_id)` | A membership is *effective* when both list and album are active. Rows survive the trashing of either side (TS-13). | FR-01.6–FR-01.10, FR-14.2 |
 | `field_definitions` | `id`, `owner_id`, `name`, `name_key`, `type` | Unique `(owner_id, name_key)`. Clients hold each field as `{id, name, type, options}`, with its options in `sort_key` order, and define and rename it with `field.create` and `field.rename` (TON-49). At most 50 per account (TS-18). | FR-03.6, FR-03.9 |
 | `field_options` | `id`, `field_id`, `label`, `label_key`, `sort_key` | Unique `(field_id, label_key)`. `sort_key` is a fractional index, compared bytewise (TS-16). At most 100 per field (TS-18). | FR-03.14–FR-03.16 |
-| `album_field_values` | `album_id`, `field_id`, `text_value`, `number_value numeric`, `date_value date`, `bool_value`, `option_id` (FK `ON DELETE SET NULL`). PK `(album_id, field_id)` | **Row present = applied**; row with all values null = **applied-empty**; no row = **unused**. CHECK: at most one value column is set, matching the type. Clients hold `{albumId, fieldId, value}` per row, keyed `<albumId>:<fieldId>`: text, a decimal string, `YYYY-MM-DD`, a boolean, an option ID, or option IDs in option order; null is applied-empty. They change it with `fieldValue.apply`, `fieldValue.set` (compare-and-set) and `fieldValue.remove` (TON-50). | FR-03.7, FR-03.8, FR-03.10 |
+| `album_field_values` | `album_id`, `field_id`, `text_value`, `number_value numeric`, `date_value date`, `bool_value`, `option_id` (FK `ON DELETE SET NULL`). PK `(album_id, field_id)` | **Row present = applied**; row with all values null = **applied-empty**; no row = **unused**. CHECK: at most one value column is set (`num_nonnulls`). The type lives in `field_definitions`, so the commands check that the value matches it (`field-values.ts`). Clients hold `{albumId, fieldId, value}` per row, keyed `<albumId>:<fieldId>`: text, a decimal string, `YYYY-MM-DD`, a boolean, an option ID, or option IDs in option order; null is applied-empty. They change it with `fieldValue.apply`, `fieldValue.set` (compare-and-set) and `fieldValue.remove` (TON-50). | FR-03.7, FR-03.8, FR-03.10 |
 | `album_field_multi` | `album_id`, `field_id`, `option_id`. PK over all three | Multiple-choice selections. The parent `album_field_values` row marks the field as applied. | FR-03.10, FR-03.17 |
 | `view_prefs` | `person_id`, `view_key` (`root`\|`unsorted`\|container id), `sort_mode` (`year`\|`name`\|`created`\|`manual`), `sort_dir`, `grouped`, `layout` (`rows`\|`grid`, DS-40). PK `(person_id, view_key)` | Remembered choices; null follows the account default. CHECK: `sort_mode` and `sort_dir` are set and cleared together, as one choice. A row with every choice cleared is deleted (TON-35). | FR-05.2–FR-05.4, FR-11.7 |
-| `account_settings` | `account_id` PK, `list_sort_mode`, `list_sort_dir`, `folder_sort_mode`, `folder_sort_dir`, `grouped`, `layout`, `folder_layout` (TON-174, default `grid`) | Account defaults, complete once saved, each with a CHECK. No row means DS-44's first-time defaults (`appViewDefaults`, TON-35). | FR-11.7, FR-11.8 |
+| `account_settings` | `account_id` PK, `list_sort_mode`, `list_sort_dir`, `folder_sort_mode`, `folder_sort_dir`, `grouped`, `layout`, `folder_layout` (TON-174, default `grid`), `link_target` (TON-104, default `web`), `hidden_services` (TON-138, default empty) | Account defaults, complete once saved, each with a CHECK. No row means DS-44's first-time defaults (`appViewDefaults`, TON-35). | FR-11.7, FR-11.8 |
 | `positions` | `person_id`, `view_key`, `item_id`, `key text` (fractional index). PK `(person_id, view_key, item_id)` | Personal manual order, for owners and signed-in viewers alike (TS-16). Keys compare bytewise (`COLLATE "C"`). Written by `order.set`, and by DS-51's placement in the commands (TON-36). | FR-05.2, FR-07.17 |
-| `trash_units` | `id`, `owner_id`, `kind`, `root_id`, `deleted_at`, `expires_at`, `tombstones jsonb` | `tombstones` records purged albums as `{id, title, artist}` for skip reporting | FR-01.13–FR-01.17 |
+| `trash_units` | `id`, `owner_id`, `kind`, `root_id`, `deleted_at`, `expires_at`, `tombstones jsonb`, `deleted_by` | `tombstones` records purged albums as `{id, title, artist}` for skip reporting. `deleted_by` is the editor who deleted the unit, for their Undo, or null when the owner did; it has no foreign key, so the unit outlives the editor's account (FR-07.20, TON-189) | FR-01.13–FR-01.17 |
 | `share_links` | `id`, `container_id`, `token_hash bytea`, `created_at`, `revoked_at` | At most one active link per container (partial unique index) | FR-07.16 |
-| `share_grants` | `id`, `container_id`, `grantee_id`, `status` (`pending`\|`accepted`\|`declined`\|`withdrawn`\|`revoked`), `email_status` | Partial unique index on `(container_id, grantee_id)` for pending and accepted grants | FR-07.4–FR-07.7 |
+| `share_grants` | `id`, `container_id`, `grantee_id`, `invited_email`, `status` (`pending`\|`accepted`\|`declined`\|`withdrawn`\|`revoked`), `role` (`view`\|`edit`, default `view`; TON-188), `email_status` | Partial unique index on `(container_id, grantee_id)` for pending and accepted grants. `invited_email` is the address the owner typed, which their dialog shows. CHECKs on `status`, `role` and `email_status` | FR-07.4–FR-07.7, FR-07.18 |
 | `saved_references` | `viewer_id`, `container_id`, `link_id` (null if the reference comes only from a grant). Unique `(viewer_id, container_id)` | Shared with me = accepted grants ∪ saved link references, deduplicated by container | FR-07.13 |
 | `change_log` | `id bigserial`, `account_id`, `seq bigint`, `entity`, `entity_id`, `op`, `data jsonb`, `mutation_id`. Unique `(account_id, seq)` | Retention 30 days | FR-09.1 |
 | `mutations` | `id uuid` PK (client `mutationId`), `account_id`, `principal` (session\|mcp grant), `name`, `status`, `result jsonb`, `received_at`, `completed_at` | Retention 30 days | FR-13.5 |
-| `approvals` | `id`, `account_id`, `grant_id`, `operation`, `args jsonb`, `scope jsonb`, `scope_hash`, `status`, `expires_at`, `decided_at`, `used_at` | | FR-10.6 |
+| `approvals` | `id`, `account_id`, `grant_id`, `operation`, `args jsonb`, `scope jsonb`, `scope_hash`, `status`, `expires_at`, `decided_at`, `used_at`, `batch_id` | `batch_id` is the batch that used the approval, so sending its key again replays it (TS-22) | FR-10.6 |
 | `mcp_operations` | `grant_id`, `key`, `batch_id`, `request_hash`, `items` | PK `(grant_id, key)`; an agent's `idempotencyKey` and the batch it names (TON-82) | TS-22 |
 | `admission_invitations` | `id`, `email_key`, `token_hash bytea`, `status` (`available`\|`redeemed`\|`revoked`\|`expired`), `expires_at`, `created_by`, `redeemed_by`, `redeemed_at`, `email_status` | Partial unique index on `email_key` for available invitations. `redeemed_at` is set exactly when the status is `redeemed`. `redeemed_by` becomes null when its account is deleted, so the redemption stays on record ([TON-24](spikes/2026-10-21-admission-gate.md)) | FR-11.6 |
 | `service_state` | singleton: `admissions_paused` | Its one row is inserted by its migration, with admissions open | FR-11.2 |
-| `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error` | | TS-90 |
-| `provider_cache` | `key` (PK, namespaced: `musicbrainz:url:{url}`), `value jsonb`, `expires_at` (indexed) | MusicBrainz and Cover Art Archive answers for 7 days; pruned daily. No user data (TS-41, TON-41). | TS-41 |
-| `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | Admin actions, recovery, deletions. `action` is checked against `auditActions`: `email.change` (TON-77), `email.recover` (TON-78) and `account.delete` (TON-79). `actor` and `subject` carry no foreign key, so a record outlives a deleted account | FR-11.4–FR-11.6 |
+| `jobs` | `id`, `kind`, `payload`, `run_at`, `attempts`, `locked_until`, `last_error`, `dead_at` | A finished job is deleted. `dead_at` marks one that gave up, which stays until the daily prune | TS-90 |
+| `provider_cache` | `key` (PK, namespaced: `musicbrainz:url:{url}`, `itunes:lookup:{id}:{storefront}`, `robots:{host}`), `value jsonb`, `expires_at` (indexed) | MusicBrainz and Cover Art Archive answers for 7 days; iTunes Lookup's albums and each store's robots.txt answer for a day (TON-42); pruned daily. No user data (TS-41, TON-41). | TS-41 |
+| `audit_log` | `id`, `actor`, `action`, `subject`, `at`, `details` | No `created_at` or `updated_at`: `at` is when it happened. Admin actions, recovery, deletions. `action` is checked against `auditActions`: `email.change` (TON-77), `email.recover` (TON-78) and `account.delete` (TON-79). `actor` and `subject` carry no foreign key, so a record outlives a deleted account | FR-11.4–FR-11.6 |
 | `account_deletions` | `id`, `user_id` (no foreign key), `token_hash bytea` (unique), `status` (`deleting`\|`deleted`\|`failed`), `finished_at` | An account deletion's progress, followed by the token its browser holds; pruned 7 days after it finishes (TON-79) | FR-11.11 |
 | `email_recoveries` | `user_id` (PK, cascades), `new_email_key`, `token_hash bytea` (unique), `code_hash bytea`, `attempts`, `expires_at`, `reason`, `disconnect_connections`, `requested_by` | One creator's recovery per account, waiting 24 hours for the new address to confirm it; a deleted account takes it along (TON-78) | FR-11.5 |
 | `email_changes` | `user_id` (PK, cascades), `new_email_key`, `stage` (`current`\|`new`), `code_hash bytea`, `attempts`, `expires_at` | One sign-in email change per account; starting again replaces it, and the swap deletes it (TON-77) | FR-11.4 |
@@ -458,10 +458,11 @@ type Mutation = {
   name: string;                // e.g. "album.update", "container.move", "membership.add"
   args: unknown;               // Zod-validated per command
   base?: Record<string, unknown>; // expected prior values of the fields this mutation changes
-  approvalId?: string;         // MCP gated operations (TS-64)
 };
 type Batch = { batchId: string; items: (Mutation & { dependsOn?: string[] })[] };
 ```
+
+*Corrected in TON-224:* the envelope carries no `approvalId`, though TS-20 first planned one for MCP's gated operations. A gated MCP tool takes the `approvalId` as its own argument, checks the approval, and only then runs the app's commands (TS-64). The schema is `mutationSchema` in `packages/domain/src/sync.ts`.
 
 `POST /v1/mutations` takes a single mutation, and `POST /v1/batches` a batch (TS-25). Two endpoints keep each request and response one shape for generated clients; TS-20 first planned one endpoint for both (changed in TON-28). A mutation goes through these steps:
 
@@ -572,7 +573,8 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 
 **TS-24 Client store (Decided; Q-01, FR-09.3).**
 
-- **Bootstrap.** `GET /v1/sync/bootstrap` returns the owned collection, preferences, positions, field definitions, the Shared with me list, and a compact search index for each shared root (TS-50), all at `seq = N`. So far it carries albums, folders and lists, list entries, and the person's view choices and account defaults, each with its commands (TON-20, TON-26, TON-27, TON-35).
+- **Bootstrap.** `GET /v1/sync/bootstrap` returns the owned collection, preferences, positions, field definitions and the Shared with me list, all at `seq = N`. It carries albums, folders and lists, list entries, service links, fields and their values, Trash units, the person's view choices, manual order and account defaults, and `references`, each with its commands (TON-20, TON-26, TON-27, TON-35).
+  - *Corrected in TON-224:* it carries no search index for shared roots. Shared content is searched on the server since TON-72 (TS-50).
   - *As built in TON-68:*
     - **`references`** lists the person's Shared with me by container, newest first, and the `reference` change entity keeps it current. Accepting, saving a link, removing and leaving write it.
     - **Names, owners and availability** come from `GET /v1/shared`, read on view, on window focus and after any reference change, since they depend on the owners' data.
@@ -634,7 +636,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
 
 - **Size.** 1 to 200 items, from every client: the app, native clients and MCP (TS-18, decided 22 October 2026).
 - **Execution.** Items run in order, each as its own mutation: its own transaction under the owner's write lock (TS-20). Independent successes commit and stay committed. Each item's changes go to the stream as it commits, not when the batch ends. Other writes may run between items, and are judged like any write.
-- **Dependencies.** An item's `dependsOn` names earlier items of its batch. It runs only if each is `confirmed`. Otherwise it is `skipped`, naming the first prerequisite that wasn't and that prerequisite's status as `because`: `failed`, `conflict`, `skipped`, `needs_input` or `needs_approval`. Dependencies across requests don't exist; the outbox's order gives causality there (TS-22).
+- **Dependencies.** An item's `dependsOn` names earlier items of its batch. It runs only if each is `confirmed`. Otherwise it is `skipped`, naming the first prerequisite that wasn't and that prerequisite's status as `because`: `failed`, `conflict`, `skipped`, `needs_input` or `needs_approval`. The contract also allows `pending`, kept for a prerequisite still running, as a capture waiting on a provider would be; items run one after another, so the server doesn't report it yet (`skipReasons` in `packages/domain/src/outcomes.ts`; *recorded in TON-224*). Dependencies across requests don't exist; the outbox's order gives causality there (TS-22).
 - **Validation.** The frame is checked as a whole: a v7 `batchId`, 1–200 items, each with a v7 `mutationId` that no other item repeats. A batch that fails it is a 422 problem, and no item runs. Each item is then validated on its own, against the mutation envelope and for `dependsOn` naming earlier items. A bad item gets `failed` with `validation_failed` and paths within the item, while the others run. The OpenAPI document therefore gives the items loosely and the item schema as the `BatchItem` component.
 - **Records.** Items that ran are stored as mutations, so they replay and `GET /v1/mutations/{id}` finds them. Skipped and invalid items are not stored, so the same item can be sent again once its prerequisite is fixed. A batch sent again applies nothing twice: what ran replays, and the rest is judged again.
 - **Capacity** is checked per item, so a batch that exceeds capacity reports exactly which items were not added (FR-15.3).
@@ -818,7 +820,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - *As built in TON-66:*
   - **Delivery:** `share.invite` saves a new grant with `email_status = 'sending'` and reports `emailing: true`; `share.resendInvitation` sets `sending` again on a pending one. After a confirmed, non-replayed outcome, the API emails the recipient's current address (`apps/api/src/invitations.ts`). The result is recorded only while the grant is still pending and sending: `sent`, `failed`, or `unknown` when the send outlasts 30 s. The owner's dialog reads a `sending` older than 5 minutes as `unknown`.
   - **Answering:** `share.accept` and `share.decline` act only on the principal's own pending grant whose container is active. The move from pending is conditional, so a concurrent revoke wins. Anything else is `not_found` "This invitation is no longer available.", including someone else's.
-  - **Accepting** upserts `saved_references (viewer, container)`, keeping an existing reference and its link. It logs no change yet: references reach clients with TON-68.
+  - **Accepting** upserts `saved_references (viewer, container)`, keeping an existing reference and its link. A new reference logs a `reference` insert to the grantee's stream, as references reach clients since TON-68; an existing one logs nothing (*corrected in TON-224*).
 - *As built in TON-64:* Trash changes no grant or link. A trashed container is simply never on an active path, so recovery resumes accepted grants and live links by itself, and leaves pending and revoked ones as they were. The statuses (`shareGrantStatuses`, `emailStatuses`) live in `packages/domain/src/sharing.ts`, and the db schema imports them.
 
 **TS-34 Display-name guard (Decided; FR-11.3).** Sharing commands and display-name updates check the invariant "a non-blank name exists while any share is active" under the owner lock.
@@ -853,7 +855,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - a link with credentials, or a port other than the default, is unsupported;
 - hosts match the allowlist exactly, and ids match their service's pattern.
 
-**Unsupported input** fails with `unsupported_link` and a reason (FR-02.3, DS-48). The reason says whether the input isn't a link of the four services at all, is a service's link that isn't an album or track, or has an id that looks incomplete.
+**Unsupported input** fails with `unsupported_link` and a reason (FR-02.3, DS-48). The reason says whether the input isn't a link of the five services at all, is a service's link that isn't an album or track, or has an id that looks incomplete.
 
 **Short links** are the only network resolution (`resolveShortLink()`):
 
@@ -940,11 +942,11 @@ Stored Spotify- or Apple-derived metadata would break the MCP (FR-10) and export
   - **Request A, the slug:** for open. and play. links, one `GET www.qobuz.com/fr-fr/album/-/{id}` with manual redirects, reading only `Location`. Those links carry no store, so they use `fr-fr`, Qobuz's home store (decided 21 October 2026); `us-en` missed albums European stores sell. Store links keep their own store.
   - **Request B, the hints:** if steps 2 and 3 miss, one `GET` of the page `Location` names, following Qobuz's redirect to the same album once, as a stale slug needs. When request A's answer is already the page (a title without Latin letters has the slug `-`), it is read instead.
   - The album page's title, artist and date are used only as transient hints for step 4. Nothing from the page is stored, and manual entry isn't prefilled from it.
-  - Each request is user-initiated: at most two per pasted link, to www.qobuz.com only, never open. or play. It sends an honest User-Agent, times out after 5 s, and follows no other links. There is no crawling or backfill.
+  - Each request is user-initiated: one page request per pasted link (two for open. and play. links, with request A), plus one redirect to the same album, to www.qobuz.com only, never open. or play. It sends an honest User-Agent, times out after 5 s, and follows no other links. There is no crawling or backfill.
   - robots.txt is checked daily, and the requests stop while it disallows album pages.
 - **Tidal: page hints, no API** (decided 20 October 2026, [Tidal spike](spikes/2026-10-20-g1-tidal.md)).
   - Step 2 looks up the canonical album URL with the other forms MusicBrainz may hold. Tidal has no step 3.
-  - **Hints:** one `GET https://tidal.com/album/{id}` per pasted link, read as Qobuz's hints are (above). A redirect to the same album is followed once. Nothing from the page is stored, and manual entry isn't prefilled from it.
+  - **Hints:** one `GET https://tidal.com/album/{id}` per pasted link, read as Qobuz's hints are (above), plus one redirect to the same album, which is followed once. Nothing from the page is stored, and manual entry isn't prefilled from it.
   - **No developer registration.** Tidal's API isn't used, and registering would bind Tonaris to its developer terms' scraping ban, which would end the page hints.
   - **Track links** name no album Tonaris may look up. They are explained and go to manual entry with the link kept (FR-02.3).
 - **Qobuz track links** go to manual entry with the link kept, as Tidal's do (decided by the creator on 24 October 2026, TON-42). Nothing permitted names their album: Qobuz has no API for Tonaris, the terms review covers album pages only, and MusicBrainz links Qobuz albums, not tracks.
@@ -1077,7 +1079,7 @@ The legal review is done: the [G1 terms review](spikes/2026-10-19-g1-terms-revie
   - Artwork follows the same rule (FR-03.4).
 - **The write** is `store.fillAlbum()` in `captureAlbum`, under the owner's write lock, so the plan is made on the album as it then is. A person's edit committed while MusicBrainz was asked is a populated value, and kept.
   - Filled values reach the owner's sessions as an album `update` in the capture's own changes.
-  - Clients' album records don't carry artwork or MBIDs yet (TON-48), so filling only those logs nothing.
+  - Clients' album records carry the artwork since TON-48, so a filled artwork is logged like the other values. They carry no MBIDs, so a plan that only changes the release group logs nothing (*corrected in TON-224*).
   - Trashed albums are enriched too, since matching may bring them back (FR-14.4).
 - **Where it runs.** Only inside `album.capture`: a new album and a reused one are planned the same way, and `store.fillAlbum` writes the plan under the lock. There is no separate enrichment job or API function: a capture that can't reach MusicBrainz saves nothing, and an entered album has no release group to ask about. *Dropped in TON-149:* `createEnricher` and `enrichAlbum`, which nothing called, with the retry job they were built for.
 
@@ -1153,7 +1155,7 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 - **Singles are a release type like EPs** (creator decision, 5 November 2026, TON-164), replacing the 17 October 2026 decision that made them Unclassified. Singles saved before it keep no type: nothing reclassifies them, and a person can set Single.
 - *As built in TON-43* (`classify()` in `packages/providers/src/album-facts.ts`): an Album, EP or Single gets `is_live` from `Live`, true or false. A release group with no types leaves both fields unknown.
 
-**TS-46 Chronology (Proposed; FR-02.8, FR-05.5, FR-05.6).**
+**TS-46 Chronology (Decided; built in TON-43; FR-02.8, FR-05.5, FR-05.6).**
 
 - `original_year` is the release group's `first-release-date` year.
 - For live releases, `recording_year_start` and `recording_year_end` are the minimum and maximum of the recordings' "recorded at" relationship dates, when present. A recording with no dated relationship uses the `life-span` of the event it was recorded at ([TON-14](spikes/2026-10-18-g1-musicbrainz.md)).
@@ -1171,9 +1173,8 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 
 **TS-50 Search implementation (Decided; FR-12, Q-01).**
 
-- **App (client-side).** Search runs a substring match of `searchKey(query)` over precomputed keys in the store:
-  - owned folders, lists, album titles, and artist credits;
-  - each shared root's compact index (names, titles, artist credits, and accessible location paths), delivered in the bootstrap and refreshed on invalidation.
+- **App (client-side).** Search runs a substring match of `searchKey(query)` over precomputed keys in the store: owned folders, lists, album titles, and artist credits.
+  - *Changed in TON-72:* shared content was to be searched in each shared root's compact index, delivered in the bootstrap. The server searches it instead (below), and the bootstrap carries no index (*corrected in TON-224*).
 
   At 10,000 albums this is under 5 ms per keystroke on the reference laptop (to be confirmed in M1). Results are grouped owned vs shared and show accessible paths only (FR-12.3).
 - **MCP and server.**
@@ -1236,7 +1237,7 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 
 **TS-60 Server and transport (Decided; FR-10.1, G3).**
 
-- `@modelcontextprotocol/server` v2: `createMcpHandler(factory).fetch`, mounted at `/mcp` on the API service (`https://api.tonaris.<tld>/mcp`, TS-08).
+- `@modelcontextprotocol/server` v2: `createMcpHandler(factory).fetch`, mounted at `/mcp` on the API service (`https://api.tonaris.app/mcp`, TS-08).
 - The server speaks the 2026-07-28 protocol, with the stateless legacy fallback **enabled**. Claude.ai lists auth support only up to the 2025-11-25 spec ([Claude connector auth](https://claude.com/docs/connectors/building/authentication)). Ignore Better Auth's suggestion to set `legacy: "reject"`.
 - **Checked in TON-22** ([spike](spikes/2026-10-21-g3-mcp-oauth.md)):
   - Claude web and ChatGPT web speak 2026-07-28. Codex 0.162.1 uses the 2025 handshake, and so did Claude once after reconnecting, so the fallback is needed.
@@ -1245,15 +1246,15 @@ The MB secondary type `Compilation` sets `release_type = compilation`, and the s
 
 **TS-61 OAuth 2.1 authorization (Decided; FR-10.3, Q-06).**
 
-- **Hosts.** The issuer, every authorization-server endpoint (`/auth/*`, `/.well-known/oauth-authorization-server`), and the JWKS live on `api.tonaris.<tld>`. The login and consent pages (`/sign-in`, `/oauth/consent`, DS-85) are rendered by `tonaris-web` and complete the flow through the API.
-  - The issuer is `https://api.tonaris.<tld>/auth`, so RFC 8414 puts its metadata at `/.well-known/oauth-authorization-server/auth`. The root path serves the same document for 2025-03-26 clients.
+- **Hosts.** The issuer, every authorization-server endpoint (`/auth/*`, `/.well-known/oauth-authorization-server`), and the JWKS live on `api.tonaris.app`. The login and consent pages (`/sign-in`, `/oauth/consent`, DS-85) are rendered by `tonaris-web` and complete the flow through the API.
+  - The issuer is `https://api.tonaris.app/auth`, so RFC 8414 puts its metadata at `/.well-known/oauth-authorization-server/auth`. The root path serves the same document for 2025-03-26 clients.
   - Sign-in that begins at an authorization request returns to `/oauth/authorize` with the client's request, which the API runs again with the new session (TON-22).
 - **Plugins:** Better Auth `@better-auth/mcp` with `jwt()` and `@better-auth/cimd` (metadata profile `mcp-2026-07-28`). The JWT plugin's session-token endpoint (`/auth/token`) isn't served, and its `set-auth-jwt` header is off.
 - **Discovery:**
   - RFC 9728 protected-resource metadata at `/.well-known/oauth-protected-resource` (served automatically);
   - RFC 8414 authorization-server metadata;
   - PKCE S256;
-  - RFC 8707 `resource`, with the token audience set to `https://api.tonaris.<tld>/mcp` and validated on every call.
+  - RFC 8707 `resource`, with the token audience set to `https://api.tonaris.app/mcp` and validated on every call.
 - **Client registration:**
   - Advertise `client_id_metadata_document_supported: true` with token auth methods `none` and `private_key_jwt`. This is the path Claude.ai, ChatGPT (`https://chatgpt.com/oauth/client.json`), and Codex prefer; all three used it in TON-22.
   - ChatGPT authenticates at the token endpoint with `private_key_jwt`, signed with the keys at its `jwks_uri`. Claude and Codex are public clients; Codex redirects to a loopback address on any port.
@@ -1347,7 +1348,7 @@ There are deliberately **no** tools for sharing management, Trash purge, export,
 
 **TS-64 Verifiable approvals (Decided mechanism; verified in all three clients in TON-23; FR-10.6).**
 
-1. The agent calls a gated tool. The server computes the exact scope (targets, affected albums including Trash, sharing effects, recoverability), stores an `approvals` row (`pending`, expiring in 30 min) with `scope_hash = sha256(canonical(scope))`, and returns `needs_approval` with `{approvalId, url: https://tonaris.<tld>/approvals/{id}, summary, expiresAt}`. The summary text is meant for the agent to relay to the user.
+1. The agent calls a gated tool. The server computes the exact scope (targets, affected albums including Trash, sharing effects, recoverability), stores an `approvals` row (`pending`, expiring in 30 min) with `scope_hash = sha256(canonical(scope))`, and returns `needs_approval` with `{approvalId, url: https://tonaris.app/approvals/{id}, summary, expiresAt}`. The summary text is meant for the agent to relay to the user.
 2. The user opens the URL, signed in as the same account; a different account gets a 403. The page shows the scope in Tonaris's own words (DS-defined) and offers Approve or Decline. Pending approvals also show as a badge in the app.
 3. The agent re-invokes the same tool with `approvalId`, or polls `get_approval`. The server re-computes the scope:
    - it executes only if the approval is `approved`, unexpired, unused, bound to the same grant, and the recomputed `scope_hash` matches;
@@ -1424,7 +1425,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Method.** Sign-in uses the Better Auth `emailOTP` plugin: a 6-digit code, valid for 10 min, single-use, with 5 attempts. Codes are stored hashed, and a new request replaces the previous code.
 - **The email.** It contains the code **and** a link to `/sign-in/verify?email=…#code=…` that submits the same code. This gives "link or code" with one mechanism. The code is in the fragment, so it never reaches a server log or a `Referer`. The magic-link plugin is not used, which also avoids its 2026 advisories.
 - **Cross-device.** A link opened on another device asks for confirmation before signing that device in. "Another device" means a browser without the pending request that `/sign-in` keeps in `localStorage`. This is only a check on whether to ask: the code is the credential.
-- **Sessions** (web only; native apps use tokens, TS-30). The cookie is `__Secure-tonaris.session_token`; it uses the `__Secure-` prefix because `__Host-` forbids the parent-domain `Domain` attribute TS-08 needs. It is `Secure`, `HttpOnly`, `SameSite=Lax`, with `Domain=tonaris.<tld>`, which is the web origin's host. Locally there is no `Domain`, since a host-only `localhost` cookie reaches both ports. Sessions roll over 30 days: a session used more than a day after its last renewal is extended, and the cookie is renewed with it.
+- **Sessions** (web only; native apps use tokens, TS-30). The cookie is `__Secure-tonaris.session_token`; it uses the `__Secure-` prefix because `__Host-` forbids the parent-domain `Domain` attribute TS-08 needs. It is `Secure`, `HttpOnly`, `SameSite=Lax`, with `Domain=tonaris.app`, which is the web origin's host. Locally there is no `Domain`, since a host-only `localhost` cookie reaches both ports. Sessions roll over 30 days: a session used more than a day after its last renewal is extended, and the cookie is renewed with it.
 - **Endpoints.** The API serves only the Better Auth endpoints sign-in needs, under `/auth/*`: request a code, sign in, the passkey ceremonies, read the session, and sign out. Any other path is `not_found`, so plugins and upgrades expose nothing unplanned, such as `/update-user`. Admission's two endpoints sit beside them, at `/auth/admission/*` (TS-71). The signed-in account is `GET /v1/me`.
 - **Privacy.** Sessions store no IP address (`disableIpTracking`), and Better Auth's telemetry is off.
 - **Rate limits.** Sign-in requests are limited per email and per IP (TS-104).
@@ -1741,15 +1742,15 @@ Findings and their fixes. None high or critical remains open:
 - `Content-Security-Policy` on the web app, on every response and in development too:
   - `default-src 'self'`
   - `script-src 'self' 'nonce-{n}'` and `style-src 'self' 'nonce-{n}'`. A request middleware in `apps/web/src/start.ts` makes a fresh 128-bit nonce. The router puts it on every script and style it renders, and `CSPProvider` puts it on the few that Base UI renders itself.
-  - `img-src 'self' data: https://api.tonaris.<tld>`; all artwork goes through the API's `/img`
-  - `connect-src 'self' https://api.tonaris.<tld>`. The Sentry ingest host is added with TS-115, as the project's exact host: a `*.ingest.de.sentry.io` wildcard would let injected code report to anyone's Sentry project.
+  - `img-src 'self' data: https://api.tonaris.app`; all artwork goes through the API's `/img`
+  - `connect-src 'self' https://api.tonaris.app`. The Sentry ingest host is added with TS-115, as the project's exact host: a `*.ingest.de.sentry.io` wildcard would let injected code report to anyone's Sentry project.
   - `font-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`
 - **No style attributes in server-rendered HTML** (TON-126). The CSP refuses them there, while React in the browser sets styles through the DOM, which it allows. So a server-rendered page (shared links, sign-in, invitations, recovery) styles with classes:
   - the artwork tile sets its colours through the DOM;
   - a guest page's view options, whose Base UI radios hide their inputs with a style attribute, render once the page is live;
   - `guest.e2e.ts` fails on any CSP report from a guest page.
 - **No eval.** Zod probes for `new Function` before compiling its parsers. The CSP blocks that, and the browser reports each probe as a violation. So `packages/domain` imports Zod through `src/zod.ts`, which switches Zod to `jitless` in browsers, and a lint rule enforces that import. Servers keep the compiled parsers.
-- Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains` (no preload), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`, overridden to `no-referrer` on `/s/`.
+- Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains` (no preload), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`, overridden to `no-referrer` on `/s/`, `/join/` and `/recover/`, whose URLs carry a token (TS-32, TS-71, TS-73; `apps/web/src/security/headers.ts`).
 - API responses send `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `nosniff`, and the same HSTS. Problems and Better Auth's responses get them too. Image-proxy responses add a fixed image `Content-Type`.
 
 **TS-102 CORS and CSRF (Decided; Q-05, Q-06).**
@@ -1763,7 +1764,13 @@ Findings and their fixes. None high or critical remains open:
   - *Exempt:* `/auth/oauth2/token` and `/auth/oauth2/revoke`, which MCP clients post forms to (RFC 6749, RFC 7009). They authenticate the client and its code or token and never read the session, so the rule has nothing to protect there. Holding them to JSON would break every client's token refresh.
 - **Bearer principals ignore cookies.** A request carrying `Authorization: Bearer` (native app or MCP) is authenticated by the token alone, and any cookie is ignored: the `signedIn` guard never reads the session for it, and the origin rule doesn't apply to it on `/v1`. MCP tokens are for `/mcp` only (TS-62) and native-app tokens don't exist yet, so no bearer token is valid on `/v1` (`401`). `/mcp` never reads cookies.
 
-**TS-103 SSRF guard and image proxy (Decided; the guard built in TON-40; Q-05, FR-03.4).** One `safeFetch` (`packages/providers/src/safe-fetch.ts`) is used for every outbound call: short links, MusicBrainz, CAA, iTunes Lookup, Spotify, the Qobuz and Tidal store pages, and the image proxy.
+**TS-103 SSRF guard and image proxy (Decided; the guard built in TON-40; Q-05, FR-03.4).** One `safeFetch` (`packages/providers/src/safe-fetch.ts`) is used for every outbound HTTP call to a provider or to a URL that comes from users or providers: short links, MusicBrainz, CAA, iTunes Lookup, Spotify, the Qobuz and Tidal store pages, the YouTube Data API, Resend's email API, and the image proxy.
+
+- *Corrected in TON-224:* four outbound paths don't use it. Three talk only to a host the operator configures, and the fourth has a guard of its own:
+  - **SMTP** (`apps/api/src/email/smtp.ts`): nodemailer to `SMTP_URL`, Mailpit locally and the fallback for a host without Resend. It isn't HTTP.
+  - **The revocation ledger** (`packages/db/src/ledger.ts`): Bun's S3 client to the bucket at `S3_ENDPOINT` (TS-113).
+  - **Sentry:** its SDKs send to the DSN's ingest host (TS-115).
+  - **CIMD's client metadata documents** (`apps/api/src/auth/auth.ts`): `@better-auth/cimd`'s own fetcher resolves the host once, refuses private addresses, pins the connection and follows no redirects (TS-61).
 
 - **Only public https hosts:**
   - `https` on its default port, with no credentials in the URL. (The earlier "ports 443 and 80" allowed nothing https uses.)
@@ -1784,7 +1791,7 @@ Findings and their fixes. None high or critical remains open:
 - **Requests** carry an honest User-Agent, `Tonaris/0.1 ( https://github.com/zunhdev/tonaris )`, unless the caller sets one.
 - **Failures** are `SafeFetchError`s with a reason: `url`, `address`, `dns`, `redirects`, `timeout`, `size`, `content_type` or `network`. Their messages leave out the query string (TS-41).
 
-The API service's `https://api.tonaris.<tld>/img/{hmac}/{b64url(url)}?w=…` serves artwork only for URLs the server itself signed when it serialized the album. The proxy:
+The API service's `https://api.tonaris.app/img/{hmac}/{b64url(url)}?w=…` serves artwork only for URLs the server itself signed when it serialized the album. The proxy:
 
 - keeps guest and viewer IPs hidden from third-party hosts (owner-supplied artwork URLs could otherwise be used for tracking);
 - satisfies the strict CSP;
@@ -1861,7 +1868,7 @@ There is no resizing in v1.
 
 ## 13. Hosting and operations (creator-owned)
 
-The creator chooses the host, region, and budget; the current preference is Render in Frankfurt. This section states only what the code needs from a host, plus the app-side operational tooling.
+The creator chooses the host, region, and budget, and chose Render in Frankfurt, behind Cloudflare, on 30 October 2026 (TON-108, TS-111). This section states only what the code needs from a host, plus the app-side operational tooling.
 
 **TS-110 Platform requirements (Decided; Q-08, Q-09).** Any host must provide:
 
@@ -1958,7 +1965,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
 
 > "Deleted data is removed from the live service immediately and disappears from encrypted backups within 30 days. If we ever restore a backup, your deletion is re-applied before the service reopens."
 
-The "30 days" matches the backup retention the creator set (Q-04).
+The "30 days" was the backup retention the creator first set (TON-97). Render's window is 3 or 7 days (TS-112), so backups leave sooner and the wording still holds (TON-108, Q-04).
 - *As built in TON-97:* the account-deletion dialog shows it under the consequences (DS-97). The app has no privacy notice yet; when one is written, it carries the same words.
 - *As built in TON-131:* the privacy notice's "How long" carries it, after "Your account and collection are kept until you delete them." (DS-119).
 
@@ -1990,7 +1997,7 @@ The "30 days" matches the backup retention the creator set (Q-04).
 
 ## 14. Quality targets and verification
 
-**TS-120 Performance targets (Approved 21 October 2026 where measured, the rest provisional; Q-01).** Measured against the reference workload. Provisional targets are confirmed with measurements before they count for acceptance (TON-92).
+**TS-120 Performance targets (Approved 21 October 2026 where measured, and the other four on 29 October 2026; Q-01).** Measured against the reference workload. The four provisional targets were confirmed with measurements before they counted for acceptance (TON-92).
 
 - **Measured on 21 October 2026 ([TON-21](spikes/2026-10-21-q01-measurements.md)).** Every target with something to measure is met with room to spare, on both reference profiles. The creator approved them on 21 October 2026 (TON-25), with the viewer target on its estimate.
   - Approved: feedback, confirmation, both propagations, list and sort switches, cold start. M7 measures viewer propagation for real.
@@ -2126,9 +2133,9 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
   **Temporarily disabled** (creator decision, 18 October 2026, to stay within a budget). The job is commented out in the workflow, with instructions for bringing it back. Until then, the full `bun run check` runs locally before every push and before a PR is handed over; it includes `bun test` and the Playwright suite.
 
 Actions are pinned to commit SHAs. **Docker images** are covered by a separate workflow, `.github/workflows/images.yml`. It builds both images and smoke-runs them against Postgres and Mailpit: migrate, seed, health checks, a sign-in email and the web page. To save runner minutes, it runs only when the images' recipe or dependencies change, or by hand, and it isn't a required check. Static checks builds the same bundles (`bun run build`) on every pull request. Still to come:
-- all browser engines nightly arrives with the browser matrix (TON-94). WebKit first needs HTTPS locally, because it refuses `Secure` cookies on `http://localhost`.
+- all browser engines nightly. The browser matrix runs them locally with `test:e2e:matrix` (TON-94, TS-122), and WebKit gets plain cookies through `E2E_INSECURE_COOKIES=1`, so it needs no local HTTPS. The nightly run waits for the Tests job's return.
 
-The "Protect main" ruleset requires **Static checks**, and requires **Tests** again once that job is re-enabled. Production deploys from `main` by tag or manual trigger, with the API before the web app. There is no staging environment for now.
+The "Protect main" ruleset requires **Static checks**, and requires **Tests** again once that job is re-enabled. Production deploys on every merge to `main` once CI's checks pass (`autoDeployTrigger: checksPass` in `render.yaml`, TS-110), with the API before the web app. A manual deploy on Render is the fallback ([deploy guide](deploy.md#each-deploy)). There is no staging environment for now.
 
 ---
 
@@ -2148,7 +2155,7 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 - Commits and PR titles include the issue key (`TON-123`), so Linear's GitHub integration links them.
 - Product, design, and tech IDs are never renumbered.
 
-**TS-131 Linear structure (Proposed).**
+**TS-131 Linear structure (Decided; created in Linear on 17 October 2026, [seed plan](linear-plan.md)).**
 
 - One team, **Tonaris** (`TON`).
 - **Projects = delivery milestones.** Each project description holds the goal, dependencies, and exit checks.
@@ -2193,9 +2200,9 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 | Capability | Source rules |
 | --- | --- |
 | `collection-hierarchy` | FR-01.1–FR-01.5, FR-03.5 |
-| `album-records` | FR-01.6–FR-01.9, FR-02.6, FR-03.1–FR-03.4 |
-| `album-capture` | FR-02.1–FR-02.5, FR-02.8, FR-02.11 |
-| `album-matching` | FR-02.9–FR-02.10, FR-02.12, FR-14.3–FR-14.4 |
+| `album-records` | FR-01.6–FR-01.9, FR-02.6, FR-02.8, FR-03.1–FR-03.4 |
+| `link-capture` | FR-02.1–FR-02.5, FR-02.9–FR-02.12, FR-14.3–FR-14.4; TS-40, TS-41 |
+| `metadata-sources` | TS-41, TS-46; FR-03.4 |
 | `custom-fields` | FR-03.6–FR-03.20 |
 | `trash-and-recovery` | FR-01.10–FR-01.18, FR-14 |
 | `views-and-ordering` | FR-04, FR-05, FR-11.7–FR-11.9 |
@@ -2206,10 +2213,16 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 | `mcp-access` | FR-10 |
 | `accounts` | FR-11.1, FR-11.3–FR-11.5, FR-11.10–FR-11.13 |
 | `admission` | FR-11.2, FR-11.6 |
+| `terms-and-privacy` | FR-11.14; TS-134 |
+| `feedback-board` | FR-11.15; TS-61 |
 | `search` | FR-12 |
 | `capacity-limits` | FR-15 |
 | `design-system` | DS-10–DS-29; Q-02, Q-10 |
 | `app-shell` | DS-30–DS-32; TS-03 |
+| `mobile-web` | PRD section 2.2, X-04; DS-110 |
+| `landing-page` | DS-120, DS-32 |
+
+*Corrected in TON-224:* the table now matches `openspec/specs/`. The planned `album-capture` and `album-matching` were built as `link-capture`, and `metadata-sources`, `terms-and-privacy`, `feedback-board`, `mobile-web` and `landing-page` arrived with their features.
 
 **TS-133 `openspec/config.yaml` (Decided).** The file itself is the source; this entry only describes it. As OpenSpec recommends, it is kept short and links to the specs rather than pasting them.
 
@@ -2233,17 +2246,17 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 
 ## 16. Pending approvals and open questions
 
-**Open**
+**Raised here, all now settled**
 
 | # | Item | Status and next step | Rules |
 | --- | --- | --- | --- |
 | 1 | G1 final metadata decision | **Decided 21 October 2026** (TON-25): the TS-41 chain, with Qobuz page hints; agent captures read no store pages | G1, D3, FR-02, FR-08.8, FR-10 |
 | 2 | Album-matching evidence | **Decided 21 October 2026** (TON-25): TS-44 as validated, plus the rule for changed release group ids | G2 |
-| 3 | Performance targets | **Approved 21 October 2026** where measured (TS-120). Quick search, MCP search, guest LCP and export stay provisional until measured. | Q-01 |
-| 4 | Backup objectives and deletion wording | Creator-owned: retention, RPO/RTO, and the drill schedule. The TS-114 wording must match the retention. | Q-04 |
+| 3 | Performance targets | **Approved 21 October 2026** where measured, and quick search, MCP search, guest LCP and export on 29 October 2026, once measured (TON-92, TS-120) | Q-01 |
+| 4 | Backup objectives and deletion wording | **Decided 30 October 2026** (TON-97, TON-108): Render's point-in-time recovery, kept 3 days on Hobby or 7 on Pro, a recovery point of a few minutes, a recovery time of 24 hours, and a drill every 3 months (TS-112). TS-114's wording stands. | Q-04 |
 | 5 | Email provider | **Decided 29 October 2026** (TON-73): Resend, sending from `mail.tonaris.app` (TS-72) | Q-06 |
 | 6 | ChatGPT web plan for write actions | **Resolved 21 October 2026:** ChatGPT Plus adds custom MCP servers (TON-22) and runs write actions (TON-23) on the web (TS-123) | G3 |
-| 7 | Elysia 2 go/no-go | End of M2 (TS-04) | — |
+| 7 | Elysia 2 go/no-go | **Go, 20 October 2026** (TON-19). M2 ended with no fallback, and the API runs on Elysia 2, now `2.0.0-rc.4` (TS-04) | — |
 
 **Creator-owned, outside these specs:** hosting provider and region, budget (FR-15.5), domains, and backup objectives (Q-04).
 

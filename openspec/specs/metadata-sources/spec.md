@@ -86,7 +86,7 @@ iTunes Lookup SHALL be asked at most once every 3 seconds, and its answers SHALL
 - **THEN** their lookups start at least 3 seconds apart
 
 ### Requirement: Store pages are read only as the terms allow
-Qobuz and Tidal album pages SHALL be read only to identify a pasted link, and only transiently: nothing from them is kept (TS-41). A Qobuz link SHALL take at most two requests, both to www.qobuz.com: request A reads only a redirect's `Location`, and open. and play. links use the `fr-fr` store. A Tidal link SHALL take one request to tidal.com. Each site's robots.txt SHALL be checked at most daily, and no album page SHALL be asked for while it disallows them.
+Qobuz and Tidal album pages SHALL be read only to identify a pasted link, and only transiently: nothing from them is kept (TS-41). A link SHALL take one page request (two for Qobuz's open. and play., whose request A reads only a redirect's `Location` in the `fr-fr` store), plus one redirect to the same album, to www.qobuz.com or tidal.com only. Each site's robots.txt SHALL be checked at most daily, and no album page SHALL be asked for while it disallows them.
 
 #### Scenario: An open.qobuz.com link
 - **WHEN** an open.qobuz.com album link needs hints
