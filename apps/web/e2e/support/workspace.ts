@@ -133,6 +133,21 @@ export async function pageFaded(page: Page): Promise<void> {
   );
 }
 
+/**
+ * The WCAG rules' findings on the page, by rule, once a page switch's fade is over (the phone tests' check). Base UI's
+ * focus guards are left out: in Safari it gives the invisible sentinels that keep focus inside a dialog
+ * `role="button"`, for VoiceOver, which axe reads as unnamed buttons (TON-93 checks them).
+ */
+export async function wcagViolations(page: Page): Promise<string[]> {
+  await pageFaded(page);
+  return (
+    await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .exclude("[data-base-ui-focus-guard]")
+      .analyze()
+  ).violations.map((violation) => violation.id);
+}
+
 /** Axe's findings on the whole page, once a page switch's fade is over: mid-fade, its text is still faint (TON-118). */
 export async function pageViolations(page: Page) {
   await pageFaded(page);

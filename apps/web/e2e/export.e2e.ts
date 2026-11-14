@@ -4,10 +4,9 @@
 
 import { readFile } from "node:fs/promises";
 
-import { expect, test } from "@playwright/test";
-
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test } from "./support/test";
 import { added, album, live, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

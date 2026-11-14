@@ -4,11 +4,10 @@
 // answers the autofill's request by itself, as choosing the passkey there would; Firefox and WebKit have none, so it
 // runs on Chromium only.
 
-import { type BrowserContext, expect, type Page, test } from "@playwright/test";
-
 import { accounts } from "./support/accounts";
 import { clearInbox, latestEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { type BrowserContext, expect, type Page, test } from "./support/test";
 import { violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

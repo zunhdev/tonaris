@@ -2,9 +2,8 @@
 // sign-in route for Tonaris's provider, so a member arrives signed in. The board is Fider's, so the test stands one in
 // at its address; the API's side of the sign-in is apps/api/src/auth/feedback.test.ts.
 
-import { expect, test } from "@playwright/test";
-
 import { feedbackBoard } from "./support/accounts";
+import { expect, test } from "./support/test";
 
 test("the account menu opens the feedback board, signing in through Tonaris", async ({
   page,

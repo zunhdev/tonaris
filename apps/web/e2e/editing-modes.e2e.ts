@@ -2,12 +2,11 @@
 // on the device, the header's toggle and tint, E, edit intent switching to Editing, leaving Editing without losing an
 // edit, inline album cells, and drag handles shown in Editing only. Each test signs in with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { bootstrapSchema } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, announcements, created, live, saved, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

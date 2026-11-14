@@ -243,6 +243,39 @@
       "rules": {
         "no-restricted-imports": "off"
       }
+    },
+    {
+      "files": ["apps/web/e2e/**/*.e2e.ts", "apps/web/e2e/**/*.setup.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@tonaris/api",
+                "allowTypeImports": true,
+                "message": "The web app is an API client: import only types, such as `type App` for Eden (TS-29)."
+              },
+              {
+                "name": "@tonaris/db",
+                "message": "The web app never touches the database; call the API (TS-02)."
+              },
+              {
+                "name": "@tonaris/providers",
+                "message": "The web app may use only the pure link parser, `@tonaris/providers/links` (TS-02, TS-40)."
+              },
+              {
+                "name": "@playwright/test",
+                "message": "Browser tests take `test` from ./support/test: its page fails on CSP violations and waits out closing dialogs before keys (DRIFT-099, DRIFT-100)."
+              },
+              {
+                "name": "@axe-core/playwright",
+                "message": "Check with pageViolations, violations or wcagViolations from ./support/workspace: they wait until the page or dialog has faded in (DRIFT-100)."
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["**/routeTree.gen.ts"]

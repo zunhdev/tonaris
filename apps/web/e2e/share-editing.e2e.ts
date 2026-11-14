@@ -1,12 +1,11 @@
 // Editing a share in a real browser (DS-70 for editors; FR-07.18, FR-07.19; TON-191): an owner and an editor build a
 // list together, each seeing the other's changes without reloading, and an editor who loses access is told so.
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Browser, type Page } from "./support/test";
 import { added, album, insert, live, saved, savedNames, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

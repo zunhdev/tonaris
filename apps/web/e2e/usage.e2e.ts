@@ -1,10 +1,9 @@
 // Settings → Data's usage meter in a real browser (DS-98; FR-15.2, FR-15.3; AC-32): albums count whether active or
 // in Trash, and the meter says how many of each against the 5,000 limit.
 
-import { expect, test } from "@playwright/test";
-
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test } from "./support/test";
 import { added, album, live, saved, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

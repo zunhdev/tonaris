@@ -1,7 +1,6 @@
 // app-shell spec: the three-pane shell, the rendering modes (TS-03) and the root redirect (DS-30, DS-32).
 
-import { expect, test } from "@playwright/test";
-
+import { expect, test } from "./support/test";
 import { pageViolations } from "./support/workspace";
 
 test.describe("three-pane desktop shell", () => {

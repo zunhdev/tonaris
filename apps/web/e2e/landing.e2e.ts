@@ -3,9 +3,8 @@
 // widths. A signed-in visitor is offered Open Tonaris instead, and the sign-in page sends them on (TON-185). A
 // signed-in `/` still opens the collection: app-shell.e2e.ts and collection-navigation.e2e.ts.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { creatorState } from "./support/accounts";
+import { expect, type Page, test } from "./support/test";
 import { violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

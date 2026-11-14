@@ -32,6 +32,7 @@ export function serviceLinkKey(albumId: string, service: StreamingService): stri
 export const linkSetArgsSchema = z.object({
   albumId: z.uuid(),
   service: z.enum(streamingServices),
+  // ASCII: a link, bounded as URLs are, not a person's text (DRIFT-103).
   url: z.string().min(1).max(maxLinkLength).meta({ description: "The link as pasted (TS-40)." }),
 });
 export type LinkSetArgs = z.infer<typeof linkSetArgsSchema>;

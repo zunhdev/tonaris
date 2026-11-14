@@ -7,7 +7,7 @@ import { api, refusalOf } from "@/api";
 import { useRouter } from "@tanstack/react-router";
 import { type FormEvent, useId, useRef, useState } from "react";
 
-import { maxRecoveryReasonLength, type Member } from "@tonaris/domain";
+import { maxRecoveryReasonLength, type Member, clipLength } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -191,9 +191,11 @@ function RecoverDialog({
                 {...control}
                 rows={3}
                 required
-                maxLength={maxRecoveryReasonLength}
                 value={reason}
-                onChange={(event) => setReason(event.target.value)}
+                // Counted in code points, as the domain counts it (TS-18, DRIFT-103).
+                onChange={(event) =>
+                  setReason(clipLength(event.target.value, maxRecoveryReasonLength))
+                }
               />
             )}
           </Field>

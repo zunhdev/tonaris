@@ -4,12 +4,11 @@
 // run it headed (`--headed`), since headless Chromium paces frames irregularly even when idle. Each test signs in
 // with its own account.
 
-import { expect, type Locator, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, type Locator, test, type Page } from "./support/test";
 import {
   added,
   album,

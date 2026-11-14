@@ -3,11 +3,10 @@
 // collections; the creator's recovery waits for the new address, whose link confirms it, moving the same account
 // and signing it out; a cancelled recovery's link refuses; and other accounts find no Admin page.
 
-import { type Browser, expect, type Page, test } from "@playwright/test";
-
 import { accounts, apiUrl, newAddresses } from "./support/accounts";
 import { clearInbox, recoveryEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { type Browser, expect, type Page, test } from "./support/test";
 import { pageViolations, violations } from "./support/workspace";
 
 const signedOut = { cookies: [], origins: [] };

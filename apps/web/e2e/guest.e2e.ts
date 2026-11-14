@@ -2,12 +2,11 @@
 // server, a folder opening into its list, the service links leaving with no referrer, view options kept for the
 // visit only, the owner's saves arriving live, preview tags, and the unavailable sentence once the link is off.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, insert, live, saved, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

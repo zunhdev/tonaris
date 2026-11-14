@@ -2,12 +2,11 @@
 // focused list to Trash at once, its album entering Unsorted, and Undo brings it back; a folder asks first, with its
 // hierarchy, Cancel focused; Editing mode's header deletes the list on view. Each test has its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, insert, live, saved, toasts } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

@@ -5,10 +5,9 @@
 // saving into the current list, and asking before discarding; and an album's own page. Each test signs in with its
 // own account.
 
-import { expect, test, type Locator, type Page } from "@playwright/test";
-
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Locator, type Page } from "./support/test";
 import {
   added,
   album,

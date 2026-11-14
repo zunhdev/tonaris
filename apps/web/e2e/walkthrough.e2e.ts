@@ -3,14 +3,13 @@
 // and the focus ring shows; focus never goes round a page; dialogs keep focus inside and give it back on Escape; and
 // axe finds nothing. The screen-reader passes on real devices follow docs/accessibility-walkthrough.md.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7 } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { faults, tabThrough, tabTo, tabWithin } from "./support/keyboard";
 import { clearInbox, signInEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import {
   added,
   album,

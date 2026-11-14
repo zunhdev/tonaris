@@ -1,7 +1,7 @@
 // A page whose build files fail to load, as when a deploy's other server answers for them, reloads itself once
 // (TON-179). The server's side, a 404 that nothing caches, is in server.ts, which these tests don't run.
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./support/test";
 
 /** Counts the page's documents: the first load and every reload. */
 function countDocuments(page: Page) {

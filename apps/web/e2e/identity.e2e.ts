@@ -1,10 +1,9 @@
 // The identity in a real browser (TON-114, TON-154, DS-19): the mark and the name on the sign-in page and in the
 // sidebar, and the icons the page names served from the web app.
 
-import { expect, test } from "@playwright/test";
-
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test } from "./support/test";
 import { live } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

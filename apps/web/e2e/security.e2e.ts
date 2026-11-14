@@ -1,9 +1,8 @@
 // The web app's security headers in the browser (TS-101): the CSP with its per-request nonce, enforced, and the
 // other headers on every page.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { apiUrl, nobody } from "./support/accounts";
+import { expect, type Page, test } from "./support/test";
 
 const signedOut = { cookies: [], origins: [] };
 
@@ -90,21 +89,26 @@ test.describe("the CSP in the browser", () => {
       });
     }
 
-    test("an inline script without the nonce doesn't run", async ({ page }) => {
-      const violations = await watchViolations(page);
-      await page.goto("/sign-in");
-      const ran = await page.evaluate(() => {
-        const script = document.createElement("script");
-        script.textContent = "window.injected = true";
-        document.body.append(script);
-        return "injected" in window;
+    test.describe("a script without the nonce", () => {
+      // The violation is what this test checks for.
+      test.use({ cspViolations: "expected" });
+
+      test("an inline script without the nonce doesn't run", async ({ page }) => {
+        const violations = await watchViolations(page);
+        await page.goto("/sign-in");
+        const ran = await page.evaluate(() => {
+          const script = document.createElement("script");
+          script.textContent = "window.injected = true";
+          document.body.append(script);
+          return "injected" in window;
+        });
+        expect(ran).toBe(false);
+        await expect
+          .poll(async () =>
+            (await violations()).map((violation) => violation.split(" ", 2).join(" ")),
+          )
+          .toEqual(["script-src-elem inline"]);
       });
-      expect(ran).toBe(false);
-      await expect
-        .poll(async () =>
-          (await violations()).map((violation) => violation.split(" ", 2).join(" ")),
-        )
-        .toEqual(["script-src-elem inline"]);
     });
   });
 

@@ -3,13 +3,12 @@
 // the account's guest link is unavailable at once; its address signs in to nothing; Cancel changes nothing; and
 // the creator has no Delete account.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { shareSettingsSchema, uuidv7 } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { latestEmail } from "./support/mailpit";
 import { requestCode, signIn } from "./support/sign-in";
+import { expect, type Page, test } from "./support/test";
 import { created, live, pageViolations, violations, webOrigin } from "./support/workspace";
 
 async function send(page: Page, name: string, args: Record<string, unknown>) {

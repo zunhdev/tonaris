@@ -4,10 +4,9 @@
 // Escape gives the focus back to the row. In Editing mode, the header's Rename opens the name's editor in the
 // sidebar. The "+" beside Collection makes them at the top level. Each test signs in with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, list, live, saved, toasts, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

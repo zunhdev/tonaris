@@ -3,12 +3,11 @@
 // what the device remembers, the fade a page switch brings, and each view and album opening at its top. Each test
 // signs in with its own account.
 
-import { expect, test, type Locator, type Page } from "@playwright/test";
-
 import { uuidv7, type Album } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Locator, type Page } from "./support/test";
 import {
   added,
   created,

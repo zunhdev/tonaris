@@ -1,8 +1,7 @@
 // Admin → Operations in a real browser (TS-115; TON-91): the creator sees where the backups are (Render's, TS-112)
 // and that no job gave up, and can send a test error, which, without a Sentry key here, the API only logs.
 
-import { expect, test } from "@playwright/test";
-
+import { expect, test } from "./support/test";
 import { violations } from "./support/workspace";
 
 test("the creator sees the backups and failed jobs, and can send a test error", async ({

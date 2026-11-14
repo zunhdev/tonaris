@@ -2,12 +2,11 @@
 // where to go, and Cancel leaves it in Trash; a list whose name was taken meanwhile asks for another, and nothing is
 // renamed for the owner. Undo is the recovery here; the Trash view joins with TON-59. Each test has its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { insert, live, saved, toasts } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

@@ -3,12 +3,11 @@
 // Cyrillic found by Latin letters; "Show all"; Trash and descriptions left out; opening folders, lists and albums, on
 // their own with ⌘Enter; and the full-screen sheet on a narrow screen. Each test has its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, insert, live, saved, toasts, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

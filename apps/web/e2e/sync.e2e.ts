@@ -4,9 +4,8 @@
 // rules refuse, and Chromium then fails the fetch. The sync client itself is tested in Bun (src/client/sync);
 // this checks what Bun can't: the browser's CORS, cookies and streaming fetch.
 
-import { expect, test } from "@playwright/test";
-
 import { apiUrl } from "./support/accounts";
+import { expect, test } from "./support/test";
 
 test("a signed-in page streams changes and writes a mutation across origins", async ({ page }) => {
   await page.goto("/c");

@@ -2,12 +2,11 @@
 // asks first, naming its lists; confirmed, it leaves every list and Unsorted for Trash. The inspector's Editing mode
 // has the same action, in its header beside Close (TON-162). Restoring arrives with the Trash view (TON-59).
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, applePlatform, insert, live, saved } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

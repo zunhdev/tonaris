@@ -2111,6 +2111,7 @@ Automated: Playwright engines nightly. Manual: an AT walkthrough checklist per m
   - `bun install --frozen-lockfile`
   - `oxfmt --check`, `oxlint` (type-aware), and `tsc --noEmit` per package (TypeScript 7)
   - the workspace rules
+  - `bun run check:refs`: rule IDs, paths, commands, error codes, unarchived changes and text limits counted in UTF-16 units (since TON-222)
   - `openspec validate --all --strict`
   - `drizzle-kit check` plus a no-diff `generate`
   - the regenerated OpenAPI diffed against `apps/api/openapi/v1.json`, plus, on pull requests, `oasdiff breaking` against the base branch's document

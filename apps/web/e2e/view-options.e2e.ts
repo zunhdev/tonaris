@@ -4,12 +4,11 @@
 // in Settings → Preferences, the root and the tree in the same sort, and a layout kept on the device moving to the
 // account. Each test signs in with its own account.
 
-import { expect, test, type Locator, type Page } from "@playwright/test";
-
 import { bootstrapSchema, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Locator, type Page } from "./support/test";
 import {
   added,
   album,

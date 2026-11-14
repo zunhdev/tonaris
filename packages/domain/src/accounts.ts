@@ -1,6 +1,7 @@
 // Accounts (FR-11): how an email address identifies an account, the roles, and the signed-in account as every
 // client sees it (`GET /v1/me`).
 
+import { textSchema } from "./names";
 import { z } from "./zod";
 
 /** The sign-in code rules (TS-70): 6 digits, valid for 10 minutes, single-use, with 5 attempts. */
@@ -66,6 +67,7 @@ export const termsVersion = "2026-11-02";
 /** `POST /v1/me/terms`: the version of the texts the person was shown and agreed to. */
 export const termsAgreementSchema = z
   .object({
+    // ASCII: a terms version, not a person's text (DRIFT-103).
     version: z.string().max(32).meta({ description: "The version the person agreed to." }),
   })
   .meta({ description: "An agreement to the terms of use and privacy notice." });
@@ -110,6 +112,7 @@ export type EmailChange = z.infer<typeof emailChangeSchema>;
  * An email address as a person types it: trimmed, not empty, and at most 320 characters. Whether it is an address
  * at all is checked where it is used. Each request describes it in its own words.
  */
+// ASCII: an address, bounded in octets as RFC 5321 does, not a person's text (DRIFT-103).
 export const emailInputSchema = z.string().trim().min(1).max(320);
 
 /** Starts a change to `newEmail`; a change in progress is replaced. */
@@ -118,6 +121,7 @@ export const emailChangeStartSchema = z.object({
 });
 
 /** A step's code, from its email. */
+// ASCII: a code, not a person's text (DRIFT-103).
 export const emailChangeCodeSchema = z.object({ code: z.string().min(1).max(32) });
 
 /** What a right code leads to: the new address's step, or the change done. */
@@ -164,16 +168,17 @@ export type Member = z.infer<typeof memberSchema>;
 /** Starts recovering a member's sign-in email: the new address, why, and whether AI connections end too. */
 export const emailRecoveryStartSchema = z.object({
   newEmail: emailInputSchema,
-  reason: z
-    .string()
-    .max(maxRecoveryReasonLength)
-    .meta({ description: "Why the creator recovers it, for the audit log." }),
+  reason: textSchema(maxRecoveryReasonLength).meta({
+    description: "Why the creator recovers it, for the audit log.",
+  }),
   disconnectConnections: z.boolean(),
 });
 
 /** Confirms a recovery from its email: the link's token and the code. */
 export const emailRecoveryConfirmSchema = z.object({
+  // ASCII: a token, not a person's text (DRIFT-103).
   token: z.string().min(1).max(200),
+  // ASCII: a code, not a person's text (DRIFT-103).
   code: z.string().min(1).max(32),
 });
 
@@ -216,6 +221,7 @@ export const accountDeletionConfirmSchema = z.object({
 });
 
 /** The token that follows a deletion once its session is gone. */
+// ASCII: a token, not a person's text (DRIFT-103).
 export const accountDeletionTokenSchema = z.object({ token: z.string().min(1).max(200) });
 
 /** A deletion's progress. */

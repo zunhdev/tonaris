@@ -1,11 +1,10 @@
 // The terms of use and the privacy notice (TON-131): public pages reached from sign-in, what YouTube's policies ask of
 // them, and the one-time agreement screen a member from before the terms meets. Joining's line is in admission.e2e.ts.
 
-import { expect, test } from "@playwright/test";
-
 import { accounts } from "./support/accounts";
 import { signInEmail } from "./support/mailpit";
 import { requestCode } from "./support/sign-in";
+import { expect, test } from "./support/test";
 import { live, pageViolations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

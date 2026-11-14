@@ -3,6 +3,7 @@
 // same way.
 
 import { nameKey } from "./normalize";
+import { z } from "./zod";
 
 /**
  * Whether `text` is longer than `limit`, counted in code points rather than graphemes: limits bound stored text
@@ -20,6 +21,18 @@ export function exceedsLength(text: string, limit: number): boolean {
 export function clipLength(text: string, limit: number): string {
   // oxlint-disable-next-line no-misused-spread
   return exceedsLength(text, limit) ? [...text].slice(0, limit).join("") : text;
+}
+
+/**
+ * A person's text of at most `limit` code points, as every text limit counts (TS-18). A string schema's own max counts
+ * UTF-16 units, which stops emoji-rich text short (TON-151), so `check:refs` flags it outside machine strings
+ * (DRIFT-103). JSON Schema's `maxLength` counts code points too, so the contract says the same.
+ */
+export function textSchema(limit: number) {
+  return z
+    .string()
+    .refine((text) => !exceedsLength(text, limit), { message: `At most ${limit} characters` })
+    .meta({ maxLength: limit });
 }
 
 /** Blank names are invalid (X-06): empty, or only whitespace. */

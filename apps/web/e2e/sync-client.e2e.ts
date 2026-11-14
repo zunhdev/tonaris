@@ -2,8 +2,6 @@
 // BroadcastChannel between tabs, and a page reloaded mid-write. The production build exposes its client to these
 // tests (`TEST_HOOKS`), which drive its collections as the UI will. Each test signs in with its own account.
 
-import { expect, type BrowserContext, type Page, test } from "@playwright/test";
-
 import {
   accountSchema,
   bootstrapSchema,
@@ -15,6 +13,7 @@ import {
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, type BrowserContext, type Page, test } from "./support/test";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 

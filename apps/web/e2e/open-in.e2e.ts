@@ -4,12 +4,11 @@
 // the apps, the chooser and the inspector open the services' apps (TON-104); and a list's cards and rows name the
 // album's services, each a link to it (TON-105). Each test signs in with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { streamingServices, type Album, type StreamingService } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, created, live, saved, toasts, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

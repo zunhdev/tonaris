@@ -4,12 +4,11 @@
 // an ellipsis, and never overlap other text (support/text-fit.ts). Each of these broke once and was found by hand
 // (TON-152, TON-156, TON-165, TON-180).
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { maxAlbumTextLength, maxNameLength, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, type Page, test } from "./support/test";
 import { textProblems } from "./support/text-fit";
 import { added, album, list, live, pageFaded } from "./support/workspace";
 

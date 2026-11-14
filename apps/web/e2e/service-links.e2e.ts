@@ -4,10 +4,9 @@
 // services turned off in Settings leave the panel's and the form's empty fields, while saved links stay (TON-138).
 // Each test signs in with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, created, live, saved, toasts, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
