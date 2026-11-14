@@ -10,7 +10,7 @@ import { useSaveActions } from "@/features/sync/save-actions";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { uuidv7, type ContainerKind } from "@tonaris/domain";
+import { clipLength, maxNameLength, uuidv7, type ContainerKind } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useCollectionMode } from "./collection-mode";
@@ -151,9 +151,9 @@ export function NameEditor({
           aria-invalid={refusal !== undefined}
           aria-describedby={refusal === undefined ? undefined : errorId}
           value={name}
-          maxLength={400}
           onChange={(event) => {
-            setName(event.target.value);
+            // At most 200 characters, counted as the domain counts them, in code points (TS-18, DRIFT-047).
+            setName(clipLength(event.target.value, maxNameLength));
             setRefusal(undefined);
           }}
           onKeyDown={(event) => {

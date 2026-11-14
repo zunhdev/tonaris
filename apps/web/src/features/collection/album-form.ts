@@ -19,7 +19,7 @@ import {
   type StreamingService,
 } from "@tonaris/domain";
 
-import { cellNames, cellText, formatRefusal, parseYears } from "./album-edit";
+import { albumProblemText, cellNames, cellText, formatRefusal, parseYears } from "./album-edit";
 import { checkLink } from "./link-check";
 
 /** The form as typed. Years are text until saved. */
@@ -149,9 +149,7 @@ function albumFieldsOf(form: AlbumForm): Omit<Album, "id"> {
 /** What is wrong with each field, by field; empty when the form can be saved. */
 export function formProblems(form: AlbumForm): Partial<Record<FormField, string>> {
   const problems: Partial<Record<FormField, string>> = {};
-  if (form.title.trim() === "") problems.title = "Give the album a title.";
-  if (form.artistCredit.trim() === "") problems.artistCredit = "Give the album an artist.";
-
+  // Here only what the form itself reads: years as typed, links. What an album needs is the domain's, below.
   const original = form.originalYear.trim();
   const originalYears = original === "" ? undefined : parseYears(original);
   if (original !== "" && (!originalYears || originalYears.end !== null)) {
@@ -160,16 +158,6 @@ export function formProblems(form: AlbumForm): Partial<Record<FormField, string>
   const recording = form.isLive ? form.recording.trim() : "";
   const recordingYears = recording === "" ? undefined : parseYears(recording);
   if (recording !== "" && !recordingYears) problems.recording = formatRefusal;
-  else if (recordingYears?.end != null && recordingYears.end < recordingYears.start) {
-    problems.recording = "The recording period ends before it starts.";
-  }
-
-  // FR-02.6: the original year, or for a live album, its recording year instead.
-  if (original === "" && recording === "") {
-    problems.originalYear = form.isLive
-      ? "Give the album its recording year or its release year."
-      : "Give the album its original release year.";
-  }
   const artwork = form.artworkUrl.trim();
   if (artwork !== "" && !isArtworkUrl(artwork)) problems.artworkUrl = artworkUrlRefusal;
   for (const service of streamingServices) {
@@ -177,12 +165,15 @@ export function formProblems(form: AlbumForm): Partial<Record<FormField, string>
     if (reason !== undefined) problems[service] = reason;
   }
 
-  // The domain has the last word (X-05): each field it refuses shows why, unless a check above already does. A path
-  // the form has no field for shows at the first one, so a refusal is never silent.
-  const refusal = albumProblem(albumFieldsOf(form))?.problem;
-  for (const { path } of refusal?.errors ?? []) {
+  // The domain has the word on what an album needs (FR-02.6, X-05): each field it refuses shows why, unless a check
+  // above already does. A year typed in a shape the form can't read is that field's problem, not a missing year. A
+  // path the form has no field for shows at the first one, so a refusal is never silent (DRIFT-048).
+  const fields = albumFieldsOf(form);
+  const refusal = albumProblem(fields);
+  for (const { path } of refusal?.problem.errors ?? []) {
     const field = fieldOfPath.get(path) ?? "title";
-    problems[field] ??= refusal?.detail ?? "Check this field.";
+    if (field === "originalYear" && problems.recording) continue;
+    if (refusal) problems[field] ??= albumProblemText(refusal, path, fields);
   }
   return problems;
 }

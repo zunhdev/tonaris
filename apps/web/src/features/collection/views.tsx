@@ -54,7 +54,7 @@ import { useDeleteContainer } from "./delete-containers";
 import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
 import { ModeSwitch } from "./mode-switch";
-import { useStartNaming } from "./name-dialog";
+import { useStartNaming } from "./naming";
 import {
   ContainerLink,
   sharingRefusal,

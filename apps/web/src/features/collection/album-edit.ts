@@ -12,7 +12,28 @@ import {
   releaseTypes,
   type Album,
   type AlbumFields,
+  type Failure,
 } from "@tonaris/domain";
+
+/**
+ * What the domain's album rules (`albumProblem`, FR-02.6) say about the field at `path`, in the app's words: a
+ * required field by its name, a missing year as the album's kind needs it, anything else in the domain's own
+ * sentence. The form and the inline editors word them through here, so the rule stays the domain's (DRIFT-048).
+ */
+export function albumProblemText(
+  problem: Failure,
+  path: string,
+  album: Pick<AlbumFields, "isLive">,
+): string {
+  if (problem.code === "required_missing") {
+    if (path === "title") return "Give the album a title.";
+    if (path === "artistCredit") return "Give the album an artist.";
+    return album.isLive === true
+      ? "Give the album its recording year or its release year."
+      : "Give the album its original release year.";
+  }
+  return problem.problem.detail ?? formatRefusal;
+}
 
 /** A text editor: a row's cells (title, artist, year) and the inspector's years. */
 export type AlbumCell = "title" | "artistCredit" | "year" | "originalYear" | "recording";
@@ -82,15 +103,8 @@ export function parseYears(text: string): { start: number; end: number | null } 
 export function albumEdit(album: Album, cell: AlbumCell, text: string): AlbumEdit {
   const typed = text.trim();
   let values: Partial<AlbumFields>;
-  if (cell === "title" || cell === "artistCredit") {
-    if (typed === "") {
-      return {
-        kind: "refuse",
-        reason: cell === "title" ? "Give the album a title." : "Give the album an artist.",
-      };
-    }
-    values = { [cell]: typed };
-  } else if (isRecording(album, cell)) {
+  if (cell === "title" || cell === "artistCredit") values = { [cell]: typed };
+  else if (isRecording(album, cell)) {
     if (typed === "") values = { recordingYearStart: null, recordingYearEnd: null };
     else {
       const years = parseYears(typed);
@@ -129,13 +143,11 @@ function checked(album: Album, values: Partial<AlbumFields>): AlbumEdit {
     }
   }
   if (Object.keys(changed).length === 0) return { kind: "unchanged" };
-  const problem = albumProblem({ ...album, ...changed });
+  const after = { ...album, ...changed };
+  const problem = albumProblem(after);
   if (problem) {
-    const missingYear = problem.problem.errors?.some((error) => error.path === "originalYear");
-    return {
-      kind: "refuse",
-      reason: missingYear ? "Give the album a year." : (problem.problem.detail ?? formatRefusal),
-    };
+    const [first] = problem.problem.errors ?? [];
+    return { kind: "refuse", reason: albumProblemText(problem, first?.path ?? "", after) };
   }
   return { kind: "save", values: changed };
 }

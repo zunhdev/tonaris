@@ -362,7 +362,7 @@ test("Editing mode edits the chronology everywhere, and refuses leaving an album
   await live(page);
   const liveSwitch = inspector(page).getByRole("switch", { name: "Live" });
   await liveSwitch.click();
-  await expect(inspector(page)).toContainText("Give the album a year.");
+  await expect(inspector(page)).toContainText("Give the album its original release year.");
   await expect(liveSwitch).toBeChecked();
 
   // A malformed year stays in its field with the reason, and nothing is sent.

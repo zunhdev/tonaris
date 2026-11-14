@@ -274,7 +274,7 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
   - **Refusals** stay in the field, under the cell, and nothing is sent:
     - "Give the album a title.";
     - "Give the album an artist.";
-    - "Give the album a year.";
+    - "Give the album its original release year.", for a live album "Give the album its recording year or its release year." (the album form's words since TON-219: both word the domain's rule through `albumProblemText`);
     - "Enter the year as four digits, such as 1986.";
     - "The recording period ends before it starts."
   - **Offline,** cells don't open (DS-81).
@@ -760,7 +760,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
 - **Viewing mode** shows the values. **Editing mode** makes them editors:
   - **title, artist, original year and recording year or range:** fields that save on Enter or leaving them and discard on Escape, as one `album.update` (TS-21);
   - **release type** (a segmented control) and **Live** (a switch): saved as chosen.
-  - **Refusals** stay with their reason and send nothing, as in DS-45. Switching Live off for an album with only a recording year reads "Give the album a year.", and Live stays on.
+  - **Refusals** stay with their reason and send nothing, as in DS-45. Switching Live off for an album with only a recording year reads "Give the album its original release year.", and Live stays on.
   - **Leaving Editing mode** saves open fields, or stays for a refused one (DS-45). Offline, the editors are read-only, with "You're offline. Changes can wait until the connection is back."
 - **The sort hints:** "Sorts by its original release year.", "Sorts by its recording year." or "Sorts by its release year, as the recording year is unknown."
 - **Links and Custom fields** show a line each until their features arrive: "Links to Spotify, Apple Music, Qobuz and Tidal arrive with link capture." and "Custom fields arrive in a later version." Links arrived in TON-46, and custom fields in TON-50 (below).

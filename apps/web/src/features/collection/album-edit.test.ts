@@ -56,7 +56,7 @@ describe("the year (DS-24)", () => {
     });
     expect(albumEdit(album(), "year", "")).toEqual({
       kind: "refuse",
-      reason: "Give the album a year.",
+      reason: "Give the album its original release year.",
     });
     const format = {
       kind: "refuse",
@@ -99,7 +99,7 @@ describe("the year (DS-24)", () => {
     });
     expect(albumEdit(live({ originalYear: null }), "year", "")).toEqual({
       kind: "refuse",
-      reason: "Give the album a year.",
+      reason: "Give the album its recording year or its release year.",
     });
   });
 
@@ -133,7 +133,7 @@ describe("the inspector's chronology (DS-46)", () => {
     });
     expect(albumEdit(album(), "originalYear", "")).toEqual({
       kind: "refuse",
-      reason: "Give the album a year.",
+      reason: "Give the album its original release year.",
     });
   });
 
@@ -141,7 +141,7 @@ describe("the inspector's chronology (DS-46)", () => {
     const recordedOnly = live({ originalYear: null });
     expect(albumChoice(recordedOnly, { isLive: false })).toEqual({
       kind: "refuse",
-      reason: "Give the album a year.",
+      reason: "Give the album its original release year.",
     });
     expect(albumChoice(album(), { isLive: true })).toEqual({
       kind: "save",
