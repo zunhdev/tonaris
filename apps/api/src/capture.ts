@@ -6,7 +6,7 @@
 
 import {
   albumsSeenBy,
-  captureCollection,
+  captureOwnerOf,
   agreedToTerms,
   findLinkedAlbum,
   mergeCandidates,
@@ -100,8 +100,10 @@ export async function prepareCapture(
   if (!deps) return { outcome: unavailable };
   const userId = actingUserId(principal);
   if (!userId) return { outcome: failure("permission_denied", "You can't add albums here.") };
-  // Matched against the collection it saves to: an editor's capture into a share, the owner's (FR-07.19).
-  const ownerId = await captureCollection(db, userId, args.listId);
+  // Matched against the collection it saves to: an editor's capture into a share, the owner's (FR-07.19). A list it
+  // can't save to refuses here, by the command's rule, before the link is looked up (DRIFT-019).
+  const ownerId = await captureOwnerOf(db, principal, args.listId);
+  if (typeof ownerId !== "string") return { outcome: ownerId };
   // An editor's capture never finds the owner's Trash, which is the owner's to restore from (FR-07.20).
   const editor = ownerId !== userId;
   try {

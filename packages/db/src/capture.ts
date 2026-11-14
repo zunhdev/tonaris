@@ -4,7 +4,14 @@
 
 import { and, asc, count, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 
-import { albumSeenBy, latinKey, maxMergeCandidates } from "@tonaris/domain";
+import {
+  albumSeenBy,
+  captureOwner,
+  latinKey,
+  maxMergeCandidates,
+  type Failure,
+  type Principal,
+} from "@tonaris/domain";
 
 import { readSnapshot, type Database } from "./client";
 import { albums, mutations } from "./schema";
@@ -30,6 +37,19 @@ export async function savedAlbumsOf(
     if (releaseGroupId && !saved.has(releaseGroupId)) saved.set(releaseGroupId, albumId);
   }
   return saved;
+}
+
+/**
+ * Whose collection a capture into `listId` saves to, by the command's own rule (`captureOwner`), or why it can't
+ * save: the API asks before it looks the link up, so a list in Trash or one the person only views refuses without a
+ * MusicBrainz request (DRIFT-019).
+ */
+export function captureOwnerOf(
+  db: Database,
+  principal: Principal,
+  listId: string | null,
+): Promise<string | Failure> {
+  return readSnapshot(db, (tx) => captureOwner(listId, { principal, store: collectionStore(tx) }));
 }
 
 /**

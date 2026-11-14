@@ -149,24 +149,6 @@ export async function canEditAlbum(
 }
 
 /**
- * Whose collection a capture into `listId` saves to, as the API prepares it before the lock (FR-07.19): the list's
- * owner's when `userId` may edit it, else their own, where the command refuses a list that isn't theirs.
- */
-export async function captureCollection(
-  db: Executor,
-  userId: string,
-  listId: string | null,
-): Promise<string> {
-  if (listId === null) return userId;
-  const [row] = await db
-    .select({ ownerId: containers.ownerId })
-    .from(containers)
-    .where(eq(containers.id, listId));
-  if (!row || row.ownerId === userId) return userId;
-  return (await canEditContainer(db, userId, listId)) ? row.ownerId : userId;
-}
-
-/**
  * The viewer's role on the container `id` (FR-07.18, `roleOn` in packages/domain): edit, view, or none. A link's guest
  * only ever views.
  */

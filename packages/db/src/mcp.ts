@@ -6,6 +6,7 @@
 import { and, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import {
+  albumSeenBy,
   deletedListsOf,
   deletionTargetsOf,
   editsInsideShare,
@@ -13,13 +14,14 @@ import {
   type DeletionTargets,
 } from "@tonaris/domain";
 
-import { canEditAlbum, canEditContainer, editSourcesAbove } from "./access";
+import { canEditContainer, editSourcesAbove } from "./access";
 import { albumsOfReleaseGroupIn } from "./album-writes";
 import type { Database, Executor, Transaction } from "./client";
 import { activeListsOf, inActiveList } from "./columns";
 import { recordInLedger } from "./ledger";
 import { albums, containers, memberships, oauthClients, oauthConsents, trashUnits } from "./schema";
 import { impactState } from "./sharing-impact";
+import { collectionStore } from "./store";
 import { endConnections } from "./teardowns";
 
 export type ConnectionRow = {
@@ -322,8 +324,10 @@ export async function sharedDeletionTargets(
 
 /**
  * Where an editor's confirmed match into the shared list `listId` goes, as they may know it (FR-07.20; TON-200): the
- * list's name, and the owner's saved album of `releaseGroupId` only when they can edit it already, with only the lists
- * they edit; otherwise it reads as a new album, as the capture answers. Undefined when it isn't a list they edit.
+ * list's name, and the owner's saved album of `releaseGroupId` only when they see it already, by the domain's rule
+ * (`albumSeenBy`), with only the lists they edit; otherwise it reads as a new album. The capture reuses an album they
+ * see, and the app shows it as saved, so the approval says so too (DRIFT-054). Undefined when it isn't a list they
+ * edit.
  */
 export async function sharedMatchTarget(
   tx: Transaction,
@@ -339,7 +343,7 @@ export async function sharedMatchTarget(
     return undefined;
   }
   const saved = await savedAlbumOfReleaseGroup(tx, { ownerId: list.ownerId, releaseGroupId });
-  if (!saved || !(await canEditAlbum(tx, userId, saved.id))) {
+  if (!saved || !(await albumSeenBy(collectionStore(tx), userId, saved.id))) {
     return { listName: list.name, saved: undefined };
   }
   const editable: { id: string; name: string }[] = [];

@@ -134,9 +134,9 @@ export {
   type PendingApprovals,
 } from "./approvals";
 export {
-  albumSeenBy,
   captureArgsSchema,
   captureMatches,
+  captureOwner,
   captureResultSchema,
   missingYearReason,
   type AlbumOrigin,
@@ -218,7 +218,7 @@ export {
   type LinkRef,
   type StreamingService,
 } from "./links";
-export { membershipKey, membershipSchema, type Membership } from "./memberships";
+export { albumSeenBy, membershipKey, membershipSchema, type Membership } from "./memberships";
 export {
   fieldValueDataSchema,
   fieldValueKey,

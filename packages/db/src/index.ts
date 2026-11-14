@@ -60,7 +60,13 @@ export {
   type ApprovalRow,
   type ApprovalUse,
 } from "./approvals";
-export { albumsSeenBy, capturesSince, mergeCandidates, savedAlbumsOf } from "./capture";
+export {
+  albumsSeenBy,
+  captureOwnerOf,
+  capturesSince,
+  mergeCandidates,
+  savedAlbumsOf,
+} from "./capture";
 export { closeDatabase, createDatabase, type Database, type Transaction } from "./client";
 export {
   fieldDeletionIn,
@@ -154,7 +160,6 @@ export {
   canEditAlbum,
   canEditContainer,
   canReadContainer,
-  captureCollection,
   editableContainers,
   readableContainers,
   roleOn,

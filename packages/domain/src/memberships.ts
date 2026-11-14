@@ -4,6 +4,7 @@
 // owner's arrangement follows (DS-51): an album entering Unsorted goes to its top, and one leaving Unsorted or a list
 // loses its place there, so a new entry lands at the end of the list.
 
+import type { CollectionStore } from "./collection-store";
 import { applied, contentAccess, isFailure, type ContentAccess } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
@@ -61,15 +62,22 @@ export function membershipLimitProblem(): Failure {
 }
 
 /**
- * Whether the person sees the album in someone else's collection: it is in an active list they may read. An editor
- * adds to a list only albums they see, so no other album of the owner's is reached by its ID (FR-07.20).
+ * Whether the person sees the owner's album: it is in an active list they may read (FR-07.20). What an editor's
+ * capture shows and reports of the owner's albums follows it, before the lock (apps/api/src/capture.ts, through
+ * `albumsSeenBy` in packages/db) and under it, so the two agree (DRIFT-019).
  */
-async function seesAlbum(context: CommandContext, userId: string, albumId: string) {
-  for (const { listId } of await context.store.entriesOfAlbum(albumId)) {
+export async function albumSeenBy(
+  store: Pick<CollectionStore, "findAlbum" | "entriesOfAlbum" | "findContainer" | "canReadShared">,
+  userId: string,
+  albumId: string,
+): Promise<boolean> {
+  const album = await store.findAlbum(albumId);
+  if (!album || album.trashed) return false;
+  for (const { listId } of await store.entriesOfAlbum(albumId)) {
     // oxlint-disable-next-line no-await-in-loop
-    const list = await context.store.findContainer(listId);
+    const list = await store.findContainer(listId);
     // oxlint-disable-next-line no-await-in-loop
-    if (list && !list.trashed && (await context.store.canReadShared(userId, listId))) return true;
+    if (list && !list.trashed && (await store.canReadShared(userId, listId))) return true;
   }
   return false;
 }
@@ -90,8 +98,10 @@ async function entryOwner(
   const unknown = failure("not_found", "This album isn't in your collection.");
   if (!album || album.ownerId !== list.ownerId) return unknown;
   const userId = actingUserId(context.principal);
+  // An editor adds only albums they see, so no other album of the owner's is reached by its ID, and one in the owner's
+  // Trash reads as unknown too: the owner's Trash is theirs alone (FR-07.20, DRIFT-053).
   if (!anyAlbum && userId !== undefined && userId !== album.ownerId) {
-    if (!(await seesAlbum(context, userId, albumId))) return unknown;
+    if (!(await albumSeenBy(context.store, userId, albumId))) return unknown;
   }
   if (album.trashed) {
     return failure("trashed", "This album is in Trash. Recover it to put it in lists.");
