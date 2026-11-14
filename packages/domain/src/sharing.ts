@@ -12,8 +12,8 @@ import { actingOwner, applied, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { containerFieldsSchema, containerKinds, containerSchema } from "./containers";
 import { base64url } from "./encoding";
-import { fieldValueSchema } from "./field-values";
-import { customFieldSchema } from "./fields";
+import { fieldValueSchema, type FieldValue } from "./field-values";
+import { customFieldSchema, isChoiceType, type CustomField } from "./fields";
 import { maxNameLength, maxSavedReferences } from "./limits";
 import { membershipSchema } from "./memberships";
 import { exceedsLength, isBlankName } from "./names";
@@ -771,3 +771,33 @@ export const sharedWithMeSchema = z.object({ entries: z.array(sharedEntrySchema)
 
 /** `GET /v1/s/{token}/reference`: whether a signed-in visitor keeps this link's collection, or owns it (DS-68). */
 export const linkReferenceStateSchema = z.object({ saved: z.boolean(), own: z.boolean() });
+
+/**
+ * The owner's fields a viewer of a share sees (FR-07.12): only those its albums use, each with only the options they
+ * choose, in the owner's order. An editor gets them all, to set (FR-07.20). The snapshot's read applies it.
+ */
+export function fieldsShownWith(
+  fields: readonly CustomField[],
+  values: readonly Pick<FieldValue, "fieldId" | "value">[],
+): CustomField[] {
+  const used = new Set(values.map((each) => each.fieldId));
+  const choice = new Set(
+    fields.filter((field) => isChoiceType(field.type)).map((field) => field.id),
+  );
+  // A choice field's value is its option's ID, or a multiple choice's IDs.
+  const chosen = new Set(
+    values
+      .filter(({ fieldId }) => choice.has(fieldId))
+      .flatMap(({ value }) =>
+        Array.isArray(value) ? value : typeof value === "string" ? [value] : [],
+      ),
+  );
+  return fields
+    .filter((field) => used.has(field.id))
+    .map(({ id, name, type, options }) => ({
+      id,
+      name,
+      type,
+      options: options.filter((option) => chosen.has(option.id)),
+    }));
+}

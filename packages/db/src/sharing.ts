@@ -5,12 +5,11 @@
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import {
-  isChoiceType,
+  fieldsShownWith,
   openGrantStatuses,
   shareTokenHash,
   shownEmailStatus,
   type ContainerFields,
-  type CustomField,
   type ServiceLink,
   type SharedEntry,
   type SharedSnapshot,
@@ -34,14 +33,12 @@ import {
   membershipOf,
   serviceLinkColumns,
 } from "./columns";
-import { valuesOfAlbums } from "./field-values";
+import { fieldsOfAccount, valuesOfAlbums } from "./field-values";
 import { ancestorsCte, descendantsCte } from "./hierarchy";
 import {
   albums,
   albumServiceLinks,
   containers,
-  fieldDefinitions,
-  fieldOptions,
   memberships,
   savedReferences,
   shareGrants,
@@ -132,77 +129,15 @@ export function sharedSnapshot(
       albums: shownAlbums,
       memberships: entries.map(membershipOf),
       links,
-      fields:
-        role === "edit" && owner
-          ? await allFields(tx, owner.id)
-          : await usedFields(tx, fieldValues),
+      // All the owner's fields for an editor to set (FR-07.20); a viewer's are those the albums use (FR-07.12).
+      fields: owner
+        ? role === "edit"
+          ? await fieldsOfAccount(tx, owner.id)
+          : fieldsShownWith(await fieldsOfAccount(tx, owner.id), fieldValues)
+        : [],
       fieldValues,
     };
   });
-}
-
-/** All the owner's fields with all their options, for an editor to set (FR-07.20). */
-async function allFields(tx: Transaction, ownerId: string): Promise<CustomField[]> {
-  const definitions = await tx
-    .select({ id: fieldDefinitions.id, name: fieldDefinitions.name, type: fieldDefinitions.type })
-    .from(fieldDefinitions)
-    .where(eq(fieldDefinitions.ownerId, ownerId))
-    .orderBy(asc(fieldDefinitions.id));
-  if (definitions.length === 0) return [];
-  const options = await tx
-    .select({ id: fieldOptions.id, fieldId: fieldOptions.fieldId, label: fieldOptions.label })
-    .from(fieldOptions)
-    .where(
-      inArray(
-        fieldOptions.fieldId,
-        definitions.map(({ id }) => id),
-      ),
-    )
-    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
-  const byField = Map.groupBy(options, (option) => option.fieldId);
-  return definitions.map(({ id, name, type }) => ({
-    id,
-    name,
-    type,
-    options: (byField.get(id) ?? []).map((option) => ({ id: option.id, label: option.label })),
-  }));
-}
-
-/** The fields `values` use, each with only the options they choose (FR-07.12). */
-async function usedFields(
-  tx: Transaction,
-  values: SharedSnapshot["fieldValues"],
-): Promise<CustomField[]> {
-  const fieldIds = [...new Set(values.map((each) => each.fieldId))];
-  if (fieldIds.length === 0) return [];
-  const definitions = await tx
-    .select({ id: fieldDefinitions.id, name: fieldDefinitions.name, type: fieldDefinitions.type })
-    .from(fieldDefinitions)
-    .where(inArray(fieldDefinitions.id, fieldIds))
-    .orderBy(asc(fieldDefinitions.id));
-  const choice = new Set(definitions.filter(({ type }) => isChoiceType(type)).map(({ id }) => id));
-  // A choice field's value is its option's ID, or a multiple choice's IDs.
-  const chosen = new Set(
-    values
-      .filter(({ fieldId }) => choice.has(fieldId))
-      .flatMap(({ value }) =>
-        Array.isArray(value) ? value : typeof value === "string" ? [value] : [],
-      ),
-  );
-  const options = await tx
-    .select({ id: fieldOptions.id, fieldId: fieldOptions.fieldId, label: fieldOptions.label })
-    .from(fieldOptions)
-    .where(inArray(fieldOptions.fieldId, fieldIds))
-    .orderBy(sql`${fieldOptions.sortKey} collate "C"`, asc(fieldOptions.id));
-  const byField = Map.groupBy(options, (option) => option.fieldId);
-  return definitions.map(({ id, name, type }) => ({
-    id,
-    name,
-    type,
-    options: (byField.get(id) ?? [])
-      .filter((option) => chosen.has(option.id))
-      .map((option) => ({ id: option.id, label: option.label })),
-  }));
 }
 
 /** A folder's or list's sharing as its owner's dialog shows it (DS-65), with the live link's ID for the API's URL. */

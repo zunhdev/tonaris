@@ -14,7 +14,7 @@ import {
   type ContentAccess,
 } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
-import { exceedsMaxDepth } from "./container-tree";
+import { exceedsMaxDepth, moveCheck } from "./container-tree";
 import { maxContainerDepth, maxContainers, maxDescriptionLength, maxNameLength } from "./limits";
 import { exceedsLength, findNameConflict, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
@@ -324,10 +324,11 @@ export async function moveContainer(
   }
   const path = await destinationPath(parentId, container.ownerId, store);
   if (isFailure(path)) return path;
-  if (path.includes(id)) {
+  const problem = moveCheck(path, id, await store.subtreeDepth(id));
+  if (problem === "cycle") {
     return failure("cycle", "A folder can't move into itself or a folder inside it.");
   }
-  if (exceedsMaxDepth(path.length, await store.subtreeDepth(id))) return tooDeep();
+  if (problem === "too_deep") return tooDeep();
   const { ownerId, name } = container;
   const taken = await siblingConflict(name, { ownerId, parentId, selfId: id }, store);
   if (taken) return taken;

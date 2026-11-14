@@ -4,7 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { mutations, provenanceOf, readChanges, shareGrants, trashUnits } from "@tonaris/db";
+import { mutations, readChanges, shareGrants, trashUnits } from "@tonaris/db";
+import { provenanceOf } from "@tonaris/db/testing";
 import {
   batchResultSchema,
   bootstrapSchema,

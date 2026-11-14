@@ -135,6 +135,7 @@
       "dependencies": {
         "@tonaris/db": "workspace:*",
         "@tonaris/domain": "workspace:*",
+        "@tonaris/providers": "workspace:*",
         "ajv": "8.20.0",
         "ajv-formats": "3.0.1",
         "drizzle-orm": "1.0.0-rc.5",

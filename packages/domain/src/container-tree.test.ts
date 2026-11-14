@@ -4,12 +4,14 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  pathOf,
   chainOf,
+  moveCheck,
   moveProblem,
+  treeOf,
   rootsAmong,
   subtreeDepthOf,
   subtreeOf,
-  treeOf,
 } from "./container-tree";
 import { maxContainerDepth } from "./limits";
 
@@ -78,5 +80,33 @@ describe("moves and deletions, as the commands decide them (FR-01.4, FR-01.5, DR
 
   test("deleting several takes only the ones inside none of the others as roots", () => {
     expect(rootsAmong(tree, ["epic", "metal", "jazz", "gone"])).toEqual(["metal", "jazz"]);
+  });
+});
+
+describe("pathOf and moveCheck (DRIFT-057)", () => {
+  const tree = treeOf([
+    { id: "metal", parentId: null },
+    { id: "doom", parentId: "metal" },
+    { id: "loop-a", parentId: "loop-b" },
+    { id: "loop-b", parentId: "loop-a" },
+  ]);
+
+  test("a path runs from the top down, starts at the highest visible folder, and stops at a cycle", () => {
+    expect(pathOf(tree, "doom").map((each) => each.id)).toEqual(["metal", "doom"]);
+    expect(pathOf(tree, "doom", new Set(["doom"])).map((each) => each.id)).toEqual(["doom"]);
+    expect(pathOf(tree, "loop-a").map((each) => each.id)).toEqual(["loop-b", "loop-a"]);
+    expect(pathOf(tree, "missing")).toEqual([]);
+  });
+
+  test("a move into itself is a cycle, and past the depth limit too deep", () => {
+    expect(moveCheck(["doom", "metal"], "metal", 1)).toBe("cycle");
+    expect(
+      moveCheck(
+        Array.from({ length: 32 }, (_, at) => `f${at}`),
+        "x",
+        1,
+      ),
+    ).toBe("too_deep");
+    expect(moveCheck(["metal"], "x", 2)).toBeUndefined();
   });
 });

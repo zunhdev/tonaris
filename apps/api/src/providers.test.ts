@@ -5,13 +5,9 @@ import { afterEach, beforeEach, expect, spyOn, test } from "bun:test";
 
 import { createTestDatabase, type TestDatabase } from "@tonaris/db/testing";
 import { ProviderUnavailableError } from "@tonaris/providers";
+import { spotifyHealthAlbum } from "@tonaris/providers";
 
-import {
-  apiSchedules,
-  runSchedule,
-  spotifyHealthAlbum,
-  spotifyHealthSchedule,
-} from "./jobs/schedules";
+import { apiSchedules, runSchedule, spotifyHealthSchedule } from "./jobs/schedules";
 import { createProviders } from "./providers";
 
 let t: TestDatabase;

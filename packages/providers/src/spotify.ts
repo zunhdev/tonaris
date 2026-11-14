@@ -57,33 +57,37 @@ export class Spotify {
 
   private async get(call: Call, kind: LinkKind, id: string): Promise<unknown> {
     if (!services.spotify.ids[kind].test(id)) return undefined;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      // A token refused once is fetched again, once.
-      // oxlint-disable-next-line no-await-in-loop
-      const token = await this.accessToken();
-      // oxlint-disable-next-line no-await-in-loop
-      const response = await this.send(call, `https://api.spotify.com/v1/${kind}s/${id}`, {
-        headers: { authorization: `Bearer ${token}`, accept: "application/json" },
-      });
-      if (response.status === 401 && attempt === 0) {
+    let response = await this.authorized(call, kind, id);
+    // A token refused once is fetched again, once; refused again, the bridge is unavailable.
+    if (response.status === 401) {
+      discard(response);
+      this.token = undefined;
+      response = await this.authorized(call, kind, id);
+      if (response.status === 401) {
         discard(response);
-        this.token = undefined;
-        continue;
+        throw new ProviderUnavailableError("spotify", `Spotify refused its token for ${call}`);
       }
-      if (response.status === 404 || response.status === 400) {
-        discard(response);
-        return undefined;
-      }
-      if (!response.ok) {
-        discard(response);
-        throw new ProviderUnavailableError(
-          "spotify",
-          `Spotify answered ${response.status} to ${call}`,
-        );
-      }
-      return readBody("spotify", response, "json", call);
     }
-    throw new ProviderUnavailableError("spotify", `Spotify refused its token for ${call}`);
+    if (response.status === 404 || response.status === 400) {
+      discard(response);
+      return undefined;
+    }
+    if (!response.ok) {
+      discard(response);
+      throw new ProviderUnavailableError(
+        "spotify",
+        `Spotify answered ${response.status} to ${call}`,
+      );
+    }
+    return readBody("spotify", response, "json", call);
+  }
+
+  /** One request with the current token. */
+  private async authorized(call: Call, kind: LinkKind, id: string): Promise<Response> {
+    const token = await this.accessToken();
+    return this.send(call, `https://api.spotify.com/v1/${kind}s/${id}`, {
+      headers: { authorization: `Bearer ${token}`, accept: "application/json" },
+    });
   }
 
   /** The client-credentials token, fetched again a minute before it expires. */
@@ -138,4 +142,23 @@ export class Spotify {
       this.queue.holdFor(retryAfterMs(response.headers.get("retry-after"), retry));
     }
   }
+}
+
+/** *Random Access Memories* on Spotify: an album with a UPC that won't go away. */
+export const spotifyHealthAlbum = "4m2880jivSbbyEGAKfITCa";
+
+/**
+ * TS-41's health check of the Spotify bridge: one Get Album call shows the token works (the owner's Premium
+ * subscription) and that a UPC still comes back. Answers what is wrong, naming no Spotify value, or undefined.
+ */
+export async function spotifyHealthProblem(
+  spotify: Pick<Spotify, "album">,
+): Promise<string | undefined> {
+  let upc: string | undefined;
+  try {
+    upc = (await spotify.album(spotifyHealthAlbum))?.upc;
+  } catch (error) {
+    return error instanceof Error ? error.message : "unknown error";
+  }
+  return upc ? undefined : "Get Album returned no UPC, so the bridge can't search barcodes";
 }

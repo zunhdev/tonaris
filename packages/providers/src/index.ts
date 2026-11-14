@@ -3,7 +3,12 @@
 
 export { describeAlbum } from "./album-facts";
 export { findCovers, type Cover } from "./covers";
-export { providerNames, ProviderUnavailableError, unavailableFailure } from "./errors";
+export {
+  couldNotReach,
+  providerNames,
+  ProviderUnavailableError,
+  unavailableFailure,
+} from "./errors";
 export {
   createIdentifier,
   identificationOutcome,
@@ -23,6 +28,7 @@ export {
   SafeFetchError,
   type SafeFetchInit,
 } from "./safe-fetch";
-export { Spotify } from "./spotify";
+export { Spotify, spotifyHealthAlbum, spotifyHealthProblem } from "./spotify";
 export { StorePages } from "./store-pages";
 export { YouTubeData } from "./youtube";
+export { albumUrl } from "./services";

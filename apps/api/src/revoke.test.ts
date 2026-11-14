@@ -4,7 +4,8 @@
 
 import { afterEach, beforeEach, expect, test } from "bun:test";
 
-import { canReadContainer, savedReferences } from "@tonaris/db";
+import { savedReferences } from "@tonaris/db";
+import { canReadContainer } from "@tonaris/db/testing";
 import {
   mutationResultSchema,
   shareSettingsSchema,

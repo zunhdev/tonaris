@@ -206,7 +206,8 @@ export async function prepareCapture(
     if (!outcome) throw new Error("An unidentified link always has an outcome");
     return { outcome };
   } catch (error) {
-    if (error instanceof ProviderUnavailableError) return { outcome: unavailable };
+    // The provider that couldn't answer, by name (DRIFT-114).
+    if (error instanceof ProviderUnavailableError) return { outcome: unavailableFailure(error) };
     throw error;
   }
 }

@@ -6,7 +6,9 @@
 import { and, asc, count, desc, eq, inArray, isNull, not, sql } from "drizzle-orm";
 
 import {
+  pathOf,
   sortFields,
+  treeOf,
   type Album,
   type ContainerKind,
   type CustomField,
@@ -401,20 +403,14 @@ export type AlbumDetail = {
 
 /**
  * The names from the top down to `id`, among `places`. With `visible`, the path starts at the highest folder in it,
- * as a shared list's does.
+ * as a shared list's does: the domain's walk (DRIFT-057).
  */
 function locationOf(
-  places: ReadonlyMap<string, { name: string; parentId: string | null }>,
+  places: ReadonlyMap<string, { id: string; name: string; parentId: string | null }>,
   id: string,
   visible?: ReadonlySet<string>,
 ): string[] {
-  const path: string[] = [];
-  for (let at = places.get(id); at && path.length <= places.size;) {
-    path.unshift(at.name);
-    if (at.parentId === null || (visible && !visible.has(at.parentId))) break;
-    at = places.get(at.parentId);
-  }
-  return path;
+  return pathOf(treeOf([...places.values()]), id, visible).map((place) => place.name);
 }
 
 /**

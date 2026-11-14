@@ -6,7 +6,7 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 
 import { coversSchema, maxAlbumTextLength, problemSchema } from "@tonaris/domain";
-import { providerNames, ProviderUnavailableError, type Cover } from "@tonaris/providers";
+import { couldNotReach, ProviderUnavailableError, type Cover } from "@tonaris/providers";
 
 import type { SessionGuard } from "../../auth/plugin";
 import type { ArtworkSigner } from "../../img/artwork";
@@ -33,7 +33,7 @@ const coversQuery = z.object({
 /** What a search that couldn't ask says: the archive it couldn't reach, the only two `findCovers` asks. */
 function unavailable(provider: ProviderUnavailableError["provider"]): string {
   return provider === "musicbrainz" || provider === "coverartarchive"
-    ? `Couldn't reach ${providerNames[provider]}. Try again.`
+    ? `${couldNotReach(provider)} Try again.`
     : "Couldn't find artwork right now. Try again.";
 }
 

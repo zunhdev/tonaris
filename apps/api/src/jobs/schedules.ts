@@ -14,7 +14,7 @@ import {
   type Transaction,
 } from "@tonaris/db";
 import type { Change } from "@tonaris/domain";
-import type { Spotify } from "@tonaris/providers";
+import { spotifyHealthProblem, type Spotify } from "@tonaris/providers";
 
 import { log, type LogError } from "../observability";
 
@@ -82,13 +82,10 @@ export function trashExpirySchedule(
   };
 }
 
-/** *Random Access Memories* on Spotify: an album with a UPC that won't go away. */
-export const spotifyHealthAlbum = "4m2880jivSbbyEGAKfITCa";
-
 /**
- * TS-41's daily health check of the Spotify bridge: one Get Album call shows the token works (the owner's Premium
- * subscription) and that a UPC still comes back, and keeps the app in use (Spotify's Terms IX.8.e). A failure is
- * logged naming no Spotify value; the bridge's lookups then fail as unavailable until it is fixed or turned off.
+ * TS-41's daily health check of the Spotify bridge (`spotifyHealthProblem` in packages/providers), which also keeps
+ * the app in use (Spotify's Terms IX.8.e). A failure is logged naming no Spotify value; the bridge's lookups then fail
+ * as unavailable until it is fixed or turned off.
  */
 export function spotifyHealthSchedule(
   spotify: Pick<Spotify, "album">,
@@ -98,19 +95,8 @@ export function spotifyHealthSchedule(
     name: "spotify-health",
     everyMs: day,
     async run() {
-      let upc: string | undefined;
-      try {
-        upc = (await spotify.album(spotifyHealthAlbum))?.upc;
-      } catch (error) {
-        report(
-          `Spotify health check failed: ${error instanceof Error ? error.message : "unknown error"}.`,
-        );
-        return;
-      }
-      if (!upc)
-        report(
-          "Spotify health check failed: Get Album returned no UPC, so the bridge can't search barcodes.",
-        );
+      const problem = await spotifyHealthProblem(spotify);
+      if (problem) report(`Spotify health check failed: ${problem}.`);
     },
   };
 }
