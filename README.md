@@ -1,6 +1,6 @@
 # Tonaris
 
-A personal workspace for saving, organizing, annotating, and revisiting music albums across streaming services. It offers read-only sharing, AI collection management through MCP, and a full export of your own data.
+A personal workspace for saving, organizing, annotating, and revisiting music albums across streaming services. Owners share folders and lists to view or to edit, and by view-only link. Tonaris also offers AI collection management through MCP and a full export of your own data.
 
 ## Project status
 

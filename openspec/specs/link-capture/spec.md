@@ -128,7 +128,7 @@ A track link SHALL identify the album of the release it belongs to (FR-02.3). Fo
 - **THEN** it goes to manual entry with the link kept, saying a Qobuz track link names no album, and no request is made
 
 ### Requirement: A hinted match needs exactly one album
-Step 4 SHALL accept a match only when exactly one album passes (TS-41, decided 21 October 2026). The search is by the cleaned title and first artist, then by the title alone. Titles and artist names (credited, artist or sort names) are compared on letters and digits, and the year must be the release's or the album's first. Only official albums and EPs count, plus singles when Apple's title says " - Single". Cleaning SHALL keep "(Taylor's Version)" and drop "(Standard)".
+Step 4 SHALL accept a match only when exactly one album passes (TS-41, decided 21 October 2026). It searches by the cleaned title and first artist, then by title alone. Titles and artist names (credited, artist or sort names) compare on letters and digits; the year is the release's or the album's first. Only official albums and EPs count, plus singles when Apple's title says " - Single" or the hints carry a track count (TON-163). Cleaning SHALL keep "(Taylor's Version)" and drop "(Standard)".
 
 #### Scenario: Two albums fit
 - **WHEN** a Tidal page's hints for Dio's *The Last in Line* (1984) fit releases of two albums in MusicBrainz
@@ -319,7 +319,7 @@ While a capture runs, its destination view SHALL show it as a placeholder row wi
 - **THEN** the album is saved, and the row becomes the album
 
 #### Scenario: Unsupported input
-- **WHEN** a pasted line isn't a link of the four services
+- **WHEN** a pasted line isn't a link of the five services
 - **THEN** its row says so, and offers manual entry
 
 ### Requirement: Manual entry continues a capture

@@ -280,7 +280,7 @@ The rule applies to creation, renaming, moves, and recovery.
 - Required: title, artist credit, and an applicable year (FR-02.6).
 - Optional, but shown: artwork URL, release classification, original release year, recording year or range, service links, and custom fields. Unused fields stay unused.
 - An album can have no streaming link.
-- When capture fails, the form is pre-filled with the pasted link and any retrieved or entered information.
+- When capture fails, the form is pre-filled with the pasted link and only the information the terms permit (G1): Apple's hints for an Apple Music link, or MusicBrainz's values for an album it knows without a year. Nothing from Qobuz's or Tidal's pages or from YouTube is prefilled.
 
 Manual entry supplements link capture; it does not replace it.
 
@@ -308,7 +308,7 @@ This is enforced for manual entry, capture, MCP, and edits.
 - Uncertain matches require user confirmation before linking. Tonaris never guesses or silently merges.
 - A link to another edition of a saved album identifies that album (FR-02.12).
 - Two albums are the same only through the canonical metadata source's album identity or a shared service link. Artist/title similarity alone never merges them.
-- **Open:** evidence and confidence criteria (G2).
+- The evidence and confidence criteria were decided on 21 October 2026 (G2): a hinted match needs exactly one album that fits (G1).
 
 **FR-02.10 Uncertain matches without immediate confirmation.** In batches and MCP operations, uncertain items stay unapplied: no link attached, no membership added, no new record created. Unambiguous items continue. Items needing confirmation are reported separately, with their links and information preserved for review.
 
@@ -1017,7 +1017,7 @@ Resolve these gates before committing to the implementations they affect. Unrela
   - Qobuz isn't asked for API keys: it doesn't grant them to individuals;
   - services are named in plain text, with no logos or badges (design spec).
 - **Tidal (20 October 2026)** ([report](spikes/2026-10-20-g1-tidal.md)). Tidal became a launch service, and the creator decided:
-  - Tidal links are identified by MusicBrainz's URL lookup and, transiently, by hints from tidal.com's album page, under Qobuz's rules. One request per pasted link, nothing from the page is saved, and manual entry isn't prefilled from it;
+  - Tidal links are identified by MusicBrainz's URL lookup and, transiently, by hints from tidal.com's album page, under Qobuz's rules. One request per pasted link, plus one redirect to the same album (TS-41), nothing from the page is saved, and manual entry isn't prefilled from it;
   - Tidal's API isn't used. Without Tidal's written approval, its developer terms forbid sending its data to another service, combining it with other services, and any use in connection with AI;
   - Tidal track links go to manual entry with the link kept (FR-02.3).
 - **Final decision (21 October 2026).** After the M1 spikes, the creator closed G1:
@@ -1026,10 +1026,11 @@ Resolve these gates before committing to the implementations they affect. Unrela
     2. the barcode bridge, for Spotify and Qobuz;
     3. hints for an automatic MusicBrainz match, from Apple's public lookup and from Qobuz's and Tidal's album pages;
     4. otherwise, manual entry.
-  - **When a hint matches.** A hinted match is accepted only when exactly one official album or EP fits its title, artist and year; several go to confirmation (FR-02.9). Measured on real links, nothing was ever matched to a wrong album (tech spec TS-41).
+  - **When a hint matches.** A hinted match is accepted only when exactly one official album or EP fits its title, artist and year, or a single when Apple's title says " - Single"; several go to confirmation (FR-02.9). Measured on real links, nothing was ever matched to a wrong album (tech spec TS-41). YouTube Music's hints widened this on 5 November 2026 (below).
   - **Agents.** Captures an agent starts never read Qobuz's or Tidal's pages, because both reject AI use (FR-10.5).
   - **Qobuz's store.** Qobuz links that name no store are looked up in the French store.
 - **Qobuz track links (24 October 2026, TON-42).** Nothing permitted names a Qobuz track's album: Qobuz has no API for Tonaris, the terms review covers album pages only, and MusicBrainz links Qobuz albums, not tracks. The creator decided they go to manual entry with the link kept, like Tidal's (FR-02.3, AC-06).
+- **YouTube Music (31 October 2026, TON-128; singles on 5 November 2026, TON-163).** Its links are identified by MusicBrainz's URL lookup, then by hints from the YouTube Data API, never from its pages, which YouTube's terms forbid reading automatically (TON-131). A YouTube hint matches only through a release with the playlist's track count. With that count, an official single fits too, whatever the playlist's title says, because the count tells an album from its namesake single.
 
 **G2 Album matching (D2, D3).** Albums are identified, not editions (FR-02.12). Test real examples: remasters, deluxe editions, reissues, compilations, regional variants, identical titles, and track links. Each must resolve to the right album, and different albums with the same title must stay apart. Define the evidence for confident matches and when confirmation is needed; title/artist similarity alone is insufficient. Distinguish reissue dates from original-release and live-recording years. Chronology may need manual completion where providers lack it.
 
@@ -1075,7 +1076,7 @@ D1–D8 are stable references from earlier iterations, not eight unanswered ques
 | D3 | Capture and enrichment | Terms decided on 19 October 2026, including artwork and export rights. Metadata strategy, link variants, store regions and album matching decided on 21 October 2026 (G1, G2). |
 | D4 | Sharing | Design: access controls, exposure previews, invitation presentation. |
 | D5 | Retention, Trash, export | Design and tech for FR-08 export. Import and restore are not planned. |
-| D6 | Quality | Performance targets measured in M1 were approved on 21 October 2026. Search, MCP search, guest pages and export stay provisional until measured (Q-01). The test matrix is approved (Q-03). Backup retention, RPO/RTO, and historical-backup deletion treatment remain with the creator's hosting decisions (Q-04). |
+| D6 | Quality | Performance targets measured in M1 were approved on 21 October 2026, and search, MCP search, guest pages and export on 29 October 2026, once measured (Q-01). The test matrix is approved (Q-03). Backup retention, RPO/RTO, and historical-backup deletion treatment were decided on 30 October 2026 (Q-04). |
 | D7 | MCP | Permitted metadata in agent responses decided on 19 October 2026: all saved metadata and service links (G1). Client authorization and approval boundaries were verified on 21 October 2026 (G3). |
 | D8 | Accounts and settings | Decided on 17 October 2026: admission invitations expire after 14 days, and account recovery relies on the creator's judgment, with a help page and contact address (TS-71, TS-73). |
 
@@ -1155,13 +1156,23 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (30 October 2026), installing on phones** (TON-115), from the creator's manual testing: the web app is installable through a web app manifest, and opens full screen from the home screen. It doesn't open offline. **Updated** section 2.2.
 - **Decision (30 October 2026), Find artwork** (TON-112), from the creator's manual testing: owners can choose a cover the Cover Art Archive has for an album's title and artist, so an album MusicBrainz didn't match can still get artwork. Other services' covers stay out, as their terms require. **Updated** FR-03.4.
 - **Decision (30 October 2026), an agent's details** (TON-111), from the creator's manual testing: details an agent sends for a link no step identified are matched like a store page's hints, so the album gets its MusicBrainz values and artwork. The app's manual entry still adds an album without a lookup (FR-02.4). **Updated** FR-10.5.
+- **Decision (30 October 2026), web page or app** (TON-104), from the creator's manual testing: each signed-in person chooses whether service links open the service's web page or its app. The setting is saved to the account and synchronizes, starts on the web page, and guests always get the web pages. This replaces "app first, then web", since browsers don't tell a page whether an app opened. Recorded here on 14 November 2026 (TON-224). **Updated** FR-06.6 and AC-18.
 - **Decision (31 October 2026), YouTube Music** (TON-128), from the creator's manual testing: YouTube Music is a fifth launch service. Its links are identified by MusicBrainz's URL lookup, then by transient hints from the YouTube Data API, never from its pages, which YouTube's terms forbid reading automatically ([YouTube Music spike](spikes/2026-10-31-g1-youtube-music.md)). The API needs a key in production, and users must agree to a privacy notice that says Tonaris uses YouTube API Services. Built in TON-131. **Updated** section 2.5.
 - **Decisions (31 October 2026), terms of use and privacy notice** (TON-131): YouTube's Developer Policies require terms that bind users to YouTube's Terms of Service and a privacy notice users agree to, and Tonaris had neither. The creator chose to build both with YouTube Music; that the notice names zunh.dev; and that joining's "By continuing, you agree…" line plus a one-time screen for earlier members is the agreement. **Added** FR-11.14; **updated** FR-02.1, FR-02.3, FR-10.5 and AC-06.
 - **Decision (31 October 2026), your streaming services** (TON-138), from the creator's manual testing: each person turns services on or off in Settings, and the album panel and New album show link fields only for those that are on. Saved links always show. **Updated** FR-06.3.
+- **Decision (31 October 2026), passkeys** (TON-143): members can add passkeys in Settings and sign in with one, beside the emailed code. A passkey must verify the person, and adding one needs a recent sign-in and emails the account's address. Passkeys keep working after an email change, and a creator-assisted recovery or an account deletion removes them. Recorded here on 14 November 2026 (TON-224). **Updated** FR-11.1, FR-11.4, FR-11.5, FR-11.11 and FR-11.13.
 - **Decision (1 November 2026), a feedback board** (TON-132), from the creator's manual testing: members reach a public feedback board from the account menu, signed in through Tonaris. It is Fider Cloud's free plan, which receives their name and email so it can tell them about replies, and requests reach planning by hand. **Added** FR-11.15.
 - **Decision (5 November 2026), singles** (TON-164), from the creator's manual testing: Single is a release type, no different from EP. It can be chosen and set by agents, singles get it from MusicBrainz on capture, and grouping shows a Single group after EP. Singles saved earlier keep no type until someone sets one. This replaces the 17 and 24 October 2026 decisions that made singles Unclassified. **Updated** FR-02.3, FR-05.7, FR-05.9 and the glossary.
+- **Decision (5 November 2026), YouTube Music singles** (TON-163), from the creator's manual testing: a YouTube Music hint may match an official single, since the playlist's track count, which a release must match, tells an album from its namesake single. Recorded here on 14 November 2026 (TON-224). **Updated** G1.
 - **Decision (7 November 2026), folder and list colors** (TON-175), from the creator's design review: owners color folders and lists from a fixed set, contents without their own color show their folder's, viewers of a share see them, agents can set them, and exports carry them. **Added** FR-01.19; **updated** FR-10.4.
 - **Decision (10 November 2026), editing shared folders and lists** (P-TON-47, TON-186), from the creator's manual testing: an owner can let chosen people edit a shared folder or list. Each invitation is Can view or Can edit, and links stay view-only. Through folders, the higher role wins. Editors change content, albums and field values inside the share, in the app and through Manage agents. Their changes stay in the owner's collection. Sharing, field definitions, the share's own place, and the owner's Trash beyond Undo stay with the owner. An editor's album deletion leaves the owner's other lists untouched, and an editor's manual order is their own. **Removed** the exclusion "Collaborative editing by other users" (section 2.6). **Added** the Editor concept, FR-07.18–FR-07.21 and AC-47–AC-50; **updated** section 2.1, X-01, FR-03.19, FR-04.2, FR-07's title, FR-07.1, FR-07.6, FR-07.12, FR-07.14, FR-07.15, FR-07.17, FR-09.5, FR-10.2, FR-10.4, FR-10.6, FR-10.7, FR-14.1 and Q-06.
+- **Decision (11 November 2026), Latin spellings in search** (TON-201): names can be searched in plain Latin letters, in any common spelling of each letter: "royksopp" finds "Røyksopp", "aerzte" finds "Die Ärzte", and "kino" finds "Кино". A Latin letter matches only itself, and Chinese, Japanese and Korean match only as written. Recorded here on 14 November 2026 (TON-224). **Updated** FR-12.5.
+- **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
+  - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
+  - FR-02.9's open question was answered by G2 on 21 October 2026;
+  - G1's hint rule names Apple's singles, as decided on 21 October 2026;
+  - a Tidal link's one page request may follow one redirect to the same album (G1, TS-41);
+  - D6 records the approvals of 29 and 30 October 2026 (Q-01, Q-04).
 - **Clarifications** (no intended behavior change; flagged in the audit):
   - container names cannot be blank (X-06);
   - single-list deletion feedback is left to design, while folder deletion stays confirmed (FR-01.11);

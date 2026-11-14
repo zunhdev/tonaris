@@ -494,14 +494,20 @@ export const shareRevokeSchema = z.object({
   args: grantArgsSchema,
 });
 
-/** `share.saveLink`: keeps a link's folder or list in Shared with me (FR-07.13). App-only (X-03). */
+/**
+ * `share.saveLink`: keeps a link's folder or list in Shared with me (FR-07.13). A Manage collection agent may save one
+ * too (FR-10.4).
+ */
 export const shareSaveLinkSchema = z.object({
   mutationId,
   name: z.literal("share.saveLink"),
   args: saveLinkArgsSchema,
 });
 
-/** `share.removeReference`: drops a folder or list from Shared with me (FR-07.13). App-only (X-03). */
+/**
+ * `share.removeReference`: drops a folder or list from Shared with me (FR-07.13). A Manage collection agent may remove
+ * one too (FR-10.4).
+ */
 export const shareRemoveReferenceSchema = z.object({
   mutationId,
   name: z.literal("share.removeReference"),

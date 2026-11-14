@@ -6575,7 +6575,7 @@
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 9007199254740991,
-                      "description": "The owner's change log position this read is current at (TS-23), so an editor's client knows its writes are in it (TS-24). 0 for viewers and guests, who don't write."
+                      "description": "How many writes the owner's collection has had when this read was made (TON-198): an editor's position, so their client knows its writes are in it (TS-24). 0 for viewers and guests, who don't write."
                     },
                     "owner": {
                       "type": "object",
@@ -7186,7 +7186,7 @@
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 9007199254740991,
-                      "description": "The owner's change log position this read is current at (TS-23), so an editor's client knows its writes are in it (TS-24). 0 for viewers and guests, who don't write."
+                      "description": "How many writes the owner's collection has had when this read was made (TON-198): an editor's position, so their client knows its writes are in it (TS-24). 0 for viewers and guests, who don't write."
                     },
                     "owner": {
                       "type": "object",

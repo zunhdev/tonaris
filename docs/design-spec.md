@@ -205,7 +205,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
   - **Base UI's Toast** for toasts. Sonner was named first, but it injects its stylesheet as a `<style>` element without the CSP nonce, which TS-101 blocks (changed in TON-31);
   - **TanStack Virtual** for long collections;
   - **dnd-kit** for drag-and-drop (it has a keyboard sensor);
-  - **react-day-picker** for date fields.
+  - **the browser's own date picker** for date fields: an off-screen `type="date"` input that "Pick a date" opens with `showPicker()` (DS-26). react-day-picker was named first; TON-50 built the date field on the browser's picker instead (*corrected in TON-224*).
 
 *(Q-10, Q-02)*
 
@@ -369,7 +369,7 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 *As built in TON-104* (decided with the creator, 30 October 2026): **the account's link setting** (FR-06.6, DS-94).
 - **Each "Open in Spotify"** opens where the setting says: the canonical page in a new tab, with no referrer, or the service's app. That holds in the popover and in the bottom sheet.
 - **One link per service:** the App choice beside it and the 2 s "may not be installed" message are gone.
-- **Shared and guest pages:** their Open popover has the same choices. Guests have no setting, so theirs open the pages.
+- **Shared and guest pages:** they had an Open popover with the same choices until TON-127. Now each album shows its services as links instead, and a signed-in viewer's follow the setting (DS-72). Guests have no setting, so theirs open the pages (*corrected in TON-224*).
 
 **DS-26 Field editors (custom fields).** One editor per type, used in the inspector and the manual-entry form. *(FR-03.6, FR-03.7, FR-03.10)*
 
@@ -1022,7 +1022,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - **Dragging** a folder or list from its row or the tree onto a folder in the tree, or onto Collection, moves it.
   - **After a move,** the destination opens in the tree, and "Moved {name} to {destination}" is announced. The item follows its new parent's arranged items, in creation order among the rest.
   - **While offline,** M does nothing and the tree takes no drops (DS-81). A refused move is reported like any failed write (DS-107).
-  - **Not yet:** adding albums to lists, with L or by dragging onto a list (their issue), and SharingImpact previews (DS-69, M7).
+  - **Since built:** L, "Add to list…", came with TON-38 (DS-46), and SharingImpact previews with TON-71 (DS-69). Dragging albums onto a list in the sidebar isn't built: an album's drag only rearranges its own view (*corrected in TON-224*).
 
 **DS-50 Removal and deletion feedback.** *(FR-01.11, FR-01.8, FR-14.1, X-07)*
 
@@ -1383,7 +1383,7 @@ The block never says "private" while another access path remains.
 - **Footer:** "Sign in". No search UI. *As built in TON-131:* then "Terms · Privacy" (DS-119).
 - **Live updates** use the same subtle treatment (DS-82).
 - **Unavailable or revoked link:** "This link isn't available. Ask the person who shared it for a new one." It reveals nothing about whether the content exists.
-- **Link previews:** title, owner display name, and album count, with no artwork until G1 clears artwork use (decided 17 October 2026).
+- **Link previews:** title, owner display name, and album count, with no artwork (decided 17 October 2026). G1 closed on 21 October 2026, and the creator decided on 14 November 2026 to keep previews text-only (TON-224).
 
 *As built in TON-70:*
 - **The frame:** "Tonaris" in `text.title` at the top, and a "Sign in" link at the foot.
@@ -1582,7 +1582,7 @@ The block never says "private" while another access path remains.
 - **In a batch report,** a completed write shows a check in `status.success`. A confirmed write still shows nothing elsewhere (DS-02).
 - **No toast of its own.** A write made with others in one action raises no toast. Its batch raises one (DS-84).
 
-**DS-81 Sync indicator and Activity.** The SyncIndicator sits in the sidebar footer, in the mobile account menu, and as a small dot on guest pages. Clicking it opens **Activity**: a popover listing pending, failed, conflict, and unconfirmed items, plus open batch reports. *(FR-09.3, section 2.3)*
+**DS-81 Sync indicator and Activity.** The SyncIndicator sits in the sidebar footer. Phones and guest pages have none (below). Clicking it opens **Activity**: a popover listing pending, failed, conflict, and unconfirmed items, plus open batch reports. *(FR-09.3, section 2.3)*
 
 | Connection state | Indicator |
 | --- | --- |
@@ -1610,9 +1610,8 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   - its actions: **Retry** and **Dismiss** for a failure, **Review** for a conflict.
 
   Empty, it reads "All changes are saved.", or "Nothing is waiting to be saved." when not connected.
-- **Waiting for their surfaces:**
-  - the indicator in the mobile account menu, and the dot on guest pages;
-  - edit controls disabled offline, which use `useConnection()` once there are edit controls.
+- **Phones and guest pages have no indicator** (decided by the creator on 14 November 2026, TON-224). Phones rely on toasts and the offline banner, and guest pages make no writes. The mobile account menu's indicator and the guest page's dot were planned here first.
+- **Edit controls are disabled offline** through `useConnection()`, each from the issue that built it.
 
 *As built in TON-32:*
 - **Batch reports.** Activity lists the open batch reports with the writes made on their own, oldest first. A write made with others shows only in its report (DS-84).
@@ -2174,7 +2173,7 @@ The tech spec sets the measurable targets (Q-01, pending approval).
 
 ## 17. Design decisions log
 
-No design questions are open. The creator settled these on 17 October 2026, rows 10 and 11 on 18 October 2026, row 12 on 1 November 2026, and row 13 on 7 November 2026:
+No design questions are open. The creator settled these on 17 October 2026, rows 10 and 11 on 18 October 2026, row 12 on 1 November 2026, and row 13 on 7 November 2026. Row 7 was confirmed on 14 November 2026:
 
 | # | Question | Decision |
 | --- | --- | --- |
@@ -2184,7 +2183,7 @@ No design questions are open. The creator settled these on 17 October 2026, rows
 | 4 | First-time default sort for lists and Unsorted (DS-44) | Chronological, ascending |
 | 5 | Approval pages on mobile (DS-87) | Yes, fully usable |
 | 6 | Lost-email recovery (DS-93, DS-100) | A help page with a contact address; the creator performs the recovery from Admin |
-| 7 | Link-preview artwork (DS-72) | Text-only until G1 clears artwork use |
+| 7 | Link-preview artwork (DS-72) | Text-only. First until G1 cleared artwork use; G1 closed on 21 October 2026, and on 14 November 2026 the creator decided to keep previews text-only (TON-224) |
 | 8 | Wordmark and app icon (DS-19) | A simple text wordmark beside the mark, a disc on a compact CD player (TON-154, 1 November 2026; after TON-114's temporary one) |
 | 9 | Typed confirmation for account deletion (DS-97) | The user types their sign-in email |
 | 10 | Input borders below 3:1 (DS-12, DS-14), 18 Oct 2026 | Raise `border.strong` to 0.52, reaching 3:1 on every surface |

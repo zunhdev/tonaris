@@ -14,7 +14,7 @@ The rules a change must follow, beyond what `bun run check` enforces. Each cites
 - Mutations are inline `oneOf` variants of `POST /v1/mutations`. oasdiff reads any edit to an existing variant, even an added optional property or a changed description, as a removal. While testing is closed (the creator, 5 November 2026), widen the mutation in place and add a named entry to `apps/api/openapi/oasdiff-ignore.txt`. Remove spent entries.
 - A `z.literal` in a response becomes a JSON-schema `const`, and widening it later breaks the contract. Use `z.enum([...])` for a value set that will grow.
 - Routes that validate input declare `422: problemSchema`; signed-in routes declare `signedIn: true` and `401: problemSchema` (README, API contract).
-- Every write carries a `mutationId` and is idempotent (TS-22).
+- Every collection write goes through the sync envelope with a `mutationId` (TS-09, TS-22).
 
 ## Data
 

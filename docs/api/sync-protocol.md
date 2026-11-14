@@ -36,25 +36,27 @@ Every account has its own `seq`. It counts the account's saved changes from 1, w
   "views": [...],
   "positions": [...],
   "defaults": { ... },
-  "trashUnits": [...]
+  "trashUnits": [...],
+  "references": [...]
 }
 ```
 
 - **One consistent point.** The records and `seq` come from one snapshot, so the data includes every change up to `seq` and none after it.
 - **Contents today:**
-  - albums, folders and lists (`containers`), and list entries (`memberships`);
+  - albums, folders and lists (`containers`), and list entries (`memberships`). A folder or list carries its `description` and its own `color`, each null for none (TON-175);
   - the albums' links to the streaming services (`links`), one per album and service, as canonical URLs (TON-46);
   - the account's custom fields (`fields`), each with its options in order (TON-49);
   - the fields each album applies, with their values (`fieldValues`), Trash included (TON-50);
   - the person's remembered view choices (`views`), one record per view they made a choice in;
   - their manual order (`positions`), one key per arranged item;
-  - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own;
+  - their account defaults (`defaults`), always complete: DS-44's first-time defaults until they save their own. They include where service links open (`linkTarget`, TON-104) and the services the person turned off (`hiddenServices`, TON-138);
   - the owner's Trash, unit by unit (`trashUnits`), each `{id, kind, rootId, name, parentId, deletedAt, expiresAt, folders, lists, members, artist}` (TON-55).
     - `parentId` is the root's folder at deletion, null for the top level or an album.
     - `members` are the folders and lists deleted with the root, `{id, kind, name, parentId}` (TON-59).
     - `artist` is an album's credit.
+  - the person's Shared with me (`references`), newest first, each `{containerId}`: the shared folders and lists they keep (TON-68). `GET /v1/shared` gives their names, owners, roles and availability.
 
-  Custom fields and Shared with me join as their features arrive, as new fields (TS-24).
+  Later features join as new fields (TS-24).
 - **Trash** (TON-55):
   - Albums, folders and lists come only when active, and entries only of active lists and albums. What is in Trash is in `trashUnits` (TON-55, TON-57).
   - Links and field values of albums in Trash are still included.
@@ -87,7 +89,7 @@ A client keeps one store per entity and applies each change by key:
 | `entity` | `id` | `data` |
 | --- | --- | --- |
 | `album` | the album's ID | `Album` |
-| `container` | the folder's or list's ID | `Container`: `{id, kind, parentId, name, description}`, `description` null for none |
+| `container` | the folder's or list's ID | `Container`: `{id, kind, parentId, name, description, color}`, `description` and `color` null for none |
 | `membership` | `<listId>:<albumId>` | `Membership` |
 | `field` | the field's ID | `CustomField`: `{id, name, type, options: [{id, label}]}` |
 | `fieldValue` | `<albumId>:<fieldId>` | `FieldValue`: `{albumId, fieldId, value}`, `value` null when applied-empty |
@@ -96,6 +98,7 @@ A client keeps one store per entity and applies each change by key:
 | `defaults` | the account's ID | `ViewDefaults`, never `null` |
 | `position` | `<viewKey>:<itemId>` | `Position` |
 | `trashUnit` | the unit's ID | `TrashUnit`: `{id, kind, rootId, name, parentId, deletedAt, expiresAt, folders, lists, members, artist}` |
+| `reference` | the shared folder's or list's ID | `{containerId}`, `null` when it leaves Shared with me |
 
 Clients must ignore entities they don't know. New ones are added within v1 (TS-09).
 
@@ -141,17 +144,17 @@ The server ends a stream in four cases:
 - **`base`** holds the prior value of exactly the fields being changed (TS-21). A field whose saved value differs is a conflict, and nothing in the mutation applies. Fields not named are never compared, so edits to different fields of one record both apply.
 - **The mutations today:**
   - `album.create`, `album.update`, `album.setArtwork`, `album.capture`;
-  - `container.create`, `container.rename`, `container.move`, `container.describe`, `container.delete`;
+  - `container.create`, `container.rename`, `container.move`, `container.describe`, `container.setColor`, `container.delete`;
   - `trash.recover`, `album.delete`, `trash.purge`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
   - `field.create`, `field.rename`, `field.changeType`, `field.addOption`, `field.renameOption`, `field.removeOption`, `field.delete`;
   - `fieldValue.apply`, `fieldValue.set`, `fieldValue.remove`;
-  - `view.set`, `defaults.set`;
-  - `share.invite`, `share.setLink`, `share.resendInvitation`, `share.accept`, `share.decline`, `share.leave`, `share.revoke`, `account.setDisplayName`;
+  - `view.set`, `defaults.set`, `defaults.setLinkTarget`, `defaults.setHiddenServices`;
+  - `share.invite`, `share.setLink`, `share.setRole`, `share.resendInvitation`, `share.accept`, `share.decline`, `share.leave`, `share.revoke`, `share.saveLink`, `share.removeReference`, `account.setDisplayName`;
   - `order.set`.
 
-  The OpenAPI document has each one's `args` and `base`.
+  That is 43. The OpenAPI document has each one's `args` and `base`.
 - **`album.capture`** saves the album a pasted link names (FR-02.1, TS-44): `{albumId, link, listId}`, where `albumId` is the ID a new album gets and `listId` may be `null` for Unsorted.
   - **It may reuse an album** of the owner's, in Trash or not, and its `confirmed` result says so: `{albumId, match: "created" | "reused" | "restored", alreadyInList, keptLink}`.
   - **It may need input** (TS-26): `match` with candidate albums, or `details` with a prefill. Resubmit as a new mutation with `releaseGroupId` or `details` added.
@@ -178,11 +181,13 @@ The server ends a stream in four cases:
     - The stream sends each unit's `trashUnit` delete, and for a purged album its `link` and `fieldValue` deletes.
   - **The hourly expiry** sends the same changes, with `mutationId` null, for units 30 days old.
   - **Later recoveries** report what was purged: `album_deleted` in a list's recovery, `list_deleted` in an album's restore.
-- **Sharing** (FR-07.1, FR-07.4, FR-07.16, FR-11.3, TON-65). These are app-only (`app_only` through MCP), change nothing a client holds, and so log no change; the owner reads the state with `GET /v1/containers/{id}/sharing`.
-  - **`share.invite`** `{grantId, containerId, email}` invites the account that signs in with `email`.
+- **Sharing** (FR-07.1, FR-07.4, FR-07.16, FR-11.3, TON-65). These are app-only (`app_only` through MCP), except `share.saveLink` and `share.removeReference` (below). Most change nothing a client holds, and so log no change; the owner reads the state with `GET /v1/containers/{id}/sharing`.
+  - **`share.invite`** `{grantId, containerId, email, role?}` invites the account that signs in with `email`.
+    - `role` is `view` or `edit` (FR-07.18), `view` unless given. See [Editors](#editors).
     - Its `confirmed` result is `{grantId, status}`.
     - Someone already invited, or viewing, keeps their invitation: the result names it.
     - No account: `recipient_not_found`. Yourself: `validation_failed`.
+  - **`share.setRole`** `{grantId, role}`: the owner changes a pending or accepted invitation's role. The person doesn't accept again; their access follows from their next read. It works while the folder or list is in Trash, as revoking does. Its `confirmed` result is `{grantId, role}`. An invitation that is gone, or no longer pending or accepted, is `not_found`; one on someone else's folder or list is `permission_denied`.
   - **`share.setLink`** `{containerId, linkId, enabled}` turns the link on, keeping a live one, or off for good.
     - Its result is `{linkId}`, null when off.
     - A new link takes `linkId`; the API derives its token and stores only the token's hash (TS-32).
@@ -197,15 +202,17 @@ The server ends a stream in four cases:
   - **Shared with me** (TON-68):
     - **`share.saveLink`** `{token}` keeps a link's folder or list, or points an existing reference at this link. The token travels in the body, which is never stored. A link that doesn't work is `not_found`; your own is `validation_failed`.
     - **`share.removeReference`** `{containerId}` drops one, accessible or not, and revokes no grant.
+    - **Through MCP,** a Manage connection may send these two, as part of the person's collection (FR-10.4). A Read-only one may not.
     - **The changes:** these, `share.accept` and `share.leave` log `reference` changes (`data: {containerId}` or null). The bootstrap carries `references`.
     - **The reads:** `GET /v1/shared` lists the entries, each with its owner, `via` (invitation, link), `available`, and the name only while available. `GET /v1/s/{token}/reference` tells a signed-in visitor `{saved, own}`.
-  - **Signed-in viewers** (TON-69): `GET /v1/shared/{id}` gives a folder or list the person reads through sharing, in the guest page's shape; anything else, their own included, is `404`. `GET /v1/shared/{id}/stream` sends `shared-invalidate` after each of the owner's saves, revoking access included, so the page reads again.
+  - **Signed-in viewers** (TON-69): `GET /v1/shared/{id}` gives a folder or list the person reads through sharing, in the guest page's shape with their `role` and a `seq` (see [Editors](#editors)); anything else, their own included, is `404`. `GET /v1/shared/{id}/stream` sends `shared-invalidate` after each of the owner's saves, revoking access included, so the page reads again.
   - **Guests** (TON-70), with no session:
     - `GET /v1/s/{token}` gives a link's content: the root, its active folders and lists, their albums with signed artwork, links, and the fields they use. Any link that doesn't work is `404`.
     - `GET /v1/s/{token}/stream` sends `shared-invalidate {rootId}` (the `SharedInvalidate` component) after each of the owner's saves.
   - **The recipient's reads:** `GET /v1/invitations` lists pending invitations; `GET /v1/invitations/{id}` answers `{state}`: `pending` or `accepted` (with `invitation`), `wrong_account`, or `unavailable`.
   - **Display name:** inviting or turning a link on needs one (`display_name_required`). So does keeping one while any invitation is pending or accepted, or any link is on.
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
+- **Colors** (FR-01.19, TON-175): **`container.setColor`** `{id, color}`, with `base.color`, sets a folder's or list's own color, or clears it with `null`. `color` is one of `red`, `orange`, `amber`, `green`, `teal`, `blue`, `violet` and `pink`. The stream sends the whole `container`. A folder or list without its own color shows its nearest folder's above it. Clients work that out; nothing stores it.
 - **Custom fields** (FR-03.6, FR-03.9, FR-03.11), defined per account (TON-49):
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.
   - **`field.rename`** `{id, name}`, with `base.name`, renames it everywhere.
@@ -244,6 +251,9 @@ The server ends a stream in four cases:
     - Clearing every field deletes the view's record: the change's `data` is `null`.
     - **Shared content** (TON-69, FR-07.17): the view may also be a folder or list the person reads through sharing. The record is still the person's own, in their change log, and the owner's view is never read or changed. Anything else is `not_found`.
   - **`defaults.set`** changes some of the account defaults. Its `base` holds their prior values, DS-44's until saved.
+  - **`defaults.setLinkTarget`** `{linkTarget}`, with `base.linkTarget`, sets where service links open: `web`, the canonical page, or `app`, the service's app (FR-06.6, TON-104).
+  - **`defaults.setHiddenServices`** `{hiddenServices}`, with `base.hiddenServices`, sets the streaming services the person turned off, kept in the services' order (FR-06.3, TON-138).
+  - Each of the three sends the whole `defaults` record.
 - **Manual order** (TS-16) is a fractional-index key per arranged item, in each of the person's views. Keys compare bytewise. Items without a key follow the arranged ones in the view's fallback order (DS-44).
   - **`order.set`** places items in one view as one move. `args.keys` maps each item's ID to its new key, or `null` to clear its place; `base` maps each to its key before, `null` for none.
     - Each item must be in the view now.
@@ -261,7 +271,7 @@ The answer is `200` with a `MutationResult`: `{mutationId, outcome}`. A malforme
 
 `outcome.status` is one of (TS-27):
 
-- **`confirmed`:** saved at `seq`. Its changes arrive on the stream at `seq`. Show the write as saved once the client has applied changes up to `seq`, not when the answer arrives. `result` carries what some mutations report, such as `membership.add`'s `{alreadyInList}`.
+- **`confirmed`:** saved at `seq`. Its changes arrive on the stream at `seq`. Show the write as saved once the client has applied changes up to `seq`, not when the answer arrives. For an editor's write to a share, `seq` is a position in the owner's collection instead (see [Editors](#editors)). `result` carries what some mutations report, such as `membership.add`'s `{alreadyInList}`.
 - **`failed`:** rejected, and nothing changed (X-05). It has a `code` and an RFC 9457 `problem`. Roll back, and keep the person's input.
 - **`conflict`:** a `base` no longer matched. `conflicts` lists each field's `current`, `attempted` and `base` values. Keep the attempt for review (FR-09.4).
 - **`needs_input`, `needs_approval`:** the write waits for a choice or an owner's approval (TS-26, TS-64).
@@ -295,6 +305,40 @@ A write whose `mutationId` is more than 30 days old and has no record is `failed
 - **One at a time, in order.** Send from an outbox: the next write only after the previous one has an answer. That keeps causality, such as creating a list and then adding to it.
 - **Persist the outbox**, so a restart can still reconcile unconfirmed writes.
 - **Several writes at once,** for one user action, go in a batch.
+
+## Editors
+
+An owner may let chosen people edit a shared folder or list (FR-07.18 to FR-07.21, TS-20, TS-24, TS-30). What an editor changes there stays in the owner's collection.
+
+- **Roles.** Each invitation is `view` or `edit`: `share.invite`'s `role`, changed with `share.setRole`. Links only ever give `view`. Through folders, the higher role wins. A client learns the person's role from two reads:
+  - `GET /v1/shared`: each entry's `role`, null while it can't be opened;
+  - `GET /v1/shared/{id}`: `role` on the root.
+- **Holding a share.** An editor's client keeps the share as a collection of its own, apart from the person's:
+  - it reads `GET /v1/shared/{id}`: the share's folders and lists, entries, albums, links and field values, plus all the owner's fields with all their options;
+  - it reads again after each `shared-invalidate` on `GET /v1/shared/{id}/stream`;
+  - a read whose `role` is `view`, or a `404`, means the person can no longer edit it.
+
+  The person's own bootstrap and stream never carry the share's content, only its `reference`.
+- **Writes** use the same envelope, endpoints, outcomes and outbox rules as the owner's.
+  - **What an editor changes:** folders, lists and albums inside the share, and the albums' links and field values. New albums and captures name a list in the share as `listId`; `album.create` takes an optional `listId` for that. The shared folder or list itself can be renamed, described and colored.
+  - **What stays the owner's:** field definitions, sharing, Trash purges, and moving or deleting the shared folder or list itself.
+  - **The person's own:** views, defaults and manual order of the share stay in the person's own change log (FR-07.17).
+- **Where the changes go.** An editor's write runs under the owner's write lock. Its changes go into the owner's change log, at the owner's `seq`, with the editor's `mutationId`. So they reach the owner's stream, and every reader of the share gets `shared-invalidate`.
+  - The stored outcome stays the editor's, so a retry and `GET /v1/mutations/{mutationId}` work as for any write.
+  - A batch may mix the person's collection and shares: each item runs under the lock of the collection it changes.
+- **Confirming.** An editor's `confirmed` outcome carries a position in the owner's collection, not the owner's `seq`.
+  - The position counts the owner's writes, one per write however many changes it made (TON-198).
+  - An editor's `GET /v1/shared/{id}` carries the same count as `seq`. Viewers and guests get 0.
+  - Show the write as saved once a read of the share reaches the outcome's `seq`. How far the count moves says nothing of how much a write changed.
+- **Refusals.**
+  - A folder, list or album the person can only view: `permission_denied`, "You can view this…, but not change it."
+  - Moving or deleting the shared folder or list itself: `permission_denied`.
+  - Anything they can't read: `not_found`, as for a record that doesn't exist.
+- **Albums.**
+  - **`album.delete`** takes the album out of the lists the editor edits. It goes to Trash only when no other list of the owner's holds it. Otherwise no unit is made, but `unitId` is spent: using it again is refused either way.
+  - **`album.capture`** never matches an album in the owner's Trash; it saves a new one. A capture that reuses an album the editor can't see reports `created`.
+- **Trash.** An editor sees nothing of the owner's Trash. Outside MCP, `trash.recover` with the `unitId` of their own folder or list deletion brings it back where it was, while they can still edit there. With a `parentId`, or once they can no longer edit there, it is `permission_denied`. Every other unit of the owner's is `not_found`.
+- **Limits.** An editor's captures count against the editor's hourly limit. The album, folder, list and entry limits are the owner's (TS-18).
 
 ## The client, step by step
 

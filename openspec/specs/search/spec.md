@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Finding the person's own folders, lists and albums by name, title or artist, from anywhere in the signed-in app, and opening them (FR-12). Shared content and server search join this capability later.
+Finding the person's own folders, lists and albums by name, title or artist, from anywhere in the signed-in app and through the API and MCP, and opening them (FR-12). Shared content is searched too, in its own group, under the sharing capability's rules (FR-12.3).
 
 ## Requirements
 
@@ -70,7 +70,7 @@ Matching SHALL be case- and accent-insensitive and partial, with no typo toleran
 - **THEN** "Doom" comes before "Classic Doom"
 
 ### Requirement: Search keeps up with typing
-Results SHALL update within 50 ms of each keystroke at 5,000 owned albums (FR-12.6, provisional Q-01 target).
+Results SHALL update within 50 ms of each keystroke at 5,000 owned albums (FR-12.6, a Q-01 target approved on 29 October 2026).
 
 #### Scenario: A full collection
 - **WHEN** the collection holds 5,000 albums and the owner types a query
@@ -92,18 +92,18 @@ Search through the API SHALL use the same scope, matched fields, matching and or
 - **THEN** the albums come in the order the app shows them
 
 ### Requirement: Server search covers only the caller's active collection
-Server search SHALL return only the caller's active owned content, Unsorted included (FR-12.1). Content in Trash and other accounts' content SHALL NOT appear.
+Server search SHALL return the caller's active owned content, Unsorted included (FR-12.1), and, in a separate `shared` group, only the shared content the sharing capability allows (FR-12.3). Content in Trash and other accounts' content not shared with the caller SHALL NOT appear.
 
 #### Scenario: Trash on the server
 - **WHEN** the owner's list "Sludge" is in Trash and an API client searches "sludge"
 - **THEN** no result is returned
 
 #### Scenario: Another account
-- **WHEN** another account has a list "Doom" and the owner searches "doom" through the API
+- **WHEN** another account has a list "Doom" it hasn't shared with the owner, and the owner searches "doom" through the API
 - **THEN** only the owner's own content is returned
 
 ### Requirement: Server search answers within 300 ms
-Server search SHALL answer within 300 ms on the reference workload of 5,000 albums (FR-12.6, provisional Q-01 target).
+Server search SHALL answer within 300 ms on the reference workload of 5,000 albums (FR-12.6, a Q-01 target approved on 29 October 2026).
 
 #### Scenario: The reference workload
 - **WHEN** the reference account with 5,000 albums is searched through the server

@@ -7,7 +7,7 @@ context: |
   Design decisions: docs/design-spec.md (DS- IDs). Technical decisions: docs/tech-spec.md (TS- IDs).
   Stack: Bun 1.4, TypeScript 7 (native `tsc`), TanStack Start (web UI + public SSR only), Elysia 2 RC (standalone API
   service at api.<domain>: /v1 REST + OpenAPI 3.1, SSE, /mcp, OAuth AS),
-  Drizzle 1.0 RC + postgres.js, Postgres 18, TanStack DB (custom SSE sync), Better Auth, MCP SDK v2, Zod 4,
+  Drizzle 1.0 RC on Bun.SQL, Postgres 18, TanStack DB (custom SSE sync), Better Auth, MCP SDK v2, Zod 4,
   shadcn/ui on Base UI + Tailwind v4, oxlint/oxfmt, Playwright.
   Invariants: all writes are domain commands in packages/domain shared by HTTP and MCP; mutations carry mutationId
   and base values (field-level CAS); no Start server functions for data; the web app is an API client like future native apps; additive-only /v1
