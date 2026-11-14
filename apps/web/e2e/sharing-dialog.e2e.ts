@@ -3,12 +3,11 @@
 // refusal, the link turned on, copied and turned off after a confirmation, access inherited from a folder above, and
 // ⇧S.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, nobody } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { insert, live, saved, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

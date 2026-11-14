@@ -3,13 +3,12 @@
 // reference with the same keys; an empty palette shows what was opened lately and the commands run most. Each test
 // has its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { commands } from "../src/common/shortcuts";
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, applePlatform, insert, live, saved, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

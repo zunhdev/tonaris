@@ -2,12 +2,11 @@
 // invites to edit, changes a role in place, and says a person edits a list through its folder; the person's inbox,
 // Shared with me and sidebar tree say they can edit.
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Browser, type Page } from "./support/test";
 import { insert, live, saved, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

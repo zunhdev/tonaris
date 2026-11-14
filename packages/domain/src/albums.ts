@@ -29,6 +29,7 @@ export const releaseTypes = ["album", "ep", "single", "compilation"] as const;
 
 const year = z.int().min(1).max(9999);
 
+// ASCII: a link, bounded as URLs are, not a person's text (DRIFT-103).
 export const artworkUrlSchema = z.string().max(maxLinkLength).nullable().meta({
   description:
     "The artwork's https URL, from the Cover Art Archive or the person (FR-03.4). Clients show it through the API's image proxy, never directly (TS-103).",

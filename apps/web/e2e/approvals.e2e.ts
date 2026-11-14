@@ -2,7 +2,6 @@
 // the sidebar and Settings → Connections and approves on the approval page (here on a phone-sized screen, X-04), and
 // only then does the agent's next call run. Another account can't see the request.
 
-import { expect, type Page, test } from "@playwright/test";
 import { z } from "zod";
 
 import { uuidv7 } from "@tonaris/domain";
@@ -19,6 +18,7 @@ import {
   registerClient,
 } from "./support/mcp";
 import { requestCode, signIn } from "./support/sign-in";
+import { expect, type Page, test } from "./support/test";
 import { live, pageViolations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

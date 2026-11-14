@@ -1,7 +1,7 @@
 // design-system spec: the dark theme and typography, as a browser renders them (DS-11, DS-13), with frosted menus and
 // filled fields (DS-16, DS-20; TON-168).
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "./support/test";
 
 /**
  * A page with nobody signed in. The project signs the creator in, and `/sign-in` sends a signed-in person on to the app

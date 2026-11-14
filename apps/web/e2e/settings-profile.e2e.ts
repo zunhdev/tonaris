@@ -1,12 +1,11 @@
 // accounts spec, Settings → Profile (FR-11.3, DS-93, AC-38): the display name, saved when the field loses focus,
 // shown in the account menu, optional while nothing is shared, and kept when clearing it while sharing.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { uuidv7 } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, type Page, test } from "./support/test";
 import { created, live, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

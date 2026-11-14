@@ -4,12 +4,11 @@
 // closing a folder that holds the view opens its view, and Shared with me stays closed on the device until a shared
 // view opens it again.
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Browser, type Page } from "./support/test";
 import { insert, live, saved, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

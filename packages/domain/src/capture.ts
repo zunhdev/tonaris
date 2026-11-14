@@ -51,6 +51,7 @@ export const captureArgsSchema = z.object({
   albumId: z.uuid({ version: "v7" }).meta({
     description: "The ID a new album gets (TS-10). A reused album keeps its own.",
   }),
+  // ASCII: a link, bounded as URLs are, not a person's text (DRIFT-103).
   link: z.string().min(1).max(maxLinkLength).meta({ description: "The link as pasted (FR-02.1)." }),
   listId: z.uuid().nullable().meta({
     description: "The list to put the album in, or null for none: Unsorted (FR-02.2).",

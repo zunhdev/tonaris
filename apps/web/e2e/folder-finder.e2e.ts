@@ -3,12 +3,11 @@
 // field that stays put while finding. Its sharing preview is in sharing-impact.e2e.ts, the restore prompt's finder in
 // recovery.e2e.ts.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { announcements, insert, live, saved, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

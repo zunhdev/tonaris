@@ -56,11 +56,14 @@ export const admissionRefusalDetails: Record<AdmissionRefusal, string> = {
 };
 
 /** Looks up an invitation, or asks for a code to its address. The token is the one in the invitation link (DS-91). */
+// ASCII: a token, not a person's text (DRIFT-103).
 export const joinCodeRequestSchema = z.object({ token: z.string().min(1).max(200) });
 
 /** Creates the account with the emailed code, and signs in. */
 export const joinSchema = z.object({
+  // ASCII: a token, not a person's text (DRIFT-103).
   token: z.string().min(1).max(200),
+  // ASCII: a code, not a person's text (DRIFT-103).
   otp: z.string().min(1).max(32),
 });
 

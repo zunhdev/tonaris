@@ -3,12 +3,11 @@
 // asking first, options added, renamed and removed (an unused one at once, a chosen one through the confirmation),
 // and deleting a field through the confirmation. Each test signs in with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type CustomField } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, live, saved, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

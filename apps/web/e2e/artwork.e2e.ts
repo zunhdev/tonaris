@@ -5,10 +5,9 @@
 // browser-test API's image host and covers are stubs (`fixtureImageFetch`, `fixtureCovers`). Each test signs in
 // with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { added, album, created, live, saved, violations, foldersAsRows } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

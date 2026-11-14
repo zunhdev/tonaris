@@ -38,6 +38,8 @@ jobs:
         run: bun run typecheck
       - name: Workspace rules
         run: bun run check:workspace
+      - name: References, error codes and text limits (check:refs)
+        run: bun run check:refs
       - name: OpenSpec (validate --all --strict)
         run: bun run check:specs
       - name: Migrations match the schema

@@ -2,12 +2,11 @@
 // adds it on purpose; another tab of the person's shows it without reloading; an invitation-based share is left after
 // a confirmation; and one whose link was turned off is dimmed and removed.
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Browser, type Page } from "./support/test";
 import { insert, live, saved, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

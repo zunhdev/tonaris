@@ -3,11 +3,10 @@
 // signs in to the same account. Cancelling changes nothing, a change resumes after a reload, and another
 // account's address is refused.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { accounts, apiUrl, newAddresses } from "./support/accounts";
 import { clearInbox, emailedCode } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { expect, type Page, test } from "./support/test";
 import { violations } from "./support/workspace";
 
 const signedOut = { cookies: [], origins: [] };

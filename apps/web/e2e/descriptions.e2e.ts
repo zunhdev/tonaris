@@ -2,12 +2,11 @@
 // header, shown in Viewing mode and in the folder's rows, kept through a reload and a move, and cleared by emptying
 // the text box.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7 } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import { insert, live, saved, violations, foldersAsRows } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

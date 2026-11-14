@@ -2,7 +2,7 @@
 // Settings → Account. What a client sees of one, and the rules for renaming it.
 
 import { maxNameLength } from "./limits";
-import { exceedsLength, isBlankName } from "./names";
+import { exceedsLength, isBlankName, textSchema } from "./names";
 import { z } from "./zod";
 
 /** The name a new passkey gets when its password manager isn't known, as for Apple's, which don't say. */
@@ -23,7 +23,7 @@ export type Passkey = z.infer<typeof passkeySchema>;
 
 /** Renames a passkey. */
 export const passkeyRenameSchema = z.object({
-  name: z.string().max(1000).meta({ description: "The new name; surrounding spaces are dropped." }),
+  name: textSchema(1000).meta({ description: "The new name; surrounding spaces are dropped." }),
 });
 
 /** Why renaming or removing a passkey is refused (DS-93), one sentence each. */

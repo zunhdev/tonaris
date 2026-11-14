@@ -4,11 +4,10 @@
 // link shows its address, the emailed code or its link creates the account, an optional name, the first run, and
 // signing in again; an unusable invitation shows only its sentence.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { accounts, apiUrl, invitee, joiners } from "./support/accounts";
 import { clearInbox, invitationEmail, joinEmail, latestEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { expect, type Page, test } from "./support/test";
 import { pageViolations } from "./support/workspace";
 
 // Pausing admissions is service-wide, so this file's tests run in order: a pause never lands mid-join.

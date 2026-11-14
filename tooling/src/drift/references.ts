@@ -4,6 +4,9 @@
 // - `bun run <script>` commands in the docs with no such script.
 // - OpenSpec changes left unarchived (TS-132: a change is archived in its own PR).
 // - TS-27's list of error codes, when it differs from `errorCodes` in packages/domain (DRIFT-015).
+// - Text limits counted in UTF-16 units: `z.string()…max(` in packages/domain and `maxLength=` in apps/web, where a
+//   person's text is counted in code points (`textSchema`, `clipLength`; DRIFT-103). Machine strings, such as tokens,
+//   codes and links, say so with an `ASCII` comment.
 // Run with `bun run check:refs`; `bun run check` runs it too, so these can't drift again.
 
 import { existsSync, readdirSync } from "node:fs";
@@ -14,7 +17,7 @@ import { errorCodes } from "@tonaris/domain";
 import { loadWorkspace, type PackageJson } from "../workspace-check";
 
 export type Finding = {
-  kind: "id" | "path" | "script" | "change" | "code";
+  kind: "id" | "path" | "script" | "change" | "code" | "length";
   where: string;
   detail: string;
 };
@@ -30,6 +33,42 @@ const definitionPatterns = [
   /^\*\*((?:TS|FR|DS|Q|AC|X)-\d+(?:\.\d+)?)\b/,
   /^\| *((?:TS|FR|DS|Q|AC|X)-\d+(?:\.\d+)?) *\|/,
 ];
+
+/** A string schema with a length bound, across lines: `z.string()`, any calls, then `.max(`. */
+const stringMax = /z\s*\.string\(\)(?:\s*\.[a-zA-Z]+\([^()]*\))*\s*\.max\(/g;
+
+/**
+ * Text limits that count UTF-16 units in `file`'s `text` (DRIFT-103): a string schema's `.max(` in the domain, unless
+ * an `ASCII` comment on its line or the line above says it bounds a machine string; any `maxLength=` in the web app.
+ */
+export function utf16Limits(file: string, text: string): Finding[] {
+  const lines = text.split("\n");
+  const findings: Finding[] = [];
+  if (file.startsWith("packages/domain/src/")) {
+    for (const match of text.matchAll(stringMax)) {
+      const line = lineOf(text, match.index + match[0].length);
+      const around = `${lines[line - 2] ?? ""}\n${lines[line - 1] ?? ""}`;
+      if (/ASCII/.test(around)) continue;
+      findings.push({
+        kind: "length",
+        where: `${file}:${line}`,
+        detail:
+          "a string's .max() counts UTF-16 units: use textSchema(limit), or mark a machine string `// ASCII`",
+      });
+    }
+  }
+  if (file.startsWith("apps/web/src/")) {
+    lines.forEach((content, index) => {
+      if (/\bmaxLength=/.test(content))
+        findings.push({
+          kind: "length",
+          where: `${file}:${index + 1}`,
+          detail: "maxLength counts UTF-16 units: clip with clipLength(value, limit) in onChange",
+        });
+    });
+  }
+  return findings;
+}
 
 /** Where references are looked for. Code is searched for IDs and paths; prose also for `bun run` commands. */
 const codeRoots = ["apps/api/src", "apps/web/src", "apps/web/e2e", "packages", "tooling/src"];
@@ -184,6 +223,7 @@ export async function checkReferences(rootDir: string): Promise<Finding[]> {
   );
   for (const { file, text } of texts) {
     const isProse = file.endsWith(".md");
+    if (!isProse && !file.endsWith(".test.ts")) findings.push(...utf16Limits(file, text));
 
     for (const match of text.matchAll(idPattern)) {
       if (!defined.has(match[0])) {

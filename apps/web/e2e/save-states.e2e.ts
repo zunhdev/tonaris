@@ -3,10 +3,9 @@
 // through the page's sync client (support/workspace.ts). Each test signs in with its own account. Batch reports are
 // batch-report.e2e.ts.
 
-import { expect, test } from "@playwright/test";
-
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test } from "./support/test";
 import {
   announcements,
   conflictingRename,

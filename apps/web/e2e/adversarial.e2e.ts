@@ -2,13 +2,12 @@
 // description and as album titles shows as the text it is in the list, the album's details, search and the guest
 // page, and none of it runs. Each fixture would set window.__tonarisPwned if it did.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { shareSettingsSchema, uuidv7 } from "@tonaris/domain";
 import adversarial from "@tonaris/domain/fixtures/adversarial.json" with { type: "json" };
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, type Page, test } from "./support/test";
 import { added, album, created, live, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

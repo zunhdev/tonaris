@@ -2,8 +2,9 @@
 // Chrome's install criteria (a name, 192 and 512 px icons, a start URL, standalone display, no related native app),
 // its icons are served, and iOS gets its icon and full screen. Chromium only, for Chrome's view of the manifest.
 
-import { expect, test } from "@playwright/test";
 import { z } from "zod";
+
+import { expect, test } from "./support/test";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 

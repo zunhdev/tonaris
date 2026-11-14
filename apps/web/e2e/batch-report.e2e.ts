@@ -3,12 +3,11 @@
 // built on a failure is skipped, and retries make the rest again without duplicating anything. The edits go through
 // the page's sync client (support/workspace.ts). Each test signs in with its own account.
 
-import { expect, test, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Page } from "./support/test";
 import {
   activity,
   announcements,

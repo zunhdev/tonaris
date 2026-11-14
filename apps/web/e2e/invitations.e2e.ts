@@ -3,13 +3,12 @@
 // from the inbox, the page for an answered invitation and for someone else, and the owner removing access. A new one
 // is announced in the open app, once (TON-129).
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { clearInbox, latestEmail } from "./support/mailpit";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Browser, type Page } from "./support/test";
 import { insert, live, saved, toasts, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

@@ -2,12 +2,11 @@
 // Shared with me, "Shared by Denis · Metal", and opens in the viewer page; the private folder above it is never found
 // or named; a shared album shows only its shared list; and once access is revoked, nothing is found.
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, test, type Browser, type Page } from "./support/test";
 import { added, album, insert, live, saved, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

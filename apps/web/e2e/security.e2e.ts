@@ -1,9 +1,8 @@
 // The web app's security headers in the browser (TS-101): the CSP with its per-request nonce, enforced, and the
 // other headers on every page.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { apiUrl, nobody } from "./support/accounts";
+import { expect, type Page, test } from "./support/test";
 
 const signedOut = { cookies: [], origins: [] };
 

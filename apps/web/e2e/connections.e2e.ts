@@ -3,8 +3,6 @@
 // revocation, with when the client last called. The client is registered by DCR and its callback is caught in the
 // browser.
 
-import { expect, test } from "@playwright/test";
-
 import { accounts, creatorState } from "./support/accounts";
 import { signInEmail } from "./support/mailpit";
 import {
@@ -16,6 +14,7 @@ import {
   registerClient,
 } from "./support/mcp";
 import { requestCode } from "./support/sign-in";
+import { expect, test } from "./support/test";
 import { live, pageViolations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });

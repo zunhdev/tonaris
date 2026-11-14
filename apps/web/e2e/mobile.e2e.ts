@@ -5,13 +5,11 @@
 // path from the top bar's name (TON-153); pull to refresh in an iPhone Home Screen app (TON-139); and a list opened
 // from far down a folder opening at its top (TON-157).
 
-import { AxeBuilder } from "@axe-core/playwright";
-import { expect, type Locator, type Page, test } from "@playwright/test";
-
 import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
+import { expect, type Locator, type Page, test } from "./support/test";
 import {
   added,
   album,
@@ -22,6 +20,7 @@ import {
   saved,
   webOrigin,
   foldersAsRows,
+  wcagViolations,
 } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -50,20 +49,8 @@ async function seeded(page: Page) {
   return { metal, doom, dopesmoker };
 }
 
-/**
- * axe's findings on the page, once a page switch's fade is over. Base UI's focus guards are left out: in Safari it
- * gives the invisible sentinels that keep focus inside a dialog `role="button"`, for VoiceOver, which axe reads as
- * unnamed buttons (TON-93 checks them).
- */
-const axe = async (page: Page) => {
-  await pageFaded(page);
-  return (
-    await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
-      .exclude("[data-base-ui-focus-guard]")
-      .analyze()
-  ).violations.map((violation) => violation.id);
-};
+/** axe's WCAG findings on the page, once a page switch's fade is over (support/workspace.ts). */
+const axe = wcagViolations;
 
 /** Where something is on the page, once it is there. */
 const boxOf = async (part: Locator) => (await part.boundingBox())!;

@@ -2,11 +2,10 @@
 // session the API sees, sign-out, and the signed-out workspace (FR-11.1, FR-11.2; DS-90, TS-70). Each test
 // starts signed out and uses its own account and inbox.
 
-import { expect, type Page, test } from "@playwright/test";
-
 import { accounts, apiUrl, nobody } from "./support/accounts";
 import { clearInbox, latestEmail, signInEmail } from "./support/mailpit";
 import { requestCode, signIn } from "./support/sign-in";
+import { expect, type Page, test } from "./support/test";
 import { pageViolations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
