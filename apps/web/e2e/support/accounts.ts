@@ -238,6 +238,8 @@ export const accounts = {
   phone: at("phone"),
   phoneOptions: at("phone-options"),
   phoneSearch: at("phone-search"),
+  // Phone touch targets (mobile.e2e.ts, TON-218).
+  phoneTargets: at("phone-targets"),
   // A phone's Mine and Shared (mobile.e2e.ts, TON-134): the sharer and the person shared with.
   phoneSharer: at("phone-sharer"),
   phoneViewer: at("phone-viewer"),

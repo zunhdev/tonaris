@@ -246,10 +246,8 @@ test("search fills the screen and opens what it finds", async ({ page }) => {
     await expect(palette.getByRole("option", { name: edit })).toHaveCount(0);
 });
 
-test("Settings' choices and a dialog's Close are 44 px targets on a phone (DS-15, DRIFT-093)", async ({
-  page,
-}) => {
-  await signIn(page, accounts.phoneSearch);
+test("Settings' choices are 44 px targets on a phone (DS-15, DRIFT-093)", async ({ page }) => {
+  await signIn(page, accounts.phoneTargets);
   await page.goto("/settings/preferences");
   const radios = page.getByRole("main").getByRole("radio");
   await expect(radios.first()).toBeVisible();
