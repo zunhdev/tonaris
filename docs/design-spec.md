@@ -1063,7 +1063,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
 - **A list:** "1 list moved to Denis's Trash", with Undo.
 - **A folder:** "Albums stay in their other lists." and "Only Denis can restore it, from their Trash.", with "Move 1 folder and 2 lists to Denis's Trash".
 - **An album:** "Delete 'Nightfall' from 'Metal'?", "It leaves 1 list: Doom.", "Removes it from every list in 'Metal'." and "Denis's other lists keep it.", with **Delete**; then "'Nightfall' left 'Metal'".
-- **The shared folder or list itself:** ⌫ on it says "Only its owner can move or delete the shared folder or list itself." and deletes nothing.
+- **The shared folder or list itself:** ⌫ on it says "Only its owner can move or delete the shared folder or list itself. You can rename it, describe it and color it." (the API's words) and deletes nothing. A folder or list inside another share the person edits isn't one: it moves and deletes within that share (TON-213).
 
 **DS-51 Unsorted placement** *(handoff FR-05.4)*:
 - An album entering Unsorted, whether new or leaving its last list, is placed at the **top** of the owner's Unsorted manual order. Unsorted behaves like an inbox.
@@ -1365,7 +1365,7 @@ The block never says "private" while another access path remains.
 
 *As built in TON-195:* **the shortcuts and the palette's commands** act on the share on screen.
 - **N, ⇧N and F2** open the name dialog, for the folder on view or the list's folder.
-- **M:** Move to… lists only the share's folders, never Collection. On the shared folder or list itself, it says "Only its owner can move or delete the shared folder or list itself." and offers nowhere.
+- **M:** Move to… lists only the share's folders, never Collection. On the shared folder or list itself, it says the same as ⌫ and offers nowhere.
 - **Dragging** onto the sidebar's folders moves nothing: they're the person's own.
 
 ---

@@ -618,7 +618,7 @@ A single-owner serializer is deliberate. Per-account write volume is tiny, and s
     - The sidebar and the palette sit in `OwnCollection`, which re-provides the person's own.
     - Views, defaults and manual order are the person's own (`personal` in `createSyncClient`, FR-07.17).
     - Links and moves to folders and lists ask the place (`ContainerLink`, `useOpenContainer`), so a share's go to `/shared/{root}?c={id}`.
-    - A new album made in a share carries its list in `album.create` (`newAlbumLists`).
+    - A new album made in a share carries its list in `album.create`, from its insert's metadata, so a Retry after a reload makes it in the same collection (TON-213).
     - The share client's unsent writes are kept under `{account}~{root}`.
   - **What follows from it** (TON-191, TON-195):
     - links to folders and lists come from a context, so a share's link to `/shared/{root}?c={id}` instead of `/f/{id}` and `/l/{id}`;
