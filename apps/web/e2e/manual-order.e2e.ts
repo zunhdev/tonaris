@@ -370,6 +370,8 @@ test("albums dragged onto a list in the tree join it, and with ⌥ move there, w
   await expect(rowOf(page, "Doom", "Holy Mountain")).toHaveCount(0);
   const notifications = page.getByRole("region", { name: "Notifications" });
   await expect(notifications.getByText("Moved to Stoner")).toBeVisible();
+  // dnd-kit stops clicks for 50 ms after a drop; the save takes longer.
+  await saved(page);
   await notifications.getByRole("button", { name: "Undo" }).click();
   await expect(rowOf(page, "Doom", "Holy Mountain")).toHaveCount(1);
   await saved(page);
