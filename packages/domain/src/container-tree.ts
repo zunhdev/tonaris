@@ -37,6 +37,27 @@ export function chainOf(tree: Tree, parentId: string | null): string[] {
   return chain;
 }
 
+/**
+ * The containers from the top down to `id`, itself included, among those in the tree. With `visible`, the path starts
+ * at the highest of them it may show, as a shared list's path starts at its share. Stops at a cycle in damaged data.
+ * Search, MCP and the web app's paths all walk with it (DRIFT-057).
+ */
+export function pathOf<T extends TreeNode>(
+  tree: Tree<T>,
+  id: string,
+  visible?: ReadonlySet<string>,
+): T[] {
+  const path: T[] = [];
+  const seen = new Set<string>();
+  for (let at = tree.byId.get(id); at && !seen.has(at.id);) {
+    seen.add(at.id);
+    path.unshift(at);
+    if (at.parentId === null || (visible && !visible.has(at.parentId))) break;
+    at = tree.byId.get(at.parentId);
+  }
+  return path;
+}
+
 /** `id` and its descendants out of Trash, breadth-first. */
 export function subtreeOf(tree: Tree, id: string): string[] {
   const ids = [id];
@@ -88,9 +109,20 @@ export function moveProblem(
   id: string,
   parentId: string | null,
 ): "cycle" | "too_deep" | undefined {
-  const path = chainOf(tree, parentId);
-  if (path.includes(id)) return "cycle";
-  if (exceedsMaxDepth(path.length, subtreeDepthOf(tree, id))) return "too_deep";
+  return moveCheck(chainOf(tree, parentId), id, subtreeDepthOf(tree, id));
+}
+
+/**
+ * The move check itself, on what the walks found: `chain`, the destination and the folders above it, and `levels`, the
+ * depth of what moves. `container.move` asks it with storage's walks, `moveProblem` with the tree's (DRIFT-057).
+ */
+export function moveCheck(
+  chain: readonly string[],
+  id: string,
+  levels: number,
+): "cycle" | "too_deep" | undefined {
+  if (chain.includes(id)) return "cycle";
+  if (exceedsMaxDepth(chain.length, levels)) return "too_deep";
   return undefined;
 }
 

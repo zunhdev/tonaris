@@ -12,7 +12,7 @@ import { albumOf, changeableAlbum } from "./albums";
 import type { CollectionStore } from "./collection-store";
 import { actingOwner, applied, insideShare, isFailure, shareTopRefusal } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
-import { exceedsMaxDepth } from "./container-tree";
+import { exceedsMaxDepth, subtreeDepthOf, treeOf } from "./container-tree";
 import {
   changeableContainer,
   containerKinds,
@@ -170,10 +170,10 @@ export function trashUnitOf(
   };
 }
 
-/** Levels in the unit from its root down, the root included. */
+/** Levels in the unit from its root down, the root included: the tree's walk, which stops at a cycle (DRIFT-057). */
 function depthOf(rootId: string, members: readonly Container[]): number {
-  const below = members.filter((member) => member.parentId === rootId);
-  return 1 + Math.max(0, ...below.map((member) => depthOf(member.id, members)));
+  // Every member is in Trash with its unit; as a tree, they are each other's children.
+  return subtreeDepthOf(treeOf(members.map((member) => ({ ...member, trashed: false }))), rootId);
 }
 
 /**

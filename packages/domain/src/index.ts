@@ -566,7 +566,9 @@ export { endedGrantStatuses, openGrantStatuses } from "./sharing";
 export {
   chainOf,
   exceedsMaxDepth,
+  moveCheck,
   moveProblem,
+  pathOf,
   rootsAmong,
   subtreeDepthOf,
   subtreeOf,
