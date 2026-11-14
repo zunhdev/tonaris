@@ -128,6 +128,7 @@ describe("migrations", () => {
       "session",
       "share_grants",
       "share_links",
+      "spent_unit_ids",
       "trash_units",
       "user",
       "verification",
