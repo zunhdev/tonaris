@@ -214,6 +214,7 @@ docs/                      PRD, design spec, tech spec, audits, runbooks
   - `bun run deps:advisories` reads what each direct dependency's own GitHub repository publishes. Those reach the shared database late or never: Better Auth's batch of 3 November 2026 never did, so neither `bun audit` nor Dependabot reported it.
 
   High and critical fixes ship the same day.
+- **Overrides.** When a transitive advisory has a fix that the parent's own range rules out, the root `package.json` pins the fixed version in `overrides`, exactly. Each comes out once the parent allows the fix. Today: `minimatch` 11.0.8 for shadcn's CLI, whose `@ts-morph/common` still asks for `^10` (GHSA-g3hv-75wg-m249, TON-235).
 - *Changed in TON-202:* Renovate was planned here but never set up, and dependencies fell behind security fixes. The skills replace it.
 
 **TS-08 Domains (Decided; Q-06).**

@@ -24,7 +24,7 @@ taze drops a package without a word when a metadata request fails. Compare its l
 ## 2. Plan the batch
 
 - **Security fixes:** for each hit, the newest version that is past the cooldown and fixes it, or the fixing version itself if that is younger: `bunx taze --maturity-period 0 --include <name> -w`. Note whether the advisory touches a feature we use (Better Auth's phone and organization plugins, for example, we don't), but upgrade either way.
-- **Transitive advisories** from `bun audit`: try `bun audit fix --dry-run`. If a fix needs a parent upgrade, upgrade the parent. Otherwise list it with its dependency path; one reached only through a dev tool, such as shadcn's CLI, weighs less.
+- **Transitive advisories** from `bun audit`: try `bun audit fix --dry-run`. If a fix needs a parent upgrade, upgrade the parent. If the parent's newest release still rules the fix out, pin the fixed version in the root `overrides`, smoke-test the parent, and record it in TS-07. Drop an override once the parent allows the fix. With no fix released, list it with its dependency path; one reached only through a dev tool, such as shadcn's CLI, weighs less.
 - **Patch and minor releases:** apply together.
 - **Majors and pre-release steps:** one at a time, after reading the release notes or migration guide; link them in the Linear issue. 0.x minors count as majors (oxfmt).
 - **Pinned pre-releases** (Elysia, Drizzle, TanStack DB): TS-04 bumps Elysia at most every two weeks unless for security, after reading its changelog. A pre-release can carry security fixes with no advisory, so also read its commits since our version: `gh api "repos/<owner>/<repo>/commits?sha=<branch>&since=<date of our version>" --jq '.[].commit.message'`, looking for security, hardening, CVE or GHSA.
