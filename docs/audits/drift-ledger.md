@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 79 | 6 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 76 | 9 | 0 |
 
 ## Areas
 
@@ -74,7 +74,7 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-041 | spec | TS-08 and §13 call the domain a placeholder and Render a "current preference"; both were decided | `docs/tech-spec.md` TS-08, §13 | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-042 | spec | DS-72 keeps link previews text-only "until G1 clears artwork use"; G1 closed with nothing recorded | `docs/design-spec.md` DS-72 | filed TON-225 | 2026-11-13 | 2026-11-13 |
 | DRIFT-043 | spec | The restore runbook's replayed events leave out passkey removals and lowered share roles | `docs/runbooks/restore.md`; `packages/db/src/ledger-replay.ts` | fixed (TON-217) | 2026-11-13 | 2026-11-13 |
-| DRIFT-044 | spec | Viewer and guest pages don't notice a silent stream or resume after sleep, an editor's share client doesn't resume, and an open share and the sidebar open two streams to one share (TS-24) | `apps/web/src/features/sharing/use-share-stream.ts`, `editable-share.tsx`; `apps/web/src/client/sync/share-engine.ts` | filed TON-211 | 2026-11-13 | 2026-11-13 |
+| DRIFT-044 | spec | Viewer and guest pages don't notice a silent stream or resume after sleep, an editor's share client doesn't resume, and an open share and the sidebar open two streams to one share (TS-24) | `apps/web/src/features/sharing/use-share-stream.ts`, `editable-share.tsx`; `apps/web/src/client/sync/share-engine.ts` | fixed (TON-211) | 2026-11-13 | 2026-11-13 |
 | DRIFT-045 | spec | Retry on a failed new album, after a reload or after leaving a share, files it in the editor's own collection | `apps/web/src/features/collection/new-album.tsx`; `apps/web/src/client/sync/resubmit.ts` | filed TON-213 | 2026-11-13 | 2026-11-13 |
 | DRIFT-046 | architecture | The web app decides "the share's own folder or list" itself, more strictly than the domain | `apps/web/src/features/collection/views.tsx`, `move.tsx`, `delete-containers.tsx`; `packages/domain/src/command-kit.ts` | filed TON-213 | 2026-11-13 | 2026-11-13 |
 | DRIFT-047 | architecture | Naming in a share checks only for a blank name, in its own words; the sidebar's name field allows 400 characters, not 200 | `apps/web/src/features/collection/name-dialog.tsx`, `name-editor.tsx`; `packages/domain/src/containers.ts` | filed TON-219 | 2026-11-13 | 2026-11-13 |
@@ -132,11 +132,11 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-099 | lesson | CSP violations on server-rendered pages were found in production by hand (TON-126); 3 pages are watched | `apps/web/e2e/security.e2e.ts` | filed TON-222 | 2026-11-13 | 2026-11-13 |
 | DRIFT-100 | lesson | Browser tests act while something animates: axe mid-fade (3 times), keys during a dialog's exit (twice) | `apps/web/e2e` | filed TON-222 | 2026-11-13 | 2026-11-13 |
 | DRIFT-101 | architecture | Read-only connections are refused in each command, not in one place, and a miss has happened | `packages/db/src/sync.ts`; `packages/domain/src/policies.ts` | filed TON-214 | 2026-11-13 | 2026-11-13 |
-| DRIFT-102 | architecture | A stream can be opened without the session it should end with: the hub's session is optional | `apps/api/src/sync/hub.ts`; `apps/api/src/sse.ts` | filed TON-211 | 2026-11-13 | 2026-11-13 |
+| DRIFT-102 | architecture | A stream can be opened without the session it should end with: the hub's session is optional | `apps/api/src/sync/hub.ts`; `apps/api/src/sse.ts` | fixed (TON-211) | 2026-11-13 | 2026-11-13 |
 | DRIFT-103 | lesson | Text limits counted in UTF-16 units, not code points (TON-151); three remain | `packages/domain/src/passkeys.ts`, `accounts.ts`; `apps/web/src/features/collection/name-editor.tsx` | filed TON-222 | 2026-11-13 | 2026-11-13 |
 | DRIFT-104 | spec | `bun run seed:workload` fails on a foreign key once the workload account has saved a default | `tooling/src/workload/seed.ts` | fixed (TON-223) | 2026-11-13 | 2026-11-13 |
 | DRIFT-105 | lesson | Six "refused" rows in TON-208's every-tool editor test pass without the ownership check: a mistake in TON-208 | `apps/api/src/mcp/shared-editing.test.ts` | filed TON-214 | 2026-11-13 | 2026-11-13 |
-| DRIFT-106 | spec | A guest page that gets a 429 from the guest-view limit shows "not available" and stops following: a mistake in TON-207 | `apps/web/src/routes/s.$token.tsx` | filed TON-211 | 2026-11-13 | 2026-11-13 |
+| DRIFT-106 | spec | A guest page that gets a 429 from the guest-view limit shows "not available" and stops following: a mistake in TON-207 | `apps/web/src/routes/s.$token.tsx` | fixed (TON-211) | 2026-11-13 | 2026-11-13 |
 | DRIFT-107 | lesson | `check:refs` runs nowhere in CI | `.github/workflows/ci.yml`; `docs/tech-spec.md` TS-124 | filed TON-222 | 2026-11-13 | 2026-11-13 |
 | DRIFT-108 | spec | The store-page request counts leave out the one redirect the code follows; TS-41 contradicts itself | `openspec/specs/metadata-sources/spec.md`; `packages/providers/src/store-pages.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-109 | spec | `bun run deps:advisories` can't flag a release-candidate pin | `tooling/src/deps/advisories.ts` | fixed (TON-223) | 2026-11-13 | 2026-11-13 |
