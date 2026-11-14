@@ -8,7 +8,7 @@ import { z } from "zod";
 import type { ProviderCache } from "@tonaris/domain";
 
 import { clientParts, readBody, type ClientOptions } from "./client";
-import { ProviderUnavailableError } from "./errors";
+import { answerOf, ProviderUnavailableError } from "./errors";
 import { PacedQueue } from "./paced-queue";
 import { cachedValue } from "./provider-cache";
 import { discard, type ProviderFetch } from "./safe-fetch";
@@ -119,9 +119,9 @@ export class ItunesLookup {
       throw new ProviderUnavailableError("itunes", `iTunes Lookup answered ${response.status}`);
     }
     const body = await readBody("itunes", response, "json");
-    const result = lookupSchema
-      .parse(body)
-      .results.find((entry) => entry.wrapperType === wrapperType);
+    const result = answerOf("itunes", lookupSchema, body).results.find(
+      (entry) => entry.wrapperType === wrapperType,
+    );
     const artist = result?.collectionArtistName ?? result?.artistName;
     const album =
       result?.collectionId &&

@@ -120,6 +120,22 @@ export function sharingStore(tx: Transaction) {
         .returning({ containerId: savedReferences.containerId });
       return dropped.length > 0;
     },
+    async countReferences(viewerId) {
+      const [row] = await tx
+        .select({ n: count() })
+        .from(savedReferences)
+        .where(eq(savedReferences.viewerId, viewerId));
+      return row?.n ?? 0;
+    },
+    async keepsReference(viewerId, containerId) {
+      const [row] = await tx
+        .select({ containerId: savedReferences.containerId })
+        .from(savedReferences)
+        .where(
+          and(eq(savedReferences.viewerId, viewerId), eq(savedReferences.containerId, containerId)),
+        );
+      return row !== undefined;
+    },
     async saveReference(viewerId, containerId, linkId) {
       const where = and(
         eq(savedReferences.viewerId, viewerId),

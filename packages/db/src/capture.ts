@@ -2,7 +2,7 @@
 // owner already has albums of, and which saved albums might be under a release group MusicBrainz has since merged
 // into the captured one. The command matches again under the lock, so these only decide what to ask.
 
-import { and, asc, count, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 
 import {
   albumSeenBy,
@@ -113,7 +113,9 @@ export async function mergeCandidates(
 
 /**
  * The account's captures received after `since`, other than `mutationId` (TS-18): what the hourly limit counts. Each
- * capture's row is written when it is claimed, so ones still running count too.
+ * capture's row is written when it is claimed, so ones still running count too. Only those that saved an album, or
+ * may still: one refused, failed or waiting for the person added nothing, so retrying while refused doesn't extend
+ * the wait, and the refusal's "You've added 100 albums" stays true (DRIFT-065).
  */
 export async function capturesSince(
   db: Database,
@@ -130,6 +132,7 @@ export async function capturesSince(
         eq(mutations.name, "album.capture"),
         gt(mutations.receivedAt, since),
         ne(mutations.id, mutationId),
+        or(isNull(mutations.result), sql`${mutations.result}->>'status' = 'confirmed'`),
       ),
     );
   return row?.count ?? 0;

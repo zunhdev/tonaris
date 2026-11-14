@@ -413,7 +413,7 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 - The host's pre-deploy step runs `bun run db:migrate` (TS-110). It applies all pending migrations in one transaction.
 - `bun run db:check` runs `drizzle-kit check` (snapshots readable, no migration conflicts) and `drizzle-kit generate --explain`, which must report no changes. Neither needs a database. CI runs it (TS-124).
 
-**TS-18 Resource limits (Decided 17 October 2026; FR-15.1, FR-15.3, FR-15.4).** Approved by the creator. Each value is one constant in `packages/domain/src/limits.ts`, checked under the owner's write lock (TS-20).
+**TS-18 Resource limits (Decided 17 October 2026; FR-15.1, FR-15.3, FR-15.4).** Approved by the creator. Each value is one constant in `packages/domain/src/limits.ts`, checked under the owner's write lock (TS-20), except MCP's per-grant rates, which live in `apps/api/src/mcp/limits.ts` (TS-66).
 
 | Resource | Limit |
 | --- | --- |
@@ -439,8 +439,9 @@ At a limit, only the new item is rejected, with `capacity_exceeded` (albums) or 
   - `album.create` and a capture making a new record check every album row of the owner, Trash included;
   - reuse, re-addition and restore never create a record, so they work at the limit;
   - the refusal is "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more."
-- **Captures** (`maxCapturesPerHour`): the mutation runner counts the account's `album.capture` mutations received in the last hour, this one excepted. *Planned in P-TON-47 (FR-07.19):* an editor's captures into a share count against the editor, whose `mutations` rows they are; the album, container and entry limits are the owner's. At 100 it answers `rate_limited` before asking any provider: "You've added 100 albums from links in the last hour. Try again later, or enter an album manually."
+- **Captures** (`maxCapturesPerHour`): the mutation runner counts the account's `album.capture` mutations received in the last hour, this one excepted. *Since TON-216:* only those that saved an album or are still running count, so a refused, failed or unfinished capture doesn't extend the wait (DRIFT-065). *Built in P-TON-47 (FR-07.19):* an editor's captures into a share count against the editor, whose `mutations` rows they are; the album, container and entry limits are the owner's. At 100 it answers `rate_limited` before asking any provider: "You've added 100 albums from links in the last hour. Try again later, or enter an album manually."
 - **MCP's per-grant rates** came with TON-85 (TS-66).
+- **Saved shared references** (`maxSavedReferences`, TON-216): saving one from a link past 100 is refused with `limit_exceeded`, "You keep 100 folders and lists in Shared with me. Remove one to keep this." One kept already is updated, and accepting an invitation always works, since someone chose the person (the creator's decision, 14 November 2026).
 - **Exports** (`maxExportsPerHour`) came with TON-89 (TS-80): 5 per account per hour, counted in memory like the sign-in limits. The sixth answers `rate_limited` with `Retry-After`: "You've exported your data 5 times in the last hour. Try again in {n} minutes."
 
 ---
@@ -860,7 +861,7 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - the `Location` must be on the allowlist: another short link, or `open.spotify.com`, whose album or track ends the walk. Any other host is never requested;
 - at most 3 hops, through the SSRF guard (TS-103). The resolver takes the fetcher as an argument, and production passes `safeFetch`;
 - the walk fails as unsupported on a redirect to anything but a Spotify album or track, an answer without a redirect, or a fourth hop. An unknown code redirects to `https://open.spotify.com/` (checked 24 October 2026);
-- a failed request, a `5xx` or a `429` is `provider_unavailable`, so it can be retried.
+- a failed request, a `5xx` or a `429` is `provider_unavailable`, so it can be retried. So is an answer of an unexpected shape, which every client parses through `answerOf` (TON-216).
 
 **Equivalence (FR-06.4).** Two links with the same `{service, kind, id}` are equivalent and never conflict, whatever their canonical URLs. This is `sameLink()` in `packages/domain/src/links.ts`, beside `streamingServices`, which `album_service_links.service` uses.
 

@@ -673,4 +673,29 @@ describe("the capture limit (TS-18)", () => {
     const added = await send(capture(links.bleachSpotify));
     expect(added.outcome.status).toBe("confirmed");
   });
+
+  test("only captures that saved an album count: refusals and failures don't extend the wait (DRIFT-065)", async () => {
+    const receivedAt = new Date(Date.now() - 10 * 60_000);
+    const row = (outcome: unknown) => ({
+      id: uuidv7(),
+      accountId,
+      principal: "user:web",
+      name: "album.capture",
+      status: "completed",
+      result: outcome,
+      receivedAt,
+    });
+    await t.db
+      .insert(mutations)
+      .values([
+        ...Array.from({ length: 99 }, () => row({ status: "confirmed", seq: 1, result: null })),
+        ...Array.from({ length: 5 }, () => row({ status: "failed", code: "rate_limited" })),
+        row({ status: "failed", code: "provider_unavailable" }),
+        row({ status: "needs_input", need: "details", candidates: [] }),
+      ]);
+    const added = await send(capture(links.bleachSpotify));
+    expect(added.outcome.status).toBe("confirmed");
+    const refused = await send(capture(links.bleachOtherSpotify));
+    expect(refused.outcome).toMatchObject({ status: "failed", code: "rate_limited" });
+  });
 });

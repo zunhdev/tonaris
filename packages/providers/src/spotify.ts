@@ -8,7 +8,7 @@ import { z } from "zod";
 import type { LinkKind } from "@tonaris/domain";
 
 import { clientParts, readBody, type ClientOptions } from "./client";
-import { ProviderUnavailableError } from "./errors";
+import { answerOf, ProviderUnavailableError } from "./errors";
 import { PacedQueue, retryAfterMs } from "./paced-queue";
 import { discard, type ProviderFetch, type SafeFetchInit } from "./safe-fetch";
 import { services } from "./services";
@@ -45,14 +45,14 @@ export class Spotify {
   async album(id: string): Promise<{ upc?: string } | undefined> {
     const body = await this.get("Get Album", "album", id);
     if (body === undefined) return undefined;
-    const upc = albumSchema.parse(body).external_ids?.upc;
+    const upc = answerOf("spotify", albumSchema, body).external_ids?.upc;
     return upc ? { upc } : {};
   }
 
   /** The album a track belongs to (FR-02.3), held only by the caller; undefined when there's no such track. */
   async parentAlbum(trackId: string): Promise<string | undefined> {
     const body = await this.get("Get Track", "track", trackId);
-    return body === undefined ? undefined : trackSchema.parse(body).album.id;
+    return body === undefined ? undefined : answerOf("spotify", trackSchema, body).album.id;
   }
 
   private async get(call: Call, kind: LinkKind, id: string): Promise<unknown> {
@@ -105,8 +105,11 @@ export class Spotify {
         `Spotify answered ${response.status} to the token`,
       );
     }
-    const { access_token: value, expires_in: expiresIn } = tokenSchema.parse(
+    const { access_token: value, expires_in: expiresIn } = answerOf(
+      "spotify",
+      tokenSchema,
       await readBody("spotify", response, "json", "the token"),
+      "the token",
     );
     this.token = { value, expiresAt: this.now() + (expiresIn - 60) * 1_000 };
     return value;

@@ -703,6 +703,12 @@ export function memoryStore({
       if (referenceRows.get(key)?.linkId !== null) return Promise.resolve(false);
       return Promise.resolve(referenceRows.delete(key));
     },
+    countReferences: (viewerId) =>
+      Promise.resolve(
+        [...referenceRows.values()].filter((row) => row.viewerId === viewerId).length,
+      ),
+    keepsReference: (viewerId, containerId) =>
+      Promise.resolve(referenceRows.has(`${viewerId}:${containerId}`)),
     saveReference(viewerId, containerId, linkId) {
       const key = `${viewerId}:${containerId}`;
       const row = referenceRows.get(key);
