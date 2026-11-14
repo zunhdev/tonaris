@@ -20,6 +20,7 @@ import {
 
 import {
   canReadContainer,
+  editGrant,
   editableContainers,
   linkByTokenHash,
   readableContainers,
@@ -269,9 +270,9 @@ export function shareSettings(
         ? []
         : await tx.execute<{ granteeId: string; id: string; name: string }>(sql`
             with recursive ${ancestorsCte(container.parentId, { active: true })}
-            select g.grantee_id as "granteeId", up.id, c.name
+            select ${shareGrants.granteeId} as "granteeId", up.id, c.name
             from up
-            join ${shareGrants} g on g.container_id = up.id and g.status = 'accepted' and g.role = 'edit'
+            join ${shareGrants} on ${shareGrants.containerId} = up.id and ${editGrant}
             join ${containers} c on c.id = up.id
             order by up.level`);
     const editableThrough = new Map<string, { containerId: string; name: string }>();

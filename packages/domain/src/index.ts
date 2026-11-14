@@ -173,7 +173,15 @@ export {
   type StoredContainer,
 } from "./containers";
 export type { CollectionStore } from "./collection-store";
-export { runCommand, type ChangeInput, type CommandContext, type CommandResult } from "./commands";
+export {
+  mutationNames,
+  mutationTarget,
+  runCommand,
+  type ChangeInput,
+  type CommandContext,
+  type CommandResult,
+  type MutationTarget,
+} from "./commands";
 export {
   blankAlbum,
   enrichableFields,
@@ -538,7 +546,13 @@ export { redact, redactRecord, redactText } from "./telemetry";
 export type { ProviderCache } from "./provider-cache";
 
 // Rules moved from packages/db (TON-147).
-export { guestMutationRefusal, mutationIdInUse, mutationTooOld } from "./sync";
+export {
+  guestMutationRefusal,
+  mutationIdInUse,
+  mutationRefusal,
+  mutationTooOld,
+  readOnlyMutationRefusal,
+} from "./sync";
 export { codeRefusal, type CodeRefusal } from "./codes";
 export { invitationStateFor, shownEmailStatus } from "./invitations";
 export { maxMergeCandidates } from "./limits";

@@ -56,12 +56,17 @@ function sourcesOf(viewer: ShareViewer): SQL {
     where ${savedReferences.viewerId} = ${viewer.userId} and ${shareLinks.revokedAt} is null`;
 }
 
-/** The containers `userId` edits through directly (`editSourcesOf` in packages/domain): accepted edit grants. */
+/**
+ * A grant that lets its grantee edit (`editSourcesOf` in packages/domain): accepted, with the edit role. Every query
+ * of who edits what uses it, so the rule is written once in SQL (DRIFT-056).
+ */
+export const editGrant = sql`${shareGrants.status} = 'accepted' and ${shareGrants.role} = 'edit'`;
+
+/** The containers `userId` edits through directly: their edit grants. */
 function editSourcesOf(userId: string): SQL {
   return sql`
     select ${shareGrants.containerId} as id from ${shareGrants}
-    where ${shareGrants.granteeId} = ${userId} and ${shareGrants.status} = 'accepted'
-      and ${shareGrants.role} = 'edit'`;
+    where ${shareGrants.granteeId} = ${userId} and ${editGrant}`;
 }
 
 /** Every container reached from `sources`, each with the sources it is reached through: down from each active one. */

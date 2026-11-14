@@ -416,9 +416,11 @@ describe("every write tool, as an editor's agent inside a share (DRIFT-024)", ()
     expect(deleted.status).toBe(200);
     // A working link to the share, which Anna may keep like anyone with it.
     const token = "t".repeat(43);
-    await t.db
-      .insert(shareLinks)
-      .values({ id: id(), containerId: metal, tokenHash: await shareTokenHash(token) });
+    await t.db.insert(shareLinks).values({
+      id: id(),
+      containerId: metal,
+      tokenHash: Buffer.from(await shareTokenHash(token)),
+    });
     const { mcp } = await agentOf("anna@example.com", "manage");
     const offered = await write(mcp, "add_albums", {
       listId: doom,
