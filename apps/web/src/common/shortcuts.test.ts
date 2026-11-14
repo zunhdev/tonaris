@@ -7,6 +7,8 @@ import {
   createShortcutMatcher,
   frequentCommands,
   isTextField,
+  keysLabel,
+  platformKeys,
   shortcutLabel,
   shortcutReference,
   type KeyPress,
@@ -129,5 +131,14 @@ describe("frequent commands (DS-75)", () => {
       "capture",
       "go-unsorted",
     ]);
+  });
+});
+
+describe("keys on each platform (DS-29, DS-78, DRIFT-094)", () => {
+  test("⌘ reads as Ctrl off Apple's, and a menu's label joins it with +", () => {
+    expect(platformKeys(["⌘", "K"], false)).toEqual(["Ctrl", "K"]);
+    expect(platformKeys(["⌘", "K"], true)).toEqual(["⌘", "K"]);
+    expect(keysLabel(["⌘", "⌫"], false)).toBe("Ctrl+⌫");
+    expect(keysLabel(["⇧", "N"], false)).toBe("⇧N");
   });
 });

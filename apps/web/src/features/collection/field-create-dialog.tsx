@@ -5,6 +5,7 @@
 // Custom fields reuses it (TON-53).
 
 import { sent } from "@/client/sync/writer";
+import { ariaShortcut } from "@/common/shortcuts";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { Plus, X } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
@@ -225,7 +226,7 @@ export function FieldCreateDialog({
             <Button type="button" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" aria-keyshortcuts="Meta+Enter">
+            <Button type="submit" variant="primary" aria-keyshortcuts={ariaShortcut("Meta+Enter")}>
               Create field
             </Button>
           </DialogFooter>

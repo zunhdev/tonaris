@@ -12,6 +12,8 @@ function Switch({ className, ...props }: SwitchPrimitive.Root.Props) {
       data-slot="switch"
       className={cn(
         "relative inline-flex h-5 w-9 shrink-0 cursor-default items-center rounded-full border border-strong bg-raised p-0.5 transition-colors duration-100 ease-enter outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid data-checked:border-transparent data-checked:bg-accent-solid data-disabled:opacity-50",
+        // On a phone, a 44 px target around the same switch (DS-15, DRIFT-093).
+        "max-md:before:absolute max-md:before:-inset-3 max-md:before:content-['']",
         className,
       )}
       {...props}

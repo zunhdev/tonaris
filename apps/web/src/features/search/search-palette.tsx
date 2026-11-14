@@ -18,8 +18,16 @@
 
 import { api } from "@/api";
 import { commandUses, recentItems } from "@/common/device";
+import { useNarrowScreen } from "@/common/media";
 import { useShell } from "@/common/shell-context";
-import { commands, frequentCommands, type Command, type CommandId } from "@/common/shortcuts";
+import {
+  commands,
+  frequentCommands,
+  phoneCommands,
+  platformKeys,
+  type Command,
+  type CommandId,
+} from "@/common/shortcuts";
 import type { CommandRunner, CommandTarget } from "@/common/shortcuts";
 import { useKeyedRead } from "@/common/use-keyed-read";
 import { count } from "@/common/words";
@@ -241,23 +249,27 @@ function PaletteBody({
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<ReadonlySet<Group>>(new Set());
 
+  const narrow = useNarrowScreen();
   const commandRows = useMemo(
     () =>
-      commands.map((command): CommandRow => ({
-        command,
-        label:
-          command.id === "toggle-mode"
-            ? editing
-              ? "Switch to viewing"
-              : "Switch to editing"
-            : command.id === "toggle-sidebar"
-              ? sidebarHidden
-                ? "Show sidebar"
-                : "Hide sidebar"
-              : command.title,
-        blocked: runner.blocked(command.id, target),
-      })),
-    [editing, sidebarHidden, runner, target],
+      // A phone views only: it offers no command that changes the collection (X-04).
+      commands
+        .filter((command) => !narrow || phoneCommands.has(command.id))
+        .map((command): CommandRow => ({
+          command,
+          label:
+            command.id === "toggle-mode"
+              ? editing
+                ? "Switch to viewing"
+                : "Switch to editing"
+              : command.id === "toggle-sidebar"
+                ? sidebarHidden
+                  ? "Show sidebar"
+                  : "Hide sidebar"
+                : command.title,
+          blocked: runner.blocked(command.id, target),
+        })),
+    [editing, sidebarHidden, runner, target, narrow],
   );
   // Read once a session: what was opened before the palette did, and what it ran before.
   const [recent] = useState(() => recentItems.read(accountId));
@@ -635,9 +647,9 @@ function ResultRow({
         <span className="flex shrink-0 gap-1">
           {/* Color… has no key of its own (TON-175). */}
           {row.command.keys.length > 0 && (
-            <span className="sr-only">, shortcut {row.command.keys.join(" ")}</span>
+            <span className="sr-only">, shortcut {platformKeys(row.command.keys).join(" ")}</span>
           )}
-          {row.command.keys.map((key) => (
+          {platformKeys(row.command.keys).map((key) => (
             <kbd
               key={key}
               aria-hidden

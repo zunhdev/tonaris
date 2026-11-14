@@ -82,12 +82,14 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
   const offline = useConnection() === "offline";
   const listId = useViewListId();
   const inShare = useCollectionPlace().kind === "share";
+  const narrow = useNarrowScreen();
   const [dialog, setDialog] = useState<{ listId: string | null } | undefined>(undefined);
   const [keptLinks, setKeptLinks] = useState<readonly KeptLink[]>([]);
 
   const capture = useCallback(
     (links: readonly string[], into: string | null) => {
-      if (!client || offline || links.length === 0) return false;
+      // Phones view only (X-04).
+      if (!client || offline || narrow || links.length === 0) return false;
       // In a share, they go in one of its lists, never the person's own Unsorted (TON-191).
       if (inShare && into === null) {
         notify?.info("Choose a list in this share.");
@@ -102,7 +104,7 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
       client.captures.send(links.map((link) => ({ link, listId: into })));
       return true;
     },
-    [client, offline, notify, enterEditing, inShare],
+    [client, offline, narrow, notify, enterEditing, inShare],
   );
 
   const value = useMemo<CaptureUi>(

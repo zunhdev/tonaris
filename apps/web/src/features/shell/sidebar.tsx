@@ -7,6 +7,7 @@
 import { sidebarWidths } from "@/common/device";
 import { ResizeHandle } from "@/common/resize-handle";
 import { useShell } from "@/common/shell-context";
+import { keysLabel } from "@/common/shortcuts";
 import { AccountMenu } from "@/features/account/account-menu";
 import { useCapture } from "@/features/capture/capture-context";
 import { CollectionTree } from "@/features/collection/collection-tree";
@@ -82,7 +83,7 @@ export function Sidebar({
         >
           <Search strokeWidth={1.5} aria-hidden />
           Search
-          <kbd className="ml-auto text-micro text-fg-tertiary">⌘K</kbd>
+          <kbd className="ml-auto text-micro text-fg-tertiary">{keysLabel(["⌘", "K"])}</kbd>
         </Button>
         <AddAlbumButton />
       </div>

@@ -8,6 +8,7 @@ import { useNarrowScreen } from "@/common/media";
 import {
   createShortcutMatcher,
   inLayer,
+  phoneCommands,
   type CommandId,
   type CommandRunner,
   type CommandTarget,
@@ -146,6 +147,8 @@ export function useCommandRunner({
   const blocked = useCallback(
     (id: CommandId, on: CommandTarget): string | undefined => {
       const now = latest.current;
+      // Phones view only (X-04): what changes the collection waits for a computer.
+      if (now.narrow && !phoneCommands.has(id) && id !== "share") return "Edit on a computer";
       if ((edits.has(id) || online.has(id)) && now.offline) return "You're offline";
       if (onAlbum.has(id) && on.album === undefined) return "Open or focus an album first";
       if (onContainer.has(id) && containerOf(id, on) === undefined)

@@ -3,6 +3,7 @@
 // Unsorted. Add, or ⌘Enter, captures each line; a line that isn't a link gets its reason in its row, as a paste's
 // would. "Enter manually" opens the manual entry form for the same destination instead (DS-47).
 
+import { ariaShortcut } from "@/common/shortcuts";
 import { emptyForm } from "@/features/collection/album-form";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { ListField } from "@/features/collection/list-field";
@@ -129,7 +130,11 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
               <Button type="button" onClick={() => ui?.closeDialog()}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" aria-keyshortcuts="Meta+Enter">
+              <Button
+                type="submit"
+                variant="primary"
+                aria-keyshortcuts={ariaShortcut("Meta+Enter")}
+              >
                 Add
               </Button>
             </div>
