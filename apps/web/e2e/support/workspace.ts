@@ -240,3 +240,20 @@ export async function chooseLayout(page: Page, layout: "Rows" | "Grid"): Promise
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
 }
+
+/**
+ * Whether the page's platform is Apple's, read as the app reads it (`isApplePlatform`): Playwright's Desktop Chrome
+ * reports Windows through the client hints, while `navigator.platform` stays the host's.
+ */
+export function applePlatform(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const hinted: unknown = Reflect.get(navigator, "userAgentData");
+    const platform =
+      typeof hinted === "object" &&
+      hinted !== null &&
+      typeof Reflect.get(hinted, "platform") === "string"
+        ? String(Reflect.get(hinted, "platform"))
+        : navigator.platform;
+    return /mac|iphone|ipad|ipod/i.test(platform);
+  });
+}

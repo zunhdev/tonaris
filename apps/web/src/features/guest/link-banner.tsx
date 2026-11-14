@@ -33,7 +33,13 @@ export function LinkBanner({ token, owner }: { token: string; owner: string }) {
           In Shared with me
         </a>
       ) : (
-        <Button size="sm" disabled={busy} onClick={() => void add()}>
+        <Button
+          size="sm"
+          // A 44 px target on a phone (DS-15).
+          className="max-md:h-11 max-md:px-3 max-md:text-base"
+          disabled={busy}
+          onClick={() => void add()}
+        >
           Add to Shared with me
         </Button>
       )}

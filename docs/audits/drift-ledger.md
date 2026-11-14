@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 53 | 32 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 48 | 37 | 0 |
 
 ## Areas
 
@@ -117,15 +117,15 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-084 | architecture | The sharing forms' sender copies the outbox's answer rules but not its 10 s timeout | `apps/web/src/features/sharing/send.ts`; `apps/web/src/client/sync/transport.ts` | fixed (TON-219) | 2026-11-13 | 2026-11-13 |
 | DRIFT-085 | smell | The "Couldn't reach Tonaris" sentence is written in 8+ places, in two wordings | `apps/web/src/features/sharing/send.ts`; `apps/web/src/features/account/auth-client.ts` | filed TON-220 | 2026-11-13 | 2026-11-13 |
 | DRIFT-086 | smell | The supported services are typed into copy 6 times; the providers package derives them | `apps/web/src/features/capture/capture-dialog.tsx`; `packages/providers/src/links.ts` | filed TON-220 | 2026-11-13 | 2026-11-13 |
-| DRIFT-087 | spec | The installed app's theme colour is the graphite from before TON-167 (DS-110) | `apps/web/src/routes/__root.tsx`; `apps/web/public/manifest.webmanifest`; `packages/ui/src/styles/tokens.css` | filed TON-218 | 2026-11-13 | 2026-11-13 |
+| DRIFT-087 | spec | The installed app's theme colour is the graphite from before TON-167 (DS-110) | `apps/web/src/routes/__root.tsx`; `apps/web/public/manifest.webmanifest`; `packages/ui/src/styles/tokens.css` | fixed (TON-218) | 2026-11-13 | 2026-11-13 |
 | DRIFT-088 | smell | Smaller duplications: route paths re-parsed with regexes, a folder's contents phrased five ways, guest defaults copied, `contentsOf` twice, 37 focus-ring classes | `apps/web/src/common/device.ts`; `apps/web/src/features/trash/trash-view.tsx`; `apps/web/src/features/guest/guest-view.ts` | filed TON-220 | 2026-11-13 | 2026-11-13 |
-| DRIFT-089 | spec | On a phone, the palette offers edit commands that work, though X-04 keeps collection edits desktop-only | `apps/web/src/features/search/search-palette.tsx`; `apps/web/src/features/shell/use-shortcuts.ts` | filed TON-218 | 2026-11-13 | 2026-11-13 |
+| DRIFT-089 | spec | On a phone, the palette offers edit commands that work, though X-04 keeps collection edits desktop-only | `apps/web/src/features/search/search-palette.tsx`; `apps/web/src/features/shell/use-shortcuts.ts` | fixed (TON-218) | 2026-11-13 | 2026-11-13 |
 | DRIFT-090 | spec | Redaction misses percent-encoded emails and codes after `#`, as in the sign-in and join links (TS-115) | `packages/domain/src/telemetry.ts` | fixed (TON-215) | 2026-11-13 | 2026-11-13 |
 | DRIFT-091 | spec | The sync indicator and Activity read only the person's own client, not an open share's | `apps/web/src/features/shell/shell.tsx`; `apps/web/src/features/sync/sync-provider.tsx` | filed TON-225 | 2026-11-13 | 2026-11-13 |
 | DRIFT-092 | spec | Removing a used option or deleting a field doesn't name the effect on shared views (FR-03.17, FR-03.18) | `apps/web/src/features/settings/custom-fields.tsx` | filed TON-225 | 2026-11-13 | 2026-11-13 |
-| DRIFT-093 | spec | Several phone controls are under DS-15's 44 px | `apps/web/src/features/guest/guest-page.tsx`, `link-banner.tsx`; `packages/ui/src/components/toast.tsx`, `dialog.tsx` | filed TON-218 | 2026-11-13 | 2026-11-13 |
-| DRIFT-094 | spec | Shortcut hints show ⌘ on Windows and Linux (DS-29, DS-78) | `apps/web/src/features/shell/sidebar.tsx`; `apps/web/src/common/shortcuts.ts` | filed TON-218 | 2026-11-13 | 2026-11-13 |
-| DRIFT-095 | spec | Buttons in ordinary dialogs are 28 px, beside 32 px fields (DS-15) | `packages/ui/src/components/alert-dialog.tsx`, `dialog.tsx` | filed TON-218 | 2026-11-13 | 2026-11-13 |
+| DRIFT-093 | spec | Several phone controls are under DS-15's 44 px | `apps/web/src/features/guest/guest-page.tsx`, `link-banner.tsx`; `packages/ui/src/components/toast.tsx`, `dialog.tsx` | fixed (TON-218) | 2026-11-13 | 2026-11-13 |
+| DRIFT-094 | spec | Shortcut hints show ⌘ on Windows and Linux (DS-29, DS-78) | `apps/web/src/features/shell/sidebar.tsx`; `apps/web/src/common/shortcuts.ts` | fixed (TON-218) | 2026-11-13 | 2026-11-13 |
+| DRIFT-095 | spec | Buttons in ordinary dialogs are 28 px, beside 32 px fields (DS-15) | `packages/ui/src/components/alert-dialog.tsx`, `dialog.tsx` | fixed (TON-218) | 2026-11-13 | 2026-11-13 |
 | DRIFT-096 | spec | DS-81 says phones and guest pages are still waiting for their sync-indicator surfaces | `docs/design-spec.md` DS-81 | filed TON-225 | 2026-11-13 | 2026-11-13 |
 | DRIFT-097 | spec | DS-25 describes an Open popover removed in TON-127; TS-101's no-referrer covers `/join/` and `/recover/` too | `docs/design-spec.md` DS-25; `docs/tech-spec.md` TS-101 | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-098 | lesson | Reads that leave out the "not in Trash" filter leaked Trash content several times; the filter is written by hand 36 times | `packages/db/src/access.ts`, `sharing.ts`, `mcp.ts` | filed TON-222 | 2026-11-13 | 2026-11-13 |

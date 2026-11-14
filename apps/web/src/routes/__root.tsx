@@ -33,7 +33,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Tonaris" },
       // Installed on a phone's home screen (TON-115): the dark theme behind the system bars, and full screen on iOS.
-      { name: "theme-color", content: "#0b0c0f" },
+      { name: "theme-color", content: "#0a0d16" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Tonaris" },

@@ -8,7 +8,7 @@ import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, insert, live, saved } from "./support/workspace";
+import { added, album, applePlatform, insert, live, saved } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -58,7 +58,12 @@ test("⌘⌫ deletes the focused album after confirming; the inspector does too"
   const inspector = page.getByRole("complementary", { name: "Album" });
   const remove = inspector.getByRole("button", { name: "Delete from collection…" });
   await expect(remove).toHaveCount(1);
-  await expect(remove).toHaveAttribute("aria-keyshortcuts", "Meta+Backspace");
+  // As this platform names it: Playwright's Desktop Chrome is Windows (TON-218).
+  const apple = await applePlatform(page);
+  await expect(remove).toHaveAttribute(
+    "aria-keyshortcuts",
+    apple ? "Meta+Backspace" : "Control+Backspace",
+  );
   await expect(remove).toBeInViewport({ ratio: 1 });
   const [box, close] = await Promise.all([
     remove.boundingBox(),
@@ -68,7 +73,7 @@ test("⌘⌫ deletes the focused album after confirming; the inspector does too"
   expect(box && close && box.x < close.x).toBe(true);
   await remove.hover();
   await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText(
-    "Delete from collection…⌘⌫",
+    `Delete from collection…${apple ? "⌘⌫" : "Ctrl+⌫"}`,
   );
   await remove.click();
   await page

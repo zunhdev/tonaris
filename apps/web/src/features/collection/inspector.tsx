@@ -9,7 +9,7 @@
 import { inspectorWidths } from "@/common/device";
 import { pageScroll } from "@/common/page-scroll";
 import { ResizeHandle } from "@/common/resize-handle";
-import { inLayer, isTextField } from "@/common/shortcuts";
+import { ariaShortcut, inLayer, isTextField, keysLabel } from "@/common/shortcuts";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Trash2, X } from "lucide-react";
 import { useEffect, useRef, type Ref } from "react";
@@ -141,7 +141,7 @@ function DeleteAlbum({ albumId }: { albumId: string }) {
             variant="ghost"
             size="icon"
             aria-label="Delete from collection…"
-            aria-keyshortcuts="Meta+Backspace"
+            aria-keyshortcuts={ariaShortcut("Meta+Backspace")}
             className="hover:text-status-danger"
           />
         }
@@ -150,7 +150,7 @@ function DeleteAlbum({ albumId }: { albumId: string }) {
         <Trash2 aria-hidden strokeWidth={1.5} />
       </TooltipTrigger>
       <TooltipContent side="bottom">
-        Delete from collection…<TooltipShortcut>⌘⌫</TooltipShortcut>
+        Delete from collection…<TooltipShortcut>{keysLabel(["⌘", "⌫"])}</TooltipShortcut>
       </TooltipContent>
     </Tooltip>
   );

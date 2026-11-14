@@ -141,6 +141,7 @@ Components consume semantic tokens only, never primitives. *(Q-10)*
 - **Control heights:** 24 for inline chips and key hints, 28 for the default (toolbar buttons, menu items, sidebar items), 32 for form inputs and dialog buttons.
 - **Rows:** desktop album rows are 36px; mobile rows are 56px.
 - **Touch targets** are at least 44×44px on mobile.
+- *As built in TON-218:* a dialog's text buttons are 32px through its surface (`dialogSurfaceClass`), small and icon buttons keeping theirs. Below 768px, segmented controls are 44px tall, a switch has a 44px target around it, and a dialog's and a toast's close buttons and a toast's actions are 44px.
 - **Radius:** 4 for chips, artwork, and checkboxes; 6 for buttons and inputs; 8 for popovers, menus, and cards; 12 for dialogs, sheets, and the palette.
 
 **DS-16 Elevation.**
@@ -477,7 +478,7 @@ Typed confirmation is reserved for account deletion (DS-97).
 | `SharingDialog` | Invitations, link, access list | DS-65 |
 | `SharingImpact` | Effective-sharing preview | DS-69 |
 | `UsageMeter` | Album capacity | DS-98 |
-| `KeyHint` / `Kbd` | Shortcut hints in menus and tooltips | macOS ⌘ glyphs; Ctrl on other platforms |
+| `KeyHint` / `Kbd` | Shortcut hints in menus and tooltips | macOS ⌘ glyphs; Ctrl on other platforms (`platformKeys`, as built in TON-218, also in `aria-keyshortcuts`) |
 | `UndoToast` | Reversible actions | DS-50 |
 
 ---
@@ -2119,6 +2120,8 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 - Desktop rows and cards don't change. A phone test checks a long name's row: 56 px, the name to the row's edge with an ellipsis, and the count under it.
 
 *As built in TON-115:* **installable.** `/manifest.webmanifest` names the app "Tonaris", starts at `/c`, displays `standalone`, and gives `bg.app`'s color as its background and theme, with TON-114's icons: 192 and 512 px, and a maskable 512 px.
+- *Since TON-218:* the manifest and the `theme-color` meta are `#0a0d16`, `bg.app` since TON-167's indigo tint; a token test holds both to it, so Android's status bar matches the app.
+- *Since TON-218:* **the palette on a phone** offers only going somewhere, View options and Open in…; edit commands aren't there, and their shortcuts answer "Edit on a computer" (X-04).
 - **Android Chrome** offers "Install app" in its menu, and the installed app opens without browser chrome.
 - **iOS** uses the square `apple-touch-icon` for Add to Home Screen, and `apple-mobile-web-app-capable` opens it full screen, with a black status bar above the top bar.
 - **No offline launch:** there is no service worker, so opening the app needs a connection, as section 2.3 says. Signed out, it opens on sign-in.

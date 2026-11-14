@@ -10,7 +10,7 @@ import { uuidv7, type Container } from "@tonaris/domain";
 import { commands } from "../src/common/shortcuts";
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, insert, live, saved, violations } from "./support/workspace";
+import { added, album, applePlatform, insert, live, saved, violations } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -73,7 +73,11 @@ test("commands: > lists only them, they act on the focus or say why not, and mat
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
-  // Every command is in the reference with the same keys.
+  // Every command is in the reference with the same keys, as this platform names them: Playwright's Desktop Chrome
+  // is Windows, so ⌘ reads Ctrl there (DS-29, TON-218).
+  const apple = await applePlatform(page);
+  const named = (keys: readonly string[]) =>
+    keys.map((key) => (key === "⌘" && !apple ? "Ctrl" : key));
   await page.keyboard.press("?");
   const reference = page.getByRole("dialog", { name: "Keyboard shortcuts" });
   await expect(reference).toBeVisible();
@@ -84,7 +88,7 @@ test("commands: > lists only them, they act on the focus or say why not, and mat
           .locator("dl > div")
           .filter({ has: page.getByText(title, { exact: true }) })
           .locator("dd"),
-      ).toHaveText(keys.join("")),
+      ).toHaveText(named(keys).join("")),
     ),
   );
   await expect(reference.getByText("Restore", { exact: true })).toBeVisible();
@@ -99,7 +103,16 @@ test("commands: > lists only them, they act on the focus or say why not, and mat
     commands
       .filter(({ keys }) => keys.length > 0)
       .map(({ keys }) =>
-        expect(all.filter({ hasText: `shortcut ${keys.join(" ")}` })).toHaveCount(1),
+        expect(
+          all.filter({
+            // Whole keys only: "C" isn't the start of "Ctrl".
+            hasText: new RegExp(
+              `shortcut ${named(keys)
+                .join(" ")
+                .replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z])`,
+            ),
+          }),
+        ).toHaveCount(1),
       ),
   );
 });

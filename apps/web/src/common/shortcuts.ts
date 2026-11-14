@@ -210,10 +210,54 @@ const commandsById: ReadonlyMap<CommandId, Command> = new Map(
   commands.map((command) => [command.id, command]),
 );
 
+/**
+ * Whether this device is Apple's, whose shortcuts use ⌘; elsewhere they use Ctrl, which every handler accepts too
+ * (DS-29, DS-78, DRIFT-094). The workspace renders in the browser only, so this is read there.
+ */
+export function isApplePlatform(): boolean {
+  if (typeof navigator === "undefined") return true;
+  const hinted: unknown = Reflect.get(navigator, "userAgentData");
+  const platform =
+    typeof hinted === "object" &&
+    hinted !== null &&
+    typeof Reflect.get(hinted, "platform") === "string"
+      ? String(Reflect.get(hinted, "platform"))
+      : navigator.platform;
+  return /mac|iphone|ipad|ipod/i.test(platform);
+}
+
+/** A shortcut's keys as this device names them: ⌘ is Ctrl off Apple's. */
+export function platformKeys(keys: readonly string[], apple = isApplePlatform()): string[] {
+  return keys.map((key) => (key === "⌘" && !apple ? "Ctrl" : key));
+}
+
+/** A shortcut's keys as one label, "⇧N", "⌘K" or, off Apple's, "Ctrl+K". */
+export function keysLabel(keys: readonly string[], apple = isApplePlatform()): string {
+  return platformKeys(keys, apple).join("").replace(/^Ctrl/, "Ctrl+");
+}
+
+/** An `aria-keyshortcuts` value for this device: Meta is Control off Apple's. */
+export function ariaShortcut(value: string): string {
+  return isApplePlatform() ? value : value.replaceAll("Meta+", "Control+");
+}
+
 /** A command's keys as a menu shows them, from the list above: "⇧N", "F2". */
 export function shortcutLabel(id: CommandId): string {
-  return commandsById.get(id)?.keys.join("") ?? "";
+  return keysLabel(commandsById.get(id)?.keys ?? []);
 }
+
+/**
+ * What a phone's palette offers: going somewhere, and how a view looks or opens. Phones view only (X-04), so no
+ * command that changes the collection is offered there (DRIFT-089).
+ */
+export const phoneCommands: ReadonlySet<CommandId> = new Set<CommandId>([
+  "go-root",
+  "go-unsorted",
+  "go-trash",
+  "go-settings",
+  "view-options",
+  "open-in",
+]);
 
 /** The palette's frequent commands before there is any history (decided with the creator, 29 October 2026). */
 export const starterCommands: readonly CommandId[] = [

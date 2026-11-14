@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import path from "node:path";
 
 import { washColor } from "../lib/wash";
-import { contrastOnGround, contrastRatio, parseOklch } from "./color";
+import { contrastOnGround, contrastRatio, parseOklch, toHex } from "./color";
 import { textSizes } from "./text-sizes";
 import { readTokens, tokensPath } from "./tokens";
 
@@ -210,5 +210,18 @@ describe("text sizes (DS-13)", () => {
         (name) => `--text-${name} names the --color-${name} color as text-${name}: rename the size`,
       );
     expect(clashes).toEqual([]);
+  });
+});
+
+describe("DS-110 the installed app's colours", () => {
+  test("the manifest and the theme-color meta are bg.app, so a phone's status bar matches the app (DRIFT-087)", async () => {
+    const app = toHex(tokens.color("bg-app"));
+    const web = path.join(import.meta.dir, "../../../../apps/web");
+    const manifest: unknown = JSON.parse(
+      await Bun.file(path.join(web, "public/manifest.webmanifest")).text(),
+    );
+    expect(manifest).toMatchObject({ theme_color: app, background_color: app });
+    const root = await Bun.file(path.join(web, "src/routes/__root.tsx")).text();
+    expect(/name: "theme-color", content: "(#[0-9a-f]{6})"/.exec(root)?.[1]).toBe(app);
   });
 });
