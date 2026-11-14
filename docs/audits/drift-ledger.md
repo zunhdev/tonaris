@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 64 | 21 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 60 | 25 | 0 |
 
 ## Areas
 
@@ -92,10 +92,10 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-059 | architecture | "The creator can't delete their account" is decided in the database and copied in the web app | `packages/db/src/account-deletion.ts`; `apps/web/src/features/account/delete-account.tsx` | filed TON-219 | 2026-11-13 | 2026-11-13 |
 | DRIFT-060 | smell | The database package exports access checks nothing outside it uses, the kind that led to DRIFT-019 | `packages/db/src/index.ts` | filed TON-221 | 2026-11-13 | 2026-11-13 |
 | DRIFT-061 | spec | An export carries the person's view choices and order on other owners' shared content, and a purge leaves view and order rows behind (FR-08.4) | `packages/db/src/export.ts`, `teardowns.ts`; `packages/domain/src/export.ts` | fixed (TON-215) | 2026-11-13 | 2026-11-13 |
-| DRIFT-062 | spec | TS-18's limit of 100 saved shared references is enforced nowhere | `docs/tech-spec.md` TS-18; `packages/domain/src/sharing.ts`, `limits.ts` | filed TON-216 | 2026-11-13 | 2026-11-13 |
-| DRIFT-063 | spec | Pasting a link only a trashed album has restores it beside an active album of the same release group (FR-14.3) | `packages/domain/src/capture.ts`, `trash.ts` | filed TON-216 | 2026-11-13 | 2026-11-13 |
+| DRIFT-062 | spec | TS-18's limit of 100 saved shared references is enforced nowhere | `docs/tech-spec.md` TS-18; `packages/domain/src/sharing.ts`, `limits.ts` | fixed (TON-216) | 2026-11-13 | 2026-11-13 |
+| DRIFT-063 | spec | Pasting a link only a trashed album has restores it beside an active album of the same release group (FR-14.3) | `packages/domain/src/capture.ts`, `trash.ts` | fixed (TON-216) | 2026-11-13 | 2026-11-13 |
 | DRIFT-064 | spec | A ledger append that fails 3 times is buried and pruned after 30 days, so a restore can revive what was deleted (TS-113) | `apps/api/src/jobs/worker.ts`, `ledger.ts`; `packages/db/src/jobs.ts` | fixed (TON-217) | 2026-11-13 | 2026-11-13 |
-| DRIFT-065 | spec | The 100-captures-an-hour limit counts refused and failed attempts, so retrying while refused extends the lockout | `packages/db/src/capture.ts`; `apps/api/src/sync/runner.ts` | filed TON-216 | 2026-11-13 | 2026-11-13 |
+| DRIFT-065 | spec | The 100-captures-an-hour limit counts refused and failed attempts, so retrying while refused extends the lockout | `packages/db/src/capture.ts`; `apps/api/src/sync/runner.ts` | fixed (TON-216) | 2026-11-13 | 2026-11-13 |
 | DRIFT-066 | spec | Four as-built notes no longer hold: TS-42 artwork, TS-33 accepting, TS-18 editors' captures, TS-24's per-root search index | `docs/tech-spec.md` | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-067 | spec | TS-11's table outline misses the editor model's columns (`role`, `deleted_by`) and others | `docs/tech-spec.md` TS-11; `packages/db/src/schema` | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-068 | spec | Small contract statements: `approvalId` in TS-20, `pending` in TS-25, TS-11's value CHECK, two "App-only" comments | `docs/tech-spec.md`; `packages/domain/src/sync.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
@@ -143,5 +143,5 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-110 | spec | TS-103 says every outbound call goes through `safeFetch`; SMTP, the S3 ledger, Sentry and CIMD don't | `docs/tech-spec.md` TS-103; `packages/providers/src/safe-fetch.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-111 | spec | FR-02.4 promises a prefilled form, which the terms decision limits to Apple's hints; FR-02.9 lists G2 as open | `docs/product-requirements.md` FR-02.4, FR-02.9 | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-112 | spec | TS-40 and the link-capture spec say four services, not five; TS-11's provider-cache row misses two entries | `docs/tech-spec.md` TS-11, TS-40; `packages/providers/src/links.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
-| DRIFT-113 | spec | An unexpected provider answer fails capture as a 500 instead of "provider unavailable" | `packages/providers/src/itunes.ts`, `spotify.ts`, `youtube.ts`, `musicbrainz.ts` | filed TON-216 | 2026-11-13 | 2026-11-13 |
+| DRIFT-113 | spec | An unexpected provider answer fails capture as a 500 instead of "provider unavailable" | `packages/providers/src/itunes.ts`, `spotify.ts`, `youtube.ts`, `musicbrainz.ts` | fixed (TON-216) | 2026-11-13 | 2026-11-13 |
 | DRIFT-114 | smell | Small provider leaks: the Spotify health check in the API's schedules, a hard-coded MusicBrainz failure, the covers route's own sentence, drifted workload link formats, an unreachable branch | `apps/api/src/jobs/schedules.ts`, `capture.ts`; `tooling/src/workload/generate.ts` | filed TON-221 | 2026-11-13 | 2026-11-13 |
