@@ -6,11 +6,13 @@ import { inArray, or } from "drizzle-orm";
 import type { PgInsertValue, PgTable } from "drizzle-orm/pg-core";
 
 import {
+  accountSettings,
   accountSync,
   albumFieldMulti,
   albumFieldValues,
   albums,
   albumServiceLinks,
+  approvals,
   changeLog,
   containers,
   closeDatabase,
@@ -105,6 +107,9 @@ async function removeAccounts(tx: Transaction, accounts: readonly Account[]): Pr
   await tx.delete(trashUnits).where(inArray(trashUnits.ownerId, ids));
   await tx.delete(positions).where(inArray(positions.personId, ids));
   await tx.delete(viewPrefs).where(inArray(viewPrefs.personId, ids));
+  // Saved defaults (link target, hidden services, layouts) and agents' approvals, once the account has used the app.
+  await tx.delete(accountSettings).where(inArray(accountSettings.accountId, ids));
+  await tx.delete(approvals).where(inArray(approvals.accountId, ids));
   await tx.delete(changeLog).where(inArray(changeLog.accountId, ids));
   await tx.delete(mutations).where(inArray(mutations.accountId, ids));
   await tx.delete(accountSync).where(inArray(accountSync.accountId, ids));

@@ -76,6 +76,13 @@ describe("isAffected", () => {
     expect(isAffected("2.0.0-rc.0", "<= 1.4.31")).toBe(false);
   });
 
+  test("finds a release candidate in a range its final release fixes (DRIFT-109)", () => {
+    expect(isAffected("2.0.0-rc.4", "< 2.0.0")).toBe(true);
+    expect(isAffected("1.0.0-rc.5", ">= 0.0.0, < 1.0.0")).toBe(true);
+    expect(isAffected("1.0.0-rc.5", ">= 1.0.0, < 1.0.3")).toBe(false);
+    expect(isAffected("1.0.0", "= 1.0.0")).toBe(true);
+  });
+
   test("counts an advisory without a range, so a person reads it", () => {
     expect(isAffected("1.0.0", null)).toBe(true);
   });

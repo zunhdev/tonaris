@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 81 | 4 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 79 | 6 | 0 |
 
 ## Areas
 
@@ -134,12 +134,12 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-101 | architecture | Read-only connections are refused in each command, not in one place, and a miss has happened | `packages/db/src/sync.ts`; `packages/domain/src/policies.ts` | filed TON-214 | 2026-11-13 | 2026-11-13 |
 | DRIFT-102 | architecture | A stream can be opened without the session it should end with: the hub's session is optional | `apps/api/src/sync/hub.ts`; `apps/api/src/sse.ts` | filed TON-211 | 2026-11-13 | 2026-11-13 |
 | DRIFT-103 | lesson | Text limits counted in UTF-16 units, not code points (TON-151); three remain | `packages/domain/src/passkeys.ts`, `accounts.ts`; `apps/web/src/features/collection/name-editor.tsx` | filed TON-222 | 2026-11-13 | 2026-11-13 |
-| DRIFT-104 | spec | `bun run seed:workload` fails on a foreign key once the workload account has saved a default | `tooling/src/workload/seed.ts` | filed TON-223 | 2026-11-13 | 2026-11-13 |
+| DRIFT-104 | spec | `bun run seed:workload` fails on a foreign key once the workload account has saved a default | `tooling/src/workload/seed.ts` | fixed (TON-223) | 2026-11-13 | 2026-11-13 |
 | DRIFT-105 | lesson | Six "refused" rows in TON-208's every-tool editor test pass without the ownership check: a mistake in TON-208 | `apps/api/src/mcp/shared-editing.test.ts` | filed TON-214 | 2026-11-13 | 2026-11-13 |
 | DRIFT-106 | spec | A guest page that gets a 429 from the guest-view limit shows "not available" and stops following: a mistake in TON-207 | `apps/web/src/routes/s.$token.tsx` | filed TON-211 | 2026-11-13 | 2026-11-13 |
 | DRIFT-107 | lesson | `check:refs` runs nowhere in CI | `.github/workflows/ci.yml`; `docs/tech-spec.md` TS-124 | filed TON-222 | 2026-11-13 | 2026-11-13 |
 | DRIFT-108 | spec | The store-page request counts leave out the one redirect the code follows; TS-41 contradicts itself | `openspec/specs/metadata-sources/spec.md`; `packages/providers/src/store-pages.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
-| DRIFT-109 | spec | `bun run deps:advisories` can't flag a release-candidate pin | `tooling/src/deps/advisories.ts` | filed TON-223 | 2026-11-13 | 2026-11-13 |
+| DRIFT-109 | spec | `bun run deps:advisories` can't flag a release-candidate pin | `tooling/src/deps/advisories.ts` | fixed (TON-223) | 2026-11-13 | 2026-11-13 |
 | DRIFT-110 | spec | TS-103 says every outbound call goes through `safeFetch`; SMTP, the S3 ledger, Sentry and CIMD don't | `docs/tech-spec.md` TS-103; `packages/providers/src/safe-fetch.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-111 | spec | FR-02.4 promises a prefilled form, which the terms decision limits to Apple's hints; FR-02.9 lists G2 as open | `docs/product-requirements.md` FR-02.4, FR-02.9 | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-112 | spec | TS-40 and the link-capture spec say four services, not five; TS-11's provider-cache row misses two entries | `docs/tech-spec.md` TS-11, TS-40; `packages/providers/src/links.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |

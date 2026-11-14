@@ -74,13 +74,31 @@ export function githubRepository(repository: unknown): string | undefined {
   return match?.[1];
 }
 
+/** Whether a version's order against a bound meets the bound's operator. */
+const holds = new Map<string, (order: number) => boolean>([
+  ["<", (order) => order < 0],
+  ["<=", (order) => order <= 0],
+  [">", (order) => order > 0],
+  [">=", (order) => order >= 0],
+  ["=", (order) => order === 0],
+]);
+
 /**
  * Whether `version` is in GitHub's `vulnerable_version_range` (">= 1.0.0, < 1.7.16"). An advisory without a
  * range counts as a hit, so a person reads it.
+ *
+ * Each bound is compared in semver order. A range check (`satisfies`) would match a pre-release only against bounds
+ * of its own release, so a release candidate such as `2.0.0-rc.4` would never be found in "< 2.0.0", the advisory
+ * fixed in the final release (DRIFT-109).
  */
 export function isAffected(version: string, range: string | null): boolean {
   if (!range) return true;
-  return Bun.semver.satisfies(version, range.replaceAll(",", " "));
+  return range.split(",").every((bound) => {
+    const match = /^\s*(<=|>=|<|>|=)?\s*v?(\S+)\s*$/.exec(bound);
+    if (!match?.[2]) return Bun.semver.satisfies(version, bound.trim());
+    const order = Bun.semver.order(version, match[2]);
+    return holds.get(match[1] ?? "=")?.(order) ?? false;
+  });
 }
 
 export function findHits(
