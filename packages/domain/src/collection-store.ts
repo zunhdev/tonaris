@@ -138,6 +138,10 @@ export type CollectionStore = {
   listEntries(listIds: string[]): Promise<Membership[]>;
   /** The Trash unit with this ID, whoever owns it. */
   findTrashUnit(id: string): Promise<StoredTrashUnit | undefined>;
+  /** Whether an editor's album deletion spent this unit ID without making a unit (TON-198). */
+  unitIdSpent(id: string): Promise<boolean>;
+  /** Remembers that an editor's album deletion in `ownerId`'s collection spent this unit ID (TON-198). */
+  spendUnitId(id: string, ownerId: string): Promise<void>;
   /** The folders and lists in the unit, as they were deleted. */
   unitContainers(unitId: string): Promise<Container[]>;
   /** Records the unit and moves the folders and lists `ids` into it (FR-01.13). */

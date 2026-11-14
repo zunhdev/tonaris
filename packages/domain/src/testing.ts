@@ -123,6 +123,7 @@ export function memoryStore({
     containers.map((container) => [container.id, { description: null, ...container }]),
   );
   /** Trash units by ID, and the unit each trashed folder or list is in (TS-13). */
+  const spentUnitIds = new Set<string>();
   const unitRows = new Map<string, StoredTrashUnit>();
   const unitOf = new Map<string, string>();
   const membershipRows = new Map(
@@ -514,6 +515,11 @@ export function memoryStore({
     findTrashUnit: (id) => {
       const unit = unitRows.get(id);
       return Promise.resolve(unit && { ...unit });
+    },
+    unitIdSpent: (id) => Promise.resolve(spentUnitIds.has(id)),
+    spendUnitId: (id) => {
+      spentUnitIds.add(id);
+      return Promise.resolve();
     },
     unitContainers: (unitId) =>
       Promise.resolve(

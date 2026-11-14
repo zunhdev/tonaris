@@ -56,7 +56,7 @@ import {
   sharedWithMe,
 } from "./sharing";
 import { editorsMoveImpact } from "./sharing-impact";
-import { executeMutation, headSeq } from "./sync";
+import { executeMutation, writesOf } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
@@ -443,7 +443,8 @@ describe("the shared snapshot (FR-07.11, FR-07.12)", () => {
     const edited = await sharedSnapshot(t.db, person(cleo), metal.id);
     expect(edited?.role).toBe("edit");
     // Current at the owner's latest change, for the editor's writes to wait on (TS-24).
-    expect(edited?.seq).toBe(await headSeq(t.db, owner.userId));
+    // An editor's position: the owner's writes, not their changes (TON-198).
+    expect(edited?.seq).toBe(await writesOf(t.db, owner.userId));
     expect(edited?.seq).toBeGreaterThan(0);
     expect(edited?.fields).toEqual([
       {
@@ -544,7 +545,10 @@ describe("an editor's writes (FR-07.19, TS-20)", () => {
       args: { id: doom.id, name: "Doom Metal" },
       base: { name: "Doom" },
     });
-    expect(renamed.result.outcome).toMatchObject({ status: "confirmed", seq: before + 1 });
+    expect(renamed.result.outcome).toMatchObject({
+      status: "confirmed",
+      seq: await writesOf(t.db, denis.userId),
+    });
     expect(renamed.accountId).toBe(denis.userId);
     expect(renamed.changes.map(({ entity, id }) => ({ entity, id }))).toEqual([
       { entity: "container", id: doom.id },
@@ -744,6 +748,46 @@ describe("a Read-only connection (FR-10.3, DRIFT-101)", () => {
       const { result } = await executeMutation(t.db, agent, { mutationId: uuidv7(), ...mutation });
       expect(result.outcome).toEqual(readOnlyMutationRefusal);
     }
+  });
+});
+
+describe("what an editor's answers say of the owner's other lists (FR-07.21, TON-198)", () => {
+  test("a deletion's unit ID used again, and the position after a write, are the same whether the album went to Trash", async () => {
+    const denis = await newPrincipal("Denis");
+    const anna = await newPrincipal("Anna");
+    const metal = await made(denis, "folder", "Metal");
+    const doom = await made(denis, "list", "Doom", metal.id);
+    const own = await made(denis, "list", "Own");
+    await grant(metal.id, anna.userId, "accepted", "edit");
+    // One album only in the share, which goes to Trash; one also in Denis's own list, which stays.
+    const [alone, kept] = [album("Alone", "Someone"), album("Kept", "Someone")];
+    for (const each of [alone, kept])
+      // oxlint-disable-next-line no-await-in-loop
+      await run(denis, { name: "album.create", args: { ...each, listId: doom.id } });
+    await run(denis, { name: "membership.add", args: { listId: own.id, albumId: kept.id } });
+
+    const answers = [];
+    for (const each of [alone, kept]) {
+      const unitId = uuidv7();
+      // oxlint-disable-next-line no-await-in-loop
+      const before = await writesOf(t.db, denis.userId);
+      // oxlint-disable-next-line no-await-in-loop
+      const deleted = await executeMutation(t.db, anna, {
+        mutationId: uuidv7(),
+        name: "album.delete",
+        args: { id: each.id, unitId },
+      });
+      expect(deleted.result.outcome).toMatchObject({ status: "confirmed", seq: before + 1 });
+      // oxlint-disable-next-line no-await-in-loop
+      const again = await executeMutation(t.db, anna, {
+        mutationId: uuidv7(),
+        name: "album.delete",
+        args: { id: each.id, unitId },
+      });
+      answers.push(again.result.outcome);
+    }
+    expect(answers[0]).toEqual(answers[1]);
+    expect(answers[0]).toMatchObject({ status: "failed", code: "validation_failed" });
   });
 });
 

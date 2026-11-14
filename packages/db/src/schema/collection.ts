@@ -32,6 +32,19 @@ import { instant, notBlank, oneOf, table, timestamps, trashStamp } from "./colum
 // The domain's vocabulary, so the column's check and the commands agree (TS-13).
 export { trashUnitKinds, type Tombstone };
 
+/**
+ * Trash unit IDs an editor's album deletion spent without making a unit, because the owner's other lists kept the
+ * album (FR-07.21, TON-198). A unit ID reused after either kind of deletion then answers the same, so the answer
+ * doesn't tell the editor whether the album went to Trash. Kept with the owner's other records.
+ */
+export const spentUnitIds = table("spent_unit_ids", {
+  id: uuid().primaryKey(),
+  ownerId: uuid()
+    .notNull()
+    .references(() => users.id),
+  ...timestamps,
+});
+
 /** Content deleted together: recovered and purged as one unit, with one expiry (FR-01.13). */
 export const trashUnits = table(
   "trash_units",

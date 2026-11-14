@@ -16,6 +16,9 @@ export const accountSync = table("account_sync", {
     .primaryKey()
     .references(() => users.id),
   seq: bigint({ mode: "number" }).notNull().default(0),
+  // The writes that logged changes, one each however many changes they logged: an editor's position in the owner's
+  // collection, which tells them when their write is in a snapshot and nothing of how much it changed (TS-24, TON-198).
+  writes: bigint({ mode: "number" }).notNull().default(0),
   ...timestamps,
 });
 
