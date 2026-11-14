@@ -8,8 +8,6 @@
 
 import { sent } from "@/client/sync/writer";
 import { ordered } from "@/features/open/service-choices";
-import { useAnnounce } from "@/features/sync/announcer";
-import { useNotify } from "@/features/sync/notify";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
@@ -22,7 +20,6 @@ import {
   chronology,
   groupNames,
   isArtworkUrl,
-  membershipKey,
   serviceNames,
   uuidv7Time,
   type Album,
@@ -54,6 +51,7 @@ import { useCollectionData } from "./data";
 import { FindArtwork } from "./find-artwork";
 import { useInlineDraft } from "./inline-draft";
 import { ContainerLink } from "./place";
+import { useRemoveFromList } from "./remove-from-list";
 import { ancestorsOf } from "./tree";
 
 const addedDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
@@ -351,32 +349,14 @@ function ArtworkUrlEditor({ album }: { album: Album }) {
  * album out of that list, with Undo (DS-50), and "+ Add to list" opens the picker.
  */
 function ListsSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
-  const client = useSyncClient();
-  const notify = useNotify();
-  const announce = useAnnounce();
   const { tree, listsByAlbum } = useCollectionData();
   const { startAddToList } = useCollectionDialogs();
   const lists = (listsByAlbum.get(album.id) ?? [])
     .flatMap((listId) => tree.byId.get(listId) ?? [])
     .toSorted((a, b) => a.name.localeCompare(b.name));
 
-  function remove(listId: string, name: string) {
-    if (!client) return;
-    sent(client.memberships.delete(membershipKey(listId, album.id)));
-    announce(`Removed ${album.title} from ${name}`);
-    notify?.undo({
-      title: `Removed from ${name}`,
-      onUndo: () => {
-        sent(
-          client.memberships.insert({
-            listId,
-            albumId: album.id,
-            addedAt: new Date().toISOString(),
-          }),
-        );
-      },
-    });
-  }
+  const removeFromList = useRemoveFromList();
+  const remove = (listId: string, name: string) => removeFromList(album, { id: listId, name });
 
   return (
     <Section title="Lists">
