@@ -10,6 +10,7 @@ import { api } from "@/api";
 import { count } from "@/common/words";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { useCollectionData } from "@/features/collection/data";
+import { sharingChanged } from "@/features/sharing/own-sharing";
 import { unreachable, useSend, type Unsent } from "@/features/sharing/send";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Check, Copy, Ellipsis, Folder } from "lucide-react";
@@ -104,7 +105,11 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
       current = false;
     };
   }, [read]);
-  const load = useCallback(() => void read(), [read]);
+  // Each change also reads again what the person shares, for the glyphs beside their folders and lists (TON-227).
+  const load = useCallback(() => {
+    void read();
+    sharingChanged();
+  }, [read]);
   const { settings, failed } = loaded;
 
   return (

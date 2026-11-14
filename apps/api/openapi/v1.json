@@ -3914,6 +3914,48 @@
         }
       }
     },
+    "/v1/sharing": {
+      "get": {
+        "summary": "List what the person shares",
+        "description": "Their folders and lists outside Trash that they share themselves, by an invitation that is pending or accepted or by a link that is on, for the glyph beside each (DS-31, DS-41). What reaches one through a folder above is the tree's to work out. Changes nothing.",
+        "tags": [
+          "sharing"
+        ],
+        "operationId": "listOwnSharing",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/$defs/OwnSharing"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sharing/impact": {
       "get": {
         "summary": "Preview a move's or a recovery's sharing consequences",

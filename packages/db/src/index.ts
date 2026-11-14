@@ -159,6 +159,7 @@ export {
   findShareLink,
   linkReferenceState,
   sharedOwner,
+  ownSharing,
   shareSettings,
   sharedSnapshot,
   sharedWithMe,

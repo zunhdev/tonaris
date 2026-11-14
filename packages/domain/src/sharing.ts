@@ -500,6 +500,25 @@ export async function setDisplayName(
   return { status: "applied", changes: [], result: { displayName: name === "" ? null : name } };
 }
 
+/**
+ * What a person shares themselves (DS-31, DS-41; TON-227): each of their active folders and lists with an open
+ * invitation or a live link, for the glyph beside it. What a folder above shares is worked out from the tree.
+ */
+export const ownSharingSchema = z
+  .object({
+    shared: z.array(
+      z.object({
+        containerId: z.uuid(),
+        people: z
+          .boolean()
+          .meta({ description: "It has an invitation that is pending or accepted." }),
+        link: z.boolean().meta({ description: "Its link is on." }),
+      }),
+    ),
+  })
+  .meta({ id: "OwnSharing" });
+export type OwnSharing = z.infer<typeof ownSharingSchema>;
+
 /** What the sharing dialog shows the owner (DS-65): invitations, the link, and access from folders above. */
 export const shareSettingsSchema = z
   .object({

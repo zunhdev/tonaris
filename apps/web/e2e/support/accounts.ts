@@ -185,6 +185,8 @@ export const accounts = {
   roleInvitee: at("role-invitee"),
   // ⌫ removes the focused album from the list on view (album-trash.e2e.ts, TON-228).
   backspaceRemove: at("backspace-remove"),
+  // The glyph on shared folders and lists (sharing-glyph.e2e.ts, TON-227).
+  sharingGlyph: at("sharing-glyph"),
   // Move to position… from the palette (move-to-position.e2e.ts, TON-230).
   moveToPosition: at("move-to-position"),
   // Selecting albums and acting on them together (selection.e2e.ts, TON-231).
