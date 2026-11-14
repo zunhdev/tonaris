@@ -221,7 +221,13 @@ function AlbumCard({
         />
         <ReleaseLabel label={label} />
         {status && (
-          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-raised shadow-floating">
+          // Beside the checkbox, when there is one, which takes the corner (TON-234).
+          <span
+            className={cn(
+              "absolute top-1.5 flex size-5 items-center justify-center rounded-full bg-raised shadow-floating",
+              selected === undefined ? "right-1.5" : "right-9",
+            )}
+          >
             <SaveStateMarker status={status} />
           </span>
         )}
@@ -252,7 +258,8 @@ function AlbumCard({
           onSelect={onSelect}
           variant="card"
           className={cn(
-            "absolute top-2 left-2",
+            // The top-right corner: the top-left holds the release label (TON-234).
+            "absolute top-2 right-2",
             // Only on the card's hover or focus until albums are selected (TON-232).
             !anySelected &&
               "opacity-0 group-focus-within/card:opacity-100 group-hover/card:opacity-100",
