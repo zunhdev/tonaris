@@ -1,7 +1,8 @@
 // The job worker (TS-90): runs queued jobs in the API process, a few at a time. Queuing a job wakes it, so work
 // starts at once; it also looks for due jobs every few seconds, for retries, a restart's leftovers, and jobs another
 // instance queued. A failed job runs again after 5 s, 30 s and 2 min, unless its handler says retrying can't help;
-// then it is buried, after its handler records the failure and says what of its payload to keep.
+// then it is buried, after its handler records the failure and says what of its payload to keep. A handler whose job
+// must never be lost, such as the ledger's, keeps retrying after the last wait, as often as that wait, until it lands.
 
 import { buryJob, claimJob, finishJob, retryJob, type Database, type JobRow } from "@tonaris/db";
 
@@ -13,6 +14,11 @@ export type JobHandler = {
   run(job: JobRow): Promise<void>;
   /** Whether `error` is worth another attempt (default: yes). */
   retryable?(error: unknown): boolean;
+  /**
+   * Whether a retryable failure is retried forever, at the last wait once the waits run out, rather than buried
+   * (default: no). For jobs nothing else would redo, such as ledger appends (TS-113).
+   */
+  retriesForever?: boolean;
   /** Records that the job gave up after `error`, and answers what to keep of its payload. */
   buried(job: JobRow, error: unknown): Promise<unknown>;
 };
@@ -69,13 +75,20 @@ export function startJobWorker(
       await handler.run(job);
       await finishJob(db, job.id);
     } catch (error) {
-      const delay = retryDelaysMs[job.attempts - 1];
+      const listed = retryDelaysMs[job.attempts - 1];
+      const delay = listed ?? (handler.retriesForever ? retryDelaysMs.at(-1) : undefined);
       if (delay !== undefined && (handler.retryable?.(error) ?? true)) {
         await retryJob(db, job.id, {
           runAt: new Date(Date.now() + delay),
           error: describe(error),
         });
         later(delay);
+        // Past the waits a job would have been buried: say once that it hasn't landed yet.
+        if (listed === undefined && job.attempts === retryDelaysMs.length + 1)
+          logError(
+            error,
+            `${job.kind} job ${job.id}, still retrying after ${job.attempts} attempts`,
+          );
       } else {
         const payload = await handler.buried(job, error);
         await buryJob(db, job.id, { error: describe(error), payload, now: new Date() });

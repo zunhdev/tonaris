@@ -10,6 +10,7 @@ For a lost or damaged database (Q-04, TS-112, TS-113). **Objectives** are the cr
 
 - **Render** backs up `tonaris-db` continuously. A restore never overwrites it: it creates a new database as it was at the moment you pick, and you then point the API at that one. Nothing in Tonaris schedules or records backups. Render's dashboard shows them, on the database's **Recovery** page.
 - **The revocation ledger** (`LEDGER_URL`, the R2 bucket `tonaris-ledger`) holds every deletion-class event since, written by the API as it happens. A restored database predates them, so the reconciliation below replays them. A restore needs the ledger as much as the backup. Its bucket is outside Render and write-once for 30 days.
+- **An event waits in the database until the ledger takes it.** When the bucket can't be reached, the API retries every 2 minutes, without giving up, and Sentry gets one "still retrying" error per event. So before a restore, if the old database still runs, check Sentry: while it shows a `ledger.append` job still retrying, fix the bucket's access first and wait for those errors to stop. Events still waiting when a database is lost are lost with it.
 
 ## Restoring
 
@@ -30,7 +31,7 @@ For a lost or damaged database (Q-04, TS-112, TS-113). **Objectives** are the cr
      ```
 
    The Shell already has `LEDGER_URL` and the R2 key. What the command does:
-   - It replays the ledger's events from 10 minutes before that moment: deleted accounts, revoked connections, links and grants, purged Trash units and revoked admissions.
+   - It replays the ledger's events from 10 minutes before that moment: deleted accounts, revoked connections, links and grants, lowered share roles, removed passkeys, purged Trash units and revoked admissions.
    - It runs the Trash-expiry sweep.
    - It ends every session and MCP token, so people sign in again and AI clients reconnect.
    - It prints what it did, and the accounts and albums the database holds.
