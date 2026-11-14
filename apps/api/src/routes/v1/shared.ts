@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import {
   linkReferenceState,
+  previewShareCopy,
   sharedOwner,
   sharedSnapshot,
   sharedWithMe,
@@ -16,6 +17,7 @@ import {
 import {
   linkReferenceStateSchema,
   problemSchema,
+  shareCopyPreviewSchema,
   sharedSnapshotSchema,
   sharedWithMeSchema,
   shareTokenSchema,
@@ -82,6 +84,42 @@ export function sharedRoutes(
         );
         if (!snapshot) throw unavailable();
         return presentSnapshot(artwork, snapshot);
+      },
+    )
+    .get(
+      "/shared/:id/copy",
+      {
+        signedIn: true,
+        params: z.object({ id: z.uuid() }),
+        query: z.object({
+          to: z.union([z.uuid(), z.literal("root")]).meta({
+            description: "Where the copy would go: one of the person's folders, or `root`.",
+          }),
+        }),
+        response: {
+          200: shareCopyPreviewSchema,
+          401: problemSchema,
+          404: problemSchema,
+          422: problemSchema,
+        },
+        detail: {
+          summary: "Preview copying a shared folder or list",
+          description:
+            "What `share.copy` would add to the person's collection (FR-07.22): the folders, lists and albums, how many albums are theirs already, the fields it creates or skips, and each limit it would exceed (all or nothing). Changes nothing. A folder or list they can't open, or their own, is `404`; a destination that can't take it is `422`.",
+          tags: ["sharing"],
+          operationId: "previewShareCopy",
+        },
+      },
+      async ({ params, query, account }) => {
+        const preview = await previewShareCopy(
+          db,
+          account.id,
+          params.id,
+          query.to === "root" ? null : query.to,
+        );
+        if (!("code" in preview)) return preview;
+        if (preview.code === "not_found") throw unavailable();
+        throw new ProblemError(422, "validation_failed", preview.detail);
       },
     )
     .get(

@@ -136,6 +136,23 @@ export type CollectionStore = {
   activeSubtree(id: string): Promise<Container[]>;
   /** The entries of these lists, whether or not their albums are in Trash. */
   listEntries(listIds: string[]): Promise<Membership[]>;
+  /**
+   * What a copy of a share reads of these albums (FR-07.22): those outside Trash, with their release groups, their
+   * service links and their field values.
+   */
+  copyAlbums(albumIds: readonly string[]): Promise<{
+    albums: (Album & { releaseGroupId: string | null })[];
+    links: (CapturedLink & { albumId: string })[];
+    values: FieldValue[];
+  }>;
+  /** The owner's albums outside Trash as TS-44 knows them: by release group and by service link. */
+  albumIdentities(ownerId: string): Promise<
+    {
+      id: string;
+      releaseGroupId: string | null;
+      links: { service: StreamingService; entityId: string }[];
+    }[]
+  >;
   /** The Trash unit with this ID, whoever owns it. */
   findTrashUnit(id: string): Promise<StoredTrashUnit | undefined>;
   /** Whether an editor's album deletion spent this unit ID without making a unit (TON-198). */

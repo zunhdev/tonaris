@@ -1368,6 +1368,12 @@ The block never says "private" while another access path remains.
   - **Shared with me's** available entries link here.
 - *As built in TON-127:* albums show their services as links, as on guest pages (DS-72), following the viewer's link setting.
 
+*As built in TON-133 (decided by the creator, 14 November 2026; FR-07.22):* **"Copy to my collection…"** sits in the header of a share the person views or edits, on a computer (with a copy glyph; disabled offline). Its dialog, "Copy '{name}' to your collection", says "The copy is yours: it has everything inside, now, and no link to the original. Albums you have already join its lists instead of being copied twice." Then:
+- **"Find a folder"** picks Collection or one of their folders, as Move to… does (TON-183), with the choice checked.
+- **Name**, prefilled with the original's; one taken there is said under it, "'{name}' already exists {at the top level / in {folder}}. Choose another name.", and Copy waits.
+- **What it adds** (a status): "It adds 1 folder, 3 lists and 120 albums, 40 of them already yours.", "It creates 2 custom fields of yours.", "'{field}' isn't copied: yours is another kind of field.", and, over a limit, the limit and how far over, with "Nothing can be copied." in `status.danger`, Copy off.
+- **Copy** sends it; the toast "Copied '{name}' to your collection" has Open, which opens the copy. The share stays in Shared with me.
+
 **DS-70 for editors** *(planned in P-TON-47, decided with the creator 10 November 2026; FR-07.18–FR-07.21; built in TON-191 and TON-195).* A share the person can edit opens in the same place, with the owner's editing tools on the desktop:
 - **The header:** a pill naming the role and the owner, the View | Edit toggle (DS-45), and View options. There's no Share button.
 - **Editing** works as in the person's own collection (DS-45, DS-49, DS-50), inside the share only:

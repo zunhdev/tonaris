@@ -274,6 +274,20 @@ describe("an editor's agent (FR-10.4, FR-07.19)", () => {
     expect(saved?.owner_id).toBe(denis);
   });
 
+  test("copies the share into the person's collection once they approve, saying what it adds (FR-07.22)", async () => {
+    const { cookie, denis, metal } = await sharedWithAnna();
+    const { mcp } = await agentOf("anna@example.com", "manage");
+    const { asked, outcomes } = await approved(mcp, cookie, "copy_shared", { containerId: metal });
+    // Denis has no display name here, so none is named.
+    expect(asked.summary).toBe('Copy "Metal" into your collection');
+    expect(asked.consequences).toContain("It adds 1 folder, 1 list and 1 album.");
+    expect(outcomes).toEqual([expect.objectContaining({ status: "confirmed" })]);
+    // Anna's own folder and list now, beside Denis's.
+    const copies = await t.db.$client`select name from containers
+      where owner_id <> ${denis} and trashed_at is null order by name`;
+    expect(copies.map((row: { name: string }) => row.name)).toEqual(["Doom", "Metal"]);
+  });
+
   test("adding the owner's album in Trash to a list reads as unknown, never as in Trash (DRIFT-053)", async () => {
     const { denisCookie, nightfall, doom } = await sharedWithAnna();
     const binned = await t.call("/v1/mutations", {
@@ -494,6 +508,8 @@ describe("every write tool, as an editor's agent inside a share (DRIFT-024)", ()
         }),
         "asks",
       ],
+      // Copying the share makes it the person's own, after their approval (FR-07.22).
+      ["copy_shared", () => ({ containerId: metal }), "asks"],
       // The owner's Trash is the owner's, even for what was inside the share (TON-192).
       ["recover_from_trash", () => ({ items: [{ unitId }] }), "refused: not_found"],
       // Anyone with a working link may keep it in Shared with me.

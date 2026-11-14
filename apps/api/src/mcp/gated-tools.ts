@@ -1,6 +1,6 @@
 // The approval-gated tools (TS-63, TS-64, FR-10.6), offered to Manage collection connections: deleting folders,
-// lists and albums to Trash, deleting a field for good, removing options albums choose, and confirming which album a
-// link is. The first call stores the exact scope and answers `needs_approval` with a link to Tonaris's approval page
+// lists and albums to Trash, deleting a field for good, removing options albums choose, confirming which album a
+// link is, and copying a share into the collection (FR-07.22). The first call stores the exact scope and answers `needs_approval` with a link to Tonaris's approval page
 // (DS-87), and the agent relays its summary to the owner. Called again with the approvalId, the tool runs the app's own
 // commands, only while the owner's approval holds for exactly that scope. Sharing effects are part of what the owner
 // sees (FR-07.14). Permission alone never stands in for an approval.
@@ -10,10 +10,12 @@ import { z } from "zod";
 
 import {
   activeListName,
+  copyApprovalScope,
   deletionTargets,
   fieldDeletionIn,
   findApproval,
   optionRemovalsIn,
+  readCopyApprovalScope,
   savedAlbumOfReleaseGroup,
   sharedDeletionTargets,
   sharedMatchTarget,
@@ -372,6 +374,70 @@ export function registerGatedTools(
           ],
         },
         () => [{ link: args.link }],
+      );
+    },
+  );
+
+  server.registerTool(
+    "copy_shared",
+    {
+      title: "Copy a shared folder or list into the collection",
+      description: `Copies a folder or list shared with the user (see list_shared_with_me) into their own collection, with the folders, lists and albums inside it: a one-time copy that is then simply theirs. Albums they already have, by MusicBrainz release group or a service link, join the copied lists instead of being duplicated; custom fields map onto theirs by name and type, created when missing. It is all or nothing: over a limit, nothing is copied. ${roundTrip}`,
+      inputSchema: z.object({
+        containerId: uuid.describe("The shared folder or list to copy, or one inside a share."),
+        parentId: uuid
+          .optional()
+          .describe("One of the user's folders to copy it into; the top level when omitted."),
+        name: z
+          .string()
+          .optional()
+          .describe("A name for the copy, when the original's is taken where it goes."),
+        approvalId,
+        idempotencyKey,
+      }),
+      annotations: { ...gatedHints, destructiveHint: false },
+    },
+    async (args) => {
+      const target = {
+        ownerId: userId,
+        containerId: args.containerId,
+        parentId: args.parentId ?? null,
+        name: args.name,
+      };
+      // Nothing to approve when it can't be copied, or wouldn't fit (FR-07.22).
+      const now = await readCopyApprovalScope(db, target);
+      if ("code" in now) {
+        return now.code === "not_found"
+          ? failed("not_found", now.detail)
+          : failed("validation_failed", now.detail);
+      }
+      const problems = now.copy?.preview.problems ?? [];
+      if (problems.length > 0) {
+        return failed("limit_exceeded", `Nothing would be copied. ${problems.join(" ")}`);
+      }
+      return answer(
+        {
+          tool: "copy_shared",
+          operation: "copy_share",
+          args,
+          missing: "This shared folder or list isn't available.",
+          scope: async (tx) => {
+            const scope = await copyApprovalScope(tx, target);
+            return "code" in scope ? undefined : scope;
+          },
+          plan: ({ record }, approved) => [
+            {
+              name: "share.copy",
+              args: {
+                containerId: args.containerId,
+                copyId: record("copy"),
+                parentId: approved.copy?.parentId ?? null,
+                name: approved.copy?.copyName ?? "",
+              },
+            },
+          ],
+        },
+        () => [{ containerId: args.containerId }],
       );
     },
   );

@@ -32,6 +32,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { ownerLabel, presentationOf, type Container, type SharedSnapshot } from "@tonaris/domain";
 
+import { CopyShareButton } from "./copy-share";
 import { useShareStream } from "./use-share-stream";
 
 type Loaded = { snapshot: SharedSnapshot } | { snapshot: undefined; missing: true };
@@ -124,6 +125,8 @@ function SharedContent({
                 View only · Shared by {owner}
               </span>
             )}
+            {/* The person may make it their own (FR-07.22, TON-133). */}
+            <CopyShareButton shared={current} />
             <ViewOptions key={current.id} viewKey={current.id} kind={kind} />
           </>
         }

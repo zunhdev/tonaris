@@ -14,6 +14,7 @@ import { useShell } from "@/common/shell-context";
 import { count as counted } from "@/common/words";
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
+import { CopyShareButton } from "@/features/sharing/copy-share";
 import { PhoneShared } from "@/features/sharing/phone-shared";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { useConnection } from "@/features/sync/sync-provider";
@@ -243,6 +244,8 @@ function ViewHeader({
               Can edit · Shared by {ownerLabel(place.ownerName)}
             </span>
           )}
+          {/* And they may make a copy their own (FR-07.22, TON-133). */}
+          {inShare && container && <CopyShareButton shared={{ ...container, name: title }} />}
           {editing && inShare && container?.kind === "folder" && (
             <>
               <Button

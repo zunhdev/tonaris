@@ -18,6 +18,9 @@ function created(mutation: Mutation): string[] {
     // A capture may reuse an album instead; then nothing later in the request refers to the ID it proposed.
     case "album.capture":
       return [mutation.args.albumId];
+    // A copy of a share is made under the ID it proposed (FR-07.22).
+    case "share.copy":
+      return [mutation.args.copyId];
     // A deletion makes its Trash unit, which an undo recovers.
     case "container.delete":
     case "album.delete":
@@ -99,6 +102,7 @@ function referenced(mutation: Mutation): (string | null)[] {
     case "album.capture":
       return [mutation.args.listId];
     case "container.create":
+    case "share.copy":
       return [mutation.args.parentId];
     case "trash.recover":
       return [mutation.args.unitId, mutation.args.parentId ?? null];

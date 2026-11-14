@@ -27,6 +27,7 @@ import { failure, outcomeSchema, type Failure } from "./outcomes";
 import { positionSchema } from "./positions";
 import type { Principal } from "./principals";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
+import { shareCopyArgsSchema } from "./share-copy";
 import {
   grantArgsSchema,
   shareSetRoleArgsSchema,
@@ -514,6 +515,17 @@ export const shareRemoveReferenceSchema = z.object({
   args: removeReferenceArgsSchema,
 });
 
+/**
+ * `share.copy`: copies a shared folder or list, with what is inside, into the person's collection (FR-07.22). All or
+ * nothing within their limits; its `result` names the copy and its albums, added and reused. An MCP client copies only
+ * after the person approves it (FR-10.6).
+ */
+export const shareCopySchema = z.object({
+  mutationId,
+  name: z.literal("share.copy"),
+  args: shareCopyArgsSchema,
+});
+
 /** `account.setDisplayName`: sets or clears the display name (FR-11.3, TS-34). App-only (X-03). */
 export const accountSetDisplayNameSchema = z.object({
   mutationId,
@@ -566,6 +578,7 @@ export const mutationSchema = z
     defaultsSetHiddenServicesSchema,
     containerSetColorSchema,
     shareSetRoleSchema,
+    shareCopySchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

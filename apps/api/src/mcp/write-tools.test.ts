@@ -78,6 +78,7 @@ describe("the tools a Manage connection gets (TS-62, TS-63, X-03)", () => {
         "change_field_type",
         "create_container",
         "confirm_match",
+        "copy_shared",
         "create_field",
         "delete_field",
         "delete_items",
@@ -119,7 +120,7 @@ describe("the tools a Manage connection gets (TS-62, TS-63, X-03)", () => {
       ),
     ).toEqual([]);
     const writing = tools.filter((tool) => tool.annotations?.readOnlyHint === false);
-    expect(writing.length).toBe(28);
+    expect(writing.length).toBe(29);
   });
 
   test("a Read-only connection can't call a write tool, even by name", async () => {

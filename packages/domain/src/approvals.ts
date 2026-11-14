@@ -8,6 +8,7 @@ import type { OptionRemoval } from "./field-options";
 import { fieldTypes, type FieldType } from "./fields";
 import { trashRetentionDays } from "./limits";
 import { byBytes } from "./order";
+import { copySummary, shareCopyPreviewSchema } from "./share-copy";
 import { audienceSchema, type Audience } from "./sharing-impact";
 import { z } from "./zod";
 
@@ -29,6 +30,7 @@ export const approvalOperations = [
   "delete_field",
   "remove_options",
   "confirm_match",
+  "copy_share",
 ] as const;
 export type ApprovalOperation = (typeof approvalOperations)[number];
 
@@ -118,6 +120,24 @@ export const approvalScopeSchema = z
       })
       .optional()
       .meta({ description: "The link, the album it is confirmed as, and where it goes." }),
+    copy: z
+      .object({
+        containerId: z.uuid(),
+        name: z.string().meta({ description: "The shared folder's or list's name." }),
+        kind: z.enum(containerKinds),
+        ownerName: z.string().nullable(),
+        copyName: z.string().meta({ description: "The copy's name." }),
+        parentId: z.uuid().nullable(),
+        destination: z
+          .string()
+          .nullable()
+          .meta({ description: "The folder it goes in; null for the top level." }),
+        preview: shareCopyPreviewSchema,
+      })
+      .optional()
+      .meta({
+        description: "A shared folder or list copied into the person's collection (FR-07.22).",
+      }),
   })
   .meta({ description: "What a gated operation does (FR-10.6, TS-64)." });
 export type ApprovalScope = z.infer<typeof approvalScopeSchema>;
@@ -269,6 +289,11 @@ export function approvalSummary(scope: ApprovalScope): string {
   if (scope.operation === "confirm_match") {
     return `Add "${scope.match?.title ?? ""}" from this link`;
   }
+  if (scope.operation === "copy_share") {
+    const copy = scope.copy;
+    const where = copy?.destination == null ? "your collection" : `"${copy.destination}"`;
+    return `Copy "${copy?.name ?? ""}"${copy?.ownerName ? ` from ${copy.ownerName}` : ""} into ${where}`;
+  }
   const containers = scope.containers ?? [];
   const lists = containers.filter((container) => container.kind === "list").length;
   const folders = containers.length - lists;
@@ -296,6 +321,20 @@ function sharingConsequence(sharing: readonly Audience[]): string | undefined {
 
 /** What happens, and whether it can be undone (X-07, FR-10.6, DS-87). */
 export function approvalConsequences(scope: ApprovalScope): string[] {
+  if (scope.operation === "copy_share" && scope.copy) {
+    const { preview, copyName, name } = scope.copy;
+    return [
+      `It adds ${copySummary(preview)}.`,
+      ...(copyName === name ? [] : [`The copy is named "${copyName}".`]),
+      ...(preview.fields > 0
+        ? [`It creates ${count(preview.fields, "custom field", "custom fields")} of yours.`]
+        : []),
+      ...preview.skippedFields.map(
+        (field) => `"${field}" isn't copied: yours is another kind of field.`,
+      ),
+      "The copy is yours, with no link to the original; you can delete it like anything else.",
+    ];
+  }
   if (scope.operation === "delete_field" || scope.operation === "remove_options") {
     const field = scope.field ?? { albums: 0, inTrash: 0, shared: 0 };
     const total = field.albums + field.inTrash;
