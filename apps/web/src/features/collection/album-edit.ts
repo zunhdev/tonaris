@@ -7,6 +7,7 @@
 import {
   albumFields,
   albumProblem,
+  chronology,
   groupNames,
   groupOf,
   releaseTypes,
@@ -70,8 +71,8 @@ export type AlbumEdit =
 
 export const formatRefusal = "Enter the year as four digits, such as 1986.";
 
-/** Whether a row's year cell shows, and so edits, a live album's recording year. */
-const editsRecording = (album: Album) => album.isLive === true && album.recordingYearStart !== null;
+/** Whether a row's year cell shows, and so edits, a live album's recording year: the domain's `chronology`. */
+const editsRecording = (album: Album) => chronology(album).recorded;
 
 /** Whether `cell` edits the recording years. */
 const isRecording = (album: Album, cell: AlbumCell) =>
@@ -82,9 +83,8 @@ export function cellText(album: Album, cell: AlbumCell): string {
   if (cell === "title") return album.title;
   if (cell === "artistCredit") return album.artistCredit;
   if (isRecording(album, cell)) {
-    const { recordingYearStart: start, recordingYearEnd: end } = album;
-    if (start === null) return "";
-    return end !== null && end !== start ? `${start}–${end}` : String(start);
+    // The inspector's recording field of a live album without one starts empty.
+    return album.recordingYearStart === null ? "" : chronology({ ...album, isLive: true }).year;
   }
   return album.originalYear === null ? "" : String(album.originalYear);
 }

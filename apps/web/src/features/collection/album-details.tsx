@@ -19,6 +19,7 @@ import { useId, useState, type ReactNode } from "react";
 
 import {
   artworkUrlRefusal,
+  chronology,
   groupNames,
   isArtworkUrl,
   membershipKey,
@@ -57,12 +58,13 @@ import { ancestorsOf } from "./tree";
 
 const addedDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
-/** Which year sorts the album (FR-05.5, FR-05.6), in words. */
+/** Which year sorts the album (FR-05.5, FR-05.6), in words, from the domain's `chronology` (DRIFT-052). */
 function sortHint(album: Album): string {
-  if (album.isLive !== true) return "Sorts by its original release year.";
-  return album.recordingYearStart === null
+  const { recorded, fallback } = chronology(album);
+  if (recorded) return "Sorts by its recording year.";
+  return fallback
     ? "Sorts by its release year, as the recording year is unknown."
-    : "Sorts by its recording year.";
+    : "Sorts by its original release year.";
 }
 
 export function AlbumDetails({ album }: { album: Album }) {
