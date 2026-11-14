@@ -285,7 +285,7 @@ In Editing mode on a computer, an album dragged by its handle from the person's 
 - **THEN** it leaves "Doom" for "Stoner", and a toast "Moved to Stoner" offers Undo
 
 ### Requirement: Selected albums are acted on together
-In Editing mode on a computer, a person SHALL select albums in a list or Unsorted by X, ⇧↑ and ⇧↓, or by their checkboxes, and SHALL see how many are selected. Add to list, removing from the list on view and deleting SHALL then act on all of them in one batch; adding and removing SHALL offer Undo, and deleting SHALL be confirmed first (DS-21, DS-45, DS-50, DS-78).
+In Editing mode on a computer, a person SHALL select albums in a list or Unsorted by X, ⇧↑ and ⇧↓, or by checkboxes shown on an album's hover or focus, and on every album while any is selected. They SHALL see how many are selected. Add to list, removing from the list on view and deleting SHALL act on all of them in one batch; adding and removing SHALL offer Undo, and deleting SHALL be confirmed first (DS-21, DS-50).
 
 #### Scenario: Removing several from a list
 - **WHEN** the owner selects three albums in the list "Doom" and presses ⌫
@@ -294,3 +294,7 @@ In Editing mode on a computer, a person SHALL select albums in a list or Unsorte
 #### Scenario: Deleting several
 - **WHEN** the owner selects two albums and presses ⌘⌫, then confirms
 - **THEN** both move to Trash, each its own unit, in one batch
+
+#### Scenario: Checkboxes stay out of the way
+- **WHEN** nothing is selected and the pointer is over one album
+- **THEN** only that album shows its checkbox
