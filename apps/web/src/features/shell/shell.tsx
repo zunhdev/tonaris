@@ -29,7 +29,7 @@ import {
 import { DragProvider } from "@/features/collection/drag";
 import { AlbumInspector, type InspectorPlacement } from "@/features/collection/inspector";
 import { useInspector } from "@/features/collection/inspector-state";
-import { MoveDialog } from "@/features/collection/move";
+import { MoveConfirmDialog, MoveDialog } from "@/features/collection/move";
 import { NewAlbumDialog } from "@/features/collection/new-album";
 import { OwnCollection } from "@/features/collection/own-collection";
 import { PositionDialog } from "@/features/collection/position-dialog";
@@ -187,6 +187,7 @@ export function Shell({ account, children }: { account: Account; children: React
         />
       </OwnCollection>
       <MoveDialog />
+      <MoveConfirmDialog />
       <PositionDialog />
       <ColorDialog />
       <ShareDialog />

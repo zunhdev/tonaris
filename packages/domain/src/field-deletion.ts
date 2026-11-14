@@ -55,6 +55,10 @@ export const fieldDeletionSchema = z
     options: z.array(z.object({ id: z.uuid(), label: z.string() })),
     albums: z.int().nonnegative().meta({ description: "Active albums applying the field." }),
     inTrash: z.int().nonnegative().meta({ description: "Albums in Trash applying the field." }),
+    shared: z.int().nonnegative().meta({
+      description:
+        "Of the active ones, how many are in folders or lists the owner shares, by an open invitation or a live link: the people they share with stop seeing it on them (FR-03.17, FR-03.18, FR-07.14).",
+    }),
     scopeHash: z.string().meta({
       description:
         "Confirms exactly this scope: pass it to `field.delete`. The deletion is refused if the field or the albums applying it changed meanwhile.",
@@ -67,6 +71,8 @@ export type FieldDeletion = z.infer<typeof fieldDeletionSchema>;
 export async function fieldDeletion(
   field: CustomField,
   users: readonly OptionUser[],
+  /** How many of the active ones are in what the owner shares. */
+  shared: number,
 ): Promise<FieldDeletion> {
   const trashed = users.filter((user) => user.trashed).length;
   return {
@@ -74,6 +80,7 @@ export async function fieldDeletion(
     options: field.options.map(({ id, label }) => ({ id, label })),
     albums: users.length - trashed,
     inTrash: trashed,
+    shared,
     scopeHash: await scopeHash(fieldDeletionScope(field, users)),
   };
 }

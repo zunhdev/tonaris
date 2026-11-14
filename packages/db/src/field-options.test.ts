@@ -14,8 +14,17 @@ import {
   type Principal,
 } from "@tonaris/domain";
 
-import { readOptionRemoval } from "./field-options";
-import { albumFieldMulti, albums, trashUnits, users } from "./schema";
+import { readFieldDeletion, readOptionRemoval } from "./field-options";
+import {
+  albumFieldMulti,
+  albums,
+  containers,
+  memberships,
+  shareGrants,
+  shareLinks,
+  trashUnits,
+  users,
+} from "./schema";
 import { bootstrapSnapshot, executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
@@ -249,5 +258,71 @@ describe("options in Postgres (FR-03.14 to FR-03.17, X-09, TS-14)", () => {
     const mood = await defined("single_choice", ["Calm"]);
     expect(await readOptionRemoval(t.db, uuidv7(), mood.id, mood.options[0] ?? "")).toBeUndefined();
     expect(await readOptionRemoval(t.db, anna.userId, mood.id, uuidv7())).toBeUndefined();
+  });
+});
+
+describe("what a removal does to sharing (FR-03.17, FR-03.18, TON-226)", () => {
+  test("albums in a list shared directly or through a folder above count once; others and Trash don't", async () => {
+    const mood = await defined("single_choice", ["Calm"]);
+    const [calm] = mood.options;
+    const other = uuidv7();
+    await t.db.insert(users).values({ id: other, email: `${other}@example.com` });
+    const container = async (kind: "folder" | "list", name: string, parentId: string | null) => {
+      const id = uuidv7();
+      await confirmed({
+        mutationId: uuidv7(),
+        name: "container.create",
+        args: { id, kind, parentId, name },
+      });
+      return id;
+    };
+    const metal = await container("folder", "Metal", null);
+    const doom = await container("list", "Doom", metal);
+    const stoner = await container("list", "Stoner", null);
+    const quiet = await container("list", "Quiet", null);
+    const [bleach, nevermind, inUtero, gone] = [
+      await newAlbum("Bleach"),
+      await newAlbum("Nevermind"),
+      await newAlbum("In Utero"),
+      await newAlbum("Gone"),
+    ];
+    for (const album of [bleach, nevermind, inUtero, gone]) {
+      // oxlint-disable-next-line no-await-in-loop -- one album after another
+      await choose(album, mood.id, calm ?? null);
+    }
+    // Bleach through Metal's invitation, and Stoner's link too; Nevermind through Stoner's link; In Utero nowhere.
+    const add = (listId: string, albumId: string) =>
+      t.db.insert(memberships).values({ listId, albumId, ownerId: anna.userId });
+    await add(doom, bleach);
+    await add(stoner, bleach);
+    await add(stoner, nevermind);
+    await add(quiet, inUtero);
+    await add(doom, gone);
+    await t.db.insert(shareGrants).values({
+      id: uuidv7(),
+      containerId: metal,
+      granteeId: other,
+      invitedEmail: "someone@example.com",
+      status: "accepted",
+      role: "view",
+    });
+    await t.db
+      .insert(shareLinks)
+      .values({ id: uuidv7(), containerId: stoner, tokenHash: Buffer.from("x".repeat(32)) });
+    await trash(gone);
+
+    expect(await readOptionRemoval(t.db, anna.userId, mood.id, calm ?? "")).toMatchObject({
+      albums: 3,
+      inTrash: 1,
+      shared: 2,
+    });
+    expect(await readFieldDeletion(t.db, anna.userId, mood.id)).toMatchObject({ shared: 2 });
+    // Stoner's link off, Nevermind is no longer shared.
+    await t.db
+      .update(shareLinks)
+      .set({ revokedAt: new Date() })
+      .where(eq(shareLinks.containerId, stoner));
+    expect(await readFieldDeletion(t.db, anna.userId, mood.id)).toMatchObject({ shared: 1 });
+    expect(await t.db.select().from(containers).where(eq(containers.id, quiet))).toHaveLength(1);
   });
 });

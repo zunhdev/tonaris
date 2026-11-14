@@ -37,7 +37,7 @@ import {
 import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { useDropOnList } from "./drop-on-list";
-import { useMoveContainer } from "./move";
+import { useMoveWithConsent } from "./move";
 import { canMoveInto } from "./tree";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -116,7 +116,8 @@ export function DragProvider({ children }: { children: ReactNode }) {
   const dropOnList = useDropOnList();
   const { tree } = useCollectionData();
   const drops = useRef(new Map<string, ViewMoves["drop"]>());
-  const move = useMoveContainer();
+  // A drop that would change who sees what asks first (TON-226).
+  const move = useMoveWithConsent();
   const { enterEditing } = useMode();
 
   const registerDrop = useCallback((viewKey: string, drop: ViewMoves["drop"]) => {

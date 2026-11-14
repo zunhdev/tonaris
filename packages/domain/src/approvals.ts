@@ -86,6 +86,10 @@ export const approvalScopeSchema = z
         type: z.enum(fieldTypes),
         albums: z.int().meta({ description: "Albums outside Trash affected." }),
         inTrash: z.int().meta({ description: "Albums in Trash affected." }),
+        shared: z.int().optional().meta({
+          description:
+            "Of the albums outside Trash, how many are in what the owner shares, counted once per option (FR-07.14).",
+        }),
       })
       .optional()
       .meta({ description: "The field deleted, or whose options are removed." }),
@@ -169,7 +173,12 @@ export function fieldDeletionApprovalScope(deletion: FieldDeletion): ApprovalSco
     operation: "delete_field",
     albums: [],
     recoverableDays: 0,
-    field: { ...deletion.field, albums: deletion.albums, inTrash: deletion.inTrash },
+    field: {
+      ...deletion.field,
+      albums: deletion.albums,
+      inTrash: deletion.inTrash,
+      shared: deletion.shared,
+    },
     checks: [deletion.scopeHash],
   };
 }
@@ -188,6 +197,7 @@ export function optionsRemovalScope(
       ...field,
       albums: sorted.reduce((sum, removal) => sum + removal.albums, 0),
       inTrash: sorted.reduce((sum, removal) => sum + removal.inTrash, 0),
+      shared: sorted.reduce((sum, removal) => sum + removal.shared, 0),
     },
     options: sorted.map(({ option, albums, inTrash }) => ({ ...option, albums, inTrash })),
     checks: sorted.map((removal) => removal.scopeHash),
@@ -287,7 +297,7 @@ function sharingConsequence(sharing: readonly Audience[]): string | undefined {
 /** What happens, and whether it can be undone (X-07, FR-10.6, DS-87). */
 export function approvalConsequences(scope: ApprovalScope): string[] {
   if (scope.operation === "delete_field" || scope.operation === "remove_options") {
-    const field = scope.field ?? { albums: 0, inTrash: 0 };
+    const field = scope.field ?? { albums: 0, inTrash: 0, shared: 0 };
     const total = field.albums + field.inTrash;
     const albums = count(total, "album", "albums");
     const trash = field.inTrash > 0 ? `, ${field.inTrash} of them in Trash` : "";
@@ -297,6 +307,12 @@ export function approvalConsequences(scope: ApprovalScope): string[] {
           ? "No album uses it."
           : `It is taken off ${albums}${trash}, with its values.`
         : `${scope.options?.length === 1 ? "It is" : "They are"} cleared from ${albums}${trash}.`,
+      // What the people the owner shares with see changes too (FR-07.14, TON-226).
+      ...((field.shared ?? 0) > 0
+        ? [
+            "Some of these albums are in what you share: the people you share them with stop seeing it.",
+          ]
+        : []),
       "This can't be undone.",
     ];
   }
