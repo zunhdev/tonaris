@@ -1669,7 +1669,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
   - **Waking:** queuing a job wakes the worker in the same process, so it starts at once. The worker also looks for due jobs every 5 s, for retries, a restart's leftovers, and jobs another instance queued.
   - **Claims:** two jobs run at a time. A claim holds a job for 2 minutes, so a worker that died lets it go. Due times come from the API's clock, which claims compare with.
   - *Fixed in TON-102:* a lane that had finished started again only once every lane had. So while one ran a long job, everything queued meanwhile waited for it, and a burst of sign-in emails stalled behind one long job. Waking now starts any finished lane at once.
-  - **Retries:** after 5 s, 30 s and 2 min, unless the handler says retrying can't help. Then the job is buried: its handler records the failure, and only what it says to keep stays in the payload.
+  - **Retries:** after 5 s, 30 s and 2 min, unless the handler says retrying can't help. Then the job is buried: its handler records the failure, and only what it says to keep stays in the payload. A handler can retry forever instead, every 2 minutes after the last wait: the ledger's does (TS-113).
   - **Secrets:** an email job's payload can hold a code or an admission token, which the database otherwise keeps only hashed. A sent email's job is deleted, and a buried one keeps only its template and address.
   - **Pruning:** dead jobs go after 30 days (`prune-dead-jobs`, daily). **Admin → Operations** lists them (TON-91).
 
@@ -1929,7 +1929,7 @@ The creator chooses the host, region, and budget; the current preference is Rend
     - `admission.revoked`;
     - `passkey.removed` (TON-143), for one removed in Settings, or for every passkey of an account at a recovery. A deletion's replay removes them through `account.deleted`.
     - `shareGrant.roleLowered` (TON-188), when an owner lowers a grant from Can edit to Can view. A raise needs no record.
-  - **Writing:** the API's worker appends each event to `LEDGER_URL`, which production requires, with the queue's retries.
+  - **Writing:** the API's worker appends each event to `LEDGER_URL`, which production requires, with the queue's retries. An append is never buried (TON-217): once the usual waits run out, it retries every 2 minutes until the ledger takes it, and reports once to the error log that it is still retrying. Only an event the schema refuses is buried.
     - `file:` writes monthly JSON-lines files.
     - `s3://bucket/prefix` writes one object per event, since objects can't be appended to.
     - Events carry IDs only.

@@ -1,6 +1,6 @@
 // The job worker (TS-90) against the local Postgres 18 (TS-121): a queued job runs as soon as the worker is woken,
-// a failure is retried after its wait and buried when the waits run out or retrying can't help, and stopping waits
-// for the job in progress.
+// a failure is retried after its wait and buried when the waits run out or retrying can't help, unless its handler
+// retries forever, and stopping waits for the job in progress.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
@@ -111,6 +111,26 @@ describe("startJobWorker", () => {
     expect(rows).toEqual([
       expect.objectContaining({ attempts: 3, lastError: "still down", payload: { kept: "this" } }),
     ]);
+  });
+
+  test("a job that retries forever runs on past the waits until it lands, and says so once (TS-113)", async () => {
+    const down = () => new Error("ledger down");
+    const recorder = handler([down(), down(), down(), down(), down()]);
+    const logged: string[] = [];
+    worker = startJobWorker(t.db, [{ ...recorder.handler, retriesForever: true }], {
+      pollMs: 60_000,
+      retryDelaysMs: [10, 20],
+      logError: (_error, context) => logged.push(context),
+    });
+    await queue();
+    worker.wake();
+    await until(() => recorder.runs.length === 6);
+    await until(() => false, 50);
+
+    expect(recorder.runs.map((run) => run.attempts)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(recorder.burials).toEqual([]);
+    expect(logged).toEqual([expect.stringContaining("still retrying after 3 attempts")]);
+    expect(await t.db.select().from(jobs)).toEqual([]);
   });
 
   test("a failure retrying can't help is buried at once", async () => {
