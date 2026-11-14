@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-import { canReadContainer } from "@tonaris/db";
+import { canReadContainer } from "@tonaris/db/testing";
 import {
   invitationListSchema,
   invitationStateSchema,

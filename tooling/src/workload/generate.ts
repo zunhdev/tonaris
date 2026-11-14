@@ -22,7 +22,8 @@ import type {
   shareLinks,
   users,
 } from "@tonaris/db";
-import { latinKey, nameKey, searchKey } from "@tonaris/domain";
+import { latinKey, nameKey } from "@tonaris/domain";
+import { albumUrl } from "@tonaris/providers";
 
 import { Random } from "./random";
 import {
@@ -425,7 +426,7 @@ function buildAlbums(b: Builder, count: number): Album[] {
       searchArtistKey: latinKey(description.artistCredit),
       ...stamps(createdAt),
     });
-    addServiceLinks(b, rng, album, description.title);
+    addServiceLinks(b, rng, album);
   }
   return made;
 }
@@ -438,7 +439,7 @@ const base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const services = ["spotify", "apple-music", "qobuz", "tidal"] as const satisfies readonly Service[];
 
 /** The link the album was captured from, sometimes a second service's too (FR-06.2). */
-function addServiceLinks(b: Builder, rng: Random, album: Album, title: string): void {
+function addServiceLinks(b: Builder, rng: Random, album: Album): void {
   const primary = rng.pickWeighted(services, [0.45, 0.25, 0.15, 0.15]);
   const linked = rng.chance(0.15)
     ? [primary, rng.pick(services.filter((service) => service !== primary))]
@@ -448,37 +449,27 @@ function addServiceLinks(b: Builder, rng: Random, album: Album, title: string): 
       albumId: album.id,
       ownerId: b.ownerId,
       service,
-      ...serviceLink[service](rng, title),
+      ...serviceLink[service](rng),
       ...stamps(album.createdAt),
     });
   }
 }
 
-/** An album ID and URL in each service's own format (TS-40). */
+/** An album ID in each service's own format, and its link as capture saves it (TS-40, `albumUrl`). */
 const serviceLink: Record<
   (typeof services)[number],
-  (rng: Random, title: string) => { entityId: string; url: string }
+  (rng: Random) => { entityId: string; url: string }
 > = {
-  spotify: (rng) => {
-    const entityId = rng.string(base62, 22);
-    return { entityId, url: `https://open.spotify.com/album/${entityId}` };
-  },
-  "apple-music": (rng, title) => {
-    const entityId = String(rng.int(100_000_000, 1_999_999_999));
-    const slug = searchKey(title)
-      .replaceAll(/[^a-z0-9]+/g, "-")
-      .replaceAll(/^-|-$/g, "");
-    return { entityId, url: `https://music.apple.com/us/album/${slug || "album"}/${entityId}` };
-  },
-  qobuz: (rng) => {
-    const entityId = rng.string("0123456789abcdefghijklmnopqrstuvwxyz", 13);
-    return { entityId, url: `https://open.qobuz.com/album/${entityId}` };
-  },
-  tidal: (rng) => {
-    const entityId = String(rng.int(1_000_000, 499_999_999));
-    return { entityId, url: `https://tidal.com/album/${entityId}` };
-  },
+  spotify: (rng) => linkOf("spotify", rng.string(base62, 22)),
+  "apple-music": (rng) => linkOf("apple-music", String(rng.int(100_000_000, 1_999_999_999))),
+  qobuz: (rng) => linkOf("qobuz", rng.string("0123456789abcdefghijklmnopqrstuvwxyz", 13)),
+  tidal: (rng) => linkOf("tidal", String(rng.int(1_000_000, 499_999_999))),
 };
+
+const linkOf = (service: Service, entityId: string) => ({
+  entityId,
+  url: albumUrl(service, entityId),
+});
 
 /** Puts each album in some lists. List sizes are heavy-tailed: a few hold hundreds, most a few dozen. */
 function buildMemberships(

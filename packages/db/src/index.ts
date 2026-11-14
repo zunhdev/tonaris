@@ -86,7 +86,6 @@ export { listPasskeys, removePasskey, renamePasskey, type PasskeyRow } from "./p
 export type { ReplayReport } from "./ledger-replay";
 export { reconcileRestored, type ReconcileReport } from "./reconcile";
 export { operationsStatus, type OperationsStatus } from "./operations";
-export { findFieldIn } from "./field-values";
 export { lockAccount, lockCollections, purgeExpiredTrash } from "./sync";
 export { databaseUrl, redact } from "./config";
 export {
@@ -147,7 +146,6 @@ export {
 } from "./jobs";
 export { runExclusively } from "./locks";
 export { migrateDatabase } from "./migrations";
-export { provenanceOf } from "./provenance";
 export { providerCacheStore, pruneProviderCache } from "./provider-cache";
 export {
   invitationState,
@@ -156,14 +154,6 @@ export {
   recordInvitationEmail,
 } from "./invitations";
 export { searchCollection } from "./search";
-export {
-  canEditAlbum,
-  canEditContainer,
-  canReadContainer,
-  editableContainers,
-  readableContainers,
-  roleOn,
-} from "./access";
 export { previewSharing, type ImpactQuery } from "./sharing-impact";
 export {
   findShareLink,

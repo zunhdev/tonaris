@@ -172,3 +172,8 @@ export const services: Readonly<Record<StreamingService, ServiceLinks>> = {
     ],
   },
 };
+
+/** An album's link in its service's own canonical form (TS-40), as capture saves it. */
+export function albumUrl(service: StreamingService, id: string): string {
+  return services[service].canonical("album", id);
+}

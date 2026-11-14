@@ -64,6 +64,11 @@ export function answerOf<T>(
 export function unavailableFailure({ provider }: { provider: ProviderId }): Failure {
   return failure(
     "provider_unavailable",
-    `Couldn't reach ${providerNames[provider]}. Try again, or enter the details manually.`,
+    `${couldNotReach(provider)} Try again, or enter the details manually.`,
   );
+}
+
+/** The sentence that names a provider that couldn't be asked, for any answer that has to say so. */
+export function couldNotReach(provider: ProviderId): string {
+  return `Couldn't reach ${providerNames[provider]}.`;
 }

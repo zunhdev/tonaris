@@ -10,6 +10,11 @@ import { passkeys } from "./schema";
 
 export { ensureDatabase };
 
+// Raw reads for tests to check against. Apps ask the domain's rules instead, so they stay out of the package's entry
+// (DRIFT-060), as the access checks that led to DRIFT-019 did.
+export { canReadContainer } from "./access";
+export { provenanceOf } from "./provenance";
+
 /**
  * Creates pg_trgm in the test database's `public` before any schema migrates (TS-50): tests run in parallel, and
  * two migrations creating it at once would collide. One that loses a race finds it made.
