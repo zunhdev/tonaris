@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 
 import { uuidv7, type Mutation, type Principal } from "@tonaris/domain";
 
-import { albums, containers, memberships, trashUnits, users } from "./schema";
+import { albums, containers, memberships, positions, trashUnits, users, viewPrefs } from "./schema";
 import { bootstrapSnapshot, executeMutation, purgeExpiredTrash, readChanges } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
@@ -218,6 +218,46 @@ describe("removing Trash for good, in Postgres (FR-01.17, FR-01.18, TS-91)", () 
     expect((await bootstrapSnapshot(t.db, anna.userId)).albums.map((album) => album.id)).toEqual([
       dopesmoker,
     ]);
+  });
+
+  test("a purge takes the view choices and places of what it removes", async () => {
+    const doom = await create("list", "Doom");
+    const stoner = await create("list", "Stoner");
+    const dopesmoker = await newAlbum("Dopesmoker");
+    await run({
+      mutationId: uuidv7(),
+      name: "membership.add",
+      args: { listId: doom, albumId: dopesmoker },
+    });
+    const arranged = [
+      await run({
+        mutationId: uuidv7(),
+        name: "view.set",
+        args: { viewKey: doom, sortMode: "manual", sortDir: "asc" },
+        base: { sortMode: null, sortDir: null },
+      }),
+      await run({
+        mutationId: uuidv7(),
+        name: "order.set",
+        args: { viewKey: doom, keys: { [dopesmoker]: "a0" } },
+        base: { [dopesmoker]: null },
+      }),
+      await run({
+        mutationId: uuidv7(),
+        name: "order.set",
+        args: { viewKey: "root", keys: { [doom]: "a0", [stoner]: "a1" } },
+        base: { [doom]: null, [stoner]: null },
+      }),
+    ];
+    for (const { outcome } of arranged) expect(outcome.status).toBe("confirmed");
+    const unitId = uuidv7();
+    await run({ mutationId: uuidv7(), name: "container.delete", args: { id: doom, unitId } });
+    await run({ mutationId: uuidv7(), name: "trash.purge", args: { unitIds: [unitId] } });
+
+    expect(await t.db.select().from(viewPrefs)).toEqual([]);
+    const places = await t.db.select().from(positions);
+    expect(places.filter((place) => place.viewKey === doom || place.itemId === doom)).toEqual([]);
+    expect(places.map((place) => place.itemId)).toContain(stoner);
   });
 
   test("the expiry purges units past 30 days only, logging their removal without a mutation", async () => {

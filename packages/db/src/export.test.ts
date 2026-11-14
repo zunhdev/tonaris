@@ -152,4 +152,43 @@ describe("the export's reader (FR-08)", () => {
       expect(text).not.toContain(absent);
     expect(text).toContain("Shared jazz");
   });
+
+  test("leaves out the person's view choices and order on content shared with them", async () => {
+    const anna = await person("anna@example.com");
+    const ben = await person("ben@example.com");
+    const bens = await list(ben, "Ben's jazz");
+    const [first, second] = [await album(ben, "First"), await album(ben, "Second")];
+    await run(ben, {
+      mutationId: uuidv7(),
+      name: "membership.add",
+      args: { listId: bens, albumId: first },
+    });
+    await run(ben, {
+      mutationId: uuidv7(),
+      name: "membership.add",
+      args: { listId: bens, albumId: second },
+    });
+    await t.db.insert(shareGrants).values({
+      id: uuidv7(),
+      containerId: bens,
+      granteeId: anna.userId,
+      invitedEmail: "anna@example.com",
+      status: "accepted",
+    });
+    await run(anna, {
+      mutationId: uuidv7(),
+      name: "view.set",
+      args: { viewKey: bens, sortMode: "manual", sortDir: "asc" },
+      base: { sortMode: null, sortDir: null },
+    });
+    await run(anna, {
+      mutationId: uuidv7(),
+      name: "order.set",
+      args: { viewKey: bens, keys: { [second]: "a0", [first]: "a1" } },
+      base: { [second]: null, [first]: null },
+    });
+
+    const text = JSON.stringify(buildExport(await exportSource(t.db, anna.userId), everything));
+    for (const absent of [bens, first, second]) expect(text).not.toContain(absent);
+  });
 });

@@ -152,7 +152,9 @@ test("a list's cards and rows name the album's services, each opening it and not
   await live(page);
   const bleach = album("Bleach", { artistCredit: "Nirvana", originalYear: 1989 });
   await linked(page, "Grunge", bleach, { tidal, spotify });
-  await page.route("https://tidal.com/**", (route) => route.fulfill({ body: "Tidal" }));
+  // On the context, not the page: the link opens a new tab, which a page's routes don't cover, and the test must not
+  // need the internet to open it.
+  await page.context().route("https://tidal.com/**", (route) => route.fulfill({ body: "Tidal" }));
   const inspector = page.getByRole("complementary", { name: "Album" });
 
   // Rows: the services column, its names links, each underlined and ending in ↗ (TON-125).
