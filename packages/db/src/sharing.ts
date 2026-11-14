@@ -10,6 +10,7 @@ import {
   shareTokenHash,
   shownEmailStatus,
   type ContainerFields,
+  type OwnSharing,
   type ServiceLink,
   type SharedEntry,
   type SharedSnapshot,
@@ -138,6 +139,25 @@ export function sharedSnapshot(
       fieldValues,
     };
   });
+}
+
+/**
+ * What `ownerId` shares directly (DS-31, TON-227): their folders and lists outside Trash with an open invitation or a
+ * live link, oldest first.
+ */
+export async function ownSharing(db: Executor, ownerId: string): Promise<OwnSharing["shared"]> {
+  const rows = await db.execute<{ containerId: string; people: boolean; link: boolean }>(sql`
+    select c.id as "containerId",
+      exists (select 1 from ${shareGrants} g
+        where g.container_id = c.id and g.status in (${sql.join(
+          openGrantStatuses.map((status) => sql`${status}`),
+          sql`, `,
+        )})) as people,
+      exists (select 1 from ${shareLinks} l where l.container_id = c.id and l.revoked_at is null) as link
+    from ${containers} c
+    where c.owner_id = ${ownerId} and c.trashed_at is null
+    order by c.id`);
+  return rows.filter((row) => row.people || row.link);
 }
 
 /** A folder's or list's sharing as its owner's dialog shows it (DS-65), with the live link's ID for the API's URL. */

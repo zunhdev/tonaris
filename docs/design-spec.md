@@ -401,7 +401,7 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 **DS-27 Tree navigation.**
 - The sidebar tree follows the ARIA `tree` pattern with roving tabindex. ←/→ collapses and expands, ↑/↓ moves, and Enter opens. Type-ahead jumps to an item by name.
 - Folders show a disclosure chevron. Lists show an album count in `fg.tertiary`.
-- Shared containers carry a small sharing glyph (DS-31).
+- Shared containers carry a small sharing glyph (DS-31). *Built in TON-227; see DS-31.*
 - Drop targets highlight with `accent.soft` during drags (DS-49).
 - Expansion state is per device and is not synced.
 
@@ -543,6 +543,8 @@ Typed confirmation is reserved for account deletion (DS-97).
 
 Shared containers in the user's own collection carry a sharing glyph: people, link, or both. Inherited sharing uses a dimmer glyph variant.
 
+*As built in TON-227 (decided by the creator, 14 November 2026):* **the glyph** follows the name in the tree, in folder rows and on folder cards: lucide's Users for an invitation pending or accepted, Link2 for a link that is on, or both, 14 px in `fg.tertiary`. Shared only through folders above, it shows the kinds of all of them at half strength. Its words are its tooltip and are read after the name: ", shared by link", ", shared with people", ", shared with people and by link", with " through a folder above" when inherited. `GET /v1/sharing` lists what the person shares themselves; the app reads it when a glyph first shows, after each change in the sharing dialog, and when the window is shown again, and works out the inherited ones from the tree, so moves change them at once. In a share the person edits, nothing of the owner's sharing shows.
+
 *As built in TON-169* (the creator picked variant 12B from TON-166's mock, 7 November 2026): **the account menu shows a round avatar** before the name: the name's first letter (the email's until there is a name), white, on `oklch(0.52 0.12 h)`, where h is the FNV-1a hash of the name modulo 360, as a cover's letter tile takes its hue (DS-23). 0.52 is the lightest at which the white letter keeps 4.5:1 at every hue (4.68:1 at the weakest, teal). 22 px in the sidebar; on a phone, 26 px in the top bar's Account button, in place of the person icon. It is decorative: the name is beside it, or in the button's name. Its letter is generated content (`::before`), not text, so the button's visible label still matches its name, "Account: …".
 
 *As built in TON-33:*
@@ -654,7 +656,7 @@ Presentation choices are not in the URL; they are personal synced preferences (F
   - the name cell, a link with the icon, name and save-state marker;
   - the contents cell: "2 albums", or "3 folders and lists".
 - **Enter** opens the folder or list from either cell.
-- **Later:** descriptions (M4) and sharing glyphs (M7).
+- **Later:** descriptions (M4) and sharing glyphs (M7). *(The glyphs came with TON-227: after the name, DS-31.)*
 
 *As built in TON-54:*
 - **Rows:** a description's first line follows the name in `fg.tertiary`, truncated. The name takes at most 60% of the cell, and the link is described by it (`aria-describedby`).

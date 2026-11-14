@@ -10,6 +10,7 @@
 
 import { isUnderway } from "@/client/sync/save-states";
 import { usePendingApprovals } from "@/features/connections/pending-approvals";
+import { SharingGlyph } from "@/features/sharing/own-sharing";
 import { usePendingInvitations } from "@/features/sharing/pending-invitations";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { useShareStream } from "@/features/sharing/use-share-stream";
@@ -654,6 +655,8 @@ function ContainerRow({
       )}
       <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
       <span className="min-w-0 flex-1 truncate">{container.name}</span>
+      {/* What the person shares, or what a folder above does (DS-31, TON-227). */}
+      <SharingGlyph containerId={container.id} />
       {count !== undefined && (
         // The ⋯ takes the count's place while it shows.
         <span className={cn("contents", menuOpen ? "*:hidden" : "group-hover/row:*:hidden")}>
