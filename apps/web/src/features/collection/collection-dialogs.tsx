@@ -50,6 +50,10 @@ type CollectionDialogs = {
   deletingAlbum: string | undefined;
   startDeleteAlbum: (id: string) => void;
   endDeleteAlbum: () => void;
+  /** The item "Move to position…" is open for, if it is open (DS-49, TON-230). */
+  positioning: string | undefined;
+  startPositioning: (id: string) => void;
+  endPositioning: () => void;
   /** The album "Add to list…" is open for, if it is open (DS-46). */
   addingToList: string | undefined;
   startAddToList: (albumId: string) => void;
@@ -69,6 +73,7 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
   const [deleting, setDeleting] = useState<string | undefined>(undefined);
   const [deletingAlbum, setDeletingAlbum] = useState<string | undefined>(undefined);
   const [addingToList, setAddingToList] = useState<string | undefined>(undefined);
+  const [positioning, setPositioning] = useState<string | undefined>(undefined);
   const [newAlbum, setNewAlbum] = useState<NewAlbumDraft | undefined>(undefined);
 
   const value = useMemo<CollectionDialogs>(
@@ -88,6 +93,9 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
       deletingAlbum,
       startDeleteAlbum: setDeletingAlbum,
       endDeleteAlbum: () => setDeletingAlbum(undefined),
+      positioning,
+      startPositioning: setPositioning,
+      endPositioning: () => setPositioning(undefined),
       addingToList,
       startAddToList: setAddingToList,
       endAddToList: () => setAddingToList(undefined),
@@ -95,7 +103,7 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
       startNewAlbum: setNewAlbum,
       endNewAlbum: () => setNewAlbum(undefined),
     }),
-    [moving, coloring, sharing, deleting, deletingAlbum, addingToList, newAlbum],
+    [moving, coloring, sharing, deleting, deletingAlbum, positioning, addingToList, newAlbum],
   );
 
   return <CollectionDialogsContext value={value}>{children}</CollectionDialogsContext>;

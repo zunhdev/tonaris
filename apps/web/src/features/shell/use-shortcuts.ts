@@ -157,6 +157,25 @@ export function useCommandRunner({
     return list?.kind === "list" && album ? { album, list } : undefined;
   }, []);
 
+  /** The view's item "Move to position…" acts on: the focused album, else the focused folder or list row (TON-230). */
+  const positioned = useCallback((on: CommandTarget) => {
+    const moves = latest.current.ui.positioner();
+    const id = [on.album, latest.current.ui.focusedRow()].find(
+      (each) => each !== undefined && moves?.standing(each) !== undefined,
+    );
+    return moves && id !== undefined ? { moves, id } : undefined;
+  }, []);
+
+  const positionRefusal = useCallback(
+    (on: CommandTarget): string | undefined => {
+      const item = positioned(on);
+      if (!item) return "Focus an album, folder or list in the view first";
+      if (!item.moves.manual) return "Rearranging works in manual order";
+      return undefined;
+    },
+    [positioned],
+  );
+
   const blocked = useCallback(
     (id: CommandId, on: CommandTarget): string | undefined => {
       const now = latest.current;
@@ -169,10 +188,11 @@ export function useCommandRunner({
       if (onContainer.has(id) && id !== "delete" && containerOf(id, on) === undefined)
         return "Focus a folder or list first";
       if (id === "restore" && on.unit === undefined) return "Focus an item in Trash first";
+      if (id === "move-to-position") return positionRefusal(on);
       if (id === "share") return sharingRefusal(now.place, now.narrow);
       return undefined;
     },
-    [containerOf, albumInList],
+    [containerOf, albumInList, positionRefusal],
   );
 
   const run = useCallback(
@@ -186,7 +206,11 @@ export function useCommandRunner({
       else if (id === "shortcuts") now.openShortcuts();
       // Choosing how a view looks isn't an edit, so it works offline (X-04).
       else if (id === "view-options") now.ui.openViewOptions();
-      else if (id === "toggle-mode") now.mode.choose(now.mode.editing ? "view" : "edit");
+      else if (id === "move-to-position") {
+        // Presentation, not an edit: no Editing mode, and offline too (DS-49).
+        const item = positioned(on);
+        if (item?.moves.manual) now.dialogs.startPositioning(item.id);
+      } else if (id === "toggle-mode") now.mode.choose(now.mode.editing ? "view" : "edit");
       else if (id === "share") {
         // The owner's dialog, desktop only (DS-65); it waits while offline.
         const container = containerOf(id, on);
@@ -246,7 +270,7 @@ export function useCommandRunner({
         else now.dialogs.startDeleteAlbum(on.album);
       }
     },
-    [containerOf, albumInList],
+    [containerOf, albumInList, positioned],
   );
 
   return { run, blocked, target };

@@ -50,3 +50,23 @@ export function placeIn(
     ? undefined
     : { place: { after }, position: to === "down" ? index + 2 : group.length };
 }
+
+/**
+ * Where "Move to position…" puts `id` among `group` to stand at `position`, from 1 (DS-49, TON-230); nothing when it
+ * stands there already, `position` isn't a whole number from 1 to the group's size, or `id` isn't in the group.
+ */
+export function placeAt(
+  group: readonly string[],
+  id: string,
+  position: number,
+): { place: Place; position: number } | undefined {
+  const index = group.indexOf(id);
+  if (index === -1 || !Number.isInteger(position) || position < 1 || position > group.length)
+    return undefined;
+  if (position === index + 1) return undefined;
+  const rest = group.filter((each) => each !== id);
+  const before = rest[position - 1];
+  if (before !== undefined) return { place: { before }, position };
+  const after = rest.at(-1);
+  return after === undefined ? undefined : { place: { after }, position };
+}

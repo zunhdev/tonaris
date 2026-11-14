@@ -27,6 +27,7 @@ import { createEditing, placeFor, type Editing, type Editor } from "./editing";
 import { useStartNaming } from "./naming";
 import { useCollectionPlace } from "./place";
 import { ancestorsOf, buildTree } from "./tree";
+import type { ViewMoves } from "./use-rearrange";
 
 type CollectionUi = {
   accountId: string;
@@ -48,6 +49,10 @@ type CollectionUi = {
   /** The album whose row or card in a view has focus, while one has: what L adds to a list. */
   focusedAlbum: () => string | undefined;
   setFocusedAlbum: (id: string | undefined) => void;
+  /** How the view on screen rearranges its items, for "Move to position…" (TON-230); undefined when it can't. */
+  positioner: () => ViewMoves | undefined;
+  /** Registers the view's moves; answers the function that takes them back, if they are still the view's. */
+  setPositioner: (moves: ViewMoves) => () => void;
 };
 
 const CollectionUiContext = createContext<CollectionUi | undefined>(undefined);
@@ -76,6 +81,7 @@ function TreeUiProvider({ accountId, children }: { accountId: string; children: 
   const viewOptions = useRef<(() => void) | undefined>(undefined);
   const focusedRow = useRef<string | undefined>(undefined);
   const focusedAlbum = useRef<string | undefined>(undefined);
+  const positioner = useRef<ViewMoves | undefined>(undefined);
 
   const update = useCallback(
     (change: (current: Set<string>) => void) => {
@@ -119,6 +125,13 @@ function TreeUiProvider({ accountId, children }: { accountId: string; children: 
       focusedAlbum: () => focusedAlbum.current,
       setFocusedAlbum: (id) => {
         focusedAlbum.current = id;
+      },
+      positioner: () => positioner.current,
+      setPositioner: (moves) => {
+        positioner.current = moves;
+        return () => {
+          if (positioner.current === moves) positioner.current = undefined;
+        };
       },
     }),
     [accountId, editing, expanded, update],

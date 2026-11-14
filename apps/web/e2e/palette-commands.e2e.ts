@@ -5,7 +5,7 @@
 
 import { uuidv7, type Container } from "@tonaris/domain";
 
-import { commands } from "../src/common/shortcuts";
+import { commands, type CommandId } from "../src/common/shortcuts";
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
 import { expect, test, type Page } from "./support/test";
@@ -30,7 +30,7 @@ const item = (page: Page, name: string) =>
 test("commands: > lists only them, they act on the focus or say why not, and match the reference", async ({
   page,
 }) => {
-  // Tall enough for every command at once: the palette's list is virtualized.
+  // Tall enough for the reference's every command at once.
   await page.setViewportSize({ width: 1280, height: 1200 });
   await signIn(page, accounts.paletteCommands);
   await live(page);
@@ -66,7 +66,7 @@ test("commands: > lists only them, they act on the focus or say why not, and mat
   await page.keyboard.press("ControlOrMeta+k");
   await field(page).fill("move");
   await group(page, "Commands")
-    .getByRole("option", { name: /Move to/ })
+    .getByRole("option", { name: /Move to…/ })
     .click();
   await expect(page.getByRole("dialog", { name: "Move 'Doom' to…" })).toBeVisible();
   await page.keyboard.press("Escape");
@@ -93,27 +93,31 @@ test("commands: > lists only them, they act on the focus or say why not, and mat
   await expect(reference.getByText("Restore", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(reference).toHaveCount(0);
+  // Every command is in the palette too, with its keys; Color… and Move to position… have none (TON-175, TON-230).
+  // The list is virtualized and holds more than fits, so each is found by its label, which for two says the state.
+  const labels: Partial<Record<CommandId, { query: string; label: RegExp }>> = {
+    "toggle-mode": { query: "switch to", label: /Switch to (editing|viewing)/ },
+    "toggle-sidebar": { query: "sidebar", label: /(Hide|Show) sidebar/ },
+  };
   await page.keyboard.press("ControlOrMeta+k");
-  await field(page).fill(">");
-  const all = group(page, "Commands").getByRole("option");
-  await expect(all).toHaveCount(commands.length);
-  // Each with its keys; Color… has none (TON-175).
-  await Promise.all(
-    commands
-      .filter(({ keys }) => keys.length > 0)
-      .map(({ keys }) =>
-        expect(
-          all.filter({
-            // Whole keys only: "C" isn't the start of "Ctrl".
-            hasText: new RegExp(
-              `shortcut ${named(keys)
-                .join(" ")
-                .replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z])`,
-            ),
-          }),
-        ).toHaveCount(1),
-      ),
-  );
+  for (const { id, title, keys } of commands) {
+    const { query, label } = labels[id] ?? { query: title, label: title };
+    // oxlint-disable-next-line no-await-in-loop -- one query after another in the one field
+    await field(page).fill(`>${query}`);
+    const option = group(page, "Commands").getByRole("option").filter({ hasText: label }).first();
+    // oxlint-disable-next-line no-await-in-loop -- as above
+    await expect(option, title).toBeVisible();
+    // Whole keys only: "C" isn't the start of "Ctrl".
+    if (keys.length > 0)
+      // oxlint-disable-next-line no-await-in-loop -- as above
+      await expect(option).toHaveText(
+        new RegExp(
+          `shortcut ${named(keys)
+            .join(" ")
+            .replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z])`,
+        ),
+      );
+  }
 });
 
 test("an empty palette shows what was opened lately and the commands run most", async ({

@@ -9,7 +9,7 @@ import { useSyncClient } from "@/features/sync/sync-provider";
 import { useCallback } from "react";
 
 import { useCollectionData } from "./data";
-import { placeIn, planMove, type Direction, type Place } from "./order";
+import { placeAt, placeIn, planMove, type Direction, type Place } from "./order";
 
 const noKeys = new Map<string, string>();
 
@@ -82,7 +82,26 @@ export function useRearrange(
     [manual, write, announce],
   );
 
-  return { manual, move, drop };
+  /** "Move to position…": to `position` among `group`, from 1 (TON-230). Only in manual order, as the command is. */
+  const moveTo = useCallback(
+    (
+      sequence: readonly string[],
+      group: readonly string[],
+      itemId: string,
+      position: number,
+      name: string,
+    ) => {
+      if (!manual) return false;
+      const target = placeAt(group, itemId, position);
+      if (!target) return false;
+      write(sequence, itemId, target.place);
+      announce(`Moved ${name} to position ${target.position} of ${group.length}`);
+      return true;
+    },
+    [manual, write, announce],
+  );
+
+  return { manual, move, drop, moveTo };
 }
 
 /** What a view's grid needs to rearrange its items: whether it is in manual order, and the moves themselves. */
@@ -94,4 +113,11 @@ export type ViewMoves = {
   move: (id: string, to: Direction) => boolean;
   /** A drop of an item before or after another; answers whether it moved. */
   drop: (id: string, place: { before: string } | { after: string }) => boolean;
+  /** "Move to position…": to a position from 1 among the items it moves among; answers whether it moved. */
+  moveTo: (id: string, position: number) => boolean;
+  /** Where an item stands among the items it moves among, from 1, their number and its name; undefined if not here. */
+  standing: (id: string) => Standing | undefined;
 };
+
+/** Where an item stands in a view, for "Move to position…" (TON-230). */
+export type Standing = { position: number; total: number; name: string };

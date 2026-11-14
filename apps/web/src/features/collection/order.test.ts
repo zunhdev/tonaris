@@ -8,6 +8,7 @@ import {
   arranged,
   chronology,
   groupOf,
+  placeAt,
   placeIn,
   planMove,
   sections,
@@ -360,5 +361,20 @@ describe("keyboard moves (DS-49)", () => {
     expect(placeIn(group, "a", "up")).toBeUndefined();
     expect(placeIn(group, "c", "bottom")).toBeUndefined();
     expect(placeIn(group, "z", "up")).toBeUndefined();
+  });
+});
+
+describe("Move to position… (DS-49, TON-230)", () => {
+  test("before the item now at that position, or after the last, and nothing where it stands or out of range", () => {
+    const group = ["a", "b", "c", "d"];
+    expect(placeAt(group, "d", 1)).toEqual({ place: { before: "a" }, position: 1 });
+    expect(placeAt(group, "a", 3)).toEqual({ place: { before: "d" }, position: 3 });
+    expect(placeAt(group, "b", 4)).toEqual({ place: { after: "d" }, position: 4 });
+    expect(placeAt(group, "c", 2)).toEqual({ place: { before: "b" }, position: 2 });
+    expect(placeAt(group, "c", 3)).toBeUndefined();
+    expect(placeAt(group, "c", 0)).toBeUndefined();
+    expect(placeAt(group, "c", 5)).toBeUndefined();
+    expect(placeAt(group, "c", 1.5)).toBeUndefined();
+    expect(placeAt(group, "z", 1)).toBeUndefined();
   });
 });

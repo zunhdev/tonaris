@@ -20,6 +20,7 @@ export type ShortcutAction =
   | "new-list"
   | "new-folder"
   | "view-options"
+  | "move-to-position"
   | "move"
   | "toggle-mode"
   | "add-to-list"
@@ -185,6 +186,8 @@ export const commands: readonly Command[] = [
     section: "Views",
   },
   { id: "view-options", title: "View options", keys: ["V"], section: "Views" },
+  // From ⌘K, in manual order, without a key of its own (DS-49, TON-230).
+  { id: "move-to-position", title: "Move to position…", keys: [], section: "Views" },
   { id: "capture", title: "Add albums from links", keys: ["C"], section: "Albums" },
   { id: "add-to-list", title: "Add to list…", keys: ["L"], section: "Albums" },
   { id: "open-in", title: "Open in…", keys: ["O"], section: "Albums" },

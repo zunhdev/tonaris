@@ -10,7 +10,7 @@ import type { Album, Container } from "@tonaris/domain";
 import { useCollectionData } from "./data";
 import { sections as sectionsOf, sortAlbums, sortContainers, type Direction } from "./order";
 import { usePresentation } from "./use-presentation";
-import { useRearrange } from "./use-rearrange";
+import { useRearrange, type Standing } from "./use-rearrange";
 
 /** What an album needs to be sorted, grouped and named. */
 type Arranged = Pick<
@@ -30,7 +30,17 @@ type Moves = {
   move: (id: string, to: Direction) => boolean;
   /** A drop of an item before or after another; answers whether it moved. */
   drop: (id: string, place: { before: string } | { after: string }) => boolean;
+  /** "Move to position…", from 1 (TON-230); answers whether it moved. */
+  moveTo: (id: string, position: number) => boolean;
+  /** Where the item stands among the items it moves among; undefined if it isn't in the view. */
+  standing: (id: string) => Standing | undefined;
 };
+
+/** Where `id` stands in `group`, the items it moves among in the order shown; undefined if it isn't there. */
+function standingIn(group: readonly string[], id: string, name: string): Standing | undefined {
+  const index = group.indexOf(id);
+  return index === -1 ? undefined : { position: index + 1, total: group.length, name };
+}
 
 /** A list's or Unsorted's albums, in `albums`' fallback order, as the view `viewKey` presents them. */
 export function useAlbumArrangement<T extends Arranged>(albums: readonly T[], viewKey: string) {
@@ -65,6 +75,8 @@ export function useAlbumArrangement<T extends Arranged>(albums: readonly T[], vi
     return {
       move: (id, to) => rearrange.move(sequence, groupOf(id), id, to, nameOf(id)),
       drop: (id, place) => rearrange.drop(sequence, groupOf(id), id, place, nameOf(id)),
+      moveTo: (id, position) => rearrange.moveTo(sequence, groupOf(id), id, position, nameOf(id)),
+      standing: (id) => standingIn(groupOf(id), id, nameOf(id)),
     };
   }, [manualOrder, sections, rearrange]);
   return { presentation, sections, manual: rearrange.manual, moves };
@@ -99,6 +111,8 @@ export function useContainerArrangement<T extends Pick<Container, "id" | "kind" 
     return {
       move: (id, to) => rearrange.move(sequence, sequence, id, to, nameOf(id)),
       drop: (id, place) => rearrange.drop(sequence, sequence, id, place, nameOf(id)),
+      moveTo: (id, position) => rearrange.moveTo(sequence, sequence, id, position, nameOf(id)),
+      standing: (id) => standingIn(sequence, id, nameOf(id)),
     };
   }, [items, manualOrder, rearrange]);
   return { presentation, shown, manual: rearrange.manual, moves };
