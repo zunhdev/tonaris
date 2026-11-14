@@ -114,8 +114,7 @@ describe("startJobWorker", () => {
   });
 
   test("a job that retries forever runs on past the waits until it lands, and says so once (TS-113)", async () => {
-    const down = () => new Error("ledger down");
-    const recorder = handler([down(), down(), down(), down(), down()]);
+    const recorder = handler(Array.from({ length: 5 }, () => new Error("ledger down")));
     const logged: string[] = [];
     worker = startJobWorker(t.db, [{ ...recorder.handler, retriesForever: true }], {
       pollMs: 60_000,
