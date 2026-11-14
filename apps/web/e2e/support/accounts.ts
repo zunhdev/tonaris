@@ -72,6 +72,8 @@ export const accounts = {
   // Manual order and moves (manual-order.e2e.ts), one per test.
   arrangeKeys: at("arrange-keys"),
   arrangeDrag: at("arrange-drag"),
+  // Dragging albums onto a list in the tree (manual-order.e2e.ts, TON-229).
+  albumDrag: at("album-drag"),
   arrangePlaces: at("arrange-places"),
   arrangeMoves: at("arrange-moves"),
   arrangeSync: at("arrange-sync"),

@@ -37,7 +37,7 @@ import { useCollectionUi, useEditor, useStartEditor, useViewContainerId } from "
 import { ContainerMenu, type ContainerMenuTarget } from "./container-menu";
 import { effectiveColor } from "./container-palette";
 import { sortForView, useCollectionData } from "./data";
-import { useDestination, useTreeDrag } from "./drag";
+import { useDestination, useListDrop, useTreeDrag } from "./drag";
 import type { Editor } from "./editing";
 import { ContainerIcon } from "./icons";
 import { NameEditor } from "./name-editor";
@@ -616,12 +616,15 @@ function ContainerRow({
   const { tree } = useCollectionData();
   const drag = useTreeDrag(container);
   const destination = useDestination(container.id, isFolder);
+  // A list takes dragged albums, which join it (TON-229).
+  const listDrop = useListDrop(container, !isFolder);
   const props = {
     ref: (element: HTMLAnchorElement | null) => {
       ref.current = element;
       register(element);
       drag.setNodeRef(element);
       destination.setNodeRef(element);
+      listDrop.setNodeRef(element);
     },
     ...drag.listeners,
     role: "treeitem",
@@ -636,7 +639,7 @@ function ContainerRow({
     className: cn(
       rowClass,
       "group/row",
-      destination.over && "bg-accent-soft",
+      (destination.over || listDrop.over) && "bg-accent-soft",
       drag.dragging && "opacity-40",
     ),
     style: indent(row.level),

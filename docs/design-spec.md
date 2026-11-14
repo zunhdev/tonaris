@@ -1022,7 +1022,14 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - **Dragging** a folder or list from its row or the tree onto a folder in the tree, or onto Collection, moves it.
   - **After a move,** the destination opens in the tree, and "Moved {name} to {destination}" is announced. The item follows its new parent's arranged items, in creation order among the rest.
   - **While offline,** M does nothing and the tree takes no drops (DS-81). A refused move is reported like any failed write (DS-107).
-  - **Since built:** L, "Add to list…", came with TON-38 (DS-46), and SharingImpact previews with TON-71 (DS-69). Dragging albums onto a list in the sidebar isn't built: an album's drag only rearranges its own view (*corrected in TON-224*).
+  - **Since built:** L, "Add to list…", came with TON-38 (DS-46), and SharingImpact previews with TON-71 (DS-69). Dragging albums onto a list in the sidebar came with TON-229 (below).
+
+*As built in TON-229 (decided by the creator, 14 November 2026):*
+- **Albums drag onto lists in the sidebar.** In Editing mode on a computer, an album row's handle shows in the person's own lists and Unsorted whatever the sort; under Manual it still rearranges too. Cards have no handle; L is the keyboard's way.
+- **A drop on a list adds the album to it,** announced "Added {title} to {list}" as L's dialog announces it, and it stays in the list on view.
+- **Holding ⌥ at the drop, from a list, moves it:** out of the list on view, into the other, announced "Moved {title} to {list}", with the toast "Moved to {list}" and Undo.
+- **While dragging,** a list that would take the album gets the `accent.soft` background, and under the overlay's name "Add to {list}", or "Move to {list}" with ⌥. A list the album is already in, a folder, and every list while offline take nothing. Albums in a share the person edits can't be dropped on their own lists, another collection.
+- **No sharing preview** shows for an album, as L's dialog shows none: SharingImpact (DS-69) covers moving folders and lists.
 
 **DS-50 Removal and deletion feedback.** *(FR-01.11, FR-01.8, FR-14.1, X-07)*
 

@@ -33,10 +33,12 @@ import { albumOf, useAlbumGrid } from "./album-grid";
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
 import { useCollectionMode, useMode } from "./collection-mode";
+import { useViewContainerId } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { GroupHeaderRow } from "./groups";
 import type { ReleaseGroup, Section } from "./order";
+import { useCollectionPlace } from "./place";
 import { cellAt, useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -85,6 +87,10 @@ export function AlbumRows({
   const offline = useConnection() === "offline";
   const { editing, enterEditing } = useMode();
   const { registerEditor } = useCollectionMode();
+  // In Editing mode on a computer, the person's own albums drag onto their lists in the tree, in any sort (TON-229).
+  const ownView = useCollectionPlace().kind !== "share";
+  const viewListId = useViewContainerId();
+  const toLists = editing && !compact && ownView ? { listId: viewListId } : undefined;
   // The edit lives here, not in the row, so that scrolling can't lose it; the ref is what the handlers read.
   const [cellEdit, setCellEditState] = useState<CellEdit | undefined>(undefined);
   const current = useRef<CellEdit | undefined>(undefined);
@@ -253,6 +259,7 @@ export function AlbumRows({
                 album={album}
                 viewKey={viewKey}
                 manual={moves.handles}
+                toLists={toLists}
                 index={virtual.index}
                 top={virtual.start}
                 template={template}
@@ -287,6 +294,7 @@ function AlbumRow({
   album,
   viewKey,
   manual,
+  toLists,
   index,
   top,
   template,
@@ -305,6 +313,8 @@ function AlbumRow({
   viewKey: string;
   /** Under Manual sort, the row has a drag handle and takes drops (DS-21, DS-49). */
   manual: boolean;
+  /** Whether its handle drags it onto the person's lists in the tree, and the list on view it is in (TON-229). */
+  toLists: { listId: string | undefined } | undefined;
   index: number;
   top: number;
   /** The grid's `grid-template-columns`. */
@@ -337,7 +347,18 @@ function AlbumRow({
     ) : undefined;
   useLiveHighlight(album.id, row);
   const status = useSaveState(album.id);
-  const drag = useRowDrag({ kind: "album", id: album.id, name: album.title, viewKey }, manual);
+  const drag = useRowDrag(
+    {
+      kind: "album",
+      id: album.id,
+      name: album.title,
+      viewKey,
+      own: toLists !== undefined,
+      listId: toLists?.listId,
+    },
+    manual,
+    manual || toLists !== undefined,
+  );
   const { ref: dragRef } = drag;
   const rowRef = useCallback(
     (element: HTMLDivElement | null) => {
@@ -438,7 +459,7 @@ function AlbumRow({
       )}
       style={{ height, transform: `translateY(${top}px)`, gridTemplateColumns: template }}
     >
-      {manual && <DragHandle {...drag.handle} />}
+      {(manual || toLists !== undefined) && <DragHandle {...drag.handle} />}
       {drag.side && <DropLine side={drag.side} />}
       {cells}
     </div>
