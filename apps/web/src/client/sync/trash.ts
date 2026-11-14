@@ -123,6 +123,35 @@ export function createTrash({
     },
 
     /**
+     * Moves several albums to Trash, each its own unit (FR-14.1), in one transaction: the outbox sends their
+     * `album.delete`s as one batch (TS-25, TON-231). Answers the transaction and the units' IDs.
+     */
+    deleteAlbums(albumIds: readonly string[]) {
+      const units = albumIds.map((albumId) => ({ albumId, unitId: uuidv7() }));
+      const gone = new Set(albumIds);
+      const entries = [...memberships.values()].filter((entry) => gone.has(entry.albumId));
+      const transaction = createTransaction({
+        mutationFn: async ({ transaction: written }) => {
+          await writer.persist(
+            written,
+            units.map(({ albumId, unitId }) => ({
+              key: albumId,
+              mutation: envelope("album.delete", { id: albumId, unitId }),
+            })),
+          );
+        },
+      });
+      transaction.mutate(() => {
+        if (entries.length > 0) {
+          memberships.delete(entries.map((entry) => membershipKey(entry.listId, entry.albumId)));
+        }
+        const present = albumIds.filter((albumId) => albums.has(albumId));
+        if (present.length > 0) albums.delete(present);
+      });
+      return { transaction, unitIds: units.map((unit) => unit.unitId) };
+    },
+
+    /**
      * Removes units from Trash for good (FR-01.18), as the owner confirmed: they leave the Trash at once, and
      * `trash.purge` reports any already gone. More units than one purge takes go as several, in one transaction
      * (TON-148). Answers the transaction and its writes' IDs.

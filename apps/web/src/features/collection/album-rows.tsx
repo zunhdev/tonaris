@@ -39,6 +39,7 @@ import { useRowDrag } from "./drag";
 import { GroupHeaderRow } from "./groups";
 import type { ReleaseGroup, Section } from "./order";
 import { useCollectionPlace } from "./place";
+import { useAlbumSelection } from "./selection";
 import { cellAt, useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -91,6 +92,9 @@ export function AlbumRows({
   const ownView = useCollectionPlace().kind !== "share";
   const viewListId = useViewContainerId();
   const toLists = editing && !compact && ownView ? { listId: viewListId } : undefined;
+  // In Editing mode on a computer, albums can be selected (TON-231).
+  const selection = useAlbumSelection();
+  const selecting = selection !== undefined && editing && !compact;
   // The edit lives here, not in the row, so that scrolling can't lose it; the ref is what the handlers read.
   const [cellEdit, setCellEditState] = useState<CellEdit | undefined>(undefined);
   const current = useRef<CellEdit | undefined>(undefined);
@@ -206,6 +210,7 @@ export function AlbumRows({
         // Its cells take the focus; the grid itself only when clicked between them.
         tabIndex={-1}
         aria-rowcount={items.length + 1}
+        aria-multiselectable={selecting || undefined}
         aria-colcount={columns}
         onKeyDown={onGridKeyDown}
         {...opening.gridProps}
@@ -260,6 +265,13 @@ export function AlbumRows({
                 viewKey={viewKey}
                 manual={moves.handles}
                 toLists={toLists}
+                selected={selecting ? selection.has(album.id) : undefined}
+                onSelect={(extend) => {
+                  if (!selection) return;
+                  const anchor = selection.ids.at(-1);
+                  if (extend && anchor !== undefined) selection.extend(anchor, album.id);
+                  else selection.toggle(album.id);
+                }}
                 index={virtual.index}
                 top={virtual.start}
                 template={template}
@@ -295,6 +307,8 @@ function AlbumRow({
   viewKey,
   manual,
   toLists,
+  selected,
+  onSelect,
   index,
   top,
   template,
@@ -315,6 +329,10 @@ function AlbumRow({
   manual: boolean;
   /** Whether its handle drags it onto the person's lists in the tree, and the list on view it is in (TON-229). */
   toLists: { listId: string | undefined } | undefined;
+  /** Whether it is selected, while albums can be selected; undefined while they can't (TON-231). */
+  selected: boolean | undefined;
+  /** Its checkbox: selects or deselects it, or with ⇧ adds the albums from the last one chosen. */
+  onSelect: (extend: boolean) => void;
   index: number;
   top: number;
   /** The grid's `grid-template-columns`. */
@@ -390,6 +408,15 @@ function AlbumRow({
       ) : (
         (editor("title") ?? <span className="truncate text-fg-primary">{album.title}</span>)
       )}
+      {/* Drawn first, but last in the cell, so its name starts with the title. */}
+      {selected !== undefined && (
+        <SelectBox
+          title={album.title}
+          checked={selected}
+          onSelect={onSelect}
+          className="order-first"
+        />
+      )}
     </div>,
     ...(compact
       ? []
@@ -453,8 +480,9 @@ function AlbumRow({
       role="row"
       aria-rowindex={index + 2}
       aria-busy={isUnderway(status) || undefined}
+      aria-selected={selected}
       className={cn(
-        "group/row absolute inset-x-0 top-0 grid items-stretch rounded-md px-2 hover:bg-hover",
+        "group/row absolute inset-x-0 top-0 grid items-stretch rounded-md px-2 hover:bg-hover aria-selected:bg-selected",
         drag.dragging && "opacity-40",
       )}
       style={{ height, transform: `translateY(${top}px)`, gridTemplateColumns: template }}
@@ -463,6 +491,42 @@ function AlbumRow({
       {drag.side && <DropLine side={drag.side} />}
       {cells}
     </div>
+  );
+}
+
+/**
+ * An album's checkbox in Editing mode (DS-21, TON-231): a click selects or deselects it, and ⇧-click adds the albums
+ * from the last one chosen. Out of the tab order, as the grid's cells are its stops: X does the same from the keyboard.
+ */
+export function SelectBox({
+  title,
+  checked,
+  onSelect,
+  className,
+}: {
+  title: string;
+  checked: boolean;
+  onSelect: (extend: boolean) => void;
+  className?: string;
+}) {
+  return (
+    <input
+      type="checkbox"
+      tabIndex={-1}
+      aria-label={`Select ${title}`}
+      checked={checked}
+      // The click decides, as it knows ⇧; the change only follows it.
+      onChange={() => {}}
+      // The focus goes to its cell, not the box, where keys would count as typing and ⌫ or L wouldn't act.
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={(event) => {
+        // Not the cell's click, which opens the album.
+        event.stopPropagation();
+        event.currentTarget.closest<HTMLElement>("[data-cell]")?.focus();
+        onSelect(event.shiftKey);
+      }}
+      className={cn("size-3.5 shrink-0 cursor-pointer rounded-sm accent-accent-solid", className)}
+    />
   );
 }
 

@@ -46,7 +46,7 @@ import { AlbumRows } from "./album-rows";
 import { useAlbumArrangement, useContainerArrangement } from "./arrangement";
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useMode } from "./collection-mode";
-import { useCollectionUi, useStartEditor } from "./collection-ui";
+import { useCollectionUi, useStartEditor, useViewContainerId } from "./collection-ui";
 import { ContainerCards } from "./container-cards";
 import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
@@ -65,6 +65,8 @@ import {
   useOpenContainer,
 } from "./place";
 import { usePositioner } from "./position-dialog";
+import { SelectionProvider, useSelectionState } from "./selection";
+import { SelectionBar } from "./selection-bar";
 import { ancestorsOf } from "./tree";
 import type { ViewMoves } from "./use-rearrange";
 import { ViewOptions } from "./view-options";
@@ -171,7 +173,25 @@ function AlbumsBody({
   const [collapsed, toggle] = useCollapsedGroups(viewKey);
   const { layout } = presentation;
   const props = { sections, label, viewKey, collapsed, onToggle: toggle, moves };
-  return layout === "grid" ? <AlbumCards {...props} /> : <AlbumRows {...props} />;
+  // Selecting is Editing mode's, on a computer (TON-231).
+  const narrow = useNarrowScreen();
+  const order = useMemo(
+    () => sections.flatMap((section) => section.albums.map((album) => album.id)),
+    [sections],
+  );
+  const selection = useSelectionState(order, editing && !narrow, viewKey);
+  const { setSelection } = useCollectionUi();
+  useEffect(() => setSelection(selection), [setSelection, selection]);
+  const { tree } = useCollectionData();
+  const viewId = useViewContainerId();
+  const shown = viewId === undefined ? undefined : tree.byId.get(viewId);
+  const list = shown?.kind === "list" ? shown : undefined;
+  return (
+    <SelectionProvider value={selection}>
+      {layout === "grid" ? <AlbumCards {...props} /> : <AlbumRows {...props} />}
+      <SelectionBar selection={selection} list={list} />
+    </SelectionProvider>
+  );
 }
 
 /**

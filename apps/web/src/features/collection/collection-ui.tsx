@@ -26,6 +26,7 @@ import { CollectionModeProvider, useMode } from "./collection-mode";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
 import { useStartNaming } from "./naming";
 import { useCollectionPlace } from "./place";
+import type { AlbumSelection } from "./selection";
 import { ancestorsOf, buildTree } from "./tree";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -53,6 +54,10 @@ type CollectionUi = {
   positioner: () => ViewMoves | undefined;
   /** Registers the view's moves; answers the function that takes them back, if they are still the view's. */
   setPositioner: (moves: ViewMoves) => () => void;
+  /** The view on screen's selected albums, for ⌫, ⌘⌫ and L (TON-231); undefined where albums can't be selected. */
+  selection: () => AlbumSelection | undefined;
+  /** Registers the view's selection; answers the function that takes it back, if it is still the view's. */
+  setSelection: (selection: AlbumSelection) => () => void;
 };
 
 const CollectionUiContext = createContext<CollectionUi | undefined>(undefined);
@@ -82,6 +87,7 @@ function TreeUiProvider({ accountId, children }: { accountId: string; children: 
   const focusedRow = useRef<string | undefined>(undefined);
   const focusedAlbum = useRef<string | undefined>(undefined);
   const positioner = useRef<ViewMoves | undefined>(undefined);
+  const selection = useRef<AlbumSelection | undefined>(undefined);
 
   const update = useCallback(
     (change: (current: Set<string>) => void) => {
@@ -125,6 +131,13 @@ function TreeUiProvider({ accountId, children }: { accountId: string; children: 
       focusedAlbum: () => focusedAlbum.current,
       setFocusedAlbum: (id) => {
         focusedAlbum.current = id;
+      },
+      selection: () => selection.current,
+      setSelection: (chosen) => {
+        selection.current = chosen;
+        return () => {
+          if (selection.current === chosen) selection.current = undefined;
+        };
       },
       positioner: () => positioner.current,
       setPositioner: (moves) => {

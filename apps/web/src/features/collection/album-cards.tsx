@@ -14,6 +14,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { isUnderway } from "@/client/sync/save-states";
+import { useNarrowScreen } from "@/common/media";
 import { pageScroll } from "@/common/page-scroll";
 import { useShell } from "@/common/shell-context";
 import { ServiceNames } from "@/features/open/service-names";
@@ -25,13 +26,16 @@ import type { Album } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useAlbumGrid } from "./album-grid";
+import { SelectBox } from "./album-rows";
 import { Artwork, artworkSrc } from "./artwork";
 import { ChronologyYear } from "./chronology-year";
+import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { GroupHeaderRow } from "./groups";
 import { useInspector } from "./inspector-state";
 import type { ReleaseGroup, Section } from "./order";
 import { ReleaseLabel, ReleaseLabelText, releaseLabel } from "./release-label";
+import { useAlbumSelection } from "./selection";
 import { useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
@@ -69,6 +73,11 @@ export function AlbumCards({
   const card = Math.min(inner, Math.floor((whole - gap * (wholeColumns - 1)) / wholeColumns));
   const columns = Math.max(1, Math.floor((inner + gap) / (card + gap)));
   const rowSize = card + textHeight + gap;
+  // In Editing mode on a computer, albums can be selected (TON-231).
+  const narrow = useNarrowScreen();
+  const selection = useAlbumSelection();
+  const { editing } = useMode();
+  const selecting = selection !== undefined && editing && !narrow;
   const { items, virtualizer, isStuck, opening, onKeyDown, cellProps } = useAlbumGrid({
     scroller,
     grid,
@@ -91,6 +100,7 @@ export function AlbumCards({
           aria-label={label}
           aria-rowcount={items.length}
           aria-colcount={columns}
+          aria-multiselectable={selecting || undefined}
           // Its cards take the focus; the grid itself only when clicked between them.
           tabIndex={-1}
           onKeyDown={onKeyDown}
@@ -133,6 +143,13 @@ export function AlbumCards({
                     width={card}
                     col={col}
                     open={album.id === albumId}
+                    selected={selecting ? selection.has(album.id) : undefined}
+                    onSelect={(extend) => {
+                      if (!selection) return;
+                      const anchor = selection.ids.at(-1);
+                      if (extend && anchor !== undefined) selection.extend(anchor, album.id);
+                      else selection.toggle(album.id);
+                    }}
                     {...cellProps(virtual.index, col)}
                   />
                 ))}
@@ -150,6 +167,8 @@ function AlbumCard({
   width,
   col,
   open,
+  selected,
+  onSelect,
   ...cell
 }: {
   album: Album;
@@ -157,6 +176,9 @@ function AlbumCard({
   col: number;
   /** Whether the inspector shows this album. */
   open: boolean;
+  /** Whether it is selected, while albums can be selected (TON-231). */
+  selected: boolean | undefined;
+  onSelect: (extend: boolean) => void;
 } & ReturnType<ReturnType<typeof useGridFocus>["cellProps"]>) {
   const ref = useRef<HTMLDivElement>(null);
   useLiveHighlight(album.id, ref);
@@ -169,9 +191,12 @@ function AlbumCard({
       role="gridcell"
       aria-colindex={col + 1}
       aria-busy={isUnderway(status) || undefined}
+      aria-selected={selected}
       data-open={open || undefined}
       className={cn(
         "relative isolate flex flex-col gap-1 rounded-md focus-ring outline-none",
+        // Selected, the surface behind it stays, in the selected color.
+        "aria-selected:before:bg-selected",
         // The raised surface under a hovering pointer, behind the card and half the gap outside it. It takes no
         // clicks, and `hover:` matches only a pointer that hovers, so a tap on a phone leaves none behind.
         "before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:transition-colors before:duration-100 before:ease-enter hover:before:bg-hover",
@@ -215,6 +240,12 @@ function AlbumCard({
       <span className="truncate text-small text-fg-tertiary">
         <ServiceNames title={album.title} links={linksByAlbum.get(album.id)} />
       </span>
+      {/* Over the cover's corner, but last, so the card's name starts with its title. */}
+      {selected !== undefined && (
+        <span className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-sm bg-raised shadow-floating">
+          <SelectBox title={album.title} checked={selected} onSelect={onSelect} />
+        </span>
+      )}
     </div>
   );
 }

@@ -187,6 +187,8 @@ export const accounts = {
   backspaceRemove: at("backspace-remove"),
   // Move to position… from the palette (move-to-position.e2e.ts, TON-230).
   moveToPosition: at("move-to-position"),
+  // Selecting albums and acting on them together (selection.e2e.ts, TON-231).
+  albumSelection: at("album-selection"),
   // Editing a share together (share-editing.e2e.ts, TON-191): the owner and the editor, one pair per test.
   editOwner: at("edit-owner"),
   shareEditor: at("share-editor"),

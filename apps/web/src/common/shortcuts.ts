@@ -302,13 +302,19 @@ const navigation: Partial<Record<Section, readonly ReferenceEntry[]>> = {
     { keys: ["⌘", "End"], action: "Last item in a view" },
     { keys: ["Enter"], action: "Open; open an album in the inspector" },
     { keys: ["⌘", "Enter"], action: "Submit a form; in search, open an album on its own" },
-    { keys: ["Esc"], action: "Close the inspector" },
+    { keys: ["Esc"], action: "Clear the selection, or close the inspector" },
   ],
   Views: [
     { keys: ["⌥", "↑"], action: "Move up, in manual order" },
     { keys: ["⌥", "↓"], action: "Move down, in manual order" },
     { keys: ["⌥", "⇧", "↑"], action: "Move to the top" },
     { keys: ["⌥", "⇧", "↓"], action: "Move to the bottom" },
+  ],
+  // Selecting, in Editing mode (TON-231): ⌫, ⌘⌫ and L then act on every selected album.
+  Albums: [
+    { keys: ["X"], action: "Select or deselect the album" },
+    { keys: ["⇧", "↑"], action: "Select the album above too" },
+    { keys: ["⇧", "↓"], action: "Select the album below too" },
   ],
 };
 

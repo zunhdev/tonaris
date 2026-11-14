@@ -54,6 +54,8 @@ const edits = new Set<CommandId>([
   "add-to-list",
 ]);
 const onAlbum = new Set<CommandId>(["add-to-list", "open-in", "delete-album"]);
+/** What acts on the view's selected albums when there are some (TON-231). */
+const selects = new Set<CommandId>(["add-to-list", "delete-album"]);
 const onContainer = new Set<CommandId>(["rename", "move", "color", "delete", "share"]);
 /** Sharing is online-only: it waits while offline, but isn't a collection edit, so it needs no Editing mode. */
 const online = new Set<CommandId>(["share"]);
@@ -148,14 +150,23 @@ export function useCommandRunner({
     [],
   );
 
-  /** In a list, the album the grid's focus is on, and the list: what ⌫ takes it out of (DS-50, TON-228). */
+  /** The view's selected albums, which ⌫, ⌘⌫ and L act on before the focused one (TON-231). */
+  const selected = useCallback(() => latest.current.ui.selection()?.ids ?? [], []);
+
+  /**
+   * In a list, the albums ⌫ takes out of it, and the list: the selected ones, else the one the grid's focus is on
+   * (DS-50, TON-228, TON-231).
+   */
   const albumInList = useCallback(() => {
     const now = latest.current;
     const list = now.viewId === undefined ? undefined : now.tree.byId.get(now.viewId);
-    const albumId = now.ui.focusedAlbum();
-    const album = albumId === undefined ? undefined : now.client?.albums.get(albumId);
-    return list?.kind === "list" && album ? { album, list } : undefined;
-  }, []);
+    if (list?.kind !== "list") return undefined;
+    const chosen = selected();
+    const focused = now.ui.focusedAlbum();
+    const ids = chosen.length > 0 ? chosen : focused === undefined ? [] : [focused];
+    const albums = ids.flatMap((albumId) => now.client?.albums.get(albumId) ?? []);
+    return albums.length > 0 ? { albums, list } : undefined;
+  }, [selected]);
 
   /** The view's item "Move to position…" acts on: the focused album, else the focused folder or list row (TON-230). */
   const positioned = useCallback((on: CommandTarget) => {
@@ -182,7 +193,8 @@ export function useCommandRunner({
       // Phones view only (X-04): what changes the collection waits for a computer.
       if (now.narrow && !phoneCommands.has(id) && id !== "share") return "Edit on a computer";
       if ((edits.has(id) || online.has(id)) && now.offline) return "You're offline";
-      if (onAlbum.has(id) && on.album === undefined) return "Open or focus an album first";
+      if (onAlbum.has(id) && on.album === undefined && !(selects.has(id) && selected().length > 0))
+        return "Open or focus an album first";
       if (id === "delete" && containerOf(id, on) === undefined && albumInList() === undefined)
         return "Focus a folder or list, or an album in a list, first";
       if (onContainer.has(id) && id !== "delete" && containerOf(id, on) === undefined)
@@ -192,7 +204,7 @@ export function useCommandRunner({
       if (id === "share") return sharingRefusal(now.place, now.narrow);
       return undefined;
     },
-    [containerOf, albumInList, positionRefusal],
+    [containerOf, albumInList, positionRefusal, selected],
   );
 
   const run = useCallback(
@@ -255,7 +267,9 @@ export function useCommandRunner({
         const inList = id === "delete" && container === undefined ? albumInList() : undefined;
         if (inList) {
           now.mode.enterEditing();
-          now.removeFromList(inList.album, inList.list);
+          now.removeFromList(inList.albums, inList.list);
+          // Acted on, the selection is done with (TON-231).
+          now.ui.selection()?.clear();
           return;
         }
         if (container === undefined) return;
@@ -264,13 +278,21 @@ export function useCommandRunner({
         else if (id === "color") now.dialogs.startColor(container);
         else now.deleteContainer(container);
       } else if (id === "add-to-list" || id === "delete-album") {
+        // The selection, when there is one, else the album open or focused (TON-231).
+        const chosen = selected();
+        if (chosen.length > 0) {
+          now.mode.enterEditing();
+          if (id === "add-to-list") now.dialogs.startAddToList(chosen);
+          else now.dialogs.startDeleteAlbums(chosen);
+          return;
+        }
         if (on.album === undefined) return;
         now.mode.enterEditing();
         if (id === "add-to-list") now.dialogs.startAddToList(on.album);
         else now.dialogs.startDeleteAlbum(on.album);
       }
     },
-    [containerOf, albumInList, positioned],
+    [containerOf, albumInList, positioned, selected],
   );
 
   return { run, blocked, target };
