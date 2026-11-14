@@ -97,8 +97,8 @@ class Subscription implements StreamSource<SyncEvent> {
 
   constructor(
     readonly accountId: string,
-    /** The session that opened the stream, if it has one to check. */
-    readonly sessionId: string | undefined,
+    /** The session that opened the stream, which it ends with. */
+    readonly sessionId: string,
     cursor: number,
     private readonly options: StreamSettings,
     private readonly onEnd: () => void,
@@ -212,7 +212,7 @@ export function createSyncHub(options: SyncHubOptions) {
   /** Every open stream that ends with a session: the account's own streams, and signed-in viewers' watches. */
   const sessionStreams = (): {
     accountId: string;
-    sessionId: string | undefined;
+    sessionId: string;
     end(): void;
   }[] => [
     ...[...streams.values()].flatMap((subscriptions) => Array.from(subscriptions)),
@@ -220,18 +220,14 @@ export function createSyncHub(options: SyncHubOptions) {
       Array.from(watches).flatMap(({ by }) => (by ? [by] : [])),
     ),
   ];
-  const endWhere = (
-    ends: (stream: { accountId: string; sessionId: string | undefined }) => boolean,
-  ) => {
+  const endWhere = (ends: (stream: { accountId: string; sessionId: string }) => boolean) => {
     for (const stream of sessionStreams().filter(ends)) stream.end();
   };
   let signedInWatches = 0;
 
   /** Ends the streams whose sessions are no longer live. */
   async function checkSessions(): Promise<void> {
-    const ids = [
-      ...new Set(sessionStreams().flatMap(({ sessionId }) => (sessionId ? [sessionId] : []))),
-    ];
+    const ids = [...new Set(sessionStreams().map(({ sessionId }) => sessionId))];
     if (!sessions || ids.length === 0) return;
     let active: Set<string>;
     try {
@@ -240,7 +236,7 @@ export function createSyncHub(options: SyncHubOptions) {
       logError(error, "Checking stream sessions");
       return;
     }
-    endWhere(({ sessionId }) => sessionId !== undefined && !active.has(sessionId));
+    endWhere(({ sessionId }) => !active.has(sessionId));
   }
 
   /** Checks sessions only while streams, or signed-in watches, are open. */
@@ -267,9 +263,11 @@ export function createSyncHub(options: SyncHubOptions) {
 
     /**
      * Calls `listener` after each of the account's writes; answers how to stop. A watch `by` someone signed in ends
-     * with their session, as their own streams do: at the next check, or at once with `endSessionsOf`.
+     * with their session, as their own streams do: at the next check, or at once with `endSessionsOf`. A guest's
+     * has no session: it must say so (DRIFT-102), so a signed-in watch can't leave its session out by mistake.
      */
-    watch(accountId: string, listener: () => void, by?: Watcher): () => void {
+    watch(accountId: string, listener: () => void, who: Watcher | "guest"): () => void {
+      const by = who === "guest" ? undefined : who;
       const watch: Watch = { listener, by };
       const account = watchers.get(accountId) ?? new Set();
       watchers.set(accountId, account.add(watch));
@@ -290,7 +288,7 @@ export function createSyncHub(options: SyncHubOptions) {
      * A stream of the account's changes after `cursor`, opened by `sessionId`. It leaves the hub when it ends, and
      * ends once that session is no longer live.
      */
-    subscribe(accountId: string, cursor: number, sessionId?: string): StreamSource<SyncEvent> {
+    subscribe(accountId: string, cursor: number, sessionId: string): StreamSource<SyncEvent> {
       const subscription: Subscription = new Subscription(
         accountId,
         sessionId,

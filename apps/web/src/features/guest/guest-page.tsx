@@ -32,12 +32,15 @@ import {
 } from "./share-content";
 
 /** The page for a link that doesn't work, whatever the reason (DS-72). */
-export function UnavailableShare() {
+/** The link stopped working; or, `busy`, its share couldn't be read yet and the page is trying again. */
+export function UnavailableShare({ busy = false }: { busy?: boolean }) {
   return (
     <GuestFrame>
       <main className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-        <h1 className="text-page text-fg-primary">Not available</h1>
-        <p className="max-w-sm text-fg-secondary">{unavailableLink}</p>
+        <h1 className="text-page text-fg-primary">{busy ? "Busy right now" : "Not available"}</h1>
+        <p className="max-w-sm text-fg-secondary">
+          {busy ? "This page tries again in a moment." : unavailableLink}
+        </p>
       </main>
     </GuestFrame>
   );

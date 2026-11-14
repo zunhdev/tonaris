@@ -106,14 +106,19 @@ export function invalidationStream(
     ownerId,
     rootId,
     viewer,
-  }: { ownerId: string; rootId: string; viewer?: { accountId: string; sessionId: string } },
+  }: {
+    ownerId: string;
+    rootId: string;
+    /** A signed-in viewer's session, which the stream ends with, or a guest's link, which has none. */
+    viewer: { accountId: string; sessionId: string } | "guest";
+  },
   context: Omit<EventStreamOptions, "signal">,
 ): AsyncGenerator<InvalidateEvent | Comment, void> {
   const channel = eventChannel<InvalidateEvent>(() => stop());
   const stop = hub.watch(
     ownerId,
     () => channel.push({ event: "shared-invalidate", data: { rootId } }),
-    viewer && { ...viewer, end: () => channel.end() },
+    viewer === "guest" ? viewer : { ...viewer, end: () => channel.end() },
   );
   return eventStream(channel, { ...context, signal: hub.signal });
 }

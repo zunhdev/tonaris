@@ -6,7 +6,13 @@
 // again, which hands the view back to the viewer's page; edits that weren't saved by then are reported, not lost
 // silently (FR-09.3).
 
-import { browserFetch, createSyncClient, type SyncClient } from "@/client/sync/client";
+import { browserFetch, createSyncClient } from "@/client/sync/client";
+import {
+  browserNetwork,
+  browserPage,
+  resumeWhenBack,
+  watchConnection,
+} from "@/client/sync/connection";
 import { indexedDbPersistence } from "@/client/sync/persistence";
 import { createShareEngine } from "@/client/sync/share-engine";
 import { useNarrowScreen } from "@/common/media";
@@ -15,13 +21,13 @@ import { ActiveCollectionData } from "@/features/collection/data";
 import { NamingProvider } from "@/features/collection/name-dialog";
 import { CollectionPlaceContext, type CollectionPlace } from "@/features/collection/place";
 import { useNotify } from "@/features/sync/notify";
-import { ActiveSyncProvider, useOwnSyncClient } from "@/features/sync/sync-provider";
+import { ActiveSyncProvider, useOwnSyncClient, type Sync } from "@/features/sync/sync-provider";
 import { useLocation } from "@tanstack/react-router";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { useSharedEntries } from "./shared-entries";
 
-type Share = { rootId: string; client: SyncClient };
+type Share = Sync & { rootId: string };
 
 /** Edits to a share that weren't saved when the person could no longer edit it. */
 type Lost = { name: string; count: number };
@@ -83,13 +89,23 @@ export function ActiveCollectionProvider({
       if (role !== "edit") end();
     });
     const offGone = engine.onUnavailable(end);
+    // The share's own connection, as the workspace reports it (DS-81): its stream, not the person's own.
+    const connection = watchConnection({
+      engine,
+      network: browserNetwork(),
+      page: browserPage(),
+    });
+    // Back online or on screen, it reads, follows and resends at once, as the person's own client does (TON-137).
+    const unwatch = resumeWhenBack(() => client.resume());
     client.start();
     // The client holds a stream, collections and timers, so it is made here rather than during render.
     // oxlint-disable-next-line react/set-state-in-effect
-    setShare({ rootId, client });
+    setShare({ rootId, client, connection });
     return () => {
       offRead();
       offGone();
+      unwatch();
+      connection.stop();
       void client.stop();
       setShare(undefined);
     };
@@ -105,7 +121,7 @@ export function ActiveCollectionProvider({
   return (
     <LostContext value={loss}>
       <CollectionPlaceContext value={place}>
-        <ActiveSyncProvider client={active?.client}>
+        <ActiveSyncProvider active={active}>
           <ActiveCollectionData client={active?.client}>
             <NamingProvider>{children}</NamingProvider>
           </ActiveCollectionData>
