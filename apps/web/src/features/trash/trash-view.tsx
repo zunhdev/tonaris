@@ -214,7 +214,8 @@ export function TrashView() {
           <table aria-label="Trash" className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-subtle text-small text-fg-secondary">
-                <th scope="col" className="py-2 pr-3 font-medium">
+                {/* The name takes what the other columns don't need; its cells truncate within it (TON-233). */}
+                <th scope="col" className="w-full py-2 pr-3 font-medium">
                   Name
                 </th>
                 <th scope="col" className="py-2 pr-3 font-medium">
@@ -307,7 +308,8 @@ function UnitRows({
     <>
       <Icon aria-hidden strokeWidth={1.5} className="size-4 shrink-0 text-fg-secondary" />
       <span className="truncate">{unit.name}</span>
-      {unit.artist && <span className="truncate text-fg-tertiary">{unit.artist}</span>}
+      {/* Squeezed, the artist gives way before the title does. */}
+      {unit.artist && <span className="shrink-[4] truncate text-fg-tertiary">{unit.artist}</span>}
     </>
   );
 
