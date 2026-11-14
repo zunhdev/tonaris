@@ -54,10 +54,14 @@ type CollectionDialogs = {
   positioning: string | undefined;
   startPositioning: (id: string) => void;
   endPositioning: () => void;
-  /** The album "Add to list…" is open for, if it is open (DS-46). */
-  addingToList: string | undefined;
-  startAddToList: (albumId: string) => void;
+  /** The albums "Add to list…" is open for, if it is open (DS-46): one, or the selection (TON-231). */
+  addingToList: readonly string[] | undefined;
+  startAddToList: (albumIds: string | readonly string[]) => void;
   endAddToList: () => void;
+  /** The selected albums whose deletion from the collection is being confirmed, if some are (TON-231). */
+  deletingAlbums: readonly string[] | undefined;
+  startDeleteAlbums: (ids: readonly string[]) => void;
+  endDeleteAlbums: () => void;
   /** The manual entry form, while it is open (DS-47). */
   newAlbum: NewAlbumDraft | undefined;
   startNewAlbum: (draft: NewAlbumDraft) => void;
@@ -72,7 +76,8 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
   const [sharing, setSharing] = useState<string | undefined>(undefined);
   const [deleting, setDeleting] = useState<string | undefined>(undefined);
   const [deletingAlbum, setDeletingAlbum] = useState<string | undefined>(undefined);
-  const [addingToList, setAddingToList] = useState<string | undefined>(undefined);
+  const [addingToList, setAddingToList] = useState<readonly string[] | undefined>(undefined);
+  const [deletingAlbums, setDeletingAlbums] = useState<readonly string[] | undefined>(undefined);
   const [positioning, setPositioning] = useState<string | undefined>(undefined);
   const [newAlbum, setNewAlbum] = useState<NewAlbumDraft | undefined>(undefined);
 
@@ -97,13 +102,26 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
       startPositioning: setPositioning,
       endPositioning: () => setPositioning(undefined),
       addingToList,
-      startAddToList: setAddingToList,
+      startAddToList: (ids) => setAddingToList(typeof ids === "string" ? [ids] : ids),
       endAddToList: () => setAddingToList(undefined),
+      deletingAlbums,
+      startDeleteAlbums: setDeletingAlbums,
+      endDeleteAlbums: () => setDeletingAlbums(undefined),
       newAlbum,
       startNewAlbum: setNewAlbum,
       endNewAlbum: () => setNewAlbum(undefined),
     }),
-    [moving, coloring, sharing, deleting, deletingAlbum, positioning, addingToList, newAlbum],
+    [
+      moving,
+      coloring,
+      sharing,
+      deleting,
+      deletingAlbum,
+      deletingAlbums,
+      positioning,
+      addingToList,
+      newAlbum,
+    ],
   );
 
   return <CollectionDialogsContext value={value}>{children}</CollectionDialogsContext>;

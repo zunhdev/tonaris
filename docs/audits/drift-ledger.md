@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 5 | 80 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 4 | 81 | 0 |
 
 ## Areas
 
@@ -105,7 +105,7 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-072 | spec | ⌫ doesn't remove an album from the list on view (DS-45, DS-50, DS-78) | `apps/web/src/features/shell/use-shortcuts.ts` | fixed (TON-228) | 2026-11-13 | 2026-11-13 |
 | DRIFT-073 | spec | Under live changes, focus is kept by position rather than by item, and editors get no highlight (DS-82) | `apps/web/src/features/collection/use-grid.ts`; `apps/web/src/client/sync/share-engine.ts` | fixed (TON-225) | 2026-11-13 | 2026-11-13 |
 | DRIFT-074 | spec | The header's Delete list and Delete folder work offline (DS-81) | `apps/web/src/features/collection/views.tsx`, `delete-containers.tsx` | fixed (TON-213) | 2026-11-13 | 2026-11-13 |
-| DRIFT-075 | spec | Move to position…, dragging albums onto a sidebar list, and multi-select are promised but were parked | `docs/design-spec.md` DS-21, DS-45, DS-49, DS-50, DS-78 | filed TON-229, TON-230, TON-231 (decided in TON-225: build) | 2026-11-13 | 2026-11-13 |
+| DRIFT-075 | spec | Move to position…, dragging albums onto a sidebar list, and multi-select are promised but were parked | `docs/design-spec.md` DS-21, DS-45, DS-49, DS-50, DS-78 | fixed (TON-229, TON-230, TON-231) | 2026-11-13 | 2026-11-13 |
 | DRIFT-076 | spec | Deleting a folder doesn't name its sharing effects (DS-28, DS-50) | `apps/web/src/features/collection/delete-containers.tsx` | filed TON-226 (decided in TON-225: build) | 2026-11-13 | 2026-11-13 |
 | DRIFT-077 | spec | DS-20 still names react-day-picker; date fields use the browser's own picker | `docs/design-spec.md` DS-20; `apps/web/src/features/collection/field-editors.tsx` | fixed (TON-224) | 2026-11-13 | 2026-11-13 |
 | DRIFT-078 | smell | Stale code comments: custom fields "coming later", layout "lists only", a removed `use-mode.ts`, DS-83 for DS-82, and others | `apps/web/src/features/collection/new-album.tsx`, `view-options.tsx`; `packages/ui/src/components/select.tsx` | fixed (TON-220) | 2026-11-13 | 2026-11-13 |

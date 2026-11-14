@@ -1,17 +1,21 @@
 // The virtualized album grid that rows (DS-21) and cards (DS-22) share (TON-150): a view's albums by group, each
 // group's header on a row of its own and the one in view stuck at the top (DS-43), the virtualizer over them, and
-// moving, opening (DS-46) and rearranging by keyboard (DS-49) across its cells. Rows put one album on a row, across
-// all its cells; cards put an album in each cell.
+// moving, opening (DS-46) and rearranging by keyboard (DS-49) across its cells, and selecting (TON-231): X, ⇧↑ and ⇧↓,
+// and Esc. Rows put one album on a row, across all its cells; cards put an album in each cell.
 
+import { isTextField } from "@/common/shortcuts";
 import { useVirtualizer, type Range } from "@tanstack/react-virtual";
-import { useCallback, useEffect, useMemo, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, type KeyboardEvent, type RefObject } from "react";
 
 import type { Album } from "@tonaris/domain";
 
+import { useMode } from "./collection-mode";
+import { nextCell, type GridShape } from "./grid-keys";
 import { headerHeight, useStickyHeader } from "./groups";
 import { useAlbumOpening } from "./inspector-state";
 import type { ReleaseGroup, Section } from "./order";
-import { useGridFocus, type GridRearrange } from "./use-grid";
+import { useAlbumSelection } from "./selection";
+import { cellAt, useGridFocus, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 export type AlbumGridItem =
@@ -135,20 +139,58 @@ export function useAlbumGrid({
     [items, moves, rows],
   );
   const opening = useAlbumOpening(rearrange.itemAt, { doubleClickEdits: rows });
+  const shape: GridShape = {
+    rows: items.length,
+    columns: (row) => {
+      const item = items[row];
+      if (item?.type !== "albums") return 1;
+      return layout.kind === "rows" ? layout.columns : item.albums.length;
+    },
+    page: page(scroller.current?.clientHeight),
+  };
   const focus = useGridFocus({
     grid,
     rearrange,
     onActivate: opening.onActivate,
-    shape: {
-      rows: items.length,
-      columns: (row) => {
-        const item = items[row];
-        if (item?.type !== "albums") return 1;
-        return layout.kind === "rows" ? layout.columns : item.albums.length;
-      },
-      page: page(scroller.current?.clientHeight),
-    },
+    shape,
     reveal,
   });
-  return { items, virtualizer, isStuck, opening, ...focus };
+  const selection = useAlbumSelection();
+  const { editing, enterEditing } = useMode();
+
+  /** The grid's keys, with selecting first: X, Esc while some are selected, and ⇧↑ / ⇧↓ in Editing mode. */
+  function onKeyDown(event: KeyboardEvent<HTMLElement>) {
+    const at = cellAt(event.target);
+    const id = at && rearrange.itemAt(at);
+    if (selection && at && !event.defaultPrevented && !isTextField(event.target)) {
+      const modified = event.altKey || event.ctrlKey || event.metaKey;
+      if ((event.key === "x" || event.key === "X") && !modified && !event.shiftKey) {
+        if (id === undefined) return;
+        event.preventDefault();
+        // Selecting is for acting on the collection, so it is edit intent (DS-45).
+        enterEditing();
+        selection.toggle(id);
+        return;
+      }
+      if (event.key === "Escape" && selection.ids.length > 0) {
+        event.preventDefault();
+        selection.clear();
+        return;
+      }
+      if (
+        editing &&
+        event.shiftKey &&
+        !modified &&
+        (event.key === "ArrowUp" || event.key === "ArrowDown") &&
+        id !== undefined
+      ) {
+        const next = nextCell(event, at, shape);
+        const to = next && rearrange.itemAt(next);
+        if (to !== undefined) selection.extend(id, to);
+      }
+    }
+    focus.onKeyDown(event);
+  }
+
+  return { items, virtualizer, isStuck, opening, ...focus, onKeyDown };
 }

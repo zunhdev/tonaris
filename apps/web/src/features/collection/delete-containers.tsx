@@ -14,7 +14,7 @@ import { useRecover } from "@/features/trash/recovery";
 import { shareTopSentence, subtreeOf, trashRetentionDays, type Container } from "@tonaris/domain";
 
 import { useCollectionDialogs } from "./collection-dialogs";
-import { useViewContainerId } from "./collection-ui";
+import { useCollectionUi, useViewContainerId } from "./collection-ui";
 import { useCollectionData } from "./data";
 import { useInspector } from "./inspector-state";
 import { useCollectionPlace, useIsShareTop, useOpenContainer } from "./place";
@@ -226,6 +226,72 @@ export function DeleteAlbumDialog() {
         }
       }
       onClose={endDeleteAlbum}
+    />
+  );
+}
+
+/**
+ * The confirmation for deleting the selected albums from the collection (DS-50, TON-231): each leaves every list and
+ * Unsorted as one album does, all in one batch. In a share the person edits, they leave the share only (FR-07.21).
+ */
+export function DeleteAlbumsDialog() {
+  const place = useCollectionPlace();
+  const client = useSyncClient();
+  const notify = useNotify();
+  const announce = useAnnounce();
+  const { close: closeInspector } = useInspector();
+  const { albumsById, tree } = useCollectionData();
+  const { deletingAlbums, endDeleteAlbums } = useCollectionDialogs();
+  const ui = useCollectionUi();
+  const albums = (deletingAlbums ?? []).flatMap((id) => albumsById.get(id) ?? []);
+  const titles = `${albums
+    .slice(0, 3)
+    .map((album) => album.title)
+    .join(", ")}${albums.length > 3 ? ", …" : ""}`;
+  const share =
+    place.kind === "share" ? (tree.byId.get(place.rootId)?.name ?? "this share") : undefined;
+  const many = `${albums.length} albums`;
+
+  function confirm() {
+    if (!client) return;
+    closeInspector();
+    sent(client.trash.deleteAlbums(albums.map((album) => album.id)).transaction);
+    ui.selection()?.clear();
+    if (share !== undefined) {
+      announce(`Deleted ${many} from ${share}`);
+      notify?.info(`${many} left '${share}'`);
+    } else {
+      announce(`Moved ${many} to Trash`);
+      notify?.info(`${many} moved to Trash`);
+    }
+  }
+
+  return (
+    <ConfirmDialog
+      confirmation={
+        albums.length === 0
+          ? undefined
+          : {
+              title:
+                share === undefined
+                  ? `Delete ${many} from your collection?`
+                  : `Delete ${many} from '${share}'?`,
+              scope: [`${titles}.`],
+              consequences:
+                share === undefined || place.kind !== "share"
+                  ? [
+                      "Removes them from every list and Unsorted.",
+                      `Recoverable from Trash for ${trashRetentionDays} days.`,
+                    ]
+                  : [
+                      `Removes them from every list in '${share}'.`,
+                      `${place.ownerName ?? "Its owner"}'s other lists keep them.`,
+                    ],
+              action: share === undefined ? `Move ${many} to Trash` : "Delete",
+              onConfirm: confirm,
+            }
+      }
+      onClose={endDeleteAlbums}
     />
   );
 }
