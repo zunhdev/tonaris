@@ -516,7 +516,7 @@ export const ownSharingSchema = z
       }),
     ),
   })
-  .meta({ id: "OwnSharing" });
+  .meta({ description: "What the person shares themselves (DS-31)." });
 export type OwnSharing = z.infer<typeof ownSharingSchema>;
 
 /** What the sharing dialog shows the owner (DS-65): invitations, the link, and access from folders above. */

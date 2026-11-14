@@ -3924,11 +3924,46 @@
         "operationId": "listOwnSharing",
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "What the person shares themselves (DS-31).",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/$defs/OwnSharing"
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "shared": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "containerId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "people": {
+                            "type": "boolean",
+                            "description": "It has an invitation that is pending or accepted."
+                          },
+                          "link": {
+                            "type": "boolean",
+                            "description": "Its link is on."
+                          }
+                        },
+                        "required": [
+                          "containerId",
+                          "people",
+                          "link"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "shared"
+                  ],
+                  "additionalProperties": false,
+                  "description": "What the person shares themselves (DS-31)."
                 }
               }
             }
