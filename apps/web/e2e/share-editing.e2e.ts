@@ -7,7 +7,7 @@ import { uuidv7, type Container } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
-import { added, album, insert, live, saved, webOrigin } from "./support/workspace";
+import { added, album, insert, live, saved, savedNames, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -133,6 +133,58 @@ test("an editor whose access ends while editing is told it's no longer available
   await expect(editor.getByRole("main").getByText(/No longer available/)).toBeVisible({
     timeout: 10_000,
   });
+});
+
+test("an editor's unsent rename is counted at sign-out, sent after a reload, and leaves nothing behind (TON-212)", async ({
+  page: owner,
+  browser,
+}) => {
+  const {
+    page: editor,
+    metal,
+    doom,
+  } = await sharedToEdit(owner, browser, accounts.unsentOwner, accounts.unsentEditor);
+  await editor.goto(`/shared/${metal.id}?c=${doom.id}`);
+  await expect(editor.getByText("Can edit · Shared by Denis")).toBeVisible();
+
+  // The rename's first send never gets an answer, and dies with the page; later sends go through.
+  let held = false;
+  await editor.route(`${apiUrl}/v1/mutations`, async (route) => {
+    if (held) return route.continue();
+    held = true;
+    return undefined;
+  });
+  await editor.keyboard.press("e");
+  await editor.getByRole("button", { name: "Rename" }).click();
+  const rename = editor.getByRole("dialog", { name: `Rename "Doom"` });
+  await rename.getByRole("textbox", { name: "Name" }).fill("Doom Metal");
+  await rename.getByRole("button", { name: "Rename" }).click();
+  await expect(rename).toHaveCount(0);
+  await expect.poll(() => held).toBe(true);
+
+  // Signing out would discard it, and says so.
+  const account = editor.getByRole("button", { name: `Account: ${accounts.unsentEditor}` });
+  const discard = editor.getByRole("alertdialog", { name: "Sign out with unsaved changes?" });
+  await account.click();
+  await editor.getByRole("menuitem", { name: "Sign out" }).click();
+  await expect(discard).toContainText("1 change hasn't been saved yet.");
+  await discard.getByRole("button", { name: "Cancel" }).click();
+  await expect(discard).toHaveCount(0);
+
+  // After a reload, the new page sends what the old one left: the owner gets the name.
+  await editor.reload();
+  await expect
+    .poll(async () => (await savedNames(owner)).includes("Doom Metal"), { timeout: 25_000 })
+    .toBe(true);
+
+  // Signing out deletes the share's database with the account's own.
+  await account.click();
+  await editor.getByRole("menuitem", { name: "Sign out" }).click();
+  await expect(editor).toHaveURL(/\/sign-in/);
+  const databases = await editor.evaluate(async () =>
+    (await indexedDB.databases()).flatMap((each) => (each.name ? [each.name] : [])),
+  );
+  expect(databases.filter((name) => name.startsWith("tonaris-sync:"))).toEqual([]);
 });
 
 test("inside a share, shortcuts, Move to and deletions keep to the share and its owner's Trash (TON-195)", async ({

@@ -15,6 +15,7 @@ import {
 } from "@/client/sync/connection";
 import { indexedDbPersistence } from "@/client/sync/persistence";
 import { createShareEngine } from "@/client/sync/share-engine";
+import { browserTabs } from "@/client/sync/tabs";
 import { useNarrowScreen } from "@/common/media";
 import { apiUrl } from "@/config";
 import { ActiveCollectionData } from "@/features/collection/data";
@@ -28,6 +29,9 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useSharedEntries } from "./shared-entries";
 
 type Share = Sync & { rootId: string };
+
+/** How long a share's client keeps sending once the person leaves it. */
+const settleMs = 30_000;
 
 /** Edits to a share that weren't saved when the person could no longer edit it. */
 type Lost = { name: string; count: number };
@@ -74,8 +78,10 @@ export function ActiveCollectionProvider({
         references: own.references,
         arrange: own.arrange,
       },
-      // Kept apart from the person's own unsent writes.
+      // Kept apart from the person's own unsent writes, and owned by this tab, so after a reload, or the next time
+      // the share opens, the new tab adopts and sends what this one left (TS-22).
       persistence: indexedDbPersistence(`${accountId}~${rootId}`),
+      tabs: browserTabs(`${accountId}~${rootId}`),
     });
     let ended = false;
     const end = () => {
@@ -106,7 +112,8 @@ export function ActiveCollectionProvider({
       offGone();
       unwatch();
       connection.stop();
-      void client.stop();
+      // Leaving the share with writes still on their way: they're sent first, for up to 30 s.
+      void client.settle(settleMs).finally(() => void client.stop());
       setShare(undefined);
     };
   }, [editable, own, rootId, accountId, reread, name]);

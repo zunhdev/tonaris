@@ -3,7 +3,7 @@
 // records it and opens the collection; signing out leaves, removing this browser's copy as the account menu does.
 
 import { api, refusalOf } from "@/api";
-import { indexedDbPersistence } from "@/client/sync/persistence";
+import { clearBrowserCopy } from "@/client/sync/persistence";
 import { authFailureMessage, signOut } from "@/features/account/auth-client";
 import { forgetSignIn } from "@/features/account/pending-sign-in";
 import { forgetAccount } from "@/features/account/session";
@@ -49,7 +49,7 @@ export function TermsScreen({ account }: { account: Account }) {
       setError(authFailureMessage(result));
       return;
     }
-    await indexedDbPersistence(account.id).clear();
+    await clearBrowserCopy(account.id);
     forgetAccount();
     forgetSignIn();
     await router.navigate({ to: "/sign-in" });

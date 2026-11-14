@@ -5,8 +5,9 @@
 // before anything else (DS-97, FR-08.7).
 
 import { api, refusalOf } from "@/api";
+import { clearBrowserCopy } from "@/client/sync/persistence";
 import { ExportButton } from "@/features/export/data-export";
-import { useSyncClient } from "@/features/sync/sync-provider";
+import { useOwnSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
@@ -73,7 +74,7 @@ export function DangerZone({ account }: { account: Account }) {
 function DeleteAccountDialog({ account, onClose }: { account: Account; onClose: () => void }) {
   const id = useId();
   const router = useRouter();
-  const sync = useSyncClient();
+  const sync = useOwnSyncClient();
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -92,6 +93,7 @@ function DeleteAccountDialog({ account, onClose }: { account: Account; onClose: 
       rememberDeletion(data.token);
       // What this browser keeps for the account goes, as on signing out.
       await sync?.clear();
+      await clearBrowserCopy(account.id);
       forgetAccount();
       forgetSignIn();
       await router.navigate({ to: "/account-deleted" });

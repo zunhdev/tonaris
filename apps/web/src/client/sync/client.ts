@@ -208,6 +208,29 @@ export function createSyncClient({
     get unsent(): number {
       return outbox.queued.length + captureOutbox.queued.length;
     },
+    /**
+     * Resolves once the writes queued so far are answered, the session ends, or `ms` pass: for a client about to stop
+     * with writes still on their way, such as a share the person leaves. What isn't sent by then stays kept, for the
+     * next client of the same collection to adopt (TS-22).
+     */
+    settle(ms: number): Promise<void> {
+      if (outbox.queued.length + captureOutbox.queued.length === 0) return Promise.resolve();
+      const now = Date.now();
+      return new Promise<void>((resolve) => {
+        const timer = setTimeout(finish, ms);
+        const off = engine.onStatus((status) => {
+          if (status === "signed_out" || status === "stopped") finish();
+        });
+        void Promise.all([outbox.answeredBefore(now), captureOutbox.answeredBefore(now)]).then(() =>
+          finish(),
+        );
+        function finish() {
+          clearTimeout(timer);
+          off();
+          resolve();
+        }
+      });
+    },
     /** Stops, and deletes what this browser keeps for the account, as signing out does. */
     async clear(): Promise<void> {
       await stop();
