@@ -38,6 +38,16 @@ const encode = (linear: number) =>
 const decode = (encoded: number) =>
   encoded <= 0.04045 ? encoded / 12.92 : ((encoded + 0.055) / 1.055) ** 2.4;
 
+/** The color as an sRGB hex, as a manifest or a `theme-color` meta needs it (DS-110). Alpha is ignored. */
+export function toHex(color: Oklch): string {
+  const hex = toLinearSrgb(color).map((channel) =>
+    Math.round(encode(channel) * 255)
+      .toString(16)
+      .padStart(2, "0"),
+  );
+  return `#${hex.join("")}`;
+}
+
 /** The color as it shows over `background`: alpha is blended in gamma-encoded sRGB, as browsers do. */
 function shownOver(color: Oklch, background: Oklch): Rgb {
   const front = toLinearSrgb(color);

@@ -13,7 +13,9 @@ export const scrimClass =
  * surface, so content as wide as a long name, such as a select's longest option, can't push past its edge (TON-180).
  */
 export const dialogSurfaceClass =
-  "fixed top-1/2 left-1/2 z-60 grid w-[calc(100%-2rem)] grid-cols-1 -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-raised p-5 text-fg-primary shadow-floating duration-200 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95";
+  "fixed top-1/2 left-1/2 z-60 grid w-[calc(100%-2rem)] grid-cols-1 -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-raised p-5 text-fg-primary shadow-floating duration-200 ease-enter outline-none data-open:animate-in data-open:fade-in-0 motion-safe:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95 " +
+  // A dialog's text buttons are 32 px, beside its 32 px fields (DS-15, DRIFT-095); small and icon buttons keep theirs.
+  "[&_[data-slot=button][data-size=md]]:h-8 [&_[data-slot=button][data-size=md]]:px-3";
 
 /**
  * A dialog that keeps its top edge while open, at 12% of the window's height as the palette is: a finder's dialog, whose

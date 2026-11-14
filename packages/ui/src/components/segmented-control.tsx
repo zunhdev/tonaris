@@ -47,7 +47,8 @@ function SegmentedControl<Value extends string>({
           value={option.value}
           className={cn(
             "flex h-6 flex-1 cursor-default items-center justify-center gap-1.5 rounded-sm px-1.5 text-small font-medium whitespace-nowrap text-fg-secondary transition-colors duration-100 ease-enter outline-none select-none hover:text-fg-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid data-checked:bg-selected data-checked:text-fg-primary data-disabled:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
-            size === "touch" && "h-10 text-base",
+            // On a phone, every one is a 44 px target (DS-15, DRIFT-093).
+            size === "touch" ? "h-10 text-base" : "max-md:h-10 max-md:text-base",
           )}
         >
           {option.label}

@@ -36,7 +36,14 @@ function DialogContent({ className, children, ...props }: DialogPrimitive.Popup.
         {children}
         <DialogPrimitive.Close
           aria-label="Close"
-          render={<Button variant="ghost" size="icon-sm" className="absolute top-3 right-3" />}
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              // A 44 px target on a phone (DS-15).
+              className="absolute top-3 right-3 max-md:top-1.5 max-md:right-1.5 max-md:size-11"
+            />
+          }
         >
           <X strokeWidth={1.5} aria-hidden />
         </DialogPrimitive.Close>

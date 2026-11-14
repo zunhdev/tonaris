@@ -236,6 +236,27 @@ test("search fills the screen and opens what it finds", async ({ page }) => {
   await page.getByRole("combobox", { name: "Search" }).fill("doom");
   await palette.getByRole("option", { name: /Doom/ }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "Doom" })).toBeVisible();
+
+  // Phones view only (X-04): the palette offers going somewhere and views, and no edit (DRIFT-089).
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await page.getByRole("combobox", { name: "Search" }).fill(">");
+  await expect(palette.getByRole("option", { name: /Go to Collection/ })).toBeVisible();
+  for (const edit of [/Add albums from links/, /New list/, /Delete/, /Add to list/])
+    // oxlint-disable-next-line no-await-in-loop
+    await expect(palette.getByRole("option", { name: edit })).toHaveCount(0);
+});
+
+test("Settings' choices and a dialog's Close are 44 px targets on a phone (DS-15, DRIFT-093)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.phoneSearch);
+  await page.goto("/settings/preferences");
+  const radios = page.getByRole("main").getByRole("radio");
+  await expect(radios.first()).toBeVisible();
+  const heights = await radios.evaluateAll((each) =>
+    each.map((radio) => radio.getBoundingClientRect().height),
+  );
+  expect(heights.every((height) => height >= 40)).toBe(true);
 });
 
 /** Sends a mutation as the page's account. */

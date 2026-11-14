@@ -168,7 +168,13 @@ function Toasts() {
           {toast.data?.actions && (
             <div className="mt-2 flex gap-2">
               {toast.data.actions.map((action) => (
-                <Button key={action.label} size="sm" onClick={action.onClick}>
+                <Button
+                  key={action.label}
+                  size="sm"
+                  // A 44 px target on a phone (DS-15).
+                  className="max-md:h-11 max-md:px-3 max-md:text-base"
+                  onClick={action.onClick}
+                >
                   {action.label}
                 </Button>
               ))}
@@ -177,7 +183,13 @@ function Toasts() {
         </div>
         <ToastPrimitive.Close
           aria-label="Close"
-          render={<Button variant="ghost" size="icon-sm" className="-mt-0.5 -mr-1" />}
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="-mt-0.5 -mr-1 max-md:-my-2.5 max-md:size-11"
+            />
+          }
         >
           <X strokeWidth={1.5} aria-hidden />
         </ToastPrimitive.Close>

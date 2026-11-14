@@ -1,7 +1,7 @@
 // The shortcut reference (DS-78): `?` or the account menu's "Keyboard shortcuts" opens it, listing the shortcuts
 // that work now. Shortcuts arriving with later issues join the list with them.
 
-import { shortcutReference } from "@/common/shortcuts";
+import { platformKeys, shortcutReference } from "@/common/shortcuts";
 
 import {
   Dialog,
@@ -37,7 +37,7 @@ export function ShortcutReference({
                 <div key={action} className="contents">
                   <dt className="text-fg-primary">{action}</dt>
                   <dd className="flex gap-1">
-                    {keys.map((key) => (
+                    {platformKeys(keys).map((key) => (
                       <kbd
                         key={key}
                         className="min-w-5 rounded-sm border border-subtle bg-panel px-1 text-center text-small text-fg-secondary"

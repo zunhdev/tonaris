@@ -8,6 +8,7 @@
 
 import type { NewAlbumMetadata } from "@/client/sync/albums";
 import { sent } from "@/client/sync/writer";
+import { ariaShortcut } from "@/common/shortcuts";
 import { shownLink } from "@/features/capture/outcomes";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useAnnounce } from "@/features/sync/announcer";
@@ -353,7 +354,11 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
               <Button type="button" onClick={requestClose}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" aria-keyshortcuts="Meta+Enter">
+              <Button
+                type="submit"
+                variant="primary"
+                aria-keyshortcuts={ariaShortcut("Meta+Enter")}
+              >
                 Add album
               </Button>
             </DialogFooter>
