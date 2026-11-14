@@ -239,7 +239,7 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **Columns:** artwork with the title, artist, year, type and status.
 - **Narrowing:** the type collapses below 640 px of view width.
 - **Later columns:**
-  - the checkbox (TON-37);
+  - the checkbox (TON-37); *came with TON-231 (DS-50):* in Editing mode, inside the title cell before the artwork, last in the DOM so the cell's name starts with the title;
   - the drag handle (TON-36);
   - the services, and the Open button (M4).
 - **The year** shows the original year, or a live recording range ("1978–1982").
@@ -739,7 +739,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - a valid value is saved, and the mode switches;
   - a blank new name is discarded;
   - a refused value keeps its editor open, focused, with its error, and the mode stays.
-- **Unchanged in both modes:** keyboard rearranging, View options, and opening folders and lists. Selection checkboxes and "+ Add album" come with selection and capture.
+- **Unchanged in both modes:** keyboard rearranging, View options, and opening folders and lists. Selection checkboxes and "+ Add album" come with selection and capture. *(Selection came with TON-231, DS-50: X is edit intent and switches to Editing; leaving Editing clears the selection.)*
 - **Interface state only:** switching sends nothing, and the server judges every write the same (FR-04.2).
 
 **DS-46 Album inspector.** It opens with Enter or a click on a row, shows the album at `?album=:id`, and Esc closes it. With the inspector open, J/K moves to the next or previous album. Sections, top to bottom: *(FR-03.1–FR-03.4, FR-06.2–FR-06.4, FR-01.6, FR-01.8, FR-14.1)*
@@ -1055,6 +1055,16 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
   - Cancel focused.
 - **The live region** says "Moved Metal to Trash" and, on Undo, "Recovered Doom".
 - **Multi-select** comes with selection (X).
+  - *As built in TON-231 (decided by the creator, 14 November 2026):* **selecting albums**, in lists and Unsorted, in Editing mode on a computer:
+    - **X** selects or deselects the focused album, switching to Editing mode first. **⇧↑ and ⇧↓** add the album above or below, from where the last range started. **Esc** in the view clears the selection, before it would close the inspector; so do leaving Editing mode and leaving the view.
+    - **Checkboxes** "Select {title}": in a row's title cell before the artwork, and over a card's cover at its top left. A click selects or deselects; ⇧-click adds the albums from the last one chosen. They are out of the tab order (the grid's cells are its stops), and a click hands the focus to their cell.
+    - **Selected** rows and cards take `bg.selected`, with `aria-selected`; the grid is `aria-multiselectable`.
+    - **The selection bar** sits under the albums: "{n} albums selected" (polite), then **Add to list…**, **Remove from {list}** (in a list), **Delete…** in danger text, and × "Clear selection". Offline, its actions are disabled, as every edit is (DS-81).
+    - **⌫ in a list, ⌘⌫ and L** act on every selected album while some are; a focused folder or list in the sidebar still takes ⌫ itself.
+    - **Add to list…** is titled "Add {n} albums to a list" and offers the lists not all of them are in ("They stay in their other lists too."; none: "They're all in every list already, or there are no lists yet."). The ones not in it join in one batch, announced "Added {n} albums to {list}", with the toast "{n} albums added to {list}" and Undo. With no list to offer, the dialog takes the focus itself, so Esc closes it there.
+    - **Removing** takes them out in one batch: "Removed {n} albums from {list}", the toast "{n} albums removed from {list}" with Undo.
+    - **Delete…** confirms "Delete {n} albums from your collection?", naming the first three, "Removes them from every list and Unsorted." and "Recoverable from Trash for 30 days.", with "Move {n} albums to Trash". Each goes to Trash as its own unit, in one batch, then "{n} albums moved to Trash". In a share the person edits: "Delete {n} albums from '{share}'?", "Removes them from every list in '{share}'." and "{owner}'s other lists keep them.", with Delete.
+    - **After removing or deleting,** the selection is cleared, so Undo brings the albums back unselected. Adding keeps it.
 
 *As built in TON-57:* **deleting an album.**
 - **Triggers:** ⌘⌫ (Ctrl+⌫ elsewhere) on the inspector's album, else the focused album; and **Delete from collection…** in the inspector's header in Editing mode (at its foot until TON-162).
