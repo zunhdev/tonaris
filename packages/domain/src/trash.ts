@@ -188,10 +188,14 @@ function sentAgain(existing: StoredTrashUnit, rootId: string, principal: Princip
     // An editor's resend changes nothing; the owner's still goes through the policy.
     return existing.ownerId === actor ? undefined : applied();
   }
-  return failure("validation_failed", "This ID is already in use.", [
+  return unitIdInUse();
+}
+
+/** A Trash unit ID already used (TS-22). */
+const unitIdInUse = () =>
+  failure("validation_failed", "This ID is already in use.", [
     { path: "args.unitId", message: "Already in use" },
   ]);
-}
 
 /** Whether the album is active: not in Trash. */
 async function isActive(store: CollectionStore, albumId: string): Promise<boolean> {
@@ -465,6 +469,13 @@ export async function deleteAlbum(
 ): Promise<CommandResult> {
   const { store, principal } = context;
   const existing = await store.findTrashUnit(args.unitId);
+  const actor = actingUserId(principal);
+  // An editor's deletion makes a unit only when the album goes to Trash, and spends the ID either way. Whichever it
+  // did, an ID used again answers the same, so the answer doesn't tell whether the owner's other lists kept the album
+  // (FR-07.21, TON-198).
+  const editorsUnit =
+    existing !== undefined && existing.deletedBy !== null && existing.ownerId !== actor;
+  if (editorsUnit || (!existing && (await store.unitIdSpent(args.unitId)))) return unitIdInUse();
   if (existing) {
     const resent = sentAgain(existing, args.id, principal);
     if (resent) return resent;
@@ -487,6 +498,7 @@ export async function deleteAlbum(
   // An editor's deletion takes the album out of the lists they edit; the owner's other lists keep it, and only with
   // none does it go to Trash. Either way the editor sees it leave the share, and nothing more (FR-07.21).
   if (editableLists && active.some((listId) => !editableLists.includes(listId))) {
+    await store.spendUnitId(args.unitId, ownerId);
     const left: ChangeInput[] = [];
     for (const listId of editableLists) {
       // oxlint-disable-next-line no-await-in-loop

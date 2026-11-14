@@ -2,7 +2,7 @@
 // change log after a cursor, and the bootstrap snapshot, with the daily pruning and the hourly Trash expiry (TS-91).
 // Commands come from packages/domain and run on the store in store/; this module records what they did.
 
-import { and, asc, desc, eq, gt, isNull, lt, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, lt, lte, sql } from "drizzle-orm";
 
 import {
   actingUserId,
@@ -102,7 +102,11 @@ export async function logChanges(
   );
   await tx
     .update(accountSync)
-    .set({ seq: seq + changes.length })
+    .set({
+      seq: seq + changes.length,
+      // One write, however many changes: an editor's position (TON-198).
+      ...(changes.length > 0 ? { writes: sql`${accountSync.writes} + 1` } : {}),
+    })
     .where(eq(accountSync.accountId, accountId));
   await tx.insert(changeLog).values(
     changes.map((change) => ({
@@ -116,6 +120,20 @@ export async function logChanges(
     })),
   );
   return changes;
+}
+
+/**
+ * The writes the account's collection has had (`account_sync.writes`): an editor's position in it, which their
+ * outcomes and snapshots carry instead of `seq`, so how far it moves says nothing of how much a write changed or of
+ * the owner's changes elsewhere, only how many writes there were, as the share's stream tells them anyway (TS-24,
+ * TON-198).
+ */
+export async function writesOf(tx: Executor, accountId: string): Promise<number> {
+  const [row] = await tx
+    .select({ writes: accountSync.writes })
+    .from(accountSync)
+    .where(eq(accountSync.accountId, accountId));
+  return row?.writes ?? 0;
 }
 
 /** How the `mutations` table names who sent a mutation (TS-11). */
@@ -302,6 +320,9 @@ export async function executeMutation(
         changes = await logChanges(tx, ownerId, seq, result.changes, mutationId);
         outcome = { status: "confirmed", seq: seq + changes.length, result: reported };
       }
+      // An editor's outcome carries their position in the owner's collection, as their snapshots do (TS-24, TON-198).
+      if (outcome.status === "confirmed" && ownerId !== accountId)
+        outcome = { ...outcome, seq: await writesOf(tx, ownerId) };
 
       // The outcome is the sender's, for their retries and `GET /v1/mutations/{id}` (TS-22).
       await recordOutcome(tx, accountId, principal, mutation, outcome, now);

@@ -1,0 +1,195 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "b754738d-e3c3-48ad-99a9-a260647e8b5c",
+  "prevIds": [
+    "c00ca296-3ed7-4e32-9afb-575dfafd544c"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "spent_unit_ids"
+      ],
+      "writes": [
+        "s|tbl|public.spent_unit_ids",
+        "n|tbl|public.spent_unit_ids",
+        "e|tbl|public.spent_unit_ids",
+        "n|rel|public.spent_unit_ids",
+        "n|type|public.spent_unit_ids",
+        "n|rel|public.spent_unit_ids_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "account_sync",
+        "writes"
+      ],
+      "writes": [
+        "s|col|public.account_sync.writes",
+        "n|col|public.account_sync.writes",
+        "e|col|public.account_sync.writes"
+      ],
+      "reads": [
+        "n|tbl|public.account_sync",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "spent_unit_ids"
+      ],
+      "writes": [
+        "s|fk|public.spent_unit_ids.spent_unit_ids_owner_id_user_id_fkey",
+        "n|fk|public.spent_unit_ids.spent_unit_ids_owner_id_user_id_fkey",
+        "e|fk|public.spent_unit_ids.spent_unit_ids_owner_id_user_id_fkey",
+        "n|con|public.spent_unit_ids.spent_unit_ids_owner_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.spent_unit_ids",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.spent_unit_ids.owner_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "spent_unit_ids",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_sync",
+        "name": "writes",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "spent_unit_ids",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "spent_unit_ids",
+        "name": "owner_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "spent_unit_ids",
+        "name": "created_at",
+        "type": "timestamp(3) with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "spent_unit_ids",
+        "name": "updated_at",
+        "type": "timestamp(3) with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "spent_unit_ids",
+        "name": "spent_unit_ids_owner_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "owner_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "spent_unit_ids",
+        "name": "spent_unit_ids_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
+}

@@ -32,6 +32,7 @@ import {
   sessions,
   shareGrants,
   shareLinks,
+  spentUnitIds,
   trashUnits,
   users,
   viewPrefs,
@@ -154,6 +155,7 @@ async function deleteTheRest(tx: Transaction, userId: string): Promise<void> {
   // One statement: `parent_id` has no foreign key, and links, grants and references cascade with containers.
   await tx.delete(containers).where(eq(containers.ownerId, userId));
   await tx.delete(trashUnits).where(eq(trashUnits.ownerId, userId));
+  await tx.delete(spentUnitIds).where(eq(spentUnitIds.ownerId, userId));
   await tx.delete(fieldDefinitions).where(eq(fieldDefinitions.ownerId, userId));
   await tx.delete(shareGrants).where(eq(shareGrants.granteeId, userId));
   await tx.delete(savedReferences).where(eq(savedReferences.viewerId, userId));

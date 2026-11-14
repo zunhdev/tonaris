@@ -28,6 +28,7 @@ import {
   savedReferences,
   shareGrants,
   shareLinks,
+  spentUnitIds,
   trashUnits,
   users,
   viewPrefs,
@@ -105,6 +106,7 @@ async function removeAccounts(tx: Transaction, accounts: readonly Account[]): Pr
   await tx.delete(albums).where(inArray(albums.ownerId, ids));
   await tx.delete(fieldDefinitions).where(inArray(fieldDefinitions.ownerId, ids));
   await tx.delete(trashUnits).where(inArray(trashUnits.ownerId, ids));
+  await tx.delete(spentUnitIds).where(inArray(spentUnitIds.ownerId, ids));
   await tx.delete(positions).where(inArray(positions.personId, ids));
   await tx.delete(viewPrefs).where(inArray(viewPrefs.personId, ids));
   // Saved defaults (link target, hidden services, layouts) and agents' approvals, once the account has used the app.

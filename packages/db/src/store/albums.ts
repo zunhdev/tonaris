@@ -24,6 +24,7 @@ import {
   albumServiceLinks,
   containers,
   memberships,
+  spentUnitIds,
   trashUnits,
 } from "../schema";
 import { purgeRows } from "../teardowns";
@@ -218,6 +219,16 @@ export function albumStore(tx: Transaction) {
         .from(trashUnits)
         .where(eq(trashUnits.id, id));
       return unit;
+    },
+    async unitIdSpent(id) {
+      const [spent] = await tx
+        .select({ id: spentUnitIds.id })
+        .from(spentUnitIds)
+        .where(eq(spentUnitIds.id, id));
+      return spent !== undefined;
+    },
+    async spendUnitId(id, ownerId) {
+      await tx.insert(spentUnitIds).values({ id, ownerId }).onConflictDoNothing();
     },
     async unitContainers(unitId) {
       return tx

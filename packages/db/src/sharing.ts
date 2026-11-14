@@ -37,7 +37,6 @@ import {
 import { valuesOfAlbums } from "./field-values";
 import { ancestorsCte, descendantsCte } from "./hierarchy";
 import {
-  accountSync,
   albums,
   albumServiceLinks,
   containers,
@@ -49,6 +48,7 @@ import {
   shareLinks,
   users,
 } from "./schema";
+import { writesOf } from "./sync";
 
 /**
  * The live link a token opens, while its folder or list is active (TS-32): looked up by the token's SHA-256, never
@@ -89,14 +89,9 @@ export function sharedSnapshot(
       .innerJoin(users, eq(users.id, containers.ownerId))
       .where(eq(containers.id, id));
     // In the same snapshot as the content, so the content is current at exactly this position (TS-24). Only for an
-    // editor, whose writes it waits for: a viewer or a guest would learn how much the owner changes elsewhere.
-    const [sync] =
-      owner && role === "edit"
-        ? await tx
-            .select({ seq: accountSync.seq })
-            .from(accountSync)
-            .where(eq(accountSync.accountId, owner.id))
-        : [];
+    // editor, whose writes it waits for, and as a count of writes rather than of changes: a viewer or a guest would
+    // learn how much the owner changes elsewhere, and an editor how much their own write changed (TON-198).
+    const position = owner && role === "edit" ? await writesOf(tx, owner.id) : 0;
     const shown = await tx
       .select(containerColumns)
       .from(containers)
@@ -128,7 +123,7 @@ export function sharedSnapshot(
     return {
       rootId: id,
       role,
-      seq: sync?.seq ?? 0,
+      seq: position,
       owner: { displayName: owner?.displayName ?? null },
       // The root's parent is a folder the viewer may not know of.
       containers: shown.map((each) =>
