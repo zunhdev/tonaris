@@ -2,6 +2,7 @@
 // (features/admin/admissions.tsx). For the creator only, as all of Admin (_admin.tsx).
 
 import { api } from "@/api";
+import { loadOrThrow } from "@/common/page-error";
 import { AdminAdmissions } from "@/features/admin/admissions";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -9,9 +10,7 @@ export const Route = createFileRoute("/_workspace/_admin/admin/admissions")({
   staticData: { title: "Admissions" },
   head: () => ({ meta: [{ title: "Admissions · Tonaris" }] }),
   loader: async () => {
-    const { data, status } = await api.v1.admin.admissions.get();
-    if (!data) throw new Error(`Couldn't load admissions (HTTP ${status}).`);
-    return data;
+    return loadOrThrow(await api.v1.admin.admissions.get(), "admissions");
   },
   component: AdmissionsPage,
 });

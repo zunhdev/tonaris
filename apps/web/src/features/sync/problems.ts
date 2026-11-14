@@ -4,8 +4,7 @@
 
 import { servicesSentence, type ErrorCode, type Problem } from "@tonaris/domain";
 
-/** What any request says when Tonaris didn't answer (DS-91): one sentence for the whole app (DRIFT-085). */
-export const unreachable = "Couldn't reach Tonaris. Check your connection and try again.";
+export { unreachable } from "@/common/unreachable";
 
 /**
  * What each failure means when the server gives no explanation (FR-13.1, DS-107): plain and blameless, with one
