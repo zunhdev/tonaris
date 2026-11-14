@@ -557,4 +557,4 @@ export {
 export { deletedListsOf, deletionTargetsOf, type DeletionPlace } from "./deletion-targets";
 export { impactOf, type ImpactQuery, type ImpactUnit } from "./sharing-preview";
 // The editor's share rules, for previews and approval scopes in packages/db (DRIFT-018).
-export { editsInsideShare, moveStaysInShare } from "./command-kit";
+export { editsInsideShare, moveStaysInShare, shareTopSentence } from "./command-kit";

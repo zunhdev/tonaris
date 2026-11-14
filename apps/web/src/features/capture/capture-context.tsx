@@ -8,14 +8,17 @@ import { useNarrowScreen } from "@/common/media";
 import { inLayer, isTextField } from "@/common/shortcuts";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { useMode } from "@/features/collection/collection-mode";
+import { useViewContainerId } from "@/features/collection/collection-ui";
+import { useCollectionData } from "@/features/collection/data";
 import { useInspector } from "@/features/collection/inspector-state";
 import { usePasteOntoAlbum } from "@/features/collection/paste-onto-album";
+import { useCollectionPlace, useOpenContainer } from "@/features/collection/place";
 import { useAnnounce } from "@/features/sync/announcer";
 import { reasonOf } from "@/features/sync/describe";
 import { useNotify } from "@/features/sync/notify";
 import { useSaveActions } from "@/features/sync/save-actions";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
-import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   createContext,
   useCallback,
@@ -62,9 +65,14 @@ export function useCapture(): CaptureUi | undefined {
   return useContext(CaptureContext);
 }
 
-/** The list on view, if a list is: where pasted links go (DS-48). */
+/**
+ * The list on view, if a list is: where pasted links go, and the list Add albums starts with (DS-48). In a share the
+ * person edits, the share's list on view (TON-191, DRIFT-079).
+ */
 function useViewListId(): string | null {
-  return useParams({ strict: false }).listId ?? null;
+  const id = useViewContainerId();
+  const { tree } = useCollectionData();
+  return id !== undefined && tree.byId.get(id)?.kind === "list" ? id : null;
 }
 
 export function CaptureProvider({ children }: { children: ReactNode }) {
@@ -73,12 +81,18 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
   const { enterEditing } = useMode();
   const offline = useConnection() === "offline";
   const listId = useViewListId();
+  const inShare = useCollectionPlace().kind === "share";
   const [dialog, setDialog] = useState<{ listId: string | null } | undefined>(undefined);
   const [keptLinks, setKeptLinks] = useState<readonly KeptLink[]>([]);
 
   const capture = useCallback(
     (links: readonly string[], into: string | null) => {
       if (!client || offline || links.length === 0) return false;
+      // In a share, they go in one of its lists, never the person's own Unsorted (TON-191).
+      if (inShare && into === null) {
+        notify?.info("Choose a list in this share.");
+        return false;
+      }
       // At most one batch at once (TS-25).
       if (links.length > maxBatchItems) {
         notify?.info(`Add up to ${maxBatchItems} links at once.`);
@@ -88,7 +102,7 @@ export function CaptureProvider({ children }: { children: ReactNode }) {
       client.captures.send(links.map((link) => ({ link, listId: into })));
       return true;
     },
-    [client, offline, notify, enterEditing],
+    [client, offline, notify, enterEditing, inShare],
   );
 
   const value = useMemo<CaptureUi>(
@@ -163,6 +177,7 @@ function useCaptureFeedback(keep: (link: KeptLink) => void): void {
   const actions = useSaveActions();
   const announce = useAnnounce();
   const navigate = useNavigate();
+  const openContainer = useOpenContainer();
   const { startAddToList } = useCollectionDialogs();
   const { enterEditing } = useMode();
   const viewListId = useViewListId();
@@ -174,6 +189,7 @@ function useCaptureFeedback(keep: (link: KeptLink) => void): void {
     viewListId,
     pathname,
     navigate,
+    openContainer,
     startAddToList,
     enterEditing,
     inspect: inspector.open,
@@ -187,6 +203,7 @@ function useCaptureFeedback(keep: (link: KeptLink) => void): void {
       viewListId,
       pathname,
       navigate,
+      openContainer,
       startAddToList,
       enterEditing,
       inspect: inspector.open,
@@ -291,11 +308,10 @@ function useCaptureFeedback(keep: (link: KeptLink) => void): void {
                 label: "Decide",
                 // The choice is in its row, in the view it goes to.
                 onClick: () =>
-                  void latest.current.navigate(
-                    listId === null
-                      ? { to: "/unsorted" }
-                      : { to: "/l/$listId", params: { listId } },
-                  ),
+                  void (listId === null
+                    ? latest.current.navigate({ to: "/unsorted" })
+                    : // In a share, its list in the share (DRIFT-079).
+                      latest.current.openContainer({ id: listId, kind: "list" })),
               }
             : { label: "Enter manually", onClick: () => act.edit(state) },
         ],

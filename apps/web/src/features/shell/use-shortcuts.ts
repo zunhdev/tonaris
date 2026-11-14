@@ -24,6 +24,7 @@ import {
 import { useCollectionData } from "@/features/collection/data";
 import { useDeleteContainer } from "@/features/collection/delete-containers";
 import { useInspector } from "@/features/collection/inspector-state";
+import { sharingRefusal, useCollectionPlace } from "@/features/collection/place";
 import { useOpenIn } from "@/features/open/open-in";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { useRecover } from "@/features/trash/recovery";
@@ -77,6 +78,7 @@ export function useCommandRunner({
   const client = useSyncClient();
   const { tree } = useCollectionData();
   const narrow = useNarrowScreen();
+  const place = useCollectionPlace();
   // The latest of each, so what callers hold stays stable.
   const latest = useRef({
     navigate,
@@ -94,6 +96,7 @@ export function useCommandRunner({
     client,
     tree,
     narrow,
+    place,
     toggleSidebar,
     openShortcuts,
   });
@@ -114,6 +117,7 @@ export function useCommandRunner({
       client,
       tree,
       narrow,
+      place,
       toggleSidebar,
       openShortcuts,
     };
@@ -147,6 +151,7 @@ export function useCommandRunner({
       if (onContainer.has(id) && containerOf(id, on) === undefined)
         return "Focus a folder or list first";
       if (id === "restore" && on.unit === undefined) return "Focus an item in Trash first";
+      if (id === "share") return sharingRefusal(now.place, now.narrow);
       return undefined;
     },
     [containerOf],
@@ -167,7 +172,11 @@ export function useCommandRunner({
       else if (id === "share") {
         // The owner's dialog, desktop only (DS-65); it waits while offline.
         const container = containerOf(id, on);
-        if (container !== undefined && !now.offline && !now.narrow)
+        if (
+          container !== undefined &&
+          !now.offline &&
+          sharingRefusal(now.place, now.narrow) === undefined
+        )
           now.dialogs.startShare(container);
       } else if (id === "open-in") {
         // Opening isn't an edit: it works in Viewing mode and offline. The chooser sits by what has the focus

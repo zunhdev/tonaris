@@ -2,6 +2,7 @@
 // edit, at `/shared/{root}` with `?c=` for what is inside it. Links to folders and lists, and moves to them, ask here,
 // so the same views work in both. The sidebar always shows the person's own (`OwnCollection`).
 
+import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   createContext,
@@ -11,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Container } from "@tonaris/domain";
+import { editsInsideShare, type Container } from "@tonaris/domain";
 
 export type CollectionPlace =
   | { kind: "own" }
@@ -82,5 +83,39 @@ export function useOpenContainer() {
         : navigate({ to: "/l/$listId", params: { listId: container.id }, replace });
     },
     [place, navigate],
+  );
+}
+
+/**
+ * Why the person can't share what is on screen, or undefined if they can: sharing is the owner's, on the desktop
+ * (DS-65). The header's Share, ⇧S and the palette's Share… all ask here (DRIFT-080).
+ */
+export function sharingRefusal(place: CollectionPlace, narrow: boolean): string | undefined {
+  if (place.kind === "share") return "Only its owner can share it";
+  if (narrow) return "Share from a computer";
+  return undefined;
+}
+
+/**
+ * Whether `id` is, for the person, the top of a share they edit, which only its owner moves or deletes (FR-07.20).
+ * The domain's rule (`editsInsideShare`), with the shares from Shared with me: a folder or list inside another share
+ * they edit isn't one, as the API and agents agree (DRIFT-046). Their own collection has none.
+ */
+export function useIsShareTop(): (id: string) => boolean {
+  const place = useCollectionPlace();
+  const { entries } = useSharedEntries();
+  return useCallback(
+    (id: string) => {
+      if (place.kind !== "share") return false;
+      const through = (entries ?? []).flatMap((entry) =>
+        entry.available &&
+        entry.role === "edit" &&
+        (entry.containerId === id || entry.containers.some((each) => each.id === id))
+          ? [entry.containerId]
+          : [],
+      );
+      return !editsInsideShare(through, id);
+    },
+    [place, entries],
   );
 }

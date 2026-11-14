@@ -13,6 +13,7 @@ import { useAnnounce } from "@/features/sync/announcer";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { useCallback, useMemo, useRef, type RefObject } from "react";
 
+import { shareTopSentence } from "@tonaris/domain";
 import {
   Dialog,
   DialogContent,
@@ -25,10 +26,9 @@ import { pinnedDialogClass } from "@tonaris/ui/lib/floating";
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useCollectionUi } from "./collection-ui";
 import { useCollectionData } from "./data";
-import { shareTopRefusal } from "./delete-containers";
 import { FolderFinder } from "./folder-finder";
 import { folderChoices } from "./folder-picker";
-import { useCollectionPlace } from "./place";
+import { useCollectionPlace, useIsShareTop } from "./place";
 import { ancestorsOf, canMoveInto } from "./tree";
 
 /** Moves the folder or list `id` into `parentId`, null being the root; answers whether it went. */
@@ -98,7 +98,7 @@ function MovePicker({
   const place = useCollectionPlace();
   // In a share, only its folders: never the top level, and never the shared folder or list itself (FR-07.20).
   const inShare = place.kind === "share";
-  const top = inShare && id === place.rootId;
+  const top = useIsShareTop()(id);
   const choices = useMemo(
     () =>
       top
@@ -115,7 +115,7 @@ function MovePicker({
         <DialogTitle>Move '{name}' to…</DialogTitle>
         <DialogDescription>
           {top
-            ? shareTopRefusal
+            ? shareTopSentence
             : choices.length > 0
               ? "It moves with everything in it."
               : "There's nowhere else to move it yet. Create a folder first."}

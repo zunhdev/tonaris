@@ -26,16 +26,20 @@ function updatesOf(original: Album, changes: Partial<Album>): Mutation[] {
   ];
 }
 
-export function createAlbumCollection({
-  engine,
-  writer,
-  listOf = () => undefined,
-}: {
-  engine: SyncEngine;
-  writer: Writer;
-  /** The list a new album is made for, if one was named: in a share, it joins the list's owner's collection (TON-191). */
-  listOf?: (albumId: string) => string | undefined;
-}) {
+/**
+ * An insert's metadata naming the list a new album is made for: in a share, it joins that list's owner's collection
+ * (TON-191). It travels with the write, so a Retry after a reload makes it in the same collection (DRIFT-045).
+ */
+export type NewAlbumMetadata = { listId: string };
+
+/** The list an insert's metadata names, if any. */
+export function listOfInsert(metadata: unknown): string | undefined {
+  if (typeof metadata !== "object" || metadata === null || !("listId" in metadata))
+    return undefined;
+  return typeof metadata.listId === "string" ? metadata.listId : undefined;
+}
+
+export function createAlbumCollection({ engine, writer }: { engine: SyncEngine; writer: Writer }) {
   return snapshotCollection({
     engine,
     id: "albums",
@@ -45,8 +49,8 @@ export function createAlbumCollection({
     handlers: {
       // `album.create` takes the album's own fields and ID, whatever else the draft carried.
       onInsert: ({ transaction }) =>
-        writer.persistEach(transaction, ({ modified }) => {
-          const listId = listOf(modified.id);
+        writer.persistEach(transaction, ({ modified, metadata }) => {
+          const listId = listOfInsert(metadata);
           return [
             envelope("album.create", {
               ...pick(modified, albumFields),
