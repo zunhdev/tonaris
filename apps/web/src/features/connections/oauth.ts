@@ -3,7 +3,7 @@
 
 import { apiUrl } from "@/config";
 
-import { mcpScopes, mcpScopesFor, type McpMode } from "@tonaris/domain";
+import { mcpModeOf, mcpModes, mcpScopesFor, type McpMode } from "@tonaris/domain";
 
 /** Parameters Better Auth adds to sign the requests it sends to the sign-in and consent pages. */
 const signatureParams = new Set(["sig", "exp", "ba_iat", "ba_pl", "ba_param"]);
@@ -67,10 +67,12 @@ export function consentRequest(search: string): ConsentRequest {
   };
 }
 
-/** The modes the client asked for enough scopes to be granted. */
+/**
+ * The modes the client asked for enough scopes to be granted: those whose grant, as the server makes it
+ * (`mcpScopesFor`), reads back as that mode (`mcpModeOf`). The domain's rule, not a copy of it (DRIFT-083).
+ */
 export function availableModes(scopes: readonly string[]): McpMode[] {
-  if (!scopes.includes(mcpScopes.read)) return [];
-  return scopes.includes(mcpScopes.manage) ? ["read_only", "manage"] : ["read_only"];
+  return mcpModes.filter((mode) => mcpModeOf(mcpScopesFor(mode, scopes)) === mode);
 }
 
 /** The client's public name (Better Auth's public client endpoint), if it has one. */

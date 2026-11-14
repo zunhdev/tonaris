@@ -5,15 +5,9 @@
 
 import { sent } from "@/client/sync/writer";
 import { useSyncClient } from "@/features/sync/sync-provider";
-import { createContext, useContext, useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 
-import {
-  clipLength,
-  maxNameLength,
-  uuidv7,
-  type Container,
-  type ContainerKind,
-} from "@tonaris/domain";
+import { clipLength, maxNameLength, uuidv7 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -25,16 +19,10 @@ import {
 import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
 
-export type Naming =
-  | { mode: "new"; kind: ContainerKind; parentId: string; parentName: string }
-  | { mode: "rename"; container: Pick<Container, "id" | "kind" | "name"> };
-
-const NamingContext = createContext<(naming: Naming) => void>(() => {});
-
-/** Asks for a name in a share: what the header's buttons and the shortcuts and palette open there (TON-195). */
-export function useStartNaming(): (naming: Naming) => void {
-  return useContext(NamingContext);
-}
+import { useCollectionData } from "./data";
+import { nameRefusal } from "./editing";
+import { NamingContext, type Naming } from "./naming";
+import { siblingsOf } from "./tree";
 
 /** Holds the name dialog for what is below, on the collection on screen. */
 export function NamingProvider({ children }: { children: ReactNode }) {
@@ -71,6 +59,7 @@ export function NameDialog({
 
 function NameForm({ naming, onClose }: { naming: Naming; onClose: () => void }) {
   const client = useSyncClient();
+  const { tree } = useCollectionData();
   const [name, setName] = useState(naming.mode === "rename" ? naming.container.name : "");
   const [problem, setProblem] = useState<string>();
   const kind = naming.mode === "new" ? naming.kind : naming.container.kind;
@@ -82,8 +71,24 @@ function NameForm({ naming, onClose }: { naming: Naming; onClose: () => void }) 
   function submit(event: FormEvent) {
     event.preventDefault();
     const trimmed = name.trim();
-    if (trimmed === "") {
-      setProblem("Enter a name.");
+    // The domain's rule, as the sidebar's editor asks it: not blank, not too long, not a sibling's (X-06, DRIFT-047).
+    const parentId =
+      naming.mode === "new"
+        ? naming.parentId
+        : (tree.byId.get(naming.container.id)?.parentId ?? null);
+    const parentName =
+      naming.mode === "new"
+        ? naming.parentName
+        : parentId === null
+          ? null
+          : (tree.byId.get(parentId)?.name ?? null);
+    const reason = nameRefusal(trimmed, {
+      siblings: siblingsOf(tree, parentId),
+      parentName,
+      ...(naming.mode === "rename" ? { selfId: naming.container.id } : {}),
+    });
+    if (reason) {
+      setProblem(reason);
       return;
     }
     if (!client) return;

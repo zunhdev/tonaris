@@ -11,7 +11,12 @@ import { useOwnSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
-import { type Account, emailKey } from "@tonaris/domain";
+import {
+  accountDeletionRefusal,
+  accountDeletionRefusalDetails,
+  type Account,
+  emailKey,
+} from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -52,10 +57,8 @@ export function DangerZone({ account }: { account: Account }) {
       <h2 id={`${id}-title`} className="text-title text-fg-primary">
         Danger zone
       </h2>
-      {account.role === "creator" ? (
-        <p className="text-fg-secondary">
-          The creator's account can't be deleted: it runs admissions.
-        </p>
+      {accountDeletionRefusal(account) === "creator" ? (
+        <p className="text-fg-secondary">{accountDeletionRefusalDetails.creator}</p>
       ) : (
         <>
           <p className="text-fg-secondary">

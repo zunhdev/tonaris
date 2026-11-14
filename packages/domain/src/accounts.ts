@@ -196,6 +196,20 @@ export const accountDeletionRefusalDetails = {
   none: "There's no account deletion for this page.",
 } as const;
 
+/**
+ * Why an account can't be deleted, or undefined if it can (FR-11.10, DS-97): the creator's runs admissions, and one
+ * already being deleted is underway. The database and the Settings page both ask here, so they can't disagree, and the
+ * page shows `accountDeletionRefusalDetails`' sentence (DRIFT-059).
+ */
+export function accountDeletionRefusal(account: {
+  role: string;
+  deletingAt?: Date | null;
+}): "creator" | "deleting" | undefined {
+  if (account.role === "creator") return "creator";
+  if (account.deletingAt) return "deleting";
+  return undefined;
+}
+
 /** Confirms deleting the account: the sign-in email, typed. */
 export const accountDeletionConfirmSchema = z.object({
   email: emailInputSchema.meta({ description: "The account's sign-in email, typed to confirm." }),

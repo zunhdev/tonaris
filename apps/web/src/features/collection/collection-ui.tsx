@@ -24,7 +24,7 @@ import type { ContainerKind } from "@tonaris/domain";
 import { CollectionDialogsProvider } from "./collection-dialogs";
 import { CollectionModeProvider, useMode } from "./collection-mode";
 import { createEditing, placeFor, type Editing, type Editor } from "./editing";
-import { useStartNaming } from "./name-dialog";
+import { useStartNaming } from "./naming";
 import { useCollectionPlace } from "./place";
 import { ancestorsOf, buildTree } from "./tree";
 

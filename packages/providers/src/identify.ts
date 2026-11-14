@@ -15,6 +15,8 @@ import { z } from "zod";
 
 import {
   linkEntityId,
+  type CaptureDetailsCandidate,
+  type CaptureMatchCandidate,
   type CapturePrefill,
   serviceNames,
   type Failure,
@@ -317,7 +319,14 @@ export type Identifier = ReturnType<typeof createIdentifier>;
  */
 export function identificationOutcome(identification: Identification): Outcome | undefined {
   if (identification.status === "ambiguous") {
-    return { status: "needs_input", need: "match", candidates: identification.candidates };
+    const candidates = identification.candidates.map(
+      ({ releaseGroupId, title }): CaptureMatchCandidate => ({
+        releaseGroupId,
+        title,
+        albumId: null,
+      }),
+    );
+    return { status: "needs_input", need: "match", candidates };
   }
   if (identification.status === "unidentified") {
     const { link, reason, prefill } = identification;
@@ -325,7 +334,12 @@ export function identificationOutcome(identification: Identification): Outcome |
       status: "needs_input",
       need: "details",
       candidates: [
-        { service: link.service, url: link.url, reason, ...(prefill ? { prefill } : {}) },
+        {
+          service: link.service,
+          url: link.url,
+          reason,
+          ...(prefill ? { prefill } : {}),
+        } satisfies CaptureDetailsCandidate,
       ],
     };
   }

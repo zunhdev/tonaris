@@ -2,33 +2,22 @@
 // person, and the choices it offers, read from `album.capture`'s outcomes (TON-44). Pure, so the wording is tested
 // without a DOM.
 
-import { z } from "zod";
-
 import {
-  albumFieldsSchema,
+  captureDetailsCandidateSchema,
+  captureMatchCandidateSchema,
   captureResultSchema,
   serviceNames,
-  streamingServices,
+  type CaptureDetailsCandidate,
+  type CaptureMatchCandidate,
   type CaptureResult,
   type Outcome,
 } from "@tonaris/domain";
 
-/** A candidate of a `match` answer: a MusicBrainz album, and the owner's album already saved as it, if any. */
-const matchCandidateSchema = z.object({
-  releaseGroupId: z.string(),
-  title: z.string(),
-  albumId: z.string().nullable(),
-});
-export type MatchCandidate = z.infer<typeof matchCandidateSchema>;
+const matchCandidateSchema = captureMatchCandidateSchema;
+export type MatchCandidate = CaptureMatchCandidate;
 
-/** The candidate of a `details` answer: the link, why details are needed, and what manual entry is prefilled with. */
-const detailsCandidateSchema = z.object({
-  service: z.enum(streamingServices),
-  url: z.string(),
-  reason: z.string(),
-  prefill: z.object({ source: z.string(), values: albumFieldsSchema.partial() }).optional(),
-});
-export type DetailsCandidate = z.infer<typeof detailsCandidateSchema>;
+const detailsCandidateSchema = captureDetailsCandidateSchema;
+export type DetailsCandidate = CaptureDetailsCandidate;
 
 /** What a capture waiting for the person asks: a choice between albums, or the album's details. */
 export type CaptureNeed =

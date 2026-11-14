@@ -19,6 +19,8 @@ import {
   linkEntityId,
   type AlbumFacts,
   type CaptureArgs,
+  type CaptureDetailsCandidate,
+  type CaptureMatchCandidate,
   type CaptureSource,
   type FoundFacts,
   type Outcome,
@@ -129,7 +131,11 @@ export async function prepareCapture(
                 status: "needs_input",
                 need: "details",
                 candidates: [
-                  { service: link.service, url: link.url, reason: unidentifiedReasons.notFound },
+                  {
+                    service: link.service,
+                    url: link.url,
+                    reason: unidentifiedReasons.notFound,
+                  } satisfies CaptureDetailsCandidate,
                 ],
               },
             };
@@ -176,7 +182,7 @@ export async function prepareCapture(
         outcome: {
           status: "needs_input",
           need: "match",
-          candidates: candidates.map(({ releaseGroupId, title }) => ({
+          candidates: candidates.map(({ releaseGroupId, title }): CaptureMatchCandidate => ({
             releaseGroupId,
             title,
             albumId: saved.get(releaseGroupId) ?? null,

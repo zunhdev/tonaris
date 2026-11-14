@@ -20,10 +20,26 @@ import type { OutboxEntry } from "./persistence";
 /** Statuses that say nothing about whether the writes ran. */
 const unknownOutcome = new Set([408, 429]);
 
+/** How long a write waits for its answer before it counts as no answer (TS-22). */
+export const requestTimeoutMs = 10_000;
+
+/**
+ * The failed outcome an answer gives the writes it carried, when the API judged them: a refusal with a problem (a
+ * 4xx). Undefined when it says nothing of whether they ran: a 5xx, a 408 or a 429, no problem, or a capture still
+ * running (409 `in_progress`), whose outcome comes with a later send. The outbox and the sharing forms read answers
+ * through here, so they agree (DRIFT-084).
+ */
+export function refusalOf(status: number, body: unknown): Outcome | undefined {
+  if (status < 400 || status >= 500 || unknownOutcome.has(status)) return undefined;
+  const problem = problemSchema.safeParse(body);
+  if (!problem.success || problem.data.code === "in_progress") return undefined;
+  return { status: "failed", code: problem.data.code, problem: problem.data };
+}
+
 export function entrySender(
   apiUrl: string,
   fetch: Fetch,
-  { timeoutMs = 10_000 }: { timeoutMs?: number } = {},
+  { timeoutMs = requestTimeoutMs }: { timeoutMs?: number } = {},
 ) {
   return async ({ id, items }: OutboxEntry): Promise<Sent> => {
     const mutations = items.map((item) => item.mutation);
@@ -49,21 +65,8 @@ export function entrySender(
           throw new Error("The batch answer doesn't match.");
         return { answered: outcomes };
       }
-      if (response.status < 500 && !unknownOutcome.has(response.status)) {
-        const problem = problemSchema.safeParse(await response.json().catch(() => undefined));
-        // A capture in this entry is still running elsewhere: its outcome comes with a later send.
-        if (problem.success && problem.data.code === "in_progress") {
-          return { unanswered: new Error("A capture in this request is still running.") };
-        }
-        if (problem.success) {
-          const failed: Outcome = {
-            status: "failed",
-            code: problem.data.code,
-            problem: problem.data,
-          };
-          return { answered: mutations.map(() => failed) };
-        }
-      }
+      const failed = refusalOf(response.status, await response.json().catch(() => undefined));
+      if (failed) return { answered: mutations.map(() => failed) };
       return { unanswered: new Error(`The API answered ${response.status}.`) };
     } catch (error) {
       return { unanswered: error };
