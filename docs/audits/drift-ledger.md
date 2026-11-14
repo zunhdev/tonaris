@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 29 | 56 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 28 | 57 | 0 |
 
 ## Areas
 
@@ -102,7 +102,7 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-069 | spec | An editor's unsent writes in a share are never sent again, and outlive sign-out and account deletion (TS-22) | `apps/web/src/features/sharing/editable-share.tsx`; `apps/web/src/client/sync/outbox.ts`, `persistence.ts` | fixed (TON-212) | 2026-11-13 | 2026-11-13 |
 | DRIFT-070 | spec | A move applies at once, before its sharing preview, with no confirmation (DS-49, FR-07.14) | `apps/web/src/features/collection/drag.tsx`, `move.tsx` | filed TON-226 (decided in TON-225: build) | 2026-11-13 | 2026-11-13 |
 | DRIFT-071 | spec | The sharing glyph on the owner's shared folders and lists was never built (DS-27, DS-31, DS-41) | `apps/web/src/features/collection/container-rows.tsx`, `collection-tree.tsx` | filed TON-227 (decided in TON-225: build) | 2026-11-13 | 2026-11-13 |
-| DRIFT-072 | spec | ⌫ doesn't remove an album from the list on view (DS-45, DS-50, DS-78) | `apps/web/src/features/shell/use-shortcuts.ts` | filed TON-228 (decided in TON-225: build) | 2026-11-13 | 2026-11-13 |
+| DRIFT-072 | spec | ⌫ doesn't remove an album from the list on view (DS-45, DS-50, DS-78) | `apps/web/src/features/shell/use-shortcuts.ts` | fixed (TON-228) | 2026-11-13 | 2026-11-13 |
 | DRIFT-073 | spec | Under live changes, focus is kept by position rather than by item, and editors get no highlight (DS-82) | `apps/web/src/features/collection/use-grid.ts`; `apps/web/src/client/sync/share-engine.ts` | fixed (TON-225) | 2026-11-13 | 2026-11-13 |
 | DRIFT-074 | spec | The header's Delete list and Delete folder work offline (DS-81) | `apps/web/src/features/collection/views.tsx`, `delete-containers.tsx` | fixed (TON-213) | 2026-11-13 | 2026-11-13 |
 | DRIFT-075 | spec | Move to position…, dragging albums onto a sidebar list, and multi-select are promised but were parked | `docs/design-spec.md` DS-21, DS-45, DS-49, DS-50, DS-78 | filed TON-229, TON-230, TON-231 (decided in TON-225: build) | 2026-11-13 | 2026-11-13 |
