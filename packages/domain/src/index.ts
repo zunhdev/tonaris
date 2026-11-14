@@ -136,12 +136,16 @@ export {
 } from "./approvals";
 export {
   captureArgsSchema,
+  captureDetailsCandidateSchema,
+  captureMatchCandidateSchema,
   captureMatches,
   captureOwner,
   captureResultSchema,
   missingYearReason,
   type AlbumOrigin,
   type CaptureArgs,
+  type CaptureDetailsCandidate,
+  type CaptureMatchCandidate,
   type CapturedLink,
   type CapturePrefill,
   type CaptureResult,

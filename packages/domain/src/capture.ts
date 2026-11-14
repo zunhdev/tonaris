@@ -161,6 +161,27 @@ function detailsProvenance(
   });
 }
 
+/**
+ * A candidate of a capture's `match` answer (TS-26): a MusicBrainz album, and the owner's album already saved as it,
+ * if the person sees one. The contract carries candidates as `unknown[]`; producers and readers share these shapes,
+ * so a renamed field can't drop choices silently (DRIFT-082).
+ */
+export const captureMatchCandidateSchema = z.object({
+  releaseGroupId: z.string(),
+  title: z.string(),
+  albumId: z.string().nullable(),
+});
+export type CaptureMatchCandidate = z.infer<typeof captureMatchCandidateSchema>;
+
+/** The candidate of a capture's `details` answer: the link, why details are needed, and what entry is prefilled with. */
+export const captureDetailsCandidateSchema = z.object({
+  service: z.enum(streamingServices),
+  url: z.string(),
+  reason: z.string(),
+  prefill: z.object({ source: z.string(), values: albumFieldsSchema.partial() }).optional(),
+});
+export type CaptureDetailsCandidate = z.infer<typeof captureDetailsCandidateSchema>;
+
 /** The answer asking for the album's details, prefilled, with the link kept (FR-02.4, FR-02.6). */
 function askForDetails(
   link: CapturedLink,
@@ -169,7 +190,14 @@ function askForDetails(
   return {
     status: "needs_input",
     need: "details",
-    candidates: [{ service: link.service, url: link.url, reason: missingYearReason, prefill }],
+    candidates: [
+      {
+        service: link.service,
+        url: link.url,
+        reason: missingYearReason,
+        prefill,
+      } satisfies CaptureDetailsCandidate,
+    ],
   };
 }
 
