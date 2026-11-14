@@ -717,6 +717,8 @@ describe("whose collection each mutation changes (DRIFT-055)", () => {
       "share.revoke",
       "share.saveLink",
       "share.removeReference",
+      // It reads the owner's share but writes only the person's own collection, under their lock (FR-07.22).
+      "share.copy",
       "account.setDisplayName",
     ];
     expect([...Object.keys(named), ...own].toSorted()).toEqual([...mutationNames].toSorted());
