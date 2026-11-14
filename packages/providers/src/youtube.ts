@@ -11,7 +11,7 @@
 import { z } from "zod";
 
 import { clientParts, readBody, type ClientOptions } from "./client";
-import { ProviderUnavailableError } from "./errors";
+import { answerOf, ProviderUnavailableError } from "./errors";
 import type { Hints } from "./hints";
 import { PacedQueue } from "./paced-queue";
 import { discard, type ProviderFetch } from "./safe-fetch";
@@ -94,14 +94,15 @@ export class YouTubeData {
   async albumHints(playlistId: string): Promise<YouTubeHints | undefined> {
     const list = encodeURIComponent(playlistId);
     const playlists = await this.read("playlists", `part=snippet,contentDetails&id=${list}`);
-    const [playlist] = playlists === undefined ? [] : playlistsSchema.parse(playlists).items;
+    const [playlist] =
+      playlists === undefined ? [] : answerOf("youtube", playlistsSchema, playlists).items;
     if (!playlist) return undefined;
     const items = await this.read(
       "playlistItems",
       `part=snippet,contentDetails&maxResults=50&playlistId=${list}`,
     );
-    const topic = (items === undefined ? [] : itemsSchema.parse(items).items).find((item) =>
-      topicArtist(item.snippet.videoOwnerChannelTitle),
+    const topic = (items === undefined ? [] : answerOf("youtube", itemsSchema, items).items).find(
+      (item) => topicArtist(item.snippet.videoOwnerChannelTitle),
     );
     const artist = topicArtist(topic?.snippet.videoOwnerChannelTitle);
     if (!topic || !artist) return undefined;
@@ -109,7 +110,7 @@ export class YouTubeData {
       "videos",
       `part=snippet&id=${encodeURIComponent(topic.contentDetails.videoId)}`,
     );
-    const [video] = videos === undefined ? [] : videosSchema.parse(videos).items;
+    const [video] = videos === undefined ? [] : answerOf("youtube", videosSchema, videos).items;
     const date = descriptionDate(video?.snippet.description ?? "");
     const title = albumTitle(playlist.snippet.title);
     if (!date || !title) return undefined;

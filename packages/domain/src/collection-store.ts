@@ -228,6 +228,10 @@ export type CollectionStore = {
     containerId: string,
     linkId?: string,
   ): Promise<"inserted" | "updated" | "unchanged">;
+  /** How many folders and lists the viewer keeps in Shared with me (TS-18). */
+  countReferences(viewerId: string): Promise<number>;
+  /** Whether the viewer keeps the container in Shared with me. */
+  keepsReference(viewerId: string, containerId: string): Promise<boolean>;
   /** Drops the viewer's reference to the container if it came from a grant alone, with no link (TS-33). */
   dropGrantReference(viewerId: string, containerId: string): Promise<boolean>;
   /** Drops the viewer's reference to the container; answers whether there was one. */

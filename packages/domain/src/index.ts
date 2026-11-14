@@ -210,6 +210,7 @@ export {
   maxDescriptionLength,
   maxFieldOptions,
   maxFields,
+  maxSavedReferences,
   maxLinkLength,
   maxMemberships,
   maxNameLength,

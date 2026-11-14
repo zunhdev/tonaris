@@ -7,6 +7,7 @@ import { describe, expect, test } from "bun:test";
 import { runCommand, type CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
+import { maxSavedReferences } from "./limits";
 import type { Principal } from "./principals";
 import { editableContainers, shareTokenHash, type ShareRole } from "./sharing";
 import { mutationSchema, type Mutation } from "./sync";
@@ -423,6 +424,25 @@ describe("Shared with me (FR-07.13)", () => {
     expect(await run(save(fresh), { ...agentOfAnna, mode: "manage" })).toMatchObject({
       status: "applied",
     });
+  });
+
+  test("at 100 kept, saving a link's share is refused, while accepting an invitation still works (TS-18, DRIFT-062)", async () => {
+    const { run, references } = setup();
+    for (let n = 0; n < maxSavedReferences; n += 1) {
+      const containerId = uuidv7();
+      references.set(`${annaId}:${containerId}`, { viewerId: annaId, containerId, linkId: null });
+    }
+    const token = "T".repeat(43);
+    await run(setLink(true, uuidv7()), me, await shareTokenHash(token));
+    expect(await run(save(token), anna)).toMatchObject({
+      status: "failed",
+      code: "limit_exceeded",
+    });
+    const grantId = uuidv7();
+    await run(invite("anna@example.com", grantId));
+    expect(await run(answer("share.accept", grantId), anna)).toMatchObject({ status: "applied" });
+    // Kept already, through the invitation: the link updates it, at the limit too.
+    expect(await run(save(token), anna)).toMatchObject({ status: "applied" });
   });
 
   test("removing logs the delete; accepting and leaving log theirs", async () => {

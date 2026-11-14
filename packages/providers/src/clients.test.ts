@@ -114,6 +114,15 @@ describe("ItunesLookup (TS-41)", () => {
     expect(error).toMatchObject({ provider: "itunes" });
   });
 
+  test("an answer of another shape is unavailable, not an internal error (DRIFT-113)", async () => {
+    const { options } = scripted(() => Response.json({ resultCount: "one", results: "none" }));
+    const error = await new ItunesLookup(options)
+      .album("1", ["us"])
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ProviderUnavailableError);
+    expect(error).toMatchObject({ provider: "itunes" });
+  });
+
   test("an answer that breaks off is unavailable, and nothing is kept", async () => {
     const { options, cache } = scripted(() => brokenBody());
     const error = await new ItunesLookup(options)

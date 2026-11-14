@@ -14,6 +14,7 @@ import { z } from "zod";
 
 import { searchKey } from "@tonaris/domain";
 
+import { answerOf } from "./errors";
 import type { MusicBrainz } from "./musicbrainz";
 import { artistCreditSchema, creditText, searchByTitle, yearOf } from "./musicbrainz-answers";
 
@@ -174,12 +175,15 @@ async function searchCandidates(musicBrainz: MusicBrainz, hints: Hints): Promise
     "release",
     { title: searchTitle(hints.title), artist: firstArtist(hints.artist) },
     async (query) =>
-      releaseSearchSchema.parse(await musicBrainz.search("release", query, 100)).releases,
+      answerOf("musicbrainz", releaseSearchSchema, await musicBrainz.search("release", query, 100))
+        .releases,
   );
   const groupIds = [...new Set(found.map((release) => release["release-group"].id))].slice(0, 50);
   const firstDates = new Map<string, string | undefined>();
   if (groupIds.length > 0) {
-    const groups = groupSearchSchema.parse(
+    const groups = answerOf(
+      "musicbrainz",
+      groupSearchSchema,
       await musicBrainz.search(
         "release-group",
         groupIds.map((id) => `rgid:${id}`).join(" OR "),

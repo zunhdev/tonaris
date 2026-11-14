@@ -344,6 +344,20 @@ describe("album.capture: re-addition from Trash (FR-14.4, TS-13, AC-07)", () => 
     expect(t.listsOf(bleach.id)).toEqual([archive.id]);
   });
 
+  test("a link only a trashed album has goes to the active album of its release group, not a second record (DRIFT-063)", async () => {
+    const trashed = saved("Bleach", { trashed: true });
+    const active = saved("Bleach");
+    const t = setup({
+      albums: [trashed, active],
+      links: [{ albumId: trashed.id, ...spotifyLink }],
+    });
+    const result = applied(
+      await t.run(capture(null), { kind: "linked", link: spotifyLink, albumId: trashed.id }),
+    );
+    expect(result.result).toMatchObject({ albumId: active.id, match: "reused" });
+    expect(t.albums.get(trashed.id)?.trashed).toBe(true);
+  });
+
   test("an active record wins over a trashed one (FR-14.3)", async () => {
     const trashed = saved("Bleach", { trashed: true });
     const active = saved("Bleach");

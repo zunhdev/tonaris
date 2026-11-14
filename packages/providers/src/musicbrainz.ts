@@ -8,7 +8,7 @@ import { z } from "zod";
 import type { ProviderCache } from "@tonaris/domain";
 
 import { clientParts, readBody, type ClientOptions } from "./client";
-import { ProviderUnavailableError } from "./errors";
+import { answerOf, ProviderUnavailableError } from "./errors";
 import { PacedQueue, retryAfterMs } from "./paced-queue";
 import { cachedValue } from "./provider-cache";
 import { discard, SafeFetchError, type ProviderFetch } from "./safe-fetch";
@@ -130,7 +130,7 @@ export class MusicBrainz {
       resource: forms,
       inc: "release-rels release-group-rels",
     });
-    const lookup = body === null ? { urls: [] } : urlLookupSchema.parse(body);
+    const lookup = body === null ? { urls: [] } : answerOf("musicbrainz", urlLookupSchema, body);
     const found = new Map(
       ("urls" in lookup ? lookup.urls : [lookup]).map((url) => [
         url.resource,
@@ -168,18 +168,19 @@ export class MusicBrainz {
       query: forms.map((form) => `barcode:${form}`).join(" OR "),
       limit: "100",
     });
-    const releases = (body === null ? [] : barcodeSearchSchema.parse(body).releases).flatMap(
-      (release): BarcodeRelease[] =>
-        release.barcode && forms.includes(release.barcode) && release["release-group"]
-          ? [
-              {
-                id: release.id,
-                title: release.title,
-                barcode: release.barcode,
-                releaseGroupId: release["release-group"].id,
-              },
-            ]
-          : [],
+    const releases = (
+      body === null ? [] : answerOf("musicbrainz", barcodeSearchSchema, body).releases
+    ).flatMap((release): BarcodeRelease[] =>
+      release.barcode && forms.includes(release.barcode) && release["release-group"]
+        ? [
+            {
+              id: release.id,
+              title: release.title,
+              barcode: release.barcode,
+              releaseGroupId: release["release-group"].id,
+            },
+          ]
+        : [],
     );
     const byBarcode = Map.groupBy(releases, (release) => release.barcode);
     await this.keep(

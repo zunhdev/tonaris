@@ -190,7 +190,15 @@ async function matchOf(
     target?.ownerId === ownerId && !(activeOnly && target.trashed);
   if (source.kind === "linked") {
     const target = await store.findCaptureTarget(source.albumId);
-    return usable(target) ? { target } : undefined;
+    if (!usable(target)) return undefined;
+    // A link only an album in Trash has, while an active album of its release group exists: that one, as recovering
+    // the other would make two active records of one album (FR-14.3, DRIFT-063).
+    if (target.trashed && target.releaseGroupId) {
+      const releaseGroup = await store.albumsOfReleaseGroup(ownerId, target.releaseGroupId);
+      const active = releaseGroup.find((each) => usable(each) && !each.trashed);
+      if (active) return { target: active };
+    }
+    return { target };
   }
   const { facts } = source;
   const saved = (await store.albumsOfReleaseGroup(ownerId, facts.releaseGroupId)).find(usable);

@@ -47,6 +47,12 @@ export const maxBatchItems = 200;
  */
 export const maxPurgeUnits = 5_000;
 
+/**
+ * Folders and lists one person keeps in Shared with me (TS-18). Saving one from a link past it is refused; accepting
+ * an invitation always works, since someone chose them (decided 14 November 2026, TON-225).
+ */
+export const maxSavedReferences = 100;
+
 /** Custom fields per account (TS-18). */
 export const maxFields = 50;
 

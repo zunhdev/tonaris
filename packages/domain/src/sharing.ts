@@ -14,7 +14,7 @@ import { containerFieldsSchema, containerKinds, containerSchema } from "./contai
 import { base64url } from "./encoding";
 import { fieldValueSchema } from "./field-values";
 import { customFieldSchema } from "./fields";
-import { maxNameLength } from "./limits";
+import { maxNameLength, maxSavedReferences } from "./limits";
 import { membershipSchema } from "./memberships";
 import { exceedsLength, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
@@ -703,6 +703,15 @@ export async function saveLink(
   if (!link) return failure("not_found", unavailableLink);
   if (link.ownerId === userId) {
     return failure("validation_failed", "This is your own folder or list.");
+  }
+  // Shared with me holds at most 100 (TS-18): a new one past them is refused; one kept already is updated, and an
+  // invitation's acceptance always goes through.
+  const kept = await store.keepsReference(userId, link.containerId);
+  if (!kept && (await store.countReferences(userId)) >= maxSavedReferences) {
+    return failure(
+      "limit_exceeded",
+      `You keep ${maxSavedReferences} folders and lists in Shared with me. Remove one to keep this.`,
+    );
   }
   const saved = await store.saveReference(userId, link.containerId, link.id);
   if (saved === "unchanged") return applied();
