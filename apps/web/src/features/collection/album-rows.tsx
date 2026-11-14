@@ -22,7 +22,7 @@ import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
-import { ExternalLink, GripVertical } from "lucide-react";
+import { Check, ExternalLink, GripVertical } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 import type { Album, ServiceLink } from "@tonaris/domain";
@@ -266,6 +266,7 @@ export function AlbumRows({
                 manual={moves.handles}
                 toLists={toLists}
                 selected={selecting ? selection.has(album.id) : undefined}
+                anySelected={selecting && selection.ids.length > 0}
                 onSelect={(extend) => {
                   if (!selection) return;
                   const anchor = selection.ids.at(-1);
@@ -308,6 +309,7 @@ function AlbumRow({
   manual,
   toLists,
   selected,
+  anySelected,
   onSelect,
   index,
   top,
@@ -331,6 +333,8 @@ function AlbumRow({
   toLists: { listId: string | undefined } | undefined;
   /** Whether it is selected, while albums can be selected; undefined while they can't (TON-231). */
   selected: boolean | undefined;
+  /** Whether any album is selected, which shows every checkbox (TON-232). */
+  anySelected: boolean;
   /** Its checkbox: selects or deselects it, or with ⇧ adds the albums from the last one chosen. */
   onSelect: (extend: boolean) => void;
   index: number;
@@ -414,7 +418,13 @@ function AlbumRow({
           title={album.title}
           checked={selected}
           onSelect={onSelect}
-          className="order-first"
+          variant="row"
+          className={cn(
+            "order-first",
+            // Only on the row's hover or focus until albums are selected (TON-232).
+            !anySelected &&
+              "opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100",
+          )}
         />
       )}
     </div>,
@@ -497,36 +507,61 @@ function AlbumRow({
 /**
  * An album's checkbox in Editing mode (DS-21, TON-231): a click selects or deselects it, and ⇧-click adds the albums
  * from the last one chosen. Out of the tab order, as the grid's cells are its stops: X does the same from the keyboard.
+ * A row's is a small square; a card's a ring over the cover, white so it shows on any artwork, filled with the accent
+ * and a check once selected. Callers show it on hover or focus, or while albums are selected (TON-232).
  */
 export function SelectBox({
   title,
   checked,
   onSelect,
+  variant,
   className,
 }: {
   title: string;
   checked: boolean;
   onSelect: (extend: boolean) => void;
+  variant: "row" | "card";
   className?: string;
 }) {
   return (
-    <input
-      type="checkbox"
-      tabIndex={-1}
-      aria-label={`Select ${title}`}
-      checked={checked}
-      // The click decides, as it knows ⇧; the change only follows it.
-      onChange={() => {}}
-      // The focus goes to its cell, not the box, where keys would count as typing and ⌫ or L wouldn't act.
-      onMouseDown={(event) => event.preventDefault()}
-      onClick={(event) => {
-        // Not the cell's click, which opens the album.
-        event.stopPropagation();
-        event.currentTarget.closest<HTMLElement>("[data-cell]")?.focus();
-        onSelect(event.shiftKey);
-      }}
-      className={cn("size-3.5 shrink-0 cursor-pointer rounded-sm accent-accent-solid", className)}
-    />
+    <span
+      className={cn(
+        "relative inline-flex shrink-0 items-center justify-center transition-opacity duration-100 ease-enter",
+        className,
+      )}
+    >
+      <input
+        type="checkbox"
+        tabIndex={-1}
+        aria-label={`Select ${title}`}
+        checked={checked}
+        // The click decides, as it knows ⇧; the change only follows it.
+        onChange={() => {}}
+        // The focus goes to its cell, not the box, where keys would count as typing and ⌫ or L wouldn't act.
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={(event) => {
+          // Not the cell's click, which opens the album.
+          event.stopPropagation();
+          event.currentTarget.closest<HTMLElement>("[data-cell]")?.focus();
+          onSelect(event.shiftKey);
+        }}
+        className={cn(
+          "peer cursor-pointer appearance-none outline-none checked:border-accent-solid checked:bg-accent-solid",
+          variant === "card"
+            ? // The theme names no white or black: a white ring with a soft shadow shows on any cover.
+              "size-5 rounded-full border-2 border-[oklch(1_0_0/0.92)] bg-[oklch(0_0_0/0.2)] shadow-[0_1px_3px_oklch(0_0_0/0.45)]"
+            : "size-3.5 rounded-sm border border-strong",
+        )}
+      />
+      <Check
+        aria-hidden
+        strokeWidth={3}
+        className={cn(
+          "pointer-events-none absolute hidden text-fg-on-accent peer-checked:block",
+          variant === "card" ? "size-3" : "size-2.5",
+        )}
+      />
+    </span>
   );
 }
 
