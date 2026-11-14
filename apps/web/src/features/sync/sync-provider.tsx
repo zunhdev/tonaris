@@ -43,6 +43,8 @@ export type Sync = { client: SyncClient; connection: ConnectionWatch };
 const SyncContext = createContext<Sync | undefined>(undefined);
 /** The person's own client, whatever is on screen. */
 const OwnSyncContext = createContext<Sync | undefined>(undefined);
+/** The client of the collection on screen, kept below `OwnSyncProvider` for what reports on it (DS-81). */
+const ScreenSyncContext = createContext<Sync | undefined>(undefined);
 
 export function SyncProvider({ account, children }: { account: Account; children: ReactNode }) {
   const router = useRouter();
@@ -104,7 +106,21 @@ export function ActiveSyncProvider({
 }) {
   const own = useContext(OwnSyncContext);
   const value = useMemo(() => active ?? own, [active, own]);
-  return <SyncContext value={value}>{children}</SyncContext>;
+  return (
+    <ScreenSyncContext value={value}>
+      <SyncContext value={value}>{children}</SyncContext>
+    </ScreenSyncContext>
+  );
+}
+
+/**
+ * The client of the collection on screen again, below `OwnSyncProvider`: the sidebar's sync indicator and Activity
+ * report a share's writes while one is open, as its toasts and actions do (DS-81, DRIFT-091).
+ */
+export function ScreenSyncProvider({ children }: { children: ReactNode }) {
+  const screen = useContext(ScreenSyncContext);
+  const own = useContext(OwnSyncContext);
+  return <SyncContext value={screen ?? own}>{children}</SyncContext>;
 }
 
 /** The person's own client again, for what always shows their own collection, such as the sidebar. */

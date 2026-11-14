@@ -1,12 +1,13 @@
 // What the collection views' grids share (DS-115, DS-106): the scroll container's size, and the roving focus of the
 // grid pattern under virtualization. Focus is kept as a cell's position rather than an element, since rows scrolled
-// out of view are unmounted; a key moving to such a row scrolls it into view first, then focuses the cell once it
-// renders. ⌥↑ and ⌥↓, with ⇧ for the ends, rearrange the focused item (DS-49), and focus follows it to its new cell.
+// out of view are unmounted, and follows its item when a change from elsewhere draws it in another cell (DS-82); a key
+// moving to an unmounted row scrolls it into view first, then focuses the cell once it renders. ⌥↑ and ⌥↓, with ⇧ for the ends, rearrange the focused item (DS-49), and focus follows it to its new cell.
 
 import { isTextField } from "@/common/shortcuts";
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -87,9 +88,12 @@ export function useGridFocus({
   const pending = useRef<Cell | undefined>(undefined);
   /** An item just moved by keyboard, whose cell takes the focus once it is drawn somewhere else. */
   const following = useRef<{ id: string; from: Cell } | undefined>(undefined);
+  /** The item the roving focus is on, so a change from elsewhere that moves it keeps the focus on it (DS-82). */
+  const focusedItem = useRef<string | undefined>(undefined);
   // The rows may have shrunk since the cell was focused.
   const row = Math.min(active.row, Math.max(0, shape.rows - 1));
-  const current: Cell = { row, col: Math.min(active.col, Math.max(0, shape.columns(row) - 1)) };
+  const column = Math.min(active.col, Math.max(0, shape.columns(row) - 1));
+  const current = useMemo<Cell>(() => ({ row, col: column }), [row, column]);
 
   useEffect(() => {
     const cell = pending.current;
@@ -100,6 +104,7 @@ export function useGridFocus({
   });
 
   function focusCell(cell: Cell) {
+    focusedItem.current = rearrange?.itemAt(cell);
     setActive(cell);
     reveal(cell.row);
     const element = grid.current?.querySelector<HTMLElement>(cellSelector(cell));
@@ -121,6 +126,27 @@ export function useGridFocus({
     following.current = undefined;
     focusCell(cell);
   });
+
+  // A change from elsewhere, such as another device's save or the owner's in a share, can draw the focused item in
+  // another cell, or another item in its cell: the focus stays on the item, not the position (DS-82, DRIFT-073).
+  useLayoutEffect(() => {
+    if (!rearrange || following.current) return;
+    const id = focusedItem.current;
+    const cell = id === undefined ? undefined : rearrange.cellOf(id, current.col);
+    if (cell && (cell.row !== current.row || cell.col !== current.col)) {
+      const focused = grid.current?.contains(document.activeElement) ?? false;
+      setActive(cell);
+      if (focused) {
+        reveal(cell.row);
+        const element = grid.current?.querySelector<HTMLElement>(cellSelector(cell));
+        if (element) element.focus();
+        else pending.current = cell;
+      }
+      return;
+    }
+    focusedItem.current = rearrange.itemAt(current);
+    // The rows' items arrive through `rearrange`, a new one whenever they change.
+  }, [rearrange, current, grid, reveal]);
 
   function onKeyDown(event: KeyboardEvent<HTMLElement>) {
     // Keys typed into a cell's editor are the editor's: letters, arrows, Home and End.
@@ -151,6 +177,7 @@ export function useGridFocus({
       "data-cell": `${cellRow}:${col}`,
       tabIndex: cellRow === current.row && col === current.col ? 0 : -1,
       onFocus: () => {
+        focusedItem.current = rearrange?.itemAt({ row: cellRow, col });
         if (cellRow !== active.row || col !== active.col) setActive({ row: cellRow, col });
       },
     };
