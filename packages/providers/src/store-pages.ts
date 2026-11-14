@@ -1,5 +1,6 @@
 // Qobuz's and Tidal's album pages, as the G1 terms review permits them (TS-41): read only to identify a pasted link,
-// transiently, at most two requests per Qobuz link and one per Tidal link, to www.qobuz.com and tidal.com only.
+// transiently, to www.qobuz.com and tidal.com only: one page request per link (two for Qobuz's open. and play. links,
+// with request A), plus one redirect to the same album (TS-41, DRIFT-108).
 // Request A asks Qobuz's home store for the album with the slug "-" and reads only the redirect's `Location`;
 // request B reads that page's schema.org title, artist and date as hints for step 4. Nothing from a page outlives
 // the call: no cache, no log, no prefill. robots.txt is read at most once a day per host, and no album page is asked

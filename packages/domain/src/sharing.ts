@@ -209,7 +209,7 @@ export const sharedSnapshotSchema = z
     }),
     seq: z.int().nonnegative().meta({
       description:
-        "The owner's change log position this read is current at (TS-23), so an editor's client knows its writes are in it (TS-24). 0 for viewers and guests, who don't write.",
+        "How many writes the owner's collection has had when this read was made (TON-198): an editor's position, so their client knows its writes are in it (TS-24). 0 for viewers and guests, who don't write.",
     }),
     owner: z.object({
       displayName: z.string().nullable(),
