@@ -1037,6 +1037,7 @@ There's no description excerpt or Created column on cards; Rows keeps them. *As 
 - **Triggers:**
   - ⌫ (Backspace or Delete) deletes the focused folder or list, in the sidebar or a folder's rows, switching to Editing mode;
   - Editing mode adds **Delete list** or **Delete folder** to a folder's or list's header.
+  - *As built in TON-228:* **in a list, ⌫ on a focused album takes it out of that list**, switching to Editing mode: "Removed {title} from {list}" is announced and a toast "Removed from {list}" offers Undo, as the inspector's chip × does (one removal for both). The album stays in its other lists or in Unsorted. Elsewhere, such as Unsorted or a share the person only views, ⌫ on an album does nothing. The shortcut reference and the palette call it "Delete a folder or list, or remove an album from the list".
 - **A list** goes at once, with "1 list moved to Trash" and Undo, which recovers it. A page showing what went goes to the nearest folder that stays, or the collection.
 - **A folder** asks first:
   - the title "Delete folder 'Metal'?";

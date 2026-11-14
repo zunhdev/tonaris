@@ -26,6 +26,7 @@ import { useCollectionData } from "@/features/collection/data";
 import { useDeleteContainer } from "@/features/collection/delete-containers";
 import { useInspector } from "@/features/collection/inspector-state";
 import { sharingRefusal, useCollectionPlace } from "@/features/collection/place";
+import { useRemoveFromList } from "@/features/collection/remove-from-list";
 import { useOpenIn } from "@/features/open/open-in";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { useRecover } from "@/features/trash/recovery";
@@ -80,6 +81,7 @@ export function useCommandRunner({
   const { tree } = useCollectionData();
   const narrow = useNarrowScreen();
   const place = useCollectionPlace();
+  const removeFromList = useRemoveFromList();
   // The latest of each, so what callers hold stays stable.
   const latest = useRef({
     navigate,
@@ -98,6 +100,7 @@ export function useCommandRunner({
     tree,
     narrow,
     place,
+    removeFromList,
     toggleSidebar,
     openShortcuts,
   });
@@ -119,6 +122,7 @@ export function useCommandRunner({
       tree,
       narrow,
       place,
+      removeFromList,
       toggleSidebar,
       openShortcuts,
     };
@@ -144,6 +148,15 @@ export function useCommandRunner({
     [],
   );
 
+  /** In a list, the album the grid's focus is on, and the list: what ⌫ takes it out of (DS-50, TON-228). */
+  const albumInList = useCallback(() => {
+    const now = latest.current;
+    const list = now.viewId === undefined ? undefined : now.tree.byId.get(now.viewId);
+    const albumId = now.ui.focusedAlbum();
+    const album = albumId === undefined ? undefined : now.client?.albums.get(albumId);
+    return list?.kind === "list" && album ? { album, list } : undefined;
+  }, []);
+
   const blocked = useCallback(
     (id: CommandId, on: CommandTarget): string | undefined => {
       const now = latest.current;
@@ -151,13 +164,15 @@ export function useCommandRunner({
       if (now.narrow && !phoneCommands.has(id) && id !== "share") return "Edit on a computer";
       if ((edits.has(id) || online.has(id)) && now.offline) return "You're offline";
       if (onAlbum.has(id) && on.album === undefined) return "Open or focus an album first";
-      if (onContainer.has(id) && containerOf(id, on) === undefined)
+      if (id === "delete" && containerOf(id, on) === undefined && albumInList() === undefined)
+        return "Focus a folder or list, or an album in a list, first";
+      if (onContainer.has(id) && id !== "delete" && containerOf(id, on) === undefined)
         return "Focus a folder or list first";
       if (id === "restore" && on.unit === undefined) return "Focus an item in Trash first";
       if (id === "share") return sharingRefusal(now.place, now.narrow);
       return undefined;
     },
-    [containerOf],
+    [containerOf, albumInList],
   );
 
   const run = useCallback(
@@ -212,6 +227,13 @@ export function useCommandRunner({
       } else if (id === "move" || id === "color" || id === "delete") {
         // Edit intent switches to Editing first (DS-45).
         const container = containerOf(id, on);
+        // ⌫ on an album in a list takes it out of the list (DS-50, TON-228).
+        const inList = id === "delete" && container === undefined ? albumInList() : undefined;
+        if (inList) {
+          now.mode.enterEditing();
+          now.removeFromList(inList.album, inList.list);
+          return;
+        }
         if (container === undefined) return;
         now.mode.enterEditing();
         if (id === "move") now.dialogs.startMove(container);
@@ -224,7 +246,7 @@ export function useCommandRunner({
         else now.dialogs.startDeleteAlbum(on.album);
       }
     },
-    [containerOf],
+    [containerOf, albumInList],
   );
 
   return { run, blocked, target };

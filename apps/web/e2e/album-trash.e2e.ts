@@ -87,3 +87,42 @@ test("⌘⌫ deletes the focused album after confirming; the inspector does too"
   await live(page);
   await expect(page.getByRole("main")).not.toContainText("Dopesmoker");
 });
+
+test("⌫ takes the focused album out of the list on view, with Undo, and keeps it in the collection (TON-228)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.backspaceRemove);
+  await live(page);
+  const doom: Container = {
+    id: uuidv7(),
+    kind: "list",
+    parentId: null,
+    name: "Doom",
+    description: null,
+    color: null,
+  };
+  await insert(page, doom);
+  await added(page, [album("Dopesmoker", { artistCredit: "Sleep", originalYear: 1999 })], doom.id);
+  await saved(page);
+
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  const rows = grid(page, "Doom").getByRole("row").filter({ hasText: "Dopesmoker" });
+  await rows.getByRole("gridcell").first().focus();
+  await page.keyboard.press("Backspace");
+  await expect(rows).toHaveCount(0);
+  const notifications = page.getByRole("region", { name: "Notifications" });
+  await expect(notifications.getByText("Removed from Doom")).toBeVisible();
+  // Undo puts it back in the list.
+  await notifications.getByRole("button", { name: "Undo" }).click();
+  await expect(rows).toHaveCount(1);
+  await saved(page);
+
+  // Again, then it is still in the collection: in Unsorted, as it is in no other list.
+  await rows.getByRole("gridcell").first().focus();
+  await page.keyboard.press("Backspace");
+  await expect(rows).toHaveCount(0);
+  await saved(page);
+  await page.goto("/unsorted");
+  await expect(page.getByRole("main").getByText("Dopesmoker")).toBeVisible();
+});

@@ -201,7 +201,12 @@ export const commands: readonly Command[] = [
   // From ⌘K or the ⋯ menu, without a key of its own (TON-175).
   { id: "color", title: "Color…", keys: [], section: "Folders and lists" },
   { id: "share", title: "Share…", keys: ["⇧", "S"], section: "Folders and lists" },
-  { id: "delete", title: "Delete a folder or list", keys: ["⌫"], section: "Folders and lists" },
+  {
+    id: "delete",
+    title: "Delete a folder or list, or remove an album from the list",
+    keys: ["⌫"],
+    section: "Folders and lists",
+  },
   { id: "restore", title: "Restore", keys: ["R"], section: "Trash" },
   { id: "shortcuts", title: "Keyboard shortcuts", keys: ["?"], section: "Help" },
 ];

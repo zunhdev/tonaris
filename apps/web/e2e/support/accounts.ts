@@ -181,6 +181,8 @@ export const accounts = {
   // Roles in the dialog and for the recipient (share-roles.e2e.ts, TON-190): the owner and the person invited.
   roleOwner: at("role-owner"),
   roleInvitee: at("role-invitee"),
+  // ⌫ removes the focused album from the list on view (album-trash.e2e.ts, TON-228).
+  backspaceRemove: at("backspace-remove"),
   // Editing a share together (share-editing.e2e.ts, TON-191): the owner and the editor, one pair per test.
   editOwner: at("edit-owner"),
   shareEditor: at("share-editor"),
