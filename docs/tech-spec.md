@@ -744,6 +744,13 @@ Every query and command takes a principal (`packages/domain/src/principals.ts`: 
 - **Snapshots:** only an editor's carries the owner's `seq` (TS-24); viewers and guests get 0.
 - **Left, low risk:** a few one-bit answers about whether an album stays in the owner's other lists (TON-198), and a change's collection read before its lock (TON-199).
 
+*Since TON-214 (DRIFT-019, 053–056, 101, 105):* **one rule each, held by tests.**
+- **What an editor sees** of the owner's albums is one rule, `albumSeenBy` (`packages/domain/src/memberships.ts`): in an active list they may read, and not in Trash. List entries, captures and `confirm_match`'s approval all ask it, so an album in the owner's Trash reads as unknown.
+- **A capture's collection** is decided by `captureOwner`, which the API asks before it looks the link up, so a list in Trash or one the editor only views refuses without a MusicBrainz request.
+- **Whose lock and change log** a mutation takes follows the record `mutationTarget` names (`packages/domain/src/commands.ts`); the database only looks up that record's owner. A test runs every such mutation as an editor.
+- **Read-only connections** are refused before any mutation runs (`mutationRefusal`), as guests are.
+- **Tests:** the property test holds `editSourcesAbove` to the model too, and the every-tool editor test checks each refusal's code on a field that would otherwise accept the change.
+
 **TS-31 Hierarchy queries (Decided; FR-01.4, FR-07.8–FR-07.10).**
 
 - The hierarchy is an **adjacency list** (`parent_id`) queried with **recursive CTEs**, not a closure table.

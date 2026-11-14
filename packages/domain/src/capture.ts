@@ -18,7 +18,6 @@ import {
   hasAlbumSlot,
   type AlbumFields,
 } from "./albums";
-import type { CollectionStore } from "./collection-store";
 import { actingOwner, isFailure } from "./command-kit";
 import type { ChangeInput, CommandContext, CommandResult } from "./commands";
 import {
@@ -36,6 +35,7 @@ import { maxLinkLength, maxMemberships } from "./limits";
 import { streamingServices, type StreamingService } from "./links";
 import {
   addMembership,
+  albumSeenBy,
   changeableList,
   membershipKey,
   membershipLimitProblem,
@@ -206,27 +206,6 @@ async function matchOf(
     usable(target) && target.releaseGroupId === own.askedId ? [{ target, facts: own }] : [],
   );
   return merged.find((match) => !match.target.trashed) ?? merged[0];
-}
-
-/**
- * Whether the person sees the owner's album: it is in an active list they may read (FR-07.20). What an editor's
- * capture shows and reports of the owner's albums follows it, before the lock (apps/api/src/capture.ts, through
- * `albumsSeenBy` in packages/db) and under it, so the two agree (DRIFT-019).
- */
-export async function albumSeenBy(
-  store: Pick<CollectionStore, "findAlbum" | "entriesOfAlbum" | "findContainer" | "canReadShared">,
-  userId: string,
-  albumId: string,
-): Promise<boolean> {
-  const album = await store.findAlbum(albumId);
-  if (!album || album.trashed) return false;
-  for (const { listId } of await store.entriesOfAlbum(albumId)) {
-    // oxlint-disable-next-line no-await-in-loop
-    const list = await store.findContainer(listId);
-    // oxlint-disable-next-line no-await-in-loop
-    if (list && !list.trashed && (await store.canReadShared(userId, listId))) return true;
-  }
-  return false;
 }
 
 /** The change that tells clients an album has `link` (TON-46). */
@@ -456,6 +435,21 @@ async function create(
 }
 
 /**
+ * Whose collection a capture into `listId` saves to, or why it can't save: the person's own, or, for a list someone
+ * shared with them to edit, its owner's (FR-07.19). A list in Trash, one they can only view and one they don't know
+ * of refuse. The API asks before it looks the link up, so a refusal costs no MusicBrainz request (DRIFT-019), and the
+ * command asks again under the lock.
+ */
+export async function captureOwner(
+  listId: string | null,
+  context: CommandContext,
+): Promise<string | Failure> {
+  if (listId === null) return actingOwner(context, "collection", "You can't add albums here.");
+  const list = await changeableList(listId, context);
+  return isFailure(list) ? list : list.ownerId;
+}
+
+/**
  * `album.capture` (FR-02.1, FR-02.9, FR-14.4): saves the album `source` names, as the API prepared it from the link.
  * Everything that can refuse is checked before anything is written, so a refusal changes nothing (X-05).
  */
@@ -470,14 +464,7 @@ export async function captureAlbum(
       "Tonaris can't look links up right now. Try again, or enter the details manually.",
     );
   }
-  // Into the person's own collection, or the list's owner's: an editor's capture into a share saves it there (FR-07.19).
-  let ownerId: string | Failure;
-  if (args.listId === null)
-    ownerId = actingOwner(context, "collection", "You can't add albums here.");
-  else {
-    const list = await changeableList(args.listId, context);
-    ownerId = isFailure(list) ? list : list.ownerId;
-  }
+  const ownerId = await captureOwner(args.listId, context);
   if (isFailure(ownerId)) return ownerId;
 
   const userId = actingUserId(context.principal);

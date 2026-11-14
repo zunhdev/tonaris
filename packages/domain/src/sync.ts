@@ -25,6 +25,7 @@ import { streamingServices } from "./links";
 import { membershipSchema } from "./memberships";
 import { failure, outcomeSchema, type Failure } from "./outcomes";
 import { positionSchema } from "./positions";
+import type { Principal } from "./principals";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
 import {
   grantArgsSchema,
@@ -65,6 +66,22 @@ export const guestMutationRefusal: Failure = failure(
   "permission_denied",
   "Guests can't change anything.",
 );
+
+/** A Read-only connection's mutation, refused before it runs: no mutation is allowed Read-only (FR-10.3). */
+export const readOnlyMutationRefusal: Failure = failure(
+  "permission_denied",
+  "This connection is Read-only, so it can't change anything.",
+);
+
+/**
+ * Why `principal` can't make any mutation at all, refused before one runs, or undefined: a link's guest, or a
+ * Read-only connection. In one place, so no command can miss it, as `trash.recover` once did (DRIFT-101).
+ */
+export function mutationRefusal(principal: Principal): Failure | undefined {
+  if (principal.kind === "guest") return guestMutationRefusal;
+  if (principal.kind === "mcp" && principal.mode !== "manage") return readOnlyMutationRefusal;
+  return undefined;
+}
 
 /** A mutation ID another mutation holds: another account's, or one not claimed by this request (TS-22). */
 export const mutationIdInUse: Failure = failure(

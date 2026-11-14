@@ -9,6 +9,8 @@ import {
   appAccountDefaults,
   changeSchema,
   guestMutationRefusal,
+  mutationRefusal,
+  mutationTarget,
   mutationIdInUse,
   mutationSchema,
   mutationTooOld,
@@ -139,84 +141,14 @@ async function storedMutation(tx: Transaction, id: string): Promise<StoredMutati
   return stored;
 }
 
-/** What a mutation names whose owner it changes (FR-07.19): a folder or list, an album, or a Trash unit. */
-type Target = { kind: "container" | "album" | "unit"; id: string };
-
-/** A folder or list a mutation names, if it names one. */
-const container = (id: string | null | undefined): Target | undefined =>
-  id === null || id === undefined ? undefined : { kind: "container", id };
-const album = (id: string): Target => ({ kind: "album", id });
-
-/**
- * The record whose owner's collection `mutation` changes, for the collection's content; none for what is the actor's
- * own: their preferences, references, sharing and account, Trash purges, and custom fields, which only their owner
- * changes (FR-07.20). Every mutation is listed, so a new one has to be placed here.
- */
-function targetOf(mutation: Mutation): Target | undefined {
-  switch (mutation.name) {
-    case "container.create":
-      return container(mutation.args.parentId);
-    case "container.rename":
-    case "container.move":
-    case "container.describe":
-    case "container.setColor":
-    case "container.delete":
-      return container(mutation.args.id);
-    case "album.create":
-    case "album.capture":
-      return container(mutation.args.listId);
-    case "membership.add":
-    case "membership.remove":
-      return container(mutation.args.listId);
-    case "album.update":
-    case "album.setArtwork":
-    case "album.delete":
-      return album(mutation.args.id);
-    case "link.set":
-    case "link.remove":
-    case "fieldValue.apply":
-    case "fieldValue.set":
-    case "fieldValue.remove":
-      return album(mutation.args.albumId);
-    case "trash.recover":
-      return { kind: "unit", id: mutation.args.unitId };
-    case "field.create":
-    case "field.rename":
-    case "field.changeType":
-    case "field.addOption":
-    case "field.renameOption":
-    case "field.removeOption":
-    case "field.delete":
-    case "trash.purge":
-    case "view.set":
-    case "defaults.set":
-    case "defaults.setLinkTarget":
-    case "defaults.setHiddenServices":
-    case "order.set":
-    case "share.invite":
-    case "share.setLink":
-    case "share.setRole":
-    case "share.resendInvitation":
-    case "share.accept":
-    case "share.decline":
-    case "share.leave":
-    case "share.revoke":
-    case "share.saveLink":
-    case "share.removeReference":
-    case "account.setDisplayName":
-      return undefined;
-    default:
-      return mutation satisfies never;
-  }
-}
-
 /**
  * Whose collection `mutation` changes, so its write lock and change log are that account's (TS-20, FR-07.19): the
  * owner of what it names, as an editor changes a share in its owner's collection, and the actor's own otherwise,
  * also when what it names doesn't exist. The command still decides whether the actor may make the change.
  */
 async function collectionOf(tx: Transaction, mutation: Mutation, actorId: string): Promise<string> {
-  const target = targetOf(mutation);
+  // Which record decides it is the domain's rule (`mutationTarget`); here, only whose that record is (DRIFT-055).
+  const target = mutationTarget(mutation);
   if (!target) return actorId;
   const table =
     target.kind === "container" ? containers : target.kind === "album" ? albums : trashUnits;
@@ -269,8 +201,10 @@ function underLock<T>(
   }) => Promise<T>,
   { ownCollection = false }: { ownCollection?: boolean } = {},
 ): Promise<T> {
+  // Guests and Read-only connections change nothing, whatever the mutation (DRIFT-101).
+  const refusal = mutationRefusal(principal);
   const accountId = actingUserId(principal);
-  if (!accountId) return Promise.resolve(refused(guestMutationRefusal));
+  if (refusal || !accountId) return Promise.resolve(refused(refusal ?? guestMutationRefusal));
   return db.transaction(async (tx) => {
     const ownerId = ownCollection ? accountId : await collectionOf(tx, mutation, accountId);
     const seq = await lockAccount(tx, ownerId);

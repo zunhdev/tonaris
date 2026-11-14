@@ -10,8 +10,10 @@ import * as fc from "fast-check";
 import {
   editableContainers as modelEditable,
   latinKey,
+  mutationNames,
   nameKey,
   readableContainers as modelReadable,
+  readOnlyMutationRefusal,
   shareGrantStatuses,
   shareRoles,
   shareToken,
@@ -30,6 +32,7 @@ import {
 import {
   canEditContainer,
   canReadContainer,
+  editSourcesAbove,
   editableContainers,
   readableContainers,
 } from "./access";
@@ -305,6 +308,12 @@ describe("the CTEs agree with the model (TS-31)", () => {
             tree.map(({ id }) => canEditContainer(t.db, userId, id)),
           );
           expect(checks).toEqual(tree.map(({ id }) => expected.has(id)));
+          // The walk every editor command trusts: the shares above each one it edits through (DRIFT-056).
+          // oxlint-disable-next-line no-await-in-loop
+          const above = await Promise.all(tree.map(({ id }) => editSourcesAbove(t.db, userId, id)));
+          expect(above.map((each) => new Set(each))).toEqual(
+            tree.map(({ id }) => expected.get(id) ?? new Set()),
+          );
         }
       }),
       { numRuns: 40 },
@@ -578,6 +587,163 @@ describe("an editor's writes (FR-07.19, TS-20)", () => {
     });
     expect(refused.result.outcome).toMatchObject({ status: "failed", code: "not_found" });
     expect(await ownerLog()).toBe(logged);
+  });
+});
+
+describe("whose collection each mutation changes (DRIFT-055)", () => {
+  test("every mutation that names a record takes that record's owner's lock and change log", async () => {
+    const denis = await newPrincipal("Denis");
+    const anna = await newPrincipal("Anna");
+    const metal = await made(denis, "folder", "Metal");
+    const doom = await made(denis, "list", "Doom", metal.id);
+    const old = await made(denis, "list", "Old", metal.id);
+    await grant(metal.id, anna.userId, "accepted", "edit");
+    const nightfall = album("Nightfall", "Candlemass");
+    await run(denis, { name: "album.create", args: { ...nightfall, listId: doom.id } });
+    const unitId = uuidv7();
+    await run(denis, { name: "container.delete", args: { id: old.id, unitId } });
+    const at = { id: nightfall.id };
+    const of = { albumId: nightfall.id };
+    const field = uuidv7();
+
+    // What an editor may name: each in the share, each the owner's. The command may still refuse; whose lock it takes
+    // doesn't depend on that.
+    const named: Record<string, Unsent> = {
+      "container.create": {
+        name: "container.create",
+        args: { id: uuidv7(), kind: "list", parentId: metal.id, name: "New" },
+      },
+      "container.rename": {
+        name: "container.rename",
+        args: { id: doom.id, name: "Doom II" },
+        base: { name: "Doom" },
+      },
+      "container.move": {
+        name: "container.move",
+        args: { id: doom.id, parentId: metal.id },
+        base: { parentId: metal.id },
+      },
+      "container.describe": {
+        name: "container.describe",
+        args: { id: doom.id, description: "Slow" },
+        base: { description: null },
+      },
+      "container.setColor": {
+        name: "container.setColor",
+        args: { id: doom.id, color: null },
+        base: { color: null },
+      },
+      "container.delete": { name: "container.delete", args: { id: doom.id, unitId: uuidv7() } },
+      "album.create": {
+        name: "album.create",
+        args: { ...album("Epicus", "Candlemass"), listId: doom.id },
+      },
+      "album.capture": {
+        name: "album.capture",
+        args: { albumId: uuidv7(), link: "https://open.spotify.com/album/1", listId: doom.id },
+      },
+      "membership.add": {
+        name: "membership.add",
+        args: { listId: doom.id, albumId: nightfall.id },
+      },
+      "membership.remove": {
+        name: "membership.remove",
+        args: { listId: doom.id, albumId: nightfall.id },
+      },
+      "album.update": {
+        name: "album.update",
+        args: { ...at, title: "N" },
+        base: { title: "Nightfall" },
+      },
+      "album.setArtwork": {
+        name: "album.setArtwork",
+        args: { ...at, artworkUrl: null },
+        base: { artworkUrl: null },
+      },
+      "album.delete": { name: "album.delete", args: { ...at, unitId: uuidv7() } },
+      "link.set": {
+        name: "link.set",
+        args: { ...of, service: "spotify", url: "https://open.spotify.com/album/1" },
+        base: { url: null },
+      },
+      "link.remove": {
+        name: "link.remove",
+        args: { ...of, service: "spotify" },
+        base: { url: "https://open.spotify.com/album/1" },
+      },
+      "fieldValue.apply": { name: "fieldValue.apply", args: { ...of, fieldId: field } },
+      "fieldValue.set": {
+        name: "fieldValue.set",
+        args: { ...of, fieldId: field, value: "x" },
+        base: { value: null },
+      },
+      "fieldValue.remove": { name: "fieldValue.remove", args: { ...of, fieldId: field } },
+      "trash.recover": { name: "trash.recover", args: { unitId } },
+    };
+    for (const [name, mutation] of Object.entries(named)) {
+      // oxlint-disable-next-line no-await-in-loop
+      const executed = await executeMutation(t.db, anna, { mutationId: uuidv7(), ...mutation });
+      expect({ name, accountId: executed.accountId }).toEqual({ name, accountId: denis.userId });
+    }
+
+    // Every other mutation is the actor's own: their preferences, references, sharing, account, Trash purges and
+    // custom fields. A new mutation must be placed in one list or the other.
+    const own = [
+      "field.create",
+      "field.rename",
+      "field.changeType",
+      "field.addOption",
+      "field.renameOption",
+      "field.removeOption",
+      "field.delete",
+      "trash.purge",
+      "view.set",
+      "defaults.set",
+      "defaults.setLinkTarget",
+      "defaults.setHiddenServices",
+      "order.set",
+      "share.invite",
+      "share.setLink",
+      "share.setRole",
+      "share.resendInvitation",
+      "share.accept",
+      "share.decline",
+      "share.leave",
+      "share.revoke",
+      "share.saveLink",
+      "share.removeReference",
+      "account.setDisplayName",
+    ];
+    expect([...Object.keys(named), ...own].toSorted()).toEqual([...mutationNames].toSorted());
+  });
+});
+
+describe("a Read-only connection (FR-10.3, DRIFT-101)", () => {
+  test("is refused before any mutation runs, its own collection's included", async () => {
+    const anna = await newPrincipal("Anna");
+    const doom = await made(anna, "list", "Doom");
+    const unitId = uuidv7();
+    await run(anna, { name: "container.delete", args: { id: doom.id, unitId } });
+    const agent: Principal = {
+      kind: "mcp",
+      userId: anna.userId,
+      grantId: uuidv7(),
+      mode: "read_only",
+    };
+    const tried: Unsent[] = [
+      { name: "trash.recover", args: { unitId } },
+      {
+        name: "container.create",
+        args: { id: uuidv7(), kind: "list", parentId: null, name: "New" },
+      },
+      { name: "view.set", args: { viewKey: "root", layout: "grid" }, base: { layout: null } },
+      { name: "share.removeReference", args: { containerId: doom.id } },
+    ];
+    for (const mutation of tried) {
+      // oxlint-disable-next-line no-await-in-loop
+      const { result } = await executeMutation(t.db, agent, { mutationId: uuidv7(), ...mutation });
+      expect(result.outcome).toEqual(readOnlyMutationRefusal);
+    }
   });
 });
 

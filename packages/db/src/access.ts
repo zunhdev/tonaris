@@ -56,12 +56,17 @@ function sourcesOf(viewer: ShareViewer): SQL {
     where ${savedReferences.viewerId} = ${viewer.userId} and ${shareLinks.revokedAt} is null`;
 }
 
-/** The containers `userId` edits through directly (`editSourcesOf` in packages/domain): accepted edit grants. */
+/**
+ * A grant that lets its grantee edit (`editSourcesOf` in packages/domain): accepted, with the edit role. Every query
+ * of who edits what uses it, so the rule is written once in SQL (DRIFT-056).
+ */
+export const editGrant = sql`${shareGrants.status} = 'accepted' and ${shareGrants.role} = 'edit'`;
+
+/** The containers `userId` edits through directly: their edit grants. */
 function editSourcesOf(userId: string): SQL {
   return sql`
     select ${shareGrants.containerId} as id from ${shareGrants}
-    where ${shareGrants.granteeId} = ${userId} and ${shareGrants.status} = 'accepted'
-      and ${shareGrants.role} = 'edit'`;
+    where ${shareGrants.granteeId} = ${userId} and ${editGrant}`;
 }
 
 /** Every container reached from `sources`, each with the sources it is reached through: down from each active one. */
@@ -146,24 +151,6 @@ export async function canEditAlbum(
     if (await canEditContainer(db, userId, id)) return true;
   }
   return false;
-}
-
-/**
- * Whose collection a capture into `listId` saves to, as the API prepares it before the lock (FR-07.19): the list's
- * owner's when `userId` may edit it, else their own, where the command refuses a list that isn't theirs.
- */
-export async function captureCollection(
-  db: Executor,
-  userId: string,
-  listId: string | null,
-): Promise<string> {
-  if (listId === null) return userId;
-  const [row] = await db
-    .select({ ownerId: containers.ownerId })
-    .from(containers)
-    .where(eq(containers.id, listId));
-  if (!row || row.ownerId === userId) return userId;
-  return (await canEditContainer(db, userId, listId)) ? row.ownerId : userId;
 }
 
 /**

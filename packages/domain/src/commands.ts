@@ -94,6 +94,78 @@ type Handlers = {
   [N in MutationName]: (mutation: MutationOf[N], context: CommandContext) => Promise<CommandResult>;
 };
 
+/** What a mutation names whose owner it changes (FR-07.19): a folder or list, an album, or a Trash unit. */
+export type MutationTarget = { kind: "container" | "album" | "unit"; id: string };
+
+/** A folder or list a mutation names, if it names one. */
+const container = (id: string | null | undefined): MutationTarget | undefined =>
+  id === null || id === undefined ? undefined : { kind: "container", id };
+const album = (id: string): MutationTarget => ({ kind: "album", id });
+
+/**
+ * The record whose owner's collection `mutation` changes, for the collection's content; none for what is the actor's
+ * own: their preferences, references, sharing and account, Trash purges, and custom fields, which only their owner
+ * changes (FR-07.20). Every mutation is listed, so a new one has to be placed here. The database takes the write lock
+ * and the change log of that record's owner (TS-20), so an editor's change reaches the owner's devices (DRIFT-055).
+ */
+export function mutationTarget(mutation: Mutation): MutationTarget | undefined {
+  switch (mutation.name) {
+    case "container.create":
+      return container(mutation.args.parentId);
+    case "container.rename":
+    case "container.move":
+    case "container.describe":
+    case "container.setColor":
+    case "container.delete":
+      return container(mutation.args.id);
+    case "album.create":
+    case "album.capture":
+      return container(mutation.args.listId);
+    case "membership.add":
+    case "membership.remove":
+      return container(mutation.args.listId);
+    case "album.update":
+    case "album.setArtwork":
+    case "album.delete":
+      return album(mutation.args.id);
+    case "link.set":
+    case "link.remove":
+    case "fieldValue.apply":
+    case "fieldValue.set":
+    case "fieldValue.remove":
+      return album(mutation.args.albumId);
+    case "trash.recover":
+      return { kind: "unit", id: mutation.args.unitId };
+    case "field.create":
+    case "field.rename":
+    case "field.changeType":
+    case "field.addOption":
+    case "field.renameOption":
+    case "field.removeOption":
+    case "field.delete":
+    case "trash.purge":
+    case "view.set":
+    case "defaults.set":
+    case "defaults.setLinkTarget":
+    case "defaults.setHiddenServices":
+    case "order.set":
+    case "share.invite":
+    case "share.setLink":
+    case "share.setRole":
+    case "share.resendInvitation":
+    case "share.accept":
+    case "share.decline":
+    case "share.leave":
+    case "share.revoke":
+    case "share.saveLink":
+    case "share.removeReference":
+    case "account.setDisplayName":
+      return undefined;
+    default:
+      return mutation satisfies never;
+  }
+}
+
 /** The command each mutation runs, in the order of `mutationSchema`. A mutation without one doesn't compile. */
 const handlers = {
   "album.create": ({ args }, context) => createAlbum(args, context),
@@ -140,6 +212,9 @@ const handlers = {
   "defaults.setHiddenServices": ({ args, base }, context) => setHiddenServices(args, base, context),
   "share.setRole": ({ args }, context) => setGrantRole(args, context),
 } satisfies Handlers;
+
+/** Every mutation's name, in the order of `mutationSchema`: for tests that must cover each one. */
+export const mutationNames: readonly string[] = Object.keys(handlers);
 
 /** Runs `mutation`'s command; the name ties the mutation to its own handler. */
 function run<N extends MutationName>(
