@@ -66,15 +66,26 @@ export const viewOnly = (what: string) =>
   failure("permission_denied", `You can view ${what}, but not change it.`);
 
 /**
+ * The answer to a change whose lock is another collection's than the content it reaches (TON-199): the database runs
+ * it again under the right lock rather than reporting it. Compared by identity.
+ */
+export const lockedElsewhere: Failure = failure(
+  "in_progress",
+  "Something this change names was just made. Try again.",
+);
+
+/**
  * How the principal may change content in `container` (TS-30, FR-07.18, FR-07.19), or why not. Its owner, under the
  * policy; a person, or their Manage connection, who edits it through a share; a reader is told they can only view; and
  * anyone else is answered as if it didn't exist, `missing`, so nobody learns of a private folder (FR-07.20).
  */
 export async function contentAccess(
-  { principal, store }: CommandContext,
+  { principal, store, lockedGuess }: CommandContext,
   container: { id: string; ownerId: string },
   { refusal, missing, what = "this" }: { refusal: string; missing: string; what?: string },
 ): Promise<ContentAccess | Failure> {
+  // Made in another collection after this change's lock was chosen: it runs again under that one's (TON-199).
+  if (lockedGuess !== undefined && container.ownerId !== lockedGuess) return lockedElsewhere;
   const userId = actingUserId(principal);
   if (userId === undefined || userId === container.ownerId) {
     const decision = authorizeWrite(principal, { ownerId: container.ownerId, scope: "collection" });

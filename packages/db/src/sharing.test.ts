@@ -56,7 +56,7 @@ import {
   sharedWithMe,
 } from "./sharing";
 import { editorsMoveImpact } from "./sharing-impact";
-import { executeMutation, writesOf } from "./sync";
+import { executeMutation, lockAccount, writesOf } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
 let t: TestDatabase;
@@ -788,6 +788,43 @@ describe("what an editor's answers say of the owner's other lists (FR-07.21, TON
     }
     expect(answers[0]).toEqual(answers[1]);
     expect(answers[0]).toMatchObject({ status: "failed", code: "validation_failed" });
+  });
+});
+
+describe("a change whose collection appears while it waits for its lock (TON-199)", () => {
+  test("runs again under the owner's lock, so it lands in the owner's change log", async () => {
+    const denis = await newPrincipal("Denis");
+    const anna = await newPrincipal("Anna");
+    const metal = await made(denis, "folder", "Metal");
+    await grant(metal.id, anna.userId, "accepted", "edit");
+    const inner = uuidv7();
+    const nested = uuidv7();
+
+    // Something else holds Anna's own lock while her second create looks for its folder and finds none yet.
+    const held = Promise.withResolvers<void>();
+    const holding = t.db.transaction(async (tx) => {
+      await lockAccount(tx, anna.userId);
+      await held.promise;
+    });
+    const second = executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "container.create",
+      args: { id: nested, kind: "list", parentId: inner, name: "Nested" },
+    });
+    await Bun.sleep(100);
+    // Her first create makes the folder, in Denis's collection, under his lock.
+    await run(anna, {
+      name: "container.create",
+      args: { id: inner, kind: "folder", parentId: metal.id, name: "Inner" },
+    });
+    held.resolve();
+    await holding;
+
+    const { result, accountId } = await second;
+    expect(result.outcome.status).toBe("confirmed");
+    expect(accountId).toBe(denis.userId);
+    const logged = await t.db.select().from(changeLog).where(eq(changeLog.entityId, nested));
+    expect(logged.map((change) => change.accountId)).toEqual([denis.userId]);
   });
 });
 
