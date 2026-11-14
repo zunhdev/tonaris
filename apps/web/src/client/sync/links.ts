@@ -40,3 +40,16 @@ export function createLinkCollection({ engine, writer }: { engine: SyncEngine; w
 }
 
 export type LinkCollection = ReturnType<typeof createLinkCollection>;
+
+/**
+ * Sets an album's link for a service: an update of the one it has, or an insert, so the write names the right base,
+ * the URL the client last saw (TS-21). Every place that saves a link asks here (DRIFT-051).
+ */
+export function setLink(links: LinkCollection, { albumId, service, url }: ServiceLink) {
+  const key = serviceLinkKey(albumId, service);
+  return links.has(key)
+    ? links.update(key, (record) => {
+        record.url = url;
+      })
+    : links.insert({ albumId, service, url });
+}

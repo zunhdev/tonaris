@@ -77,6 +77,22 @@ export function createViewCollection({ engine, writer }: { engine: SyncEngine; w
 }
 
 /**
+ * Sets some of a person's choices for one view: an update of the choices kept, or a new record from the defaults, so
+ * the write names the right base (TS-21). Every place that changes a view's choices asks here (DRIFT-051).
+ */
+export function setViewChoice(
+  views: ReturnType<typeof createViewCollection>,
+  viewKey: string,
+  choices: Partial<ViewPrefsFields>,
+) {
+  return views.has(viewKey)
+    ? views.update(viewKey, (draft) => {
+        Object.assign(draft, choices);
+      })
+    : views.insert({ ...unsetView(viewKey), ...choices });
+}
+
+/**
  * The writes that take the defaults from `before` to `next`: a `defaults.set` for the view options, a
  * `defaults.setLinkTarget` for the link setting, and a `defaults.setHiddenServices` for the services turned off
  * (TON-138); none if they are the same. The services are compared as the server compares them, in any order.
