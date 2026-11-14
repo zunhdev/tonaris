@@ -466,6 +466,7 @@ type Batch = { batchId: string; items: (Mutation & { dependsOn?: string[] })[] }
 
 1. Authenticate the principal.
 2. Take the owner's write lock with `SELECT seq FROM account_sync … FOR UPDATE`; the row is created on first use. The row lock serializes that owner's writes, so commit order equals `seq` order. A copy of a mutation that arrives while the first is still running waits here.
+   - *Since TON-199:* whose lock it is follows the record the mutation names. When that record doesn't exist yet, the actor's own lock stands in, and the command is told so (`lockedGuess`). If the record appears in another's collection before the command reads it, as when an editor sends "create folder P" and "create list Q in P" at once, the command answers `lockedElsewhere`, and the change rolls back and runs again under that collection's lock, up to twice.
 3. Check the `mutations` table for `mutationId`. If it already completed, return the stored outcome (idempotent replay).
 4. Run the command: validation, authorization, invariants, CAS (TS-21).
 5. Write the entity changes, one `change_log` row per change, and a `mutations` row in **one transaction**. `seq` advances by one per change, so the log has no gaps, and a rejection or a replay uses no `seq`. Every outcome is stored, conflicts and rejections included, so a retry gets the same answer.
