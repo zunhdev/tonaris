@@ -10,7 +10,7 @@ States: `open`, `filed TON-n`, `fixed (TON-n)`, `accepted: <reason>`, `not drift
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-13 | 2ff85b2 | First run while building the audit (TON-202): the new `check:refs` sensor, and the stack review | 5 | 0 | 5 | 0 |
 | 2026-11-13 | d82479e | The four commits since 2ff85b2, and a full read of the API area. During closed testing the creator asked to fix every finding, whatever its size: the small ones in TON-206, the rest in TON-207, TON-208 and TON-209 | 24 | 0 | 24 | 0 |
-| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 36 | 49 | 0 |
+| 2026-11-13 | fbb1ba2 | Every area: full reads of the web app, domain, database, providers, design system, tooling and specs, and the changes merged in TON-206 to TON-209 (TON-210). DRIFT-019's other half reopened. Fixed one issue at a time, TON-211 to TON-225 | 85 | 31 | 54 | 0 |
 
 ## Areas
 
@@ -128,16 +128,16 @@ One area gets a full read per audit, the one read longest ago.
 | DRIFT-095 | spec | Buttons in ordinary dialogs are 28 px, beside 32 px fields (DS-15) | `packages/ui/src/components/alert-dialog.tsx`, `dialog.tsx` | fixed (TON-218) | 2026-11-13 | 2026-11-13 |
 | DRIFT-096 | spec | DS-81 says phones and guest pages are still waiting for their sync-indicator surfaces | `docs/design-spec.md` DS-81 | filed TON-225 | 2026-11-13 | 2026-11-13 |
 | DRIFT-097 | spec | DS-25 describes an Open popover removed in TON-127; TS-101's no-referrer covers `/join/` and `/recover/` too | `docs/design-spec.md` DS-25; `docs/tech-spec.md` TS-101 | filed TON-224 | 2026-11-13 | 2026-11-13 |
-| DRIFT-098 | lesson | Reads that leave out the "not in Trash" filter leaked Trash content several times; the filter is written by hand 36 times | `packages/db/src/access.ts`, `sharing.ts`, `mcp.ts` | filed TON-222 | 2026-11-13 | 2026-11-13 |
-| DRIFT-099 | lesson | CSP violations on server-rendered pages were found in production by hand (TON-126); 3 pages are watched | `apps/web/e2e/security.e2e.ts` | filed TON-222 | 2026-11-13 | 2026-11-13 |
-| DRIFT-100 | lesson | Browser tests act while something animates: axe mid-fade (3 times), keys during a dialog's exit (twice) | `apps/web/e2e` | filed TON-222 | 2026-11-13 | 2026-11-13 |
+| DRIFT-098 | lesson | Reads that leave out the "not in Trash" filter leaked Trash content several times; the filter is written by hand 36 times | `packages/db/src/access.ts`, `sharing.ts`, `mcp.ts` | fixed (TON-222) | 2026-11-13 | 2026-11-13 |
+| DRIFT-099 | lesson | CSP violations on server-rendered pages were found in production by hand (TON-126); 3 pages are watched | `apps/web/e2e/security.e2e.ts` | fixed (TON-222) | 2026-11-13 | 2026-11-13 |
+| DRIFT-100 | lesson | Browser tests act while something animates: axe mid-fade (3 times), keys during a dialog's exit (twice) | `apps/web/e2e` | fixed (TON-222) | 2026-11-13 | 2026-11-13 |
 | DRIFT-101 | architecture | Read-only connections are refused in each command, not in one place, and a miss has happened | `packages/db/src/sync.ts`; `packages/domain/src/policies.ts` | fixed (TON-214) | 2026-11-13 | 2026-11-13 |
 | DRIFT-102 | architecture | A stream can be opened without the session it should end with: the hub's session is optional | `apps/api/src/sync/hub.ts`; `apps/api/src/sse.ts` | fixed (TON-211) | 2026-11-13 | 2026-11-13 |
-| DRIFT-103 | lesson | Text limits counted in UTF-16 units, not code points (TON-151); three remain | `packages/domain/src/passkeys.ts`, `accounts.ts`; `apps/web/src/features/collection/name-editor.tsx` | filed TON-222 | 2026-11-13 | 2026-11-13 |
+| DRIFT-103 | lesson | Text limits counted in UTF-16 units, not code points (TON-151); three remain | `packages/domain/src/passkeys.ts`, `accounts.ts`; `apps/web/src/features/collection/name-editor.tsx` | fixed (TON-222) | 2026-11-13 | 2026-11-13 |
 | DRIFT-104 | spec | `bun run seed:workload` fails on a foreign key once the workload account has saved a default | `tooling/src/workload/seed.ts` | fixed (TON-223) | 2026-11-13 | 2026-11-13 |
 | DRIFT-105 | lesson | Six "refused" rows in TON-208's every-tool editor test pass without the ownership check: a mistake in TON-208 | `apps/api/src/mcp/shared-editing.test.ts` | fixed (TON-214) | 2026-11-13 | 2026-11-13 |
 | DRIFT-106 | spec | A guest page that gets a 429 from the guest-view limit shows "not available" and stops following: a mistake in TON-207 | `apps/web/src/routes/s.$token.tsx` | fixed (TON-211) | 2026-11-13 | 2026-11-13 |
-| DRIFT-107 | lesson | `check:refs` runs nowhere in CI | `.github/workflows/ci.yml`; `docs/tech-spec.md` TS-124 | filed TON-222 | 2026-11-13 | 2026-11-13 |
+| DRIFT-107 | lesson | `check:refs` runs nowhere in CI | `.github/workflows/ci.yml`; `docs/tech-spec.md` TS-124 | fixed (TON-222) | 2026-11-13 | 2026-11-13 |
 | DRIFT-108 | spec | The store-page request counts leave out the one redirect the code follows; TS-41 contradicts itself | `openspec/specs/metadata-sources/spec.md`; `packages/providers/src/store-pages.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
 | DRIFT-109 | spec | `bun run deps:advisories` can't flag a release-candidate pin | `tooling/src/deps/advisories.ts` | fixed (TON-223) | 2026-11-13 | 2026-11-13 |
 | DRIFT-110 | spec | TS-103 says every outbound call goes through `safeFetch`; SMTP, the S3 ledger, Sentry and CIMD don't | `docs/tech-spec.md` TS-103; `packages/providers/src/safe-fetch.ts` | filed TON-224 | 2026-11-13 | 2026-11-13 |
