@@ -57,11 +57,15 @@ export function guestViewOf(text: string | undefined): GuestView {
   if (typeof value !== "object" || value === null) return guestDefaults;
   const stored = new Map<string, unknown>(Object.entries(value));
   return {
-    sort: oneOf(guestSorts, stored.get("sort")) ?? "year",
-    dir: oneOf(sortDirections, stored.get("dir")) ?? "asc",
-    grouped: stored.get("grouped") === true,
-    layout: oneOf(viewLayouts, stored.get("layout")) ?? "rows",
-    folderLayout: oneOf(viewLayouts, stored.get("folderLayout")) ?? appViewDefaults.folderLayout,
+    // Anything missing or unreadable is DS-44's first-time default, as a new visit starts (DRIFT-088).
+    sort: oneOf(guestSorts, stored.get("sort")) ?? guestDefaults.sort,
+    dir: oneOf(sortDirections, stored.get("dir")) ?? guestDefaults.dir,
+    grouped:
+      typeof stored.get("grouped") === "boolean"
+        ? stored.get("grouped") === true
+        : guestDefaults.grouped,
+    layout: oneOf(viewLayouts, stored.get("layout")) ?? guestDefaults.layout,
+    folderLayout: oneOf(viewLayouts, stored.get("folderLayout")) ?? guestDefaults.folderLayout,
   };
 }
 

@@ -61,7 +61,7 @@ function DescriptionEditor({ container }: { container: Container }) {
           {...pageScroll("description")}
           placeholder="Add a description"
           rows={Math.min(6, Math.max(1, shown.split("\n").length))}
-          className="-mx-2 max-w-3xl resize-none rounded-md border border-transparent bg-transparent px-2 py-1 text-fg-secondary outline-none placeholder:text-fg-tertiary hover:border-subtle focus-visible:border-strong focus-visible:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-invalid:border-status-danger"
+          className="-mx-2 max-w-3xl resize-none rounded-md border border-transparent bg-transparent px-2 py-1 text-fg-secondary focus-ring-flush outline-none placeholder:text-fg-tertiary hover:border-subtle focus-visible:border-strong focus-visible:text-fg-primary aria-invalid:border-status-danger"
         />
       )}
     </Field>

@@ -7,6 +7,7 @@
 // (FR-06.4, TON-45). In Editing mode, a line says a paste adds a link (TON-160): ⌘V with the panel open puts each
 // pasted link in its service's row (paste-onto-album.ts).
 
+import { setLink } from "@/client/sync/links";
 import { sent } from "@/client/sync/writer";
 import { useCapture, type KeptLink } from "@/features/capture/capture-context";
 import { ServiceAnchor } from "@/features/open/service-anchor";
@@ -113,8 +114,10 @@ function KeptLinkNotice({ kept, canEdit }: { kept: KeptLink; canEdit: boolean })
             if (!client) return;
             if (!canEdit) enterEditing();
             sent(
-              client.links.update(serviceLinkKey(kept.albumId, kept.service), (record) => {
-                record.url = kept.pasted;
+              setLink(client.links, {
+                albumId: kept.albumId,
+                service: kept.service,
+                url: kept.pasted,
               }),
             );
             capture?.forgetKeptLink(kept.albumId, kept.service);
@@ -176,7 +179,7 @@ function LinkRow({
         <ServiceAnchor
           link={link}
           title={link.url}
-          className="group/link flex min-w-0 flex-1 items-center gap-0.5 text-accent-solid outline-none focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+          className="group/link flex min-w-0 flex-1 items-center gap-0.5 text-accent-solid focus-ring-flush outline-none"
         >
           <span className="sr-only">Open in {name}: </span>
           {/* Tonaris's link style, with an underline that firms up on hover (TON-123). */}
@@ -245,13 +248,7 @@ function LinkEditor({
     save: (typed) => {
       const url = typed.trim();
       if (unchanged(url) || !client) return;
-      if (link) {
-        sent(
-          client.links.update(serviceLinkKey(album.id, service), (record) => {
-            record.url = url;
-          }),
-        );
-      } else sent(client.links.insert({ albumId: album.id, service, url }));
+      sent(setLink(client.links, { albumId: album.id, service, url }));
     },
     onClose,
   });

@@ -21,7 +21,7 @@ export function SignInCard({ children, home = false }: { children: ReactNode; ho
           <Link
             to="/welcome"
             aria-label="Tonaris, what it is"
-            className="-mx-1.5 flex rounded-md px-1.5 py-0.5 outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+            className="-mx-1.5 flex rounded-md px-1.5 py-0.5 focus-ring-flush outline-none hover:bg-hover"
           >
             <Wordmark size="page" />
           </Link>

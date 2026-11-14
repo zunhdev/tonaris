@@ -20,7 +20,11 @@ import { useNarrowScreen } from "@/common/media";
 import { apiUrl } from "@/config";
 import { ActiveCollectionData } from "@/features/collection/data";
 import { NamingProvider } from "@/features/collection/name-dialog";
-import { CollectionPlaceContext, type CollectionPlace } from "@/features/collection/place";
+import {
+  CollectionPlaceContext,
+  type CollectionPlace,
+  sharedRootOf,
+} from "@/features/collection/place";
 import { useNotify } from "@/features/sync/notify";
 import { ActiveSyncProvider, useOwnSyncClient, type Sync } from "@/features/sync/sync-provider";
 import { useLocation } from "@tanstack/react-router";
@@ -51,7 +55,7 @@ export function ActiveCollectionProvider({
   const own = useOwnSyncClient();
   const narrow = useNarrowScreen();
   const rootId = useLocation({
-    select: (location) => /^\/shared\/([^/]+)$/.exec(location.pathname)?.[1],
+    select: (location) => sharedRootOf(location.pathname),
   });
   const { entries, reread } = useSharedEntries();
   const entry =

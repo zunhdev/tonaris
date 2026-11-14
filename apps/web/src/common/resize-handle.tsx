@@ -65,7 +65,7 @@ export function ResizeHandle({
         drag.current = undefined;
       }}
       className={cn(
-        "absolute top-0 bottom-0 z-10 w-2 cursor-col-resize outline-none hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid",
+        "absolute top-0 bottom-0 z-10 w-2 cursor-col-resize focus-ring-inset outline-none hover:bg-accent-soft focus-visible:bg-accent-soft",
         edge === "right" ? "-right-1" : "-left-1",
       )}
     />

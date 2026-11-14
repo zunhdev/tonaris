@@ -10,7 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { Bot, ChevronDown, Download, FolderTree, Share2, Zap, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { maxContainerDepth } from "@tonaris/domain";
+import { maxContainerDepth, servicesSentence } from "@tonaris/domain";
 import { buttonVariants } from "@tonaris/ui/components/button";
 import { Logo, Wordmark } from "@tonaris/ui/components/logo";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -184,7 +184,7 @@ function SectionHeading({
 const steps: { title: string; text: string; picture: ReactNode }[] = [
   {
     title: "Paste a link",
-    text: "From Spotify, Apple Music, Qobuz, Tidal or YouTube Music. A track link brings its album. No link? Type it in.",
+    text: `From ${servicesSentence("or")}. A track link brings its album. No link? Type it in.`,
     picture: <PastePicture />,
   },
   {

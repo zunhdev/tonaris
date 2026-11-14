@@ -36,6 +36,31 @@ export function OwnPlace({ children }: { children: ReactNode }) {
   return <CollectionPlaceContext value={own}>{children}</CollectionPlaceContext>;
 }
 
+/** The shared folder or list a path opens, `/shared/{root}`, if it opens one: the routes' shape, read in one place. */
+export function sharedRootOf(pathname: string): string | undefined {
+  return /^\/shared\/([^/]+)$/.exec(pathname)?.[1];
+}
+
+/**
+ * Where a folder or list inside a share opens: `/shared/{root}`, with `?c=` for anything below its top (TON-191).
+ * Every link and navigation into a share is built here, checked by the router (DRIFT-050).
+ */
+export function shareLocation(
+  rootId: string,
+  id: string = rootId,
+): { to: "/shared/$containerId"; params: { containerId: string }; search: { c?: string } } {
+  return {
+    to: "/shared/$containerId",
+    params: { containerId: rootId },
+    search: id === rootId ? {} : { c: id },
+  };
+}
+
+/** `shareLocation` as a path, for what takes a string, such as a phone's path steps (DS-110). */
+export function shareHref(rootId: string, id: string = rootId): string {
+  return id === rootId ? `/shared/${rootId}` : `/shared/${rootId}?c=${id}`;
+}
+
 /** A link opening a folder or list of the collection on screen. */
 export function ContainerLink({
   container,
@@ -46,14 +71,7 @@ export function ContainerLink({
 >) {
   const place = useCollectionPlace();
   if (place.kind === "share") {
-    return (
-      <Link
-        to="/shared/$containerId"
-        params={{ containerId: place.rootId }}
-        search={container.id === place.rootId ? {} : { c: container.id }}
-        {...props}
-      />
-    );
+    return <Link {...shareLocation(place.rootId, container.id)} {...props} />;
   }
   return container.kind === "folder" ? (
     <Link to="/f/$folderId" params={{ folderId: container.id }} {...props} />
@@ -69,13 +87,7 @@ export function useOpenContainer() {
   return useCallback(
     (container: Pick<Container, "id" | "kind"> | null, { replace = false } = {}) => {
       if (place.kind === "share") {
-        const id = container?.id ?? place.rootId;
-        return navigate({
-          to: "/shared/$containerId",
-          params: { containerId: place.rootId },
-          search: id === place.rootId ? {} : { c: id },
-          replace,
-        });
+        return navigate({ ...shareLocation(place.rootId, container?.id), replace });
       }
       if (container === null) return navigate({ to: "/c", replace });
       return container.kind === "folder"

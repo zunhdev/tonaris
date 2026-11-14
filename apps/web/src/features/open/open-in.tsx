@@ -89,7 +89,7 @@ function OpenInChooser({ opening, onClose }: { opening: Opening; onClose: () => 
                 <ServiceAnchor
                   link={link}
                   onClick={onClose}
-                  className="flex h-11 items-center justify-between rounded-md border border-subtle px-3 text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+                  className="flex h-11 items-center justify-between rounded-md border border-subtle px-3 text-fg-primary focus-ring-flush outline-none hover:bg-hover"
                 >
                   Open in {serviceNames[link.service]}
                   <ExternalLink aria-hidden strokeWidth={1.5} className="size-4" />

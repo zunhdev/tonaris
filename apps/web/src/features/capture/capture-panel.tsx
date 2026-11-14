@@ -42,7 +42,7 @@ export function CapturePanel() {
           type="button"
           aria-busy
           onClick={() => activity.show(report.id)}
-          className="rounded-sm px-2 py-1 text-left text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid"
+          className="rounded-sm px-2 py-1 text-left text-fg-primary focus-ring-flush outline-none hover:bg-hover"
         >
           {captureProgress(report)}
         </button>

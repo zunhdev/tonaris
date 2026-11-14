@@ -2,6 +2,7 @@
 // client, and the clients connected through MCP (features/settings/connections.tsx).
 
 import { api } from "@/api";
+import { loadOrThrow } from "@/common/page-error";
 import { ConnectionsSettings } from "@/features/settings/connections";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -9,9 +10,7 @@ export const Route = createFileRoute("/_workspace/_settings/settings/connections
   staticData: { title: "Connections" },
   head: () => ({ meta: [{ title: "Connections · Tonaris" }] }),
   loader: async () => {
-    const { data, status } = await api.v1.connections.get();
-    if (!data) throw new Error(`Couldn't load the connections (HTTP ${status}).`);
-    return data;
+    return loadOrThrow(await api.v1.connections.get(), "the connections");
   },
   component: ConnectionsPage,
 });

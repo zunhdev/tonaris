@@ -2,6 +2,7 @@
 // (features/settings/account.tsx). A change in progress resumes at its step.
 
 import { api } from "@/api";
+import { loadOrThrow } from "@/common/page-error";
 import { AccountSettings } from "@/features/settings/account";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -13,9 +14,10 @@ export const Route = createFileRoute("/_workspace/_settings/settings/account")({
       api.v1.account["email-change"].get(),
       api.v1.account.passkeys.get(),
     ]);
-    if (!change.data) throw new Error(`Couldn't load the email change (HTTP ${change.status}).`);
-    if (!passkeys.data) throw new Error(`Couldn't load the passkeys (HTTP ${passkeys.status}).`);
-    return { change: change.data.change, passkeys: passkeys.data };
+    return {
+      change: loadOrThrow(change, "the email change").change,
+      passkeys: loadOrThrow(passkeys, "the passkeys"),
+    };
   },
   component: AccountPage,
 });

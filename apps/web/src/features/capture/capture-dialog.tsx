@@ -11,7 +11,7 @@ import { useCollectionPlace } from "@/features/collection/place";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useRef, useState, type FormEvent } from "react";
 
-import { maxBatchItems } from "@tonaris/domain";
+import { maxBatchItems, servicesSentence } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
 import {
   Dialog,
@@ -51,7 +51,7 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
     event?.preventDefault();
     const lines = linesIn(text);
     if (lines.length === 0) {
-      setProblem("Paste at least one Spotify, Apple Music, Qobuz, Tidal or YouTube Music link.");
+      setProblem(`Paste at least one ${servicesSentence("or")} link.`);
       linksRef.current?.focus();
       return;
     }
@@ -80,7 +80,7 @@ function CaptureForm({ listId: initialList }: { listId: string | null }) {
         <DialogHeader>
           <DialogTitle>Add albums</DialogTitle>
           <DialogDescription>
-            Paste Spotify, Apple Music, Qobuz, Tidal or YouTube Music album or track links.
+            Paste {servicesSentence("or")} album or track links.
           </DialogDescription>
         </DialogHeader>
         <CapacityNotice />

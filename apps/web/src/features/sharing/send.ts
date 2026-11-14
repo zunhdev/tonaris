@@ -6,6 +6,7 @@
 import { api, type ApiClient } from "@/api";
 import { refusalOf, requestTimeoutMs } from "@/client/sync/transport";
 import { problemSentence } from "@/features/sync/problems";
+import { unreachable } from "@/features/sync/problems";
 import { useCallback, useState } from "react";
 
 import { uuidv7, type Mutation, type MutationResult, type Outcome } from "@tonaris/domain";
@@ -18,7 +19,7 @@ export type Unsent = Mutation extends infer M
   : never;
 
 /** What a send says when no answer came, even after sending again. */
-export const unreachable = "Couldn't reach Tonaris. Try again.";
+export { unreachable };
 
 /** The write's outcome from an answer, or undefined when the answer says nothing of it: the outbox's rule. */
 function outcomeOf({

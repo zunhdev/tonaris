@@ -3,6 +3,7 @@
 // until the next export or signing out.
 
 import { apiUrl } from "@/config";
+import { unreachable } from "@/features/sync/problems";
 import { useSyncExternalStore } from "react";
 
 import { problemSchema } from "@tonaris/domain";
@@ -61,7 +62,7 @@ export async function startExport(): Promise<void> {
   } catch {
     set({
       status: "failed",
-      reason: "Couldn't reach Tonaris. Check your connection and try again.",
+      reason: unreachable,
     });
   }
 }

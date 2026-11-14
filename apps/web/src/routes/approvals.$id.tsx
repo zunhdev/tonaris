@@ -8,6 +8,7 @@ import { count } from "@/common/words";
 import { SignInCard, signInTitleId } from "@/features/account/sign-in-card";
 import { fieldTypeNames } from "@/features/collection/field-types";
 import { refreshPendingApprovals } from "@/features/connections/pending-approvals";
+import { unreachable } from "@/features/sync/problems";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useId, useState } from "react";
@@ -46,7 +47,7 @@ function Part({ title, children }: { title: string; children: React.ReactNode })
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((was) => !was)}
-        className="flex w-full items-center gap-1.5 rounded-sm text-left text-fg-primary outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid"
+        className="flex w-full items-center gap-1.5 rounded-sm text-left text-fg-primary focus-ring outline-none"
       >
         <ChevronRight
           aria-hidden
@@ -217,7 +218,7 @@ function ApprovalPage() {
       loading: "Loading the request…",
       "other-account": "This request belongs to another account.",
       missing: "There is no such request. It may have been removed with its connection.",
-      unreachable: "Couldn't reach Tonaris. Check your connection and try again.",
+      unreachable,
     }[load.kind];
     return (
       <SignInCard>

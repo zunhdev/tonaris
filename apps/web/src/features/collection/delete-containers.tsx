@@ -11,7 +11,7 @@ import { useNotify } from "@/features/sync/notify";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { useRecover } from "@/features/trash/recovery";
 
-import { shareTopSentence, trashRetentionDays, type Container } from "@tonaris/domain";
+import { shareTopSentence, subtreeOf, trashRetentionDays, type Container } from "@tonaris/domain";
 
 import { useCollectionDialogs } from "./collection-dialogs";
 import { useViewContainerId } from "./collection-ui";
@@ -20,15 +20,11 @@ import { useInspector } from "./inspector-state";
 import { useCollectionPlace, useIsShareTop, useOpenContainer } from "./place";
 import { ancestorsOf, type Tree } from "./tree";
 
-/** The containers under `id`, nearest first. */
+/** The containers under `id`, nearest first: the walk the deletion itself takes (`subtreeOf`), so the count matches it. */
 function descendants(tree: Tree, id: string): Container[] {
-  const found: Container[] = [];
-  const queue = [...(tree.children.get(id) ?? [])];
-  for (let next = queue.shift(); next; next = queue.shift()) {
-    found.push(next);
-    queue.push(...(tree.children.get(next.id) ?? []));
-  }
-  return found;
+  return subtreeOf(tree.walks, id)
+    .slice(1)
+    .flatMap((each) => tree.byId.get(each) ?? []);
 }
 
 /** The owner's Trash, as a share's deletions name it (FR-07.20). */

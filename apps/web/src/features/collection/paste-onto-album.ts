@@ -3,6 +3,7 @@
 // so it switches to Editing first and waits while offline (DS-45, DS-81). It says what it did, with Undo (DS-50); a
 // refused paste says why, and sends nothing.
 
+import { setLink } from "@/client/sync/links";
 import { sent } from "@/client/sync/writer";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
@@ -45,29 +46,17 @@ export function usePasteOntoAlbum(): (links: readonly string[]) => boolean {
       }
       if (!client) return true;
       enterEditing();
-      for (const { service, url, replaces } of plan.links) {
-        if (replaces) {
-          sent(
-            client.links.update(serviceLinkKey(album.id, service), (record) => {
-              record.url = url;
-            }),
-          );
-        } else sent(client.links.insert({ albumId: album.id, service, url }));
-      }
+      for (const { service, url } of plan.links)
+        sent(setLink(client.links, { albumId: album.id, service, url }));
       const title = savedTitle(plan.links);
       announce(`${title} of ${album.title}`);
       notify?.undo({
         title,
         onUndo: () => {
           for (const { service, replaces } of plan.links) {
-            const key = serviceLinkKey(album.id, service);
-            if (replaces) {
-              sent(
-                client.links.update(key, (record) => {
-                  record.url = replaces.url;
-                }),
-              );
-            } else sent(client.links.delete(key));
+            if (replaces)
+              sent(setLink(client.links, { albumId: album.id, service, url: replaces.url }));
+            else sent(client.links.delete(serviceLinkKey(album.id, service)));
           }
         },
       });

@@ -5,6 +5,7 @@
 // and the top level as the root is (decided 23 October 2026), manual order included.
 
 import type { SyncClient } from "@/client/sync/client";
+import { setViewChoice } from "@/client/sync/views";
 import { sent } from "@/client/sync/writer";
 import { takeDeviceGridViews } from "@/common/device";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -14,7 +15,6 @@ import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode }
 import {
   appAccountDefaults,
   sortFields,
-  unsetView,
   type Album,
   type Container,
   type CustomField,
@@ -263,12 +263,7 @@ function useDeviceLayoutsSaved({ ready, tree, views }: CollectionData): void {
       const isList = viewKey === "unsorted" || tree.byId.get(viewKey)?.kind === "list";
       const own = views.get(viewKey);
       if (!isList || (own?.layout ?? null) !== null) continue;
-      const write = own
-        ? client.views.update(viewKey, (draft) => {
-            draft.layout = "grid";
-          })
-        : client.views.insert({ ...unsetView(viewKey), layout: "grid" });
-      sent(write);
+      sent(setViewChoice(client.views, viewKey, { layout: "grid" }));
     }
   }, [client, ready, accountId, tree, views]);
 }

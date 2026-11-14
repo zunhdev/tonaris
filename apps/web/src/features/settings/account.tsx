@@ -9,6 +9,7 @@ import { CodeField, useResendCountdown } from "@/features/account/code-field";
 import { DangerZone } from "@/features/account/delete-account";
 import { Passkeys } from "@/features/account/passkeys";
 import { forgetAccount } from "@/features/account/session";
+import { unreachable } from "@/features/sync/problems";
 import { Link, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useId, useState } from "react";
 
@@ -16,8 +17,6 @@ import type { Account, EmailChange, EmailChangeStage, Passkey } from "@tonaris/d
 import { Button } from "@tonaris/ui/components/button";
 import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
-
-const unreachable = "Couldn't reach Tonaris. Try again.";
 
 type Step =
   | { kind: "idle" }

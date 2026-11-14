@@ -4,8 +4,9 @@
 import { LandingPage } from "@/features/landing/landing-page";
 import { createFileRoute } from "@tanstack/react-router";
 
-const description =
-  "Paste a link from Spotify, Apple Music, Qobuz, Tidal or YouTube Music and Tonaris fills in the album. Folders within folders, AI agents through MCP, sharing and an export that is always yours.";
+import { servicesSentence } from "@tonaris/domain";
+
+const description = `Paste a link from ${servicesSentence("or")} and Tonaris fills in the album. Folders within folders, AI agents through MCP, sharing and an export that is always yours.`;
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({

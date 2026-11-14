@@ -4,16 +4,12 @@
 // layer reports one that fails. Choosing is not a collection edit (X-04), so it works offline too, waiting in the
 // outbox.
 
+import { setViewChoice } from "@/client/sync/views";
 import { sent } from "@/client/sync/writer";
 import { useAccountDefaults } from "@/features/settings/account-defaults";
 import { useSyncClient } from "@/features/sync/sync-provider";
 
-import {
-  unsetView,
-  type FolderSortMode,
-  type ListSortMode,
-  type ViewPrefsFields,
-} from "@tonaris/domain";
+import { type FolderSortMode, type ListSortMode, type ViewPrefsFields } from "@tonaris/domain";
 
 import { useCollectionData } from "./data";
 import { defaultsFrom, presentationOf, type Presentation, type ViewKind } from "./presentation";
@@ -68,13 +64,7 @@ export function usePresentation(
         }
         if (change.grouped !== undefined) next.grouped = change.grouped;
         if (change.layout !== undefined) next.layout = change.layout;
-        sent(
-          client.views.has(viewKey)
-            ? client.views.update(viewKey, (draft) => {
-                Object.assign(draft, next);
-              })
-            : client.views.insert({ ...unsetView(viewKey), ...next }),
-        );
+        sent(setViewChoice(client.views, viewKey, next));
       },
 
       resetToDefaults: () => {

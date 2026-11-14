@@ -5,6 +5,7 @@
 import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
 import { ContainerIcon } from "@/features/collection/icons";
+import { shareLocation } from "@/features/collection/place";
 import { buildSharedTree } from "@/features/collection/tree";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, MailOpen, Users } from "lucide-react";
@@ -16,7 +17,7 @@ import { usePendingInvitations } from "./pending-invitations";
 import { useSharedEntries } from "./shared-entries";
 
 const row =
-  "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus";
+  "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-ring-flush";
 
 export function PhoneShared() {
   const { entries } = useSharedEntries();
@@ -41,8 +42,7 @@ export function PhoneShared() {
           {items.map((item) => (
             <li key={item.id}>
               <Link
-                to="/shared/$containerId"
-                params={{ containerId: item.id }}
+                {...shareLocation(item.id)}
                 className={cn(row, !item.available && "opacity-60")}
               >
                 {item.kind ? (

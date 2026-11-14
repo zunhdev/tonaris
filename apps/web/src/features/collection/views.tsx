@@ -29,6 +29,7 @@ import {
   type ContainerKind,
   type Membership,
   ownerLabel,
+  servicesSentence,
 } from "@tonaris/domain";
 import { Button, buttonVariants } from "@tonaris/ui/components/button";
 import { SegmentedControl } from "@tonaris/ui/components/segmented-control";
@@ -57,6 +58,7 @@ import { ModeSwitch } from "./mode-switch";
 import { useStartNaming } from "./naming";
 import {
   ContainerLink,
+  shareHref,
   sharingRefusal,
   useCollectionPlace,
   useIsShareTop,
@@ -370,7 +372,7 @@ function NewListButton({ parentId }: { parentId: string | null }) {
 function PhoneRootLinks() {
   const { unsortedAlbums } = useCollectionData();
   const row =
-    "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus";
+    "flex min-h-12 items-center gap-2.5 rounded-md px-2 text-fg-primary outline-none hover:bg-hover focus-ring-flush";
   return (
     <nav aria-label="More" className="shrink-0 border-t border-subtle px-4 py-2">
       <Link to="/unsorted" className={row}>
@@ -509,7 +511,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
       ? [
           { to: "/shared", label: "Shared with me" },
           ...ancestors.map((folder) => ({
-            to: `/shared/${place.rootId}${folder.id === place.rootId ? "" : `?c=${folder.id}`}`,
+            to: shareHref(place.rootId, folder.id),
             label: folder.name,
           })),
         ]
@@ -564,7 +566,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
           </>
         ) : (
           <Empty
-            text="No albums yet. Paste a Spotify, Apple Music, Qobuz, Tidal or YouTube Music link."
+            text={`No albums yet. Paste a ${servicesSentence("or")} link.`}
             action={<AddAlbumButton variant="primary" />}
           />
         )}

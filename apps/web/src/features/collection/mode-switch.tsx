@@ -1,5 +1,5 @@
 // The mode toggle (DS-45): `View | Edit` in a collection view's header, so the mode is always visible, as is E.
-// Leaving Editing stays put if an open inline editor refuses its value (use-mode.ts). Hidden on a narrow screen,
+// Leaving Editing stays put if an open inline editor refuses its value (collection-mode.tsx). Hidden on a narrow screen,
 // which is for browsing (FR-04.1).
 
 import type { Mode } from "@/common/device";

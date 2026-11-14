@@ -3,6 +3,7 @@
 // that must arrive redacted.
 
 import { api } from "@/api";
+import { loadOrThrow } from "@/common/page-error";
 import { reportTestError } from "@/observability";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -13,9 +14,7 @@ export const Route = createFileRoute("/_workspace/_admin/admin/operations")({
   staticData: { title: "Operations" },
   head: () => ({ meta: [{ title: "Operations · Tonaris" }] }),
   loader: async () => {
-    const { data, status } = await api.v1.admin.operations.get();
-    if (!data) throw new Error(`Couldn't load the service's health (HTTP ${status}).`);
-    return data;
+    return loadOrThrow(await api.v1.admin.operations.get(), "the service's health");
   },
   component: OperationsPage,
 });

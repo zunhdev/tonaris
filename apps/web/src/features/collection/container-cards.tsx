@@ -35,8 +35,7 @@ const padding = 24;
 /** The name and the count under the fan. */
 const textHeight = 52;
 
-const cardClass =
-  "flex flex-col gap-1 rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:outline-solid";
+const cardClass = "flex flex-col gap-1 rounded-md outline-none focus-ring";
 
 export function ContainerCards({
   containers,

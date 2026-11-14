@@ -9,13 +9,13 @@ import { api } from "@/api";
 import { useNarrowScreen } from "@/common/media";
 import { PageHeader, useDocumentTitle } from "@/common/page-header";
 import { useKeyedRead } from "@/common/use-keyed-read";
-import { count as counted } from "@/common/words";
 import { useAlbumArrangement, useContainerArrangement } from "@/features/collection/arrangement";
 import { artworkSrc } from "@/features/collection/artwork";
 import { coversIn } from "@/features/collection/container-covers";
 import { effectiveColor } from "@/features/collection/container-palette";
 import { useCollectionData } from "@/features/collection/data";
 import { sections as sectionsOf, sortAlbums, sortContainers } from "@/features/collection/order";
+import { shareHref, shareLocation } from "@/features/collection/place";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
 import { ViewOptions } from "@/features/collection/view-options";
 import {
@@ -25,6 +25,7 @@ import {
   linksByAlbum,
   ShareBreadcrumbs,
   type LinkTo,
+  itemContents,
 } from "@/features/guest/share-content";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
@@ -89,14 +90,7 @@ function SharedContent({
   const current =
     (containerId === undefined ? undefined : tree.byId.get(containerId)) ?? tree.byId.get(rootId);
   const linkTo = useCallback<LinkTo>(
-    (id, props) => (
-      <Link
-        to="/shared/$containerId"
-        params={{ containerId: rootId }}
-        search={id === rootId ? {} : { c: id }}
-        {...props}
-      />
-    ),
+    (id, props) => <Link {...shareLocation(rootId, id)} {...props} />,
     [rootId],
   );
   const narrow = useNarrowScreen();
@@ -119,7 +113,7 @@ function SharedContent({
         path={[
           { to: "/c?show=shared", label: "Collection" },
           ...ancestors.map((folder) => ({
-            to: folder.id === rootId ? `/shared/${rootId}` : `/shared/${rootId}?c=${folder.id}`,
+            to: shareHref(rootId, folder.id),
             label: folder.name,
           })),
         ]}
@@ -200,10 +194,7 @@ function FolderBody({
       }).map((album) => ({ id: album.id, title: album.title, src: artworkSrc(album) })),
     [tree, snapshot, views, defaults, keys],
   );
-  const contentsOf = (item: Container) =>
-    item.kind === "list"
-      ? counted(albumsIn(snapshot, item.id).length, "album", "albums")
-      : counted(tree.children.get(item.id)?.length ?? 0, "folder or list", "folders and lists");
+  const contentsOf = (item: Container) => itemContents(snapshot, tree.children, item);
   return (
     <FolderItems
       folder={folder}

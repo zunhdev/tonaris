@@ -4,6 +4,7 @@
 // around it says where a folder or list opens and how the view is sorted. A signed-in viewer's folders and lists, and in manual order their album rows' Move
 // buttons, also move with ⌥↑ and ⌥↓, ⇧ for the ends (DS-49), in the viewer's own arrangement.
 
+import { count } from "@/common/words";
 import { Artwork, artworkSrc } from "@/features/collection/artwork";
 import { CoverFan, type FanCover } from "@/features/collection/cover-fan";
 import { directionOf } from "@/features/collection/grid-keys";
@@ -50,6 +51,20 @@ export function albumsIn(snapshot: SharedSnapshot, listId: string): SharedAlbum[
 }
 
 /** Each album's service links. */
+/**
+ * What a folder or list in a share holds, as its row says it: a list's albums, or a folder's folders and lists. The
+ * guest's page and a viewer's both say it so (DRIFT-088).
+ */
+export function itemContents(
+  snapshot: SharedSnapshot,
+  children: ReadonlyMap<string, readonly unknown[]>,
+  item: Pick<Container, "id" | "kind">,
+): string {
+  return item.kind === "list"
+    ? count(albumsIn(snapshot, item.id).length, "album", "albums")
+    : count(children.get(item.id)?.length ?? 0, "folder or list", "folders and lists");
+}
+
 export function linksByAlbum(snapshot: SharedSnapshot): Map<string, SharedSnapshot["links"]> {
   const links = new Map<string, SharedSnapshot["links"]>();
   for (const link of snapshot.links) {

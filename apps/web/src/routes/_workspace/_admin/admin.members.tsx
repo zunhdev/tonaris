@@ -2,6 +2,7 @@
 // (features/admin/members.tsx). For the creator only, as all of Admin (_admin.tsx).
 
 import { api } from "@/api";
+import { loadOrThrow } from "@/common/page-error";
 import { AdminMembers } from "@/features/admin/members";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -9,9 +10,7 @@ export const Route = createFileRoute("/_workspace/_admin/admin/members")({
   staticData: { title: "Members" },
   head: () => ({ meta: [{ title: "Members · Tonaris" }] }),
   loader: async () => {
-    const { data, status } = await api.v1.admin.members.get();
-    if (!data) throw new Error(`Couldn't load the members (HTTP ${status}).`);
-    return data.members;
+    return loadOrThrow(await api.v1.admin.members.get(), "the members").members;
   },
   component: MembersPage,
 });

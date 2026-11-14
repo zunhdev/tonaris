@@ -227,6 +227,7 @@ export {
   linkKinds,
   sameLink,
   serviceNames,
+  servicesSentence,
   streamingServices,
   type LinkKind,
   type LinkRef,

@@ -5,6 +5,7 @@
 // a change here. An available one opens in the app, view-only (shared-view.tsx).
 
 import { PageHeader, toCollection } from "@/common/page-header";
+import { shareLocation } from "@/features/collection/place";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { Link2, Users } from "lucide-react";
@@ -71,8 +72,7 @@ function SharedRow({ entry, onChanged }: { entry: SharedEntry; onChanged: () => 
         <span className="flex min-w-0 flex-1 flex-col">
           {entry.available ? (
             <Link
-              to="/shared/$containerId"
-              params={{ containerId: entry.containerId }}
+              {...shareLocation(entry.containerId)}
               className="truncate text-fg-primary hover:underline"
             >
               {entry.name ? `"${entry.name}"` : name}

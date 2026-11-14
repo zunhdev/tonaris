@@ -7,6 +7,7 @@
 import { api, refusalOf } from "@/api";
 import { clearBrowserCopy } from "@/client/sync/persistence";
 import { ExportButton } from "@/features/export/data-export";
+import { unreachable } from "@/features/sync/problems";
 import { useOwnSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
 import { useId, useState } from "react";
@@ -101,7 +102,7 @@ function DeleteAccountDialog({ account, onClose }: { account: Account; onClose: 
       forgetSignIn();
       await router.navigate({ to: "/account-deleted" });
     } catch {
-      setError("Couldn't reach Tonaris. Try again.");
+      setError(unreachable);
       setBusy(false);
     }
   }

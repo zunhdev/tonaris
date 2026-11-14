@@ -16,7 +16,7 @@ export function PageTabs({ label, pages }: { label: string; pages: readonly Page
         <Link
           key={page.to}
           to={page.to}
-          className="-mb-px flex h-9 items-center border-b-2 border-transparent text-fg-secondary outline-none hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-focus focus-visible:outline-solid aria-[current=page]:border-accent-solid aria-[current=page]:text-fg-primary"
+          className="-mb-px flex h-9 items-center border-b-2 border-transparent text-fg-secondary focus-ring-flush outline-none hover:text-fg-primary aria-[current=page]:border-accent-solid aria-[current=page]:text-fg-primary"
         >
           {page.label}
         </Link>

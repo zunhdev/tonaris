@@ -4,6 +4,7 @@
 // DS-91, DS-93).
 
 import { apiUrl } from "@/config";
+import { unreachable } from "@/features/sync/problems";
 import {
   type PublicKeyCredentialCreationOptionsJSON,
   type PublicKeyCredentialRequestOptionsJSON,
@@ -49,7 +50,7 @@ const messages: Record<PlainReason, string> = {
   expired: "This code has expired. Send a new code.",
   too_many_attempts: "Too many wrong codes. Send a new code.",
   invalid_email: "Enter a valid email address.",
-  unreachable: "Couldn't reach Tonaris. Check your connection and try again.",
+  unreachable,
   passkey_unverified:
     "That passkey doesn't ask for your face, fingerprint or PIN, so Tonaris can't use it.",
   passkey_unknown:

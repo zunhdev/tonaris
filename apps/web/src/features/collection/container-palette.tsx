@@ -1,7 +1,7 @@
 // Folder and list colors' pure parts (DS-27, TON-175): their names, their classes (written out, so Tailwind finds
 // each), and the rule that a folder or list without its own color takes the nearest folder's above it.
 
-import type { Container, ContainerColor } from "@tonaris/domain";
+import { chainOf, type Container, type ContainerColor } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 export const colorNames: Record<ContainerColor, string> = {
@@ -63,13 +63,13 @@ export function tintedChip(color: ContainerColor | null): string | undefined {
 /** Its own color, or the nearest folder's above it; null when none of them has one. */
 export function effectiveColor(
   container: Pick<Container, "color" | "parentId">,
-  byId: ReadonlyMap<string, Pick<Container, "color" | "parentId">>,
+  byId: ReadonlyMap<string, Pick<Container, "id" | "color" | "parentId">>,
 ): ContainerColor | null {
-  let at: Pick<Container, "color" | "parentId"> | undefined = container;
-  // A parent cycle can't be saved, but the walk stops after the tree's depth limit anyway.
-  for (let step = 0; at && step < 64; step++) {
-    if (at.color !== null) return at.color;
-    at = at.parentId === null ? undefined : byId.get(at.parentId);
+  if (container.color !== null) return container.color;
+  // The folders above, nearest first: the domain's walk, which stops at a cycle (`chainOf`).
+  for (const id of chainOf({ byId, children: new Map() }, container.parentId)) {
+    const color = byId.get(id)?.color;
+    if (color) return color;
   }
   return null;
 }

@@ -3,6 +3,7 @@
 import { createRouter } from "@tanstack/react-router";
 import { getGlobalStartContext } from "@tanstack/react-start";
 
+import { PageError } from "./common/page-error";
 import { pageScrollSelectors } from "./common/page-scroll";
 import { reportError, startErrorReports } from "./observability";
 import { routeTree } from "./routeTree.gen";
@@ -22,6 +23,8 @@ export function getRouter() {
     ssr: { nonce: getGlobalStartContext()?.nonce },
     // Errors a route's boundary catches never reach the browser's global handlers.
     defaultOnCatch: (error) => void reportError(error),
+    // A page that can't be shown says why in its own place; the shell around it stays (DRIFT-081).
+    defaultErrorComponent: PageError,
   });
 }
 
