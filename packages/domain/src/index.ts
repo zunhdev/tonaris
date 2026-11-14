@@ -562,7 +562,7 @@ export {
 export { codeRefusal, type CodeRefusal } from "./codes";
 export { invitationStateFor, shownEmailStatus } from "./invitations";
 export { maxMergeCandidates } from "./limits";
-export { endedGrantStatuses, openGrantStatuses } from "./sharing";
+export { endedGrantStatuses, fieldsShownWith, openGrantStatuses } from "./sharing";
 export {
   chainOf,
   exceedsMaxDepth,
