@@ -7,9 +7,10 @@
 // unsent, it asks first (decided 22 October 2026). On a phone it is the top bar's Account button, its avatar alone, without Admin or
 // the shortcuts, which a phone doesn't have, and with 44 px items (DS-110).
 
+import { clearBrowserCopy, unsentInShares } from "@/client/sync/persistence";
 import { useShell } from "@/common/shell-context";
 import { feedbackUrl } from "@/config";
-import { useSyncClient } from "@/features/sync/sync-provider";
+import { useOwnSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
 import {
   ChevronsUpDown,
@@ -56,7 +57,7 @@ export function AccountMenu({
   compact?: boolean;
 }) {
   const router = useRouter();
-  const sync = useSyncClient();
+  const sync = useOwnSyncClient();
   const { openShortcuts } = useShell();
   const [error, setError] = useState<string>();
   /** The unsent changes the person is asked about, while the dialog is open. */
@@ -73,13 +74,15 @@ export function AccountMenu({
       return;
     }
     await sync?.clear();
+    await clearBrowserCopy(account.id);
     forgetAccount();
     forgetSignIn();
     await router.navigate({ to: "/sign-in" });
   }
 
-  function chooseSignOut() {
-    const waiting = sync?.unsent ?? 0;
+  async function chooseSignOut() {
+    // A share's unsent writes are kept in this browser too, and go with the rest (TS-22).
+    const waiting = (sync?.unsent ?? 0) + (await unsentInShares(account.id).catch(() => 0));
     if (waiting > 0) setUnsent(waiting);
     else void leave();
   }
@@ -147,7 +150,7 @@ export function AccountMenu({
             <FileText strokeWidth={1.5} aria-hidden />
             Privacy notice
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={chooseSignOut}>
+          <DropdownMenuItem onClick={() => void chooseSignOut()}>
             <LogOut strokeWidth={1.5} aria-hidden />
             Sign out
           </DropdownMenuItem>

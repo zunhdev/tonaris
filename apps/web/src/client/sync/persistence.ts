@@ -253,3 +253,43 @@ export function indexedDbPersistence(accountId: string): SyncPersistence {
     },
   };
 }
+
+/** The databases this browser keeps for the account: its own, and one per share it edited (`{account}~{share}`). */
+async function accountDatabases(accountId: string): Promise<string[]> {
+  const own = syncDatabaseName(accountId);
+  return (await indexedDB.databases()).flatMap(({ name }) =>
+    name === own || name?.startsWith(`${own}~`) ? [name] : [],
+  );
+}
+
+/**
+ * Deletes everything this browser keeps for the account, as signing out and deleting the account do (TS-22): its own
+ * database and every share's it edited, with their unsent writes and the album titles and list names in them. An
+ * open one closes when asked (`openDatabase`).
+ */
+export async function clearBrowserCopy(accountId: string): Promise<void> {
+  const names = await accountDatabases(accountId);
+  await Promise.all(names.map((name) => settled(indexedDB.deleteDatabase(name))));
+}
+
+/** The writes kept unsent in the shares the account edited in this browser, which signing out would discard. */
+export async function unsentInShares(accountId: string): Promise<number> {
+  const shares = (await accountDatabases(accountId)).filter((name) => name.includes("~"));
+  const counts = await Promise.all(
+    shares.map(async (name) => {
+      const database = await openDatabase(name, () => {});
+      try {
+        const records = await settled(
+          database.transaction("outbox", "readonly").objectStore("outbox").getAll(),
+        );
+        return valid(outboxEntrySchema, records).reduce(
+          (sum, entry) => sum + entry.items.length,
+          0,
+        );
+      } finally {
+        database.close();
+      }
+    }),
+  );
+  return counts.reduce((sum, count) => sum + count, 0);
+}
