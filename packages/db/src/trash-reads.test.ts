@@ -106,9 +106,7 @@ describe("every sharing read leaves Trash out (DRIFT-098)", () => {
     // A new read in access.ts must be listed above, with its check.
     expect(Object.keys(covered).toSorted()).toEqual(Object.keys(access).toSorted());
     const reached: Record<string, unknown> = {};
-    for (const [name, check] of Object.entries(covered))
-      // oxlint-disable-next-line no-await-in-loop
-      if (check) reached[name] = await check();
+    for (const [name, check] of Object.entries(covered)) if (check) reached[name] = await check();
     expect(Object.values(reached).every((value) => value === false)).toBe(true);
     // And what isn't in Trash is reached, so the checks above can fail.
     expect(await access.canEditContainer(t.db, anna.userId, doom)).toBe(true);
