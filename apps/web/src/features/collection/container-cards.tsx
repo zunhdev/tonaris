@@ -3,6 +3,9 @@
 // (`coversOf`), its name and what it holds. A card is a link that opens its folder or list; the arrows walk the grid,
 // Enter opens, and under Manual sort ⌥↑ and ⌥↓ rearrange (DS-49). A hovering pointer raises a surface behind a card
 // (TON-167). Each card shows its save state and is highlighted when changed elsewhere (DS-80, DS-82).
+//
+// TON-283: a name takes two lines when it doesn't fit beside its icon, cut ones shown whole in a tooltip; the count
+// goes under it with the sharing glyph, and a row is a line taller only when one of its names takes two.
 
 // Virtualized rows are absolutely positioned, which table elements can't be without overriding their display, so the
 // ARIA grid roles go on plain elements.
@@ -20,8 +23,9 @@ import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 import type { Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { cardGrid } from "./album-cards";
+import { cardGrid, CardWords } from "./album-cards";
 import { artworkSrc } from "./artwork";
+import { measureText, nameLines, nameWordsHeight, useCardType } from "./card-text";
 import { useCollectionUi } from "./collection-ui";
 import { coversOf } from "./container-covers";
 import { effectiveColor } from "./container-palette";
@@ -33,8 +37,6 @@ import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const gap = 16;
-/** The name and the count under the fan. */
-const textHeight = 52;
 
 const cardClass = "flex flex-col gap-1 rounded-md outline-none focus-ring";
 
@@ -59,19 +61,45 @@ export function ContainerCards({
   const columns = Math.max(1, Math.floor((inner + gap) / (minCard + gap)));
   const card = Math.min(inner, Math.floor((inner - gap * (columns - 1)) / columns));
   const rowCount = Math.ceil(containers.length / columns);
-  const rowSize = card + textHeight + gap;
+  // A name takes two lines when it doesn't fit beside its icon, and its row is then a line taller (TON-283).
+  const type = useCardType();
+  const linesById = useMemo(
+    () =>
+      new Map(
+        containers.map((container) => [
+          container.id,
+          nameLines(container.name, card, type, measureText),
+        ]),
+      ),
+    [containers, card, type],
+  );
+  const rowLines = useCallback(
+    (row: number): 1 | 2 =>
+      containers
+        .slice(row * columns, (row + 1) * columns)
+        .some((container) => linesById.get(container.id) === 2)
+        ? 2
+        : 1,
+    [containers, columns, linesById],
+  );
+  const sizeOf = useCallback(
+    (row: number) => card + nameWordsHeight(rowLines(row), type) + gap,
+    [card, rowLines, type],
+  );
+  // A two-line row's height: Page Up and Page Down move by as many rows as fit when every one is.
+  const rowSize = card + nameWordsHeight(2, type) + gap;
   // TanStack Virtual re-renders on scroll by design; the app isn't compiled with React Compiler, which the rule is
   // about.
   // oxlint-disable-next-line react/incompatible-library
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => scroller.current,
-    estimateSize: () => rowSize,
+    estimateSize: sizeOf,
     overscan: 3,
     paddingStart: gap,
     paddingEnd: gap,
   });
-  useEffect(() => virtualizer.measure(), [virtualizer, rowSize]);
+  useEffect(() => virtualizer.measure(), [virtualizer, sizeOf]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
   const page = Math.max(1, Math.floor((scroller.current?.clientHeight ?? rowSize) / rowSize));
   const rearrange = useMemo<GridRearrange>(
@@ -135,6 +163,8 @@ export function ContainerCards({
                     container={container}
                     contents={contentsOf(container)}
                     width={card}
+                    words={nameWordsHeight(rowLines(virtual.index), type)}
+                    lines={linesById.get(container.id) ?? 2}
                     col={col}
                     {...cellProps(virtual.index, col)}
                   />
@@ -151,12 +181,18 @@ function ContainerCard({
   container,
   contents,
   width,
+  words,
+  lines,
   col,
   ...cell
 }: {
   container: Container;
   contents: string;
   width: number;
+  /** The height of the words under the fan, the same for every card in its row (TON-283). */
+  words: number;
+  /** The name's lines. */
+  lines: 1 | 2;
   col: number;
 } & ReturnType<ReturnType<typeof useGridFocus>["cellProps"]>) {
   const ref = useRef<HTMLDivElement>(null);
@@ -185,12 +221,28 @@ function ContainerCard({
           </span>
         )}
       </span>
-      <span className="mt-1.5 flex min-w-0 items-center gap-1.5">
-        <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
-        <span className="truncate font-medium text-fg-primary">{container.name}</span>
+      {/* The name on one or two lines beside its icon, level with the first (TON-283). */}
+      <span className="mt-1.5 flex min-w-0 items-start gap-1.5">
+        <span className="flex h-(--text-base--line-height) shrink-0 items-center">
+          <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
+        </span>
+        <CardWords
+          slot="card-title"
+          text={container.name}
+          lines={lines}
+          className="min-w-0 flex-1 font-medium text-fg-primary"
+        />
+      </span>
+      {/* The count right under the name, in line with it, and the sharing glyph after it, where a cut name can't take
+          it along. It follows the name rather than the card's bottom, so it never reads as the caption of the next
+          row's cover (TON-283). */}
+      <span
+        data-slot="card-foot"
+        className="flex min-w-0 items-center gap-1.5 pl-5.5 text-small text-fg-tertiary"
+      >
+        <span className="truncate">{contents}</span>
         <SharingGlyph containerId={container.id} />
       </span>
-      <span className="truncate text-small text-fg-tertiary">{contents}</span>
     </>
   );
   return (
@@ -207,7 +259,7 @@ function ContainerCard({
         // The raised surface under a hovering pointer, as album cards have (TON-167).
         "before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:transition-colors before:duration-100 before:ease-enter hover:before:bg-hover",
       )}
-      style={{ width, height: width + textHeight }}
+      style={{ width, height: width + words }}
     >
       <ContainerLink container={container} className={cardClass} {...cell}>
         {body}

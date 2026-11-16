@@ -360,10 +360,10 @@ const isCut = (element: HTMLElement | null) =>
     element.scrollWidth > element.clientWidth + 1);
 
 /**
- * A card's title or artist on its `lines`, ending in an ellipsis when it still doesn't fit; then, under a pointer,
- * a tooltip shows it whole (TON-280). Words that fit open no tooltip.
+ * A card's title or artist, or a folder's or list's name (TON-283), on its `lines`, ending in an ellipsis when it still
+ * doesn't fit; then, under a pointer, a tooltip shows it whole (TON-280). Words that fit open no tooltip.
  */
-function CardWords({
+export function CardWords({
   slot,
   text,
   lines,

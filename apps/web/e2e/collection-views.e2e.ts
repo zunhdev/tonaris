@@ -381,6 +381,63 @@ test("cards give a long title or artist a second line, and each row of cards onl
   expect(await violations(page, '[role="grid"]')).toEqual([]);
 });
 
+test("folder cards give a long name a second line, and each row only the height it needs", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signIn(page, accounts.viewsFolderNames);
+  await live(page);
+  const kpop: Container = { ...list("K-Pop"), kind: "folder" };
+  const names = [
+    "IVE",
+    "ITZY",
+    "aespa",
+    "TXT",
+    "NMIXX",
+    "LOONA",
+    "2nd Generation (2003–2011)",
+    "ATEEZ",
+  ];
+  const lists = names.map((name) => Object.assign(list(name), { parentId: kpop.id }));
+  await insert(page, kpop, ...lists);
+  await page.goto(`/f/${kpop.id}`);
+  await live(page);
+  const cards = grid(page, "K-Pop");
+  await expect(cards).toHaveAttribute("aria-colcount", "5");
+  const card = (name: string) =>
+    cards.getByRole("link", { name: new RegExp(`^${name.replace("(", "\\(")}`) });
+
+  // A name that doesn't fit beside its icon takes two lines; a short one, one (TON-283).
+  const second = card("2nd Generation");
+  await expect.poll(() => lineCount(titleOf(second))).toBe(2);
+  expect(await lineCount(titleOf(card("IVE")))).toBe(1);
+  await expect(second.locator('[data-slot="card-foot"]')).toHaveText("0 albums");
+
+  // The first row's names fit on one line, so its cards are a title line shorter than the second row's.
+  const titleLine = await titleOf(second).evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).lineHeight),
+  );
+  expect((await heightOf(second.locator(".."))) - (await heightOf(card("IVE").locator("..")))).toBe(
+    titleLine,
+  );
+  // Each count follows right under its name, on one line or two, rather than at the card's bottom.
+  const gaps = await cards
+    .getByRole("row")
+    .filter({ hasText: "2nd Generation" })
+    .getByRole("link")
+    .evaluateAll((links) =>
+      links.map((link) => {
+        const name = link.querySelector('[data-slot="card-title"]')?.getBoundingClientRect();
+        const count = link.querySelector('[data-slot="card-foot"]')?.getBoundingClientRect();
+        return Math.round((count?.top ?? 0) - (name?.bottom ?? 0));
+      }),
+    );
+  expect(gaps.length).toBe(3);
+  expect(new Set(gaps).size).toBe(1);
+  expect(gaps[0]).toBeLessThanOrEqual(4);
+  expect(await violations(page, '[role="grid"]')).toEqual([]);
+});
+
 test("a folder opens as cards fanning each list's first covers, walked by keyboard; Rows is kept per folder", async ({
   page,
 }) => {
