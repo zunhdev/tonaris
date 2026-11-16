@@ -5,7 +5,8 @@
 // (TON-167). Each card shows its save state and is highlighted when changed elsewhere (DS-80, DS-82).
 //
 // TON-283: a name takes two lines when it doesn't fit beside its icon, cut ones shown whole in a tooltip; the count
-// goes under it with the sharing glyph, and a row is a line taller only when one of its names takes two.
+// goes under it with the sharing glyph, and a row is a line taller only when one of its names takes two. TON-285: the
+// icon sits in the name's first line, and the second line and the count start at the card's edge.
 
 // Virtualized rows are absolutely positioned, which table elements can't be without overriding their display, so the
 // ARIA grid roles go on plain elements.
@@ -221,24 +222,27 @@ function ContainerCard({
           </span>
         )}
       </span>
-      {/* The name on one or two lines beside its icon, level with the first (TON-283). */}
-      <span className="mt-1.5 flex min-w-0 items-start gap-1.5">
-        <span className="flex h-(--text-base--line-height) shrink-0 items-center">
-          <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
-        </span>
-        <CardWords
-          slot="card-title"
-          text={container.name}
-          lines={lines}
-          className="min-w-0 flex-1 font-medium text-fg-primary"
+      {/* The name on one or two lines (TON-283), its icon in the first, and a second line from the card's edge, in
+          line with the cover (TON-285). */}
+      <CardWords
+        slot="card-title"
+        text={container.name}
+        lines={lines}
+        className="mt-1.5 font-medium text-fg-primary"
+      >
+        <ContainerIcon
+          kind={container.kind}
+          color={effectiveColor(container, tree.byId)}
+          className="mr-1.5 inline-block align-[-3px]"
         />
-      </span>
+        {container.name}
+      </CardWords>
       {/* The count right under the name, in line with it, and the sharing glyph after it, where a cut name can't take
           it along. It follows the name rather than the card's bottom, so it never reads as the caption of the next
           row's cover (TON-283). */}
       <span
         data-slot="card-foot"
-        className="flex min-w-0 items-center gap-1.5 pl-5.5 text-small text-fg-tertiary"
+        className="flex min-w-0 items-center gap-1.5 text-small text-fg-tertiary"
       >
         <span className="truncate">{contents}</span>
         <SharingGlyph containerId={container.id} />

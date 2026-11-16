@@ -441,6 +441,14 @@ test("folder cards give a long name a second line, and each row only the height 
   expect(gaps.length).toBe(3);
   expect(new Set(gaps).size).toBe(1);
   expect(gaps[0]).toBeLessThanOrEqual(4);
+
+  // The icon sits in the name's first line, so the name and the count start at the card's edge (TON-285).
+  const edges = await second.evaluate((link) => {
+    const left = (slot: string) =>
+      link.querySelector(`[data-slot="${slot}"]`)?.getBoundingClientRect().left;
+    return [link.getBoundingClientRect().left, left("card-title"), left("card-foot")];
+  });
+  expect(new Set(edges).size, JSON.stringify(edges)).toBe(1);
   expect(await violations(page, '[role="grid"]')).toEqual([]);
 });
 
