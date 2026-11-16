@@ -50,6 +50,7 @@ export function useAlbumGrid({
   collapsed,
   layout,
   rowSize,
+  sizeOf,
   page,
   overscan,
   padding = 0,
@@ -65,6 +66,8 @@ export function useAlbumGrid({
   layout: { kind: "rows"; columns: number } | { kind: "cards"; perRow: number };
   /** An album row's height, gap included. */
   rowSize: number;
+  /** A row's own height, gap included, where rows differ: a row of cards is as tall as its fullest card (TON-280). */
+  sizeOf?: ((albums: readonly Album[]) => number) | undefined;
   /** The rows Page Up and Page Down move, given the scroll container's height once it has one. */
   page: (viewport: number | undefined) => number;
   overscan: number;
@@ -106,7 +109,11 @@ export function useAlbumGrid({
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => scroller.current,
-    estimateSize: (index) => (items[index]?.type === "header" ? headerHeight : rowSize),
+    estimateSize: (index) => {
+      const item = items[index];
+      if (item?.type === "header") return headerHeight;
+      return item && sizeOf ? sizeOf(item.albums) : rowSize;
+    },
     getItemKey: (index) => {
       const item = items[index];
       if (item?.type === "header") return `group:${item.group}`;
@@ -117,8 +124,8 @@ export function useAlbumGrid({
     paddingEnd: padding,
     rangeExtractor: extractRange,
   });
-  // Headers and rows differ in height, so offsets change whenever the items do.
-  useEffect(() => virtualizer.measure(), [virtualizer, items, rowSize]);
+  // Headers and rows differ in height, so offsets change whenever the items or their sizes do.
+  useEffect(() => virtualizer.measure(), [virtualizer, items, rowSize, sizeOf]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
   const rearrange = useMemo<GridRearrange>(
     () => ({

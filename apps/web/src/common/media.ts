@@ -20,9 +20,12 @@ export function useMediaQuery(query: string, fallback: boolean): boolean {
   );
 }
 
+/** A phone's screen (DS-110), where the type scale is also a step larger (DS-13). */
+export const narrowQuery = "(max-width: 767px)";
+
 /** Whether the screen is narrower than the desktop app (DS-110): there the app is for browsing. */
 export function useNarrowScreen(): boolean {
-  return useMediaQuery("(max-width: 767px)", false);
+  return useMediaQuery(narrowQuery, false);
 }
 
 /** Whether the window is wide enough for the inspector beside the view (DS-30). */

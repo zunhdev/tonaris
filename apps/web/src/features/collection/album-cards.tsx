@@ -8,6 +8,11 @@
 // TON-167: the open album's card has an accent ring around its cover and its title on an accent highlight; a hovering
 // pointer raises a surface behind a card, which takes no clicks, so the service links still open their service; and
 // a cover names a release that isn't a plain studio album (`ReleaseLabel`).
+//
+// TON-280: the title takes up to two lines, and the artist two under a one-line title; cut words show whole in a
+// tooltip. The year and the links that fit whole share the card's last line, then "+N" opens the chooser for the
+// rest. Each row is as tall as its fullest card, worked out from text widths (`card-text`), so short rows are a line
+// shorter and the links line up within each row.
 
 // Virtualized rows are absolutely positioned, which table elements can't be without overriding their display, and
 // that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -17,17 +22,31 @@ import { isUnderway } from "@/client/sync/save-states";
 import { useNarrowScreen } from "@/common/media";
 import { pageScroll } from "@/common/page-scroll";
 import { useShell } from "@/common/shell-context";
+import { useOpenIn } from "@/features/open/open-in";
+import { ordered } from "@/features/open/service-choices";
 import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
-import { useRef } from "react";
+import { useCallback, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 
 import type { Album } from "@tonaris/domain";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/tooltip";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useAlbumGrid } from "./album-grid";
 import { SelectBox } from "./album-rows";
 import { Artwork, artworkSrc } from "./artwork";
+import {
+  cardLines,
+  fullCard,
+  linksThatFit,
+  measureText,
+  useCardType,
+  wordsHeight,
+  yearWidth,
+  type CardLines,
+  type CardType,
+} from "./card-text";
 import { ChronologyYear } from "./chronology-year";
 import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
@@ -42,8 +61,6 @@ import type { ViewMoves } from "./use-rearrange";
 const minCard = 160;
 const gap = 16;
 const padding = 24;
-/** The title, artist, year and services under the artwork. */
-const textHeight = 88;
 
 export function AlbumCards({
   sections,
@@ -72,9 +89,29 @@ export function AlbumCards({
   const wholeColumns = Math.max(1, Math.floor((whole + gap) / (minCard + gap)));
   const card = Math.min(inner, Math.floor((whole - gap * (wholeColumns - 1)) / wholeColumns));
   const columns = Math.max(1, Math.floor((inner + gap) / (card + gap)));
-  const rowSize = card + textHeight + gap;
   // In Editing mode on a computer, albums can be selected (TON-231).
   const narrow = useNarrowScreen();
+  // The words' type (DS-13), and each album's lines at this card width (TON-280).
+  const type = useCardType();
+  const linesById = useMemo(() => {
+    const lines = new Map<string, CardLines>();
+    for (const section of sections) {
+      for (const album of section.albums)
+        lines.set(album.id, cardLines(album, card, type, measureText));
+    }
+    return lines;
+  }, [sections, card, type]);
+  const fullRow = useCallback(
+    (albums: readonly Album[]) =>
+      albums.some((album) => fullCard(linesById.get(album.id) ?? { title: 2, artist: 1 })),
+    [linesById],
+  );
+  const sizeOf = useCallback(
+    (albums: readonly Album[]) => card + wordsHeight(fullRow(albums), type) + gap,
+    [card, fullRow, type],
+  );
+  // A full row's height: Page Up and Page Down move by as many rows as fit when every one is full.
+  const rowSize = card + wordsHeight(true, type) + gap;
   const selection = useAlbumSelection();
   const { editing } = useMode();
   const selecting = selection !== undefined && editing && !narrow;
@@ -85,6 +122,7 @@ export function AlbumCards({
     collapsed,
     layout: { kind: "cards", perRow: columns },
     rowSize,
+    sizeOf,
     page: (viewport) => Math.max(1, Math.floor((viewport ?? rowSize) / rowSize)),
     overscan: 3,
     padding: gap,
@@ -128,6 +166,7 @@ export function AlbumCards({
                 />
               );
             }
+            const words = wordsHeight(fullRow(item.albums), type);
             return (
               <div
                 key={virtual.key}
@@ -141,6 +180,9 @@ export function AlbumCards({
                     key={album.id}
                     album={album}
                     width={card}
+                    words={words}
+                    lines={linesById.get(album.id) ?? { title: 2, artist: 1 }}
+                    type={type}
                     col={col}
                     open={album.id === albumId}
                     selected={selecting ? selection.has(album.id) : undefined}
@@ -166,6 +208,9 @@ export function AlbumCards({
 function AlbumCard({
   album,
   width,
+  words,
+  lines,
+  type,
   col,
   open,
   selected,
@@ -175,6 +220,10 @@ function AlbumCard({
 }: {
   album: Album;
   width: number;
+  /** The height of the words under the cover, the same for every card in its row. */
+  words: number;
+  lines: CardLines;
+  type: CardType;
   col: number;
   /** Whether the inspector shows this album. */
   open: boolean;
@@ -189,6 +238,12 @@ function AlbumCard({
   const status = useSaveState(album.id);
   const { linksByAlbum } = useCollectionData();
   const label = releaseLabel(album);
+  const links = linksByAlbum.get(album.id);
+  const services = ordered(links).map((link) => link.service);
+  const shown =
+    services.length === 0
+      ? 0
+      : linksThatFit(services, yearWidth(album, true, type, measureText), width, type, measureText);
   return (
     <div
       ref={ref}
@@ -205,7 +260,7 @@ function AlbumCard({
         // clicks, and `hover:` matches only a pointer that hovers, so a tap on a phone leaves none behind.
         "before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:transition-colors before:duration-100 before:ease-enter hover:before:bg-hover",
       )}
-      style={{ width, height: width + textHeight }}
+      style={{ width, height: width + words }}
       {...cell}
     >
       <span className="relative block">
@@ -232,23 +287,44 @@ function AlbumCard({
           </span>
         )}
       </span>
-      <span
-        className={cn(
-          "mt-1 truncate font-medium text-fg-primary",
-          // The open album's title on the accent, padded out and pulled back so its text stays in line.
-          open &&
-            "-mx-1.5 max-w-[calc(100%+0.75rem)] self-start rounded-sm bg-accent-fill px-1.5 text-fg-on-accent",
-        )}
+      <CardWords
+        slot="card-title"
+        text={album.title}
+        lines={lines.title}
+        // The open album's title on the accent, line by line, padded out and pulled back so its text stays in line.
+        className={cn("mt-1 font-medium text-fg-primary", open && "-mx-1.5 px-1.5")}
       >
-        {album.title}
-      </span>
-      <span className={cn("truncate text-small text-fg-secondary")}>{album.artistCredit}</span>
-      <span className="flex text-small text-fg-tertiary">
-        <ChronologyYear album={album} />
+        {open ? (
+          <span className="-mx-1.5 rounded-sm bg-accent-fill box-decoration-clone px-1.5 text-fg-on-accent">
+            {album.title}
+          </span>
+        ) : undefined}
+      </CardWords>
+      <CardWords
+        slot="card-artist"
+        text={album.artistCredit}
+        lines={lines.artist}
+        className="text-small text-fg-secondary"
+      />
+      {/* The card's last line, wherever the words above end: the year, then the links that fit whole. */}
+      <span data-slot="card-foot" className="mt-auto flex min-w-0 text-small text-fg-tertiary">
+        <span className="shrink-0">
+          <ChronologyYear album={album} />
+        </span>
         <ReleaseLabelText label={label} />
-      </span>
-      <span className="truncate text-small text-fg-tertiary">
-        <ServiceNames title={album.title} links={linksByAlbum.get(album.id)} />
+        {services.length > 0 && (
+          <>
+            <span aria-hidden className="shrink-0 whitespace-pre">
+              {" · "}
+            </span>
+            <span className="min-w-0 truncate">
+              <ServiceNames title={album.title} links={links} limit={shown} />
+              {shown < services.length && (
+                <MoreLinks albumId={album.id} title={album.title} count={services.length - shown} />
+              )}
+            </span>
+          </>
+        )}
       </span>
       {/* Over the cover's corner, but last, so the card's name starts with its title. */}
       {selected !== undefined && (
@@ -267,5 +343,79 @@ function AlbumCard({
         />
       )}
     </div>
+  );
+}
+
+/** Whether an element's words run past it, so an ellipsis cuts them. */
+const isCut = (element: HTMLElement | null) =>
+  element !== null &&
+  (element.scrollHeight > element.clientHeight + 1 ||
+    element.scrollWidth > element.clientWidth + 1);
+
+/**
+ * A card's title or artist on its `lines`, ending in an ellipsis when it still doesn't fit; then, under a pointer,
+ * a tooltip shows it whole (TON-280). Words that fit open no tooltip.
+ */
+function CardWords({
+  slot,
+  text,
+  lines,
+  className,
+  children,
+}: {
+  slot: string;
+  text: string;
+  lines: 1 | 2;
+  className?: string;
+  /** What shows, when it isn't plain `text`. */
+  children?: ReactNode;
+}) {
+  // The trigger is typed as Base UI's default button; here it renders a span, which a callback ref takes as it is.
+  const element = useRef<HTMLElement | null>(null);
+  const setElement = useCallback((node: HTMLElement | null) => {
+    element.current = node;
+  }, []);
+  const [open, setOpen] = useState(false);
+  return (
+    <Tooltip open={open} onOpenChange={(next) => setOpen(next && isCut(element.current))}>
+      <TooltipTrigger
+        ref={setElement}
+        render={
+          <span
+            data-slot={slot}
+            className={cn("break-words", lines === 1 ? "line-clamp-1" : "line-clamp-2", className)}
+          />
+        }
+      >
+        {children ?? text}
+      </TooltipTrigger>
+      <TooltipContent className="max-w-80">{text}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+const keepFocus = (event: MouseEvent) => event.preventDefault();
+
+/**
+ * "+N" after the links that fit on a card: the "Open in…" chooser with every service the album has a link for
+ * (DS-25, TON-280). Like the links it is for the pointer, as `O` is the keyboard's way, and keeps the grid's focus.
+ */
+function MoreLinks({ albumId, title, count }: { albumId: string; title: string; count: number }) {
+  const openIn = useOpenIn();
+  return (
+    <button
+      type="button"
+      tabIndex={-1}
+      data-slot="more-links"
+      aria-label={`+${count} more: Open '${title}' in…`}
+      onMouseDown={keepFocus}
+      onClick={(event) => {
+        event.stopPropagation();
+        openIn?.show(albumId, event.currentTarget);
+      }}
+      className="rounded-sm bg-raised px-1.5 font-medium text-fg-primary outline-none hover:bg-hover"
+    >
+      +{count}
+    </button>
   );
 }

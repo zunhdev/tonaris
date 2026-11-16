@@ -266,10 +266,12 @@ function AlbumItem({
   const shown = `${recorded ? "rec. " : ""}${year}`;
   if (layout === "grid") {
     // The cover's shadow and release label, as on the workspace's cards (TON-167). Nothing opens here, so no hover.
+    // As there too, the title and artist take up to two lines, and the year and links end the card (TON-280); a row
+    // of the grid is as tall as its tallest card, so the links line up within it, with no measuring.
     const label = releaseLabel(album);
     return (
-      <li className="flex flex-col gap-1.5 [contain-intrinsic-size:auto_14rem] [content-visibility:auto]">
-        <span className="relative block">
+      <li className="flex flex-col gap-1 [contain-intrinsic-size:auto_14rem] [content-visibility:auto]">
+        <span className="relative mb-0.5 block">
           <Artwork
             title={album.title}
             src={artworkSrc(album)}
@@ -279,16 +281,25 @@ function AlbumItem({
           />
           <ReleaseLabel label={label} />
         </span>
-        <span className="truncate text-fg-primary">{album.title}</span>
-        <span className="truncate text-small text-fg-secondary">
-          {album.artistCredit} · {shown}
-          <ReleaseLabelText label={label} />
+        <span data-slot="card-title" className="line-clamp-2 break-words text-fg-primary">
+          {album.title}
         </span>
-        {links.length > 0 && (
-          <span className="text-small text-fg-tertiary">
-            <ServiceNames title={album.title} links={links} focusable />
-          </span>
-        )}
+        <span
+          data-slot="card-artist"
+          className="line-clamp-2 text-small break-words text-fg-secondary"
+        >
+          {album.artistCredit}
+        </span>
+        <span data-slot="card-foot" className="mt-auto text-small text-fg-tertiary">
+          {shown}
+          <ReleaseLabelText label={label} />
+          {links.length > 0 && (
+            <>
+              {" · "}
+              <ServiceNames title={album.title} links={links} focusable />
+            </>
+          )}
+        </span>
       </li>
     );
   }

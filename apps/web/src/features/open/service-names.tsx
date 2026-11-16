@@ -21,14 +21,19 @@ export function ServiceNames({
   title,
   links,
   focusable = false,
+  limit,
 }: {
   /** The album's title, for each link's name. */
   title: string;
   links: readonly Destination[] | undefined;
   /** Whether each takes focus, as on shared pages; the workspace's grid keeps it instead. */
   focusable?: boolean;
+  /** Only the first this many, spaced from the "+N" that follows for the rest, as on a card (TON-280). */
+  limit?: number | undefined;
 }) {
-  const shown = ordered(links);
+  const all = ordered(links);
+  const shown = limit === undefined ? all : all.slice(0, limit);
+  const more = shown.length < all.length;
   return shown.map((link, index) => {
     const name = serviceNames[link.service];
     return (
@@ -43,7 +48,7 @@ export function ServiceNames({
         className={cn(
           "group/service whitespace-nowrap text-fg-secondary hover:text-accent-solid",
           !focusable && "outline-none",
-          index < shown.length - 1 && "mr-2.5",
+          (index < shown.length - 1 || more) && "mr-2.5",
         )}
       >
         <span className="underline decoration-fg-tertiary/50 underline-offset-4 group-hover/service:decoration-accent-solid">
