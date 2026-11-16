@@ -414,6 +414,17 @@ export const defaultsSetHiddenServicesSchema = z.object({
 });
 
 /**
+ * `defaults.setServiceOrder`: sets the order the person wants their streaming services in, the one they use most first
+ * (TON-282); `base` holds the prior order (TS-21).
+ */
+export const defaultsSetServiceOrderSchema = z.object({
+  mutationId,
+  name: z.literal("defaults.setServiceOrder"),
+  args: z.object({ serviceOrder: z.array(z.enum(streamingServices)) }),
+  base: z.object({ serviceOrder: z.array(z.enum(streamingServices)) }),
+});
+
+/**
  * `order.set`: places items in one of the person's views, as one move (TS-16, FR-05.2). `keys` maps each item's ID to
  * its new fractional-index key, or null to clear its place; `base` maps each to its key before, null for none
  * (TS-21). Every item must be in the view.
@@ -579,6 +590,7 @@ export const mutationSchema = z
     containerSetColorSchema,
     shareSetRoleSchema,
     shareCopySchema,
+    defaultsSetServiceOrderSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

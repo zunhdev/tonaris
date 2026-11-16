@@ -7,7 +7,7 @@
 // Editing mode is left. A change from elsewhere never overwrites a field being edited (DS-82).
 
 import { sent } from "@/client/sync/writer";
-import { ordered } from "@/features/open/service-choices";
+import { ordered, useServiceOrder } from "@/features/open/service-choices";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
@@ -203,7 +203,10 @@ function PropertiesSection({ album, withChronology }: { album: Album; withChrono
   const { listsByAlbum, linksByAlbum } = useCollectionData();
   const added = uuidv7Time(album.id);
   const lists = listsByAlbum.get(album.id)?.length ?? 0;
-  const links = ordered(linksByAlbum.get(album.id)).map((link) => serviceNames[link.service]);
+  const order = useServiceOrder();
+  const links = ordered(linksByAlbum.get(album.id), order).map(
+    (link) => serviceNames[link.service],
+  );
   return (
     <Section title="Properties">
       <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-3 gap-y-1.5">

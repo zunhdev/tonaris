@@ -11,6 +11,7 @@ import { setLink } from "@/client/sync/links";
 import { sent } from "@/client/sync/writer";
 import { useCapture, type KeptLink } from "@/features/capture/capture-context";
 import { ServiceAnchor } from "@/features/open/service-anchor";
+import { useServiceOrder } from "@/features/open/service-choices";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -22,7 +23,6 @@ import { useEffect, useState } from "react";
 import {
   serviceLinkKey,
   serviceNames,
-  streamingServices,
   type Album,
   type ServiceLink,
   type StreamingService,
@@ -49,8 +49,9 @@ function shownUrl(url: string): string {
 export function LinksSection({ album, canEdit }: { album: Album; canEdit: boolean }) {
   const { linksByAlbum, defaults } = useCollectionData();
   const links = new Map((linksByAlbum.get(album.id) ?? []).map((link) => [link.service, link]));
-  // Editing offers every service the person uses, from Settings, and any the album already links (TON-138).
-  const shown = streamingServices.filter(
+  // Editing offers every service the person uses, from Settings, and any the album already links (TON-138), in
+  // their order (TON-282).
+  const shown = useServiceOrder().filter(
     (service) => links.has(service) || (canEdit && !defaults.hiddenServices.includes(service)),
   );
   // Links capture kept instead of pasted ones, while the album still has them (FR-06.4).

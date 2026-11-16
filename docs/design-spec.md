@@ -1926,6 +1926,8 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 *As built in TON-138* (from the creator's manual testing; the creator chose this, 31 October 2026): **Streaming services.** A section after Links lists each service with a switch, all on at first, and a note: "The album panel and New album show link fields only for the services that are on. Links you've already saved still show, and you can paste a link from any service." It is saved to the account at once and synced. A service added later starts on, since the account keeps the services turned off. *(FR-06.3)*
 
+*As built in TON-282* (from the creator's manual testing, 16 November 2026): **the services in the person's order.** The section lists the services in the person's order, each with a handle before its name, and a note: "Drag a service by its handle, or press ⌥↑ or ⌥↓ on its switch, to put the ones you use most first. An album lists its links in this order." The handle drags a service to another place, a line showing where it would land (DS-49); it is for the pointer only, and the keyboard moves a service with ⌥↑ and ⌥↓ on its switch, announced as the views announce moves (DS-83). The order is saved to the account at once and synced. Cards' and rows' links, the "Open in…" chooser (DS-25), the album panel's properties and link fields (DS-46), and New album follow it; guests see the services' own order, and a service added later goes last. *(FR-06.3)*
+
 **DS-96 Data export** (Settings → Data). *(FR-08.1–FR-08.6)*
 - **Explanation:** "A ZIP with a JSON file (complete, for programs and AI tools), a Markdown file (readable outline of your collection) and a README."
 - **Included / not included:** a short two-column list (FR-08.3, FR-08.4).

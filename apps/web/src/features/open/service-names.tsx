@@ -12,7 +12,7 @@ import { serviceNames } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { ServiceAnchor, type Destination } from "./service-anchor";
-import { ordered } from "./service-choices";
+import { ordered, useServiceOrder } from "./service-choices";
 
 const keepFocus = (event: MouseEvent) => event.preventDefault();
 const keepToLink = (event: MouseEvent) => event.stopPropagation();
@@ -31,7 +31,7 @@ export function ServiceNames({
   /** Only the first this many, spaced from the "+N" that follows for the rest, as on a card (TON-280). */
   limit?: number | undefined;
 }) {
-  const all = ordered(links);
+  const all = ordered(links, useServiceOrder());
   const shown = limit === undefined ? all : all.slice(0, limit);
   const more = shown.length < all.length;
   return shown.map((link, index) => {

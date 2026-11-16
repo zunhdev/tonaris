@@ -1,5 +1,5 @@
-// The person's account defaults as a page reads and writes them (FR-11.7, FR-06.6, TON-138): the values every view
-// follows where it has no choice of its own, where links open, and the streaming services turned off. Each write goes
+// The person's account defaults as a page reads and writes them (FR-11.7, FR-06.6, TON-138, TON-282): the values every
+// view follows where it has no choice of its own, where links open, the streaming services turned off, and their order. Each write goes
 // through the sync client's defaults collection, so it shows at once and reaches the person's other sessions; the
 // save-state layer reports one that fails.
 
@@ -8,7 +8,12 @@ import { sent } from "@/client/sync/writer";
 import { useCollectionData } from "@/features/collection/data";
 import { useSyncClient } from "@/features/sync/sync-provider";
 
-import { streamingServices, type AccountDefaults, type StreamingService } from "@tonaris/domain";
+import {
+  servicesInOrder,
+  streamingServices,
+  type AccountDefaults,
+  type StreamingService,
+} from "@tonaris/domain";
 
 export type AccountDefaultsControl = {
   defaults: AccountDefaults;
@@ -18,6 +23,8 @@ export type AccountDefaultsControl = {
   set: (values: Partial<AccountDefaults>) => void;
   /** Turns a service on or off, keeping the list in the services' order. */
   setService: (service: StreamingService, on: boolean) => void;
+  /** Moves a service to place `to`, counted from 0, in the person's order (TON-282). */
+  moveService: (service: StreamingService, to: number) => void;
 };
 
 export function useAccountDefaults(): AccountDefaultsControl {
@@ -40,5 +47,11 @@ export function useAccountDefaults(): AccountDefaultsControl {
     set({ hiddenServices: streamingServices.filter((each) => hidden.has(each)) });
   }
 
-  return { defaults, ready, set, setService };
+  function moveService(service: StreamingService, to: number) {
+    const order = servicesInOrder(defaults.serviceOrder).filter((each) => each !== service);
+    order.splice(Math.max(0, Math.min(to, order.length)), 0, service);
+    set({ serviceOrder: order });
+  }
+
+  return { defaults, ready, set, setService, moveService };
 }

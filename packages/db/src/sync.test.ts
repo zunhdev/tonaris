@@ -21,6 +21,7 @@ import {
   type Container,
   type Mutation,
   type Principal,
+  type StreamingService,
 } from "@tonaris/domain";
 
 import { collectionOverview } from "./mcp";
@@ -934,6 +935,35 @@ describe("view choices and defaults (FR-05.2, FR-11.7, FR-11.8)", () => {
       ...appAccountDefaults,
       linkTarget: "app",
       hiddenServices: ["qobuz", "tidal"],
+    });
+  });
+
+  test("the services' order is saved with the defaults, and the services turned off keep it (TON-282)", async () => {
+    const anna = await newPrincipal();
+    const order = await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "defaults.setServiceOrder",
+      args: { serviceOrder: ["tidal", "spotify"] },
+      base: { serviceOrder: [] },
+    });
+    const serviceOrder: StreamingService[] = [
+      "tidal",
+      "spotify",
+      "apple-music",
+      "qobuz",
+      "youtube-music",
+    ];
+    expect(order.changes[0]?.data).toEqual({ ...appAccountDefaults, serviceOrder });
+    await executeMutation(t.db, anna, {
+      mutationId: uuidv7(),
+      name: "defaults.setHiddenServices",
+      args: { hiddenServices: ["qobuz"] },
+      base: { hiddenServices: [] },
+    });
+    expect((await bootstrapSnapshot(t.db, anna.userId)).defaults).toEqual({
+      ...appAccountDefaults,
+      hiddenServices: ["qobuz"],
+      serviceOrder,
     });
   });
 });

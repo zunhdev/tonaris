@@ -49,6 +49,7 @@ function created(mutation: Mutation): string[] {
     case "defaults.set":
     case "defaults.setLinkTarget":
     case "defaults.setHiddenServices":
+    case "defaults.setServiceOrder":
     case "order.set":
     case "share.invite":
     case "share.setLink":
@@ -76,6 +77,7 @@ function referenced(mutation: Mutation): (string | null)[] {
     case "defaults.set":
     case "defaults.setLinkTarget":
     case "defaults.setHiddenServices":
+    case "defaults.setServiceOrder":
     case "account.setDisplayName":
     case "share.saveLink":
       return [];

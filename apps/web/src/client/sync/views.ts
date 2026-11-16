@@ -7,6 +7,7 @@
 
 import {
   sameServices,
+  servicesInOrder,
   unsetView,
   viewDefaultsFields,
   viewPrefsFields,
@@ -94,8 +95,9 @@ export function setViewChoice(
 
 /**
  * The writes that take the defaults from `before` to `next`: a `defaults.set` for the view options, a
- * `defaults.setLinkTarget` for the link setting, and a `defaults.setHiddenServices` for the services turned off
- * (TON-138); none if they are the same. The services are compared as the server compares them, in any order.
+ * `defaults.setLinkTarget` for the link setting, a `defaults.setHiddenServices` for the services turned off
+ * (TON-138), and a `defaults.setServiceOrder` for their order (TON-282); none if they are the same. The services
+ * turned off are compared in any order, and orders once filled out, as the server compares them.
  */
 export function defaultsWrites(
   before: AccountDefaults,
@@ -122,6 +124,18 @@ export function defaultsWrites(
         "defaults.setHiddenServices",
         { hiddenServices: next.hiddenServices },
         { hiddenServices: before.hiddenServices },
+      ),
+    );
+  }
+  if (
+    next.serviceOrder !== undefined &&
+    servicesInOrder(next.serviceOrder).join(",") !== servicesInOrder(before.serviceOrder).join(",")
+  ) {
+    writes.push(
+      envelope(
+        "defaults.setServiceOrder",
+        { serviceOrder: next.serviceOrder },
+        { serviceOrder: before.serviceOrder },
       ),
     );
   }

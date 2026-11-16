@@ -22,7 +22,7 @@ import {
 import { Popover, PopoverContent } from "@tonaris/ui/components/popover";
 
 import { ServiceAnchor } from "./service-anchor";
-import { ordered, ServiceChoices } from "./service-choices";
+import { ordered, ServiceChoices, useServiceOrder } from "./service-choices";
 
 type Opening = { albumId: string; anchor: Element | null };
 
@@ -71,7 +71,7 @@ export function OpenInProvider({ children }: { children: ReactNode }) {
 function OpenInChooser({ opening, onClose }: { opening: Opening; onClose: () => void }) {
   const { albumsById, linksByAlbum } = useCollectionData();
   const narrow = useNarrowScreen();
-  const links = ordered(linksByAlbum.get(opening.albumId));
+  const links = ordered(linksByAlbum.get(opening.albumId), useServiceOrder());
   const title = albumsById.get(opening.albumId)?.title ?? "";
   if (links.length === 0) return null;
 

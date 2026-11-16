@@ -10682,6 +10682,69 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setServiceOrder"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "serviceOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal",
+                                "youtube-music"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "serviceOrder"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "serviceOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal",
+                                "youtube-music"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "serviceOrder"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -13208,6 +13271,69 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setServiceOrder"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "serviceOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal",
+                                "youtube-music"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "serviceOrder"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "serviceOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal",
+                                "youtube-music"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "serviceOrder"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -15733,6 +15859,69 @@
                       "mutationId",
                       "name",
                       "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "defaults.setServiceOrder"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "serviceOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal",
+                                "youtube-music"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "serviceOrder"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "serviceOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "spotify",
+                                "apple-music",
+                                "qobuz",
+                                "tidal",
+                                "youtube-music"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "serviceOrder"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
                     ]
                   }
                 ],
@@ -17474,6 +17663,20 @@
                             ]
                           },
                           "description": "The streaming services the person turned off, in the services' order: their empty link fields stay out of sight, while saved links still show (TON-138). Empty until they choose."
+                        },
+                        "serviceOrder": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "spotify",
+                              "apple-music",
+                              "qobuz",
+                              "tidal",
+                              "youtube-music"
+                            ]
+                          },
+                          "description": "The streaming services in the person's order, the one they use most first: every list of an album's services follows it (TON-282). Empty until they choose; a service missing from it follows, in the services' order."
                         }
                       },
                       "required": [
@@ -17485,7 +17688,8 @@
                         "layout",
                         "folderLayout",
                         "linkTarget",
-                        "hiddenServices"
+                        "hiddenServices",
+                        "serviceOrder"
                       ],
                       "additionalProperties": false,
                       "description": "The person's account defaults, DS-44's until they save their own, and where their links open."
@@ -19098,6 +19302,20 @@
                       ]
                     },
                     "description": "The streaming services the person turned off, in the services' order: their empty link fields stay out of sight, while saved links still show (TON-138). Empty until they choose."
+                  },
+                  "serviceOrder": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "spotify",
+                        "apple-music",
+                        "qobuz",
+                        "tidal",
+                        "youtube-music"
+                      ]
+                    },
+                    "description": "The streaming services in the person's order, the one they use most first: every list of an album's services follows it (TON-282). Empty until they choose; a service missing from it follows, in the services' order."
                   }
                 },
                 "required": [
@@ -19109,10 +19327,11 @@
                   "layout",
                   "folderLayout",
                   "linkTarget",
-                  "hiddenServices"
+                  "hiddenServices",
+                  "serviceOrder"
                 ],
                 "additionalProperties": false,
-                "description": "A person's account defaults for presentation (FR-11.7), where their service links open (FR-06.6), and the services they don't use (TON-138)."
+                "description": "A person's account defaults for presentation (FR-11.7), where their service links open (FR-06.6), the services they don't use (TON-138), and the order they want them in (TON-282)."
               },
               "mutationId": {
                 "anyOf": [
@@ -21913,6 +22132,72 @@
                   "mutationId",
                   "name",
                   "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "defaults.setServiceOrder"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "serviceOrder": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "spotify",
+                            "apple-music",
+                            "qobuz",
+                            "tidal",
+                            "youtube-music"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "serviceOrder"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "serviceOrder": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "spotify",
+                            "apple-music",
+                            "qobuz",
+                            "tidal",
+                            "youtube-music"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "serviceOrder"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
                 ],
                 "additionalProperties": false
               }
