@@ -288,6 +288,8 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **Virtualized by rows of cards.**
 - **Each card is a grid cell,** named by its title, artist and year. The save-state badge sits on the artwork's top-right corner.
 
+*As built in TON-281* (decided with the creator, 16 November 2026): **on a phone, cards are at least 150 px wide, 16 px in from each side,** so a 360 or 375 px screen fits two a row; before, 160 px and 24 px left a 375 px screen one 327 px card a row. Folder cards (DS-41) are sized the same way. Computers keep 160 px and 24 px.
+
 *As built in TON-35:* the year follows DS-24, as in rows. Grouped, each group's header is a row of its own above its cards (DS-43).
 
 *As built in TON-105* (decided with the creator, 30 October 2026): **a line under the year** names the services the album has links for, "Spotify · Apple Music", in `text.small` `fg.tertiary`, truncated. Each name is a link, as in DS-21's services column. Every card keeps the line, empty without links, so the grid's rows stay one height (88 px of text under the tile).

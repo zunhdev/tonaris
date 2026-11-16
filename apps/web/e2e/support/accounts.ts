@@ -66,6 +66,8 @@ export const accounts = {
   viewsFolderCards: at("views-folder-cards"),
   // Cards' long titles and artists, and rows of their own heights (collection-views.e2e.ts, TON-280).
   viewsLongNames: at("views-long-names"),
+  // Two cards a row on small phones (collection-views.e2e.ts, TON-281).
+  viewsPhoneCards: at("views-phone-cards"),
   // Sorting, grouping, View options and defaults (view-options.e2e.ts), one per test.
   orderViews: at("order-views"),
   syncViews: at("sync-views"),

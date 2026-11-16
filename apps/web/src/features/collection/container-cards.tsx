@@ -1,5 +1,5 @@
 // Folder and root cards (DS-41, TON-174): a folder's, or the root's, folders and lists as a virtualized ARIA grid of
-// cards, at least 160 px wide in responsive columns, as album cards are (DS-22): each a fan of its first covers
+// cards, at least 160 px wide (150 on a phone, TON-281) in responsive columns, as album cards are (DS-22): each a fan of its first covers
 // (`coversOf`), its name and what it holds. A card is a link that opens its folder or list; the arrows walk the grid,
 // Enter opens, and under Manual sort ⌥↑ and ⌥↓ rearrange (DS-49). A hovering pointer raises a surface behind a card
 // (TON-167). Each card shows its save state and is highlighted when changed elsewhere (DS-80, DS-82).
@@ -9,6 +9,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role */
 
 import { isUnderway } from "@/client/sync/save-states";
+import { useNarrowScreen } from "@/common/media";
 import { pageScroll } from "@/common/page-scroll";
 import { SharingGlyph } from "@/features/sharing/own-sharing";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
@@ -19,6 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 import type { Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { cardGrid } from "./album-cards";
 import { artworkSrc } from "./artwork";
 import { useCollectionUi } from "./collection-ui";
 import { coversOf } from "./container-covers";
@@ -30,9 +32,7 @@ import { ContainerLink, useOpenContainer } from "./place";
 import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
-const minCard = 160;
 const gap = 16;
-const padding = 24;
 /** The name and the count under the fan. */
 const textHeight = 52;
 
@@ -53,6 +53,8 @@ export function ContainerCards({
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
   const open = useOpenContainer();
+  // Sized as album cards are, a little smaller on a phone (TON-281).
+  const { minCard, padding } = cardGrid(useNarrowScreen());
   const inner = Math.max(0, useWidth(scroller) - 2 * padding);
   const columns = Math.max(1, Math.floor((inner + gap) / (minCard + gap)));
   const card = Math.min(inner, Math.floor((inner - gap * (columns - 1)) / columns));
