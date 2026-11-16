@@ -363,16 +363,22 @@ test("cards give a long title or artist a second line, and each row of cards onl
   );
   expect((await heightOf(border)) - (await heightOf(card("Orchid")))).toBe(titleLine);
 
-  // In the long names' row, every card's last line, the year and links, lines up.
-  const feet = cards
+  // In the long names' row, each card's year and links follow right after its artist, not the card's bottom
+  // (TON-284).
+  const gaps = await cards
     .getByRole("row")
     .filter({ hasText: "Border: Day One" })
-    .locator('[data-slot="card-foot"]');
-  const tops = await feet.evaluateAll((elements) =>
-    elements.map((element) => element.getBoundingClientRect().top),
-  );
-  expect(tops.length).toBeGreaterThan(1);
-  expect(new Set(tops).size).toBe(1);
+    .getByRole("gridcell")
+    .evaluateAll((cells) =>
+      cells.map((cell) => {
+        const artist = cell.querySelector('[data-slot="card-artist"]')?.getBoundingClientRect();
+        const foot = cell.querySelector('[data-slot="card-foot"]')?.getBoundingClientRect();
+        return Math.round((foot?.top ?? 0) - (artist?.bottom ?? 0));
+      }),
+    );
+  expect(gaps.length).toBeGreaterThan(1);
+  expect(new Set(gaps).size).toBe(1);
+  expect(gaps[0]).toBeLessThanOrEqual(4);
   await expect(border.locator('[data-slot="card-foot"]')).toHaveText("2020");
 
   // Words cut even on two lines show whole in a tooltip under the pointer.

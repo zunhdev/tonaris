@@ -266,8 +266,8 @@ function AlbumItem({
   const shown = `${recorded ? "rec. " : ""}${year}`;
   if (layout === "grid") {
     // The cover's shadow and release label, as on the workspace's cards (TON-167). Nothing opens here, so no hover.
-    // As there too, the title and artist take up to two lines, and the year and links end the card (TON-280); a row
-    // of the grid is as tall as its tallest card, so the links line up within it, with no measuring.
+    // As there too, the title and artist take up to two lines (TON-280), and the year and links follow right after
+    // the artist (TON-284).
     const label = releaseLabel(album);
     return (
       <li className="flex flex-col gap-1 [contain-intrinsic-size:auto_14rem] [content-visibility:auto]">
@@ -290,7 +290,7 @@ function AlbumItem({
         >
           {album.artistCredit}
         </span>
-        <span data-slot="card-foot" className="mt-auto text-small text-fg-tertiary">
+        <span data-slot="card-foot" className="text-small text-fg-tertiary">
           {shown}
           <ReleaseLabelText label={label} />
           {links.length > 0 && (

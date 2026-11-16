@@ -310,6 +310,8 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 - **Links that don't fit wait behind "+N".** The links that fit whole show, in the services' order, then "+N" in `text.small` medium on `bg.raised`, which opens the "Open in…" chooser (DS-25) with every service. Like the links, it takes no focus.
 - **Guest pages' cards follow** with CSS alone (DS-72): the title and artist on up to two lines each, and the year and links at the bottom of each card, in line across a row of the grid.
 
+*As built in TON-284* (decided with the creator, 16 November 2026), replacing TON-280's bottom line: **the year and links follow right after the artist,** in the workspace and on guest pages. Rows keep TON-280's heights, so on a short card in a taller row the spare room falls below the links, into the gap between rows. At the card's bottom they had sat 20 px below their artist but 16 px above the next row's cover, and on these borderless cards read as its caption. In a row, the links now shift by one line at most.
+
 **DS-23 Artwork.**
 - A fixed-aspect box with lazy loading, `decoding="async"`, a `sizes`/`srcset` where the source allows it, and a 150ms fade-in.
 - **Fallback tile:** a neutral surface with the first letter of the title and a hue derived from a hash of the title, desaturated to stay calm. The same tile is used when artwork is missing, still loading, or fails to load. A failed load is never shown as an error. *(FR-03.4)*
