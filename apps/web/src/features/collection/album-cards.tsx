@@ -300,11 +300,13 @@ function AlbumCard({
         slot="card-title"
         text={album.title}
         lines={lines.title}
-        // The open album's title on the accent, line by line, padded out and pulled back so its text stays in line.
+        // The open album's title on the accent, line by line, its text in line with the other cards'. A shadow, not
+        // padding pulled back by a margin, reaches 6 px past each line's ends: Safari doesn't repeat a margin on a
+        // second line (TON-286). The title's own padding keeps its line clamp from cutting the shadow off.
         className={cn("mt-1 font-medium text-fg-primary", open && "-mx-1.5 px-1.5")}
       >
         {open ? (
-          <span className="-mx-1.5 rounded-sm bg-accent-fill box-decoration-clone px-1.5 text-fg-on-accent">
+          <span className="rounded-sm bg-accent-fill box-decoration-clone text-fg-on-accent shadow-[-6px_0_var(--accent-fill),6px_0_var(--accent-fill)]">
             {album.title}
           </span>
         ) : undefined}
