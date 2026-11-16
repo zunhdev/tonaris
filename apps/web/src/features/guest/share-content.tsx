@@ -155,7 +155,7 @@ export function FolderItems({
           <li key={child.id} className="min-w-0">
             {linkTo(child.id, {
               className:
-                "relative isolate flex h-full flex-col gap-1 rounded-md text-fg-primary before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:transition-colors before:duration-100 before:ease-enter hover:before:bg-hover",
+                "relative isolate flex flex-col gap-1 rounded-md text-fg-primary before:pointer-events-none before:absolute before:-inset-2 before:-z-10 before:rounded-lg before:transition-colors before:duration-100 before:ease-enter hover:before:bg-hover",
               onKeyDown: keysFor?.(child.id),
               "aria-keyshortcuts": keysFor ? "Alt+ArrowUp Alt+ArrowDown" : undefined,
               children: (
@@ -164,7 +164,7 @@ export function FolderItems({
                     <CoverFan covers={coversOf?.(child) ?? []} kind={child.kind} />
                   </span>
                   {/* As on the workspace's cards, the name takes up to two lines beside its icon, and the count
-                      ends the card, in line with the name (TON-283). */}
+                      follows right under it, in line with it (TON-283). */}
                   <span className="mt-1.5 flex min-w-0 items-start gap-1.5">
                     <span className="flex h-(--text-base--line-height) shrink-0 items-center">
                       <ContainerIcon kind={child.kind} color={colorOf?.(child) ?? null} />
@@ -179,7 +179,7 @@ export function FolderItems({
                   {contentsOf && (
                     <span
                       data-slot="card-foot"
-                      className="mt-auto truncate pl-5.5 text-small text-fg-tertiary"
+                      className="truncate pl-5.5 text-small text-fg-tertiary"
                     >
                       {contentsOf(child)}
                     </span>

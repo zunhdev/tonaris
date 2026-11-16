@@ -420,14 +420,21 @@ test("folder cards give a long name a second line, and each row only the height 
   expect((await heightOf(second.locator(".."))) - (await heightOf(card("IVE").locator("..")))).toBe(
     titleLine,
   );
-  // In the second row, every card's count lines up.
-  const tops = await cards
+  // Each count follows right under its name, on one line or two, rather than at the card's bottom.
+  const gaps = await cards
     .getByRole("row")
     .filter({ hasText: "2nd Generation" })
-    .locator('[data-slot="card-foot"]')
-    .evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().top));
-  expect(tops.length).toBe(3);
-  expect(new Set(tops).size).toBe(1);
+    .getByRole("link")
+    .evaluateAll((links) =>
+      links.map((link) => {
+        const name = link.querySelector('[data-slot="card-title"]')?.getBoundingClientRect();
+        const count = link.querySelector('[data-slot="card-foot"]')?.getBoundingClientRect();
+        return Math.round((count?.top ?? 0) - (name?.bottom ?? 0));
+      }),
+    );
+  expect(gaps.length).toBe(3);
+  expect(new Set(gaps).size).toBe(1);
+  expect(gaps[0]).toBeLessThanOrEqual(4);
   expect(await violations(page, '[role="grid"]')).toEqual([]);
 });
 

@@ -38,8 +38,7 @@ import type { ViewMoves } from "./use-rearrange";
 
 const gap = 16;
 
-// The link fills the card, so its count can sit at the bottom, in line across a row (TON-283).
-const cardClass = "flex h-full flex-col gap-1 rounded-md outline-none focus-ring";
+const cardClass = "flex flex-col gap-1 rounded-md outline-none focus-ring";
 
 export function ContainerCards({
   containers,
@@ -234,10 +233,12 @@ function ContainerCard({
           className="min-w-0 flex-1 font-medium text-fg-primary"
         />
       </span>
-      {/* The count in line with the name, and the sharing glyph after it, where a cut name can't take it along. */}
+      {/* The count right under the name, in line with it, and the sharing glyph after it, where a cut name can't take
+          it along. It follows the name rather than the card's bottom, so it never reads as the caption of the next
+          row's cover (TON-283). */}
       <span
         data-slot="card-foot"
-        className="mt-auto flex min-w-0 items-center gap-1.5 pl-5.5 text-small text-fg-tertiary"
+        className="flex min-w-0 items-center gap-1.5 pl-5.5 text-small text-fg-tertiary"
       >
         <span className="truncate">{contents}</span>
         <SharingGlyph containerId={container.id} />

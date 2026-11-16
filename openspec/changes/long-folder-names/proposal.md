@@ -7,7 +7,7 @@ TON-280 gave album cards two-line titles, but folder and list cards still cut a 
 ## What Changes
 
 - A folder's or list's name takes up to two lines beside its icon; a name still cut shows whole in a tooltip (DS-41).
-- The count goes under the name at the bottom of the card, with the sharing glyph after it.
+- The count follows right under the name, with the sharing glyph after it; at the card's bottom it read as the caption of the next row's cover.
 - A row of cards is a line taller only when one of its names takes two lines, as album cards' rows are.
 - Guest pages' folder cards give names two lines too (DS-72).
 
