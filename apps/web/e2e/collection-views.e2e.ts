@@ -247,6 +247,58 @@ test("cards mark the open album, raise a surface under the pointer, and label re
   await expect(cards.locator("[data-open]")).toHaveCount(0);
 });
 
+/** At `width`, a grid of cards shows two a row, each at least 150 px, with nothing wider than the screen (TON-281). */
+async function twoARow(page: Page, cards: Locator, card: Locator, width: number): Promise<void> {
+  await page.setViewportSize({ width, height: 800 });
+  await expect(cards).toHaveAttribute("aria-colcount", "2");
+  expect((await card.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(150);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+}
+
+test("on a 360 or 375 px phone, album cards and folder cards show two a row", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await signIn(page, accounts.viewsPhoneCards);
+  await live(page);
+  const metal: Container = { ...list("Metal"), kind: "folder" };
+  const doom: Container = { ...list("Doom"), parentId: metal.id };
+  const death: Container = { ...list("Death"), parentId: metal.id };
+  const thrash: Container = { ...list("Thrash"), parentId: metal.id };
+  await insert(page, metal, doom, death, thrash);
+  await added(
+    page,
+    [
+      album("Nightfall", { originalYear: 1987 }),
+      album("Tales of Creation", { originalYear: 1989 }),
+      album("Ancient Dreams", { originalYear: 1988 }),
+    ],
+    doom.id,
+  );
+
+  // A folder opens as cards (TON-174).
+  await page.goto(`/f/${metal.id}`);
+  await live(page);
+  const folderCards = grid(page, "Metal");
+  const doomCard = folderCards.getByRole("link", { name: /^Doom/ });
+  await twoARow(page, folderCards, doomCard, 375);
+  await twoARow(page, folderCards, doomCard, 360);
+
+  // A list's album cards, chosen in View options, likewise.
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  await page.getByRole("button", { name: "View options" }).click();
+  const options = page.getByRole("dialog", { name: "View options" });
+  await options
+    .getByRole("radiogroup", { name: "Layout" })
+    .getByRole("radio", { name: "Grid" })
+    .click();
+  await page.keyboard.press("Escape");
+  await expect(options).toHaveCount(0);
+  const albumCards = grid(page, "Doom");
+  const nightfall = albumCards.getByRole("gridcell", { name: /^Nightfall/ });
+  await twoARow(page, albumCards, nightfall, 360);
+  await twoARow(page, albumCards, nightfall, 375);
+});
+
 /** A card's title, and its artist (TON-280). */
 const titleOf = (card: Locator) => card.locator('[data-slot="card-title"]');
 const artistOf = (card: Locator) => card.locator('[data-slot="card-artist"]');

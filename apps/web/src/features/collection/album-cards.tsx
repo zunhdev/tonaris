@@ -1,5 +1,5 @@
 // Album cards (DS-22): a list's or Unsorted's albums as a virtualized ARIA grid of square artwork tiles, at least
-// 160 px wide in responsive columns, sized by the window rather than the inspector (TON-106), over the title, artist and year and the services the album has links for, each
+// 160 px wide (150 on a phone, TON-281) in responsive columns, sized by the window rather than the inspector (TON-106), over the title, artist and year and the services the album has links for, each
 // opening that service (TON-105), with the save state as a corner badge. Each
 // virtual row is a row of cards; the grid states every row and column (DS-115). Grouped, each group starts with its
 // header on a row of its own, the one in view sticking at the top (DS-43). A click or Enter opens a card's album in the
@@ -58,9 +58,15 @@ import { useAlbumSelection } from "./selection";
 import { useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
-const minCard = 160;
 const gap = 16;
-const padding = 24;
+
+/**
+ * A card's least width and the grid's padding on each side: on a phone a little less of both, so a 360 px screen
+ * still fits two cards a row (TON-281). Folder cards share them (DS-41).
+ */
+export function cardGrid(narrow: boolean): { minCard: number; padding: number } {
+  return narrow ? { minCard: 150, padding: 16 } : { minCard: 160, padding: 24 };
+}
 
 export function AlbumCards({
   sections,
@@ -84,13 +90,14 @@ export function AlbumCards({
   const { inspectorBeside, inspectorWidth } = useShell();
   const { albumId } = useInspector();
   const beside = inspectorBeside ? inspectorWidth : 0;
+  // A phone's screen: smaller cards and padding (TON-281), and no selecting (TON-231).
+  const narrow = useNarrowScreen();
+  const { minCard, padding } = cardGrid(narrow);
   const inner = Math.max(0, useWidth(scroller, beside) - 2 * padding);
   const whole = inner + beside;
   const wholeColumns = Math.max(1, Math.floor((whole + gap) / (minCard + gap)));
   const card = Math.min(inner, Math.floor((whole - gap * (wholeColumns - 1)) / wholeColumns));
   const columns = Math.max(1, Math.floor((inner + gap) / (card + gap)));
-  // In Editing mode on a computer, albums can be selected (TON-231).
-  const narrow = useNarrowScreen();
   // The words' type (DS-13), and each album's lines at this card width (TON-280).
   const type = useCardType();
   const linesById = useMemo(() => {
