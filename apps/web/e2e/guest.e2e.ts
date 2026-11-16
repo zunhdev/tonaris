@@ -153,24 +153,21 @@ test("a guest browses a shared folder, live, with the visit's own view", async (
   await guest.getByRole("radio", { name: "Grid" }).click();
   const boxes = await Promise.all((await albums.all()).map((card) => card.boundingBox()));
   for (const box of boxes) expect(box && box.height > box.width, JSON.stringify(box)).toBe(true);
-  // Each card ends with its year and links, in line with the other cards of its row (TON-280).
+  // Each card's year and links follow right after its artist (TON-280, TON-284).
   const nightfallFoot = albums.filter({ hasText: "Nightfall" }).locator('[data-slot="card-foot"]');
   await expect(nightfallFoot).toContainText("1987");
   await expect(
     nightfallFoot.getByRole("link", { name: "Open 'Nightfall' in Spotify" }),
   ).toBeVisible();
-  const ends = await albums.evaluateAll((items) =>
-    items.map((item) => ({
-      top: Math.round(item.getBoundingClientRect().top),
-      foot: Math.round(
-        item.querySelector('[data-slot="card-foot"]')?.getBoundingClientRect().bottom ?? 0,
-      ),
-    })),
+  const gaps = await albums.evaluateAll((items) =>
+    items.map((item) => {
+      const artist = item.querySelector('[data-slot="card-artist"]')?.getBoundingClientRect();
+      const foot = item.querySelector('[data-slot="card-foot"]')?.getBoundingClientRect();
+      return Math.round((foot?.top ?? 0) - (artist?.bottom ?? 0));
+    }),
   );
-  for (const end of ends) {
-    const row = ends.filter((other) => other.top === end.top);
-    expect(new Set(row.map((other) => other.foot)).size, JSON.stringify(ends)).toBe(1);
-  }
+  expect(new Set(gaps).size, JSON.stringify(gaps)).toBe(1);
+  expect(gaps[0]).toBeLessThanOrEqual(4);
   await expect(
     albums
       .filter({ hasText: "Nightfall" })

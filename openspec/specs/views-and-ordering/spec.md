@@ -363,7 +363,7 @@ In a view in manual order, the palette's "Move to position…" SHALL move the fo
 - **THEN** "Enter a whole number from 1 to 3." shows under the field and nothing moves
 
 ### Requirement: A card gives a long title or artist a second line
-An album card SHALL show its title on up to two lines, and its artist on two when the title fits on one, else on one; text that still doesn't fit SHALL end in an ellipsis and show whole in a tooltip under a pointer (FR-05, DS-22, TON-280). The year and service links SHALL take the card's last line. Each row of cards SHALL be as tall as its fullest card needs, so the links line up within a row.
+An album card SHALL show its title on up to two lines, and its artist on two when the title fits on one, else on one; text that still doesn't fit SHALL end in an ellipsis and show whole in a tooltip under a pointer (FR-05, DS-22, TON-280). The year and service links SHALL follow right after the artist (TON-284). Each row of cards SHALL be as tall as its fullest card needs.
 
 #### Scenario: A long title
 - **WHEN** an owner views a list as cards holding 'Border: Day One • 1st Mini Album' by ENHYPEN
@@ -375,7 +375,7 @@ An album card SHALL show its title on up to two lines, and its artist on two whe
 
 #### Scenario: A row of short names
 - **WHEN** every album in one row of cards has a title and artist that fit on one line, and another row holds a long title
-- **THEN** the first row is a line shorter than the second, and each row's links line up
+- **THEN** the first row is a line shorter than the second, and in each card the year and links follow right after the artist
 
 ### Requirement: A folder or list card gives a long name a second line
 A folder's or list's card, in the workspace and on guest pages, SHALL show its name on up to two lines beside its icon, ending in an ellipsis only when two lines don't hold it (DS-41, TON-283). The count SHALL follow right under the name, with the sharing glyph after it. In the workspace, a row of cards SHALL be a line taller only when one of its names takes two lines.

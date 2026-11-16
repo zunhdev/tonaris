@@ -10,9 +10,11 @@
 // a cover names a release that isn't a plain studio album (`ReleaseLabel`).
 //
 // TON-280: the title takes up to two lines, and the artist two under a one-line title; cut words show whole in a
-// tooltip. The year and the links that fit whole share the card's last line, then "+N" opens the chooser for the
-// rest. Each row is as tall as its fullest card, worked out from text widths (`card-text`), so short rows are a line
-// shorter and the links line up within each row.
+// tooltip. The year and the links that fit whole share a line, then "+N" opens the chooser for the rest. Each row is
+// as tall as its fullest card, worked out from text widths (`card-text`), so short rows are a line shorter.
+//
+// TON-284: the year and links follow right after the artist rather than the card's bottom, where on a short card
+// they sat nearer the next row's cover than their own words and read as its caption.
 
 // Virtualized rows are absolutely positioned, which table elements can't be without overriding their display, and
 // that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -313,8 +315,8 @@ function AlbumCard({
         lines={lines.artist}
         className="text-small text-fg-secondary"
       />
-      {/* The card's last line, wherever the words above end: the year, then the links that fit whole. */}
-      <span data-slot="card-foot" className="mt-auto flex min-w-0 text-small text-fg-tertiary">
+      {/* Right after the artist, the year, then the links that fit whole (TON-284). */}
+      <span data-slot="card-foot" className="flex min-w-0 text-small text-fg-tertiary">
         <span className="shrink-0">
           <ChronologyYear album={album} />
         </span>
