@@ -247,6 +247,88 @@ test("cards mark the open album, raise a surface under the pointer, and label re
   await expect(cards.locator("[data-open]")).toHaveCount(0);
 });
 
+/** A card's title, and its artist (TON-280). */
+const titleOf = (card: Locator) => card.locator('[data-slot="card-title"]');
+const artistOf = (card: Locator) => card.locator('[data-slot="card-artist"]');
+const heightOf = async (locator: Locator) => (await locator.boundingBox())?.height ?? 0;
+
+/** How many lines an element's words take, at its own line height. */
+async function lineCount(locator: Locator): Promise<number> {
+  const { height, line } = await locator.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    line: Number.parseFloat(getComputedStyle(element).lineHeight),
+  }));
+  return Math.round(height / line);
+}
+
+test("cards give a long title or artist a second line, and each row of cards only the height it needs", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signIn(page, accounts.viewsLongNames);
+  await live(page);
+  const mixed = await created(page, "Mixed");
+  const golden = "GOLDEN HOUR : Part.3 ‘In Your Fantasy Edition’ • 12th Mini Album Repackage";
+  await added(
+    page,
+    [
+      ...[
+        "Orchid",
+        "Morningrise",
+        "Still Life",
+        "Deliverance",
+        "Damnation",
+        "Watershed",
+        "Heritage",
+      ].map((title, index) => album(title, { artistCredit: "Opeth", originalYear: 1995 + index })),
+      album("Border: Day One • 1st Mini Album", { artistCredit: "ENHYPEN", originalYear: 2020 }),
+      album("Agrippina", {
+        artistCredit: "Jacobs, Akademie für Alte Musik Berlin",
+        originalYear: 2021,
+      }),
+      album(golden, { artistCredit: "ATEEZ", originalYear: 2022 }),
+    ],
+    mixed.id,
+  );
+  await page.goto(`/l/${mixed.id}`);
+  await live(page);
+  await chooseLayout(page, "Grid");
+  const cards = grid(page, "Mixed");
+  const card = (title: string) => cards.getByRole("gridcell", { name: new RegExp(`^${title}`) });
+
+  // A long title takes two lines and its artist one; a short title leaves a long artist two (TON-280).
+  const border = card("Border: Day One");
+  await expect.poll(() => lineCount(titleOf(border))).toBe(2);
+  expect(await lineCount(artistOf(border))).toBe(1);
+  const agrippina = card("Agrippina");
+  expect(await lineCount(titleOf(agrippina))).toBe(1);
+  expect(await lineCount(artistOf(agrippina))).toBe(2);
+  expect(await lineCount(titleOf(card("Orchid")))).toBe(1);
+
+  // The first row's names all fit on one line, so its cards are a title line shorter than the long names' row.
+  const titleLine = await titleOf(border).evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).lineHeight),
+  );
+  expect((await heightOf(border)) - (await heightOf(card("Orchid")))).toBe(titleLine);
+
+  // In the long names' row, every card's last line, the year and links, lines up.
+  const feet = cards
+    .getByRole("row")
+    .filter({ hasText: "Border: Day One" })
+    .locator('[data-slot="card-foot"]');
+  const tops = await feet.evaluateAll((elements) =>
+    elements.map((element) => element.getBoundingClientRect().top),
+  );
+  expect(tops.length).toBeGreaterThan(1);
+  expect(new Set(tops).size).toBe(1);
+  await expect(border.locator('[data-slot="card-foot"]')).toHaveText("2020");
+
+  // Words cut even on two lines show whole in a tooltip under the pointer.
+  await titleOf(card("GOLDEN HOUR")).hover();
+  await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText(golden);
+  expect(await violations(page, '[role="grid"]')).toEqual([]);
+});
+
 test("a folder opens as cards fanning each list's first covers, walked by keyboard; Rows is kept per folder", async ({
   page,
 }) => {

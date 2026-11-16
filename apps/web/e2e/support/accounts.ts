@@ -64,6 +64,8 @@ export const accounts = {
   viewsCards: at("views-cards"),
   // Folders as cards (collection-views.e2e.ts, TON-174).
   viewsFolderCards: at("views-folder-cards"),
+  // Cards' long titles and artists, and rows of their own heights (collection-views.e2e.ts, TON-280).
+  viewsLongNames: at("views-long-names"),
   // Sorting, grouping, View options and defaults (view-options.e2e.ts), one per test.
   orderViews: at("order-views"),
   syncViews: at("sync-views"),
@@ -120,6 +122,8 @@ export const accounts = {
   // A member from before the terms existed (terms.e2e.ts): the e2e API leaves `unagreed-` accounts unagreed.
   unagreed: at("unagreed-member"),
   openList: at("open-list"),
+  // A card's links that don't fit, behind "+N" (open-in.e2e.ts, TON-280).
+  openMore: at("open-more"),
   // Artwork (artwork.e2e.ts), one per test.
   artworkShown: at("artwork-shown"),
   artworkAtOnce: at("artwork-at-once"),

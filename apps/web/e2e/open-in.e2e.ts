@@ -9,7 +9,16 @@ import { streamingServices, type Album, type StreamingService } from "@tonaris/d
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
 import { expect, test, type Page } from "./support/test";
-import { added, album, created, live, saved, toasts, violations } from "./support/workspace";
+import {
+  added,
+  album,
+  chooseLayout,
+  created,
+  live,
+  saved,
+  toasts,
+  violations,
+} from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -170,7 +179,7 @@ test("a list's cards and rows name the album's services, each opening it and not
   await fromRow.close();
   await expect(inspector).toHaveCount(0);
 
-  // Cards: a line under the year.
+  // Cards: the last line, after the year.
   await page.getByRole("button", { name: "View", exact: true }).click();
   const options = page.getByRole("dialog", { name: "View options" });
   await options
@@ -201,6 +210,51 @@ test("a list's cards and rows name the album's services, each opening it and not
   await fromCard.close();
   await expect(inspector).toHaveCount(0);
   expect(await violations(page, '[role="grid"]')).toEqual([]);
+});
+
+test("a card shows the links that fit whole, and +N opens the chooser with every service", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await signIn(page, accounts.openMore);
+  await live(page);
+  const orchid = album("Orchid", { artistCredit: "Opeth", originalYear: 1995 });
+  await linked(page, "Opeth", orchid, {
+    spotify,
+    "apple-music": apple,
+    tidal,
+    "youtube-music": youtube,
+  });
+  await chooseLayout(page, "Grid");
+  const card = page.getByRole("grid", { name: "Opeth" }).getByRole("gridcell", { name: /^Orchid/ });
+
+  // The links that fit whole after the year, in the services' order, then +N for the rest (TON-280).
+  const links = card.locator('[data-slot="service-link"]');
+  const more = card.locator('[data-slot="more-links"]');
+  await expect(more).toBeVisible();
+  const shown = await links.count();
+  expect(shown).toBeGreaterThan(0);
+  expect(shown).toBeLessThan(4);
+  await expect(links).toHaveText(
+    ["Spotify", "Apple Music", "Tidal", "YouTube Music"].slice(0, shown),
+  );
+  await expect(more).toHaveText(`+${4 - shown}`);
+  const edge = await card.evaluate((element) => element.getBoundingClientRect().right);
+  const ends = await card
+    .locator('[data-slot="service-link"], [data-slot="more-links"]')
+    .evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().right));
+  for (const end of ends) expect(end).toBeLessThanOrEqual(edge);
+  expect(await violations(page, '[role="grid"]')).toEqual([]);
+
+  // +N opens the chooser with every service, and not the album.
+  await more.click();
+  await expect(page.getByRole("dialog", { name: "Open in…" }).getByRole("link")).toHaveText([
+    "Open in Spotify",
+    "Open in Apple Music",
+    "Open in Tidal",
+    "Open in YouTube Music",
+  ]);
+  await expect(page.getByRole("complementary", { name: "Album" })).toHaveCount(0);
 });
 
 test.describe("on a phone", () => {
