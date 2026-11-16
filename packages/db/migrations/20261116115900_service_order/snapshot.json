@@ -1,0 +1,76 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "1a34543a-f37c-47de-ac50-597085c8b478",
+  "prevIds": [
+    "e2a839f3-292c-4c50-bb20-4a7425eb0ea4"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "account_settings",
+        "service_order"
+      ],
+      "writes": [
+        "s|col|public.account_settings.service_order",
+        "n|col|public.account_settings.service_order",
+        "e|col|public.account_settings.service_order"
+      ],
+      "reads": [
+        "n|tbl|public.account_settings",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "account_settings"
+      ],
+      "writes": [
+        "s|ck|public.account_settings.account_settings_service_order_check",
+        "n|ck|public.account_settings.account_settings_service_order_check",
+        "e|ck|public.account_settings.account_settings_service_order_check",
+        "n|con|public.account_settings.account_settings_service_order_check"
+      ],
+      "reads": [
+        "n|tbl|public.account_settings",
+        "n|sch|public",
+        "n|col|public.account_settings.service_order"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_settings",
+        "name": "service_order",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": "'{}'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_settings",
+        "name": "account_settings_service_order_check",
+        "value": "\"service_order\" <@ array['spotify', 'apple-music', 'qobuz', 'tidal', 'youtube-music']::text[]",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

@@ -370,6 +370,7 @@ export {
   linkTargets,
   listSortModes,
   sameServices,
+  servicesInOrder,
   sortDirections,
   sortModes,
   unsetView,

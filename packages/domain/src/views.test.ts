@@ -7,11 +7,12 @@ import { describe, expect, test } from "bun:test";
 import { runCommand, type CommandResult } from "./commands";
 import type { StoredContainer } from "./containers";
 import { uuidv7 } from "./ids";
-import type { StreamingService } from "./links";
+import { streamingServices, type StreamingService } from "./links";
 import type { Principal } from "./principals";
 import { bootstrapSchema, changeSchema, mutationSchema, type Mutation } from "./sync";
 import { memoryStore, viewRowKey } from "./testing";
 import {
+  servicesInOrder,
   appAccountDefaults,
   appViewDefaults,
   containerOfView,
@@ -73,6 +74,14 @@ const setHidden = (hiddenServices: StreamingService[], base: StreamingService[])
     name: "defaults.setHiddenServices",
     args: { hiddenServices },
     base: { hiddenServices: base },
+  });
+
+const setOrder = (serviceOrder: StreamingService[], base: StreamingService[]): Mutation =>
+  mutationSchema.parse({
+    mutationId: uuidv7(),
+    name: "defaults.setServiceOrder",
+    args: { serviceOrder },
+    base: { serviceOrder: base },
   });
 
 /** The changes, checked against the stream's schema as the database layer will log them. */
@@ -398,6 +407,7 @@ describe("defaults.setLinkTarget", () => {
       grouped: true,
       linkTarget: "app",
       hiddenServices: [],
+      serviceOrder: [],
     });
   });
 
@@ -476,6 +486,74 @@ describe("defaults.setHiddenServices (TON-138)", () => {
     expect(
       failed(await runCommand(setHidden(["qobuz"], []), { principal: readOnlyAgent, store }))?.code,
     ).toBe("permission_denied");
+  });
+});
+
+describe("defaults.setServiceOrder (TON-282)", () => {
+  test("saves every service in the person's order, those left out after, each once", async () => {
+    const memory = memoryStore();
+    const result = await runCommand(setOrder(["tidal", "qobuz", "tidal"], []), {
+      principal: anna,
+      store: memory.store,
+    });
+    const next: AccountDefaults = {
+      ...appAccountDefaults,
+      serviceOrder: ["tidal", "qobuz", "spotify", "apple-music", "youtube-music"],
+    };
+    expect(changesOf(result)).toEqual([
+      { entity: "defaults", id: owner, op: "update", data: next },
+    ]);
+    expect(memory.defaults.get(owner)).toEqual(next);
+  });
+
+  test("keeps the other settings, and they keep it", async () => {
+    const memory = memoryStore({
+      defaults: [{ personId: owner, ...appViewDefaults, hiddenServices: ["qobuz"] }],
+    });
+    const context = { principal: anna, store: memory.store };
+    await runCommand(setOrder(["tidal"], []), context);
+    await runCommand(setHidden([], ["qobuz"]), context);
+    expect(memory.defaults.get(owner)).toEqual({
+      ...appAccountDefaults,
+      serviceOrder: ["tidal", "spotify", "apple-music", "qobuz", "youtube-music"],
+    });
+  });
+
+  test("a stale order is a conflict, and the same order, however written, changes nothing", async () => {
+    const memory = memoryStore({
+      defaults: [{ personId: owner, ...appViewDefaults, serviceOrder: ["tidal"] }],
+    });
+    const context = { principal: anna, store: memory.store };
+    expect(await runCommand(setOrder(["qobuz"], []), context)).toEqual({
+      status: "conflict",
+      conflicts: [{ field: "serviceOrder", current: ["tidal"], attempted: ["qobuz"], base: [] }],
+    });
+    expect(
+      changesOf(
+        await runCommand(
+          setOrder(["tidal", "spotify"], ["tidal", "spotify", "apple-music", "qobuz"]),
+          context,
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  test("a read-only agent can't change it", async () => {
+    const { store } = memoryStore();
+    expect(
+      failed(await runCommand(setOrder(["tidal"], []), { principal: readOnlyAgent, store }))?.code,
+    ).toBe("permission_denied");
+  });
+
+  test("servicesInOrder fills out an order, and an empty one is the services' order", () => {
+    expect(servicesInOrder([])).toEqual([...streamingServices]);
+    expect(servicesInOrder(["youtube-music", "tidal"])).toEqual([
+      "youtube-music",
+      "tidal",
+      "spotify",
+      "apple-music",
+      "qobuz",
+    ]);
   });
 });
 

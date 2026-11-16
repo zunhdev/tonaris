@@ -433,7 +433,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-06.2 One link per service.** Albums may have service links; they are optional for manually created albums. A saved album has at most one current link per supported service.
 
-**FR-06.3 Manual link editing.** Users add, replace, or remove links as editable metadata. Each person chooses in Settings which services they use: empty link fields show only for those, while saved links always show and a link from any service can still be pasted (decided 31 October 2026, TON-138).
+**FR-06.3 Manual link editing.** Users add, replace, or remove links as editable metadata. Each person chooses in Settings which services they use: empty link fields show only for those, while saved links always show and a link from any service can still be pasted (decided 31 October 2026, TON-138). Each person can also put the services in their own order, which every list of an album's services and link fields follows (decided 16 November 2026, TON-282).
 
 **FR-06.4 Link conflicts during capture.** Capture and enrichment may fill an absent link.
 
@@ -442,7 +442,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 - The match can still apply the requested membership, and the retained-link outcome is reported separately.
 - Populated links change only through an explicit edit within the user's requested task.
 
-**FR-06.5 Explicit service choice.** For each opening, the person (owner, viewer, or guest) explicitly picks a service among the available links. There is no preferred-service setting and no automatic choice.
+**FR-06.5 Explicit service choice.** For each opening, the person (owner, viewer, or guest) explicitly picks a service among the available links. There is no preferred-service setting and no automatic choice: a person's order of services (FR-06.3) only arranges the choices.
 
 **FR-06.6 Web page or app, by setting.** Each signed-in person chooses whether service links open the service's web page or its app. The setting is saved to the account and synchronizes (FR-11.8). Links open the web pages until the person chooses the app, and guests' links always open the web pages. Either way, Tonaris opens the same release on the same service and never switches service or release. Browsers don't tell a page whether an app opened, so a link to an app that isn't installed may simply not open (decided 30 October 2026, replacing "app first, then web").
 
@@ -1177,6 +1177,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (10 November 2026), editing shared folders and lists** (P-TON-47, TON-186), from the creator's manual testing: an owner can let chosen people edit a shared folder or list. Each invitation is Can view or Can edit, and links stay view-only. Through folders, the higher role wins. Editors change content, albums and field values inside the share, in the app and through Manage agents. Their changes stay in the owner's collection. Sharing, field definitions, the share's own place, and the owner's Trash beyond Undo stay with the owner. An editor's album deletion leaves the owner's other lists untouched, and an editor's manual order is their own. **Removed** the exclusion "Collaborative editing by other users" (section 2.6). **Added** the Editor concept, FR-07.18–FR-07.21 and AC-47–AC-50; **updated** section 2.1, X-01, FR-03.19, FR-04.2, FR-07's title, FR-07.1, FR-07.6, FR-07.12, FR-07.14, FR-07.15, FR-07.17, FR-09.5, FR-10.2, FR-10.4, FR-10.6, FR-10.7, FR-14.1 and Q-06.
 - **Decision (11 November 2026), Latin spellings in search** (TON-201): names can be searched in plain Latin letters, in any common spelling of each letter: "royksopp" finds "Røyksopp", "aerzte" finds "Die Ärzte", and "kino" finds "Кино". A Latin letter matches only itself, and Chinese, Japanese and Korean match only as written. Recorded here on 14 November 2026 (TON-224). **Updated** FR-12.5.
 - **Decision (14 November 2026), copying a share** (TON-133), from the creator's manual testing: anyone who can open a shared folder or list can copy it into their own collection (FR-07.22, AC-51). Fields map onto theirs by name and type, created when missing; albums they have are reused by release group or link, and albums with neither are copied as new; they choose where it goes; it is all or nothing within their limits; nothing records where it came from; MCP can copy too, after approval.
+- **Decision (16 November 2026), your order of streaming services** (TON-282), from the creator's manual testing: each person drags the services into their own order in Settings, and every list of an album's services follows it, cards, rows, the "Open in…" chooser and the link fields. It never opens a service by itself. **Updated** FR-06.3 and FR-06.5.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

@@ -75,7 +75,9 @@ export function memoryStore({
   memberships?: StoredMembership[];
   views?: (ViewPrefs & { personId: string })[];
   defaults?: (ViewDefaults &
-    Partial<Pick<AccountDefaults, "linkTarget" | "hiddenServices">> & { personId: string })[];
+    Partial<Pick<AccountDefaults, "linkTarget" | "hiddenServices" | "serviceOrder">> & {
+      personId: string;
+    })[];
   positions?: (Position & { personId: string })[];
   /** Accounts, by email key, for invitations and display names. */
   accounts?: { id: string; email: string; displayName?: string | null }[];
@@ -135,7 +137,7 @@ export function memoryStore({
   const defaultRows = new Map<string, AccountDefaults>(
     defaults.map(({ personId, ...values }) => [
       personId,
-      { linkTarget: "web", hiddenServices: [], ...values },
+      { linkTarget: "web", hiddenServices: [], serviceOrder: [], ...values },
     ]),
   );
   const positionRows = new Map<string, Position & { personId: string }>(

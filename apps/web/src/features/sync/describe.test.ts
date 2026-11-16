@@ -338,6 +338,10 @@ describe("view options (DS-49, DS-94)", () => {
     expect(fieldLabel("hiddenServices")).toBe("Streaming services");
     expect(fieldValue("hiddenServices", ["tidal", "qobuz"], names)).toBe("Off: Qobuz, Tidal");
     expect(fieldValue("hiddenServices", [], names)).toBe("All on");
+    expect(fieldLabel("serviceOrder")).toBe("Order of streaming services");
+    expect(fieldValue("serviceOrder", ["tidal"], names)).toBe(
+      "Tidal, Spotify, Apple Music, Qobuz, YouTube Music",
+    );
     expect(fieldValue("grouped", false, names)).toBe("None");
     expect(fieldValue("layout", "grid", names)).toBe("Grid");
     expect(fieldValue("listSortMode", "manual", names)).toBe("Manual");

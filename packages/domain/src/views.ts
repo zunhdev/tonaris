@@ -103,10 +103,14 @@ export const accountDefaultsSchema = viewDefaultsSchema
       description:
         "The streaming services the person turned off, in the services' order: their empty link fields stay out of sight, while saved links still show (TON-138). Empty until they choose.",
     }),
+    serviceOrder: z.array(z.enum(streamingServices)).meta({
+      description:
+        "The streaming services in the person's order, the one they use most first: every list of an album's services follows it (TON-282). Empty until they choose; a service missing from it follows, in the services' order.",
+    }),
   })
   .meta({
     description:
-      "A person's account defaults for presentation (FR-11.7), where their service links open (FR-06.6), and the services they don't use (TON-138).",
+      "A person's account defaults for presentation (FR-11.7), where their service links open (FR-06.6), the services they don't use (TON-138), and the order they want them in (TON-282).",
   });
 export type AccountDefaults = z.infer<typeof accountDefaultsSchema>;
 
@@ -118,6 +122,7 @@ export const appAccountDefaults: AccountDefaults = {
   ...appViewDefaults,
   linkTarget: "web",
   hiddenServices: [],
+  serviceOrder: [],
 };
 
 /** A view with no remembered choice. */
@@ -289,6 +294,44 @@ export async function setHiddenServices(
   const hiddenServices = inOrder(values.hiddenServices);
   if (sameServices(hiddenServices, current.hiddenServices)) return applied();
   const next = { ...current, hiddenServices };
+  await store.saveDefaults(personId, next);
+  return applied({ entity: "defaults", id: personId, op: "update", data: next });
+}
+
+/**
+ * Every streaming service in a person's order (TON-282): the ones they put in order, each once, then any they didn't,
+ * such as a service added later, in the services' order. An empty order is the services' order.
+ */
+export function servicesInOrder(order: readonly StreamingService[]): StreamingService[] {
+  const chosen = order.filter(
+    (service, index) => streamingServices.includes(service) && order.indexOf(service) === index,
+  );
+  return [...chosen, ...streamingServices.filter((service) => !chosen.includes(service))];
+}
+
+/** Whether two orders put the services the same way, once each is filled out. */
+const sameOrder = (a: readonly StreamingService[], b: readonly StreamingService[]) =>
+  servicesInOrder(a).join(",") === servicesInOrder(b).join(",");
+
+/**
+ * Sets the order a person wants their streaming services in (TON-282): the links on cards and rows, the "Open in…"
+ * chooser and the link fields follow it, on every device. `base` holds the prior order (TS-21).
+ */
+export async function setServiceOrder(
+  values: { serviceOrder: readonly StreamingService[] },
+  base: { serviceOrder: readonly StreamingService[] },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const personId = personOf(context);
+  if (isFailure(personId)) return personId;
+  const { store } = context;
+
+  const current = (await store.findDefaults(personId)) ?? appAccountDefaults;
+  if (!sameOrder(current.serviceOrder, base.serviceOrder)) {
+    return conflict("serviceOrder", current.serviceOrder, values.serviceOrder, base.serviceOrder);
+  }
+  if (sameOrder(values.serviceOrder, current.serviceOrder)) return applied();
+  const next = { ...current, serviceOrder: servicesInOrder(values.serviceOrder) };
   await store.saveDefaults(personId, next);
   return applied({ entity: "defaults", id: personId, op: "update", data: next });
 }

@@ -126,6 +126,8 @@ export const accounts = {
   openList: at("open-list"),
   // A card's links that don't fit, behind "+N" (open-in.e2e.ts, TON-280).
   openMore: at("open-more"),
+  // The person's order of services, from Settings (open-in.e2e.ts, TON-282).
+  openOrder: at("open-order"),
   // Artwork (artwork.e2e.ts), one per test.
   artworkShown: at("artwork-shown"),
   artworkAtOnce: at("artwork-at-once"),

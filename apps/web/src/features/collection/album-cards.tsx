@@ -23,7 +23,7 @@ import { useNarrowScreen } from "@/common/media";
 import { pageScroll } from "@/common/page-scroll";
 import { useShell } from "@/common/shell-context";
 import { useOpenIn } from "@/features/open/open-in";
-import { ordered } from "@/features/open/service-choices";
+import { ordered, useServiceOrder } from "@/features/open/service-choices";
 import { ServiceNames } from "@/features/open/service-names";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
@@ -246,7 +246,7 @@ function AlbumCard({
   const { linksByAlbum } = useCollectionData();
   const label = releaseLabel(album);
   const links = linksByAlbum.get(album.id);
-  const services = ordered(links).map((link) => link.service);
+  const services = ordered(links, useServiceOrder()).map((link) => link.service);
   const shown =
     services.length === 0
       ? 0

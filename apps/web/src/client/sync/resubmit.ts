@@ -13,6 +13,7 @@ import {
   membershipKey,
   positionKey,
   sameServices,
+  servicesInOrder,
   sameValue,
   serviceLinkKey,
   unsetView,
@@ -415,6 +416,14 @@ function remake(
       if (!current) return "gone";
       if (sameServices(current.hiddenServices, mutation.args.hiddenServices)) return "unchanged";
       planned.defaultsUpdate.hiddenServices = mutation.args.hiddenServices;
+      return planned.needs("defaults.update");
+    }
+    case "defaults.setServiceOrder": {
+      const current = defaults.get(defaultsKey);
+      if (!current) return "gone";
+      const order = servicesInOrder(mutation.args.serviceOrder);
+      if (servicesInOrder(current.serviceOrder).join(",") === order.join(",")) return "unchanged";
+      planned.defaultsUpdate.serviceOrder = order;
       return planned.needs("defaults.update");
     }
     case "order.set": {

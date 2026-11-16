@@ -65,13 +65,14 @@ export const defaultsColumns = {
 };
 
 /**
- * The account defaults with the link setting and the services turned off, as the person's sessions see them; the
- * export leaves them out.
+ * The account defaults with the link setting, the services turned off and their order, as the person's sessions see
+ * them; the export leaves them out.
  */
 export const accountDefaultsColumns = {
   ...defaultsColumns,
   linkTarget: accountSettings.linkTarget,
   hiddenServices: accountSettings.hiddenServices,
+  serviceOrder: accountSettings.serviceOrder,
 };
 
 export const positionColumns = {

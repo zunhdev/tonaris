@@ -10,6 +10,7 @@ import type { NewAlbumMetadata } from "@/client/sync/albums";
 import { sent } from "@/client/sync/writer";
 import { ariaShortcut } from "@/common/shortcuts";
 import { shownLink } from "@/features/capture/outcomes";
+import { useServiceOrder } from "@/features/open/service-choices";
 import { CapacityNotice } from "@/features/settings/usage";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSaveActions } from "@/features/sync/save-actions";
@@ -88,9 +89,10 @@ function NewAlbumForm({ draft, onDone }: { draft: NewAlbumDraft; onDone: () => v
   const inShare = useCollectionPlace().kind === "share";
   const actions = useSaveActions();
   const [form, setForm] = useState<AlbumForm>(draft.form);
-  // Link fields for the services the person uses, from Settings, and any already filled in (TON-138).
+  // Link fields for the services the person uses, from Settings, and any already filled in (TON-138), in their
+  // order (TON-282).
   const { hiddenServices } = useCollectionData().defaults;
-  const linkFields = streamingServices.filter(
+  const linkFields = useServiceOrder().filter(
     (service) => !hiddenServices.includes(service) || form.links[service],
   );
   const [touched, setTouched] = useState<ReadonlySet<FormField>>(new Set());

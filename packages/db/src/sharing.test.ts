@@ -706,6 +706,7 @@ describe("whose collection each mutation changes (DRIFT-055)", () => {
       "defaults.set",
       "defaults.setLinkTarget",
       "defaults.setHiddenServices",
+      "defaults.setServiceOrder",
       "order.set",
       "share.invite",
       "share.setLink",

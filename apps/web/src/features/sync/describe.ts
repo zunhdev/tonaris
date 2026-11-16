@@ -10,6 +10,7 @@ import {
   groupNames,
   isUuid,
   serviceNames,
+  servicesInOrder,
   streamingServices,
   viewDefaultsFields,
   viewPrefsFields,
@@ -18,6 +19,7 @@ import {
   type Mutation,
   type Outcome,
   type OutcomeStatus,
+  type StreamingService,
 } from "@tonaris/domain";
 
 import { problemSentence } from "./problems";
@@ -367,6 +369,13 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
         subject: "Your streaming services",
       };
     }
+    case "defaults.setServiceOrder": {
+      return {
+        summary: "Your streaming services' order",
+        what: "your streaming services' order",
+        subject: "Your streaming services' order",
+      };
+    }
     case "link.set":
     case "link.remove": {
       const title = quoted(names.album(mutation.args.albumId), "an album");
@@ -475,6 +484,7 @@ const fieldLabels: Partial<Record<string, string>> = {
   folderLayout: "Layout for folders",
   linkTarget: "Open links in",
   hiddenServices: "Streaming services",
+  serviceOrder: "Order of streaming services",
 } satisfies Partial<Record<BaseField, string>>;
 
 /** A conflicting field's name in the review (DS-80): an item's place is named by the item. */
@@ -531,6 +541,15 @@ export function fieldValue(
       .filter((service) => value.includes(service))
       .map((service) => serviceNames[service]);
     return off.length === 0 ? "All on" : `Off: ${off.join(", ")}`;
+  }
+  // The services in the person's order, each named (TON-282).
+  if (field === "serviceOrder" && Array.isArray(value)) {
+    const order = value.filter((service): service is StreamingService =>
+      streamingServices.some((each) => each === service),
+    );
+    return servicesInOrder(order)
+      .map((service) => serviceNames[service])
+      .join(", ");
   }
   if (field === "parentId") {
     if (value === null) return "Collection";

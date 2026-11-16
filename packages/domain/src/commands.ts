@@ -48,6 +48,7 @@ import { deleteAlbum, deleteContainer, purgeUnits, recoverUnit, type TrashUnit }
 import {
   setDefaults,
   setHiddenServices,
+  setServiceOrder,
   setLinkTarget,
   setView,
   type AccountDefaults,
@@ -155,6 +156,7 @@ export function mutationTarget(mutation: Mutation): MutationTarget | undefined {
     case "defaults.set":
     case "defaults.setLinkTarget":
     case "defaults.setHiddenServices":
+    case "defaults.setServiceOrder":
     case "order.set":
     case "share.invite":
     case "share.setLink":
@@ -218,6 +220,7 @@ const handlers = {
   "share.removeReference": ({ args }, context) => removeReference(args, context),
   "defaults.setLinkTarget": ({ args, base }, context) => setLinkTarget(args, base, context),
   "defaults.setHiddenServices": ({ args, base }, context) => setHiddenServices(args, base, context),
+  "defaults.setServiceOrder": ({ args, base }, context) => setServiceOrder(args, base, context),
   "share.setRole": ({ args }, context) => setGrantRole(args, context),
   "share.copy": ({ args }, context) => copyShare(args, context),
 } satisfies Handlers;

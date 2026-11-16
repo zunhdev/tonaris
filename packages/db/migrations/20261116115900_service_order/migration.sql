@@ -1,0 +1,2 @@
+ALTER TABLE "account_settings" ADD COLUMN "service_order" text[] DEFAULT '{}'::text[] NOT NULL;--> statement-breakpoint
+ALTER TABLE "account_settings" ADD CONSTRAINT "account_settings_service_order_check" CHECK ("service_order" <@ array['spotify', 'apple-music', 'qobuz', 'tidal', 'youtube-music']::text[]);

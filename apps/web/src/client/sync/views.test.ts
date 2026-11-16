@@ -1,6 +1,6 @@
 // The writes a change of the account defaults becomes (FR-11.7, FR-06.6): the view options as one `defaults.set`, the
-// link setting as its own `defaults.setLinkTarget` (TON-104), and the services turned off as
-// `defaults.setHiddenServices` (TON-138), each with the values it replaces as its base.
+// link setting as its own `defaults.setLinkTarget` (TON-104), the services turned off as `defaults.setHiddenServices`
+// (TON-138), and their order as `defaults.setServiceOrder` (TON-282), each with the values it replaces as its base.
 
 import { describe, expect, test } from "bun:test";
 
@@ -51,5 +51,19 @@ describe("defaultsWrites", () => {
   test("the same services in another order are no change, as the server compares them (TON-147)", () => {
     const before: AccountDefaults = { ...appAccountDefaults, hiddenServices: ["spotify", "qobuz"] };
     expect(sent({ hiddenServices: ["qobuz", "spotify"] }, before)).toEqual([]);
+  });
+
+  test("the services' order is its own write, sent only when the filled-out order changes (TON-282)", () => {
+    expect(sent({ serviceOrder: ["tidal", "spotify"] })).toEqual([
+      {
+        name: "defaults.setServiceOrder",
+        args: { serviceOrder: ["tidal", "spotify"] },
+        base: { serviceOrder: [] },
+      },
+    ]);
+    // The services' own order, written out, is the order an empty one stands for.
+    expect(
+      sent({ serviceOrder: ["spotify", "apple-music", "qobuz", "tidal", "youtube-music"] }),
+    ).toEqual([]);
   });
 });

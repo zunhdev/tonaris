@@ -68,6 +68,11 @@ export const accountSettings = table(
       .array()
       .notNull()
       .default(sql`'{}'::text[]`),
+    /** The services in the person's order (TON-282); empty means the services' own order. */
+    serviceOrder: text({ enum: streamingServices })
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     ...timestamps,
   },
   (t) => [
@@ -76,6 +81,10 @@ export const accountSettings = table(
     check(
       "account_settings_hidden_services_check",
       sql`${t.hiddenServices} <@ array[${sql.raw(streamingServices.map((each) => `'${each}'`).join(", "))}]::text[]`,
+    ),
+    check(
+      "account_settings_service_order_check",
+      sql`${t.serviceOrder} <@ array[${sql.raw(streamingServices.map((each) => `'${each}'`).join(", "))}]::text[]`,
     ),
     check("account_settings_list_sort_dir_check", oneOf(t.listSortDir, sortDirections)),
     check("account_settings_folder_sort_mode_check", oneOf(t.folderSortMode, folderSortModes)),

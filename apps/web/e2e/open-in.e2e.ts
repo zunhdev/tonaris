@@ -257,6 +257,79 @@ test("a card shows the links that fit whole, and +N opens the chooser with every
   await expect(page.getByRole("complementary", { name: "Album" })).toHaveCount(0);
 });
 
+test("services dragged into the person's order in Settings lead every list of an album's links", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await signIn(page, accounts.openOrder);
+  await live(page);
+  const bleach = album("Bleach", { artistCredit: "Nirvana", originalYear: 1989 });
+  const grunge = await linked(page, "Grunge", bleach, {
+    spotify,
+    "apple-music": apple,
+    tidal,
+    "youtube-music": youtube,
+  });
+
+  // Tidal dragged by its handle onto Spotify's place: a line shows where it lands, and it's first (TON-282).
+  await page.goto("/settings/preferences");
+  await live(page);
+  const services = page.getByRole("region", { name: "Streaming services" });
+  const rows = services.locator('[data-slot="service-row"]');
+  const names = () => rows.allInnerTexts();
+  await expect.poll(names).toEqual(["Spotify", "Apple Music", "Qobuz", "Tidal", "YouTube Music"]);
+  await services.scrollIntoViewIfNeeded();
+  const from = await rows
+    .filter({ hasText: "Tidal" })
+    .locator('[data-slot="drag-handle"]')
+    .boundingBox();
+  const to = await rows.filter({ hasText: "Spotify" }).boundingBox();
+  if (!from || !to) throw new Error("The services aren't on the page.");
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2, to.y + 4, { steps: 12 });
+  await expect(services.locator(".bg-accent-solid.h-0\\.5")).toHaveCount(1);
+  await page.mouse.up();
+  await expect.poll(names).toEqual(["Tidal", "Spotify", "Apple Music", "Qobuz", "YouTube Music"]);
+
+  // With its switch focused, ⌥↑ moves YouTube Music a place up, and the switch keeps the focus.
+  const youtubeSwitch = services.getByRole("switch", { name: "YouTube Music" });
+  await youtubeSwitch.focus();
+  await page.keyboard.press("Alt+ArrowUp");
+  await expect.poll(names).toEqual(["Tidal", "Spotify", "Apple Music", "YouTube Music", "Qobuz"]);
+  await expect(youtubeSwitch).toBeFocused();
+  await saved(page);
+  await page.reload();
+  await live(page);
+  await expect.poll(names).toEqual(["Tidal", "Spotify", "Apple Music", "YouTube Music", "Qobuz"]);
+
+  // The album's row, its chooser and its card list its services in that order.
+  await page.goto(`/l/${grunge.id}`);
+  await live(page);
+  const row = rowOf(page, "Grunge", "Bleach");
+  await expect(row.locator('[data-slot="service-link"]')).toHaveText([
+    "Tidal",
+    "Spotify",
+    "Apple Music",
+    "YouTube Music",
+  ]);
+  await row.hover();
+  await row.getByRole("button", { name: "Open 'Bleach' in…" }).click();
+  await expect(page.getByRole("dialog", { name: "Open in…" }).getByRole("link")).toHaveText([
+    "Open in Tidal",
+    "Open in Spotify",
+    "Open in Apple Music",
+    "Open in YouTube Music",
+  ]);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Open in…" })).toHaveCount(0);
+  await chooseLayout(page, "Grid");
+  const card = page
+    .getByRole("grid", { name: "Grunge" })
+    .getByRole("gridcell", { name: /^Bleach/ });
+  await expect(card.locator('[data-slot="service-link"]').first()).toHaveText("Tidal");
+});
+
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
