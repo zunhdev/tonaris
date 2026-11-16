@@ -385,6 +385,18 @@ test("cards give a long title or artist a second line, and each row of cards onl
   await titleOf(card("GOLDEN HOUR")).hover();
   await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText(golden);
   expect(await violations(page, '[role="grid"]')).toEqual([]);
+
+  // Open, a two-line title is on the accent line by line, each line's words in line with the cover and the accent
+  // 6 px past both its ends. Safari had left the second line's start flush with its words (TON-286).
+  await border.click();
+  await expect(border).toHaveAttribute("data-open", "true");
+  const highlight = titleOf(border).locator("span");
+  const starts = await highlight.evaluate((element) =>
+    [...element.getClientRects()].map((rect) => Math.round(rect.left)),
+  );
+  const cover = await border.locator('[data-slot="artwork"]').boundingBox();
+  expect(starts).toEqual([Math.round(cover?.x ?? 0), Math.round(cover?.x ?? 0)]);
+  await expect(highlight).toHaveCSS("box-shadow", /-6px 0px 0px 0px, .* 6px 0px 0px 0px$/);
 });
 
 test("folder cards give a long name a second line, and each row only the height it needs", async ({
