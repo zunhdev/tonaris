@@ -684,7 +684,9 @@ Presentation choices are not in the URL; they are personal synced preferences (F
 - **its name and what it holds,** "9 albums" or "3 folders and lists", in `text.small` `fg.tertiary`;
 - the raised surface under a hovering pointer (DS-22), the save state on the fan's top-right corner, and DS-82's highlight.
 
-There's no description excerpt or Created column on cards; Rows keeps them. *As built in TON-175:* the card's name follows its icon, colored as in the tree (DS-27). Shared folders (DS-70) show the same cards in their viewer's presentation, and guest pages (DS-72) in the visit's, with a Rows | Grid control for folders that starts at Grid; the fan there is drawn by classes alone, as the CSP refuses style attributes on server-rendered pages.
+There's no description excerpt or Created column on cards; Rows keeps them.
+
+*As built in TON-283* (variant 8 from TON-280's mock, which the creator had picked, 16 November 2026): **a long name takes a second line.** A folder's or list's name takes up to two lines beside its icon, which stays level with the first line; a name still cut ends in an ellipsis and shows whole in a tooltip under a pointer. The count goes under the name, in line with it, at the bottom of the card, and the sharing glyph (DS-27) moves after the count, where a cut name can't take it along. As with album cards (DS-22), a row is a title line taller only when one of its names takes two lines. Guest pages' folder cards (DS-72) follow with CSS alone. *As built in TON-175:* the card's name follows its icon, colored as in the tree (DS-27). Shared folders (DS-70) show the same cards in their viewer's presentation, and guest pages (DS-72) in the visit's, with a Rows | Grid control for folders that starts at Grid; the fan there is drawn by classes alone, as the CSP refuses style attributes on server-rendered pages.
 
 **DS-42 Lists and folders under each sort** *(handoff FR-05.1)*:
 - **Name and creation-date sorts:** folders first, then lists, each sorted by the selected key and direction. This is the filesystem convention and keeps hierarchy scannable.
