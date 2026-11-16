@@ -619,3 +619,10 @@ Anyone who can open a shared folder or list SHALL be able to copy it, with what 
 #### Scenario: Over a limit
 - **WHEN** the copy would create a custom field and Anna has 50
 - **THEN** nothing is copied, and she is told which limit and by how much
+
+### Requirement: Guest cards give long names a second line
+On a guest page, an album card SHALL show its title and its artist on up to two lines each, and its year with its service links at the bottom of the card (DS-22, DS-72, TON-280). Cards in a row SHALL end their links on the same line.
+
+#### Scenario: A guest's card for a long title
+- **WHEN** a guest views a shared list as cards holding 'Border: Day One • 1st Mini Album' from 2020
+- **THEN** the title takes two lines, and the card ends with "2020" and its links

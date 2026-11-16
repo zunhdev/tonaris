@@ -81,7 +81,7 @@ An album's links SHALL reach every session of its owner: in the data a session l
 - **THEN** their other open sessions no longer show it
 
 ### Requirement: Opening an album is an explicit choice of service
-Opening an album SHALL offer only the services it has links for, and the person SHALL choose one every time (FR-06.5): no service is preselected or remembered, and a single link is still a choice. The choice SHALL be offered from an album's row and from the keyboard, for the inspector's or the focused album. An album's card and row SHALL also name each service it has a link for, each a link to that service, which opens it without opening the album's details.
+Opening an album SHALL offer only the services it has links for, and the person SHALL choose one every time (FR-06.5): no service is preselected or remembered, and a single link is still a choice. The choice SHALL be offered from an album's row and from the keyboard, for the inspector's or the focused album. An album's row SHALL also name each service it has a link for, and its card those that fit, each a link that opens it without opening the album's details.
 
 #### Scenario: Two links
 - **WHEN** an owner opens the chooser for an album with Spotify and Tidal links
@@ -160,3 +160,10 @@ On desktop, with an album open in the inspector and no text field focused, an ow
 #### Scenario: Pasting a playlist
 - **WHEN** an owner pastes a Spotify playlist link onto an open album
 - **THEN** it is refused with the reason link capture gives, and the album's links are unchanged
+
+### Requirement: A card's links that don't fit open from "+N"
+An album card SHALL show the service links that fit whole after its year, in the services' order, then "+N" for the rest (FR-06.5, DS-22, TON-280). Clicking "+N" SHALL open the "Open in…" chooser with every service the album has a link for, and SHALL NOT open the album's details.
+
+#### Scenario: Four links on a narrow card
+- **WHEN** an album has Spotify, Apple Music, Qobuz and Tidal links, and its card has room for one after the year
+- **THEN** the card shows "Spotify" and "+3", and clicking "+3" offers all four services
