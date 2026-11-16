@@ -251,6 +251,8 @@ test("folders and lists move with M and by dragging onto the tree, and the root 
   ]);
   expect(await violations(page, '[role="dialog"]')).toEqual([]);
   await page.keyboard.press("Escape");
+  // Keys pressed while a dialog is still closing are ignored, so the next M waits until it's gone.
+  await expect(picker).toHaveCount(0);
 
   // M on the list Doom, into Metal: it keeps its album, and lands last.
   await tree.getByRole("treeitem", { name: /^Doom/ }).focus();

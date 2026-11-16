@@ -51,6 +51,22 @@ export function wordsHeight(full: boolean, type: CardType): number {
   return 16 + (full ? 2 : 1) * type.titleLine + 2 * type.smallLine;
 }
 
+/** The icon before a folder's or list's name on its card, and the gap after it (`size-4`, `gap-1.5`). */
+export const nameIndent = 22;
+
+/** A folder's or list's name on its card: one line when it fits beside its icon, else two (TON-283). */
+export function nameLines(name: string, width: number, type: CardType, measure: Measure): 1 | 2 {
+  return measure(name, type.title) <= width - nameIndent - slack ? 1 : 2;
+}
+
+/**
+ * The height of a folder or list card's words: the name's margin, its one or two lines, the gap, the count's line,
+ * and room below it (DS-41).
+ */
+export function nameWordsHeight(lines: 1 | 2, type: CardType): number {
+  return 16 + lines * type.titleLine + type.smallLine;
+}
+
 /** A link's arrow (`size-3` and `ml-px`), the space between links (`mr-2.5`), and "+N"'s padding (`px-1.5`). */
 const arrow = 13;
 const between = 10;

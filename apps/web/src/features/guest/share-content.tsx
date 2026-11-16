@@ -163,12 +163,24 @@ export function FolderItems({
                   <span className="relative block aspect-square w-full">
                     <CoverFan covers={coversOf?.(child) ?? []} kind={child.kind} />
                   </span>
-                  <span className="mt-1.5 flex min-w-0 items-center gap-1.5">
-                    <ContainerIcon kind={child.kind} color={colorOf?.(child) ?? null} />
-                    <span className="truncate font-medium">{child.name}</span>
+                  {/* As on the workspace's cards, the name takes up to two lines beside its icon, and the count
+                      follows right under it, in line with it (TON-283). */}
+                  <span className="mt-1.5 flex min-w-0 items-start gap-1.5">
+                    <span className="flex h-(--text-base--line-height) shrink-0 items-center">
+                      <ContainerIcon kind={child.kind} color={colorOf?.(child) ?? null} />
+                    </span>
+                    <span
+                      data-slot="card-title"
+                      className="line-clamp-2 min-w-0 flex-1 font-medium break-words"
+                    >
+                      {child.name}
+                    </span>
                   </span>
                   {contentsOf && (
-                    <span className="truncate text-small text-fg-tertiary">
+                    <span
+                      data-slot="card-foot"
+                      className="truncate pl-5.5 text-small text-fg-tertiary"
+                    >
                       {contentsOf(child)}
                     </span>
                   )}

@@ -4,6 +4,8 @@ import {
   cardLines,
   fullCard,
   linksThatFit,
+  nameLines,
+  nameWordsHeight,
   wordsHeight,
   yearWidth,
   type CardType,
@@ -110,5 +112,18 @@ describe("linksThatFit (TON-280)", () => {
 
   test("none, when even the first link and +N don't fit", () => {
     expect(linksThatFit(four, 42, 100, type, measure)).toBe(0);
+  });
+});
+
+describe("nameLines (DS-41, TON-283)", () => {
+  test("a name that fits beside its icon takes one line, else two", () => {
+    // 200 px less the icon's 22 and 2 of slack leaves 176: 25 characters (175 px) fit, 26 don't.
+    expect(nameLines("x".repeat(25), 200, type, measure)).toBe(1);
+    expect(nameLines("2nd Generation (2003–2011)", 200, type, measure)).toBe(2);
+  });
+
+  test("a row with a two-line name is a title line taller", () => {
+    expect(nameWordsHeight(1, type)).toBe(52);
+    expect(nameWordsHeight(2, type)).toBe(72);
   });
 });
