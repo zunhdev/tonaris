@@ -48,6 +48,7 @@ describe("response headers (TS-101)", () => {
       expect(response.headers.get("strict-transport-security")).toBe(
         "max-age=31536000; includeSubDomains",
       );
+      expect(response.headers.get("cross-origin-resource-policy")).toBe("same-site");
     }
   });
 });

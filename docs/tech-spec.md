@@ -1753,8 +1753,10 @@ Findings and their fixes. None high or critical remains open:
   - a guest page's view options, whose Base UI radios hide their inputs with a style attribute, render once the page is live;
   - `guest.e2e.ts` fails on any CSP report from a guest page.
 - **No eval.** Zod probes for `new Function` before compiling its parsers. The CSP blocks that, and the browser reports each probe as a violation. So `packages/domain` imports Zod through `src/zod.ts`, which switches Zod to `jitless` in browsers, and a lint rule enforces that import. Servers keep the compiled parsers.
-- Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains` (no preload), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`, overridden to `no-referrer` on `/s/`, `/join/` and `/recover/`, whose URLs carry a token (TS-32, TS-71, TS-73; `apps/web/src/security/headers.ts`).
-- API responses send `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `nosniff`, and the same HSTS. Problems and Better Auth's responses get them too. Image-proxy responses add a fixed image `Content-Type`.
+- Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains` (no preload), `X-Content-Type-Options: nosniff`, `Cross-Origin-Resource-Policy: same-origin`, and `Referrer-Policy: strict-origin-when-cross-origin`, overridden to `no-referrer` on `/s/`, `/join/` and `/recover/`, whose URLs carry a token (TS-32, TS-71, TS-73; `apps/web/src/security/headers.ts`). Built files, served as they are, get the first three (`apps/web/server.ts`).
+- Pages send `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()`: the app uses none of them. Clipboard writes and passkeys stay allowed (TON-293).
+- API responses send `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `nosniff`, the same HSTS, and `Cross-Origin-Resource-Policy: same-site`, so only the web app's site can load them into a page, the image proxy's artwork included (TON-293). Problems and Better Auth's responses get them too. Image-proxy responses add a fixed image `Content-Type`.
+- Left out on purpose (TON-293): `X-Frame-Options`, which `frame-ancestors` covers; `Cross-Origin-Opener-Policy`, which would cut an MCP client's sign-in popup off from the client that opened it; `Cross-Origin-Embedder-Policy`, since nothing needs cross-origin isolation; and `Clear-Site-Data`, since signing out deletes the browser copy itself (TS-22).
 
 **TS-102 CORS and CSRF (Decided; Q-05, Q-06).**
 

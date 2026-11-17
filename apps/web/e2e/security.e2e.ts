@@ -44,6 +44,10 @@ test.describe("security headers", () => {
         expect(headers["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
         expect(headers["x-content-type-options"]).toBe("nosniff");
         expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+        expect(headers["cross-origin-resource-policy"]).toBe("same-origin");
+        expect(headers["permissions-policy"]).toBe(
+          "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        );
 
         const nonce = /script-src 'self' 'nonce-([^']+)'/.exec(csp)?.[1];
         expect(nonce).toBeTruthy();

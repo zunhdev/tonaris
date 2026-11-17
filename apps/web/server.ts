@@ -33,15 +33,21 @@ const handler = entry.default;
 
 const clientDir = path.join(import.meta.dir, "dist/client");
 
-/** Headers for files served as they are; pages get theirs from Start's middleware (src/start.ts). */
+/** The security headers on files served as they are (TS-101); pages get theirs from Start's middleware (src/start.ts). */
+const fileSecurityHeaders = {
+  "x-content-type-options": "nosniff",
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
+  "cross-origin-resource-policy": "same-origin",
+};
+
+/** Headers for files served as they are. */
 function fileHeaders(file: string): Record<string, string> {
   return {
     // Vite fingerprints everything under assets/, so those files never change; the rest may.
     "cache-control": file.startsWith("assets/")
       ? "public, max-age=31536000, immutable"
       : "public, max-age=3600",
-    "x-content-type-options": "nosniff",
-    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    ...fileSecurityHeaders,
   };
 }
 
@@ -67,8 +73,7 @@ const missingBuildFile = new Response("Not found", {
   headers: {
     "content-type": "text/plain; charset=utf-8",
     "cache-control": "no-store",
-    "x-content-type-options": "nosniff",
-    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    ...fileSecurityHeaders,
   },
 });
 
