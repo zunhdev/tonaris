@@ -318,16 +318,20 @@ function ViewHeader({
               Rename
             </Button>
           )}
-          {/* Description opens the description's panel (TON-292); it waits while offline. */}
+          {/* Description opens the description's panel (TON-292); it waits while offline. An icon, named in its
+          tooltip: with its word, it left the name no room beside a panel or in a share the person edits. */}
           {editing && container && (
-            <Button
-              variant="ghost"
-              disabled={offline}
-              onClick={() => openDescription(container.id)}
-            >
-              <TextAlignStart strokeWidth={1.5} aria-hidden />
-              Description
-            </Button>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button variant="ghost" size="icon" aria-label="Description" disabled={offline} />
+                }
+                onClick={() => openDescription(container.id)}
+              >
+                <TextAlignStart strokeWidth={1.5} aria-hidden />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Description</TooltipContent>
+            </Tooltip>
           )}
           {/* The shared folder or list itself stays where its owner put it (FR-07.20). */}
           {editing && container && !isShareTop(container.id) && (
