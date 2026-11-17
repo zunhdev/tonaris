@@ -3,9 +3,9 @@
 import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 
-import { latinKey, nameKey } from "@tonaris/domain";
+import { latinKey, maxAlbums, maxContainers, maxMemberships, nameKey } from "@tonaris/domain";
 
-import { generateWorkload, referenceWorkload } from "./generate";
+import { generateWorkload, referenceWorkload, scaledWorkload } from "./generate";
 import { Random } from "./random";
 
 const workload = generateWorkload();
@@ -51,6 +51,22 @@ describe("generateWorkload", () => {
     expect(owned.containers.filter((c) => c.kind === "list")).toHaveLength(250);
     expect(owned.containers.filter((c) => c.kind === "folder")).toHaveLength(60);
     expect(Math.max(...owned.containers.map((c) => depth(c.id)))).toBe(6);
+  });
+
+  test("at the album limit, has more lists of at most 500 albums, within the other limits (TON-287)", () => {
+    const full = generateWorkload(scaledWorkload(maxAlbums));
+    const fullyOwned = full.rows.albums.filter((a) => a.ownerId === full.owner.id);
+    const entries = full.rows.memberships.filter((m) => m.ownerId === full.owner.id);
+    const containers = full.rows.containers.filter((c) => c.ownerId === full.owner.id);
+    expect(fullyOwned).toHaveLength(maxAlbums);
+    expect(containers.filter((c) => c.kind === "list")).toHaveLength(1_500);
+    expect(containers.length).toBeLessThanOrEqual(maxContainers);
+    const sizes = Map.groupBy(entries, (m) => m.listId);
+    expect(Math.max(...[...sizes.values()].map((inList) => inList.length))).toBeLessThanOrEqual(
+      500,
+    );
+    expect(entries.length / fullyOwned.length).toBeCloseTo(1.8, 1);
+    expect(entries.length).toBeLessThanOrEqual(maxMemberships);
   });
 
   test("puts albums in about 1.8 lists each, leaving some in Unsorted", () => {

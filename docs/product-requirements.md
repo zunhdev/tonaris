@@ -856,7 +856,7 @@ Uncertain matches follow FR-02.9 and FR-02.10. Explicit restore still uses FR-14
 
 ### FR-15 — Capacity and resource limits
 
-**FR-15.1 Album limit.** Each user can save up to 5,000 albums. This provisional limit is also the size used for performance targets. It can be adjusted after costs are measured and is not a guarantee of affordability.
+**FR-15.1 Album limit.** Each user can save up to 50,000 albums (raised from 5,000 on 17 November 2026). Performance targets are set on a 5,000-album workload (Q-01), so a larger collection may be slower. The limit can be adjusted after costs are measured and is not a guarantee of affordability.
 
 **FR-15.2 Counting.** Each saved album record counts once, whether active, in Unsorted, or in Trash.
 
@@ -884,7 +884,7 @@ Restoring or re-adding an album reuses its slot, even at capacity.
 
 **Q-01 Performance.** Interactions are fast and modern, in the style of Linear's optimistic updates: immediate feedback, visible pending saves, accurate outcomes, and preserved input and saved state on failure.
 
-Targets cover interaction feedback, browsing, sorting, search, synchronization, and export. The workload is 5,000 owned albums plus representative shared content, nesting, memberships, and fields. The measurement conditions (devices, browsers, network) are defined in the tech spec (TS-120).
+Targets cover interaction feedback, browsing, sorting, search, synchronization, and export. The workload is 5,000 owned albums plus representative shared content, nesting, memberships, and fields. The measurement conditions (devices, browsers, network) are defined in the tech spec (TS-120). A collection at the 50,000-album limit (FR-15.1) was measured once, on 17 November 2026, and the targets aren't promised at that size ([report](performance-verification.md#at-50000-albums-17-november-2026)).
 
 **Approved where measured (21 October 2026).** The creator adopted the targets below as working targets on 17 October 2026. On 21 October 2026, after the M1 prototype measurements ([report](spikes/2026-10-21-q01-measurements.md)), they approved those that could be measured, and the viewer target on an estimate. The rest stay provisional until they are measured. An unconfirmed target cannot pass acceptance. On 29 October 2026, after the measurements on the real app ([report](performance-verification.md), TON-92), the creator approved the four that were still provisional, as they stood.
 
@@ -979,7 +979,7 @@ The first version's results, with the evidence for each check and what waits for
 | AC-29 | Delete, recover, re-add albums | Deletion moves the album to 30-day Trash. Restore brings back active-list memberships, and re-adding applies only the requested memberships. Both reuse the slot. A same-album conflict pauses with both records unchanged. | FR-14 |
 | AC-30 | Sharing during Trash | Trashed content leaves shared views and search. Recovery resumes unrevoked links and accepted grants, keeps pending invitations pending, and never revives revoked access. | FR-07.10 |
 | AC-31 | Expire and clear Trash | Expiry is shown and enforced at 30 days. Early removal is app-only and confirmed. Purging containers keeps active albums, and purging albums frees slots. Partial outcomes are reported. | FR-01.17–FR-01.18 |
-| AC-32 | Capacity | Active plus trashed records are counted, including Unsorted. Memberships, links, and shared viewing are free. At 5,000, new records are refused clearly while everything else works, and batches report what was not added. | FR-15 |
+| AC-32 | Capacity | Active plus trashed records are counted, including Unsorted. Memberships, links, and shared viewing are free. At 50,000, new records are refused clearly while everything else works, and batches report what was not added. | FR-15 |
 | AC-33 | Synchronization and conflicts | Sessions, viewers, and preferences update automatically. Newer conflicting state is kept, both values are reported and preserved, and independent changes proceed. Pending or failed changes are never shown as saved. | FR-09 |
 | AC-34 | Partial batches and retries | Independent successes are kept, dependents wait for confirmed prerequisites, and outcomes are reported by status. Retries never duplicate or overwrite. | FR-13.4–FR-13.5 |
 | AC-35 | Connection loss | Lost connectivity is reported, input is kept, pending and unconfirmed changes are distinguished, and state is reconciled on reconnect. No offline guarantee. | Section 2.3, FR-09.3 |
@@ -1070,7 +1070,7 @@ Resolve these gates before committing to the implementations they affect. Unrela
 
 **Standing risks.**
 
-- *Scope and cost.* The 5,000-album cap bounds collection size, but not accounts, traffic, artwork, provider calls, or bulk agent activity (FR-15.4).
+- *Scope and cost.* The 50,000-album cap bounds collection size, but not accounts, traffic, artwork, provider calls, or bulk agent activity (FR-15.4).
 - *Organizational complexity.* Nested folders, custom-field lifecycle, sharing inheritance, and Trash units drive design and test effort.
 - *Album identity.* Automatic identification is not guaranteed, so manually entered and unidentified albums must stay fully usable.
 
@@ -1178,6 +1178,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (11 November 2026), Latin spellings in search** (TON-201): names can be searched in plain Latin letters, in any common spelling of each letter: "royksopp" finds "Røyksopp", "aerzte" finds "Die Ärzte", and "kino" finds "Кино". A Latin letter matches only itself, and Chinese, Japanese and Korean match only as written. Recorded here on 14 November 2026 (TON-224). **Updated** FR-12.5.
 - **Decision (14 November 2026), copying a share** (TON-133), from the creator's manual testing: anyone who can open a shared folder or list can copy it into their own collection (FR-07.22, AC-51). Fields map onto theirs by name and type, created when missing; albums they have are reused by release group or link, and albums with neither are copied as new; they choose where it goes; it is all or nothing within their limits; nothing records where it came from; MCP can copy too, after approval.
 - **Decision (16 November 2026), your order of streaming services** (TON-282), from the creator's manual testing: each person drags the services into their own order in Settings, and every list of an album's services follows it, cards, rows, the "Open in…" chooser and the link fields. It never opens a service by itself. **Updated** FR-06.3 and FR-06.5.
+- **Decision (17 November 2026), 50,000 albums** (TON-287): each person can save up to 50,000 albums, up from 5,000, and keep up to 100,000 list entries, up from 50,000 (TS-18). Q-01's targets stay set on the 5,000-album workload; one measurement at 50,000 is recorded. **Updated** FR-15.1, Q-01, AC-32 and section 8.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

@@ -695,7 +695,7 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
     const anna = await newPrincipal();
     const kindOfBlue = await savedAlbum(anna, "Kind of Blue");
     const lateNight = await savedList(anna, "Late night");
-    // 250 lists of 200 albums: 50,000 entries, made in SQL because one insert can't carry that many parameters.
+    // 500 lists of 200 albums: 100,000 entries, made in SQL because one insert can't carry that many parameters.
     await t.db.execute(sql`
       insert into ${albums} (id, owner_id, title, artist_credit, original_year, search_title_key, search_artist_key)
       select gen_random_uuid(), ${anna.userId}, 'Album ' || n, 'Artist', 2000, 'album ' || n, 'artist'
@@ -703,7 +703,7 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
     await t.db.execute(sql`
       insert into ${containers} (id, owner_id, kind, name, name_key, search_name_key)
       select gen_random_uuid(), ${anna.userId}, 'list', 'Bulk ' || n, 'bulk ' || n, 'bulk ' || n
-      from generate_series(1, 250) n`);
+      from generate_series(1, 500) n`);
     await t.db.execute(sql`
       insert into ${memberships} (list_id, album_id, owner_id)
       select c.id, a.id, ${anna.userId}
@@ -712,7 +712,7 @@ describe("list entries (FR-01.6–FR-01.8)", () => {
     const [bulk] = await t.db.select().from(containers).where(eq(containers.name, "Bulk 1"));
     if (!bulk) throw new Error("The bulk lists weren't inserted.");
     await trash(anna.userId, bulk.id);
-    expect(maxMemberships).toBe(50_000);
+    expect(maxMemberships).toBe(100_000);
 
     const before = await headSeq(t.db, anna.userId);
     const over = await executeMutation(t.db, anna, addEntry(lateNight.id, kindOfBlue.id));
@@ -1095,7 +1095,7 @@ describe("executeBatch (TS-25, FR-13.4)", () => {
     const anna = await newPrincipal();
     const doom = await savedList(anna, "Doom");
     const kept = await savedAlbum(anna, "Dopesmoker");
-    // The rest of the 5,000, written straight in, a thousand rows at a time.
+    // The rest of the 50,000, written straight in, a thousand rows at a time.
     const rest = Array.from({ length: maxAlbums - 1 }, (_, index) => ({
       id: uuidv7(),
       ownerId: anna.userId,
@@ -1146,7 +1146,7 @@ describe("executeBatch (TS-25, FR-13.4)", () => {
       code: "capacity_exceeded",
       problem: expect.objectContaining({
         detail:
-          "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more.",
+          "You've reached 50,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more.",
       }),
     });
     expect(result.items.map(({ outcome }) => outcome)).toEqual([

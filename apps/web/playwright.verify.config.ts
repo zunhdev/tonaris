@@ -30,6 +30,8 @@ export default defineConfig({
         PORT: String(verifyPort),
         API_URL: `http://localhost:${verifyApiPort}`,
         NODE_ENV: "production",
+        // Signing in waits for the sync engine through the test hooks (e2e/support/sign-in.ts), as in the e2e run.
+        TEST_HOOKS: "1",
       },
       timeout: 120_000,
     },

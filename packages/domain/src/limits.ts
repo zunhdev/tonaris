@@ -4,9 +4,10 @@
 
 /**
  * Albums per account, counting those in Trash until they are purged (FR-15.1, FR-15.2). Restoring or re-adding one
- * reuses its slot, so only a new record can be refused.
+ * reuses its slot, so only a new record can be refused. Raised from 5,000 by the creator on 17 November 2026
+ * (TON-287); Q-01's targets stay set on the 5,000-album reference workload (TS-120).
  */
-export const maxAlbums = 5_000;
+export const maxAlbums = 50_000;
 
 /** Link captures per account per hour, from the app or MCP (TS-18). */
 export const maxCapturesPerHour = 100;
@@ -32,8 +33,11 @@ export const maxNameLength = 200;
 /** Characters in a folder's or list's description, counted in code points (FR-03.5). */
 export const maxDescriptionLength = 2_000;
 
-/** List entries per account, counting those whose list or album is in Trash until purged (decided 22 October 2026). */
-export const maxMemberships = 50_000;
+/**
+ * List entries per account, counting those whose list or album is in Trash until purged (decided 22 October 2026).
+ * Raised from 50,000 with the album limit, about 2 per album (17 November 2026, TON-287).
+ */
+export const maxMemberships = 100_000;
 
 /** Characters in a pasted link: longer input isn't a link of any of the streaming services (TS-40). */
 export const maxLinkLength = 2_048;

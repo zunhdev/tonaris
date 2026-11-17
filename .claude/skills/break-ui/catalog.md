@@ -45,7 +45,7 @@ Real values that break music UI. Use `example.com` or `.test` addresses for any 
 | --- | --- |
 | `0` albums, lists, members | Empty states, and whether each screen has one |
 | `1` of each | "1 album", "1 list", "1 person": singular forms |
-| `5,000` albums (the account limit) | The usage meter, counts in the sidebar, virtualization |
+| `5,000` albums (the reference workload; the limit is 50,000) | The usage meter, counts in the sidebar, virtualization |
 | `2,066` entries in one shared folder | The guest page's first paint |
 | Year `1877` / missing year / `2026` | Release-year columns and grouping |
 

@@ -43,3 +43,32 @@
   - **No change was made.** The target is met, and dropping durability to speed it up would trade a promise (FR-13) for milliseconds.
 - **Viewer propagation,** approved on 21 October on an estimate, is now measured: a 2,000-album viewer's refetch takes 117 ms on desktop and 616 ms on mobile.
 - **Raw results** are committed in `apps/web/perf/results/`: `desktop.json`, `mobile.json` and `verify.json`.
+
+## At 50,000 albums (17 November 2026)
+
+[TON-287](https://linear.app/zunhdev/issue/TON-287) raised the album limit from 5,000 to 50,000 (FR-15.1). The creator kept Q-01's targets set at 5,000 and asked for one measurement at 50,000, with each slow spot filed as its own issue.
+
+**The server holds; the browser doesn't.** Search, export, the guest page and confirmations stay within the targets. The cold start, views and edits slow down with the size of the whole collection.
+
+| Metric (p95) | Target, set at 5,000 | 5,000 desktop | 50,000 desktop | 5,000 mobile | 50,000 mobile | Follow-up |
+| --- | --- | --- | --- | --- | --- | --- |
+| Workspace cold start, slowest of 3 | ≤ 2.5 s (desktop) | 0.39 s | 3.4 s | 1.6 s | 14.6 s | [TON-288](https://linear.app/zunhdev/issue/TON-288) |
+| Opening a list | ≤ 100 ms | 10 ms | 93 ms | 41 ms | 336 ms | [TON-289](https://linear.app/zunhdev/issue/TON-289) |
+| Sorting a list | ≤ 100 ms | 8 ms | 69 ms | 24 ms | 364 ms | TON-289 |
+| Opening or sorting a view of every album | ≤ 200 ms | 34 ms | 813 ms | 122 ms | 4,347 ms | TON-289 |
+| Feedback after an edit | ≤ 50 ms | 2 ms | 16 ms | 8 ms | 77 ms | TON-289 |
+| Edit confirmation | ≤ 400 ms | 39 ms | 52 ms | 186 ms | 259 ms | — |
+| Propagation to another session | ≤ 1 s | 18 ms | 43 ms | 28 ms | 192 ms | — |
+| Quick search, per keystroke | ≤ 50 ms | 7 ms | 29 ms | 14 ms | 101 ms | [TON-290](https://linear.app/zunhdev/issue/TON-290) |
+| MCP search, server time | ≤ 300 ms | — | 83 ms | — | — | — |
+| Guest page LCP (mobile p75) | ≤ 2.5 s | — | — | 0.63 s | 1.02 s | — |
+| Export | ≤ 3 s | 0.18 s | 1.17 s | — | — | — |
+
+- **The workload:** `WORKLOAD_ALBUMS=50000` gives the owner 50,000 albums in 1,500 lists and 120 folders, with 90,604 list entries and 3,950 albums in Unsorted. Real lists hold a few hundred albums at most (the creator, 17 November 2026), so no list holds more than 500, and half hold 38 or fewer. The shared collections are the reference workload's.
+- **The bootstrap** is 40.2 MB raw and 7.2 MB gzipped, against 4.1 MB and 0.75 MB at 5,000. It has grown since TON-92 measured 2.33 MB, as fields, colors and settings arrived.
+- **Opening a list doesn't depend on its size:** a first run with the reference's 250 lists, the largest holding 7,170 albums, measured the same. The workspace builds one model over the whole collection and rebuilds it on every change (`features/collection/data.tsx`).
+- **A view of every album** is the perf page's All albums. The app has none, but Unsorted becomes one for someone who never puts albums in lists.
+- **`test:verify` ran on that first shape,** whose largest shared folder held 20,262 entries. Its other measures don't depend on list size.
+- **The 5,000 columns** are today's runs of the same suites, since the code has changed since 29 October. Edit confirmation is faster than TON-92's 188 ms.
+- **MCP search** is `searchCollection` timed 40 times with 20 words, as above.
+- **Raw results** at 50,000 aren't committed; `apps/web/perf/results/` keeps the reference workload's.

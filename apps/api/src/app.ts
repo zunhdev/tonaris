@@ -50,10 +50,11 @@ import { syncRoutes } from "./sync/routes";
 import { announcer, mutationRunner, type Mutations } from "./sync/runner";
 
 /**
- * The largest request body the API reads (TON-95), passed to `listen`. The largest legitimate request, a 200-item
- * batch of 2,000-character text values (TS-18), is about 1.7 MB in UTF-8; Bun's default would read 128 MB.
+ * The largest request body the API reads (TON-95), passed to `listen`. The largest legitimate request is the first
+ * move in an unarranged view of 50,000 albums (TON-287): one `order.set` keying them all, about 4.3 MB. A 200-item
+ * batch of 2,000-character text values (TS-18) is about 1.7 MB in UTF-8. Bun's default would read 128 MB.
  */
-export const maxRequestBodySize = 4 * 1024 * 1024;
+export const maxRequestBodySize = 8 * 1024 * 1024;
 
 export const healthSchema = z
   .object({

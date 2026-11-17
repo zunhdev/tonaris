@@ -22,7 +22,7 @@ import type {
   shareLinks,
   users,
 } from "@tonaris/db";
-import { latinKey, nameKey } from "@tonaris/domain";
+import { latinKey, nameKey, termsVersion } from "@tonaris/domain";
 import { albumUrl } from "@tonaris/providers";
 
 import { Random } from "./random";
@@ -73,6 +73,8 @@ export type CollectionShape = {
   membershipWeights: readonly number[];
   /** The share of albums with at least one custom field applied. */
   fieldUsage: number;
+  /** Albums one list holds at most; without it, lists grow as their weights fall. */
+  maxListAlbums?: number;
   /** One container that holds the whole collection, so it can be shared as a unit. */
   root?: { kind: ContainerKind; name: string };
 };
@@ -147,6 +149,27 @@ export const referenceWorkload: WorkloadShape = {
   ],
 };
 
+/**
+ * The reference workload with `albums` owned albums, to measure at the album limit (TON-287):
+ * `WORKLOAD_ALBUMS=50000 bun run seed:workload`. Real lists hold a few hundred albums at most (the creator, 17
+ * November 2026), so lists grow in number, not size: up to 6 times as many, and twice the folders, which keeps 50,000
+ * albums within the 2,000 folders and lists (TS-18). Q-01's targets are set on the reference workload itself.
+ */
+export function scaledWorkload(albums: number): WorkloadShape {
+  const { owned } = referenceWorkload;
+  const scale = Math.max(1, albums / owned.albums);
+  return {
+    ...referenceWorkload,
+    owned: {
+      ...owned,
+      albums,
+      lists: Math.round(owned.lists * Math.min(scale, 6)),
+      folders: Math.round(owned.folders * Math.min(scale, 2)),
+      maxListAlbums: 500,
+    },
+  };
+}
+
 export type Account = { id: string; email: string; displayName: string };
 
 export type SharedCollection = {
@@ -209,6 +232,9 @@ export function generateWorkload(shape: WorkloadShape = referenceWorkload): Work
       emailVerified: true,
       displayName,
       role: "user",
+      // Agreed to the current terms (TON-131), so signing in as them opens the app rather than the terms.
+      termsVersion,
+      termsAgreedAt: new Date(start),
       ...stamps(start),
     });
     rows.accountSync.push({ accountId: id, seq: 0, ...stamps(start) });
@@ -248,7 +274,7 @@ type Album = { id: string; createdAt: number };
 function buildCollection(b: Builder, shape: CollectionShape): Container | undefined {
   const { root, lists } = buildTree(b, shape);
   const albums = buildAlbums(b, shape.albums);
-  buildMemberships(b, lists, albums, shape.membershipWeights);
+  buildMemberships(b, lists, albums, shape.membershipWeights, shape.maxListAlbums);
   buildFields(b, albums, shape.fieldUsage);
   return root;
 }
@@ -477,14 +503,21 @@ function buildMemberships(
   lists: readonly Container[],
   albums: readonly Album[],
   weights: readonly number[],
+  maxListAlbums = Infinity,
 ): void {
   const rng = b.rng.derive("memberships");
   const listWeights = lists.map(() => (1 - rng.next()) ** -0.7);
+  const sizes = new Map<Container, number>();
   for (const album of albums) {
     const count = Math.min(rng.weighted(weights), lists.length);
     const chosen = new Set<Container>();
-    while (chosen.size < count) chosen.add(rng.pickWeighted(lists, listWeights));
+    while (chosen.size < count) {
+      const list = rng.pickWeighted(lists, listWeights);
+      // A full list is passed over; the shapes leave lists ample room in total.
+      if ((sizes.get(list) ?? 0) < maxListAlbums) chosen.add(list);
+    }
     for (const list of chosen) {
+      sizes.set(list, (sizes.get(list) ?? 0) + 1);
       const addedAt = Math.min(
         Math.max(album.createdAt, list.createdAt) + rng.int(0, 14 * day),
         end,

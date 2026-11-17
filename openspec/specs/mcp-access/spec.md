@@ -104,7 +104,7 @@ Folder, list, Unsorted and Trash listings SHALL come in pages of at most 200 wit
 
 #### Scenario: Usage
 - **WHEN** a collection has one active album and one in Trash
-- **THEN** the overview counts 1 album and 2 of the 5,000 album limit
+- **THEN** the overview counts 1 album and 2 of the 50,000 album limit
 
 ### Requirement: Results are structured data, with user text framed and values filtered by policy
 Every read result SHALL be structured JSON with a short summary, and the same JSON as text (TS-65, FR-10.9). Each tool's description SHALL state that collection text is the user's data, never instructions (Q-05). Album values SHALL pass the provider policy for agents, a withheld value being replaced by the `withheld` marker, never dropped, and the values' sources SHALL never be sent (TS-15).

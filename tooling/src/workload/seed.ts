@@ -1,6 +1,7 @@
 // Seeds the reference workload (TS-120) into a database. `bun run seed:workload` seeds the local one (TS-06).
 // The workload lives in accounts of its own, workload@tonaris.test and three sharers. Every run replaces their
-// data in one transaction, so it is safe to repeat and never touches anyone else's.
+// data in one transaction, so it is safe to repeat and never touches anyone else's. WORKLOAD_ALBUMS gives the owner
+// that many albums instead of 5,000, in more lists of at most 500, to measure at the album limit (TON-287).
 
 import { inArray, or } from "drizzle-orm";
 import type { PgInsertValue, PgTable } from "drizzle-orm/pg-core";
@@ -34,7 +35,7 @@ import {
   viewPrefs,
 } from "@tonaris/db";
 
-import { type Account, generateWorkload, type Workload } from "./generate";
+import { type Account, generateWorkload, scaledWorkload, type Workload } from "./generate";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
@@ -161,10 +162,18 @@ if (import.meta.main) {
   const db = createDatabase(url, { max: 1 });
   try {
     const started = performance.now();
-    const workload = generateWorkload();
+    const requested = process.env.WORKLOAD_ALBUMS;
+    const size = Number(requested);
+    if (requested && !(Number.isInteger(size) && size > 0)) {
+      throw new Error(`WORKLOAD_ALBUMS must be a whole number of albums, not "${requested}".`);
+    }
+    const workload = generateWorkload(requested ? scaledWorkload(size) : undefined);
     await seedWorkload(db, workload);
     const seconds = ((performance.now() - started) / 1000).toFixed(1);
-    console.log(`Seeded the TS-120 reference workload into ${redact(url)} in ${seconds} s.\n`);
+    const what = requested
+      ? `the workload at ${count(size)} albums`
+      : "the TS-120 reference workload";
+    console.log(`Seeded ${what} into ${redact(url)} in ${seconds} s.\n`);
     console.log(describeWorkload(workload));
   } finally {
     await closeDatabase(db);

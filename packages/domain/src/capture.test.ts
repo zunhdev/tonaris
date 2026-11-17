@@ -675,7 +675,7 @@ describe("album.capture: refusals change nothing (X-05)", () => {
   });
 });
 
-/** 5,000 albums, none of them Bleach, and Bleach in Trash when `bleachInTrash`. */
+/** 50,000 albums, none of them Bleach, and Bleach in Trash when `bleachInTrash`. */
 function atLimit(bleachInTrash: boolean) {
   const others = Array.from({ length: maxAlbums - (bleachInTrash ? 1 : 0) }, (_, index) =>
     saved(`A${index}`, { releaseGroupId: null }),

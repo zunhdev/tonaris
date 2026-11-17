@@ -328,7 +328,7 @@ describe("membership.remove: albums stay in the collection (FR-01.8)", () => {
 });
 
 describe("the entry limit (FR-15.4, TS-18)", () => {
-  test("adding past 50,000 entries is refused, counting Trash; removing and re-adding still work", async () => {
+  test("adding past 100,000 entries is refused, counting Trash; removing and re-adding still work", async () => {
     const kindOfBlue = album("Kind of Blue");
     const favorites = list("Favorites");
     const inTrash = list("Old favorites", { trashed: true });
@@ -348,7 +348,7 @@ describe("the entry limit (FR-15.4, TS-18)", () => {
 
     const over = await run(add(lateNight.id, blueTrain.id));
     expect(codeOf(over)).toBe("limit_exceeded");
-    expect(over.status === "failed" && over.problem.detail).toContain("50,000");
+    expect(over.status === "failed" && over.problem.detail).toContain("100,000");
     expect(memberships.size).toBe(maxMemberships);
 
     expect(await run(add(favorites.id, kindOfBlue.id))).toMatchObject({
