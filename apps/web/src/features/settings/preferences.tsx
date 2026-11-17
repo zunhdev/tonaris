@@ -4,7 +4,7 @@
 // (account-defaults.ts). Views with choices of their own keep them. Links: whether service links open the services'
 // web pages or their apps (FR-06.6, TON-104). Streaming services: the ones the person uses, a switch each; the album
 // panel and New album show link fields only for those, while saved links still show (TON-138); dragged into the
-// person's order, which every list of an album's services follows (TON-282).
+// person's order, which every list of an album's services follows (TON-282). App: how to install Tonaris (TON-298).
 
 import { pageScroll } from "@/common/page-scroll";
 import { DropLine } from "@/features/collection/album-rows";
@@ -41,6 +41,7 @@ import { Switch } from "@tonaris/ui/components/switch";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useAccountDefaults } from "./account-defaults";
+import { InstallApp } from "./install-app";
 
 const linkTargetOptions: readonly SegmentedOption<LinkTarget>[] = [
   { value: "web", label: "Web page" },
@@ -181,6 +182,8 @@ export function PreferencesSettings() {
           you've already saved still show, and you can paste a link from any service.
         </p>
       </section>
+
+      <InstallApp />
     </div>
   );
 }

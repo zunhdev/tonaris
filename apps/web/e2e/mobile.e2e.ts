@@ -233,7 +233,10 @@ test("search fills the screen and opens what it finds", async ({ page }) => {
     await expect(palette.getByRole("option", { name: edit })).toHaveCount(0);
 });
 
-test("Settings' choices are 44 px targets on a phone (DS-15, DRIFT-093)", async ({ page }) => {
+test("Settings' choices are 44 px targets on a phone (DS-15, DRIFT-093)", async ({
+  page,
+  browserName,
+}) => {
   await signIn(page, accounts.phoneTargets);
   await page.goto("/settings/preferences");
   const radios = page.getByRole("main").getByRole("radio");
@@ -242,6 +245,16 @@ test("Settings' choices are 44 px targets on a phone (DS-15, DRIFT-093)", async 
     each.map((radio) => radio.getBoundingClientRect().height),
   );
   expect(heights.every((height) => height >= 40)).toBe(true);
+
+  // App says how to install Tonaris here (TON-298): an iPhone adds it to the Home Screen.
+  const app = page.getByRole("region", { name: "App" });
+  await expect(app).toContainText(/Install Tonaris|Add Tonaris to your Home Screen/);
+  if (browserName === "webkit")
+    await expect(app).toContainText("Tap Share, then Add to Home Screen.");
+  for (const button of await app.getByRole("button").all()) {
+    // oxlint-disable-next-line no-await-in-loop -- at most one
+    expect((await button.boundingBox())?.height).toBeGreaterThanOrEqual(40);
+  }
 });
 
 /** Sends a mutation as the page's account. */

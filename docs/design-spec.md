@@ -1946,6 +1946,13 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 
 *As built in TON-282* (from the creator's manual testing, 16 November 2026): **the services in the person's order.** The section lists the services in the person's order, each with a handle before its name, and a note: "Drag a service by its handle, or press ⌥↑ or ⌥↓ on its switch, to put the ones you use most first. An album lists its links in this order." The handle drags a service to another place, a line showing where it would land (DS-49); it is for the pointer only, and the keyboard moves a service with ⌥↑ and ⌥↓ on its switch, announced as the views announce moves (DS-83). The order is saved to the account at once and synced. Cards' and rows' links, the "Open in…" chooser (DS-25), the album panel's properties and link fields (DS-46), and New album follow it; guests see the services' own order, and a service added later goes last. *(FR-06.3)*
 
+*As built in TON-298* (from the creator's desktop-app evaluation; the creator chose its place, 18 November 2026): **App.** The last section says how to install Tonaris in the browser at hand, on every device (section 2.2):
+- **Chrome or Edge, when they offer it:** "Install Tonaris to open it in its own window, from your Dock, Start menu or home screen." and an **Install Tonaris** button, 40 px tall on a phone, that opens the browser's own prompt. The prompt can be shown once, so the button goes either way and the focus moves to the section's heading. Accepted, the section says "Tonaris is installed. Open it from your apps, like any other."
+- **Safari on a Mac:** "Install Tonaris to open it in its own window, from your Dock. In Safari, choose File → Add to Dock."
+- **An iPhone or iPad:** "Add Tonaris to your Home Screen to open it full screen, like an app. Tap Share, then Add to Home Screen."
+- **Elsewhere,** Chrome without an offer included: "Install Tonaris to open it in its own window, like an app. In Chrome or Edge, choose Install in the address bar or the browser's menu. In Safari on a Mac, choose File → Add to Dock. If Tonaris is installed already, open it from your apps."
+- **In the installed app's window:** "You're using Tonaris as an installed app."
+
 **DS-96 Data export** (Settings → Data). *(FR-08.1–FR-08.6)*
 - **Explanation:** "A ZIP with a JSON file (complete, for programs and AI tools), a Markdown file (readable outline of your collection) and a README."
 - **Included / not included:** a short two-column list (FR-08.3, FR-08.4).
@@ -2188,6 +2195,8 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 - **Android Chrome** offers "Install app" in its menu, and the installed app opens without browser chrome.
 - **iOS** uses the square `apple-touch-icon` for Add to Home Screen, and `apple-mobile-web-app-capable` opens it full screen, with a black status bar above the top bar.
 - **No offline launch:** there is no service worker, so opening the app needs a connection, as section 2.3 says. Signed out, it opens on sign-in.
+- *Since TON-298:* **on a computer,** Chrome and Edge find nothing missing to install it, and Safari's Add to Dock opens it in its own window, with its own Dock icon. Settings → Preferences says how (DS-94).
+- *Since TON-298:* **a link goes to the open window.** The manifest's `launch_handler` is `focus-existing`, then `auto`. When Chrome or Edge opens a Tonaris link in the installed app, they bring its open window forward rather than open another, and the window goes to the link without reloading, so typed text and the sync stream stay. It stays put for the link it's already on.
 
 ---
 

@@ -5,13 +5,14 @@ import { getGlobalStartContext } from "@tanstack/react-start";
 
 import { PageError } from "./common/page-error";
 import { pageScrollSelectors } from "./common/page-scroll";
+import { watchInstall } from "./features/shell/install";
 import { reportError, startErrorReports } from "./observability";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
   // In the browser, once: reports go to Sentry when the server was given a key (TS-115).
   startErrorReports();
-  return createRouter({
+  const router = createRouter({
     routeTree,
     scrollRestoration: true,
     // A page's own scroll containers start at the top on a new page, not where the last page's were (TON-157).
@@ -26,6 +27,10 @@ export function getRouter() {
     // A page that can't be shown says why in its own place; the shell around it stays (DRIFT-081).
     defaultErrorComponent: PageError,
   });
+  // In the browser, once: the install offer for Preferences, and the links an installed app's window is brought
+  // forward for, which it goes to here without reloading (TON-298).
+  watchInstall((href) => void router.navigate({ href }));
+  return router;
 }
 
 declare module "@tanstack/react-router" {

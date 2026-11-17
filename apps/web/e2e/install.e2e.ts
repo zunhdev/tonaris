@@ -1,6 +1,7 @@
-// Installing Tonaris on a phone (TON-115, DS-110): Chrome loads the manifest the page links, the manifest meets
-// Chrome's install criteria (a name, 192 and 512 px icons, a start URL, standalone display, no related native app),
-// its icons are served, and iOS gets its icon and full screen. Chromium only, for Chrome's view of the manifest.
+// Installing Tonaris on a phone (TON-115, DS-110) or a computer (TON-298): Chrome loads the manifest the page links,
+// the manifest meets Chrome's install criteria (a name, 192 and 512 px icons, a start URL, standalone display, no
+// related native app) and asks for an open window to be brought forward for a link, its icons are served, and iOS
+// gets its icon and full screen. Chromium only, for Chrome's view of the manifest.
 
 import { z } from "zod";
 
@@ -14,6 +15,7 @@ const manifestSchema = z.object({
   start_url: z.string(),
   display: z.string(),
   prefer_related_applications: z.boolean().optional(),
+  launch_handler: z.object({ client_mode: z.array(z.string()) }),
   icons: z.array(
     z.object({ src: z.string(), sizes: z.string(), type: z.string(), purpose: z.string() }),
   ),
@@ -44,6 +46,10 @@ test("Chrome loads an installable manifest, and iOS gets its icon and full scree
     display: "standalone",
   });
   expect(manifest.prefer_related_applications).toBeUndefined();
+  // An installed app's open window is brought forward for a link, rather than another opened (TON-298).
+  expect(manifest.launch_handler.client_mode).toEqual(["focus-existing", "auto"]);
+  // Chrome on a computer finds nothing that stops it installing Tonaris (TON-298).
+  expect((await devtools.send("Page.getInstallabilityErrors")).installabilityErrors).toEqual([]);
   expect(manifest.icons.map(({ sizes, type, purpose }) => `${sizes} ${type} ${purpose}`)).toEqual(
     expect.arrayContaining([
       "192x192 image/png any",

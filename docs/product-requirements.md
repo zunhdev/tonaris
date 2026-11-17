@@ -84,8 +84,10 @@ The substantial first-version scope is accepted. Work is delivered in increments
   Guests can view valid shared links. Collection-content edits are desktop-only in the browser (X-04). Mobile coverage of account and sharing administration is not required.
 
   The web app can be installed on a phone's home screen, from Chrome on Android or Safari's Add to Home Screen on iOS, and then opens full screen like an app. It still needs a connection to open (decided 30 October 2026, TON-115).
+
+  On a computer, Chrome and Edge install it, and Safari on a Mac adds it to the Dock. It then opens in its own window, which a person switches to like any other app. Settings says how to install it in the browser at hand (decided 18 November 2026, TON-298).
 - **Supported browsers.** Desktop: Chrome, Edge, Firefox, and Safari. Mobile: Safari on iOS and Chrome on Android. Exact versions and the OS test matrix are in the tech spec.
-- **Later platforms.** Native iOS and Android apps are planned for a later phase, and desktop apps for a more distant one. They are not specified here. Native apps will use the same service API as the web app (tech spec).
+- **Later platforms.** Native iOS and Android apps are planned for a later phase, and desktop apps for a more distant one. They are not specified here. Native apps will use the same service API as the web app (tech spec). On a computer, the installed web app stands in for a desktop app. A wrapped one, such as Tauri, would only be built for something a browser can't do (decided 18 November 2026, TON-298).
 
 ### 2.3 Connectivity and language
 
@@ -1179,6 +1181,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (14 November 2026), copying a share** (TON-133), from the creator's manual testing: anyone who can open a shared folder or list can copy it into their own collection (FR-07.22, AC-51). Fields map onto theirs by name and type, created when missing; albums they have are reused by release group or link, and albums with neither are copied as new; they choose where it goes; it is all or nothing within their limits; nothing records where it came from; MCP can copy too, after approval.
 - **Decision (16 November 2026), your order of streaming services** (TON-282), from the creator's manual testing: each person drags the services into their own order in Settings, and every list of an album's services follows it, cards, rows, the "Open in…" chooser and the link fields. It never opens a service by itself. **Updated** FR-06.3 and FR-06.5.
 - **Decision (17 November 2026), 50,000 albums** (TON-287): each person can save up to 50,000 albums, up from 5,000, and keep up to 100,000 list entries, up from 50,000 (TS-18). Q-01's targets stay set on the 5,000-album workload; one measurement at 50,000 is recorded. **Updated** FR-15.1, Q-01, AC-32 and section 8.
+- **Decision (18 November 2026), Tonaris as an app on a computer** (TON-298), from the creator's desktop-app evaluation: the installed web app, from Chrome or Edge's Install or Safari's Add to Dock, rather than a wrapped desktop app such as Tauri, Electrobun or Electron. Settings → Preferences says how to install it on every device, and a link opened in the installed app goes to its open window. A wrapped app is for later, and only for something a browser can't do, such as a menu bar icon. **Updated** section 2.2.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;
