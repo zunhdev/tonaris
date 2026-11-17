@@ -324,7 +324,7 @@ test("names are checked before sending, and a name the server refuses can be edi
   await page.keyboard.press("Enter");
   await expect.poll(() => savedNames(page)).toEqual(["Later", "Sooner"]);
   await expect(toast).toBeHidden();
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date");
 });
 
 test("offline, folders and lists can't be created or renamed", async ({ page, context }) => {
@@ -333,9 +333,9 @@ test("offline, folders and lists can't be created or renamed", async ({ page, co
   await created(page, "Later");
 
   await context.setOffline(true);
-  await expect(indicator(page)).toHaveAccessibleName(
-    "Sync status: Offline — changes can't be saved",
-  );
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Offline — changes can't be saved");
+  // Offline takes over the row (TON-291).
+  await expect(indicator(page)).toHaveText("Offline — changes can't be saved");
   const plus = page.getByRole("button", { name: "New list or folder" });
   await expect(plus).toHaveAttribute("aria-disabled", "true");
   await plus.hover();

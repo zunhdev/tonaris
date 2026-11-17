@@ -61,7 +61,7 @@ test("a batch that partly fails is reported once, by status, kept across a reloa
   await expect(
     page.getByRole("alert").filter({ hasText: "Couldn't save 2 of 4 changes" }),
   ).toBeAttached();
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: 2 need review");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: 2 need review");
   // The independent successes are kept.
   await expect.poll(() => savedNames(page)).toEqual(["Later", "Soon", "Sooner"]);
 
@@ -95,7 +95,7 @@ test("a batch that partly fails is reported once, by status, kept across a reloa
   await expect.poll(() => keptReports(page)).toBe(1);
   await page.reload();
   await live(page);
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: 2 need review");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: 2 need review");
   await expect(toasts(page)).toHaveCount(0);
   await openActivity(page);
   await expect(report(page).getByRole("heading")).toHaveText([
@@ -111,7 +111,9 @@ test("a batch that partly fails is reported once, by status, kept across a reloa
   await openActivity(page);
   await report(page).getByRole("button", { name: "Retry" }).click();
   await expect(report(page).getByRole("button", { name: "4 saved" })).toBeVisible();
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  // Kept until dismissed, the report is counted at the row's right (TON-291).
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date, 1 report");
+  await expect(indicator(page)).toHaveText("Activity1");
   await expect(announcements(page)).toHaveText(["4 changes saved.", ""]);
   // Nothing saved the first time was made again.
   await expect.poll(() => savedNames(page)).toEqual(["Doom", "Earlier", "Later", "Soon", "Sooner"]);
@@ -124,6 +126,8 @@ test("a batch that partly fails is reported once, by status, kept across a reloa
   // Dismissed, it is gone, also after a reload: the browser deletes its copy (a reload aborts what is in flight).
   await report(page).getByRole("button", { name: "Dismiss" }).click();
   await expect(activity(page)).toContainText("All changes are saved.");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date");
+  await expect(indicator(page)).toHaveText("Activity");
   await expect.poll(() => keptReports(page)).toBe(0);
   await page.reload();
   await live(page);

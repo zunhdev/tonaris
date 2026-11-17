@@ -28,7 +28,7 @@ test("a slow save shows Saving…, is listed in Activity, and settles with no st
 }) => {
   await signIn(page, accounts.saveSlow);
   await live(page);
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date");
 
   const answered = Promise.withResolvers<void>();
   await page.route(`${apiUrl}/v1/mutations`, async (route) => {
@@ -36,12 +36,12 @@ test("a slow save shows Saving…, is listed in Activity, and settles with no st
     await route.continue();
   });
   await insert(page, list("Later"));
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Saving…");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Saving…");
   const panel = await openActivity(page);
   await expect(panel.getByRole("listitem")).toHaveText(["New list 'Later'Saving…"]);
 
   answered.resolve();
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date");
   await expect(panel).toContainText("All changes are saved.");
   await expect(toasts(page)).toHaveCount(0);
   // Routine saves are not announced (DS-83).
@@ -58,7 +58,7 @@ test("changes sent without an answer wait to confirm, never as saved, and are sa
 
   // One action, two lists: one request, which goes unanswered. They are one batch, reported together (DS-84).
   await insert(page, list("Later"), list("Soon"));
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: 2 changes waiting to confirm");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: 2 changes waiting to confirm");
   const panel = await openActivity(page);
   const report = panel.locator('[data-slot="batch-report"]');
   await expect(report).toHaveCount(1);
@@ -74,7 +74,7 @@ test("changes sent without an answer wait to confirm, never as saved, and are sa
   // Once answered and wholly saved, the report closes by itself, and only a polite summary is said.
   await page.unrouteAll({ behavior: "ignoreErrors" });
   await page.evaluate(() => window.tonarisSync?.outbox.wake());
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date");
   await expect(panel).toContainText("All changes are saved.");
   await expect(announcements(page)).toHaveText(["2 changes saved.", ""]);
   await expect(toasts(page)).toHaveCount(0);
@@ -96,7 +96,7 @@ test("a failed save is reported until dealt with, also after a reload, and Retry
   await expect(
     page.getByRole("alert").filter({ hasText: "Couldn't save the list 'Later'" }),
   ).toBeAttached();
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: 1 needs review");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: 1 needs review");
 
   // F6 reaches the toasts (DS-108). Closing one keeps the failure in Activity, across a reload too.
   await page.keyboard.press("F6");
@@ -104,7 +104,7 @@ test("a failed save is reported until dealt with, also after a reload, and Retry
   await expect(toast).toBeHidden();
   await page.reload();
   await live(page);
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: 1 needs review");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: 1 needs review");
   await expect(toasts(page)).toHaveCount(0);
   const panel = await openActivity(page);
   const failed = panel.getByRole("listitem");
@@ -119,12 +119,12 @@ test("a failed save is reported until dealt with, also after a reload, and Retry
   await expect.poll(() => savedNames(page)).toEqual(["Sooner"]);
   await indicator(page).click();
   await failed.getByRole("button", { name: "Retry" }).click();
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date");
   await expect.poll(() => savedNames(page)).toEqual(["Later", "Sooner"]);
 
   // A failure can also just be dismissed.
   await insert(page, list("Later"));
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: 1 needs review");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: 1 needs review");
   await panel.getByRole("button", { name: "Dismiss" }).click();
   await expect(panel).toContainText("All changes are saved.");
   await expect(toasts(page)).toHaveCount(0);
@@ -152,12 +152,12 @@ test("a conflict is reviewed: Apply mine saves the attempt, Keep current the new
   await review.getByRole("button", { name: "Apply mine" }).click();
   await expect(review).toBeHidden();
   await expect(toast).toBeHidden();
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date");
   await expect.poll(() => savedNames(page)).toEqual(["Favorites"]);
 
   // A second conflict, reviewed after a reload: Keep current leaves the other session's name.
   await conflictingRename(page, { ...later, name: "Favorites" }, "Mine", "Theirs");
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: 1 needs review");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: 1 needs review");
   await page.reload();
   await live(page);
   const panel = await openActivity(page);
@@ -171,7 +171,7 @@ test("a conflict is reviewed: Apply mine saves the attempt, Keep current the new
   await expect(again.getByRole("row")).toHaveText(["FieldCurrentYours", "NameTheirsMine"]);
   await again.getByRole("button", { name: "Keep current" }).click();
   await expect(again).toBeHidden();
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date");
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date");
   await expect.poll(() => savedNames(page)).toEqual(["Theirs"]);
   expect(await page.evaluate(() => window.tonarisSync?.states.conflicts().length)).toBe(0);
 });
@@ -185,16 +185,14 @@ test("going offline is reported and announced, with a banner, until the connecti
   const banner = page.getByText("Offline — showing what was last loaded");
 
   await context.setOffline(true);
-  await expect(indicator(page)).toHaveAccessibleName(
-    "Sync status: Offline — changes can't be saved",
-  );
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Offline — changes can't be saved");
   await expect(banner).toBeVisible();
   await expect(announcements(page).nth(1)).toHaveText(
     "You're offline. Changes can't be saved until the connection is back.",
   );
 
   await context.setOffline(false);
-  await expect(indicator(page)).toHaveAccessibleName("Sync status: Up to date", {
+  await expect(indicator(page)).toHaveAccessibleName("Activity: Up to date", {
     timeout: 15_000,
   });
   await expect(banner).toBeHidden();

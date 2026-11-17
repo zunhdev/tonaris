@@ -1629,7 +1629,7 @@ The block never says "private" while another access path remains.
 
 | Connection state | Indicator |
 | --- | --- |
-| *connected* | Neutral dot, no label; tooltip "Up to date". With saves in flight: "Saving…" |
+| *connected* | Neutral dot, no label; tooltip "Up to date". With saves in flight: "Saving…" (the Activity row since TON-291, below) |
 | *reconnecting* | Warning dot, "Reconnecting…". Edits are still accepted as *pending*. |
 | *offline* | Danger dot, "Offline — changes can't be saved". A slim banner in the main view reads "Offline — showing what was last loaded". Edit controls are disabled with the tooltip "You're offline". |
 
@@ -1645,7 +1645,7 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
   4. "{n} need review", with a warning dot, while failures or conflicts wait (this keeps them in view once their toasts are closed, DS-02);
   5. "Saving…".
 
-  A long label wraps rather than being cut off. The accessible name is "Sync status: {label}", or "Sync status: Up to date".
+  A long label wraps rather than being cut off. The accessible name was "Sync status: {label}", or "Sync status: Up to date", until TON-291.
 - **Activity** lists each write with:
   - its marker;
   - a summary, e.g. "Rename 'Metal' to 'Doom'";
@@ -1663,6 +1663,12 @@ The tech spec defines the timing that separates *reconnecting* from *offline*.
 - **"{n} need review"** also counts skipped writes and those needing a choice.
 
 *As built in TON-225 (decided by the creator, 14 November 2026):* **with a share open,** the sidebar's indicator and Activity report that share's writes: its pending, failed and unconfirmed ones and its batch reports, so a share's "View report" opens an Activity that has the report. They follow the collection on screen, as its toasts and their Retry and Dismiss do (`ScreenSyncProvider`).
+
+*As built in TON-291 (decided by the creator, 17 November 2026, from their manual testing):* the dot alone read as an empty field, so the indicator is the **Activity row**, drawn as Search and Add album are:
+- **The row** is the History icon and "Activity". The state the label followed above shows at its right, short: "{n} waiting", "{n} need review" in `status.warning`, or "Saving…" with the pending spinner.
+- **Up to date,** the right shows how many reports Activity holds, styled like the tree's counts.
+- **Reconnecting or offline** takes over the row: a cloud with arrows in `status.warning` and "Reconnecting…", or a crossed-out cloud in `status.danger` and "Offline — changes can't be saved", wrapping.
+- **The accessible name** is "Activity: {state}": the label in full, "Up to date" or "Connecting…", then ", {n} reports" when counted. A tooltip says the same while the row shortens it.
 
 **DS-82 Live updates from elsewhere.** *(FR-09.1, FR-07.11)*
 - Rows changed by another session, agent, or owner get a 1.2s `accent.soft` background fade.
