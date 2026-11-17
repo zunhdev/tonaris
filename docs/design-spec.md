@@ -1973,12 +1973,12 @@ Invalid, revoked, expired, already-used, or paused invitations each get one plai
 - **Confirming:** "Type {email} to confirm" enables **Delete account permanently** once the typed email matches, whatever its case. **Cancel** closes it.
 - **`/account-deleted`:** "Deleting your account…" with an indeterminate bar, then "Your account has been deleted" and "Everything in it is gone. Thanks for using Tonaris.". A failure reads "Couldn't finish deleting your account" and "Try again to finish it.", with **Retry**.
 
-**DS-98 Usage meter.** Settings → Data shows "4,812 of 5,000 albums · 37 in Trash", with a bar split into active and trashed. *(FR-15.2, FR-15.3)*
+**DS-98 Usage meter.** Settings → Data shows "48,120 of 50,000 albums · 370 in Trash", with a bar split into active and trashed. *(FR-15.2, FR-15.3)*
 - At 95% or more, a quiet notice appears in capture surfaces.
-- At the limit, capture shows "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more", with links.
+- At the limit, capture shows "You've reached 50,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more", with links.
 
 *As built in TON-60:*
-- **Settings → Data**, under "Usage", reads "2 of 5,000 albums · 1 in Trash" (without the Trash part at zero).
+- **Settings → Data**, under "Usage", reads "2 of 50,000 albums · 1 in Trash" (without the Trash part at zero).
   - A native meter ("Albums used") serves assistive technology; the bar is split into active (`accent.solid`) and trashed (`fg.tertiary`).
   - The note says: "Albums in Trash count until they are deleted permanently. Restoring an album reuses its place."
 - **The capture dialog and manual entry** show the usage line from 95%, and the refusal's words at the limit (as an alert). Both have "Open Trash" and "See usage" links.

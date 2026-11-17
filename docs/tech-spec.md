@@ -52,7 +52,7 @@ The table records the verdicts.
 | *(deferred)* WebSockets | **Use SSE for now** | The standalone API could use Elysia's `.ws()` on the Bun adapter, but push is one-directional. SSE resumes from a cursor with `Last-Event-ID`, is plain HTTP for native clients and proxies, and hosts commonly drop long connections on deploy anyway. WebSockets stay available if a bidirectional need appears. TS-23. |
 | *(rejected)* Zero / ElectricSQL | **Not adopted** | Zero 1.x is capable but adds a second stateful service and a logical-replication dependency. Electric Cloud is winding down ([Electric](https://electric.ax/blog/2026/08/11/electric-joining-databricks)). Our requirements (field-level conflict review, invalidation for guests and viewers) fit a small custom protocol better. |
 
-**What actually makes it fast (Q-01).** The workspace runs from an in-memory normalized store holding the whole owned collection (a few MB at 5,000 albums):
+**What actually makes it fast (Q-01).** The workspace runs from an in-memory normalized store holding the whole owned collection (a few MB at 5,000 albums, and a 40 MB bootstrap at the 50,000 limit, TON-288):
 
 - reads, sorting, grouping, and search are local;
 - writes apply optimistically and confirm in the background.
@@ -418,10 +418,10 @@ Keys are stored rather than computed in SQL so that app, MCP, and export behave 
 
 | Resource | Limit |
 | --- | --- |
-| Albums, including Trash | 5,000 |
+| Albums, including Trash (raised from 5,000 on 17 November 2026, TON-287) | 50,000 |
 | Folders and lists, Trash included (decided 21 October 2026) | 2,000 |
 | Nesting depth | 32 |
-| List memberships, Trash included (decided 22 October 2026) | 50,000 |
+| List memberships, Trash included (decided 22 October 2026; raised from 50,000 on 17 November 2026, TON-287) | 100,000 |
 | Custom fields | 50 |
 | Options per choice field | 100 |
 | Names (containers, fields, options, display names) | 200 characters, counted in code points (display names since TON-151) |
@@ -439,7 +439,7 @@ At a limit, only the new item is rejected, with `capacity_exceeded` (albums) or 
 - **The album limit** (`maxAlbums`):
   - `album.create` and a capture making a new record check every album row of the owner, Trash included;
   - reuse, re-addition and restore never create a record, so they work at the limit;
-  - the refusal is "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more."
+  - the refusal is "You've reached 50,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more."
 - **Captures** (`maxCapturesPerHour`): the mutation runner counts the account's `album.capture` mutations received in the last hour, this one excepted. *Since TON-216:* only those that saved an album or are still running count, so a refused, failed or unfinished capture doesn't extend the wait (DRIFT-065). *Built in P-TON-47 (FR-07.19):* an editor's captures into a share count against the editor, whose `mutations` rows they are; the album, container and entry limits are the owner's. At 100 it answers `rate_limited` before asking any provider: "You've added 100 albums from links in the last hour. Try again later, or enter an album manually."
 - **MCP's per-grant rates** came with TON-85 (TS-66).
 - **Saved shared references** (`maxSavedReferences`, TON-216): saving one from a link past 100 is refused with `limit_exceeded`, "You keep 100 folders and lists in Shared with me. Remove one to keep this." One kept already is updated, and accepting an invitation always works, since someone chose the person (the creator's decision, 14 November 2026).
@@ -1592,7 +1592,7 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
   - `tonaris-export.schema.json` (JSON Schema 2020-12)
   - `collection.md`
   - `README.md`
-- **Performance target:** TS-120 (≤ 3 s for 5,000 albums). If exports grow larger, the same builder runs as a job with a short-lived signed download.
+- **Performance target:** TS-120 (≤ 3 s for 5,000 albums). At the 50,000-album limit an export took 1.17 s (TON-287). If exports grow larger, the same builder runs as a job with a short-lived signed download.
 - **Limits:** 5 exports per hour per account (TS-18).
 - **Errors** follow FR-08.6. Exports never mutate data.
 
@@ -1731,7 +1731,7 @@ Excluded by construction (FR-08.4): no account, sharing, reference, or credentia
 - **Added in this review, service availability:** the TS-18 limits, the rate limits (sign-in, MCP, captures, exports) and a request-size cap.
 
 Findings and their fixes. None high or critical remains open:
-- **Medium, fixed:** the API read request bodies up to Bun's 128 MB default. `listen` now caps them at 4 MiB (`maxRequestBodySize`), and a larger body gets `413`. The largest legitimate request is about 1.7 MB.
+- **Medium, fixed:** the API read request bodies up to Bun's 128 MB default. `listen` now caps them at 4 MiB (`maxRequestBodySize`), and a larger body gets `413`. The largest legitimate request is about 1.7 MB. *Since TON-287:* 8 MiB, since the first move in an unarranged view of 50,000 albums sends about 4.3 MB.
 - **Medium, fixed:** album titles and artist credits had no length limit. They now have 1,000 characters (TS-18), checked by `albumProblem`. The request schemas are unchanged.
 - **Low, fixed:** the sign-in redirect accepted `/<tab>/host`, which browsers read as `//host`. `pushState` refuses cross-origin targets, so it never redirected, but `safeRedirect` now parses the URL and requires the app's origin.
 - **Dependencies (`bun audit`):**
@@ -1861,7 +1861,7 @@ There is no resizing in v1.
 - **`apps/api/src/adversarial.test.ts`** covers the app's API, the export and MCP:
   - XSS saved and returned verbatim, and escaped in `collection.md`;
   - injected descriptions returned to an agent as data, with nothing changed;
-  - titles, credits, names and descriptions over their limits refused, and a body over 4 MiB refused with `413`;
+  - titles, credits, names and descriptions over their limits refused, and a body over the cap (8 MiB since TON-287) refused with `413`;
   - lookalike list names kept apart, and an invitation to a lookalike address reaching no one (`recipient_not_found`).
 - **`apps/web/e2e/adversarial.e2e.ts`** renders the XSS fixtures in a list, the album's details, search and a guest page. None runs, and none opens a dialog.
 - **SSRF** keeps its fixtures against `safeFetch` and the image proxy.
@@ -2022,6 +2022,8 @@ The "30 days" was the backup retention the creator first set (TON-97). Render's 
 - 3 saved shared collections holding 5,000 albums in total.
 
 *Generator:* `bun run seed:workload` seeds the workload deterministically into the local database (`tooling/src/workload`), in accounts of its own: the owner `workload@tonaris.test` and three sharers. Each run replaces those accounts' data in one transaction. Performance tests seed it with `seedWorkload`.
+
+*At the album limit (TON-287):* `WORKLOAD_ALBUMS=50000` gives the owner 50,000 albums in 1,500 lists of at most 500 albums and 120 folders, with about 90,600 list entries (`scaledWorkload`). Both suites ran on it once, on 17 November 2026. The targets below stay set on the reference workload ([report](performance-verification.md#at-50000-albums-17-november-2026)).
 
 *Devices:*
 

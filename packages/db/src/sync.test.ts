@@ -1095,7 +1095,7 @@ describe("executeBatch (TS-25, FR-13.4)", () => {
     const anna = await newPrincipal();
     const doom = await savedList(anna, "Doom");
     const kept = await savedAlbum(anna, "Dopesmoker");
-    // The rest of the 5,000, written straight in, a thousand rows at a time.
+    // The rest of the 50,000, written straight in, a thousand rows at a time.
     const rest = Array.from({ length: maxAlbums - 1 }, (_, index) => ({
       id: uuidv7(),
       ownerId: anna.userId,
@@ -1146,7 +1146,7 @@ describe("executeBatch (TS-25, FR-13.4)", () => {
       code: "capacity_exceeded",
       problem: expect.objectContaining({
         detail:
-          "You've reached 5,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more.",
+          "You've reached 50,000 albums (including Trash). Permanently delete albums from Trash or remove albums to add more.",
       }),
     });
     expect(result.items.map(({ outcome }) => outcome)).toEqual([

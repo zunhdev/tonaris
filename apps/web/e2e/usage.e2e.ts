@@ -1,5 +1,5 @@
 // Settings → Data's usage meter in a real browser (DS-98; FR-15.2, FR-15.3; AC-32): albums count whether active or
-// in Trash, and the meter says how many of each against the 5,000 limit.
+// in Trash, and the meter says how many of each against the 50,000 limit.
 
 import { accounts } from "./support/accounts";
 import { signIn } from "./support/sign-in";
@@ -27,7 +27,7 @@ test("the meter counts active albums and albums in Trash", async ({ page }) => {
     page.getByRole("navigation", { name: "Settings" }).getByRole("link", { name: "Data" }),
   ).toHaveAttribute("aria-current", "page");
   const usage = page.getByRole("region", { name: "Usage" });
-  await expect(usage).toContainText("2 of 5,000 albums · 1 in Trash");
+  await expect(usage).toContainText("2 of 50,000 albums · 1 in Trash");
   await expect(usage.getByRole("meter", { name: "Albums used" })).toHaveAttribute("value", "2");
   expect(await violations(page, "main")).toEqual([]);
 });

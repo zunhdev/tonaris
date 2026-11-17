@@ -1,4 +1,4 @@
-// Album capacity (FR-15.1 to FR-15.3, DS-98): the owner's albums against the 5,000 limit, those in Trash counting
+// Album capacity (FR-15.1 to FR-15.3, DS-98): the owner's albums against the 50,000 limit, those in Trash counting
 // too. Settings → Data shows the meter; capture surfaces show a quiet notice from 95%, and at the limit the reason a
 // new album can't be saved, with the ways out. Restoring and re-adding reuse a slot, so they keep working.
 
@@ -22,7 +22,7 @@ export function useAlbumUsage(): AlbumUsage {
 
 const number = new Intl.NumberFormat("en");
 
-/** "4,812 of 5,000 albums · 37 in Trash" (DS-98). */
+/** "48,120 of 50,000 albums · 370 in Trash" (DS-98). */
 export function usageLine({ total, trashed, limit }: AlbumUsage): string {
   const used = `${number.format(total)} of ${number.format(limit)} albums`;
   return trashed === 0 ? used : `${used} · ${number.format(trashed)} in Trash`;
