@@ -163,6 +163,8 @@ describe("the image proxy (TS-103)", () => {
     expect(response.headers.get("content-type")).toBe("image/png");
     expect(response.headers.get("cache-control")).toBe("public, max-age=604800, immutable");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    // Only the web app's site may show it (TON-293).
+    expect(response.headers.get("cross-origin-resource-policy")).toBe("same-site");
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(png);
     expect(fetched[0]?.init.contentTypes).toEqual([
       "image/jpeg",

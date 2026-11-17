@@ -52,6 +52,10 @@ export function securityHeaders({
     // One year, subdomains included (the API's too); browsers ignore it over plain HTTP.
     "strict-transport-security": "max-age=31536000; includeSubDomains",
     "x-content-type-options": "nosniff",
+    // Other sites can't load the app's responses into their pages (TON-293).
+    "cross-origin-resource-policy": "same-origin",
+    // Powerful features the app never uses stay off, even for injected code. Clipboard writes and passkeys stay on.
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
     // Guest share, invitation and recovery URLs carry their token, so they never leak in a Referer (TS-32, TS-71,
     // TS-73).
     "referrer-policy":

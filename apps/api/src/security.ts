@@ -6,11 +6,15 @@ import { Elysia } from "elysia";
 import type { ApiConfig } from "./config";
 import { ProblemError } from "./problem";
 
-/** The API serves data, never documents: nothing may load, run or frame what it returns (TS-101). */
+/**
+ * The API serves data, never documents: nothing may load, run or frame what it returns (TS-101). Only the web app's
+ * site may load it into a page, so other sites can't show the image proxy's artwork (TON-293).
+ */
 const responseHeaders = {
   "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
   "x-content-type-options": "nosniff",
   "strict-transport-security": "max-age=31536000; includeSubDomains",
+  "cross-origin-resource-policy": "same-site",
 };
 
 export function securityHeaders() {

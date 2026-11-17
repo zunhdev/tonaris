@@ -146,6 +146,9 @@ jobs:
               *.css) [[ "$type" == text/css* ]] ;;
             esac
           done
+          # Built files carry the security headers too (TS-101, TON-293).
+          built=$(curl -fsS -D - -o /dev/null "http://localhost:3000$(head -n 1 <<< "$assets")")
+          grep -qi '^cross-origin-resource-policy: same-origin' <<< "$built"
           # A missing one is a 404 that no cache keeps, so the next deploy's page loads (TON-179).
           missing=$(curl -s -D - -o /dev/null http://localhost:3000/assets/missing-build-file.js)
           grep -q '^HTTP/[0-9.]* 404' <<< "$missing"
