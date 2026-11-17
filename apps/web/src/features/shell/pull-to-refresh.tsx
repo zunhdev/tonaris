@@ -9,12 +9,8 @@ import { useEffect, useState } from "react";
 
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { homeScreenApp } from "./install";
 import { pullDistance, pullProgress, pullThreshold } from "./pull";
-
-/** Whether this is an iPhone's Home Screen app: only iOS sets `navigator.standalone`, and only there. */
-function homeScreenApp(): boolean {
-  return (navigator as Navigator & { standalone?: boolean }).standalone === true;
-}
 
 /** Whether a touch starting at `target` may pull: outside dialogs, the album sheet and fields, at its view's top. */
 function mayPull(target: Element): boolean {
