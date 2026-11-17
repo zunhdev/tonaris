@@ -1,69 +1,45 @@
-// A folder's or list's description under its header (DS-41; FR-03.5): plain text, its line breaks kept. Viewing mode
-// shows it, or nothing without one. Editing mode makes it a text box, "Add a description" when empty: Enter or leaving
-// it saves, Shift+Enter adds a line, Escape reverts, and leaving Editing mode saves it too (DS-45). Emptied, it is
-// cleared. Over 2,000 characters it stays with its reason (X-05).
+// A folder's or list's description under its header (DS-41; FR-03.5, TON-292): its Markdown rendered, three lines and
+// More, at the top of the view's scroll area, so it scrolls away with the albums or the folders and lists. Nothing
+// shows without one. It is written in the description panel (description-panel.tsx): in Editing mode, a click on it
+// opens the panel, as Description in the header does, and while the panel is open it shows what is typed.
 
-import { sent } from "@/client/sync/writer";
-import { pageScroll } from "@/common/page-scroll";
-import { useSyncClient } from "@/features/sync/sync-provider";
+import { useNarrowScreen } from "@/common/media";
+import { useConnection } from "@/features/sync/sync-provider";
+import type { MouseEvent } from "react";
 
-import { descriptionProblem, type Container } from "@tonaris/domain";
-import { Field } from "@tonaris/ui/components/field";
+import type { Container } from "@tonaris/domain";
+import { cn } from "@tonaris/ui/lib/utils";
 
 import { useMode } from "./collection-mode";
-import { useInlineDraft } from "./inline-draft";
+import { useDescriptionDraft, useDescriptionPanel } from "./description-panel";
+import { DescriptionText } from "./description-text";
 
 export function ContainerDescription({ container }: { container: Container }) {
+  const draft = useDescriptionDraft(container.id);
+  const text = draft ?? container.description ?? "";
   const { editing } = useMode();
-  if (editing) return <DescriptionEditor key={container.id} container={container} />;
-  if (!container.description) return null;
+  const { open } = useDescriptionPanel();
+  const offline = useConnection() === "offline";
+  const narrow = useNarrowScreen();
+  if (text.trim() === "") return null;
+  // A click opens the panel, except on a link or More.
+  const opens = editing && !offline && !narrow;
+  const onClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest("a, button")) return;
+    open(container.id);
+  };
   return (
-    <p
-      {...pageScroll("description")}
-      className="max-h-24 shrink-0 overflow-y-auto px-6 pt-3 whitespace-pre-line text-fg-secondary"
-    >
-      {container.description}
-    </p>
-  );
-}
-
-function DescriptionEditor({ container }: { container: Container }) {
-  const client = useSyncClient();
-  const {
-    text: shown,
-    refusal: problem,
-    props,
-  } = useInlineDraft<HTMLTextAreaElement>({
-    value: container.description ?? "",
-    check: (typed) => descriptionProblem(typed.trim())?.problem.detail,
-    save: (typed) => {
-      const text = typed.trim();
-      const next = text === "" ? null : text;
-      if (next === container.description || !client) return;
-      sent(
-        client.containers.update(container.id, (row) => {
-          row.description = next;
-        }),
-      );
-    },
-    multiline: true,
-    // Once saved, Escape is the page's again.
-    escape: "open",
-  });
-
-  return (
-    <Field label="Description" hideLabel problem={problem} className="shrink-0 gap-1 px-6 pt-3">
-      {(control) => (
-        // Text under the header, not a form's box: it shows its edge only on hover and focus.
-        <textarea
-          {...props}
-          {...control}
-          {...pageScroll("description")}
-          placeholder="Add a description"
-          rows={Math.min(6, Math.max(1, shown.split("\n").length))}
-          className="-mx-2 max-w-3xl resize-none rounded-md border border-transparent bg-transparent px-2 py-1 text-fg-secondary focus-ring-flush outline-none placeholder:text-fg-tertiary hover:border-subtle focus-visible:border-strong focus-visible:text-fg-primary aria-invalid:border-status-danger"
-        />
-      )}
-    </Field>
+    <div className="px-6 pt-3 pb-2 max-md:px-4">
+      {/* The header's Description is the way there by keyboard; this is a pointer's shortcut. */}
+      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      <div
+        onClick={opens ? onClick : undefined}
+        className={cn(
+          opens && "-mx-2 -my-1 w-fit max-w-full cursor-text rounded-md px-2 py-1 hover:bg-hover",
+        )}
+      >
+        <DescriptionText key={container.id} text={text} />
+      </div>
+    </div>
   );
 }

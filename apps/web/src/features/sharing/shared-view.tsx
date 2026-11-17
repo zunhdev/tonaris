@@ -14,6 +14,7 @@ import { artworkSrc } from "@/features/collection/artwork";
 import { coversIn } from "@/features/collection/container-covers";
 import { effectiveColor } from "@/features/collection/container-palette";
 import { useCollectionData } from "@/features/collection/data";
+import { DescriptionText } from "@/features/collection/description-text";
 import { sections as sectionsOf, sortAlbums, sortContainers } from "@/features/collection/order";
 import { shareHref, shareLocation } from "@/features/collection/place";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
@@ -135,9 +136,8 @@ function SharedContent({
         {/* A phone's top bar has no room for it (DS-110). */}
         {narrow && <p className="text-small text-fg-secondary">View only · Shared by {owner}</p>}
         <ShareBreadcrumbs path={ancestors} linkTo={linkTo} />
-        {current.description && (
-          <p className="max-w-2xl whitespace-pre-line text-fg-secondary">{current.description}</p>
-        )}
+        {/* Its Markdown rendered, three lines and More (TON-292). */}
+        {current.description && <DescriptionText key={current.id} text={current.description} />}
         {current.kind === "folder" ? (
           <FolderBody
             key={current.id}

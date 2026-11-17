@@ -7,7 +7,8 @@
 // the shell is a drill-down (DS-110): no sidebar, each view's header is its top bar, and an album opens as a sheet
 // over the view. On desktop the shell is the window and the page itself never scrolls (TON-158): the main pane
 // scrolls a page that has no scroll area of its own, such as Account. The album panel slides in and out
-// (inspector-slide.ts, TON-159).
+// (inspector-slide.ts, TON-159). A folder's or list's description panel takes the same slot (TON-292): while it is
+// open it shows instead of the album, and opening either closes the other.
 
 import { inspectorLayout, sidebarLayout } from "@/common/device";
 import { useNarrowScreen, useWideScreen } from "@/common/media";
@@ -26,6 +27,11 @@ import {
   DeleteAlbumsDialog,
   DeleteFolderDialog,
 } from "@/features/collection/delete-containers";
+import {
+  DescriptionPanel,
+  DescriptionPanelContext,
+  useDescriptionPanelState,
+} from "@/features/collection/description-panel";
 import { DragProvider } from "@/features/collection/drag";
 import { AlbumInspector, type InspectorPlacement } from "@/features/collection/inspector";
 import { useInspector } from "@/features/collection/inspector-state";
@@ -61,15 +67,27 @@ export function Shell({ account, children }: { account: Account; children: React
   });
   const { editing } = useCollectionUi();
   const { albumId } = useInspector();
+  const describing = useDescriptionPanelState();
+  // What the panel shows: a description while its panel is open, else the album.
+  const subject =
+    describing.containerId !== undefined
+      ? `description:${describing.containerId}`
+      : albumId === undefined
+        ? undefined
+        : `album:${albumId}`;
   const wide = useWideScreen();
   const narrow = useNarrowScreen();
-  const beside = albumId !== undefined && wide;
+  const beside = subject !== undefined && wide;
   const sidebar = !layout.hidden && !narrow;
   const main = useRef<HTMLElement>(null);
   usePageFade(main);
   const placement: InspectorPlacement = narrow ? "sheet" : wide ? "beside" : "overlay";
   const panel = useRef<HTMLElement>(null);
-  const inspector = useInspectorSlide(panel, albumId, placement);
+  const inspector = useInspectorSlide(panel, subject, placement);
+  const shownAlbum = inspector.shown?.startsWith("album:") ? inspector.shown.slice(6) : undefined;
+  const shownDescription = inspector.shown?.startsWith("description:")
+    ? inspector.shown.slice(12)
+    : undefined;
 
   useEffect(() => sidebarLayout.write(layout), [layout]);
   useEffect(() => inspectorLayout.write(inspectorWidth), [inspectorWidth]);
@@ -129,54 +147,67 @@ export function Shell({ account, children }: { account: Account; children: React
 
   return (
     <ShellContext value={control}>
-      <DragProvider>
-        <div
-          // Clipped on desktop, since text only screen readers see, below a pane's fold, sits outside the pane's scroll
-          // area and would stretch the page past the window, which then scrolls the panes away over a blank band
-          // (TON-158). `relative` brings what the views place against the window into the clip. On a phone, a page with
-          // no scroll area of its own scrolls the window, as Safari expects.
-          className={cn("grid h-dvh bg-app", !narrow && "relative overflow-clip")}
-          style={{
-            gridTemplateColumns: [
-              sidebar ? `${layout.width}px` : undefined,
-              "minmax(0,1fr)",
-              beside ? `${inspectorWidth}px` : undefined,
-            ]
-              .filter(Boolean)
-              .join(" "),
-          }}
-        >
-          {sidebar && (
-            // The person's own collection, even while a share they edit is on screen (TON-191).
-            <OwnCollection>
-              <Sidebar
-                account={account}
-                width={layout.width}
-                onResize={(width) => setLayout((current) => ({ ...current, width }))}
-              />
-            </OwnCollection>
-          )}
-          <main
-            ref={main}
-            aria-labelledby={pageTitleId}
-            {...pageScroll("main")}
-            className={cn("flex min-h-0 min-w-0 flex-col bg-panel", !narrow && "overflow-y-auto")}
+      <DescriptionPanelContext value={describing}>
+        <DragProvider>
+          <div
+            // Clipped on desktop, since text only screen readers see, below a pane's fold, sits outside the pane's scroll
+            // area and would stretch the page past the window, which then scrolls the panes away over a blank band
+            // (TON-158). `relative` brings what the views place against the window into the clip. On a phone, a page with
+            // no scroll area of its own scrolls the window, as Safari expects.
+            className={cn("grid h-dvh bg-app", !narrow && "relative overflow-clip")}
+            style={{
+              gridTemplateColumns: [
+                sidebar ? `${layout.width}px` : undefined,
+                "minmax(0,1fr)",
+                beside ? `${inspectorWidth}px` : undefined,
+              ]
+                .filter(Boolean)
+                .join(" "),
+            }}
           >
-            <OfflineBanner />
-            {children}
-          </main>
-          {inspector.shown !== undefined && (
-            <AlbumInspector
-              ref={panel}
-              albumId={inspector.shown}
-              closing={inspector.closing}
-              placement={placement}
-              width={inspectorWidth}
-              onResize={setInspectorWidth}
-            />
-          )}
-        </div>
-      </DragProvider>
+            {sidebar && (
+              // The person's own collection, even while a share they edit is on screen (TON-191).
+              <OwnCollection>
+                <Sidebar
+                  account={account}
+                  width={layout.width}
+                  onResize={(width) => setLayout((current) => ({ ...current, width }))}
+                />
+              </OwnCollection>
+            )}
+            <main
+              ref={main}
+              aria-labelledby={pageTitleId}
+              {...pageScroll("main")}
+              className={cn("flex min-h-0 min-w-0 flex-col bg-panel", !narrow && "overflow-y-auto")}
+            >
+              <OfflineBanner />
+              {children}
+            </main>
+            {shownAlbum !== undefined && (
+              <AlbumInspector
+                ref={panel}
+                albumId={shownAlbum}
+                closing={inspector.closing}
+                placement={placement}
+                width={inspectorWidth}
+                onResize={setInspectorWidth}
+              />
+            )}
+            {shownDescription !== undefined && (
+              <DescriptionPanel
+                key={shownDescription}
+                ref={panel}
+                containerId={shownDescription}
+                closing={inspector.closing}
+                placement={placement}
+                width={inspectorWidth}
+                onResize={setInspectorWidth}
+              />
+            )}
+          </div>
+        </DragProvider>
+      </DescriptionPanelContext>
       <ShortcutReference open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <OwnCollection>
         <SearchPalette

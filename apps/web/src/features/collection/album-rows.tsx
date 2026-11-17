@@ -23,7 +23,15 @@ import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { Check, ExternalLink, GripVertical } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 
 import type { Album, ServiceLink } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
@@ -40,7 +48,7 @@ import { GroupHeaderRow } from "./groups";
 import type { ReleaseGroup, Section } from "./order";
 import { useCollectionPlace } from "./place";
 import { useAlbumSelection } from "./selection";
-import { cellAt, useWidth, type useGridFocus } from "./use-grid";
+import { cellAt, useLead, useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
@@ -64,6 +72,7 @@ export function AlbumRows({
   collapsed,
   onToggle,
   moves,
+  lead,
 }: {
   sections: readonly Section<Album>[];
   label: string;
@@ -71,10 +80,13 @@ export function AlbumRows({
   collapsed: ReadonlySet<ReleaseGroup>;
   onToggle: (group: ReleaseGroup) => void;
   moves: ViewMoves;
+  /** What scrolls above the rows: the list's description (TON-292). */
+  lead?: ReactNode;
 }) {
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
+  const [leadRef, leadHeight] = useLead();
   const width = useWidth(scroller);
   const compact = useNarrowScreen();
   const height = compact ? phoneRowHeight : rowHeight;
@@ -113,6 +125,7 @@ export function AlbumRows({
     overscan: 10,
     // The edited row stays drawn while the view scrolls.
     keepAlbum: cellEdit?.albumId,
+    scrollMargin: leadHeight,
     moves,
   });
 
@@ -203,6 +216,7 @@ export function AlbumRows({
 
   return (
     <div ref={scroller} {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto py-2">
+      {lead && <div ref={leadRef}>{lead}</div>}
       <div
         ref={grid}
         role="grid"
@@ -246,7 +260,7 @@ export function AlbumRows({
                   index={virtual.index}
                   rowIndex={virtual.index + 2}
                   columns={columns}
-                  start={virtual.start}
+                  start={virtual.start - leadHeight}
                   stuck={isStuck(virtual.index)}
                   collapsed={collapsed.has(item.group)}
                   onToggle={onToggle}
@@ -274,7 +288,7 @@ export function AlbumRows({
                   else selection.toggle(album.id);
                 }}
                 index={virtual.index}
-                top={virtual.start}
+                top={virtual.start - leadHeight}
                 template={template}
                 compact={compact}
                 height={height}

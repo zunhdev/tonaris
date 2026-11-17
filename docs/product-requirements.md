@@ -332,7 +332,7 @@ This is enforced for manual entry, capture, MCP, and edits.
 
 **FR-03.4 Artwork.** Users enter or replace the artwork URL in the manual form and when editing, or choose one of the Cover Art Archive's covers for the album's title and artist (decided 30 October 2026, TON-112). Enrichment keeps an existing URL. Missing or unavailable artwork never blocks using an album.
 
-**FR-03.5 Descriptions.** Folders and lists have an optional plain-text description. The owner or a Manage collection agent edits it as an ordinary change. Descriptions survive moves and Trash, are visible to authorized viewers, are excluded from search (FR-12.4), and are included in exports (FR-08.3).
+**FR-03.5 Descriptions.** Folders and lists have an optional description in simple Markdown: bold, italic, bulleted and numbered lists, and links to web addresses (decided 17 November 2026, TON-292). The owner or a Manage collection agent edits it as an ordinary change. Descriptions survive moves and Trash, are visible to authorized viewers, are excluded from search (FR-12.4), and are included in exports (FR-08.3).
 
 **FR-03.6 Field definitions.** Users define custom fields at account level. The types are text, number, date, yes/no, single choice, and multiple choice. Choice fields define their options in the definition. There are no predefined fields.
 

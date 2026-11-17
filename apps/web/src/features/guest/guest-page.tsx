@@ -9,6 +9,7 @@
 import { artworkSrc } from "@/features/collection/artwork";
 import { coversIn } from "@/features/collection/container-covers";
 import { effectiveColor } from "@/features/collection/container-palette";
+import { DescriptionText } from "@/features/collection/description-text";
 import { sections, sortAlbums, sortContainers } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
 import { LegalLinks } from "@/features/legal/legal-page";
@@ -113,8 +114,9 @@ export function GuestPage({
             {current.name}
           </h1>
           <p className="text-fg-secondary">Shared by {owner}</p>
+          {/* Its Markdown rendered, three lines and More (TON-292). */}
           {current.description && (
-            <p className="max-w-2xl whitespace-pre-line text-fg-secondary">{current.description}</p>
+            <DescriptionText key={current.id} text={current.description} className="mt-2" />
           )}
         </div>
         {current.kind === "folder" ? (

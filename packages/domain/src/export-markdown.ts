@@ -3,6 +3,7 @@
 // sort, grouping and manual order the app shows them (`presentationOf`, `sortAlbums`, `sortContainers`). Unsorted and
 // Trash follow as their own sections, Trash with each unit's deletion and expiry dates.
 
+import { descriptionMarkdown } from "./description-markdown";
 import type { ExportAlbum, ExportValue, TonarisExport, Withheld } from "./export";
 import { serviceNames, streamingServices } from "./links";
 import {
@@ -175,7 +176,8 @@ export function renderCollection(data: TonarisExport): string {
   ): string[] {
     const name = [...trail, container.name].map(md).join(" › ");
     const lines = [`${"#".repeat(Math.min(depth, 6))} ${name}`, ""];
-    if (container.description) lines.push(md(container.description), "");
+    // Its own Markdown renders; any other is escaped (TON-292).
+    if (container.description) lines.push(descriptionMarkdown(container.description), "");
     if (container.kind === "list") {
       const listed = container.albumIds.flatMap((id) => rows.get(id) ?? []).filter(albumIn);
       lines.push(...albumLines(container.id, listed), "");

@@ -13,8 +13,6 @@ const pageScrollers = [
   "main",
   // The view: its rows or cards, or the page's body.
   "view",
-  // A folder's or list's description, read or edited.
-  "description",
   // The albums being added, above a list's rows.
   "captures",
   // The album panel.
