@@ -1,4 +1,5 @@
-// The album inspector (DS-46, DS-30): the album named by `?album=` beside the view, or over it on a narrow window, as
+// The album inspector (DS-46, DS-30), in a frame (`SidePanel`) the description panel shares (TON-292): the album
+// named by `?album=` beside the view, or over it on a narrow window, as
 // wide as its left edge was dragged, 380 px at first (TON-124). On a phone it is a sheet over the view, read-only as phones are, with an Open button for each
 // service (DS-110); it takes the focus when it opens. Esc closes it, unless a field, dialog, popover or menu has the
 // keys; so does Close. An album that is gone says so (DS-82's "removed elsewhere" pattern).
@@ -12,7 +13,7 @@ import { ResizeHandle } from "@/common/resize-handle";
 import { ariaShortcut, inLayer, isTextField, keysLabel } from "@/common/shortcuts";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Trash2, X } from "lucide-react";
-import { useEffect, useRef, type Ref } from "react";
+import { useEffect, useRef, type ReactNode, type Ref } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
 import {
@@ -69,12 +70,77 @@ export function AlbumInspector({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [close, closing]);
 
+  return (
+    <SidePanel
+      ref={ref}
+      label="Album"
+      closing={closing}
+      placement={placement}
+      width={width}
+      onResize={onResize}
+      actions={
+        <>
+          {album && <DeleteAlbum albumId={album.id} />}
+          <Button
+            ref={closeButton}
+            variant="ghost"
+            size="icon"
+            aria-label="Close album"
+            className={cn(sheet && "size-11")}
+            onClick={close}
+          >
+            <X aria-hidden strokeWidth={1.5} />
+          </Button>
+        </>
+      }
+    >
+      {/* Each album starts at its top, not at the last one's offset (TON-157). */}
+      <div key={albumId} {...pageScroll("album")} className="min-h-0 flex-1 overflow-y-auto">
+        {album ? (
+          <AlbumDetails key={album.id} album={album} />
+        ) : (
+          ready && <p className="p-4 text-fg-secondary">This album isn't available.</p>
+        )}
+      </div>
+    </SidePanel>
+  );
+}
+
+/**
+ * The panel's frame, the album's and a description's (TON-292): beside the view, over it on a narrow window, or a
+ * phone's sheet; its name and buttons in a 48 px header, and, off a phone, its left edge dragged to resize it.
+ */
+export function SidePanel({
+  ref,
+  label,
+  detail,
+  actions,
+  closing,
+  placement,
+  width,
+  onResize,
+  children,
+}: {
+  ref: Ref<HTMLElement>;
+  /** Its name, in its header and for assistive technology. */
+  label: string;
+  /** Words after the name, in its header: what it is about. */
+  detail?: string | undefined;
+  /** Its header's buttons, Close last. */
+  actions: ReactNode;
+  closing: boolean;
+  placement: InspectorPlacement;
+  width: number;
+  onResize: (width: number) => void;
+  children: ReactNode;
+}) {
+  const sheet = placement === "sheet";
   // Over the view, or, beside it, while sliding out.
   const floating = placement === "overlay" || (placement === "beside" && closing);
   return (
     <aside
       ref={ref}
-      aria-label="Album"
+      aria-label={label}
       inert={closing}
       style={floating ? { width } : undefined}
       className={cn(
@@ -87,39 +153,21 @@ export function AlbumInspector({
           "fixed inset-x-0 bottom-0 z-50 h-[92dvh] rounded-t-xl border-t border-subtle pb-[env(safe-area-inset-bottom)] shadow-floating",
       )}
     >
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-subtle pr-2 pl-4">
-        <span className="text-small font-medium text-fg-secondary">Album</span>
-        <div className="flex items-center gap-1">
-          {album && <DeleteAlbum albumId={album.id} />}
-          <Button
-            ref={closeButton}
-            variant="ghost"
-            size="icon"
-            aria-label="Close album"
-            className={cn(sheet && "size-11")}
-            onClick={close}
-          >
-            <X aria-hidden strokeWidth={1.5} />
-          </Button>
-        </div>
+      <div className="flex h-12 shrink-0 items-center gap-2 border-b border-subtle pr-2 pl-4">
+        <span className="shrink-0 text-small font-medium text-fg-secondary">{label}</span>
+        {detail && <span className="min-w-0 truncate text-small text-fg-tertiary">{detail}</span>}
+        <div className="ml-auto flex shrink-0 items-center gap-1">{actions}</div>
       </div>
       {!sheet && (
         <ResizeHandle
-          label="Resize album panel"
+          label={`Resize ${label.toLowerCase()} panel`}
           edge="left"
           width={width}
           widths={inspectorWidths}
           onResize={onResize}
         />
       )}
-      {/* Each album starts at its top, not at the last one's offset (TON-157). */}
-      <div key={albumId} {...pageScroll("album")} className="min-h-0 flex-1 overflow-y-auto">
-        {album ? (
-          <AlbumDetails key={album.id} album={album} />
-        ) : (
-          ready && <p className="p-4 text-fg-secondary">This album isn't available.</p>
-        )}
-      </div>
+      {children}
     </aside>
   );
 }

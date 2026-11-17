@@ -57,7 +57,7 @@ import { useInspector } from "./inspector-state";
 import type { ReleaseGroup, Section } from "./order";
 import { ReleaseLabel, ReleaseLabelText, releaseLabel } from "./release-label";
 import { useAlbumSelection } from "./selection";
-import { useWidth, type useGridFocus } from "./use-grid";
+import { useLead, useWidth, type useGridFocus } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const gap = 16;
@@ -76,6 +76,7 @@ export function AlbumCards({
   collapsed,
   onToggle,
   moves,
+  lead,
 }: {
   sections: readonly Section<Album>[];
   label: string;
@@ -83,10 +84,13 @@ export function AlbumCards({
   onToggle: (group: ReleaseGroup) => void;
   /** Cards are rearranged by keyboard; the drag handle is a row's (DS-21). */
   moves: ViewMoves;
+  /** What scrolls above the cards: the list's description (TON-292). */
+  lead?: ReactNode;
 }) {
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
+  const [leadRef, leadHeight] = useLead();
   // The inspector beside the view leaves fewer cards a row, not other cards: their size is worked out as if it took
   // no room, so opening and closing it keeps them as they are (TON-106).
   const { inspectorBeside, inspectorWidth } = useShell();
@@ -135,11 +139,13 @@ export function AlbumCards({
     page: (viewport) => Math.max(1, Math.floor((viewport ?? rowSize) / rowSize)),
     overscan: 3,
     padding: gap,
+    scrollMargin: leadHeight,
     moves,
   });
 
   return (
     <div ref={scroller} {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto">
+      {lead && <div ref={leadRef}>{lead}</div>}
       {inner > 0 && (
         <div
           ref={grid}
@@ -167,7 +173,7 @@ export function AlbumCards({
                   index={virtual.index}
                   rowIndex={virtual.index + 1}
                   columns={columns}
-                  start={virtual.start}
+                  start={virtual.start - leadHeight}
                   stuck={isStuck(virtual.index)}
                   collapsed={collapsed.has(item.group)}
                   onToggle={onToggle}
@@ -182,7 +188,7 @@ export function AlbumCards({
                 role="row"
                 aria-rowindex={virtual.index + 1}
                 className="absolute inset-x-0 top-0 flex"
-                style={{ transform: `translateY(${virtual.start}px)`, gap }}
+                style={{ transform: `translateY(${virtual.start - leadHeight}px)`, gap }}
               >
                 {item.albums.map((album, col) => (
                   <AlbumCard

@@ -54,6 +54,7 @@ export function useAlbumGrid({
   page,
   overscan,
   padding = 0,
+  scrollMargin = 0,
   keepAlbum,
   moves,
 }: {
@@ -73,6 +74,8 @@ export function useAlbumGrid({
   overscan: number;
   /** Space before the first row and after the last. */
   padding?: number;
+  /** The height of what sits above the grid in its scroll area (`useLead`). */
+  scrollMargin?: number;
   /** An album whose row stays drawn while the view scrolls, such as one being edited. */
   keepAlbum?: string | undefined;
   moves: ViewMoves;
@@ -122,6 +125,7 @@ export function useAlbumGrid({
     overscan,
     paddingStart: padding,
     paddingEnd: padding,
+    scrollMargin,
     rangeExtractor: extractRange,
   });
   // Headers and rows differ in height, so offsets change whenever the items or their sizes do.

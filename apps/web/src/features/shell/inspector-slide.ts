@@ -1,10 +1,11 @@
 // The album panel's slide (DS-17, TON-159): in from the right over 200 ms with the enter easing, and back out with the
 // exit easing; the phone's sheet slides up and down instead. Under reduced motion it fades. Back and Forward, and a
 // panel open when the shell first renders, as after a reload, show it at once, as page switches do (page-fade.ts).
-// Switching albums in the panel doesn't move it.
+// Switching albums in the panel doesn't move it, nor does switching between an album and a description (TON-292).
 //
-// Closing is `?album=` going away, which would drop the panel at once, so this keeps the album it showed until the
-// panel has slid out. Meanwhile the shell gives the view its width back and keeps the panel inert.
+// Closing is `?album=` going away, or the description panel closing, which would drop the panel at once, so this
+// keeps what it showed until the panel has slid out. Meanwhile the shell gives the view its width back and keeps the
+// panel inert.
 
 import type { InspectorPlacement } from "@/features/collection/inspector";
 import { useRouter } from "@tanstack/react-router";
@@ -23,12 +24,12 @@ function slide(placement: InspectorPlacement): Keyframe[] {
 }
 
 /**
- * Slides `panel` in as `albumId` appears and out once it has gone. Returns the album the panel shows, the one sliding
- * out included, and whether it is closing.
+ * Slides `panel` in as `subject` appears and out once it has gone. `subject` names what the panel shows, such as
+ * `album:{id}`. Returns what the panel shows, what slides out included, and whether it is closing.
  */
 export function useInspectorSlide(
   panel: RefObject<HTMLElement | null>,
-  albumId: string | undefined,
+  subject: string | undefined,
   placement: InspectorPlacement,
 ): { shown: string | undefined; closing: boolean } {
   const router = useRouter();
@@ -47,16 +48,16 @@ export function useInspectorSlide(
     placed.current = placement;
   }, [placement]);
 
-  // The album whose panel is sliding out, once `?album=` has gone.
+  // What the panel showed as it slides out, once its subject has gone.
   const [leaving, setLeaving] = useState<string>();
-  const [previous, setPrevious] = useState(albumId);
-  if (previous !== albumId) {
-    setPrevious(albumId);
-    setLeaving(albumId === undefined ? previous : undefined);
+  const [previous, setPrevious] = useState(subject);
+  if (previous !== subject) {
+    setPrevious(subject);
+    setLeaving(subject === undefined ? previous : undefined);
   }
 
   // In, before the panel's first paint; not for a panel already open as the shell first renders.
-  const open = albumId !== undefined;
+  const open = subject !== undefined;
   const wasOpen = useRef(open);
   useLayoutEffect(() => {
     const opening = open && !wasOpen.current;
@@ -67,7 +68,7 @@ export function useInspectorSlide(
     return () => animation.cancel();
   }, [open, panel]);
 
-  // Out, then gone. Opening another album meanwhile cancels it.
+  // Out, then gone. Opening another album or description meanwhile cancels it.
   useLayoutEffect(() => {
     const element = panel.current;
     if (leaving === undefined || !element) return undefined;
@@ -83,5 +84,5 @@ export function useInspectorSlide(
     return () => animation.cancel();
   }, [leaving, panel]);
 
-  return { shown: albumId ?? leaving, closing: albumId === undefined && leaving !== undefined };
+  return { shown: subject ?? leaving, closing: subject === undefined && leaving !== undefined };
 }

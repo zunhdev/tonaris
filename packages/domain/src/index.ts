@@ -277,9 +277,19 @@ export {
   exceedsLength,
   findNameConflict,
   isBlankName,
+  textLength,
   textSchema,
   type NamedItem,
 } from "./names";
+export {
+  descriptionExcerpt,
+  descriptionMarkdown,
+  parseDescription,
+  plainText,
+  type DescriptionBlock,
+  type DescriptionInline,
+  type DescriptionLine,
+} from "./description-markdown";
 export {
   isOrderKey,
   maxOrderItems,

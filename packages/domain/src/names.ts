@@ -6,12 +6,17 @@ import { nameKey } from "./normalize";
 import { z } from "./zod";
 
 /**
- * Whether `text` is longer than `limit`, counted in code points rather than graphemes: limits bound stored text
- * (TS-18), and a grapheme can hold any number of code points.
+ * How long `text` is, counted in code points rather than graphemes: limits bound stored text (TS-18), and a grapheme
+ * can hold any number of code points.
  */
-export function exceedsLength(text: string, limit: number): boolean {
+export function textLength(text: string): number {
   // oxlint-disable-next-line no-misused-spread
-  return [...text].length > limit;
+  return [...text].length;
+}
+
+/** Whether `text` is longer than `limit`, counted as `textLength` counts. */
+export function exceedsLength(text: string, limit: number): boolean {
+  return textLength(text) > limit;
 }
 
 /**

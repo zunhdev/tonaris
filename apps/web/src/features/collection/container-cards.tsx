@@ -34,7 +34,7 @@ import { CoverFan, type FanCover } from "./cover-fan";
 import { useCollectionData } from "./data";
 import { ContainerIcon } from "./icons";
 import { ContainerLink, useOpenContainer } from "./place";
-import { useGridFocus, useWidth, type GridRearrange } from "./use-grid";
+import { useGridFocus, useLead, useWidth, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const gap = 16;
@@ -46,15 +46,19 @@ export function ContainerCards({
   label,
   contentsOf,
   moves,
+  lead,
 }: {
   containers: readonly Container[];
   label: string;
   /** What it holds, counted: "3 albums", "2 folders and lists". */
   contentsOf: (container: Container) => string;
   moves: ViewMoves;
+  /** What scrolls above the cards: the folder's description (TON-292). */
+  lead?: ReactNode;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
+  const [leadRef, leadHeight] = useLead();
   const open = useOpenContainer();
   // Sized as album cards are, a little smaller on a phone (TON-281).
   const { minCard, padding } = cardGrid(useNarrowScreen());
@@ -99,6 +103,7 @@ export function ContainerCards({
     overscan: 3,
     paddingStart: gap,
     paddingEnd: gap,
+    scrollMargin: leadHeight,
   });
   useEffect(() => virtualizer.measure(), [virtualizer, sizeOf]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
@@ -135,6 +140,7 @@ export function ContainerCards({
 
   return (
     <div ref={scroller} {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto">
+      {lead && <div ref={leadRef}>{lead}</div>}
       {inner > 0 && (
         <div
           ref={grid}
@@ -154,7 +160,7 @@ export function ContainerCards({
               role="row"
               aria-rowindex={virtual.index + 1}
               className="absolute inset-x-0 top-0 flex"
-              style={{ transform: `translateY(${virtual.start}px)`, gap }}
+              style={{ transform: `translateY(${virtual.start - leadHeight}px)`, gap }}
             >
               {containers
                 .slice(virtual.index * columns, (virtual.index + 1) * columns)

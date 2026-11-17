@@ -290,7 +290,7 @@ export const containerCreateSchema = z.object({
 });
 
 /**
- * `container.describe`: sets a folder's or list's plain-text description, or clears it with null or empty text
+ * `container.describe`: sets a folder's or list's description, in simple Markdown (TON-292), or clears it with null or empty text
  * (FR-03.5); `base.description` is the one the client last saw (TS-21). At most 2,000 characters.
  */
 export const containerDescribeSchema = z.object({

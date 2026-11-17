@@ -19,7 +19,7 @@ import { PhoneShared } from "@/features/sharing/phone-shared";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { Inbox, Pencil, Plus, Share2, Trash2 } from "lucide-react";
+import { Inbox, Pencil, Plus, Share2, TextAlignStart, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import {
@@ -53,6 +53,7 @@ import { ContainerDescription } from "./container-description";
 import { ContainerRows } from "./container-rows";
 import { useCollectionData } from "./data";
 import { useDeleteContainer } from "./delete-containers";
+import { useDescriptionPanel } from "./description-panel";
 import { useDropHandler } from "./drag";
 import { useCollapsedGroups } from "./groups";
 import { ModeSwitch } from "./mode-switch";
@@ -88,10 +89,13 @@ function ContainersBody({
   containers,
   label,
   viewKey,
+  lead,
 }: {
   containers: readonly Container[];
   label: string;
   viewKey: string;
+  /** What scrolls above them: the folder's description (TON-292). */
+  lead?: ReactNode;
 }) {
   const { tree, counts } = useCollectionData();
   const {
@@ -120,6 +124,7 @@ function ContainersBody({
             : counted(childCounts(container.id), "folder or list", "folders and lists")
         }
         moves={moves}
+        lead={lead}
       />
     );
   }
@@ -132,6 +137,7 @@ function ContainersBody({
       childCounts={childCounts}
       showCreated={presentation.sortMode === "created"}
       moves={moves}
+      lead={lead}
     />
   );
 }
@@ -158,10 +164,13 @@ function AlbumsBody({
   albums,
   label,
   viewKey,
+  lead,
 }: {
   albums: readonly Album[];
   label: string;
   viewKey: string;
+  /** What scrolls above them: the list's description (TON-292). */
+  lead?: ReactNode;
 }) {
   const { presentation, sections, manual, moves: arranged } = useAlbumArrangement(albums, viewKey);
   const { editing } = useMode();
@@ -173,7 +182,7 @@ function AlbumsBody({
   usePositioner(moves);
   const [collapsed, toggle] = useCollapsedGroups(viewKey);
   const { layout } = presentation;
-  const props = { sections, label, viewKey, collapsed, onToggle: toggle, moves };
+  const props = { sections, label, viewKey, collapsed, onToggle: toggle, moves, lead };
   // Selecting is Editing mode's, on a computer (TON-231).
   const narrow = useNarrowScreen();
   const order = useMemo(
@@ -230,6 +239,7 @@ function ViewHeader({
   const isShareTop = useIsShareTop();
   // In a share, names are asked for in a dialog, as the sidebar shows the person's own collection (TON-191).
   const setNaming = useStartNaming();
+  const { open: openDescription } = useDescriptionPanel();
   return (
     <PageHeader
       title={title}
@@ -307,6 +317,21 @@ function ViewHeader({
               <Pencil strokeWidth={1.5} aria-hidden />
               Rename
             </Button>
+          )}
+          {/* Description opens the description's panel (TON-292); it waits while offline. An icon, named in its
+          tooltip: with its word, it left the name no room beside a panel or in a share the person edits. */}
+          {editing && container && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button variant="ghost" size="icon" aria-label="Description" disabled={offline} />
+                }
+                onClick={() => openDescription(container.id)}
+              >
+                <TextAlignStart strokeWidth={1.5} aria-hidden />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Description</TooltipContent>
+            </Tooltip>
           )}
           {/* The shared folder or list itself stays where its owner put it (FR-07.20). */}
           {editing && container && !isShareTop(container.id) && (
@@ -562,12 +587,20 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
     )),
   ];
 
+  // The description scrolls with what the view holds, or, with nothing to hold, tops the empty view (TON-292).
+  const description = <ContainerDescription key={id} container={container} />;
+  const inside = tree.children.get(id) ?? [];
+  const isEmpty = container.kind === "folder" ? inside.length === 0 : albums.length === 0;
   let body: ReactNode;
   if (container.kind === "folder") {
-    const inside = tree.children.get(id) ?? [];
     body =
       inside.length > 0 ? (
-        <ContainersBody containers={inside} label={container.name} viewKey={id} />
+        <ContainersBody
+          containers={inside}
+          label={container.name}
+          viewKey={id}
+          lead={description}
+        />
       ) : (
         <Empty
           text="This folder is empty."
@@ -583,7 +616,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
         <CaptureRows listId={id} />
         {albums.length > 0 ? (
           <>
-            <AlbumsBody albums={albums} label={container.name} viewKey={id} />
+            <AlbumsBody albums={albums} label={container.name} viewKey={id} lead={description} />
             {editing && (
               <div className="shrink-0 border-t border-subtle px-4 py-2">
                 <AddAlbumButton variant="ghost" />
@@ -610,7 +643,7 @@ export function ContainerView({ id, kind }: { id: string; kind: ContainerKind })
         kind={container.kind === "folder" ? "containers" : "albums"}
         container={container}
       />
-      <ContainerDescription container={container} />
+      {isEmpty && description}
       {body}
     </>
   );

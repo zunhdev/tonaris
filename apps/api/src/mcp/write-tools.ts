@@ -78,6 +78,10 @@ const year = z.number().int();
  */
 const maxPairedChanges = maxBatchItems / 2;
 
+/** What a description may hold, as Tonaris renders it (FR-03.5, TON-292). */
+const markdownNote =
+  'It takes simple Markdown: **bold**, *italic*, lists of lines starting "- " or "1. ", and links to http or https addresses; anything else shows as written.';
+
 /** As limits are written in tool descriptions: 2,000. */
 const count = (limit: number) => limit.toLocaleString("en");
 
@@ -208,7 +212,7 @@ export function registerWriteTools(
         description: z
           .string()
           .optional()
-          .describe(`Plain text, at most ${count(maxDescriptionLength)} characters.`),
+          .describe(`At most ${count(maxDescriptionLength)} characters. ${markdownNote}`),
         idempotencyKey,
       }),
       outputSchema: output({ containerId: uuid, name: z.string() }),
@@ -293,7 +297,7 @@ export function registerWriteTools(
     "set_description",
     {
       title: "Describe a folder or list",
-      description: `Sets a folder's or list's plain-text description, at most ${count(maxDescriptionLength)} characters, or clears it with null. Pass base, the description you read, to be told if it changed since.`,
+      description: `Sets a folder's or list's description, at most ${count(maxDescriptionLength)} characters, or clears it with null. ${markdownNote} Pass base, the description you read, to be told if it changed since.`,
       inputSchema: containerChange.extend({
         description: z.string().nullable(),
         base: z.object({ description: z.string().nullable() }).optional(),

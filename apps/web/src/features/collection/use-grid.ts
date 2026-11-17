@@ -53,6 +53,26 @@ export function useWidth(ref: RefObject<HTMLElement | null>, remeasure?: unknown
   return width;
 }
 
+/**
+ * What sits above a view's grid in its scroll area, a folder's or list's description (DS-41, TON-292), and its
+ * height. The grid's virtualizer takes the height as its `scrollMargin`, so its rows are placed, and scrolled to,
+ * below it; each row is drawn at its `start` less that margin.
+ */
+export function useLead(): [(element: HTMLDivElement | null) => void, number] {
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const [height, setHeight] = useState(0);
+  useLayoutEffect(() => {
+    if (!element) return undefined;
+    // Measured before the first paint, so the rows never overlap it.
+    // oxlint-disable-next-line react/set-state-in-effect
+    setHeight(element.offsetHeight);
+    const observer = new ResizeObserver(() => setHeight(element.offsetHeight));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element]);
+  return [setElement, element ? height : 0];
+}
+
 const cellSelector = (cell: Cell) => `[data-cell="${cell.row}:${cell.col}"]`;
 
 /** The cell `target` is in, from its `data-cell` address. */

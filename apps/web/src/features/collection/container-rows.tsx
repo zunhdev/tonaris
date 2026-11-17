@@ -17,9 +17,9 @@ import { SharingGlyph } from "@/features/sharing/own-sharing";
 import { SaveStateMarker } from "@/features/sync/save-state-marker";
 import { useLiveHighlight, useSaveState } from "@/features/sync/save-states";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useEffect, useId, useMemo, useRef } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, type ReactNode } from "react";
 
-import { uuidv7Time, type Container } from "@tonaris/domain";
+import { descriptionExcerpt, uuidv7Time, type Container } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { DragHandle, DropLine } from "./album-rows";
@@ -29,7 +29,7 @@ import { useCollectionData } from "./data";
 import { useRowDrag } from "./drag";
 import { ContainerIcon } from "./icons";
 import { ContainerLink, useOpenContainer } from "./place";
-import { useGridFocus, type GridRearrange } from "./use-grid";
+import { useGridFocus, useLead, type GridRearrange } from "./use-grid";
 import type { ViewMoves } from "./use-rearrange";
 
 const rowHeight = 36;
@@ -52,6 +52,7 @@ export function ContainerRows({
   showCreated: createdChosen = false,
   viewKey,
   moves,
+  lead,
 }: {
   containers: readonly Container[];
   label: string;
@@ -62,6 +63,8 @@ export function ContainerRows({
   showCreated?: boolean;
   viewKey: string;
   moves: ViewMoves;
+  /** What scrolls above the rows: the folder's description (TON-292). */
+  lead?: ReactNode;
 }) {
   const compact = useNarrowScreen();
   const height = compact ? phoneRowHeight : rowHeight;
@@ -72,6 +75,7 @@ export function ContainerRows({
   // The grid owns its scroll container, so that the container exists when the virtualizer first reads it.
   const scroller = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
+  const [leadRef, leadHeight] = useLead();
   const open = useOpenContainer();
   // TanStack Virtual re-renders on scroll by design; the app isn't compiled with React Compiler, which the rule is
   // about.
@@ -81,6 +85,7 @@ export function ContainerRows({
     getScrollElement: () => scroller.current,
     estimateSize: () => height,
     overscan: 10,
+    scrollMargin: leadHeight,
   });
   useEffect(() => virtualizer.measure(), [virtualizer, height]);
   const reveal = useCallback((row: number) => virtualizer.scrollToIndex(row), [virtualizer]);
@@ -111,6 +116,7 @@ export function ContainerRows({
 
   return (
     <div ref={scroller} {...pageScroll("view")} className="min-h-0 flex-1 overflow-y-auto py-2">
+      {lead && <div ref={leadRef}>{lead}</div>}
       <div
         ref={grid}
         role="grid"
@@ -146,7 +152,7 @@ export function ContainerRows({
                 viewKey={viewKey}
                 manual={moves.handles}
                 index={item.index}
-                top={item.start}
+                top={item.start - leadHeight}
                 height={height}
                 compact={compact}
                 cellProps={cellProps}
@@ -207,7 +213,8 @@ function ContainerRow({
   const status = useSaveState(container.id);
   const nameId = useId();
   const descriptionId = useId();
-  const excerpt = container.description?.split("\n")[0];
+  // Its first line without the Markdown's marks (TON-292).
+  const excerpt = container.description ? descriptionExcerpt(container.description) : undefined;
   const icon = (
     <ContainerIcon
       kind={container.kind}

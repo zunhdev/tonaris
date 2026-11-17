@@ -176,6 +176,17 @@ describe("renderCollection", () => {
     expect(text).not.toContain("Never used");
   });
 
+  test("a description's own Markdown renders under its heading, and any other is escaped (TON-292)", () => {
+    const doom = {
+      ...container("list", "Doom"),
+      description: "**Slow** and *heavy*\n# not a heading\n\n- Sleep\n- Electric Wizard",
+    };
+    const text = render({ ...empty(), containers: [doom] });
+    expect(text).toContain(
+      "## Doom\n\n**Slow** and *heavy*\\\n\\# not a heading\n\n- Sleep\n- Electric Wizard\n",
+    );
+  });
+
   test("a grouped view shows its albums by release type", () => {
     const studio = album("Kind of Blue");
     const ep = album("Four", { releaseType: "ep" });
