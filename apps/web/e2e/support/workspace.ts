@@ -116,7 +116,7 @@ export async function conflictingRename(
   await page.unrouteAll({ behavior: "wait" });
 }
 
-export const indicator = (page: Page) => page.getByRole("button", { name: /^Sync status:/ });
+export const indicator = (page: Page) => page.getByRole("button", { name: /^Activity:/ });
 export const activity = (page: Page) => page.getByRole("dialog", { name: "Activity" });
 export const toasts = (page: Page) => page.locator('[data-slot="toast"]');
 export const announcements = (page: Page) => page.locator('[data-slot="announcer"]');
