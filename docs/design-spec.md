@@ -457,6 +457,8 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 
 *Fixed in TON-300* (from the creator's manual testing, 18 November 2026): **the current view's item scrolls into sight.** A list opened from search had its folders opened and was selected, but in a long tree it stayed far outside the part on screen, with its ⋯ menu. Now, when the view opens or moves, the sidebar scrolls to its item if it is out of sight: to the middle when hidden, just enough when cut at an edge. One in sight stays put, so a click on a row never moves the tree. The focus stays where it was.
 
+*Fixed in TON-302* (from the creator's manual testing, 19 November 2026): **a drag lights the folder under the pointer.** A dragged list sometimes lit a folder rows away from the pointer: drop targets were found by where each was measured as the drag began, so rows that moved during the drag were looked for where they had been. Now the target is whatever is under the pointer at that moment. The overlay with the dragged item's name stays where the pointer took hold of the row, even when the tree scrolls between the press and the drag's start.
+
 *(FR-01.1, FR-01.3, Q-02)*
 
 *As built in TON-169* (the creator picked variant 11A from TON-166's mock, 7 November 2026): **guide lines.** Under every level above a row's own, a 1px `border.subtle` line runs where that level's chevron sits (11 px, then every 12 px), from the row's top edge, over the 1px gap between rows, to its bottom, so an open folder's branch reads as one down to its last child. The rename and new-name editors draw them too. Phones have no tree.
