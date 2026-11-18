@@ -110,6 +110,7 @@ describe("sharing (DS-65)", () => {
       invitations: [
         {
           id: grantId,
+          personId: expect.any(String),
           email: "Anna@Example.com",
           displayName: null,
           status: "pending",

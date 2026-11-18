@@ -450,7 +450,10 @@ export const membershipAddResultSchema = z
 export type MembershipAddResult = z.infer<typeof membershipAddResultSchema>;
 
 /** One write, from the app or MCP (TS-20). */
-/** `share.invite`: invites an existing account to view a folder or list (FR-07.4). App-only (X-03). */
+/**
+ * `share.invite`: invites an existing account to view or edit a folder or list, by address or as one of the owner's
+ * people (FR-07.4, FR-07.23). App-only (X-03).
+ */
 export const shareInviteSchema = z.object({
   mutationId,
   name: z.literal("share.invite"),

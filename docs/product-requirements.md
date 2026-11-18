@@ -118,7 +118,7 @@ The substantial first-version scope is accepted. Work is delivered in increments
 | In-app playback, audio hosting, music downloads | Playback happens in the selected service (FR-06.1). |
 | Synchronization with streaming libraries | Either direction. |
 | Track items and track-level playlists | Track links resolve to their parent release. |
-| Public discovery feeds, follows, comments, public profiles, user discovery | Sharing is selective (FR-07). |
+| Public discovery feeds, follows, comments, public profiles, user discovery | Sharing is selective (FR-07). Your people come only from invitations (FR-07.23). |
 | Built-in recommendations | External agents keep the ordinary MCP read and search abilities. The MCP server adds no recommendation feature. |
 | Automatic listening-history tracking | Custom fields may hold manually or agent-entered listening information (FR-03.20). |
 | Importing or restoring exports, and merging backups | **Not planned.** Export exists so users own their data (FR-08). |
@@ -460,7 +460,7 @@ Automatic sorts support ascending and descending order. How lists and folders mi
 
 **FR-07.3 Owner identification.** Shared content and invitations show the owner's display name (FR-11.3), never their sign-in email. Names do not confer access or identity.
 
-**FR-07.4 Invitation eligibility.** Invitations target existing registered accounts only. An unregistered recipient is rejected (X-05): no account is created, no admission granted, no invitation queued. The owner may use link sharing instead.
+**FR-07.4 Invitation eligibility.** Invitations target existing registered accounts only. An unregistered recipient is rejected (X-05): no account is created, no admission granted, no invitation queued. The owner may use link sharing instead. An owner may also invite one of their people (FR-07.23) by account, without typing an address; anyone else answers as an unregistered address does.
 
 **FR-07.5 Invitation delivery.**
 
@@ -572,6 +572,12 @@ Adding an album the owner already has reuses the owner's record (FR-02.9) withou
 - **Albums they already have** are never duplicated: an album with the same MusicBrainz release group, else the same service link, joins the copied lists and keeps its own details (TS-44). An album with neither is copied as a new one.
 - **Custom fields** map onto theirs by name and type. A missing one is created, with the options the copied albums use; one of the same name but another type isn't copied, and the copy says so first.
 - **All or nothing:** before copying, it says what it adds. If that exceeds a limit (FR-15), it says which and by how much, and copies nothing. It is *confirmed* through MCP (FR-10.6).
+
+**FR-07.23 Your people.** A person's people are everyone they invited to a folder or list, unless that person only ever declined, and everyone who invited them, once they accepted. Leaving a share or revoking one keeps the connection. There are no friend requests, and nobody else can be found (section 2.6).
+
+- The invite field suggests them: the most recently shared with first, found by typing a name or the address the owner typed. People already invited to that folder or list aren't suggested.
+- Someone who invited you shows by display name only, never their email (FR-07.3). Choosing them invites their account.
+- Accounts being deleted are nobody's people.
 
 ### FR-08 — Data export
 
@@ -1001,6 +1007,7 @@ The first version's results, with the evidence for each check and what waits for
 | AC-49 | What editors can't do | An editor can't share, change fields or options, move or delete the shared folder or list, move content across the share's edge, or open the owner's Trash beyond Undo. Nothing outside the share is readable or changeable, and refusals and previews reveal nothing of it. A lowered role or revoked invitation refuses the next change. | FR-07.18, FR-07.20, X-03 |
 | AC-50 | Editors and albums | An editor's album edit shows in every list. Their confirmed deletion removes it from the share's lists, keeps it in the owner's lists outside, and otherwise moves it to the owner's Trash, with the same outcome shown either way. | FR-07.21 |
 | AC-51 | Copy a share | A viewer or editor copies a shared folder into a folder of theirs: its folders, lists and albums arrive; albums they had join the lists instead of being duplicated; fields map by name and type; over a limit, nothing is copied. The original and Shared with me are unchanged. | FR-07.22 |
+| AC-52 | Your people | The invite field suggests whom the owner invited and who invited them once accepted, not someone who only declined, a stranger or an account being deleted. Someone who invited the owner shows by name only and is invited by account. A stranger's id is refused as an unregistered address is. | FR-07.23, FR-07.4 |
 
 **Product evaluation.** Verify the creator's real workflows: saving, organizing, search, sharing, Trash recovery, export, and agents. Check usability and performance at the capacity limit, and review operating costs. Commercial adoption is not a release criterion.
 
@@ -1182,6 +1189,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (16 November 2026), your order of streaming services** (TON-282), from the creator's manual testing: each person drags the services into their own order in Settings, and every list of an album's services follows it, cards, rows, the "Open in…" chooser and the link fields. It never opens a service by itself. **Updated** FR-06.3 and FR-06.5.
 - **Decision (17 November 2026), 50,000 albums** (TON-287): each person can save up to 50,000 albums, up from 5,000, and keep up to 100,000 list entries, up from 50,000 (TS-18). Q-01's targets stay set on the 5,000-album workload; one measurement at 50,000 is recorded. **Updated** FR-15.1, Q-01, AC-32 and section 8.
 - **Decision (18 November 2026), Tonaris as an app on a computer** (TON-298), from the creator's desktop-app evaluation: the installed web app, from Chrome or Edge's Install or Safari's Add to Dock, rather than a wrapped desktop app such as Tauri, Electrobun or Electron. Settings → Preferences says how to install it on every device, and a link opened in the installed app goes to its open window. A wrapped app is for later, and only for something a browser can't do, such as a menu bar icon. **Updated** section 2.2.
+- **Decision (18 November 2026), your people** (P-TON-57, TON-294), from the creator's request to stop typing emails when sharing again: anyone you invited, unless they only ever declined, and anyone who invited you, once you accepted, is one of your people, even after the share ends. There are no friend requests. The invite field suggests them, the latest 8 before typing, and someone who invited you shows by name only and is invited by account. **Added** FR-07.23 and AC-52; **updated** FR-07.4 and section 2.6.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

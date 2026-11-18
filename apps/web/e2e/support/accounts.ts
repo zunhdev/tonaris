@@ -193,6 +193,11 @@ export const accounts = {
   // Roles in the dialog and for the recipient (share-roles.e2e.ts, TON-190): the owner and the person invited.
   roleOwner: at("role-owner"),
   roleInvitee: at("role-invitee"),
+  // The invite field's suggestions (invite-suggestions.e2e.ts, TON-294): the owner, someone they invited, and someone
+  // who invited them.
+  peopleOwner: at("people-owner"),
+  peopleFriend: at("people-friend"),
+  peopleSharer: at("people-sharer"),
   // ⌫ removes the focused album from the list on view (album-trash.e2e.ts, TON-228).
   backspaceRemove: at("backspace-remove"),
   // The glyph on shared folders and lists (sharing-glyph.e2e.ts, TON-227).

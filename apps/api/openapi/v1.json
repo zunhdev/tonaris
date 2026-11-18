@@ -4251,6 +4251,103 @@
         }
       }
     },
+    "/v1/people": {
+      "get": {
+        "summary": "List the person's people",
+        "description": "Everyone connected to the signed-in person by an invitation (FR-07.23): whom they invited, unless that person only ever declined, and who invited them, once they accepted, even after leaving or a revocation. The most recently shared with first. An address shows only where they typed it; the email of someone who invited them never does (FR-07.3). `share.invite` takes one's `id` as `personId`. Changes nothing.",
+        "tags": [
+          "sharing"
+        ],
+        "operationId": "listPeople",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "displayName": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "email": {
+                            "description": "The address the signed-in person last typed to invite them; null if they never did. Someone who only invited them never shows theirs (FR-07.3).",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "sharedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                            "description": "When the newest invitation between them was made, either way."
+                          },
+                          "sharesWithYou": {
+                            "description": "The name of the newest folder or list they share with the signed-in person that they can open now; null if none.",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "displayName",
+                          "email",
+                          "sharedAt",
+                          "sharesWithYou"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Someone connected to the signed-in person by an invitation (FR-07.23)."
+                      }
+                    }
+                  },
+                  "required": [
+                    "people"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sharing/impact": {
       "get": {
         "summary": "Preview a move's or a recovery's sharing consequences",
@@ -4697,9 +4794,18 @@
                             "format": "uuid",
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
-                          "email": {
+                          "personId": {
                             "type": "string",
-                            "description": "The address as the owner typed it."
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "description": "The person invited (FR-07.23)."
+                          },
+                          "email": {
+                            "description": "The address as the owner typed it; null for one of their people invited by account without one (FR-07.23).",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
                           },
                           "displayName": {
                             "description": "The person's display name, if they set one.",
@@ -4761,6 +4867,7 @@
                         },
                         "required": [
                           "id",
+                          "personId",
                           "email",
                           "displayName",
                           "status",
@@ -10058,10 +10165,16 @@
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
                           "email": {
+                            "description": "The address to invite, as typed. Give this or `personId`.",
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 320,
-                            "description": "The address to invite, as typed."
+                            "maxLength": 320
+                          },
+                          "personId": {
+                            "description": "One of the owner's people to invite by account, from `GET /v1/people` (FR-07.23). Give this or `email`.",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
                           "role": {
                             "description": "What the invitation lets them do (FR-07.18); view unless given.",
@@ -10074,8 +10187,7 @@
                         },
                         "required": [
                           "grantId",
-                          "containerId",
-                          "email"
+                          "containerId"
                         ]
                       }
                     },
@@ -12647,10 +12759,16 @@
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
                           "email": {
+                            "description": "The address to invite, as typed. Give this or `personId`.",
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 320,
-                            "description": "The address to invite, as typed."
+                            "maxLength": 320
+                          },
+                          "personId": {
+                            "description": "One of the owner's people to invite by account, from `GET /v1/people` (FR-07.23). Give this or `email`.",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
                           "role": {
                             "description": "What the invitation lets them do (FR-07.18); view unless given.",
@@ -12663,8 +12781,7 @@
                         },
                         "required": [
                           "grantId",
-                          "containerId",
-                          "email"
+                          "containerId"
                         ]
                       }
                     },
@@ -15236,10 +15353,16 @@
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
                           "email": {
+                            "description": "The address to invite, as typed. Give this or `personId`.",
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 320,
-                            "description": "The address to invite, as typed."
+                            "maxLength": 320
+                          },
+                          "personId": {
+                            "description": "One of the owner's people to invite by account, from `GET /v1/people` (FR-07.23). Give this or `email`.",
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
                           "role": {
                             "description": "What the invitation lets them do (FR-07.18); view unless given.",
@@ -15252,8 +15375,7 @@
                         },
                         "required": [
                           "grantId",
-                          "containerId",
-                          "email"
+                          "containerId"
                         ]
                       }
                     },
@@ -21463,10 +21585,16 @@
                         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                       },
                       "email": {
+                        "description": "The address to invite, as typed. Give this or `personId`.",
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 320,
-                        "description": "The address to invite, as typed."
+                        "maxLength": 320
+                      },
+                      "personId": {
+                        "description": "One of the owner's people to invite by account, from `GET /v1/people` (FR-07.23). Give this or `email`.",
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                       },
                       "role": {
                         "description": "What the invitation lets them do (FR-07.18); view unless given.",
@@ -21479,8 +21607,7 @@
                     },
                     "required": [
                       "grantId",
-                      "containerId",
-                      "email"
+                      "containerId"
                     ],
                     "additionalProperties": false
                   }

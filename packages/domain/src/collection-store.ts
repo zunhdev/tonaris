@@ -212,6 +212,14 @@ export type CollectionStore = {
 
   /** The account an email key signs in with, if any (FR-07.4). */
   findAccountByEmail(emailKey: string): Promise<{ id: string } | undefined>;
+  /**
+   * `personId`, if they are one of `userId`'s people (FR-07.23, `personThrough`) and their account isn't being
+   * deleted, with the address `userId` last typed to invite them, if any.
+   */
+  findPerson(
+    userId: string,
+    personId: string,
+  ): Promise<{ id: string; email: string | null } | undefined>;
   /** The account's display name; null for none (FR-11.3). */
   displayNameOf(userId: string): Promise<string | null>;
   setDisplayName(userId: string, displayName: string | null): Promise<void>;
@@ -223,7 +231,7 @@ export type CollectionStore = {
     grant: ShareGrant & {
       containerId: string;
       granteeId: string;
-      invitedEmail: string;
+      invitedEmail: string | null;
       emailStatus: EmailStatus | null;
     },
   ): Promise<void>;
@@ -231,7 +239,7 @@ export type CollectionStore = {
   findGrant(
     id: string,
   ): Promise<(ShareGrant & { containerId: string; granteeId: string }) | undefined>;
-  /** Sets the grant's status if it is still `from`; answers whether it was (TS-33). */
+  /** Sets the grant's status if it is still `from`, noting when it is accepted; answers whether it was (TS-33). */
   moveGrant(id: string, from: ShareGrantStatus, to: ShareGrantStatus): Promise<boolean>;
   /** Sets the grant's role; lowering it to view is recorded in the revocation ledger (FR-07.18, TS-113). */
   setGrantRole(id: string, role: ShareRole): Promise<void>;

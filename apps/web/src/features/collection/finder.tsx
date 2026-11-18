@@ -222,7 +222,7 @@ export function PathText({ path, terms }: { path: readonly string[]; terms: read
 }
 
 /** `text` with the parts the typed words match marked, in its own spelling (DS-75). */
-function Marked({ text, terms }: { text: string; terms: readonly string[] }) {
+export function Marked({ text, terms }: { text: string; terms: readonly string[] }) {
   const parts = matchedParts(text, terms);
   if (parts.length === 0) return text;
   const pieces = [];

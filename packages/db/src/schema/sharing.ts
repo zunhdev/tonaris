@@ -42,12 +42,16 @@ export const shareGrants = table(
     granteeId: uuid()
       .notNull()
       .references(() => users.id),
-    // The address the owner typed, which their dialog shows (DS-65, DS-69); the grantee's may change later.
-    invitedEmail: text().notNull(),
+    // The address the owner typed, which their dialog shows (DS-65, DS-69); the grantee's may change later. Null for
+    // an invitation of one of the owner's people by account with no address they typed (FR-07.23, TON-294).
+    invitedEmail: text(),
     status: text({ enum: shareGrantStatuses }).notNull(),
     // What the invitation lets its person do (FR-07.18); invitations made before roles view.
     role: text({ enum: shareRoles }).notNull().default("view"),
     emailStatus: text({ enum: emailStatuses }),
+    // When the person accepted, kept after they leave or it is revoked: an owner who invited them stays one of their
+    // people (FR-07.23, TON-294).
+    acceptedAt: instant(),
     ...timestamps,
   },
   (t) => [

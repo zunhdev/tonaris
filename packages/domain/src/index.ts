@@ -521,6 +521,7 @@ export {
   type SharedSnapshot,
   type SharingState,
 } from "./sharing";
+export { peopleSchema, personSchema, personThrough, type PeopleGrant, type Person } from "./people";
 export {
   audienceSchema,
   deletionImpact,

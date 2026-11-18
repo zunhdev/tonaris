@@ -51,6 +51,11 @@ const invite = (email: string, grantId = uuidv7()): Mutation => ({
   name: "share.invite",
   args: { grantId, containerId: doom.id, email },
 });
+const byEmail = (email: string, containerId: string, grantId = uuidv7()): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.invite",
+  args: { grantId, containerId, email },
+});
 const setLink = (enabled: boolean, linkId = uuidv7()): Mutation => ({
   mutationId: uuidv7(),
   name: "share.setLink",
@@ -110,6 +115,98 @@ describe("share.invite (FR-07.4, FR-07.5)", () => {
       "display_name_required",
     );
     expect(grants.size).toBe(0);
+  });
+});
+
+/** Someone's signed-in principal in the app. */
+const principalOf = (id: string): Principal => ({
+  kind: "user",
+  userId: id,
+  role: "user",
+  client: "web",
+});
+
+describe("share.invite by person (FR-07.23)", () => {
+  const benId = uuidv7();
+  const jazz: StoredContainer = { ...doom, id: uuidv7(), name: "Jazz", ownerId: annaId };
+  function people() {
+    const memory = memoryStore({
+      containers: [doom, jazz],
+      accounts: [
+        { id: owner, email: "denis@example.com", displayName: "Denis" },
+        { id: annaId, email: "anna@example.com", displayName: "Anna" },
+        { id: benId, email: "ben@example.com", displayName: "Ben" },
+      ],
+    });
+    const run = (mutation: Mutation, principal = me): Promise<CommandResult> =>
+      runCommand(mutationSchema.parse(mutation), { principal, store: memory.store });
+    return { ...memory, run };
+  }
+  const byPerson = (personId: string, containerId = doom.id, grantId = uuidv7()): Mutation => ({
+    mutationId: uuidv7(),
+    name: "share.invite",
+    args: { grantId, containerId, personId },
+  });
+
+  test("someone who invited you, once you accepted: invited by account, with no address", async () => {
+    const { run, grants } = people();
+    const fromAnna = uuidv7();
+    await run(byEmail("denis@example.com", jazz.id, fromAnna), principalOf(annaId));
+    // Not before Denis accepts.
+    expect(codeOf(await run(byPerson(annaId)))).toBe("recipient_not_found");
+    await run(answer("share.accept", fromAnna), principalOf(owner));
+    const grantId = uuidv7();
+    expect(await run(byPerson(annaId, doom.id, grantId))).toMatchObject({
+      status: "applied",
+      result: { grantId, status: "pending", emailing: true },
+    });
+    expect(grants.get(grantId)).toMatchObject({ granteeId: annaId, invitedEmail: null });
+  });
+
+  test("someone you invited, even after a revocation: the address you typed last", async () => {
+    const { run, grants } = people();
+    const toAnna = uuidv7();
+    await run(byEmail("Anna@Example.com", doom.id, toAnna));
+    await run({ mutationId: uuidv7(), name: "share.revoke", args: { grantId: toAnna } });
+    const grantId = uuidv7();
+    expect(codeOf(await run(byPerson(annaId, doom.id, grantId)))).toBe("applied");
+    expect(grants.get(grantId)).toMatchObject({
+      granteeId: annaId,
+      invitedEmail: "Anna@Example.com",
+    });
+  });
+
+  test("a stranger, oneself, a declined invitation and an unknown id answer alike", async () => {
+    const { run, grants } = people();
+    const toBen = uuidv7();
+    await run(byEmail("ben@example.com", doom.id, toBen));
+    await run(answer("share.decline", toBen), principalOf(benId));
+    const before = grants.size;
+    const answers = await Promise.all(
+      [annaId, owner, benId, uuidv7()].map((id) => run(byPerson(id))),
+    );
+    for (const refused of answers) {
+      expect(refused).toMatchObject({
+        status: "failed",
+        code: "recipient_not_found",
+        problem: { errors: [{ path: "args.personId", message: "Not one of your people" }] },
+      });
+    }
+    expect(grants.size).toBe(before);
+  });
+
+  test("an email or a person, never both or neither", () => {
+    const args = { grantId: uuidv7(), containerId: doom.id };
+    const parse = (extra: object) =>
+      mutationSchema.safeParse({
+        mutationId: uuidv7(),
+        name: "share.invite",
+        args: { ...args, ...extra },
+      }).success;
+    expect(parse({ email: "anna@example.com" })).toBe(true);
+    expect(parse({ personId: annaId })).toBe(true);
+    expect(parse({})).toBe(false);
+    expect(parse({ email: "anna@example.com", personId: annaId })).toBe(false);
   });
 });
 
