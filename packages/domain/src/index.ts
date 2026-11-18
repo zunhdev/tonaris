@@ -521,7 +521,18 @@ export {
   type SharedSnapshot,
   type SharingState,
 } from "./sharing";
-export { peopleSchema, personSchema, personThrough, type PeopleGrant, type Person } from "./people";
+export {
+  peopleSchema,
+  personArgsSchema,
+  personSchema,
+  personShareSchema,
+  personSharesSchema,
+  personThrough,
+  type PeopleGrant,
+  type Person,
+  type PersonShare,
+  type PersonShares,
+} from "./people";
 export {
   audienceSchema,
   deletionImpact,

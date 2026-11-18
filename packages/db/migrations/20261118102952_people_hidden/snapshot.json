@@ -1,0 +1,265 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "308f9ea9-7836-451c-ab61-f285c5cb3476",
+  "prevIds": [
+    "fc3f1cc3-0ee4-4db6-beb2-6d1fa9484758"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "people_hidden"
+      ],
+      "writes": [
+        "s|tbl|public.people_hidden",
+        "n|tbl|public.people_hidden",
+        "e|tbl|public.people_hidden",
+        "n|rel|public.people_hidden",
+        "n|type|public.people_hidden",
+        "n|rel|public.people_hidden_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "people_hidden",
+        "people_hidden_person_id_index"
+      ],
+      "writes": [
+        "s|idx|public.people_hidden_person_id_index",
+        "n|idx|public.people_hidden_person_id_index",
+        "e|idx|public.people_hidden_person_id_index",
+        "n|rel|public.people_hidden_person_id_index"
+      ],
+      "reads": [
+        "n|tbl|public.people_hidden",
+        "n|sch|public",
+        "n|col|public.people_hidden.person_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "people_hidden"
+      ],
+      "writes": [
+        "s|fk|public.people_hidden.people_hidden_user_id_user_id_fkey",
+        "n|fk|public.people_hidden.people_hidden_user_id_user_id_fkey",
+        "e|fk|public.people_hidden.people_hidden_user_id_user_id_fkey",
+        "n|con|public.people_hidden.people_hidden_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.people_hidden",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.people_hidden.user_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "people_hidden"
+      ],
+      "writes": [
+        "s|fk|public.people_hidden.people_hidden_person_id_user_id_fkey",
+        "n|fk|public.people_hidden.people_hidden_person_id_user_id_fkey",
+        "e|fk|public.people_hidden.people_hidden_person_id_user_id_fkey",
+        "n|con|public.people_hidden.people_hidden_person_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.people_hidden",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.people_hidden.person_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "people_hidden",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "person_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "hidden_at",
+        "type": "timestamp(3) with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "created_at",
+        "type": "timestamp(3) with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "updated_at",
+        "type": "timestamp(3) with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "people_hidden_person_id_index",
+        "nameExplicit": false,
+        "columns": [
+          {
+            "value": "person_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "people_hidden_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "people_hidden_person_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "person_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "people_hidden",
+        "name": "people_hidden_pkey",
+        "columns": [
+          "user_id",
+          "person_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
+}

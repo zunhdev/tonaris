@@ -25,6 +25,7 @@ import { applyField, removeField, setFieldValue, type FieldValue } from "./field
 import { createField, renameField, type CustomField } from "./fields";
 import { addMembership, removeMembership, type Membership } from "./memberships";
 import type { Outcome } from "./outcomes";
+import { removePerson, revokePerson } from "./people";
 import { setOrder, type Position } from "./positions";
 import type { Principal } from "./principals";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
@@ -169,6 +170,8 @@ export function mutationTarget(mutation: Mutation): MutationTarget | undefined {
     case "share.saveLink":
     case "share.removeReference":
     case "share.copy":
+    case "share.revokePerson":
+    case "people.remove":
     case "account.setDisplayName":
       return undefined;
     default:
@@ -223,6 +226,8 @@ const handlers = {
   "defaults.setServiceOrder": ({ args, base }, context) => setServiceOrder(args, base, context),
   "share.setRole": ({ args }, context) => setGrantRole(args, context),
   "share.copy": ({ args }, context) => copyShare(args, context),
+  "share.revokePerson": ({ args }, context) => revokePerson(args, context),
+  "people.remove": ({ args }, context) => removePerson(args, context),
 } satisfies Handlers;
 
 /** Every mutation's name, in the order of `mutationSchema`: for tests that must cover each one. */

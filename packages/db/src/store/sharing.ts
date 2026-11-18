@@ -1,7 +1,7 @@
 // The store's accounts and sharing (TS-31–TS-33; FR-07): display names, grants and their ends, saved references,
 // and links, with what the person may read through them.
 
-import { and, count, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { endedGrantStatuses, openGrantStatuses, type CollectionStore } from "@tonaris/domain";
 
@@ -9,7 +9,14 @@ import { canReadContainer, editSourcesAbove, linkByTokenHash } from "../access";
 import type { Transaction } from "../client";
 import { recordInLedger } from "../ledger";
 import { connections } from "../people";
-import { containers, savedReferences, shareGrants, shareLinks, users } from "../schema";
+import {
+  containers,
+  peopleHidden,
+  savedReferences,
+  shareGrants,
+  shareLinks,
+  users,
+} from "../schema";
 
 /** Accounts, grants, references and links, on `tx`. */
 export function sharingStore(tx: Transaction) {
@@ -27,6 +34,30 @@ export function sharingStore(tx: Transaction) {
     async findPerson(userId, personId) {
       const connection = (await connections(tx, userId, personId)).get(personId);
       return connection && { id: personId, email: connection.email };
+    },
+    async openGrantsTo(ownerId, personId) {
+      return tx
+        .select({ id: shareGrants.id, status: shareGrants.status, role: shareGrants.role })
+        .from(shareGrants)
+        .innerJoin(containers, eq(containers.id, shareGrants.containerId))
+        .where(
+          and(
+            eq(containers.ownerId, ownerId),
+            eq(shareGrants.granteeId, personId),
+            inArray(shareGrants.status, [...openGrantStatuses]),
+          ),
+        )
+        .orderBy(asc(shareGrants.id));
+    },
+    async hidePerson(userId, personId) {
+      // The database's clock, as grants' `created_at` and `accepted_at` are, so a later invitation compares later.
+      await tx
+        .insert(peopleHidden)
+        .values({ userId, personId, hiddenAt: sql`now()` })
+        .onConflictDoUpdate({
+          target: [peopleHidden.userId, peopleHidden.personId],
+          set: { hiddenAt: sql`now()` },
+        });
     },
     async displayNameOf(userId) {
       const [account] = await tx
@@ -91,7 +122,7 @@ export function sharingStore(tx: Transaction) {
       const moved = await tx
         .update(shareGrants)
         // When it is accepted stays after it ends, for the people it connects (FR-07.23).
-        .set(to === "accepted" ? { status: to, acceptedAt: new Date() } : { status: to })
+        .set(to === "accepted" ? { status: to, acceptedAt: sql`now()` } : { status: to })
         .where(and(eq(shareGrants.id, id), eq(shareGrants.status, from)))
         .returning({ id: shareGrants.id });
       // An ended grant stays ended after a restore (TS-113).

@@ -2,15 +2,24 @@
 // is on with its URL, derived again from the server's secret each time (TS-32), and access inherited from folders
 // above. Changes go through the sharing mutations. Anyone else's container answers 404, as if it didn't exist. Also
 // the preview of what a move or a recovery would do to sharing (DS-69), the list of what a person shares, for the
-// glyph beside each (DS-31, TON-227), and the person's people, for the invite field (FR-07.23, TON-294).
+// glyph beside each (DS-31, TON-227), and the person's people, for the invite field and the People page (FR-07.23,
+// FR-07.24; TON-294, TON-295).
 
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { ownSharing, people, previewSharing, shareSettings, type Database } from "@tonaris/db";
+import {
+  ownSharing,
+  people,
+  personShares,
+  previewSharing,
+  shareSettings,
+  type Database,
+} from "@tonaris/db";
 import {
   ownSharingSchema,
   peopleSchema,
+  personSharesSchema,
   problemSchema,
   shareSettingsSchema,
   sharingImpactSchema,
@@ -78,6 +87,32 @@ export function sharingRoutes(
         },
       },
       async ({ account }) => ({ people: await people(db, account.id) }),
+    )
+    .get(
+      "/people/:id",
+      {
+        signedIn: true,
+        params: z.object({ id: z.uuid() }),
+        response: {
+          200: personSharesSchema,
+          401: problemSchema,
+          404: problemSchema,
+          422: problemSchema,
+        },
+        detail: {
+          summary: "Get one of the person's people",
+          description:
+            "One of the signed-in person's people (FR-07.23) and what's shared each way, by name (FR-07.24, DS-121): their own folders and lists outside Trash with an open invitation to them, and theirs they're invited to, pending, or accepted and can open now. Anyone else answers 404, as if they didn't exist. `share.revokePerson` and `people.remove` act on them, in the app only (X-03). Changes nothing.",
+          tags: ["sharing"],
+          operationId: "getPerson",
+        },
+      },
+      async ({ params: { id }, account }) => {
+        const shares = await personShares(db, account.id, id);
+        if (!shares)
+          throw new ProblemError(404, "not_found", "This person isn't one of your people.");
+        return shares;
+      },
     )
     .get(
       "/sharing/impact",

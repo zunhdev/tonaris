@@ -579,6 +579,12 @@ Adding an album the owner already has reuses the owner's record (FR-02.9) withou
 - Someone who invited you shows by display name only, never their email (FR-07.3). Choosing them invites their account.
 - Accounts being deleted are nobody's people.
 
+**FR-07.24 The People page.** A People page lists a person's people (FR-07.23), the most recently shared with first, each with what's shared each way, and finds them by typing. Opening a person shows each folder and list shared each way, with its role and status.
+
+- **Stop sharing with a person** revokes every invitation of theirs to that person at once, Trash included, after a *confirmed* summary of what they lose (X-07, FR-07.15). Their shares with the owner stay.
+- **Remove from People** hides a person from the page and the invite suggestions, revoking nothing, until a later invitation either way connects them again.
+- Both are app-only (X-03) and desktop-only; phones read the page.
+
 ### FR-08 — Data export
 
 *Replaces iteration 5's "Future backup compatibility" (see change log).*
@@ -1008,6 +1014,7 @@ The first version's results, with the evidence for each check and what waits for
 | AC-50 | Editors and albums | An editor's album edit shows in every list. Their confirmed deletion removes it from the share's lists, keeps it in the owner's lists outside, and otherwise moves it to the owner's Trash, with the same outcome shown either way. | FR-07.21 |
 | AC-51 | Copy a share | A viewer or editor copies a shared folder into a folder of theirs: its folders, lists and albums arrive; albums they had join the lists instead of being duplicated; fields map by name and type; over a limit, nothing is copied. The original and Shared with me are unchanged. | FR-07.22 |
 | AC-52 | Your people | The invite field suggests whom the owner invited and who invited them once accepted, not someone who only declined, a stranger or an account being deleted. Someone who invited the owner shows by name only and is invited by account. A stranger's id is refused as an unregistered address is. | FR-07.23, FR-07.4 |
+| AC-53 | The People page | A row per person says what's shared each way, counted, and a person's page lists both ways by name. Stopping sharing with a person, after confirming, revokes all the owner's invitations to them and none of theirs. Removing someone hides them until a new invitation. | FR-07.24 |
 
 **Product evaluation.** Verify the creator's real workflows: saving, organizing, search, sharing, Trash recovery, export, and agents. Check usability and performance at the capacity limit, and review operating costs. Commercial adoption is not a release criterion.
 
@@ -1190,6 +1197,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (17 November 2026), 50,000 albums** (TON-287): each person can save up to 50,000 albums, up from 5,000, and keep up to 100,000 list entries, up from 50,000 (TS-18). Q-01's targets stay set on the 5,000-album workload; one measurement at 50,000 is recorded. **Updated** FR-15.1, Q-01, AC-32 and section 8.
 - **Decision (18 November 2026), Tonaris as an app on a computer** (TON-298), from the creator's desktop-app evaluation: the installed web app, from Chrome or Edge's Install or Safari's Add to Dock, rather than a wrapped desktop app such as Tauri, Electrobun or Electron. Settings → Preferences says how to install it on every device, and a link opened in the installed app goes to its open window. A wrapped app is for later, and only for something a browser can't do, such as a menu bar icon. **Updated** section 2.2.
 - **Decision (18 November 2026), your people** (P-TON-57, TON-294), from the creator's request to stop typing emails when sharing again: anyone you invited, unless they only ever declined, and anyone who invited you, once you accepted, is one of your people, even after the share ends. There are no friend requests. The invite field suggests them, the latest 8 before typing, and someone who invited you shows by name only and is invited by account. **Added** FR-07.23 and AC-52; **updated** FR-07.4 and section 2.6.
+- **Decision (18 November 2026), the People page** (P-TON-57, TON-295): People in the sidebar, after Shared with me, lists each person with what's shared each way, and a person's page lists both ways by name, each of the owner's opening its sharing dialog. On the desktop, "Stop sharing with {name}…" revokes all the owner's invitations to them after a confirmation, and "Remove from People" hides them until a new invitation; phones read only. **Added** FR-07.24 and AC-53.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

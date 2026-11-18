@@ -53,24 +53,26 @@ describe("the sidebar tree (DS-27)", () => {
   test("siblings come in creation order, and only expanded folders show what they hold", () => {
     const tree = buildTree([later, deep, funeral, doom, metal]);
     expect(visibleRows(tree, new Set()).map(label)).toEqual([
-      "Metal 1/5",
-      "Later 2/5",
-      "Unsorted 3/5",
-      "Shared with me 4/5",
-      "Trash 5/5",
+      "Metal 1/6",
+      "Later 2/6",
+      "Unsorted 3/6",
+      "Shared with me 4/6",
+      "People 5/6",
+      "Trash 6/6",
     ]);
     expect(visibleRows(tree, new Set([metal.id, funeral.id])).map(label)).toEqual([
-      "Metal 1/5",
+      "Metal 1/6",
       "  Doom 1/2",
       "  Funeral 2/2",
       "    Deep 1/1",
-      "Later 2/5",
-      "Unsorted 3/5",
-      "Shared with me 4/5",
-      "Trash 5/5",
+      "Later 2/6",
+      "Unsorted 3/6",
+      "Shared with me 4/6",
+      "People 5/6",
+      "Trash 6/6",
     ]);
     // A folder inside a collapsed one stays hidden, even if expanded itself.
-    expect(visibleRows(tree, new Set([funeral.id])).map(label)).toHaveLength(5);
+    expect(visibleRows(tree, new Set([funeral.id])).map(label)).toHaveLength(6);
   });
 
   test("each level comes in the order its folder's view gives, the top level in the root's", () => {
@@ -152,13 +154,14 @@ describe("Shared with me in the tree (TON-130)", () => {
     ]);
     const rows = visibleRows(buildTree([later]), new Set(), { shared: sharedTree });
     expect(rows.map(label)).toEqual([
-      "Later 1/4",
-      "Unsorted 2/4",
-      "Shared with me 3/4",
+      "Later 1/5",
+      "Unsorted 2/5",
+      "Shared with me 3/5",
       "  Ambient 1/3",
       "  Shared metal 2/3",
       "  (unavailable) 3/3",
-      "Trash 4/4",
+      "People 4/5",
+      "Trash 5/5",
     ]);
     expect(rows.find((row) => row.type === "place" && row.place === "shared")).toMatchObject({
       expanded: true,
@@ -170,21 +173,23 @@ describe("Shared with me in the tree (TON-130)", () => {
     expect(sharedTree.byId.get(grind.id)).toMatchObject({ rootId: shared.id, parentId: crust.id });
     const open = new Set([shared.id, crust.id]);
     expect(visibleRows(buildTree([]), open, { shared: sharedTree }).map(label)).toEqual([
-      "Unsorted 1/3",
-      "Shared with me 2/3",
+      "Unsorted 1/4",
+      "Shared with me 2/4",
       "  Ambient 1/3",
       "  Shared metal 2/3",
       "    Black 1/2",
       "    Crust 2/2",
       "      Grind 1/1",
       "  (unavailable) 3/3",
-      "Trash 3/3",
+      "People 3/4",
+      "Trash 4/4",
     ]);
     open.add(sharedClosedKey);
     expect(visibleRows(buildTree([]), open, { shared: sharedTree }).map(label)).toEqual([
-      "Unsorted 1/3",
-      "Shared with me 2/3",
-      "Trash 3/3",
+      "Unsorted 1/4",
+      "Shared with me 2/4",
+      "People 3/4",
+      "Trash 4/4",
     ]);
   });
 

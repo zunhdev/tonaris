@@ -332,6 +332,8 @@ function remake(
     case "share.saveLink":
     case "share.removeReference":
     case "share.copy":
+    case "share.revokePerson":
+    case "people.remove":
     case "account.setDisplayName":
       return "unchanged";
     case "trash.purge": {

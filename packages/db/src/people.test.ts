@@ -16,8 +16,9 @@ import {
   type ShareGrantStatus,
 } from "@tonaris/domain";
 
-import { connections, people } from "./people";
-import { shareGrants, users } from "./schema";
+import { deleteAccountData } from "./account-deletion";
+import { connections, people, personShares } from "./people";
+import { peopleHidden, shareGrants, users } from "./schema";
 import { sharingStore } from "./store/sharing";
 import { executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
@@ -176,6 +177,8 @@ describe("people (FR-07.23)", () => {
         email: null,
         sharedAt: expect.any(String),
         sharesWithYou: "Folk",
+        yours: { folders: 0, lists: 0, toEdit: 0 },
+        theirs: { folders: 0, lists: 1 },
       },
       {
         id: anna,
@@ -183,6 +186,8 @@ describe("people (FR-07.23)", () => {
         email: "Anna@New.example",
         sharedAt: expect.any(String),
         sharesWithYou: null,
+        yours: { folders: 0, lists: 1, toEdit: 0 },
+        theirs: { folders: 0, lists: 0 },
       },
     ]);
     expect(await findPerson(denis, anna)).toEqual({
@@ -214,5 +219,74 @@ describe("people (FR-07.23)", () => {
     expect(row?.acceptedAt).toBeInstanceOf(Date);
     await run(denis, { name: "share.leave", args: { containerId: jazz } });
     expect([...(await connections(t.db, denis)).keys()]).toEqual([anna]);
+  });
+});
+
+describe("a person's page and hiding (FR-07.24)", () => {
+  test("what's shared each way, by name: theirs pending or opening, yours outside Trash", async () => {
+    const denis = await newPerson("Denis");
+    const anna = await newPerson("Anna");
+    const metal = uuidv7();
+    await run(denis, {
+      name: "container.create",
+      args: { id: metal, kind: "folder", parentId: null, name: "Metal" },
+    });
+    const doom = await newList(denis, "Doom");
+    const old = await newList(denis, "Old");
+    await grant(metal, anna, "accepted", { accepted: true, email: "anna@example.com" });
+    await grant(doom, anna, "pending", { email: "anna@example.com" });
+    await grant(old, anna, "pending", { email: "anna@example.com" });
+    await t.db.update(shareGrants).set({ role: "edit" }).where(eq(shareGrants.containerId, metal));
+    await run(denis, { name: "container.delete", args: { id: old, unitId: uuidv7() } });
+    const jazz = await newList(anna, "Jazz");
+    const blues = await newList(anna, "Blues");
+    await grant(jazz, denis, "accepted", { accepted: true });
+    await grant(blues, denis, "pending");
+
+    const shares = await personShares(t.db, denis, anna);
+    expect(shares?.person.yours).toEqual({ folders: 1, lists: 1, toEdit: 1 });
+    expect(shares?.person.theirs).toEqual({ folders: 0, lists: 1 });
+    expect(shares?.yours.map(({ name, kind, role, status }) => [name, kind, role, status])).toEqual(
+      [
+        ["Doom", "list", "view", "pending"],
+        ["Metal", "folder", "edit", "accepted"],
+      ],
+    );
+    expect(shares?.theirs.map(({ name, status }) => [name, status])).toEqual([
+      ["Blues", "pending"],
+      ["Jazz", "accepted"],
+    ]);
+    expect(await personShares(t.db, denis, await newPerson("Stranger"))).toBeUndefined();
+  });
+
+  test("hidden until a later invitation either way, and never findable meanwhile", async () => {
+    const denis = await newPerson("Denis");
+    const anna = await newPerson("Anna");
+    const doom = await newList(denis, "Doom");
+    await grant(doom, anna, "accepted", { accepted: true, email: "anna@example.com" });
+    await run(denis, { name: "people.remove", args: { personId: anna } });
+    expect(await people(t.db, denis)).toEqual([]);
+    expect(await findPerson(denis, anna)).toBeUndefined();
+    expect(await personShares(t.db, denis, anna)).toBeUndefined();
+    // Her invitation stays: removing revokes nothing.
+    const [kept] = await t.db.select({ status: shareGrants.status }).from(shareGrants);
+    expect(kept?.status).toBe("accepted");
+
+    // Anna invites Denis; once he accepts, she's back.
+    const jazz = await newList(anna, "Jazz");
+    const fromAnna = await grant(jazz, denis, "pending");
+    expect(await people(t.db, denis)).toEqual([]);
+    await run(denis, { name: "share.accept", args: { grantId: fromAnna } });
+    expect((await people(t.db, denis)).map((person) => person.id)).toEqual([anna]);
+  });
+
+  test("account deletion's purge removes hidden rows on both sides", async () => {
+    const denis = await newPerson("Denis");
+    const anna = await newPerson("Anna");
+    await run(denis, { name: "people.remove", args: { personId: anna } });
+    await run(anna, { name: "people.remove", args: { personId: denis } });
+    expect(await t.db.select().from(peopleHidden)).toHaveLength(2);
+    await deleteAccountData(t.db, anna);
+    expect(await t.db.select().from(peopleHidden)).toEqual([]);
   });
 });

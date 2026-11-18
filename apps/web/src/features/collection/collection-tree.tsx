@@ -1,5 +1,5 @@
-// The sidebar tree (DS-27, DS-31; FR-01.3): the owner's folders and lists, then Unsorted, Shared with me and Trash,
-// as one ARIA tree in its flat form (each item's level, position and set size), with a single tab stop. Items are
+// The sidebar tree (DS-27, DS-31; FR-01.3): the owner's folders and lists, then Unsorted, Shared with me, People and
+// Trash, as one ARIA tree in its flat form (each item's level, position and set size), with a single tab stop. Items are
 // links, so Enter and a click open the view, and a view can open in a new tab. The current view's item is
 // selected; closing a folder that holds it selects the folder (TON-121). ↑/↓, Home/End, ←/→ and type-ahead move
 // focus; letters that are shortcuts act as shortcuts instead (decided 22 October 2026). F2 renames, and new folders and lists are named inline (editing.ts). Each folder or
@@ -20,6 +20,7 @@ import { useConnection } from "@/features/sync/sync-provider";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   ChevronRight,
+  Contact,
   Ellipsis,
   Inbox,
   MailOpen,
@@ -100,10 +101,11 @@ function sharedPath(tree: SharedTree, id: string): string[] {
 
 const placePaths: Record<
   Place,
-  "/unsorted" | "/shared" | "/invitations" | "/settings/connections" | "/trash"
+  "/unsorted" | "/shared" | "/people" | "/invitations" | "/settings/connections" | "/trash"
 > = {
   unsorted: "/unsorted",
   shared: "/shared",
+  people: "/people",
   invitations: "/invitations",
   approvals: "/settings/connections",
   trash: "/trash",
@@ -112,6 +114,7 @@ const placePaths: Record<
 const placeIcons: Record<Place, LucideIcon> = {
   unsorted: Inbox,
   shared: Users,
+  people: Contact,
   invitations: MailOpen,
   approvals: ShieldCheck,
   trash: Trash2,
@@ -119,6 +122,8 @@ const placeIcons: Record<Place, LucideIcon> = {
 
 /** The place a path shows, if it shows one. */
 function placeAt(pathname: string): Place | undefined {
+  // A person's page is People's (TON-295).
+  if (pathname.startsWith("/people/")) return "people";
   return places.find(({ place }) => placePaths[place] === pathname)?.place;
 }
 

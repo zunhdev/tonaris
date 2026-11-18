@@ -35,6 +35,8 @@ import { Route as WorkspaceFFolderIdRouteImport } from './routes/_workspace/f.$f
 import { Route as WorkspaceInvitationsIndexRouteImport } from './routes/_workspace/invitations.index'
 import { Route as WorkspaceInvitationsIdRouteImport } from './routes/_workspace/invitations.$id'
 import { Route as WorkspaceLListIdRouteImport } from './routes/_workspace/l.$listId'
+import { Route as WorkspacePeopleIndexRouteImport } from './routes/_workspace/people.index'
+import { Route as WorkspacePeoplePersonIdRouteImport } from './routes/_workspace/people.$personId'
 import { Route as WorkspaceSharedIndexRouteImport } from './routes/_workspace/shared.index'
 import { Route as WorkspaceSharedContainerIdRouteImport } from './routes/_workspace/shared.$containerId'
 import { Route as WorkspaceAdminAdminAdmissionsRouteImport } from './routes/_workspace/_admin/admin.admissions'
@@ -175,6 +177,16 @@ const WorkspaceLListIdRoute = WorkspaceLListIdRouteImport.update({
   path: '/l/$listId',
   getParentRoute: () => WorkspaceRoute,
 } as any)
+const WorkspacePeopleIndexRoute = WorkspacePeopleIndexRouteImport.update({
+  id: '/people/',
+  path: '/people/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspacePeoplePersonIdRoute = WorkspacePeoplePersonIdRouteImport.update({
+  id: '/people/$personId',
+  path: '/people/$personId',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const WorkspaceSharedIndexRoute = WorkspaceSharedIndexRouteImport.update({
   id: '/shared/',
   path: '/shared/',
@@ -264,8 +276,10 @@ export interface FileRoutesByFullPath {
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
+  '/people/$personId': typeof WorkspacePeoplePersonIdRoute
   '/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/invitations/': typeof WorkspaceInvitationsIndexRoute
+  '/people/': typeof WorkspacePeopleIndexRoute
   '/shared/': typeof WorkspaceSharedIndexRoute
   '/admin/admissions': typeof WorkspaceAdminAdminAdmissionsRoute
   '/admin/members': typeof WorkspaceAdminAdminMembersRoute
@@ -299,8 +313,10 @@ export interface FileRoutesByTo {
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/l/$listId': typeof WorkspaceLListIdRoute
+  '/people/$personId': typeof WorkspacePeoplePersonIdRoute
   '/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/invitations': typeof WorkspaceInvitationsIndexRoute
+  '/people': typeof WorkspacePeopleIndexRoute
   '/shared': typeof WorkspaceSharedIndexRoute
   '/admin/admissions': typeof WorkspaceAdminAdminAdmissionsRoute
   '/admin/members': typeof WorkspaceAdminAdminMembersRoute
@@ -339,8 +355,10 @@ export interface FileRoutesById {
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
   '/_workspace/invitations/$id': typeof WorkspaceInvitationsIdRoute
   '/_workspace/l/$listId': typeof WorkspaceLListIdRoute
+  '/_workspace/people/$personId': typeof WorkspacePeoplePersonIdRoute
   '/_workspace/shared/$containerId': typeof WorkspaceSharedContainerIdRoute
   '/_workspace/invitations/': typeof WorkspaceInvitationsIndexRoute
+  '/_workspace/people/': typeof WorkspacePeopleIndexRoute
   '/_workspace/shared/': typeof WorkspaceSharedIndexRoute
   '/_workspace/_admin/admin/admissions': typeof WorkspaceAdminAdminAdmissionsRoute
   '/_workspace/_admin/admin/members': typeof WorkspaceAdminAdminMembersRoute
@@ -377,8 +395,10 @@ export interface FileRouteTypes {
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
+    | '/people/$personId'
     | '/shared/$containerId'
     | '/invitations/'
+    | '/people/'
     | '/shared/'
     | '/admin/admissions'
     | '/admin/members'
@@ -412,8 +432,10 @@ export interface FileRouteTypes {
     | '/f/$folderId'
     | '/invitations/$id'
     | '/l/$listId'
+    | '/people/$personId'
     | '/shared/$containerId'
     | '/invitations'
+    | '/people'
     | '/shared'
     | '/admin/admissions'
     | '/admin/members'
@@ -451,8 +473,10 @@ export interface FileRouteTypes {
     | '/_workspace/f/$folderId'
     | '/_workspace/invitations/$id'
     | '/_workspace/l/$listId'
+    | '/_workspace/people/$personId'
     | '/_workspace/shared/$containerId'
     | '/_workspace/invitations/'
+    | '/_workspace/people/'
     | '/_workspace/shared/'
     | '/_workspace/_admin/admin/admissions'
     | '/_workspace/_admin/admin/members'
@@ -665,6 +689,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceLListIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/people/': {
+      id: '/_workspace/people/'
+      path: '/people'
+      fullPath: '/people/'
+      preLoaderRoute: typeof WorkspacePeopleIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/_workspace/people/$personId': {
+      id: '/_workspace/people/$personId'
+      path: '/people/$personId'
+      fullPath: '/people/$personId'
+      preLoaderRoute: typeof WorkspacePeoplePersonIdRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/_workspace/shared/': {
       id: '/_workspace/shared/'
       path: '/shared'
@@ -796,8 +834,10 @@ interface WorkspaceRouteChildren {
   WorkspaceFFolderIdRoute: typeof WorkspaceFFolderIdRoute
   WorkspaceInvitationsIdRoute: typeof WorkspaceInvitationsIdRoute
   WorkspaceLListIdRoute: typeof WorkspaceLListIdRoute
+  WorkspacePeoplePersonIdRoute: typeof WorkspacePeoplePersonIdRoute
   WorkspaceSharedContainerIdRoute: typeof WorkspaceSharedContainerIdRoute
   WorkspaceInvitationsIndexRoute: typeof WorkspaceInvitationsIndexRoute
+  WorkspacePeopleIndexRoute: typeof WorkspacePeopleIndexRoute
   WorkspaceSharedIndexRoute: typeof WorkspaceSharedIndexRoute
 }
 
@@ -812,8 +852,10 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceFFolderIdRoute: WorkspaceFFolderIdRoute,
   WorkspaceInvitationsIdRoute: WorkspaceInvitationsIdRoute,
   WorkspaceLListIdRoute: WorkspaceLListIdRoute,
+  WorkspacePeoplePersonIdRoute: WorkspacePeoplePersonIdRoute,
   WorkspaceSharedContainerIdRoute: WorkspaceSharedContainerIdRoute,
   WorkspaceInvitationsIndexRoute: WorkspaceInvitationsIndexRoute,
+  WorkspacePeopleIndexRoute: WorkspacePeopleIndexRoute,
   WorkspaceSharedIndexRoute: WorkspaceSharedIndexRoute,
 }
 

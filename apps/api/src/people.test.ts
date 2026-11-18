@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
   mutationResultSchema,
   peopleSchema,
+  personSharesSchema,
   shareSettingsSchema,
   uuidv7,
   type Mutation,
@@ -86,6 +87,8 @@ describe("people (FR-07.23)", () => {
         email: null,
         sharedAt: expect.any(String),
         sharesWithYou: "Folk",
+        yours: { folders: 0, lists: 0, toEdit: 0 },
+        theirs: { folders: 0, lists: 1 },
       },
       {
         id: anna.id,
@@ -93,6 +96,8 @@ describe("people (FR-07.23)", () => {
         email: "Anna@Example.com",
         sharedAt: expect.any(String),
         sharesWithYou: null,
+        yours: { folders: 0, lists: 1, toEdit: 0 },
+        theirs: { folders: 0, lists: 0 },
       },
     ]);
     // Ben's email is never sent to Denis (FR-07.3).
@@ -166,5 +171,66 @@ describe("people (FR-07.23)", () => {
 
   test("signed out, nothing", async () => {
     expect((await t.call("/v1/people")).status).toBe(401);
+    expect((await t.call(`/v1/people/${uuidv7()}`)).status).toBe(401);
+  });
+});
+
+/** A person's page, as `cookie`'s account reads it. */
+async function page(cookie: string, id: string) {
+  const response = await t.call(`/v1/people/${id}`, { headers: { cookie } });
+  return {
+    status: response.status,
+    body: response.ok ? personSharesSchema.parse(await response.json()) : undefined,
+  };
+}
+
+describe("a person's page (FR-07.24)", () => {
+  test("both ways by name; stop sharing revokes yours only; removing hides until a new invitation", async () => {
+    const denis = await member("denis@example.com", "Denis", "Doom");
+    const anna = await member("anna@example.com", "Anna", "Jazz");
+    const toAnna = uuidv7();
+    await send(denis.cookie, {
+      name: "share.invite",
+      args: { grantId: toAnna, containerId: denis.listId, email: "anna@example.com", role: "edit" },
+    });
+    await send(anna.cookie, { name: "share.accept", args: { grantId: toAnna } });
+    const fromAnna = uuidv7();
+    await send(anna.cookie, {
+      name: "share.invite",
+      args: { grantId: fromAnna, containerId: anna.listId, email: "denis@example.com" },
+    });
+    await send(denis.cookie, { name: "share.accept", args: { grantId: fromAnna } });
+
+    const { body } = await page(denis.cookie, anna.id);
+    expect(body?.yours).toEqual([
+      {
+        grantId: toAnna,
+        containerId: denis.listId,
+        name: "Doom",
+        kind: "list",
+        role: "edit",
+        status: "accepted",
+      },
+    ]);
+    expect(body?.theirs).toMatchObject([{ grantId: fromAnna, name: "Jazz", status: "accepted" }]);
+    expect((await page(denis.cookie, uuidv7())).status).toBe(404);
+
+    // Stop sharing: Denis's invitation is revoked; Anna's to him stays.
+    expect(
+      await send(denis.cookie, { name: "share.revokePerson", args: { personId: anna.id } }),
+    ).toMatchObject({ status: "confirmed", result: { revoked: 1 } });
+    const after = await page(denis.cookie, anna.id);
+    expect(after.body?.yours).toEqual([]);
+    expect(after.body?.theirs).toHaveLength(1);
+
+    // Remove from People: gone, until he invites her again.
+    await send(denis.cookie, { name: "people.remove", args: { personId: anna.id } });
+    expect(await peopleOf(denis.cookie)).toEqual([]);
+    expect((await page(denis.cookie, anna.id)).status).toBe(404);
+    await send(denis.cookie, {
+      name: "share.invite",
+      args: { grantId: uuidv7(), containerId: denis.listId, email: "anna@example.com" },
+    });
+    expect((await peopleOf(denis.cookie)).map((person) => person.id)).toEqual([anna.id]);
   });
 });

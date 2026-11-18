@@ -5,7 +5,14 @@ import { describe, expect, test } from "bun:test";
 
 import { uuidv7, type Person } from "@tonaris/domain";
 
-import { clashingNames, findPeople, personChoices, suggestedPeople } from "./people-picker";
+import {
+  clashingNames,
+  findPeople,
+  personChoices,
+  suggestedPeople,
+  theirsText,
+  yoursText,
+} from "./people-picker";
 
 const person = (
   displayName: string | null,
@@ -17,6 +24,8 @@ const person = (
   email,
   sharedAt: "2026-11-18T10:00:00.000Z",
   sharesWithYou,
+  yours: { folders: 0, lists: 0, toEdit: 0 },
+  theirs: { folders: 0, lists: 0 },
 });
 
 const names = (choices: readonly { name: string }[]) => choices.map((choice) => choice.name);
@@ -69,5 +78,18 @@ describe("people to invite (FR-07.23)", () => {
       [],
     );
     expect(clashingNames(shown)).toEqual(new Set(["Anna"]));
+  });
+});
+
+describe("what a People row says (DS-121, TON-295)", () => {
+  test("lists first, then folders, with those to edit; nothing for none", () => {
+    expect(yoursText({ folders: 1, lists: 3, toEdit: 1 })).toBe(
+      "You share 3 lists and 1 folder (1 to edit)",
+    );
+    expect(yoursText({ folders: 2, lists: 0, toEdit: 0 })).toBe("You share 2 folders");
+    expect(yoursText({ folders: 0, lists: 0, toEdit: 0 })).toBeUndefined();
+    expect(theirsText({ folders: 0, lists: 1 })).toBe("Shares 1 list with you");
+    expect(theirsText({ folders: 1, lists: 2 })).toBe("Shares 2 lists and 1 folder with you");
+    expect(theirsText({ folders: 0, lists: 0 })).toBeUndefined();
   });
 });
