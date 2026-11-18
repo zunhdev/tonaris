@@ -106,7 +106,7 @@ export function SyncIndicator() {
       render={
         <Button
           variant="ghost"
-          className="h-auto min-h-7 w-full justify-start py-1 text-left whitespace-normal"
+          className="h-auto min-h-7 w-full justify-start py-0.5 text-left whitespace-normal"
         />
       }
       aria-label={`Activity: ${state}`}
