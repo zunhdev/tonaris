@@ -147,6 +147,8 @@ export const accounts = {
   rowMenuColors: at("row-menu-colors"),
   // Closing a folder that holds the view (collection-navigation.e2e.ts).
   closeHolder: at("close-holder"),
+  // The view's row scrolling into sight in a long tree (collection-navigation.e2e.ts, TON-300).
+  navReveal: at("nav-reveal"),
   // Add album's key in its tooltips (capture.e2e.ts).
   addAlbumKey: at("add-album-key"),
   // The inspector's width (album-inspector.e2e.ts).

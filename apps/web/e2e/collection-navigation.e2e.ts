@@ -244,6 +244,57 @@ test("closing a folder that holds the open list selects the folder, and it stays
   await expect(thrashItem).toBeHidden();
 });
 
+test("the view's row scrolls into sight in a long tree, and a row in sight stays put (TON-300)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.navReveal);
+  await live(page);
+  // Forty lists at the top, then the list 'Doom' in the folder 'Thrash' in the folder 'Metal', below them all.
+  const fillers = Array.from({ length: 40 }, (_, n) =>
+    list(`Filler ${String(n + 1).padStart(2, "0")}`),
+  );
+  const metal = { ...list("Metal"), kind: "folder" as const };
+  const thrash = { ...list("Thrash"), kind: "folder" as const, parentId: metal.id };
+  const doom = { ...list("Doom"), parentId: thrash.id };
+  await insert(page, ...fillers, metal, thrash, doom);
+  const metalItem = item(page, /^Metal\b/);
+  const doomItem = item(page, /^Doom\b/);
+  await expect(metalItem).toHaveAttribute("aria-expanded", "false");
+  await expect(metalItem).not.toBeInViewport();
+  const viewport = sidebar(page).locator('[data-slot="scroll-area-viewport"]');
+  const scrolled = () => viewport.evaluate((element) => element.scrollTop);
+
+  // Opened from ⌘K, 'Doom' has its folders opened and the sidebar scrolled to it; the focus stays out of the tree.
+  await page.keyboard.press("ControlOrMeta+k");
+  await page.getByRole("combobox", { name: "Search" }).fill("doom");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(`/l/${doom.id}`);
+  await expect(doomItem).toHaveAttribute("aria-selected", "true");
+  await expect(doomItem).toBeInViewport({ ratio: 1 });
+  await expect(tree(page).locator(":focus")).toHaveCount(0);
+
+  // A click on a row in sight opens its view without moving the tree.
+  const at = await scrolled();
+  expect(at).toBeGreaterThan(0);
+  await item(page, /^Thrash\b/).click();
+  await expect(page).toHaveURL(`/f/${thrash.id}`);
+  await page.goBack();
+  await expect(doomItem).toHaveAttribute("aria-selected", "true");
+  expect(await scrolled()).toBe(at);
+
+  // Away at Collection, with 'Metal' closed and the tree at its top, Back opens 'Metal' again and shows 'Doom'.
+  await sidebar(page).getByRole("link", { name: "Collection", exact: true }).click();
+  await expect(page).toHaveURL("/c");
+  await metalItem.locator('[data-slot="row-chevron"]').click();
+  await expect(metalItem).toHaveAttribute("aria-expanded", "false");
+  await viewport.evaluate((element) => element.scrollTo({ top: 0 }));
+  await expect(metalItem).not.toBeInViewport();
+  await page.goBack();
+  await expect(page).toHaveURL(`/l/${doom.id}`);
+  await expect(metalItem).toHaveAttribute("aria-expanded", "true");
+  await expect(doomItem).toBeInViewport({ ratio: 1 });
+});
+
 test("the tree draws a guide line under each level above a row, and the account shows its avatar (TON-169)", async ({
   page,
 }) => {
