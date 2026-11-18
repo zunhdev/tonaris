@@ -8,19 +8,23 @@
 
 import { api } from "@/api";
 import { count } from "@/common/words";
+import { Avatar } from "@/features/account/avatar";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { useCollectionData } from "@/features/collection/data";
+import { InviteField } from "@/features/sharing/invite-field";
 import { sharingChanged } from "@/features/sharing/own-sharing";
+import { RolePicker } from "@/features/sharing/role-picker";
 import { unreachable, useSend, type Unsent } from "@/features/sharing/send";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Check, Copy, Ellipsis, Folder } from "lucide-react";
-import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useId, useMemo, useState, type FormEvent } from "react";
 
 import {
   clipLength,
   maxNameLength,
+  ownerLabel,
   uuidv7,
-  type ShareRole,
+  type Person,
   type ShareSettings,
 } from "@tonaris/domain";
 import { Button } from "@tonaris/ui/components/button";
@@ -39,7 +43,6 @@ import {
 } from "@tonaris/ui/components/dropdown-menu";
 import { Field } from "@tonaris/ui/components/field";
 import { Input } from "@tonaris/ui/components/input";
-import { Select } from "@tonaris/ui/components/select";
 import { Switch } from "@tonaris/ui/components/switch";
 
 export function ShareDialog() {
@@ -98,19 +101,37 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
     },
     [id],
   );
+  // The owner's people, for the invite field's suggestions (FR-07.23); without them, it takes addresses only.
+  const [people, setPeople] = useState<readonly Person[]>();
+  const readPeople = useCallback((isCurrent: () => boolean = () => true) => {
+    void api.v1.people.get().then(
+      ({ data }) => {
+        if (isCurrent() && data) setPeople(data.people);
+        return undefined;
+      },
+      () => undefined,
+    );
+  }, []);
   useEffect(() => {
     let current = true;
     void read(() => current);
+    readPeople(() => current);
     return () => {
       current = false;
     };
-  }, [read]);
-  // Each change also reads again what the person shares, for the glyphs beside their folders and lists (TON-227).
+  }, [read, readPeople]);
+  // Each change also reads again what the person shares, for the glyphs beside their folders and lists (TON-227), and
+  // their people, whom a new invitation may add to.
   const load = useCallback(() => {
     void read();
+    readPeople();
     sharingChanged();
-  }, [read]);
+  }, [read, readPeople]);
   const { settings, failed } = loaded;
+  const invited = useMemo(
+    () => settings?.invitations.map((invitation) => invitation.personId) ?? [],
+    [settings],
+  );
 
   return (
     <>
@@ -140,7 +161,13 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
           <DisplayNameForm disabled={offline} onSaved={load} />
         ) : (
           <>
-            <InviteForm containerId={id} disabled={offline} onInvited={load} />
+            <InviteField
+              containerId={id}
+              people={people}
+              invited={invited}
+              disabled={offline}
+              onInvited={load}
+            />
             {settings.invitations.length > 0 && (
               <ul aria-label="People with access" className="flex flex-col gap-1">
                 {settings.invitations.map((invitation) => (
@@ -197,35 +224,6 @@ function deliveryOf(status: ShareSettings["invitations"][number]["emailStatus"])
   return "";
 }
 
-/** The roles an invitation gives (FR-07.18), as the dialog names them. */
-const roleNames: Record<ShareRole, string> = { view: "Can view", edit: "Can edit" };
-
-/** Pick a role (FR-07.18): Can view or Can edit. */
-function RolePicker({
-  role,
-  label,
-  disabled,
-  onChange,
-}: {
-  role: ShareRole;
-  label: string;
-  disabled: boolean;
-  onChange: (role: ShareRole) => void;
-}) {
-  return (
-    <Select
-      aria-label={label}
-      value={role}
-      disabled={disabled}
-      onChange={(event) => onChange(event.target.value === "edit" ? "edit" : "view")}
-      className="shrink-0"
-    >
-      <option value="view">{roleNames.view}</option>
-      <option value="edit">{roleNames.edit}</option>
-    </Select>
-  );
-}
-
 /**
  * A person with access (DS-65): who, their invitation's status, its role, which a change saves at once, Resend while
  * its email didn't go, and their menu. A view invitation under a folder they already edit says so (FR-07.18). A write
@@ -242,16 +240,23 @@ function PersonRow({
 }) {
   const { run, busy, error } = useSend();
   const send = (mutation: Unsent) => void run(mutation).then(onChanged);
-  const who = invitation.displayName ?? invitation.email;
+  // An invitation of one of the owner's people by account may have no address (FR-07.23).
+  const who = invitation.displayName ?? invitation.email ?? ownerLabel(null, { start: true });
   const through = invitation.role === "view" ? invitation.editableThrough : null;
   return (
     <li className="flex flex-col gap-1">
       <div className="flex items-center gap-3 text-base">
-        <span className="min-w-0 flex-1 truncate">
-          {invitation.displayName && (
-            <span className="mr-2 text-fg-primary">{invitation.displayName}</span>
-          )}
-          <span className="text-fg-secondary">{invitation.email}</span>
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          <Avatar name={who} className="size-5 text-[11px]" />
+          <span className="min-w-0 flex-1 truncate">
+            {invitation.displayName && (
+              <span className="mr-2 text-fg-primary">{invitation.displayName}</span>
+            )}
+            {invitation.email !== null && (
+              <span className="text-fg-secondary">{invitation.email}</span>
+            )}
+            {invitation.displayName === null && invitation.email === null && who}
+          </span>
         </span>
         <span className="text-small text-fg-secondary">
           {invitation.status === "accepted"
@@ -372,67 +377,6 @@ function DisplayNameForm({ disabled, onSaved }: { disabled: boolean; onSaved: ()
           </div>
         )}
       </Field>
-    </form>
-  );
-}
-
-/** Invite by email (FR-07.4): a refusal keeps the typed address, with the reason under it. */
-function InviteForm({
-  containerId,
-  disabled,
-  onInvited,
-}: {
-  containerId: string;
-  disabled: boolean;
-  onInvited: () => void;
-}) {
-  const id = useId();
-  const [email, setEmail] = useState("");
-  // Can view unless the owner picks Can edit (FR-07.18); kept for the next invitation.
-  const [role, setRole] = useState<ShareRole>("view");
-  const { run, busy, error, setError } = useSend();
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (email.trim() === "") return;
-    const reason = await run({
-      name: "share.invite",
-      args: { grantId: uuidv7(), containerId, email, role },
-    });
-    if (reason === undefined) {
-      setEmail("");
-      onInvited();
-    }
-  }
-  return (
-    <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-1.5">
-      <div className="flex gap-2">
-        <Input
-          type="email"
-          aria-label="Invite by email"
-          placeholder="Invite by email…"
-          value={email}
-          aria-invalid={error !== undefined}
-          aria-describedby={error === undefined ? undefined : `${id}-error`}
-          onChange={(event) => {
-            setEmail(event.target.value);
-            setError(undefined);
-          }}
-        />
-        <RolePicker
-          role={role}
-          label="Role for the invitation"
-          disabled={disabled || busy}
-          onChange={setRole}
-        />
-        <Button type="submit" disabled={disabled || busy}>
-          Invite
-        </Button>
-      </div>
-      {error !== undefined && (
-        <p id={`${id}-error`} role="alert" className="text-small text-status-danger">
-          {error}
-        </p>
-      )}
     </form>
   );
 }

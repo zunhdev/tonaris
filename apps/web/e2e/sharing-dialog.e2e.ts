@@ -60,7 +60,7 @@ test("share a folder by invitation and link, then see it from a list inside", as
   await share.getByRole("button", { name: "Save" }).click();
 
   // Only members can be invited; the typed address stays (FR-07.4).
-  const email = share.getByRole("textbox", { name: "Invite by email" });
+  const email = share.getByRole("combobox", { name: "Invite by name or email" });
   await email.fill(nobody);
   await share.getByRole("button", { name: "Invite" }).click();
   await expect(share.getByRole("alert")).toHaveText(

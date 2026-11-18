@@ -1,15 +1,16 @@
 // A folder's or list's sharing, for its owner's dialog (DS-65; FR-07.1, FR-07.14): the open invitations, the link that
 // is on with its URL, derived again from the server's secret each time (TS-32), and access inherited from folders
 // above. Changes go through the sharing mutations. Anyone else's container answers 404, as if it didn't exist. Also
-// the preview of what a move or a recovery would do to sharing (DS-69), and the list of what a person shares, for the
-// glyph beside each (DS-31, TON-227).
+// the preview of what a move or a recovery would do to sharing (DS-69), the list of what a person shares, for the
+// glyph beside each (DS-31, TON-227), and the person's people, for the invite field (FR-07.23, TON-294).
 
 import { Elysia } from "elysia";
 import { z } from "zod";
 
-import { ownSharing, previewSharing, shareSettings, type Database } from "@tonaris/db";
+import { ownSharing, people, previewSharing, shareSettings, type Database } from "@tonaris/db";
 import {
   ownSharingSchema,
+  peopleSchema,
   problemSchema,
   shareSettingsSchema,
   sharingImpactSchema,
@@ -62,6 +63,21 @@ export function sharingRoutes(
         },
       },
       async ({ account }) => ({ shared: await ownSharing(db, account.id) }),
+    )
+    .get(
+      "/people",
+      {
+        signedIn: true,
+        response: { 200: peopleSchema, 401: problemSchema },
+        detail: {
+          summary: "List the person's people",
+          description:
+            "Everyone connected to the signed-in person by an invitation (FR-07.23): whom they invited, unless that person only ever declined, and who invited them, once they accepted, even after leaving or a revocation. The most recently shared with first. An address shows only where they typed it; the email of someone who invited them never does (FR-07.3). `share.invite` takes one's `id` as `personId`. Changes nothing.",
+          tags: ["sharing"],
+          operationId: "listPeople",
+        },
+      },
+      async ({ account }) => ({ people: await people(db, account.id) }),
     )
     .get(
       "/sharing/impact",

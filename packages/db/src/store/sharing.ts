@@ -8,6 +8,7 @@ import { endedGrantStatuses, openGrantStatuses, type CollectionStore } from "@to
 import { canReadContainer, editSourcesAbove, linkByTokenHash } from "../access";
 import type { Transaction } from "../client";
 import { recordInLedger } from "../ledger";
+import { connections } from "../people";
 import { containers, savedReferences, shareGrants, shareLinks, users } from "../schema";
 
 /** Accounts, grants, references and links, on `tx`. */
@@ -22,6 +23,10 @@ export function sharingStore(tx: Transaction) {
     async findAccountByEmail(key) {
       const [account] = await tx.select({ id: users.id }).from(users).where(eq(users.email, key));
       return account;
+    },
+    async findPerson(userId, personId) {
+      const connection = (await connections(tx, userId, personId)).get(personId);
+      return connection && { id: personId, email: connection.email };
     },
     async displayNameOf(userId) {
       const [account] = await tx
@@ -85,7 +90,8 @@ export function sharingStore(tx: Transaction) {
     async moveGrant(id, from, to) {
       const moved = await tx
         .update(shareGrants)
-        .set({ status: to })
+        // When it is accepted stays after it ends, for the people it connects (FR-07.23).
+        .set(to === "accepted" ? { status: to, acceptedAt: new Date() } : { status: to })
         .where(and(eq(shareGrants.id, id), eq(shareGrants.status, from)))
         .returning({ id: shareGrants.id });
       // An ended grant stays ended after a restore (TS-113).

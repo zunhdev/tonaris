@@ -1,0 +1,72 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "fc3f1cc3-0ee4-4db6-beb2-6d1fa9484758",
+  "prevIds": [
+    "1a34543a-f37c-47de-ac50-597085c8b478"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "share_grants",
+        "accepted_at"
+      ],
+      "writes": [
+        "s|col|public.share_grants.accepted_at",
+        "n|col|public.share_grants.accepted_at",
+        "e|col|public.share_grants.accepted_at"
+      ],
+      "reads": [
+        "n|tbl|public.share_grants",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "share_grants",
+        "invited_email"
+      ],
+      "writes": [
+        "s|colprop|public.share_grants.invited_email.notNull"
+      ],
+      "reads": [
+        "n|tbl|public.share_grants",
+        "n|sch|public",
+        "n|col|public.share_grants.invited_email"
+      ],
+      "sqlHash": "33aca2c8f9342b36"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "share_grants",
+        "name": "accepted_at",
+        "type": "timestamp(3) with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"share_grants\",\"invited_email\"]",
+      "set": {
+        "notNull": false
+      }
+    }
+  ]
+}

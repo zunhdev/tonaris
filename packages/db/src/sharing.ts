@@ -239,6 +239,7 @@ export function shareSettings(
           ? [
               {
                 ...each,
+                personId: granteeId,
                 status,
                 editableThrough: editableThrough.get(granteeId) ?? null,
                 emailStatus: shownEmailStatus(emailStatus, updatedAt, now),

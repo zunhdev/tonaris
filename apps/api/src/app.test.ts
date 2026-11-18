@@ -95,6 +95,7 @@ describe("OpenAPI", () => {
       "/v1/artwork/covers",
       "/v1/export",
       "/v1/sharing",
+      "/v1/people",
       "/v1/sharing/impact",
       "/v1/containers/{id}/sharing",
       "/v1/invitations",

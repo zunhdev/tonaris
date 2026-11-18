@@ -8,6 +8,7 @@ import {
   impactOf,
   moveStaysInShare,
   openGrantStatuses,
+  ownerLabel,
   type ImpactQuery,
   type ImpactState,
   type SharingImpact,
@@ -66,7 +67,8 @@ export async function impactState(
     people: people.map((person) => ({
       containerId: person.containerId,
       personId: person.personId,
-      name: person.displayName ?? person.email,
+      // An invitation of one of the owner's people by account may have no address (FR-07.23).
+      name: person.displayName ?? person.email ?? ownerLabel(null),
       pending: person.status === "pending",
     })),
     links,

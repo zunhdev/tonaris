@@ -1278,6 +1278,13 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 - *TON-67 adds the row menu:* a "More for {name or address}" button opens a menu with **Remove access**, which revokes the invitation, pending or accepted, and reads the dialog again.
 - *TON-66 adds delivery:* a pending row reads "Pending · sending…", "· sent", "· email failed" or "· email not confirmed", with **Resend** for the last two. While anything is sending, the dialog reads again every 1.5 s until it settles.
 
+*As built in TON-294 (decided with the creator, 18 November 2026; FR-07.3, FR-07.4, FR-07.23):*
+- **The field** reads "Invite by name or email…". While it has the focus, the owner's people show under it in a "Your people" list: before typing, "Recent", the 8 most recently shared with, then "Type to find N more people."; while typing, those whose name or typed address matches, in any spelling (FR-12.5), whole-name matches first.
+- **Each person** has their avatar and display name, then the address the owner typed for them; without a name, the address. Someone who invited the owner shows their name only. Only when two show the same name does each add "· shares "{name}" with you".
+- **Choosing:** ↑ and ↓ move, wrapping; Enter or a click invites that person at once, with the role beside the field. Before typing nothing is active; typing makes the first match active. With no person active, Enter or **Invite** invites the address typed, as before. Escape closes the list first, then the dialog.
+- **Not offered:** people with a pending or accepted invitation to this folder or list.
+- **Rows** gain the person's avatar. A person invited by account without an address shows their name only.
+
 *As built in TON-190 (decided with the creator, 10 November 2026; FR-07.14, FR-07.15, FR-07.18):*
 - **Roles:** each person's row has a role select, "Can view" or "Can edit", named "Role for {name or address}", after its status. A change saves at once, pending or accepted, and the dialog reads again.
 - **Inviting:** a role select beside the address, "Role for the invitation", starting at Can view and kept for the next invitation.
@@ -1342,7 +1349,7 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
   - The banner is a strip above the guest page's header, asked for in the browser after the server rendered the page. Guests and the owner don't see it.
   - "In Shared with me" links to `/shared`.
 
-**DS-69 SharingImpact.** A compact block, used in move pickers, move confirmations, recovery dialogs, and the standard confirmation dialog. Each line names people by display name or email as the owner entered it, and link audiences by their source. *(FR-07.9, FR-07.10, FR-07.14)*
+**DS-69 SharingImpact.** A compact block, used in move pickers, move confirmations, recovery dialogs, and the standard confirmation dialog. Each line names people by display name or email as the owner entered it, and link audiences by their source. *(FR-07.9, FR-07.10, FR-07.14)* *TON-294:* a person invited by account without an address, and without a display name now, reads "a Tonaris member".
 
 | Line | Shown when |
 | --- | --- |

@@ -55,7 +55,7 @@ test("the owner invites to edit and changes a role; the person sees they can edi
   await expect(share).toContainText(
     "People who can edit also add, change, move and delete what's inside, and what they add stays in your collection.",
   );
-  await share.getByRole("textbox", { name: "Invite by email" }).fill(accounts.roleInvitee);
+  await share.getByRole("combobox", { name: "Invite by name or email" }).fill(accounts.roleInvitee);
   const inviteRole = share.getByRole("combobox", { name: "Role for the invitation" });
   await expect(inviteRole).toHaveValue("view");
   await inviteRole.selectOption("edit");

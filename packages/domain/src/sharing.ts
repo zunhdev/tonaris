@@ -236,16 +236,29 @@ export const sharedSnapshotSchema = z
   .meta({ description: "A shared folder or list as its viewers see it (FR-07.11, FR-07.12)." });
 export type SharedSnapshot = z.infer<typeof sharedSnapshotSchema>;
 
-/** `share.invite`'s arguments: the grant's ID, chosen by the client (TS-10), the address as typed, and the role. */
-export const shareInviteArgsSchema = z.object({
-  grantId: z.uuid({ version: "v7" }),
-  containerId: z.uuid(),
-  email: emailInputSchema.meta({ description: "The address to invite, as typed." }),
-  role: z
-    .enum(shareRoles)
-    .optional()
-    .meta({ description: "What the invitation lets them do (FR-07.18); view unless given." }),
-});
+/**
+ * `share.invite`'s arguments: the grant's ID, chosen by the client (TS-10), the address as typed or one of the owner's
+ * people (FR-07.23), and the role.
+ */
+export const shareInviteArgsSchema = z
+  .object({
+    grantId: z.uuid({ version: "v7" }),
+    containerId: z.uuid(),
+    email: emailInputSchema.optional().meta({
+      description: "The address to invite, as typed. Give this or `personId`.",
+    }),
+    personId: z.uuid().optional().meta({
+      description:
+        "One of the owner's people to invite by account, from `GET /v1/people` (FR-07.23). Give this or `email`.",
+    }),
+    role: z
+      .enum(shareRoles)
+      .optional()
+      .meta({ description: "What the invitation lets them do (FR-07.18); view unless given." }),
+  })
+  .refine((args) => (args.email === undefined) !== (args.personId === undefined), {
+    message: "Give one of email and personId",
+  });
 
 /** `share.setRole`'s arguments: the invitation and its new role (FR-07.18). */
 export const shareSetRoleArgsSchema = z.object({
@@ -295,6 +308,8 @@ export const leaveArgsSchema = z.object({ containerId: z.uuid() });
 
 const recipientNotFound =
   "No Tonaris account uses this email. Invitations only work for existing members — you can share a link instead.";
+// Anyone who isn't one of the owner's people, existing or not, so an id can't be probed (FR-07.23).
+const personNotFound = "This person can't be invited. Invite them by email instead.";
 const displayNameRequired = "Add a display name before sharing.";
 
 /** The folder or list the principal may share, or why not: theirs, in the app (X-03), and not in Trash. */
@@ -318,13 +333,40 @@ async function shareable(
 const named = async ({ store }: CommandContext, ownerId: string) =>
   !isBlankName((await store.displayNameOf(ownerId)) ?? "");
 
+/** Who `share.invite` invites, and the address it records, or why nobody (FR-07.4, FR-07.23). */
+async function recipientOf(
+  { email, personId }: Pick<z.infer<typeof shareInviteArgsSchema>, "email" | "personId">,
+  ownerId: string,
+  { store }: CommandContext,
+): Promise<Failure | { id: string; invitedEmail: string | null }> {
+  if (personId !== undefined) {
+    // One of the owner's people only; anyone else answers alike, so an id reveals nothing (FR-07.23).
+    const person = await store.findPerson(ownerId, personId);
+    if (!person) {
+      return failure("recipient_not_found", personNotFound, [
+        { path: "args.personId", message: "Not one of your people" },
+      ]);
+    }
+    return { id: person.id, invitedEmail: person.email };
+  }
+  const typed = email ?? "";
+  const account = await store.findAccountByEmail(emailKey(typed));
+  if (!account) {
+    return failure("recipient_not_found", recipientNotFound, [
+      { path: "args.email", message: "No account uses this email" },
+    ]);
+  }
+  return { id: account.id, invitedEmail: typed.trim() };
+}
+
 /**
- * `share.invite` (FR-07.4, FR-07.5): a pending invitation for the account that signs in with `email`. Nobody without an
- * account is invited, nor is an account or admission made for them (X-05). Someone already invited or viewing keeps
- * the invitation they have. A new one is emailed once it is saved.
+ * `share.invite` (FR-07.4, FR-07.5, FR-07.23): a pending invitation for the account that signs in with `email`, or for
+ * one of the owner's people by account. Nobody without an account is invited, nor is an account or admission made for
+ * them (X-05). Someone already invited or viewing keeps the invitation they have. A new one is emailed once it is
+ * saved.
  */
 export async function inviteToShare(
-  { grantId, containerId, email, role = "view" }: z.infer<typeof shareInviteArgsSchema>,
+  { grantId, containerId, email, personId, role = "view" }: z.infer<typeof shareInviteArgsSchema>,
   context: CommandContext,
 ): Promise<CommandResult> {
   const container = await shareable(containerId, context);
@@ -332,12 +374,8 @@ export async function inviteToShare(
   if (!(await named(context, container.ownerId))) {
     return failure("display_name_required", displayNameRequired);
   }
-  const recipient = await context.store.findAccountByEmail(emailKey(email));
-  if (!recipient) {
-    return failure("recipient_not_found", recipientNotFound, [
-      { path: "args.email", message: "No account uses this email" },
-    ]);
-  }
+  const recipient = await recipientOf({ email, personId }, container.ownerId, context);
+  if (isFailure(recipient)) return recipient;
   if (recipient.id === container.ownerId) {
     return failure("validation_failed", "You can't invite yourself.", [
       { path: "args.email", message: "This is your own email" },
@@ -355,7 +393,7 @@ export async function inviteToShare(
     id: grantId,
     containerId,
     granteeId: recipient.id,
-    invitedEmail: email.trim(),
+    invitedEmail: recipient.invitedEmail,
     status: "pending",
     role,
     // The API sends the email once this is saved, and records how it went (FR-07.5, TS-72).
@@ -531,7 +569,11 @@ export const shareSettingsSchema = z
       .array(
         z.object({
           id: z.uuid(),
-          email: z.string().meta({ description: "The address as the owner typed it." }),
+          personId: z.uuid().meta({ description: "The person invited (FR-07.23)." }),
+          email: z.string().nullable().meta({
+            description:
+              "The address as the owner typed it; null for one of their people invited by account without one (FR-07.23).",
+          }),
           displayName: z
             .string()
             .nullable()

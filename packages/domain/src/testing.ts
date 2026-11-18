@@ -12,6 +12,7 @@ import { fieldValueKey, type FieldValue, type FieldValueData } from "./field-val
 import type { StoredField } from "./fields";
 import { streamingServices } from "./links";
 import { membershipKey, type Membership } from "./memberships";
+import { personThrough } from "./people";
 import { positionKey, type Position } from "./positions";
 import {
   editableContainers,
@@ -149,8 +150,10 @@ export function memoryStore({
   type GrantRow = ShareGrant & {
     containerId: string;
     granteeId: string;
-    invitedEmail: string;
+    invitedEmail: string | null;
     emailStatus: EmailStatus | null;
+    /** Accepted at some point (FR-07.23). */
+    accepted?: boolean;
   };
   /** Saved references, by viewer and container (TS-33). */
   const referenceRows = new Map<
@@ -675,6 +678,27 @@ export function memoryStore({
       const account = [...accountRows.values()].find((each) => each.email === key);
       return Promise.resolve(account && { id: account.id });
     },
+    findPerson(userId, personId) {
+      // Grants in the order they were made, so the last address typed wins (FR-07.23).
+      let found: { id: string; email: string | null } | undefined;
+      for (const grant of grantRows.values()) {
+        const ownerId = containerRows.get(grant.containerId)?.ownerId;
+        if (ownerId === undefined) continue;
+        const person = personThrough(
+          {
+            ownerId,
+            granteeId: grant.granteeId,
+            status: grant.status,
+            accepted: grant.accepted ?? false,
+          },
+          userId,
+        );
+        if (person !== personId || !accountRows.has(personId)) continue;
+        const typed = ownerId === userId ? grant.invitedEmail : null;
+        found = { id: personId, email: typed ?? found?.email ?? null };
+      }
+      return Promise.resolve(found);
+    },
     displayNameOf: (userId) => Promise.resolve(accountRows.get(userId)?.displayName ?? null),
     setDisplayName(userId, displayName) {
       const account = accountRows.get(userId);
@@ -721,6 +745,7 @@ export function memoryStore({
       const grant = grantRows.get(id);
       if (grant?.status !== from) return Promise.resolve(false);
       grant.status = to;
+      if (to === "accepted") grant.accepted = true;
       return Promise.resolve(true);
     },
     setGrantRole(id, role) {
