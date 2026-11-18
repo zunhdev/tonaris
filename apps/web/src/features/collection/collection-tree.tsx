@@ -1,7 +1,8 @@
 // The sidebar tree (DS-27, DS-31; FR-01.3): the owner's folders and lists, then Unsorted, Shared with me, People and
 // Trash, as one ARIA tree in its flat form (each item's level, position and set size), with a single tab stop. Items are
 // links, so Enter and a click open the view, and a view can open in a new tab. The current view's item is
-// selected; closing a folder that holds it selects the folder (TON-121). ↑/↓, Home/End, ←/→ and type-ahead move
+// selected, and scrolled into sight when the view opens (TON-300); closing a folder that holds it selects the folder
+// (TON-121). ↑/↓, Home/End, ←/→ and type-ahead move
 // focus; letters that are shortcuts act as shortcuts instead (decided 22 October 2026). F2 renames, and new folders and lists are named inline (editing.ts). Each folder or
 // list shows its save state, is busy while saving, and is highlighted when changed elsewhere (DS-80, DS-82, DS-83).
 // Folders and lists can be dragged onto a folder, or onto Collection, to move them (DS-49, drag.tsx). Shared with
@@ -183,17 +184,18 @@ export function CollectionTree() {
     [entries, data.views, data.defaults, data.keys],
   );
 
-  // The current view's folders open, so its item can be seen (DS-27): once for each view, and again when it moves,
-  // never on a later expand or collapse, so a folder holding it can still be closed (TON-121).
+  // The current view's folders open, so its item can be seen (DS-27): once each time the view opens, and again when
+  // it moves, never on a later expand or collapse, so a folder holding it can still be closed (TON-121). A view
+  // without a row in between, such as Collection, counts as leaving it (TON-300).
   const viewPath =
     viewId === undefined || !data.tree.byId.has(viewId)
       ? undefined
       : [...ancestorsOf(data.tree, viewId).map((folder) => folder.id), viewId].join("/");
   const shownPath = useRef<string>(undefined);
   useEffect(() => {
-    if (viewPath === undefined || viewPath === shownPath.current) return;
+    if (viewPath === shownPath.current) return;
     shownPath.current = viewPath;
-    expand(viewPath.split("/").slice(0, -1));
+    if (viewPath !== undefined) expand(viewPath.split("/").slice(0, -1));
   }, [viewPath, expand]);
 
   // A shared view's item can be seen too: Shared with me and the shared folders above it open (TON-130).
@@ -203,11 +205,24 @@ export function CollectionTree() {
       : sharedPath(sharedTree, sharedView).join("/");
   const shownSharedPath = useRef<string>(undefined);
   useEffect(() => {
-    if (sharedViewPath === undefined || sharedViewPath === shownSharedPath.current) return;
+    if (sharedViewPath === shownSharedPath.current) return;
     shownSharedPath.current = sharedViewPath;
+    if (sharedViewPath === undefined) return;
     setExpanded(sharedClosedKey, false);
     expand(sharedViewPath.split("/").slice(0, -1));
   }, [sharedViewPath, expand, setExpanded]);
+
+  // And the sidebar scrolls to it when it's out of sight, as its folders open: a list opened from search, a card or
+  // Back was otherwise selected far outside the part of a long tree on screen (TON-300). The focus stays put.
+  const revealKey = viewPath ?? sharedViewPath ?? selected;
+  const revealedKey = useRef<string>(undefined);
+  /** The row to scroll into sight once it is rendered, which its folders opening may take a render for. */
+  const revealing = useRef<string>(undefined);
+  useEffect(() => {
+    if (revealKey === revealedKey.current) return;
+    revealedKey.current = revealKey;
+    revealing.current = selected;
+  }, [revealKey, selected]);
 
   /**
    * Opens or closes a folder, a shared one or Shared with me. Closing one that holds the current view selects it, by
@@ -265,6 +280,14 @@ export function CollectionTree() {
     if (!element) return;
     pending.current = undefined;
     element.focus();
+  });
+
+  useEffect(() => {
+    const key = revealing.current;
+    const element = key === undefined ? undefined : elements.current.get(key);
+    if (!element) return;
+    revealing.current = undefined;
+    reveal(element);
   });
 
   function focusKey(key: string) {
@@ -486,6 +509,24 @@ export function CollectionTree() {
       )}
     </div>
   );
+}
+
+/**
+ * Scrolls the sidebar so `row` is in sight (TON-300): to the middle when it was hidden, just enough when an edge cut
+ * it, and not at all when it was in sight already, so a click on a row never moves the tree.
+ */
+function reveal(row: HTMLElement) {
+  const viewport = row.closest<HTMLElement>('[data-slot="scroll-area-viewport"]');
+  if (!viewport) return;
+  const { top, bottom, height } = row.getBoundingClientRect();
+  const view = viewport.getBoundingClientRect();
+  if (top >= view.top && bottom <= view.bottom) return;
+  const hidden = bottom <= view.top || top >= view.bottom;
+  viewport.scrollTop += hidden
+    ? top - view.top - (view.height - height) / 2
+    : top < view.top
+      ? top - view.top
+      : bottom - view.bottom;
 }
 
 /** Follows an open shared folder's stream, so the tree shows its owner's saves (TON-130). */

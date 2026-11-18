@@ -455,6 +455,8 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 
 *As built in TON-121* (a bug from the creator's manual testing, 31 October 2026): **a folder that holds the current view can be closed.** The view's folders open when the view opens, or when it moves, not again on every expand or collapse. Closing a folder that holds the view, by its chevron or ←, selects that folder: its view opens, as the selection moves up in Finder and VS Code.
 
+*Fixed in TON-300* (from the creator's manual testing, 18 November 2026): **the current view's item scrolls into sight.** A list opened from search had its folders opened and was selected, but in a long tree it stayed far outside the part on screen, with its ⋯ menu. Now, when the view opens or moves, the sidebar scrolls to its item if it is out of sight: to the middle when hidden, just enough when cut at an edge. One in sight stays put, so a click on a row never moves the tree. The focus stays where it was.
+
 *(FR-01.1, FR-01.3, Q-02)*
 
 *As built in TON-169* (the creator picked variant 11A from TON-166's mock, 7 November 2026): **guide lines.** Under every level above a row's own, a 1px `border.subtle` line runs where that level's chevron sits (11 px, then every 12 px), from the row's top edge, over the 1px gap between rows, to its bottom, so an open folder's branch reads as one down to its last child. The rename and new-name editors draw them too. Phones have no tree.
