@@ -12,6 +12,10 @@ test.describe("three-pane desktop shell", () => {
     await expect(sidebar).toBeVisible();
     await expect(sidebar.getByText("Tonaris", { exact: true })).toBeVisible();
     expect((await sidebar.boundingBox())?.width).toBe(240);
+    // The Activity row is 28 px, as Add album is, so its footer lines up with a list's Add album footer (TON-301).
+    const activityRow = sidebar.getByRole("button", { name: /^Activity:/ });
+    await expect(activityRow).toBeVisible();
+    expect((await activityRow.boundingBox())?.height).toBe(28);
 
     await expect(page.getByRole("main", { name: "Collection" })).toBeVisible();
     await expect(page.getByRole("complementary")).toHaveCount(0);
