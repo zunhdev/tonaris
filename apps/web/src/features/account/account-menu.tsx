@@ -101,10 +101,18 @@ export function AccountMenu({
           aria-label={`Account: ${account.displayName ?? account.email}`}
         >
           {compact ? (
-            <Avatar name={account.displayName ?? account.email} className="size-6.5 text-small" />
+            <Avatar
+              name={account.displayName ?? account.email}
+              hue={account.avatarHue}
+              className="size-6.5 text-small"
+            />
           ) : (
             <>
-              <Avatar name={account.displayName ?? account.email} className="size-5.5 text-micro" />
+              <Avatar
+                name={account.displayName ?? account.email}
+                hue={account.avatarHue}
+                className="size-5.5 text-micro"
+              />
               <span className="min-w-0 flex-1 truncate text-left">
                 {account.displayName ?? account.email}
               </span>

@@ -18,6 +18,8 @@ type ToastData = {
   /** `danger` for failures, `warning` for conflicts; each adds its icon, so status is never color only. */
   tone?: "danger" | "warning";
   actions?: ToastAction[];
+  /** Shown before the title, such as the avatar of whoever the news is from. */
+  leading?: React.ReactNode;
 };
 
 export type ToastManager = ReturnType<typeof createToastManager>;
@@ -37,20 +39,26 @@ function addClosing(
   manager: Pick<ToastManager, "add" | "close">,
   toast: Omit<Parameters<ToastManager["add"]>[0], "data">,
   actions: readonly ToastAction[],
+  leading?: React.ReactNode,
 ): string {
   const id: string = manager.add({
     ...toast,
-    ...(actions.length === 0
+    ...(actions.length === 0 && leading === undefined
       ? {}
       : {
           data: {
-            actions: actions.map(({ label, onClick }) => ({
-              label,
-              onClick: () => {
-                onClick();
-                manager.close(id);
-              },
-            })),
+            ...(leading === undefined ? {} : { leading }),
+            ...(actions.length === 0
+              ? {}
+              : {
+                  actions: actions.map(({ label, onClick }) => ({
+                    label,
+                    onClick: () => {
+                      onClick();
+                      manager.close(id);
+                    },
+                  })),
+                }),
           },
         }),
   });
@@ -80,10 +88,13 @@ export function notifier(manager: Pick<ToastManager, "add" | "close">) {
      * News from someone else, with a way to it, such as a new invitation: gone after 8 s, like Undo, so there's time
      * to take it. Taking the action closes the toast (TON-129).
      */
-    notice(title: string, action: ToastAction): string {
-      return addClosing(manager, { title, timeout: toastTimeouts.notice, priority: "low" }, [
-        action,
-      ]);
+    notice(title: string, action: ToastAction, leading?: React.ReactNode): string {
+      return addClosing(
+        manager,
+        { title, timeout: toastTimeouts.notice, priority: "low" },
+        [action],
+        leading,
+      );
     },
     /** A reversible action done: **Undo** for 8 s, which undoes it and closes the toast (DS-50). */
     undo({ title, onUndo }: { title: string; onUndo: () => void }): string {
@@ -162,6 +173,7 @@ function Toasts() {
     >
       <ToastPrimitive.Content className="flex items-start gap-2.5">
         {toast.data?.tone && <span className="mt-0.5 shrink-0">{toneIcons[toast.data.tone]}</span>}
+        {toast.data?.leading && <span className="shrink-0">{toast.data.leading}</span>}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <ToastPrimitive.Title className="font-medium text-fg-primary" />
           <ToastPrimitive.Description className="text-small text-fg-secondary" />

@@ -249,7 +249,7 @@ function PersonOption({
         active && "bg-hover",
       )}
     >
-      <Avatar name={name} className="size-5 text-[11px]" />
+      <Avatar name={name} hue={person.avatarHue} className="size-5 text-[11px]" />
       <span className="min-w-0 flex-1 truncate">
         <Marked text={name} terms={terms} />
         {person.displayName !== null && person.email !== null && (

@@ -18,6 +18,9 @@ export const users = table(
     // Better Auth's `name`. Null until the person sets one; never derived from the email (FR-11.3).
     displayName: text(),
     image: text(),
+    // The profile (FR-11.16, TON-296): the avatar's hue, null for Automatic, and the About text, null for none.
+    avatarHue: integer(),
+    about: text(),
     role: text({ enum: userRoles }).notNull().default("user"),
     // Set when deletion starts (TS-74): the email has moved to a placeholder, and a job is removing the data.
     deletingAt: instant(),
@@ -28,6 +31,10 @@ export const users = table(
   },
   (t) => [
     check("user_role_check", oneOf(t.role, userRoles)),
+    check(
+      "user_avatar_hue_check",
+      sql`${t.avatarHue} is null or (${t.avatarHue} between 0 and 330 and ${t.avatarHue} % 30 = 0)`,
+    ),
     // The creator bootstrap is the only way to the role (TS-71), and there is one creator.
     uniqueIndex("user_single_creator_key")
       .on(t.role)

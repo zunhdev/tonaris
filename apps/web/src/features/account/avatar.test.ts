@@ -13,4 +13,10 @@ describe("avatarOf (TON-169)", () => {
     expect(avatarOf("Zunh").background).toMatch(/^oklch\(0\.52 0\.12 \d{1,3}\)$/);
     expect(avatarOf("Zunh").background).not.toBe(avatarOf("Ada").background);
   });
+
+  test("a chosen hue wins over the name's (TON-296)", () => {
+    expect(avatarOf("Zunh", 240).background).toBe("oklch(0.52 0.12 240)");
+    expect(avatarOf("Ada", 240).background).toBe(avatarOf("Zunh", 240).background);
+    expect(avatarOf("Zunh", null).background).toBe(avatarOf("Zunh").background);
+  });
 });

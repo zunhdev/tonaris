@@ -5,6 +5,7 @@
 import { actingOwner, applied, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { containerKinds } from "./containers";
+import { avatarHueSchema } from "./profiles";
 import { openGrantStatuses, shareRoles, type ShareGrantStatus } from "./sharing";
 import { z } from "./zod";
 
@@ -33,6 +34,7 @@ export const personSchema = z
   .object({
     id: z.uuid(),
     displayName: z.string().nullable(),
+    avatarHue: avatarHueSchema,
     email: z.string().nullable().meta({
       description:
         "The address the signed-in person last typed to invite them; null if they never did. Someone who only invited them never shows theirs (FR-07.3).",
@@ -83,6 +85,10 @@ export type PersonShare = z.infer<typeof personShareSchema>;
 export const personSharesSchema = z
   .object({
     person: personSchema,
+    about: z.string().nullable().meta({
+      description:
+        "Their About text, while the signed-in person is one of their people from their side: invited by them, or whose invitation they accepted (FR-11.16); else null.",
+    }),
     yours: z.array(personShareSchema).meta({
       description:
         "The signed-in person's folders and lists outside Trash with an open invitation to them.",

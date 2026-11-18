@@ -30,6 +30,9 @@ export const maxContainerDepth = 32;
 /** Characters in a container, field or option name, counted in code points. */
 export const maxNameLength = 200;
 
+/** Characters in a person's About text, counted in code points (FR-11.16, TON-296). */
+export const maxAboutLength = 160;
+
 /** Characters in a folder's or list's description, counted in code points (FR-03.5). */
 export const maxDescriptionLength = 2_000;
 

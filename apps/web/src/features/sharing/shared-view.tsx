@@ -31,9 +31,10 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 
-import { ownerLabel, presentationOf, type Container, type SharedSnapshot } from "@tonaris/domain";
+import { presentationOf, type Container, type SharedSnapshot } from "@tonaris/domain";
 
 import { CopyShareButton } from "./copy-share";
+import { OwnerPill } from "./owner-pill";
 import { useShareStream } from "./use-share-stream";
 
 type Loaded = { snapshot: SharedSnapshot } | { snapshot: undefined; missing: true };
@@ -100,7 +101,6 @@ function SharedContent({
   useDocumentTitle(title);
   if (!current) return <NoLongerAvailable />;
   const ancestors = ancestorsOf(tree, current.id);
-  const owner = ownerLabel(snapshot.owner.displayName);
   const kind = current.kind === "folder" ? "containers" : "albums";
   return (
     <>
@@ -121,11 +121,7 @@ function SharedContent({
         ]}
         actions={
           <>
-            {!narrow && (
-              <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-subtle px-2.5 text-small text-fg-secondary">
-                View only · Shared by {owner}
-              </span>
-            )}
+            {!narrow && <OwnerPill rootId={rootId} prefix="View only" owner={snapshot.owner} />}
             {/* The person may make it their own (FR-07.22, TON-133). */}
             <CopyShareButton shared={current} />
             <ViewOptions key={current.id} viewKey={current.id} kind={kind} />
@@ -134,7 +130,11 @@ function SharedContent({
       />
       <div className="flex flex-col gap-5 px-6 py-5">
         {/* A phone's top bar has no room for it (DS-110). */}
-        {narrow && <p className="text-small text-fg-secondary">View only · Shared by {owner}</p>}
+        {narrow && (
+          <div>
+            <OwnerPill rootId={rootId} prefix="View only" owner={snapshot.owner} />
+          </div>
+        )}
         <ShareBreadcrumbs path={ancestors} linkTo={linkTo} />
         {/* Its Markdown rendered, three lines and More (TON-292). */}
         {current.description && <DescriptionText key={current.id} text={current.description} />}

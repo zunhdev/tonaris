@@ -28,6 +28,7 @@ import type { Outcome } from "./outcomes";
 import { removePerson, revokePerson } from "./people";
 import { setOrder, type Position } from "./positions";
 import type { Principal } from "./principals";
+import { setAbout, setAvatarColor } from "./profiles";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
 import { copyShare } from "./share-copy";
 import {
@@ -173,6 +174,8 @@ export function mutationTarget(mutation: Mutation): MutationTarget | undefined {
     case "share.revokePerson":
     case "people.remove":
     case "account.setDisplayName":
+    case "account.setAvatarColor":
+    case "account.setAbout":
       return undefined;
     default:
       return mutation satisfies never;
@@ -228,6 +231,8 @@ const handlers = {
   "share.copy": ({ args }, context) => copyShare(args, context),
   "share.revokePerson": ({ args }, context) => revokePerson(args, context),
   "people.remove": ({ args }, context) => removePerson(args, context),
+  "account.setAvatarColor": ({ args }, context) => setAvatarColor(args, context),
+  "account.setAbout": ({ args }, context) => setAbout(args, context),
 } satisfies Handlers;
 
 /** Every mutation's name, in the order of `mutationSchema`: for tests that must cover each one. */

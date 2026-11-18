@@ -185,6 +185,8 @@ export function sessionGuard(auth: Auth) {
           id: user.id,
           email: user.email,
           displayName: user.name || null,
+          avatarHue: user.avatarHue ?? null,
+          about: user.about ?? null,
           role: user.role === "creator" ? "creator" : "user",
           termsAgreed: user.termsVersion === termsVersion,
         };

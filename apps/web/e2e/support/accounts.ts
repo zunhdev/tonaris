@@ -255,6 +255,8 @@ export const accounts = {
   // Settings → Profile (settings-profile.e2e.ts), one per test.
   profileName: at("profile-name"),
   profileGuard: at("profile-guard"),
+  // The avatar's color and the About text (settings-profile.e2e.ts, TON-296).
+  profileColor: at("profile-color"),
   // Settings → Account (settings-account.e2e.ts), one per test.
   emailChanger: at("email-changer"),
   emailCanceller: at("email-canceller"),

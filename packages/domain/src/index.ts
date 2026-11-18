@@ -534,6 +534,14 @@ export {
   type PersonShares,
 } from "./people";
 export {
+  aboutOf,
+  avatarHueSchema,
+  avatarHues,
+  setAboutArgsSchema,
+  setAvatarColorArgsSchema,
+  type AvatarHue,
+} from "./profiles";
+export {
   audienceSchema,
   deletionImpact,
   listsImpact,
@@ -594,7 +602,7 @@ export {
 } from "./sync";
 export { codeRefusal, type CodeRefusal } from "./codes";
 export { invitationStateFor, shownEmailStatus } from "./invitations";
-export { maxMergeCandidates } from "./limits";
+export { maxAboutLength, maxMergeCandidates } from "./limits";
 export { endedGrantStatuses, fieldsShownWith, openGrantStatuses } from "./sharing";
 export {
   copySummary,

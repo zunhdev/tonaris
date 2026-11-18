@@ -1587,7 +1587,9 @@ Tonaris verifies the user's approval itself, so an agent's claim is never truste
 - **Tests:** the browser-test API marks every seeded account as agreed, except addresses starting `unagreed-`.
 - *Since TON-143:* the privacy notice describes passkeys and their 5-minute challenge cookie, which the sign-in page's autofill sets on every visit, so the version moved to `2026-11-01`, the day it ships. Members agree once more (decided 31 October 2026).
 - *Since TON-144:* the privacy notice describes the feedback board, so the version is `2026-11-02`, a day after TON-143's, which was already today's date. Members agree once more, as TS-134 asks of any change to the texts.
+- *Since TON-296:* the notice names the avatar's color and the About text, and who sees them, so the version is `2026-11-18`. Members agree once more.
 
+**TS-135 Profile (Decided; FR-11.16; built in TON-296).** `user.avatar_hue` (null for Automatic, else 0 to 330 in steps of 30, checked) and `user.about` (null for none), read into the session's account through Better Auth's `additionalFields`. `account.setAvatarColor {avatarHue}` and `account.setAbout {about}` are app-only; About is trimmed, its whitespace runs become one space, blank clears it, and it holds at most 160 code points (`maxAboutLength`, TS-18). `avatarHue` is a response addition on the account, the dialog's invitations, people, Shared with me's and invitations' owners, and the shared snapshot's owner, guests' included. `about` is only in `GET /v1/people/{id}`, when `connections(person, caller)` holds the caller. The invitation page's `oneOf` change needed a one-time oasdiff ignore (closed testing).
 ---
 
 ## 10. Data export

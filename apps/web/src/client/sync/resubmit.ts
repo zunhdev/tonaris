@@ -335,6 +335,8 @@ function remake(
     case "share.revokePerson":
     case "people.remove":
     case "account.setDisplayName":
+    case "account.setAvatarColor":
+    case "account.setAbout":
       return "unchanged";
     case "trash.purge": {
       const left = mutation.args.unitIds.filter((unitId) => trashUnits.has(unitId));

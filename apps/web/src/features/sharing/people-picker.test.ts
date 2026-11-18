@@ -21,6 +21,7 @@ const person = (
 ): Person => ({
   id: uuidv7(),
   displayName,
+  avatarHue: null,
   email,
   sharedAt: "2026-11-18T10:00:00.000Z",
   sharesWithYou,

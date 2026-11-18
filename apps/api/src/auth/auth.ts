@@ -169,6 +169,9 @@ export function createAuth({
         role: { type: [...userRoles], required: true, defaultValue: "user", input: false },
         // The terms' version the person agreed to (TON-131), set only by joining and `POST /v1/me/terms`.
         termsVersion: { type: "string", required: false, input: false },
+        // The profile (FR-11.16, TON-296), set only by `account.setAvatarColor` and `account.setAbout`.
+        avatarHue: { type: "number", required: false, input: false },
+        about: { type: "string", required: false, input: false },
       },
     },
     // Rolling sessions: each day of use moves the expiry to 30 days from then (TS-70).

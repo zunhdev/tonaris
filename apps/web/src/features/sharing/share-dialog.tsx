@@ -247,7 +247,7 @@ function PersonRow({
     <li className="flex flex-col gap-1">
       <div className="flex items-center gap-3 text-base">
         <span className="flex min-w-0 flex-1 items-center gap-2">
-          <Avatar name={who} className="size-5 text-[11px]" />
+          <Avatar name={who} hue={invitation.avatarHue} className="size-5 text-[11px]" />
           <span className="min-w-0 flex-1 truncate">
             {invitation.displayName && (
               <span className="mr-2 text-fg-primary">{invitation.displayName}</span>

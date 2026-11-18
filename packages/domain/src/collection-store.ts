@@ -230,6 +230,10 @@ export type CollectionStore = {
   /** The account's display name; null for none (FR-11.3). */
   displayNameOf(userId: string): Promise<string | null>;
   setDisplayName(userId: string, displayName: string | null): Promise<void>;
+  /** Sets the avatar's hue; null for Automatic (FR-11.16). */
+  setAvatarHue(userId: string, avatarHue: number | null): Promise<void>;
+  /** Sets the About text; null for none (FR-11.16). */
+  setAbout(userId: string, about: string | null): Promise<void>;
   /** The owner's pending or accepted grants and live links, on any of their folders and lists (TS-34). */
   activeShareCount(ownerId: string): Promise<number>;
   /** The person's pending or accepted grant on the container, if any: one at most (TS-11). */

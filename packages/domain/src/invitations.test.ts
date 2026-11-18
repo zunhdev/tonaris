@@ -13,7 +13,7 @@ import {
 
 const invitation: Invitation = {
   id: "0195d0a0-0000-7000-8000-000000000001",
-  owner: { displayName: "Denis" },
+  owner: { displayName: "Denis", avatarHue: null },
   container: { id: "0195d0a0-0000-7000-8000-000000000002", name: "Doom", kind: "list" },
   role: "view",
   invitedAt: "2026-11-01T12:00:00.000Z",

@@ -128,7 +128,7 @@ describe("artwork signatures (TS-103)", () => {
       rootId: uuidv7(),
       role: "view",
       seq: 0,
-      owner: { displayName: "Anna" },
+      owner: { displayName: "Anna", avatarHue: null },
       containers: [],
       albums: [withArtwork, without],
       memberships: [],

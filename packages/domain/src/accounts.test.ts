@@ -50,6 +50,8 @@ describe("accountSchema", () => {
       id: "01a14f81-7851-73f1-9848-821fb3927b02",
       email: "creator@example.com",
       displayName: null,
+      avatarHue: null,
+      about: null,
       role: "creator",
       termsAgreed: false,
     } as const;

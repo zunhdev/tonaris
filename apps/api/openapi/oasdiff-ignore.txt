@@ -9,3 +9,7 @@ POST /v1/approvals/{id}/decision the 'operation' response property const value '
 # backup. Its only reader was the web app's Admin → Operations page.
 GET /v1/admin/operations removed the required property `lastBackup` from the response with the `200` status
 GET /v1/admin/operations removed the required property 'lastBackup' from the response with the '200' status
+# TON-296, 18 November 2026: an invitation's owner gains their avatar's hue (FR-11.16), a response addition that
+# oasdiff reads as new `oneOf` members. Its only reader is the web app's invitation page; closed testing (TON-164).
+GET /v1/invitations/{id} added `subschema #1, subschema #2` to the response body `oneOf` list for the response status `200`
+GET /v1/invitations/{id} added 'subschema #1, subschema #2' to the response body 'oneOf' list for the response status '200'

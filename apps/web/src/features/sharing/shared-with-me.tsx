@@ -5,6 +5,7 @@
 // a change here. An available one opens in the app, view-only (shared-view.tsx).
 
 import { PageHeader, toCollection } from "@/common/page-header";
+import { Avatar } from "@/features/account/avatar";
 import { shareLocation } from "@/features/collection/place";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
@@ -20,10 +21,12 @@ import { useSharedEntries } from "./shared-entries";
 
 export function SharedWithMeView() {
   const { entries, reread } = useSharedEntries();
-  const groups = new Map<string, SharedEntry[]>();
+  // By owner, each under their avatar and name (TON-296).
+  const groups = new Map<string, { owner: SharedEntry["owner"]; entries: SharedEntry[] }>();
   for (const entry of entries ?? []) {
-    const owner = ownerLabel(entry.owner.displayName, { start: true });
-    groups.set(owner, [...(groups.get(owner) ?? []), entry]);
+    const group = groups.get(entry.owner.id) ?? { owner: entry.owner, entries: [] };
+    group.entries.push(entry);
+    groups.set(entry.owner.id, group);
   }
   return (
     <>
@@ -34,9 +37,20 @@ export function SharedWithMeView() {
             Nothing is shared with you yet. Invitations you accept and links you add show here.
           </p>
         )}
-        {[...groups].map(([owner, owned]) => (
-          <section key={owner} aria-label={`Shared by ${owner}`} className="flex flex-col gap-1">
-            <h2 className="text-small font-medium text-fg-tertiary">{owner}</h2>
+        {[...groups.values()].map(({ owner: { id, displayName, avatarHue }, entries: owned }) => (
+          <section
+            key={id}
+            aria-label={`Shared by ${ownerLabel(displayName, { start: true })}`}
+            className="flex flex-col gap-1"
+          >
+            <h2 className="flex items-center gap-2 text-small font-medium text-fg-tertiary">
+              <Avatar
+                name={ownerLabel(displayName, { start: true })}
+                hue={avatarHue}
+                className="size-5 text-[11px]"
+              />
+              {ownerLabel(displayName, { start: true })}
+            </h2>
             <ul className="flex flex-col">
               {owned.map((entry) => (
                 <SharedRow key={entry.containerId} entry={entry} onChanged={reread} />

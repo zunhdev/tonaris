@@ -128,6 +128,23 @@
                         "null"
                       ]
                     },
+                    "avatarHue": {
+                      "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "maximum": 330,
+                      "multipleOf": 30
+                    },
+                    "about": {
+                      "description": "The About text their people see (FR-11.16); null for none.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -144,6 +161,8 @@
                     "id",
                     "email",
                     "displayName",
+                    "avatarHue",
+                    "about",
                     "role",
                     "termsAgreed"
                   ],
@@ -266,6 +285,23 @@
                         "null"
                       ]
                     },
+                    "avatarHue": {
+                      "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "maximum": 330,
+                      "multipleOf": 30
+                    },
+                    "about": {
+                      "description": "The About text their people see (FR-11.16); null for none.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -282,6 +318,8 @@
                     "id",
                     "email",
                     "displayName",
+                    "avatarHue",
+                    "about",
                     "role",
                     "termsAgreed"
                   ],
@@ -4284,6 +4322,16 @@
                               "null"
                             ]
                           },
+                          "avatarHue": {
+                            "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "maximum": 330,
+                            "multipleOf": 30
+                          },
                           "email": {
                             "description": "The address the signed-in person last typed to invite them; null if they never did. Someone who only invited them never shows theirs (FR-07.3).",
                             "type": [
@@ -4357,6 +4405,7 @@
                         "required": [
                           "id",
                           "displayName",
+                          "avatarHue",
                           "email",
                           "sharedAt",
                           "sharesWithYou",
@@ -4442,6 +4491,16 @@
                             "null"
                           ]
                         },
+                        "avatarHue": {
+                          "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0,
+                          "maximum": 330,
+                          "multipleOf": 30
+                        },
                         "email": {
                           "description": "The address the signed-in person last typed to invite them; null if they never did. Someone who only invited them never shows theirs (FR-07.3).",
                           "type": [
@@ -4515,6 +4574,7 @@
                       "required": [
                         "id",
                         "displayName",
+                        "avatarHue",
                         "email",
                         "sharedAt",
                         "sharesWithYou",
@@ -4523,6 +4583,13 @@
                       ],
                       "additionalProperties": false,
                       "description": "Someone connected to the signed-in person by an invitation (FR-07.23)."
+                    },
+                    "about": {
+                      "description": "Their About text, while the signed-in person is one of their people from their side: invited by them, or whose invitation they accepted (FR-11.16); else null.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "yours": {
                       "type": "array",
@@ -4633,6 +4700,7 @@
                   },
                   "required": [
                     "person",
+                    "about",
                     "yours",
                     "theirs"
                   ],
@@ -5151,6 +5219,16 @@
                               "null"
                             ]
                           },
+                          "avatarHue": {
+                            "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "maximum": 330,
+                            "multipleOf": 30
+                          },
                           "status": {
                             "type": "string",
                             "enum": [
@@ -5207,6 +5285,7 @@
                           "personId",
                           "email",
                           "displayName",
+                          "avatarHue",
                           "status",
                           "role",
                           "editableThrough",
@@ -5364,10 +5443,21 @@
                                   "string",
                                   "null"
                                 ]
+                              },
+                              "avatarHue": {
+                                "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 0,
+                                "maximum": 330,
+                                "multipleOf": 30
                               }
                             },
                             "required": [
-                              "displayName"
+                              "displayName",
+                              "avatarHue"
                             ],
                             "additionalProperties": false
                           },
@@ -5505,10 +5595,21 @@
                                     "string",
                                     "null"
                                   ]
+                                },
+                                "avatarHue": {
+                                  "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                                  "type": [
+                                    "integer",
+                                    "null"
+                                  ],
+                                  "minimum": 0,
+                                  "maximum": 330,
+                                  "multipleOf": 30
                                 }
                               },
                               "required": [
-                                "displayName"
+                                "displayName",
+                                "avatarHue"
                               ],
                               "additionalProperties": false
                             },
@@ -5592,10 +5693,21 @@
                                     "string",
                                     "null"
                                   ]
+                                },
+                                "avatarHue": {
+                                  "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                                  "type": [
+                                    "integer",
+                                    "null"
+                                  ],
+                                  "minimum": 0,
+                                  "maximum": 330,
+                                  "multipleOf": 30
                                 }
                               },
                               "required": [
-                                "displayName"
+                                "displayName",
+                                "avatarHue"
                               ],
                               "additionalProperties": false
                             },
@@ -7163,11 +7275,22 @@
                                   "string",
                                   "null"
                                 ]
+                              },
+                              "avatarHue": {
+                                "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 0,
+                                "maximum": 330,
+                                "multipleOf": 30
                               }
                             },
                             "required": [
                               "id",
-                              "displayName"
+                              "displayName",
+                              "avatarHue"
                             ],
                             "additionalProperties": false
                           },
@@ -7366,10 +7489,21 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "avatarHue": {
+                          "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0,
+                          "maximum": 330,
+                          "multipleOf": 30
                         }
                       },
                       "required": [
-                        "displayName"
+                        "displayName",
+                        "avatarHue"
                       ],
                       "additionalProperties": false
                     },
@@ -8126,10 +8260,21 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "avatarHue": {
+                          "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0,
+                          "maximum": 330,
+                          "multipleOf": 30
                         }
                       },
                       "required": [
-                        "displayName"
+                        "displayName",
+                        "avatarHue"
                       ],
                       "additionalProperties": false
                     },
@@ -11260,6 +11405,79 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setAvatarColor"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "avatarHue": {
+                            "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "maximum": 330,
+                            "multipleOf": 30
+                          }
+                        },
+                        "required": [
+                          "avatarHue"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setAbout"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "about": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "maxLength": 160
+                          }
+                        },
+                        "required": [
+                          "about"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -13920,6 +14138,79 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setAvatarColor"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "avatarHue": {
+                            "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "maximum": 330,
+                            "multipleOf": 30
+                          }
+                        },
+                        "required": [
+                          "avatarHue"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setAbout"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "about": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "maxLength": 160
+                          }
+                        },
+                        "required": [
+                          "about"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -16572,6 +16863,79 @@
                         },
                         "required": [
                           "personId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setAvatarColor"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "avatarHue": {
+                            "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31).",
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "maximum": 330,
+                            "multipleOf": 30
+                          }
+                        },
+                        "required": [
+                          "avatarHue"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setAbout"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "about": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "maxLength": 160
+                          }
+                        },
+                        "required": [
+                          "about"
                         ]
                       }
                     },
@@ -22922,6 +23286,91 @@
                     },
                     "required": [
                       "personId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "account.setAvatarColor"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "avatarHue": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 330,
+                            "multipleOf": 30
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "The avatar's chosen hue in degrees; null for Automatic, from the name (DS-31)."
+                      }
+                    },
+                    "required": [
+                      "avatarHue"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "account.setAbout"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "about": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "about"
                     ],
                     "additionalProperties": false
                   }

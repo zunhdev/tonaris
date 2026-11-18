@@ -145,7 +145,7 @@ describe("answering (FR-07.6, DS-66)", () => {
     expect(inbox.invitations).toEqual([
       expect.objectContaining({
         id: grantId,
-        owner: { displayName: "Denis" },
+        owner: { displayName: "Denis", avatarHue: null },
         container: { id: doom, name: "Doom", kind: "list" },
       }),
     ]);

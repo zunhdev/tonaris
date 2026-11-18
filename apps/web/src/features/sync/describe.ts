@@ -287,6 +287,20 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
         subject: "Your display name",
       };
     }
+    case "account.setAvatarColor": {
+      return {
+        summary: "Change your avatar's color",
+        what: "your avatar's color",
+        subject: "Your avatar's color",
+      };
+    }
+    case "account.setAbout": {
+      return {
+        summary: "Change your About text",
+        what: "your About text",
+        subject: "Your About text",
+      };
+    }
     case "trash.purge": {
       const count = mutation.args.unitIds.length;
       const items = `${count} ${count === 1 ? "item" : "items"}`;

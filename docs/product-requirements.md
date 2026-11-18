@@ -614,7 +614,7 @@ The distinctions between *unknown*, *unused*, and *applied-empty* are preserved.
 - credentials, sessions, or MCP connections;
 - sharing configuration: invitations, grants, recipients, or links;
 - Shared with me references or other owners' content;
-- account profile data (display name, sign-in email);
+- account profile data (display name, avatar color, About text, sign-in email);
 - artwork image files. Artwork is exported as URLs.
 
 **FR-08.5 Consistency.** An export reflects one consistent point in time, with no half-applied changes. It states its creation time and format version. An album in several lists appears once, and its memberships reference it, so the file mirrors the collection's real structure.
@@ -773,9 +773,15 @@ Other users' collections are untouched, and their references to the deleted cont
 
 **FR-11.12 Provider separation.** App authentication and streaming-account connection are separate, and signing in never connects a streaming account. Spotify or Apple authorization may be added where an agreed feature needs it. It does not imply extra catalog permissions or lift provider restrictions.
 
-**FR-11.13 Settings inventory.** Required settings are display name, sign-in email, passkeys (FR-11.1), viewing defaults, MCP connections (FR-10.3), data export (FR-08), and account deletion. The creator also has admission administration (FR-11.6).
+**FR-11.13 Settings inventory.** Required settings are display name, avatar color and About text (FR-11.16), sign-in email, passkeys (FR-11.1), viewing defaults, MCP connections (FR-10.3), data export (FR-08), and account deletion. The creator also has admission administration (FR-11.6).
 
 **FR-11.14 Terms of use and privacy notice.** Tonaris publishes terms of use and a privacy notice, public and always reachable: from the sign-in pages, shared pages, and the account menu. They name zunh.dev as who runs Tonaris, with the support address (decided 31 October 2026). As YouTube's Developer Policies require, the terms bind people to YouTube's Terms of Service, and the notice says Tonaris uses YouTube API Services and links Google's Privacy Policy. Joining says that continuing agrees to both, and the account records the version agreed to. A member who hasn't agreed to the current version, such as one who joined before, agrees on a one-time screen before reaching their collection, or signs out. YouTube's API is read only for members who agreed (TON-131).
+
+**FR-11.16 Profile.** Beside the display name, a person may choose their avatar's color, Automatic from the name or one of 12 fixed hues, and write a plain About text of up to 160 characters, in settings and in the app only (X-03).
+
+- **The avatar**, the name's first letter in that color, shows wherever the person is named to others: the sharing dialog, People, Shared with me, invitations, the "Shared by" pill, and guest link pages.
+- **The About text** shows only to the person's people (FR-07.23) from their side: those they invited, and those whose invitations they accepted. Guests, MCP agents and exports never get it.
+- Profiles stay non-public (section 2.6).
 
 **FR-11.15 Feedback board.** Members send feedback and feature requests to a public board, where anyone can read, discuss and vote on requests (decided 1 November 2026, TON-132, TON-144).
 
@@ -1198,6 +1204,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (18 November 2026), Tonaris as an app on a computer** (TON-298), from the creator's desktop-app evaluation: the installed web app, from Chrome or Edge's Install or Safari's Add to Dock, rather than a wrapped desktop app such as Tauri, Electrobun or Electron. Settings → Preferences says how to install it on every device, and a link opened in the installed app goes to its open window. A wrapped app is for later, and only for something a browser can't do, such as a menu bar icon. **Updated** section 2.2.
 - **Decision (18 November 2026), your people** (P-TON-57, TON-294), from the creator's request to stop typing emails when sharing again: anyone you invited, unless they only ever declined, and anyone who invited you, once you accepted, is one of your people, even after the share ends. There are no friend requests. The invite field suggests them, the latest 8 before typing, and someone who invited you shows by name only and is invited by account. **Added** FR-07.23 and AC-52; **updated** FR-07.4 and section 2.6.
 - **Decision (18 November 2026), the People page** (P-TON-57, TON-295): People in the sidebar, after Shared with me, lists each person with what's shared each way, and a person's page lists both ways by name, each of the owner's opening its sharing dialog. On the desktop, "Stop sharing with {name}…" revokes all the owner's invitations to them after a confirmation, and "Remove from People" hides them until a new invitation; phones read only. **Added** FR-07.24 and AC-53.
+- **Decision (18 November 2026), your profile** (P-TON-57, TON-296): a person may choose their avatar's color, Automatic or one of 12 hues, and write a plain About text of up to 160 characters, in Settings → Profile. The avatar joins owners' names everywhere, guest pages included. The About text shows only to the person's people from their side, on their page in People and in a card from the "Shared by" pill; it stays out of exports and MCP. The privacy notice says so. **Added** FR-11.16; **updated** FR-11.13 and FR-08.4.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

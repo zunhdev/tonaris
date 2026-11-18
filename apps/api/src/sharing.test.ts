@@ -113,6 +113,7 @@ describe("sharing (DS-65)", () => {
           personId: expect.any(String),
           email: "Anna@Example.com",
           displayName: null,
+          avatarHue: null,
           status: "pending",
           role: "view",
           editableThrough: null,
