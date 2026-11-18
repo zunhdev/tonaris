@@ -337,6 +337,7 @@ function remake(
     case "account.setDisplayName":
     case "account.setAvatarColor":
     case "account.setAbout":
+    case "account.setFavorites":
       return "unchanged";
     case "trash.purge": {
       const left = mutation.args.unitIds.filter((unitId) => trashUnits.has(unitId));

@@ -30,6 +30,7 @@ import {
   passkeys,
   positions,
   peopleHidden,
+  profileFavorites,
   savedReferences,
   sessions,
   shareGrants,
@@ -161,6 +162,7 @@ async function deleteTheRest(tx: Transaction, userId: string): Promise<void> {
   await tx.delete(fieldDefinitions).where(eq(fieldDefinitions.ownerId, userId));
   await tx.delete(shareGrants).where(eq(shareGrants.granteeId, userId));
   await tx.delete(savedReferences).where(eq(savedReferences.viewerId, userId));
+  await tx.delete(profileFavorites).where(eq(profileFavorites.userId, userId));
   await tx
     .delete(peopleHidden)
     .where(or(eq(peopleHidden.userId, userId), eq(peopleHidden.personId, userId)));

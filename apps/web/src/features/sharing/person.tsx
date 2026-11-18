@@ -10,6 +10,7 @@ import { useNarrowScreen } from "@/common/media";
 import { PageHeader, toCollection, useDocumentTitle } from "@/common/page-header";
 import { pageScroll } from "@/common/page-scroll";
 import { Avatar } from "@/features/account/avatar";
+import { Artwork, artworkSrc } from "@/features/collection/artwork";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { ContainerIcon } from "@/features/collection/icons";
 import { shareLocation } from "@/features/collection/place";
@@ -170,8 +171,27 @@ function PersonDetails({
           </span>
         </div>
       </section>
-      {/* Their About, which they show their people (FR-11.16, TON-296). */}
+      {/* Their About and favorites, which they show their people (FR-11.16, TON-296, TON-297). */}
       {shares.about && <p className="max-w-xl text-fg-primary">{shares.about}</p>}
+      {shares.favorites.length > 0 && (
+        <section aria-label="Favorite albums" className="flex flex-col gap-2">
+          <h2 className="text-small font-medium text-fg-tertiary">Favorite albums</h2>
+          <ul className="grid max-w-xl grid-cols-2 gap-4 sm:grid-cols-4">
+            {shares.favorites.map((favorite) => (
+              <li key={`${favorite.title}:${favorite.artistCredit}:${favorite.artworkUrl ?? ""}`}>
+                <Artwork
+                  title={favorite.title}
+                  src={artworkSrc(favorite)}
+                  className="aspect-square w-full"
+                  raised
+                />
+                <p className="mt-1.5 truncate text-small text-fg-primary">{favorite.title}</p>
+                <p className="truncate text-small text-fg-secondary">{favorite.artistCredit}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {!narrow && (
         <div className="flex flex-wrap gap-2">
           {yours.length > 0 && (

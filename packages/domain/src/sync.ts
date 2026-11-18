@@ -27,7 +27,7 @@ import { failure, outcomeSchema, type Failure } from "./outcomes";
 import { personArgsSchema } from "./people";
 import { positionSchema } from "./positions";
 import type { Principal } from "./principals";
-import { setAboutArgsSchema, setAvatarColorArgsSchema } from "./profiles";
+import { setAboutArgsSchema, setAvatarColorArgsSchema, setFavoritesArgsSchema } from "./profiles";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
 import { shareCopyArgsSchema } from "./share-copy";
 import {
@@ -563,6 +563,13 @@ export const accountSetAvatarColorSchema = z.object({
   args: setAvatarColorArgsSchema,
 });
 
+/** `account.setFavorites`: replaces the person's favorite albums, in order (FR-11.16). App-only (X-03). */
+export const accountSetFavoritesSchema = z.object({
+  mutationId,
+  name: z.literal("account.setFavorites"),
+  args: setFavoritesArgsSchema,
+});
+
 /** `account.setAbout`: sets or clears the About text (FR-11.16). App-only (X-03). */
 export const accountSetAboutSchema = z.object({
   mutationId,
@@ -628,6 +635,7 @@ export const mutationSchema = z
     peopleRemoveSchema,
     accountSetAvatarColorSchema,
     accountSetAboutSchema,
+    accountSetFavoritesSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

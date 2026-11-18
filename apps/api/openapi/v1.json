@@ -195,6 +195,96 @@
         }
       }
     },
+    "/v1/me/favorites": {
+      "get": {
+        "summary": "List the person's favorite albums",
+        "description": "Their favorite albums in order (FR-11.16), each with its title, artist and signed artwork, those in Trash marked: hidden from their people until restored. `account.setFavorites` changes them, in the app only (X-03).",
+        "tags": [
+          "accounts"
+        ],
+        "operationId": "listOwnFavorites",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "favorites": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string"
+                          },
+                          "artistCredit": {
+                            "type": "string"
+                          },
+                          "artworkUrl": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "artworkSignature": {
+                            "description": "The image proxy's signature of `artworkUrl`, when it has one (TS-103).",
+                            "type": "string"
+                          },
+                          "albumId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "trashed": {
+                            "type": "boolean",
+                            "description": "In Trash: hidden from their people until restored."
+                          }
+                        },
+                        "required": [
+                          "title",
+                          "artistCredit",
+                          "artworkUrl",
+                          "albumId",
+                          "trashed"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "favorites"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/terms": {
       "post": {
         "summary": "Agree to the terms of use and privacy notice",
@@ -4451,7 +4541,7 @@
     "/v1/people/{id}": {
       "get": {
         "summary": "Get one of the person's people",
-        "description": "One of the signed-in person's people (FR-07.23) and what's shared each way, by name (FR-07.24, DS-121): their own folders and lists outside Trash with an open invitation to them, and theirs they're invited to, pending, or accepted and can open now. Anyone else answers 404, as if they didn't exist. `share.revokePerson` and `people.remove` act on them, in the app only (X-03). Changes nothing.",
+        "description": "One of the signed-in person's people (FR-07.23) and what's shared each way, by name (FR-07.24, DS-121): their own folders and lists outside Trash with an open invitation to them, and theirs they're invited to, pending, or accepted and can open now. Their About text and favorite albums come only when the signed-in person is one of their people from their side (FR-11.16). Anyone else answers 404, as if they didn't exist. `share.revokePerson` and `people.remove` act on them, in the app only (X-03). Changes nothing.",
         "tags": [
           "sharing"
         ],
@@ -4584,6 +4674,38 @@
                       "additionalProperties": false,
                       "description": "Someone connected to the signed-in person by an invitation (FR-07.23)."
                     },
+                    "favorites": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string"
+                          },
+                          "artistCredit": {
+                            "type": "string"
+                          },
+                          "artworkUrl": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "artworkSignature": {
+                            "description": "The image proxy's signature of `artworkUrl`, when it has one (TS-103).",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "title",
+                          "artistCredit",
+                          "artworkUrl"
+                        ],
+                        "additionalProperties": false,
+                        "description": "A favorite album, by its cover, title and artist only (FR-11.16)."
+                      },
+                      "description": "Their favorite albums outside Trash, in order, for the same people as `about` (FR-11.16); else empty."
+                    },
                     "about": {
                       "description": "Their About text, while the signed-in person is one of their people from their side: invited by them, or whose invitation they accepted (FR-11.16); else null.",
                       "type": [
@@ -4700,6 +4822,7 @@
                   },
                   "required": [
                     "person",
+                    "favorites",
                     "about",
                     "yours",
                     "theirs"
@@ -11478,6 +11601,44 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setFavorites"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumIds": {
+                            "maxItems": 4,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "description": "At most 4 of the person's own albums, in the order shown."
+                          }
+                        },
+                        "required": [
+                          "albumIds"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -14211,6 +14372,44 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setFavorites"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumIds": {
+                            "maxItems": 4,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "description": "At most 4 of the person's own albums, in the order shown."
+                          }
+                        },
+                        "required": [
+                          "albumIds"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -16936,6 +17135,44 @@
                         },
                         "required": [
                           "about"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "account.setFavorites"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "albumIds": {
+                            "maxItems": 4,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "description": "At most 4 of the person's own albums, in the order shown."
+                          }
+                        },
+                        "required": [
+                          "albumIds"
                         ]
                       }
                     },
@@ -23371,6 +23608,46 @@
                     },
                     "required": [
                       "about"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "account.setFavorites"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "albumIds": {
+                        "maxItems": 4,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "description": "At most 4 of the person's own albums, in the order shown."
+                      }
+                    },
+                    "required": [
+                      "albumIds"
                     ],
                     "additionalProperties": false
                   }

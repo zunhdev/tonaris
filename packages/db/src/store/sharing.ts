@@ -12,6 +12,7 @@ import { connections } from "../people";
 import {
   containers,
   peopleHidden,
+  profileFavorites,
   savedReferences,
   shareGrants,
   shareLinks,
@@ -74,6 +75,13 @@ export function sharingStore(tx: Transaction) {
     },
     async setAbout(userId, about) {
       await tx.update(users).set({ about }).where(eq(users.id, userId));
+    },
+    async setFavorites(userId, albumIds) {
+      await tx.delete(profileFavorites).where(eq(profileFavorites.userId, userId));
+      if (albumIds.length === 0) return;
+      await tx
+        .insert(profileFavorites)
+        .values(albumIds.map((albumId, position) => ({ userId, albumId, position })));
     },
     async activeShareCount(ownerId) {
       const owned = tx

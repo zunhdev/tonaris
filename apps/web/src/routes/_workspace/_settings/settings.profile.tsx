@@ -2,10 +2,11 @@
 // their email. It is saved when the field loses focus, or on Enter. Clearing it removes it while they share nothing;
 // while they share, the server refuses (AC-38), and the field goes back to the saved name with the reason. Then the
 // avatar's color, Automatic or one of 12 hues, saved on choice, and the About text their people see, saved as the
-// name is (TON-296).
+// name is (TON-296); then up to four favorite albums (TON-297).
 
 import { Avatar } from "@/features/account/avatar";
 import { forgetAccount } from "@/features/account/session";
+import { FavoriteAlbums } from "@/features/settings/favorite-albums";
 import { useSend } from "@/features/sharing/send";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useId, useState } from "react";
@@ -86,6 +87,7 @@ function Profile() {
       </form>
       <AvatarColor name={account.displayName ?? account.email} saved={account.avatarHue} />
       <About saved={account.about ?? ""} />
+      <FavoriteAlbums />
     </div>
   );
 }

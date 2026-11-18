@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import {
   mutationResultSchema,
+  ownFavoritesSchema,
   peopleSchema,
   personSharesSchema,
   shareSettingsSchema,
@@ -263,5 +264,68 @@ describe("profiles (FR-11.16)", () => {
     // Removed from her People, he no longer sees it.
     await send(anna.cookie, { name: "people.remove", args: { personId: denis.id } });
     expect((await annaFor(denis.cookie))?.about).toBeNull();
+  });
+});
+
+describe("favorite albums (FR-11.16, TON-297)", () => {
+  test("the person's own list with signed artwork; their people see title, artist and cover", async () => {
+    const denis = await member("denis@example.com", "Denis", "Doom");
+    const anna = await member("anna@example.com", "Anna", "Jazz");
+    const nightfall = uuidv7();
+    await send(anna.cookie, {
+      name: "album.create",
+      args: {
+        id: nightfall,
+        title: "Nightfall",
+        artistCredit: "Candlemass",
+        releaseType: "album",
+        isLive: false,
+        originalYear: 1987,
+        recordingYearStart: null,
+        recordingYearEnd: null,
+      },
+    });
+    await send(anna.cookie, {
+      name: "album.setArtwork",
+      args: { id: nightfall, artworkUrl: "https://coverartarchive.org/release/x/front-500.jpg" },
+      base: { artworkUrl: null },
+    });
+    // Someone else's album is refused.
+    expect(
+      await send(denis.cookie, { name: "account.setFavorites", args: { albumIds: [nightfall] } }),
+    ).toMatchObject({ status: "failed", code: "not_found" });
+    expect(
+      await send(anna.cookie, { name: "account.setFavorites", args: { albumIds: [nightfall] } }),
+    ).toMatchObject({ status: "confirmed" });
+    const own = ownFavoritesSchema.parse(
+      await (await t.call("/v1/me/favorites", { headers: { cookie: anna.cookie } })).json(),
+    );
+    expect(own.favorites).toEqual([
+      {
+        albumId: nightfall,
+        title: "Nightfall",
+        artistCredit: "Candlemass",
+        artworkUrl: "https://coverartarchive.org/release/x/front-500.jpg",
+        artworkSignature: expect.any(String),
+        trashed: false,
+      },
+    ]);
+
+    // Anna invites Denis, who accepts: he's one of her people.
+    const toDenis = uuidv7();
+    await send(anna.cookie, {
+      name: "share.invite",
+      args: { grantId: toDenis, containerId: anna.listId, email: "denis@example.com" },
+    });
+    await send(denis.cookie, { name: "share.accept", args: { grantId: toDenis } });
+    expect((await page(denis.cookie, anna.id)).body?.favorites).toEqual([
+      {
+        title: "Nightfall",
+        artistCredit: "Candlemass",
+        artworkUrl: "https://coverartarchive.org/release/x/front-500.jpg",
+        artworkSignature: expect.any(String),
+      },
+    ]);
+    expect((await t.call("/v1/me/favorites")).status).toBe(401);
   });
 });

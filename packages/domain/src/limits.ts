@@ -33,6 +33,9 @@ export const maxNameLength = 200;
 /** Characters in a person's About text, counted in code points (FR-11.16, TON-296). */
 export const maxAboutLength = 160;
 
+/** Favorite albums on a person's profile (FR-11.16, TON-297). */
+export const maxFavorites = 4;
+
 /** Characters in a folder's or list's description, counted in code points (FR-03.5). */
 export const maxDescriptionLength = 2_000;
 

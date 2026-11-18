@@ -1,13 +1,13 @@
 // accounts spec, Settings → Profile (FR-11.3, FR-11.16, DS-93, AC-38): the display name, saved when the field loses
 // focus, shown in the account menu, optional while nothing is shared, and kept when clearing it while sharing; the
-// avatar's color and the About text (TON-296).
+// avatar's color and the About text (TON-296); favorite albums, found by typing, moved and removed (TON-297).
 
 import { uuidv7 } from "@tonaris/domain";
 
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
 import { expect, type Page, test } from "./support/test";
-import { created, live, violations, webOrigin } from "./support/workspace";
+import { added, album, created, live, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -116,4 +116,45 @@ test("the avatar's color saves on choice and shows in the account menu; the Abou
   await page.reload();
   await expect(about).toHaveValue("Doom and sludge, mostly on vinyl.");
   await expect(page.getByRole("radio", { name: "Blue" })).toBeChecked();
+});
+
+test("favorite albums are found by typing, moved, removed, and four at most", async ({ page }) => {
+  await signIn(page, accounts.profileFavorites);
+  await live(page);
+  const titles = ["Nightfall", "Dopesmoker", "Homogenic", "Spiderland", "Remain in Light"];
+  await added(
+    page,
+    titles.map((title) => album(title, { artistCredit: `${title} band` })),
+  );
+  await openProfile(page);
+  const favorites = page.getByRole("list", { name: "Favorite albums" }).getByRole("listitem");
+
+  async function pick(typed: string, title: string) {
+    await page.getByRole("button", { name: "Add a favorite…" }).click();
+    const dialog = page.getByRole("dialog", { name: "Add a favorite album" });
+    await expect(dialog).toContainText("Type a title or artist.");
+    await dialog.getByRole("combobox", { name: "Find an album" }).fill(typed);
+    await dialog.getByRole("option", { name: new RegExp(title) }).click();
+    // Gone from the page, past its closing animation, before the next (TON-102's lesson).
+    await expect(page.locator('[data-slot="dialog-content"]')).toHaveCount(0);
+    await expect(favorites.filter({ hasText: title })).toHaveCount(1);
+  }
+  await pick("night", "Nightfall");
+  await pick("dope", "Dopesmoker");
+  await expect(favorites).toHaveText([/Nightfall/, /Dopesmoker/]);
+  expect(await violations(page, "main")).toEqual([]);
+
+  await page.getByRole("button", { name: "Move Dopesmoker up" }).click();
+  await expect(favorites).toHaveText([/Dopesmoker/, /Nightfall/]);
+  await page.getByRole("button", { name: "Remove Nightfall" }).click();
+  await expect(favorites).toHaveText([/Dopesmoker/]);
+
+  // Four at most: then nothing more to add.
+  await pick("homo", "Homogenic");
+  await pick("spider", "Spiderland");
+  await pick("remain", "Remain in Light");
+  await expect(favorites).toHaveCount(4);
+  await expect(page.getByRole("button", { name: "Add a favorite…" })).toHaveCount(0);
+  await page.reload();
+  await expect(favorites).toHaveText([/Dopesmoker/, /Homogenic/, /Spiderland/, /Remain in Light/]);
 });

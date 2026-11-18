@@ -727,6 +727,8 @@ describe("whose collection each mutation changes (DRIFT-055)", () => {
       // The person's own profile (FR-11.16).
       "account.setAvatarColor",
       "account.setAbout",
+      // Their own albums only, under their own lock (TON-297).
+      "account.setFavorites",
     ];
     expect([...Object.keys(named), ...own].toSorted()).toEqual([...mutationNames].toSorted());
   });

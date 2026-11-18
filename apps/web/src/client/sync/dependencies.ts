@@ -66,6 +66,7 @@ function created(mutation: Mutation): string[] {
     case "account.setDisplayName":
     case "account.setAvatarColor":
     case "account.setAbout":
+    case "account.setFavorites":
       return [];
     default:
       return mutation satisfies never;
@@ -85,6 +86,7 @@ function referenced(mutation: Mutation): (string | null)[] {
     case "account.setDisplayName":
     case "account.setAvatarColor":
     case "account.setAbout":
+    case "account.setFavorites":
     case "share.saveLink":
       return [];
     case "field.rename":

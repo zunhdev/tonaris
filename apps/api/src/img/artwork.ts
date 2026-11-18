@@ -71,6 +71,18 @@ export function presentSnapshot(signer: ArtworkSigner, snapshot: SharedSnapshot)
   };
 }
 
+/** Favorite albums as their reader gets them (FR-11.16): each with its artwork signed. */
+export function presentFavorites<T extends { artworkUrl: string | null }>(
+  signer: ArtworkSigner,
+  favorites: readonly T[],
+): (T & { artworkSignature?: string })[] {
+  return favorites.map((favorite) =>
+    favorite.artworkUrl
+      ? { ...favorite, artworkSignature: signer.sign(favorite.artworkUrl) }
+      : favorite,
+  );
+}
+
 /** The URL a path's last segment encodes, if it is base64url of UTF-8. */
 function decoded(encoded: string): string | undefined {
   if (!/^[A-Za-z0-9_-]+$/.test(encoded)) return undefined;

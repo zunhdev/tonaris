@@ -102,7 +102,7 @@ function v1(
       () => ({ status: "ok" as const, ...(commit ? { commit } : {}) }),
     )
     .use(supportRoutes({ supportEmail: config.supportEmail }))
-    .use(meRoutes(session, { db }))
+    .use(meRoutes(session, { db, artwork }))
     .use(emailChangeRoutes(session, { db, email, limiter, clientIpHeader, hub }))
     .use(accountDeletionRoutes(session, { db, wakeJobs, hub }))
     .use(connectionRoutes(session, { db }))
@@ -112,7 +112,7 @@ function v1(
     .use(searchRoutes(session, { db }))
     .use(coverRoutes(session, { covers, artwork }))
     .use(exportRoutes(session, { db }))
-    .use(sharingRoutes(session, { db, shareSecret: config.authSecret, webOrigin }))
+    .use(sharingRoutes(session, { db, shareSecret: config.authSecret, webOrigin, artwork }))
     .use(invitationRoutes(session, { db }))
     .use(admissionAdminRoutes(session, { db, email, webOrigin, logError }))
     .use(memberAdminRoutes(session, { db, email, webOrigin }))

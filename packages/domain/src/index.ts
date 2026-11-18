@@ -539,7 +539,12 @@ export {
   avatarHues,
   setAboutArgsSchema,
   setAvatarColorArgsSchema,
+  favoriteSchema,
+  ownFavoritesSchema,
+  setFavoritesArgsSchema,
   type AvatarHue,
+  type Favorite,
+  type OwnFavorites,
 } from "./profiles";
 export {
   audienceSchema,
@@ -602,7 +607,7 @@ export {
 } from "./sync";
 export { codeRefusal, type CodeRefusal } from "./codes";
 export { invitationStateFor, shownEmailStatus } from "./invitations";
-export { maxAboutLength, maxMergeCandidates } from "./limits";
+export { maxAboutLength, maxFavorites, maxMergeCandidates } from "./limits";
 export { endedGrantStatuses, fieldsShownWith, openGrantStatuses } from "./sharing";
 export {
   copySummary,
