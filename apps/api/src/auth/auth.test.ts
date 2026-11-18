@@ -73,6 +73,8 @@ describe("signing in with an emailed code (FR-11.1)", () => {
       id,
       email: "creator@example.com",
       displayName: null,
+      avatarHue: null,
+      about: null,
       role: "creator",
       termsAgreed: false,
     });

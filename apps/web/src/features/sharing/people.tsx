@@ -92,7 +92,7 @@ function PersonRow({ person, name }: { person: Person; name: string }) {
         params={{ personId: person.id }}
         className="flex min-h-12 items-center gap-3 rounded-md px-2 py-2 focus-ring-flush outline-none hover:bg-hover"
       >
-        <Avatar name={name} className="size-8 text-base" />
+        <Avatar name={name} hue={person.avatarHue} className="size-8 text-base" />
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-fg-primary">
             {name}

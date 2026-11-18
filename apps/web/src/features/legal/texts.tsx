@@ -124,7 +124,8 @@ export function PrivacyText({ support }: { support: string | undefined }) {
         <ul className="flex list-disc flex-col gap-1 pl-5">
           <li>
             <strong className="font-medium text-fg-primary">Your account:</strong> your email
-            address, the display name you choose, and when you agreed to these terms.
+            address, the display name you choose, your avatar's color and About text if you set
+            them, and when you agreed to these terms.
           </li>
           <li>
             <strong className="font-medium text-fg-primary">Your collection:</strong> albums with
@@ -133,7 +134,9 @@ export function PrivacyText({ support }: { support: string | undefined }) {
           </li>
           <li>
             <strong className="font-medium text-fg-primary">Sharing:</strong> the addresses you
-            invite, who accepted, and your share links.
+            invite, who accepted, and your share links. People you invite, and people whose
+            invitations you accept, see your display name, avatar and About text; anyone with one of
+            your share links sees only your display name and avatar.
           </li>
           <li>
             <strong className="font-medium text-fg-primary">Signing in:</strong> your sessions, each

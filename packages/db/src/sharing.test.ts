@@ -423,7 +423,7 @@ describe("the shared snapshot (FR-07.11, FR-07.12)", () => {
 
     const snapshot = await sharedSnapshot(t.db, person(anna), metal.id);
     expect(snapshot?.rootId).toBe(metal.id);
-    expect(snapshot?.owner).toEqual({ displayName: "Denis" });
+    expect(snapshot?.owner).toEqual({ displayName: "Denis", avatarHue: null });
     expect(snapshot?.containers).toEqual([{ ...metal, description: "Heavy things" }, { ...doom }]);
     expect(snapshot?.albums.map(({ title }) => title)).toEqual(["Nightfall"]);
     expect(snapshot?.links).toEqual([{ albumId: nightfall.id, service: "spotify", url: spotify }]);
@@ -724,6 +724,9 @@ describe("whose collection each mutation changes (DRIFT-055)", () => {
       "share.revokePerson",
       "people.remove",
       "account.setDisplayName",
+      // The person's own profile (FR-11.16).
+      "account.setAvatarColor",
+      "account.setAbout",
     ];
     expect([...Object.keys(named), ...own].toSorted()).toEqual([...mutationNames].toSorted());
   });

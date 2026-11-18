@@ -22,7 +22,7 @@ describe("loadGuestShare", () => {
       rootId: "x",
       role: "view",
       seq: 1,
-      owner: { displayName: null },
+      owner: { displayName: null, avatarHue: null },
       containers: [],
       albums: [],
       memberships: [],

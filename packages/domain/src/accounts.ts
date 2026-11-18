@@ -2,6 +2,7 @@
 // client sees it (`GET /v1/me`).
 
 import { textSchema } from "./names";
+import { avatarHueSchema } from "./profiles";
 import { z } from "./zod";
 
 /** The sign-in code rules (TS-70): 6 digits, valid for 10 minutes, single-use, with 5 attempts. */
@@ -49,6 +50,11 @@ export const accountSchema = z
       .string()
       .nullable()
       .meta({ description: "The display name (FR-11.3); null until the person sets one." }),
+    avatarHue: avatarHueSchema,
+    about: z
+      .string()
+      .nullable()
+      .meta({ description: "The About text their people see (FR-11.16); null for none." }),
     role: z.enum(userRoles),
     termsAgreed: z.boolean().meta({
       description:
@@ -62,7 +68,7 @@ export type Account = z.infer<typeof accountSchema>;
  * The terms of use and privacy notice's version: the day their text last changed (TON-131). A member agrees to one
  * version; a later one asks them again.
  */
-export const termsVersion = "2026-11-02";
+export const termsVersion = "2026-11-18";
 
 /** `POST /v1/me/terms`: the version of the texts the person was shown and agreed to. */
 export const termsAgreementSchema = z

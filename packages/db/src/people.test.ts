@@ -174,6 +174,7 @@ describe("people (FR-07.23)", () => {
       {
         id: ben,
         displayName: "Ben",
+        avatarHue: null,
         email: null,
         sharedAt: expect.any(String),
         sharesWithYou: "Folk",
@@ -183,6 +184,7 @@ describe("people (FR-07.23)", () => {
       {
         id: anna,
         displayName: "Anna",
+        avatarHue: null,
         email: "Anna@New.example",
         sharedAt: expect.any(String),
         sharesWithYou: null,

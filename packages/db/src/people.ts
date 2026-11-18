@@ -177,7 +177,7 @@ const counted = (shares: readonly Share[]) => ({
 /** A person as `GET /v1/people` gives them, or undefined for someone with neither a name nor an address typed. */
 function personOf(
   id: string,
-  displayName: string | null,
+  { displayName, avatarHue }: Account,
   connection: Connection,
   opens: ReadonlySet<string>,
 ): Person | undefined {
@@ -189,6 +189,7 @@ function personOf(
   return {
     id,
     displayName,
+    avatarHue,
     email: connection.email,
     sharedAt: connection.sharedAt.toISOString(),
     sharesWithYou: theirs[0]?.name ?? null,
@@ -197,16 +198,23 @@ function personOf(
   };
 }
 
-/** The display names of `ids`, by ID. */
-async function displayNames(
-  db: Executor,
-  ids: readonly string[],
-): Promise<Map<string, string | null>> {
+/** What a person shows of themselves (FR-11.16): their About only to their people. */
+type Account = { displayName: string | null; avatarHue: number | null; about: string | null };
+
+const nobody: Account = { displayName: null, avatarHue: null, about: null };
+
+/** The display names, hues and About texts of `ids`, by ID. */
+async function accountsOf(db: Executor, ids: readonly string[]): Promise<Map<string, Account>> {
   const rows = await db
-    .select({ id: users.id, displayName: users.displayName })
+    .select({
+      id: users.id,
+      displayName: users.displayName,
+      avatarHue: users.avatarHue,
+      about: users.about,
+    })
     .from(users)
     .where(inArray(users.id, [...ids]));
-  return new Map(rows.map((row) => [row.id, row.displayName]));
+  return new Map(rows.map(({ id, ...account }) => [id, account]));
 }
 
 /**
@@ -218,12 +226,14 @@ export function people(db: Database, userId: string): Promise<Person[]> {
   return readSnapshot(db, async (tx) => {
     const found = await connections(tx, userId);
     if (found.size === 0) return [];
-    const [names, opens] = await Promise.all([
-      displayNames(tx, [...found.keys()]),
+    const [accounts, opens] = await Promise.all([
+      accountsOf(tx, [...found.keys()]),
       opening(tx, userId, found),
     ]);
     return [...found]
-      .flatMap(([id, connection]) => personOf(id, names.get(id) ?? null, connection, opens) ?? [])
+      .flatMap(
+        ([id, connection]) => personOf(id, accounts.get(id) ?? nobody, connection, opens) ?? [],
+      )
       .toSorted(
         (a, b) => b.sharedAt.localeCompare(a.sharedAt) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
       );
@@ -252,14 +262,19 @@ export function personShares(
     const found = await connections(tx, userId, personId);
     const connection = found.get(personId);
     if (!connection) return undefined;
-    const [names, opens] = await Promise.all([
-      displayNames(tx, [personId]),
+    // Their About shows only to their people, from their side (FR-11.16): not to someone whose invitation they
+    // haven't answered or declined, nor to someone they removed from People.
+    const [accounts, opens, theirPeople] = await Promise.all([
+      accountsOf(tx, [personId]),
       opening(tx, userId, found),
+      connections(tx, personId, userId),
     ]);
-    const person = personOf(personId, names.get(personId) ?? null, connection, opens);
+    const account = accounts.get(personId) ?? nobody;
+    const person = personOf(personId, account, connection, opens);
     if (!person) return undefined;
     return {
       person,
+      about: theirPeople.has(userId) ? account.about : null,
       yours: connection.yours
         .filter((share) => !share.trashed)
         .flatMap(shown)

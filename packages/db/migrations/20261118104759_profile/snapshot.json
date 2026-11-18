@@ -1,0 +1,110 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "91fd0be4-2f3c-4fe4-b400-bc637682c86a",
+  "prevIds": [
+    "308f9ea9-7836-451c-ab61-f285c5cb3476"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "user",
+        "avatar_hue"
+      ],
+      "writes": [
+        "s|col|public.user.avatar_hue",
+        "n|col|public.user.avatar_hue",
+        "e|col|public.user.avatar_hue"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "user",
+        "about"
+      ],
+      "writes": [
+        "s|col|public.user.about",
+        "n|col|public.user.about",
+        "e|col|public.user.about"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "user"
+      ],
+      "writes": [
+        "s|ck|public.user.user_avatar_hue_check",
+        "n|ck|public.user.user_avatar_hue_check",
+        "e|ck|public.user.user_avatar_hue_check",
+        "n|con|public.user.user_avatar_hue_check"
+      ],
+      "reads": [
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.user.avatar_hue"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "user",
+        "name": "avatar_hue",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "user",
+        "name": "about",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "user",
+        "name": "user_avatar_hue_check",
+        "value": "\"avatar_hue\" is null or (\"avatar_hue\" between 0 and 330 and \"avatar_hue\" % 30 = 0)",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

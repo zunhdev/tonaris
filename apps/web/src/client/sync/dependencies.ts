@@ -64,6 +64,8 @@ function created(mutation: Mutation): string[] {
     case "share.revokePerson":
     case "people.remove":
     case "account.setDisplayName":
+    case "account.setAvatarColor":
+    case "account.setAbout":
       return [];
     default:
       return mutation satisfies never;
@@ -81,6 +83,8 @@ function referenced(mutation: Mutation): (string | null)[] {
     case "defaults.setHiddenServices":
     case "defaults.setServiceOrder":
     case "account.setDisplayName":
+    case "account.setAvatarColor":
+    case "account.setAbout":
     case "share.saveLink":
       return [];
     case "field.rename":

@@ -91,7 +91,7 @@ test("saving a link keeps it once, copying nothing; opening it alone adds nothin
   expect(await shared(anna)).toEqual([
     {
       containerId: doom,
-      owner: { id: expect.any(String), displayName: "Denis" },
+      owner: { id: expect.any(String), displayName: "Denis", avatarHue: null },
       name: "Doom",
       kind: "list",
       via: { invitation: false, link: true },

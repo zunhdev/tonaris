@@ -91,7 +91,7 @@ test("a viewer sees it view-only, in their own order, live, until access ends", 
   await expect(viewer.getByText("View only · Shared by Denis")).toBeVisible();
   // No editing: no mode toggle, no Share.
   await expect(viewer.getByRole("radiogroup", { name: "Mode" })).toHaveCount(0);
-  await expect(viewer.getByRole("button", { name: "Share" })).toHaveCount(0);
+  await expect(viewer.getByRole("button", { name: "Share", exact: true })).toHaveCount(0);
   const albums = viewer.getByRole("list", { name: "Albums in Doom" }).getByRole("listitem");
   await expect(albums).toHaveCount(3);
   // The account default: by year.

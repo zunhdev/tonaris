@@ -4,6 +4,7 @@
 // on the device, those found on load included; on the Invitations pages, they're already in view.
 
 import { announcedInvitations } from "@/common/device";
+import { Avatar } from "@/features/account/avatar";
 import { useNotify } from "@/features/sync/notify";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -36,10 +37,15 @@ export function InvitationToasts({ accountId }: { accountId: string }) {
         first.role === "edit"
           ? `${owner} invited you to edit "${first.container.name}"`
           : `${owner} shared "${first.container.name}" with you`;
-      notify.notice(shared, {
-        label: "View",
-        onClick: () => void navigate({ to: "/invitations/$id", params: { id: first.id } }),
-      });
+      notify.notice(
+        shared,
+        {
+          label: "View",
+          onClick: () => void navigate({ to: "/invitations/$id", params: { id: first.id } }),
+        },
+        // Whoever it's from, by their avatar (TON-296).
+        <Avatar name={owner} hue={first.owner.avatarHue} className="size-6 text-small" />,
+      );
     } else {
       notify.notice(`${fresh.length} new invitations`, {
         label: "View",

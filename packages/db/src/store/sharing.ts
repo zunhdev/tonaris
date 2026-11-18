@@ -69,6 +69,12 @@ export function sharingStore(tx: Transaction) {
     async setDisplayName(userId, displayName) {
       await tx.update(users).set({ displayName }).where(eq(users.id, userId));
     },
+    async setAvatarHue(userId, avatarHue) {
+      await tx.update(users).set({ avatarHue }).where(eq(users.id, userId));
+    },
+    async setAbout(userId, about) {
+      await tx.update(users).set({ about }).where(eq(users.id, userId));
+    },
     async activeShareCount(ownerId) {
       const owned = tx
         .select({ id: containers.id })

@@ -145,7 +145,15 @@ export function memoryStore({
     positions.map((row) => [positionRowKey(row.personId, row.viewKey, row.itemId), { ...row }]),
   );
   const accountRows = new Map(
-    accounts.map(({ displayName = null, ...account }) => [account.id, { ...account, displayName }]),
+    accounts.map(({ displayName = null, ...account }) => [
+      account.id,
+      {
+        ...account,
+        displayName,
+        avatarHue: null as number | null,
+        about: null as string | null,
+      },
+    ]),
   );
   type GrantRow = ShareGrant & {
     containerId: string;
@@ -717,6 +725,16 @@ export function memoryStore({
     },
     hidePerson(userId, personId) {
       hiddenRows.set(`${userId}:${personId}`, new Date());
+      return Promise.resolve();
+    },
+    setAvatarHue(userId, avatarHue) {
+      const account = accountRows.get(userId);
+      if (account) account.avatarHue = avatarHue;
+      return Promise.resolve();
+    },
+    setAbout(userId, about) {
+      const account = accountRows.get(userId);
+      if (account) account.about = about;
       return Promise.resolve();
     },
     displayNameOf: (userId) => Promise.resolve(accountRows.get(userId)?.displayName ?? null),

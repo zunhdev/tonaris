@@ -55,6 +55,10 @@ test("People lists what's shared each way; a person's page stops sharing and rem
     email: accounts.rosterOwner,
   });
 
+  // Her profile, which the owner sees as one of her people (FR-11.16, TON-296).
+  await send(friend, "account.setAvatarColor", { avatarHue: 120 });
+  await send(friend, "account.setAbout", { about: "Jazz, mostly on vinyl." });
+
   await signIn(page, accounts.rosterOwner);
   await live(page);
   await send(page, "account.setDisplayName", { displayName: "Denis" });
@@ -101,6 +105,7 @@ test("People lists what's shared each way; a person's page stops sharing and rem
   ]);
   const theirs = page.getByRole("region", { name: "Anna shares with you" }).getByRole("listitem");
   await expect(theirs).toHaveText([/"Jazz"\s*List · Can view · Accepted/]);
+  await expect(page.getByText("Jazz, mostly on vinyl.")).toBeVisible();
   expect(await violations(page, "main")).toEqual([]);
 
   // One of yours opens its sharing dialog.
@@ -118,9 +123,14 @@ test("People lists what's shared each way; a person's page stops sharing and rem
   await expect(page.getByText("You don't share anything with Anna.")).toBeVisible();
   await expect(theirs).toHaveCount(1);
 
-  // One of theirs opens the shared view.
+  // One of theirs opens the shared view, whose Shared by pill opens a card with her About.
   await theirs.getByRole("link", { name: /Jazz/ }).click();
   await expect(page).toHaveURL(new RegExp(`/shared/${jazz.id}`));
+  await page.getByRole("button", { name: "View only · Shared by Anna" }).click();
+  const card = page.getByRole("dialog", { name: "Anna", exact: true });
+  await expect(card).toContainText("Jazz, mostly on vinyl.");
+  await expect(card.getByRole("link", { name: "See Anna in People" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await page.goBack();
 
   // Remove from People: back on People, with nobody.

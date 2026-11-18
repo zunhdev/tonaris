@@ -82,7 +82,7 @@ export function sharedSnapshot(
     if (role === undefined) return undefined;
     const ids = await activeSubtree(tx, id);
     const [owner] = await tx
-      .select({ id: users.id, displayName: users.displayName })
+      .select({ id: users.id, displayName: users.displayName, avatarHue: users.avatarHue })
       .from(containers)
       .innerJoin(users, eq(users.id, containers.ownerId))
       .where(eq(containers.id, id));
@@ -122,7 +122,7 @@ export function sharedSnapshot(
       rootId: id,
       role,
       seq: position,
-      owner: { displayName: owner?.displayName ?? null },
+      owner: { displayName: owner?.displayName ?? null, avatarHue: owner?.avatarHue ?? null },
       // The root's parent is a folder the viewer may not know of.
       containers: shown.map((each) =>
         each.id === id ? Object.assign(each, { parentId: null }) : each,
@@ -189,6 +189,7 @@ export function shareSettings(
         granteeId: shareGrants.granteeId,
         email: shareGrants.invitedEmail,
         displayName: users.displayName,
+        avatarHue: users.avatarHue,
         status: shareGrants.status,
         role: shareGrants.role,
         emailStatus: shareGrants.emailStatus,
@@ -292,6 +293,7 @@ export function sharedWithMe(db: Database, viewerId: string): Promise<SharedEntr
         linkId: savedReferences.linkId,
         ownerId: containers.ownerId,
         ownerName: users.displayName,
+        ownerHue: users.avatarHue,
         name: containers.name,
         kind: containers.kind,
       })
@@ -330,7 +332,7 @@ export function sharedWithMe(db: Database, viewerId: string): Promise<SharedEntr
         const available = readable.has(row.containerId);
         return {
           containerId: row.containerId,
-          owner: { id: row.ownerId, displayName: row.ownerName },
+          owner: { id: row.ownerId, displayName: row.ownerName, avatarHue: row.ownerHue },
           name: available ? row.name : null,
           kind: available ? row.kind : null,
           via: {

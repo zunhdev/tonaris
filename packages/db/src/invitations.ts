@@ -22,6 +22,7 @@ const invitationColumns = {
   granteeId: shareGrants.granteeId,
   createdAt: shareGrants.createdAt,
   ownerName: owners.displayName,
+  ownerHue: owners.avatarHue,
   containerId: containers.id,
   containerName: containers.name,
   kind: containers.kind,
@@ -33,6 +34,7 @@ type InvitationRow = {
   id: string;
   createdAt: Date;
   ownerName: string | null;
+  ownerHue: number | null;
   containerId: string;
   containerName: string;
   kind: "folder" | "list";
@@ -41,7 +43,7 @@ type InvitationRow = {
 
 const invitationOf = (row: InvitationRow): Invitation => ({
   id: row.id,
-  owner: { displayName: row.ownerName },
+  owner: { displayName: row.ownerName, avatarHue: row.ownerHue },
   container: { id: row.containerId, name: row.containerName, kind: row.kind },
   role: row.role,
   invitedAt: row.createdAt.toISOString(),

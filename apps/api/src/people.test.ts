@@ -84,6 +84,7 @@ describe("people (FR-07.23)", () => {
       {
         id: ben.id,
         displayName: "Ben",
+        avatarHue: null,
         email: null,
         sharedAt: expect.any(String),
         sharesWithYou: "Folk",
@@ -93,6 +94,7 @@ describe("people (FR-07.23)", () => {
       {
         id: anna.id,
         displayName: "Anna",
+        avatarHue: null,
         email: "Anna@Example.com",
         sharedAt: expect.any(String),
         sharesWithYou: null,
@@ -232,5 +234,34 @@ describe("a person's page (FR-07.24)", () => {
       args: { grantId: uuidv7(), containerId: denis.listId, email: "anna@example.com" },
     });
     expect((await peopleOf(denis.cookie)).map((person) => person.id)).toEqual([anna.id]);
+  });
+});
+
+describe("profiles (FR-11.16)", () => {
+  test("the account carries its color and About; a person's About shows to their people only", async () => {
+    const denis = await member("denis@example.com", "Denis", "Doom");
+    const anna = await member("anna@example.com", "Anna", "Jazz");
+    await send(anna.cookie, { name: "account.setAvatarColor", args: { avatarHue: 120 } });
+    await send(anna.cookie, { name: "account.setAbout", args: { about: "Jazz, mostly." } });
+    const me = await t.call("/v1/me", { headers: { cookie: anna.cookie } });
+    expect(await me.json()).toMatchObject({ avatarHue: 120, about: "Jazz, mostly." });
+
+    // Denis invites Anna: she's one of his people, but he isn't hers until she accepts.
+    const toAnna = uuidv7();
+    await send(denis.cookie, {
+      name: "share.invite",
+      args: { grantId: toAnna, containerId: denis.listId, email: "anna@example.com" },
+    });
+    const annaFor = async (cookie: string) => (await page(cookie, anna.id)).body;
+    expect(await annaFor(denis.cookie)).toMatchObject({
+      person: { avatarHue: 120 },
+      about: null,
+    });
+    await send(anna.cookie, { name: "share.accept", args: { grantId: toAnna } });
+    expect((await annaFor(denis.cookie))?.about).toBe("Jazz, mostly.");
+
+    // Removed from her People, he no longer sees it.
+    await send(anna.cookie, { name: "people.remove", args: { personId: denis.id } });
+    expect((await annaFor(denis.cookie))?.about).toBeNull();
   });
 });

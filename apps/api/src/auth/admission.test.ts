@@ -155,6 +155,8 @@ describe("joining with an invitation (FR-11.2, DS-91)", () => {
       id: account.id,
       email: "new.member@example.com",
       displayName: null,
+      avatarHue: null,
+      about: null,
       role: "user",
       termsAgreed: true,
     });

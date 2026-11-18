@@ -19,6 +19,7 @@ import { membershipSchema } from "./memberships";
 import { exceedsLength, isBlankName } from "./names";
 import { failure, type Failure } from "./outcomes";
 import { authorizeWrite } from "./policies";
+import { avatarHueSchema } from "./profiles";
 import { serviceLinkSchema } from "./service-links";
 import { z } from "./zod";
 
@@ -213,6 +214,7 @@ export const sharedSnapshotSchema = z
     }),
     owner: z.object({
       displayName: z.string().nullable(),
+      avatarHue: avatarHueSchema,
     }),
     containers: z.array(containerSchema).meta({
       description: "The root, with no parent, and its active folders and lists.",
@@ -578,6 +580,7 @@ export const shareSettingsSchema = z
             .string()
             .nullable()
             .meta({ description: "The person's display name, if they set one." }),
+          avatarHue: avatarHueSchema,
           status: z.enum(openGrantStatuses),
           role: z
             .enum(shareRoles)
@@ -680,7 +683,7 @@ export async function setGrantRole(
 export const invitationSchema = z
   .object({
     id: z.uuid(),
-    owner: z.object({ displayName: z.string().nullable() }),
+    owner: z.object({ displayName: z.string().nullable(), avatarHue: avatarHueSchema }),
     container: z.object({ id: z.uuid(), name: z.string(), kind: z.enum(containerKinds) }),
     role: z.enum(shareRoles).meta({ description: "What it lets them do (FR-07.18)." }),
     invitedAt: z.iso.datetime(),
@@ -805,7 +808,11 @@ export async function removeReference(
 export const sharedEntrySchema = z
   .object({
     containerId: z.uuid(),
-    owner: z.object({ id: z.uuid(), displayName: z.string().nullable() }),
+    owner: z.object({
+      id: z.uuid(),
+      displayName: z.string().nullable(),
+      avatarHue: avatarHueSchema,
+    }),
     name: z
       .string()
       .nullable()

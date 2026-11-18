@@ -15,6 +15,7 @@ import { count as counted } from "@/common/words";
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
 import { CopyShareButton } from "@/features/sharing/copy-share";
+import { OwnerPill } from "@/features/sharing/owner-pill";
 import { PhoneShared } from "@/features/sharing/phone-shared";
 import { useSharedEntries } from "@/features/sharing/shared-entries";
 import { useConnection } from "@/features/sync/sync-provider";
@@ -29,7 +30,6 @@ import {
   type Container,
   type ContainerKind,
   type Membership,
-  ownerLabel,
   servicesSentence,
 } from "@tonaris/domain";
 import { Button, buttonVariants } from "@tonaris/ui/components/button";
@@ -249,11 +249,7 @@ function ViewHeader({
       actions={
         <>
           {/* In a share the person edits, who it is from, as a viewer's page says (DS-70). */}
-          {inShare && (
-            <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-subtle px-2.5 text-small text-fg-secondary">
-              Can edit · Shared by {ownerLabel(place.ownerName)}
-            </span>
-          )}
+          {inShare && <OwnerPill rootId={place.rootId} prefix="Can edit" />}
           {/* And they may make a copy their own (FR-07.22, TON-133). */}
           {inShare && container && <CopyShareButton shared={{ ...container, name: title }} />}
           {editing && inShare && container?.kind === "folder" && (

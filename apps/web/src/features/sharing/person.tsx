@@ -157,7 +157,7 @@ function PersonDetails({
   return (
     <>
       <section aria-label={name} className="flex items-center gap-3">
-        <Avatar name={name} className="text-xl size-12" />
+        <Avatar name={name} hue={person.avatarHue} className="text-xl size-12" />
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-fg-primary">
             {name}
@@ -170,6 +170,8 @@ function PersonDetails({
           </span>
         </div>
       </section>
+      {/* Their About, which they show their people (FR-11.16, TON-296). */}
+      {shares.about && <p className="max-w-xl text-fg-primary">{shares.about}</p>}
       {!narrow && (
         <div className="flex flex-wrap gap-2">
           {yours.length > 0 && (

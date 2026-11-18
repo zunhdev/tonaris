@@ -122,7 +122,7 @@ describe("Shared with me in the tree (TON-130)", () => {
     owner = "Denis",
   ): SharedEntry => ({
     containerId: containers[0]?.parentId ?? uuidv7(),
-    owner: { id: ownerId, displayName: owner },
+    owner: { id: ownerId, displayName: owner, avatarHue: null },
     name,
     kind,
     via: { invitation: true, link: false },

@@ -5,6 +5,7 @@
 
 import { api } from "@/api";
 import { PageHeader, toCollection } from "@/common/page-header";
+import { Avatar } from "@/features/account/avatar";
 import { useConnection } from "@/features/sync/sync-provider";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
@@ -21,12 +22,15 @@ const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
 function Summary({ invitation }: { invitation: Invitation }) {
   const owner = invitation.owner.displayName ?? "Someone";
   return (
-    <span className="flex min-w-0 flex-col">
-      <span className="truncate text-fg-primary">"{invitation.container.name}"</span>
-      <span className="text-small text-fg-secondary">
-        A {invitation.container.kind} from {owner}
-        {invitation.role === "edit" ? ", to edit" : ""} ·{" "}
-        {dateFormat.format(new Date(invitation.invitedAt))}
+    <span className="flex min-w-0 items-center gap-3">
+      <Avatar name={owner} hue={invitation.owner.avatarHue} className="size-8 text-base" />
+      <span className="flex min-w-0 flex-col">
+        <span className="truncate text-fg-primary">"{invitation.container.name}"</span>
+        <span className="text-small text-fg-secondary">
+          A {invitation.container.kind} from {owner}
+          {invitation.role === "edit" ? ", to edit" : ""} ·{" "}
+          {dateFormat.format(new Date(invitation.invitedAt))}
+        </span>
       </span>
     </span>
   );

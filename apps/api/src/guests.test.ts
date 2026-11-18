@@ -86,11 +86,15 @@ const guest = (token: string) => t.call(`/v1/s/${token}`);
 
 test("a link's content, without a session, with artwork signed", async () => {
   const { doom, token } = await sharedDoom();
+  // The owner's avatar color reaches guests; their About never does (FR-11.16, TON-296).
+  await send({ name: "account.setAvatarColor", args: { avatarHue: 240 } });
+  await send({ name: "account.setAbout", args: { about: "Doom, mostly." } });
   const response = await guest(token);
   expect(response.status).toBe(200);
   const snapshot = sharedSnapshotSchema.parse(await response.json());
   expect(snapshot.rootId).toBe(doom);
-  expect(snapshot.owner).toEqual({ displayName: "Denis" });
+  expect(snapshot.owner).toEqual({ displayName: "Denis", avatarHue: 240 });
+  expect(JSON.stringify(snapshot)).not.toContain("Doom, mostly.");
   expect(snapshot.albums).toEqual([
     expect.objectContaining({ title: "Nightfall", artworkSignature: expect.any(String) }),
   ]);

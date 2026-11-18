@@ -6,6 +6,7 @@
 // DS-72's unavailable sentence once the link stops working. No search; "Sign in", the terms and the privacy notice
 // at the foot (TON-131).
 
+import { Avatar } from "@/features/account/avatar";
 import { artworkSrc } from "@/features/collection/artwork";
 import { coversIn } from "@/features/collection/container-covers";
 import { effectiveColor } from "@/features/collection/container-palette";
@@ -113,7 +114,12 @@ export function GuestPage({
           <h1 id="share-title" className="text-display text-fg-primary">
             {current.name}
           </h1>
-          <p className="text-fg-secondary">Shared by {owner}</p>
+          {/* The owner's name and avatar; never their About (FR-11.16, TON-296). */}
+          <p className="flex items-center gap-1.5 text-fg-secondary">
+            Shared by
+            <Avatar name={owner} hue={snapshot.owner.avatarHue} className="size-5 text-[11px]" />
+            {owner}
+          </p>
           {/* Its Markdown rendered, three lines and More (TON-292). */}
           {current.description && (
             <DescriptionText key={current.id} text={current.description} className="mt-2" />
