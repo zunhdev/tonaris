@@ -220,6 +220,13 @@ export type CollectionStore = {
     userId: string,
     personId: string,
   ): Promise<{ id: string; email: string | null } | undefined>;
+  /** The owner's pending and accepted grants to `personId`, on any of their folders and lists, Trash included. */
+  openGrantsTo(ownerId: string, personId: string): Promise<ShareGrant[]>;
+  /**
+   * Hides `personId` from `userId`'s people as of now, by the clock grants are stamped with, until a later invitation
+   * connects them (FR-07.23).
+   */
+  hidePerson(userId: string, personId: string): Promise<void>;
   /** The account's display name; null for none (FR-11.3). */
   displayNameOf(userId: string): Promise<string | null>;
   setDisplayName(userId: string, displayName: string | null): Promise<void>;

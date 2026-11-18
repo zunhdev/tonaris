@@ -51,6 +51,11 @@ const invite = (email: string, grantId = uuidv7()): Mutation => ({
   name: "share.invite",
   args: { grantId, containerId: doom.id, email },
 });
+const byPersonId = (personId: string, containerId: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.invite",
+  args: { grantId: uuidv7(), containerId, personId },
+});
 const byEmail = (email: string, containerId: string, grantId = uuidv7()): Mutation => ({
   mutationId: uuidv7(),
   name: "share.invite",
@@ -207,6 +212,60 @@ describe("share.invite by person (FR-07.23)", () => {
     expect(parse({ personId: annaId })).toBe(true);
     expect(parse({})).toBe(false);
     expect(parse({ email: "anna@example.com", personId: annaId })).toBe(false);
+  });
+});
+
+const revokePerson = (personId: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "share.revokePerson",
+  args: { personId },
+});
+const removePerson = (personId: string): Mutation => ({
+  mutationId: uuidv7(),
+  name: "people.remove",
+  args: { personId },
+});
+
+describe("stopping sharing with a person and removing them (FR-07.24)", () => {
+  const blues: StoredContainer = { ...doom, id: uuidv7(), name: "Blues" };
+  const people = () => {
+    const memory = memoryStore({
+      containers: [doom, blues],
+      accounts: [
+        { id: owner, email: "denis@example.com", displayName: "Denis" },
+        { id: annaId, email: "anna@example.com", displayName: "Anna" },
+      ],
+    });
+    const run = (mutation: Mutation, principal: Principal = me): Promise<CommandResult> =>
+      runCommand(mutationSchema.parse(mutation), { principal, store: memory.store });
+    return { ...memory, run };
+  };
+
+  test("every open invitation to them is revoked; again, none; not through MCP", async () => {
+    const { run, grants } = people();
+    const accepted = uuidv7();
+    await run(byEmail("anna@example.com", doom.id, accepted));
+    await run(answer("share.accept", accepted), principalOf(annaId));
+    await run(byEmail("anna@example.com", blues.id));
+    expect(codeOf(await run(revokePerson(annaId), agent))).toBe("app_only");
+    expect(await run(revokePerson(annaId))).toMatchObject({
+      status: "applied",
+      result: { revoked: 2 },
+    });
+    expect([...grants.values()].map((grant) => grant.status)).toEqual(["revoked", "revoked"]);
+    expect(await run(revokePerson(annaId))).toMatchObject({ result: { revoked: 0 } });
+  });
+
+  test("removing hides them from inviting by id, revokes nothing, and is app-only", async () => {
+    const { run, grants } = people();
+    await run(byEmail("anna@example.com", doom.id));
+    expect(codeOf(await run(removePerson(annaId), agent))).toBe("app_only");
+    expect(codeOf(await run(removePerson(annaId)))).toBe("applied");
+    expect([...grants.values()].map((grant) => grant.status)).toEqual(["pending"]);
+    expect(codeOf(await run(byPersonId(annaId, blues.id)))).toBe("recipient_not_found");
+    // Removing oneself, or a stranger, changes nothing and says nothing.
+    expect(codeOf(await run(removePerson(owner)))).toBe("applied");
+    expect(codeOf(await run(removePerson(uuidv7())))).toBe("applied");
   });
 });
 

@@ -24,6 +24,7 @@ import { uuidv7Time } from "./ids";
 import { streamingServices } from "./links";
 import { membershipSchema } from "./memberships";
 import { failure, outcomeSchema, type Failure } from "./outcomes";
+import { personArgsSchema } from "./people";
 import { positionSchema } from "./positions";
 import type { Principal } from "./principals";
 import { linkRemoveArgsSchema, linkSetArgsSchema, serviceLinkSchema } from "./service-links";
@@ -540,6 +541,20 @@ export const shareCopySchema = z.object({
   args: shareCopyArgsSchema,
 });
 
+/** `share.revokePerson`: the owner revokes every invitation of theirs to one person (FR-07.15, FR-07.24). App-only. */
+export const shareRevokePersonSchema = z.object({
+  mutationId,
+  name: z.literal("share.revokePerson"),
+  args: personArgsSchema,
+});
+
+/** `people.remove`: hides someone from the person's People until a later invitation (FR-07.24). App-only (X-03). */
+export const peopleRemoveSchema = z.object({
+  mutationId,
+  name: z.literal("people.remove"),
+  args: personArgsSchema,
+});
+
 /** `account.setDisplayName`: sets or clears the display name (FR-11.3, TS-34). App-only (X-03). */
 export const accountSetDisplayNameSchema = z.object({
   mutationId,
@@ -594,6 +609,8 @@ export const mutationSchema = z
     shareSetRoleSchema,
     shareCopySchema,
     defaultsSetServiceOrderSchema,
+    shareRevokePersonSchema,
+    peopleRemoveSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

@@ -3,7 +3,7 @@
 // account's links and invitations are revoked, and its own invitations as a viewer withdrawn; the audit log
 // records it; and the data job is queued. The job then removes the owned rows in chunks, and the account last.
 
-import { and, eq, inArray, isNull, lt } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
 
 import {
   accountDeletionJobKind,
@@ -29,6 +29,7 @@ import {
   mutations,
   passkeys,
   positions,
+  peopleHidden,
   savedReferences,
   sessions,
   shareGrants,
@@ -160,6 +161,9 @@ async function deleteTheRest(tx: Transaction, userId: string): Promise<void> {
   await tx.delete(fieldDefinitions).where(eq(fieldDefinitions.ownerId, userId));
   await tx.delete(shareGrants).where(eq(shareGrants.granteeId, userId));
   await tx.delete(savedReferences).where(eq(savedReferences.viewerId, userId));
+  await tx
+    .delete(peopleHidden)
+    .where(or(eq(peopleHidden.userId, userId), eq(peopleHidden.personId, userId)));
   await tx.delete(viewPrefs).where(eq(viewPrefs.personId, userId));
   await tx.delete(positions).where(eq(positions.personId, userId));
   await tx.delete(accountSettings).where(eq(accountSettings.accountId, userId));

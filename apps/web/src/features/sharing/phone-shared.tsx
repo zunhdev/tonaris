@@ -1,6 +1,6 @@
 // A phone's Collection screen, switched to Shared (TON-134; DS-67, DS-110): pending invitations first, as one row to
-// the inbox, then each folder or list shared with the person, by name, with its owner, those that can't be opened
-// last and dimmed. Each opens its shared view, whose Back returns here.
+// the inbox, then People (TON-295), then each folder or list shared with the person, by name, with its owner, those
+// that can't be opened last and dimmed. Each opens its shared view, whose Back returns here.
 
 import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
@@ -8,7 +8,7 @@ import { ContainerIcon } from "@/features/collection/icons";
 import { shareLocation } from "@/features/collection/place";
 import { buildSharedTree } from "@/features/collection/tree";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, MailOpen, Users } from "lucide-react";
+import { ChevronRight, Contact, MailOpen, Users } from "lucide-react";
 import { useMemo } from "react";
 
 import { cn } from "@tonaris/ui/lib/utils";
@@ -33,6 +33,12 @@ export function PhoneShared() {
           <ChevronRight strokeWidth={1.5} aria-hidden className="size-4 text-fg-tertiary" />
         </Link>
       )}
+      {/* Everyone the person shares with, either way, read only on a phone (DS-121, TON-295). */}
+      <Link to="/people" className={row}>
+        <Contact strokeWidth={1.5} aria-hidden className="size-4 text-fg-secondary" />
+        <span className="flex-1">People</span>
+        <ChevronRight strokeWidth={1.5} aria-hidden className="size-4 text-fg-tertiary" />
+      </Link>
       {items.length === 0 ? (
         <p className="py-6 text-center text-fg-secondary">
           Nothing is shared with you yet. Invitations you accept and links you add show here.

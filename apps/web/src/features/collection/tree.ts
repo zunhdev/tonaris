@@ -56,6 +56,8 @@ export function buildTree(
 export const places = [
   { place: "unsorted", name: "Unsorted" },
   { place: "shared", name: "Shared with me" },
+  // Everyone the person shares with, either way (FR-07.24, TON-295).
+  { place: "people", name: "People" },
   // Only while invitations are pending (DS-31).
   { place: "invitations", name: "Invitations" },
   // Only while AI clients' requests wait for approval (DS-86, TS-64).

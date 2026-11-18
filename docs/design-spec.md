@@ -548,6 +548,7 @@ Typed confirmation is reserved for account deletion (DS-97).
 4. **Collection:** the root's folders and lists in the owner's root order.
 5. **Unsorted**, with count.
 6. **Shared with me:** references grouped under each owner's display name. Invitation-based and link-saved references show distinct glyphs.
+   - *TON-295:* **People** follows Shared with me (and what it holds), with lucide's Contact icon, opening `/people` (DS-121). A person's page selects it too.
 7. **Invitations**, visible only when pending invitations exist, with a badge.
 8. **Trash**, with count.
 9. **Footer:** the SyncIndicator.
@@ -600,6 +601,7 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 | `/unsorted`, `/trash` | Unsorted, Trash (Trash is desktop only) |
 | `/a/:albumId` | Album deep link. Opens the inspector over the last view, or a standalone page when entered directly. |
 | `/shared` | Shared with me index |
+| `/people`, `/people/:personId` | People and a person's page (DS-121, TON-295) |
 | `/invitations`, `/invitations/:id` | Sharing invitations inbox and detail (landing from email) |
 | `/s/:linkToken` (+ `/f/:id`, `/l/:id` below it) | Guest and link-shared view (SSR) |
 | `/settings/{profile,account,preferences,fields,connections,data}` | Settings |
@@ -1343,6 +1345,14 @@ Folder units expand to show their contents read-only. Contents are labelled "Par
 *As built in TON-190 (FR-07.18):* a share the person can edit is marked.
 - **`/shared`:** "Folder · by invitation · you can edit".
 - **The tree:** a top entry ends with a pencil glyph, read as ", you can edit this".
+
+**DS-121 People** *(decided with the creator 18 November 2026; built in TON-295; FR-07.23, FR-07.24)*. `/people` lists the person's people, the most recently shared with first.
+- **A row** has the avatar, the display name and the address the owner typed (else the address alone), then "You share 3 lists and 1 folder (1 to edit)" and "Shares 2 lists with you", lists first, either line left out at zero, and "Nothing shared now" for neither. It opens the person's page.
+- **"Find people…"** finds by name or address as the invite field does (DS-65); with no match it says "No one matches '{text}'.". With nobody: "Nobody yet. People you invite, and people whose invitations you accept, show here."
+- **A person's page**, titled with their name, shows the avatar, the name and address, and both lines joined by " · ". Then "You share with {name}" and "{name} shares with you", each folder or list by name in quotes, over "List" or "Folder, with everything inside it", its role and Pending or Accepted, sorted by name. The owner's open their sharing dialog (DS-65) on a desktop and read only on a phone; theirs open the shared view (DS-70), or the invitation (DS-66) while pending. Empty, they read "You don't share anything with {name}." and "{name} doesn't share anything with you now."
+- **Actions**, desktop only: **Stop sharing with {name}…** (while the owner shares anything with them) opens the standard confirmation (DS-28): "Stop sharing with {name}?", each folder and list, "{name} loses access to these at once, and to any you share with them from Trash. What {name} shares with you stays." and "This can't be undone: you'd have to invite them again.", with **Stop sharing with {name}**. **Remove from People** acts at once and returns to `/people`. Both are announced.
+- **A phone** reaches People from the Shared screen's People row (DS-110), after any invitations.
+- **Anyone else's page** says "This person isn't one of your people." with a link to People.
 
 **DS-68 Signed-in visit to a shared link.** A banner reads "Shared by {name} · **Add to Shared with me**". It changes to "In Shared with me" after adding. Adding never happens implicitly. *(FR-07.13)*
 - *As built in TON-68:*

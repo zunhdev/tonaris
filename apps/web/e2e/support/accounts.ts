@@ -198,6 +198,9 @@ export const accounts = {
   peopleOwner: at("people-owner"),
   peopleFriend: at("people-friend"),
   peopleSharer: at("people-sharer"),
+  // The People page and a person's page (people-page.e2e.ts, TON-295): the owner and the person they share with.
+  rosterOwner: at("roster-owner"),
+  rosterFriend: at("roster-friend"),
   // ⌫ removes the focused album from the list on view (album-trash.e2e.ts, TON-228).
   backspaceRemove: at("backspace-remove"),
   // The glyph on shared folders and lists (sharing-glyph.e2e.ts, TON-227).

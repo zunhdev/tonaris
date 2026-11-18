@@ -4303,6 +4303,55 @@
                               "string",
                               "null"
                             ]
+                          },
+                          "yours": {
+                            "type": "object",
+                            "properties": {
+                              "folders": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "lists": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "toEdit": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Those of them they can edit (FR-07.18)."
+                              }
+                            },
+                            "required": [
+                              "folders",
+                              "lists",
+                              "toEdit"
+                            ],
+                            "additionalProperties": false,
+                            "description": "The signed-in person's folders and lists outside Trash with an invitation to them, pending or accepted (FR-07.24)."
+                          },
+                          "theirs": {
+                            "type": "object",
+                            "properties": {
+                              "folders": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "lists": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "folders",
+                              "lists"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Their folders and lists the signed-in person accepted and can open now (FR-07.24)."
                           }
                         },
                         "required": [
@@ -4310,7 +4359,9 @@
                           "displayName",
                           "email",
                           "sharedAt",
-                          "sharesWithYou"
+                          "sharesWithYou",
+                          "yours",
+                          "theirs"
                         ],
                         "additionalProperties": false,
                         "description": "Someone connected to the signed-in person by an invitation (FR-07.23)."
@@ -4326,6 +4377,292 @@
             }
           },
           "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/people/{id}": {
+      "get": {
+        "summary": "Get one of the person's people",
+        "description": "One of the signed-in person's people (FR-07.23) and what's shared each way, by name (FR-07.24, DS-121): their own folders and lists outside Trash with an open invitation to them, and theirs they're invited to, pending, or accepted and can open now. Anyone else answers 404, as if they didn't exist. `share.revokePerson` and `people.remove` act on them, in the app only (X-03). Changes nothing.",
+        "tags": [
+          "sharing"
+        ],
+        "operationId": "getPerson",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What's shared each way with one of the signed-in person's people (DS-121).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "displayName": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "email": {
+                          "description": "The address the signed-in person last typed to invite them; null if they never did. Someone who only invited them never shows theirs (FR-07.3).",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "sharedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the newest invitation between them was made, either way."
+                        },
+                        "sharesWithYou": {
+                          "description": "The name of the newest folder or list they share with the signed-in person that they can open now; null if none.",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "yours": {
+                          "type": "object",
+                          "properties": {
+                            "folders": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "lists": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "toEdit": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991,
+                              "description": "Those of them they can edit (FR-07.18)."
+                            }
+                          },
+                          "required": [
+                            "folders",
+                            "lists",
+                            "toEdit"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The signed-in person's folders and lists outside Trash with an invitation to them, pending or accepted (FR-07.24)."
+                        },
+                        "theirs": {
+                          "type": "object",
+                          "properties": {
+                            "folders": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "lists": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "folders",
+                            "lists"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Their folders and lists the signed-in person accepted and can open now (FR-07.24)."
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "displayName",
+                        "email",
+                        "sharedAt",
+                        "sharesWithYou",
+                        "yours",
+                        "theirs"
+                      ],
+                      "additionalProperties": false,
+                      "description": "Someone connected to the signed-in person by an invitation (FR-07.23)."
+                    },
+                    "yours": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "grantId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "description": "The invitation: one of theirs to the signed-in person opens its page while pending."
+                          },
+                          "containerId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "folder",
+                              "list"
+                            ]
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "accepted"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "grantId",
+                          "containerId",
+                          "name",
+                          "kind",
+                          "role",
+                          "status"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "The signed-in person's folders and lists outside Trash with an open invitation to them."
+                    },
+                    "theirs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "grantId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "description": "The invitation: one of theirs to the signed-in person opens its page while pending."
+                          },
+                          "containerId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "folder",
+                              "list"
+                            ]
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "view",
+                              "edit"
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "accepted"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "grantId",
+                          "containerId",
+                          "name",
+                          "kind",
+                          "role",
+                          "status"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Theirs the signed-in person is invited to, pending, or accepted and can open now, outside Trash."
+                    }
+                  },
+                  "required": [
+                    "person",
+                    "yours",
+                    "theirs"
+                  ],
+                  "additionalProperties": false,
+                  "description": "What's shared each way with one of the signed-in person's people (DS-121)."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Problem details (RFC 9457) with a TS-27 `code`",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
             "description": "Problem details (RFC 9457) with a TS-27 `code`",
             "content": {
               "application/problem+json": {
@@ -10857,6 +11194,72 @@
                       "args",
                       "base"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "share.revokePerson"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "personId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "personId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "people.remove"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "personId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "personId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -13451,6 +13854,72 @@
                       "args",
                       "base"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "share.revokePerson"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "personId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "personId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "people.remove"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "personId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "personId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -16044,6 +16513,72 @@
                       "name",
                       "args",
                       "base"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "share.revokePerson"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "personId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "personId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "people.remove"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "personId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "personId"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args"
                     ]
                   }
                 ],
@@ -22325,6 +22860,76 @@
                   "name",
                   "args",
                   "base"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "share.revokePerson"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "personId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    },
+                    "required": [
+                      "personId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "people.remove"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "personId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    },
+                    "required": [
+                      "personId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args"
                 ],
                 "additionalProperties": false
               }

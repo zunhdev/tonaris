@@ -161,6 +161,8 @@ export function memoryStore({
     { viewerId: string; containerId: string; linkId: string | null }
   >();
   const grantRows = new Map<string, GrantRow>();
+  /** People hidden from someone's People, by `user:person` (FR-07.23). */
+  const hiddenRows = new Map<string, Date>();
   const shareLinkRows = new Map<
     string,
     { id: string; containerId: string; tokenHash: Uint8Array; revokedAt: Date | null }
@@ -679,6 +681,8 @@ export function memoryStore({
       return Promise.resolve(account && { id: account.id });
     },
     findPerson(userId, personId) {
+      // Hidden until a later invitation, which the memory store has no clock for: hidden stays hidden here.
+      if (hiddenRows.has(`${userId}:${personId}`)) return Promise.resolve(undefined);
       // Grants in the order they were made, so the last address typed wins (FR-07.23).
       let found: { id: string; email: string | null } | undefined;
       for (const grant of grantRows.values()) {
@@ -698,6 +702,22 @@ export function memoryStore({
         found = { id: personId, email: typed ?? found?.email ?? null };
       }
       return Promise.resolve(found);
+    },
+    openGrantsTo(ownerId, personId) {
+      return Promise.resolve(
+        [...grantRows.values()]
+          .filter(
+            (grant) =>
+              ownedBy(ownerId, grant.containerId) &&
+              grant.granteeId === personId &&
+              (grant.status === "pending" || grant.status === "accepted"),
+          )
+          .map(({ id, status, role }) => ({ id, status, role })),
+      );
+    },
+    hidePerson(userId, personId) {
+      hiddenRows.set(`${userId}:${personId}`, new Date());
+      return Promise.resolve();
     },
     displayNameOf: (userId) => Promise.resolve(accountRows.get(userId)?.displayName ?? null),
     setDisplayName(userId, displayName) {
@@ -829,6 +849,7 @@ export function memoryStore({
     positions: positionRows,
     accounts: accountRows,
     grants: grantRows,
+    hidden: hiddenRows,
     shareLinks: shareLinkRows,
     references: referenceRows,
   };

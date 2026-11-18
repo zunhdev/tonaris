@@ -9,7 +9,3 @@ POST /v1/approvals/{id}/decision the 'operation' response property const value '
 # backup. Its only reader was the web app's Admin → Operations page.
 GET /v1/admin/operations removed the required property `lastBackup` from the response with the `200` status
 GET /v1/admin/operations removed the required property 'lastBackup' from the response with the '200' status
-# TON-294, 18 November 2026: an invitation of one of the owner's people by account may have no typed address
-# (FR-07.23). Its only reader is the web app's sharing dialog; closed testing (TON-164).
-GET /v1/containers/{id}/sharing the response property `invitations/items/email` became nullable for the status `200`
-GET /v1/containers/{id}/sharing the response property 'invitations/items/email' became nullable for the status '200'

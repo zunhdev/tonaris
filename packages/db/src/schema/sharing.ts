@@ -82,3 +82,22 @@ export const savedReferences = table(
   },
   (t) => [primaryKey({ columns: [t.viewerId, t.containerId] }), index().on(t.containerId)],
 );
+
+/**
+ * People someone removed from their People (FR-07.23, FR-07.24; TON-295): hidden while no invitation either way has
+ * connected them since `hidden_at`. Both columns reference `user` with NO ACTION; account deletion removes both sides.
+ */
+export const peopleHidden = table(
+  "people_hidden",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id),
+    personId: uuid()
+      .notNull()
+      .references(() => users.id),
+    hiddenAt: instant().notNull(),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.personId] }), index().on(t.personId)],
+);

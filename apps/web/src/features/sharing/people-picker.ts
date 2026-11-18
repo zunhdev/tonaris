@@ -1,8 +1,10 @@
 // What the invite field offers (DS-65, FR-07.23; TON-294): the owner's people, without those already invited to this
 // folder or list. Before anything is typed, the 8 most recently shared with; typed words must each match a person's
 // name or the address the owner typed for them, as search matches (FR-12.5, TON-201), names matching the whole text
-// first. Pure, so the rules are tested without a DOM.
+// first. The People page finds people the same way, and says what's shared each way (DS-121, TON-295). Pure, so the
+// rules are tested without a DOM.
 
+import { count } from "@/common/words";
 import {
   matchLimit,
   suggestedCount,
@@ -82,4 +84,32 @@ export function clashingNames(shown: readonly PersonChoice[]): Set<string> {
     seen.add(name);
   }
   return twice;
+}
+
+/** "3 lists and 1 folder", lists first; undefined for none. */
+function listsAndFolders({
+  folders,
+  lists,
+}: {
+  folders: number;
+  lists: number;
+}): string | undefined {
+  const parts = [
+    ...(lists > 0 ? [count(lists, "list", "lists")] : []),
+    ...(folders > 0 ? [count(folders, "folder", "folders")] : []),
+  ];
+  return parts.length === 0 ? undefined : parts.join(" and ");
+}
+
+/** What the owner shares with a person, as their People row says it (DS-121): "You share 3 lists (1 to edit)". */
+export function yoursText(yours: Person["yours"]): string | undefined {
+  const shared = listsAndFolders(yours);
+  if (shared === undefined) return undefined;
+  return `You share ${shared}${yours.toEdit > 0 ? ` (${yours.toEdit} to edit)` : ""}`;
+}
+
+/** What a person shares with the owner, as their People row says it (DS-121): "Shares 2 lists with you". */
+export function theirsText(theirs: Person["theirs"]): string | undefined {
+  const shared = listsAndFolders(theirs);
+  return shared === undefined ? undefined : `Shares ${shared} with you`;
 }

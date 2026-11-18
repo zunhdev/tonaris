@@ -61,6 +61,8 @@ function created(mutation: Mutation): string[] {
     case "share.setRole":
     case "share.saveLink":
     case "share.removeReference":
+    case "share.revokePerson":
+    case "people.remove":
     case "account.setDisplayName":
       return [];
     default:
@@ -125,6 +127,9 @@ function referenced(mutation: Mutation): (string | null)[] {
     case "share.revoke":
     case "share.setRole":
       return [mutation.args.grantId];
+    case "share.revokePerson":
+    case "people.remove":
+      return [mutation.args.personId];
     case "link.set":
     case "link.remove":
       return [mutation.args.albumId];

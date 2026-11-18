@@ -329,6 +329,17 @@ test("Mine and Shared switch the Collection screen, and Back from a share return
   await page.getByRole("radio", { name: "Mine" }).click();
   await expect(page).toHaveURL(/\/c$/);
   await expect(page.getByRole("navigation", { name: "More" })).toBeVisible();
+
+  // People, from Shared, reads on a phone: Anna and what she shares, with nothing to change (TON-295).
+  await page.getByRole("radio", { name: "Shared · 1" }).click();
+  await page.getByRole("link", { name: "People" }).click();
+  await expect(page).toHaveURL(/\/people$/);
+  const annaRow = page.getByRole("list", { name: "People" }).getByRole("link");
+  await expect(annaRow).toHaveText([/Anna\s*Shares 1 list with you/]);
+  await annaRow.click();
+  await expect(page.getByRole("link", { name: /Road trip/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove from People" })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test("two levels down, the name opens the path, in the person's own folders and in a share", async ({
