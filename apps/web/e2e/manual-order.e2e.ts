@@ -15,6 +15,7 @@ import {
   created,
   list,
   live,
+  renameElsewhere,
   saved,
   violations,
   foldersAsRows,
@@ -382,6 +383,77 @@ test("albums dragged onto a list in the tree join it, and with ⌥ move there, w
   await live(page);
   await expect(grid(page, "Stoner").getByRole("row")).toHaveCount(2);
   await expect(rowOf(page, "Stoner", "Dopesmoker")).toHaveCount(1);
+});
+
+test("a drag onto the tree lights the folder under the pointer as rows move, its name chip where it was taken (TON-302)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.dragTarget);
+  await live(page);
+  const genres: Container = { ...list("Genres"), kind: "folder" };
+  const folders = ["Blues", "Country", "Disco", "Folk", "Funk"].map((name): Container =>
+    Object.assign(list(name), { kind: "folder" as const, parentId: genres.id }),
+  );
+  const doom: Container = { ...list("Doom"), parentId: genres.id };
+  // Enough below them for the sidebar to scroll.
+  const more = Array.from({ length: 16 }, (_, n) => list(`More ${String(n + 1).padStart(2, "0")}`));
+  await page.evaluate(
+    async (containers) => {
+      await window.tonarisSync?.containers.insert(containers).when("settled");
+    },
+    [genres, ...folders, doom, ...more],
+  );
+  // Genres sorted by name, so a rename moves a folder among the others.
+  await page.goto(`/f/${genres.id}`);
+  await live(page);
+  await chooseSort(page, "Name");
+  await page.setViewportSize({ width: 1280, height: 520 });
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  const tree = page.getByRole("tree");
+  const item = (name: string) => tree.getByRole("treeitem", { name: new RegExp(`^${name}`) });
+  const inGenres = tree.locator('[role="treeitem"][aria-level="2"]');
+  await expect(inGenres).toHaveText(["Blues", "Country", "Disco", "Folk", "Funk", /^Doom/]);
+  const lit = /bg-accent-soft/;
+
+  // A rename saved in another browser mid-drag takes Blues to the end, and the folders below move up a row under
+  // the pointer. The folder lit is the one now under it, Disco, not Country, which was.
+  const [x, y] = await centre(item("Country"));
+  await dragOver(page, item("Doom"), item("Country"));
+  await expect(item("Country")).toHaveClass(lit);
+  await renameElsewhere(page, folders[0]!.id, "Blues", "Zydeco");
+  await expect(inGenres).toHaveText(["Country", "Disco", "Folk", "Funk", "Zydeco", /^Doom/]);
+  await page.mouse.move(x, y + 2, { steps: 2 });
+  await expect(item("Disco")).toHaveClass(lit);
+  await expect(item("Country")).not.toHaveClass(lit);
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+
+  // The sidebar scrolls after Doom is pressed and before the drag starts, 6 px on, as a wheel turned just before the
+  // press does in Chromium: the chip with its name stays where the pointer took the row, its middle, and not where
+  // the row went.
+  const viewport = page
+    .getByRole("navigation", { name: "Sidebar" })
+    .locator('[data-slot="scroll-area-viewport"]');
+  await viewport.evaluate((element) => element.scrollTo({ top: 0 }));
+  const [dx, dy] = await centre(item("Doom"));
+  const half = ((await item("Doom").boundingBox())?.height ?? 0) / 2;
+  await page.mouse.move(dx, dy);
+  await page.mouse.down();
+  await viewport.evaluate((element) => element.scrollBy({ top: 100 }));
+  await expect.poll(() => viewport.evaluate((element) => element.scrollTop)).toBe(100);
+  await page.mouse.move(dx, dy + 10, { steps: 3 });
+  // dnd-kit counts the pointer from the move after the one that starts the drag.
+  await page.mouse.move(dx, dy + 12);
+  const chip = page.locator('[data-slot="drag-overlay"]');
+  await expect(chip).toContainText("Doom");
+  await expect
+    .poll(async () => Math.round((await chip.boundingBox())?.y ?? 0))
+    .toBe(Math.round(dy + 12 - half));
+  await page.mouse.move(...(await centre(item("Folk"))), { steps: 6 });
+  await expect(item("Folk")).toHaveClass(lit);
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
 });
 
 async function centre(locator: Locator): Promise<[number, number]> {

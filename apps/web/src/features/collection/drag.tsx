@@ -3,25 +3,30 @@
 // land; a drop rearranges (TS-16). A folder or list, dragged from its row or the tree, moves when dropped onto a
 // folder in the tree or onto Collection, which highlight while it is over them (FR-01.4, FR-01.5). Pointer only:
 // the keyboard rearranges with ⌥↑ / ⌥↓ and moves with M. Only rows in view can be targets, since the rest are not
-// drawn; the overlay keeps the dragged item's name in sight as the view scrolls, and over a folder it can move into,
-// what the move would do to sharing (DS-69, FR-07.14). An album from the person's own list or Unsorted, dropped on
-// another of their lists in the tree, joins it; with ⌥ held, from a list, it moves there (TON-229).
+// drawn; the overlay keeps the dragged item's name in sight as the view scrolls, where the pointer took hold of it,
+// and over a folder it can move into, what the move would do to sharing (DS-69, FR-07.14). The target is what is
+// under the pointer on the page as it is, so rows that move during a drag are found where they went (TON-302). An
+// album from the person's own list or Unsorted, dropped on another of their lists in the tree, joins it; with ⌥
+// held, from a list, it moves there (TON-229).
 
 import { SharingImpactPreview } from "@/features/sharing/sharing-impact";
 import { useConnection } from "@/features/sync/sync-provider";
 import {
   DndContext,
   DragOverlay,
-  MeasuringStrategy,
   PointerSensor,
-  pointerWithin,
   useDndContext,
   useDraggable,
   useDroppable,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragMoveEvent,
+  type DraggableNode,
+  type DroppableContainer,
+  type Modifier,
+  type PointerSensorOptions,
 } from "@dnd-kit/core";
 import {
   createContext,
@@ -31,6 +36,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 
@@ -89,23 +95,102 @@ function placeOf(element: HTMLElement) {
   return { top, left, width, height, bottom, right };
 }
 
-/** The row a drag is over, and which half of it the pointer is in. */
+/**
+ * The drop target under the pointer, found on the page as it is now (TON-302), with where it is and where the pointer
+ * is. dnd-kit's `pointerWithin` reads where it measured each target, which it measures again only as targets come and
+ * go or their list scrolls: rows that moved meanwhile, such as a folder re-sorted by a rename saved elsewhere, lit the
+ * folder that used to be under the pointer.
+ */
+const underPointer: CollisionDetection = ({ droppableContainers, pointerCoordinates }) => {
+  if (!pointerCoordinates) return [];
+  const targets = new Map<Element, DroppableContainer>();
+  for (const container of droppableContainers) {
+    const node = container.node.current;
+    if (node && !targets.has(node)) targets.set(node, container);
+  }
+  for (const element of document.elementsFromPoint(pointerCoordinates.x, pointerCoordinates.y)) {
+    const container = targets.get(element);
+    if (container) {
+      const place = element.getBoundingClientRect();
+      const pointerY = pointerCoordinates.y;
+      return [
+        { id: container.id, data: { droppableContainer: container, value: 0, place, pointerY } },
+      ];
+    }
+  }
+  return [];
+};
+
+/** The row a drag is over, and which half of it the pointer is in, as `underPointer` found them. */
 function rowTargetOf(event: DragMoveEvent | DragEndEvent): (RowTarget & Indicator) | undefined {
-  const { over, activatorEvent, delta } = event;
+  const { over, collisions } = event;
   const data = over?.data.current;
   if (!over || !isRow(data)) return undefined;
-  const startY =
-    activatorEvent && "clientY" in activatorEvent && typeof activatorEvent.clientY === "number"
-      ? activatorEvent.clientY
-      : undefined;
-  if (startY === undefined) return undefined;
-  const side = startY + delta.y < over.rect.top + over.rect.height / 2 ? "before" : "after";
+  const found = collisions?.find((each) => each.id === over.id)?.data;
+  const place: unknown = found?.["place"];
+  const pointerY: unknown = found?.["pointerY"];
+  if (!(place instanceof DOMRect) || typeof pointerY !== "number") return undefined;
+  const side = pointerY < place.top + place.height / 2 ? "before" : "after";
   return { ...data, side };
 }
 
+/** Where in the dragged item the pointer took hold of it, by its press, measured as the press lands (TON-302). */
+const grips = new WeakMap<Event, { x: number; y: number }>();
+
+/**
+ * dnd-kit's pointer sensor, also noting where in the item a press lands. The drag starts 6 px later, and by then the
+ * item may have moved with its list still scrolling, so the overlay is placed by the press rather than by where the
+ * item has got to: placed by the item, the name sat rows away from the pointer (TON-302).
+ */
+class GripSensor extends PointerSensor {
+  static override activators = [
+    {
+      eventName: "onPointerDown" as const,
+      handler: (
+        event: ReactPointerEvent,
+        options: PointerSensorOptions,
+        context?: { active: DraggableNode },
+      ) => {
+        const [press] = PointerSensor.activators;
+        if (!press?.handler(event, options)) return false;
+        const item = context?.active.node.current?.getBoundingClientRect();
+        if (item) {
+          grips.set(event.nativeEvent, {
+            x: event.clientX - item.left,
+            y: event.clientY - item.top,
+          });
+        }
+        return true;
+      },
+    },
+  ];
+}
+
+/**
+ * Places the overlay at the pointer, less its grip, so it stays where the pointer took hold of the item. Its `top`
+ * and `left` are 0 (`overlayAtOrigin`), so the transform places it alone; without a grip, it goes where the item is.
+ */
+const atGrip: Modifier = ({ activatorEvent, activeNodeRect, transform }) => {
+  const grip = activatorEvent ? grips.get(activatorEvent) : undefined;
+  if (grip && activatorEvent instanceof PointerEvent) {
+    return {
+      ...transform,
+      x: activatorEvent.clientX + transform.x - grip.x,
+      y: activatorEvent.clientY + transform.y - grip.y,
+    };
+  }
+  return {
+    ...transform,
+    x: transform.x + (activeNodeRect?.left ?? 0),
+    y: transform.y + (activeNodeRect?.top ?? 0),
+  };
+};
+const overlayModifiers = [atGrip];
+const overlayAtOrigin = { top: 0, left: 0 };
+
 export function DragProvider({ children }: { children: ReactNode }) {
   // A press that moves less than 6 px is still a click, so links and buttons keep working.
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const sensors = useSensors(useSensor(GripSensor, { activationConstraint: { distance: 6 } }));
   const [active, setActive] = useState<DragItem | undefined>(undefined);
   const [indicator, setIndicator] = useState<Indicator | undefined>(undefined);
   // The folder, or the root, a dragged folder or list is over.
@@ -158,14 +243,10 @@ export function DragProvider({ children }: { children: ReactNode }) {
     <DragContext value={state}>
       <DndContext
         sensors={sensors}
-        collisionDetection={pointerWithin}
-        // Virtual rows are placed by a transform, which dnd-kit leaves out of its measures by default; and they move
-        // as the view re-sorts, so they are measured afresh while dragging.
-        measuring={{
-          draggable: { measure: placeOf },
-          dragOverlay: { measure: placeOf },
-          droppable: { strategy: MeasuringStrategy.Always, measure: placeOf },
-        }}
+        collisionDetection={underPointer}
+        // Virtual rows are placed by a transform, which dnd-kit leaves out of its measures by default. Drop targets
+        // are found on the page (`underPointer`), so dnd-kit's measures of them go unused.
+        measuring={{ draggable: { measure: placeOf }, dragOverlay: { measure: placeOf } }}
         // The views announce the moves themselves (DS-83).
         accessibility={{
           announcements: {
@@ -232,9 +313,9 @@ export function DragProvider({ children }: { children: ReactNode }) {
         onDragCancel={end}
       >
         {children}
-        <DragOverlay dropAnimation={null}>
+        <DragOverlay dropAnimation={null} modifiers={overlayModifiers} style={overlayAtOrigin}>
           {active && (
-            <div className="flex max-w-72 flex-col items-start gap-1">
+            <div data-slot="drag-overlay" className="flex max-w-72 flex-col items-start gap-1">
               <div className="inline-flex max-w-full items-center rounded-md bg-raised px-3 py-1.5 text-fg-primary shadow-floating">
                 <span className="truncate">{active.name}</span>
               </div>

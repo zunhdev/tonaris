@@ -80,6 +80,8 @@ export const accounts = {
   arrangeDrag: at("arrange-drag"),
   // Dragging albums onto a list in the tree (manual-order.e2e.ts, TON-229).
   albumDrag: at("album-drag"),
+  // The folder a drag lights is the one under the pointer (manual-order.e2e.ts, TON-302).
+  dragTarget: at("drag-target"),
   arrangePlaces: at("arrange-places"),
   arrangeMoves: at("arrange-moves"),
   arrangeSync: at("arrange-sync"),
