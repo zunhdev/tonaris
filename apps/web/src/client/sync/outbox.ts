@@ -8,7 +8,8 @@
 // by another tab of the account, which sends them on (`adopt`), so a reload loses no write.
 // An outbox is one lane. Captures, which can take a minute, have a lane of their own, so they never hold up the
 // edits made after them; a capture's entry waits for the main lane's entries made before it (`answeredBefore`), so
-// it never overtakes what it depends on either (TON-45).
+// it never overtakes what it depends on either (TON-45). "Before" is by a clock the lanes share (`outboxClock`), so a
+// list made and captured into in the same millisecond still goes first (TON-299).
 
 import { maxBatchItems, uuidv7, type Mutation, type Outcome } from "@tonaris/domain";
 
@@ -22,8 +23,23 @@ export type Sent = { answered: Outcome[] } | { unanswered: unknown };
 export const queuedStates = ["pending", "unconfirmed"] as const;
 export type QueuedState = (typeof queuedStates)[number];
 
+/**
+ * Stamps entries as they are made: milliseconds since the epoch, each later than the one before, even within one
+ * millisecond. Lanes that wait on each other share one, so their entries' order is the order they were made in
+ * (TON-299).
+ */
+export function outboxClock(): () => number {
+  let last = 0;
+  return () => {
+    last = Math.max(last + 0.001, Date.now());
+    return last;
+  };
+}
+
 export type OutboxOptions = {
   send: (entry: OutboxEntry) => Promise<Sent>;
+  /** Stamps new entries; lanes that wait on each other share one. Its own clock without one. */
+  clock?: () => number;
   /** The lane its entries are kept under, such as `capture`; none for the main lane. */
   lane?: string;
   /** Where entries are kept until answered; without it, a reload loses them. */
@@ -51,6 +67,7 @@ type Queued = { entry: OutboxEntry; stored: Promise<void>; resolve(outcomes: Out
 
 export function createOutbox({
   send,
+  clock = outboxClock(),
   lane,
   persistence,
   tab,
@@ -66,8 +83,6 @@ export function createOutbox({
   let draining = false;
   let stopped = false;
   let wake: (() => void) | undefined;
-  // Entries made in the same millisecond keep their order.
-  let lastCreated = 0;
   /** Who waits for the entries made before a time to be answered. */
   const waiters: { time: number; resolve: () => void }[] = [];
 
@@ -213,12 +228,12 @@ export function createOutbox({
     async enqueue(items: readonly OutboxItem[]): Promise<Outcome[]> {
       const sent: Promise<Outcome[]>[] = [];
       for (let start = 0; start < items.length; start += maxBatchItems) {
-        lastCreated = Math.max(lastCreated + 0.001, Date.now());
         const entry: OutboxEntry = {
           id: uuidv7(),
           tab: owner,
           ...(lane === undefined ? {} : { lane }),
-          createdAt: lastCreated,
+          // Later than every entry made before it, in this lane or one sharing the clock (TON-299).
+          createdAt: clock(),
           items: items.slice(start, start + maxBatchItems),
         };
         for (const { mutation } of entry.items) onState(mutation, "pending");

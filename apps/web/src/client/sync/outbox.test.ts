@@ -2,11 +2,11 @@
 // until answered, batches split at 200, entries kept in the browser until answered, and a gone tab's entries
 // adopted and sent first.
 
-import { describe, expect, test } from "bun:test";
+import { describe, expect, spyOn, test } from "bun:test";
 
 import { uuidv7, type Mutation, type Outcome } from "@tonaris/domain";
 
-import { createOutbox, type QueuedState, type Sent } from "./outbox";
+import { createOutbox, outboxClock, type QueuedState, type Sent } from "./outbox";
 import { memoryPersistence, type OutboxEntry, type OutboxItem } from "./persistence";
 import { memoryBrowser } from "./tabs";
 
@@ -271,6 +271,55 @@ describe("lanes (TON-45)", () => {
     await Promise.all([sent, captured, renamed]);
     expect(order.indexOf(list.key)).toBeLessThan(order.indexOf(capture.key));
     expect(order).toContain(rename.key);
+  });
+
+  test("with a shared clock, a capture made in the same millisecond as the list still waits for it (TON-299)", async () => {
+    // Every entry in one millisecond, as a list made and captured into at once can be.
+    const now = spyOn(Date, "now").mockReturnValue(1_795_000_000_000);
+    try {
+      const order: string[] = [];
+      const { promise: held, resolve: releaseList } = Promise.withResolvers<void>();
+      const clock = outboxClock();
+      const main = createOutbox({
+        clock,
+        send: async (entry) => {
+          await held;
+          order.push(entry.items[0]?.key ?? "");
+          return { answered: entry.items.map(() => confirmed(1)) };
+        },
+      });
+      const captureLane = createOutbox({
+        clock,
+        lane: "capture",
+        send: async (entry) => {
+          await main.answeredBefore(entry.createdAt);
+          order.push(entry.items[0]?.key ?? "");
+          return { answered: entry.items.map(() => confirmed(0)) };
+        },
+      });
+      const [list, capture] = [item("list"), item("capture")];
+      const made = main.enqueue([list]);
+      const captured = captureLane.enqueue([capture]);
+      await Bun.sleep(5);
+      // The capture hasn't gone ahead of the list.
+      expect(order).toEqual([]);
+      releaseList();
+      await Promise.all([made, captured]);
+      expect(order).toEqual([list.key, capture.key]);
+    } finally {
+      now.mockRestore();
+    }
+  });
+
+  test("the clock's stamps only grow, within one millisecond too", () => {
+    const now = spyOn(Date, "now").mockReturnValue(1_795_000_000_000);
+    try {
+      const clock = outboxClock();
+      const [first, second] = [clock(), clock()];
+      expect(second).toBeGreaterThan(first);
+    } finally {
+      now.mockRestore();
+    }
   });
 
   test("a main entry is answered while a capture is still running", async () => {

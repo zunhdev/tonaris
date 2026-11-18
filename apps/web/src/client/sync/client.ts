@@ -13,7 +13,7 @@ import { createFieldValueCollection } from "./field-values";
 import { createFieldCollection } from "./fields";
 import { createLinkCollection } from "./links";
 import { createContainerCollection, createMembershipCollection } from "./lists";
-import { createOutbox } from "./outbox";
+import { createOutbox, outboxClock } from "./outbox";
 import { memoryPersistence, type SyncPersistence } from "./persistence";
 import { createArrange, createPositionCollection } from "./positions";
 import { createReferenceCollection } from "./references";
@@ -68,7 +68,11 @@ export function createSyncClient({
   const engine = given ?? createSyncEngine(options);
   const states = createSaveStates({ persistence });
   let writer: ReturnType<typeof createWriter> | undefined;
+  // One clock for both lanes, so a capture made in the same millisecond as the list it goes into waits for it
+  // (TON-299).
+  const clock = outboxClock();
   const outbox = createOutbox({
+    clock,
     send: entrySender(options.apiUrl, options.fetch, { timeoutMs: options.requestTimeoutMs }),
     persistence,
     tab: options.tabs,
@@ -83,6 +87,7 @@ export function createSyncClient({
   });
   let captures: Captures | undefined;
   const captureOutbox = createOutbox({
+    clock,
     lane: "capture",
     send: async (entry) => {
       await outbox.answeredBefore(entry.createdAt);
