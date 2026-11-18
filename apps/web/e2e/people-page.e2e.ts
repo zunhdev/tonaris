@@ -7,7 +7,7 @@ import { uuidv7, type Container } from "@tonaris/domain";
 import { accounts, apiUrl } from "./support/accounts";
 import { signIn } from "./support/sign-in";
 import { expect, test, type Browser, type Page } from "./support/test";
-import { insert, live, saved, violations, webOrigin } from "./support/workspace";
+import { added, album, insert, live, saved, violations, webOrigin } from "./support/workspace";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -58,6 +58,9 @@ test("People lists what's shared each way; a person's page stops sharing and rem
   // Her profile, which the owner sees as one of her people (FR-11.16, TON-296).
   await send(friend, "account.setAvatarColor", { avatarHue: 120 });
   await send(friend, "account.setAbout", { about: "Jazz, mostly on vinyl." });
+  const favorite = album("Kind of Blue", { artistCredit: "Miles Davis" });
+  await added(friend, [favorite]);
+  await send(friend, "account.setFavorites", { albumIds: [favorite.id] });
 
   await signIn(page, accounts.rosterOwner);
   await live(page);
@@ -106,6 +109,10 @@ test("People lists what's shared each way; a person's page stops sharing and rem
   const theirs = page.getByRole("region", { name: "Anna shares with you" }).getByRole("listitem");
   await expect(theirs).toHaveText([/"Jazz"\s*List · Can view · Accepted/]);
   await expect(page.getByText("Jazz, mostly on vinyl.")).toBeVisible();
+  // Her favorites, by cover, title and artist only (TON-297).
+  const favorites = page.getByRole("region", { name: "Favorite albums" });
+  await expect(favorites.getByRole("listitem")).toHaveText([/Kind of Blue\s*Miles Davis/]);
+  await expect(favorites).not.toContainText("1986");
   expect(await violations(page, "main")).toEqual([]);
 
   // One of yours opens its sharing dialog.

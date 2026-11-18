@@ -294,6 +294,13 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
         subject: "Your avatar's color",
       };
     }
+    case "account.setFavorites": {
+      return {
+        summary: "Change your favorite albums",
+        what: "your favorite albums",
+        subject: "Your favorite albums",
+      };
+    }
     case "account.setAbout": {
       return {
         summary: "Change your About text",

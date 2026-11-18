@@ -5,7 +5,7 @@
 import { actingOwner, applied, isFailure } from "./command-kit";
 import type { CommandContext, CommandResult } from "./commands";
 import { containerKinds } from "./containers";
-import { avatarHueSchema } from "./profiles";
+import { avatarHueSchema, favoriteSchema } from "./profiles";
 import { openGrantStatuses, shareRoles, type ShareGrantStatus } from "./sharing";
 import { z } from "./zod";
 
@@ -85,6 +85,10 @@ export type PersonShare = z.infer<typeof personShareSchema>;
 export const personSharesSchema = z
   .object({
     person: personSchema,
+    favorites: z.array(favoriteSchema).meta({
+      description:
+        "Their favorite albums outside Trash, in order, for the same people as `about` (FR-11.16); else empty.",
+    }),
     about: z.string().nullable().meta({
       description:
         "Their About text, while the signed-in person is one of their people from their side: invited by them, or whose invitation they accepted (FR-11.16); else null.",

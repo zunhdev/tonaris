@@ -9,6 +9,7 @@ export * from "./collection";
 export * from "./fields";
 export * from "./jobs";
 export * from "./oauth";
+export * from "./profiles";
 export * from "./sharing";
 export * from "./sync";
 export * from "./views";

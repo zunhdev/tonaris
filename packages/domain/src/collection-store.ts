@@ -234,6 +234,8 @@ export type CollectionStore = {
   setAvatarHue(userId: string, avatarHue: number | null): Promise<void>;
   /** Sets the About text; null for none (FR-11.16). */
   setAbout(userId: string, about: string | null): Promise<void>;
+  /** Replaces the person's favorite albums, in order (FR-11.16, TON-297). */
+  setFavorites(userId: string, albumIds: readonly string[]): Promise<void>;
   /** The owner's pending or accepted grants and live links, on any of their folders and lists (TS-34). */
   activeShareCount(ownerId: string): Promise<number>;
   /** The person's pending or accepted grant on the container, if any: one at most (TS-11). */

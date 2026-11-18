@@ -28,7 +28,7 @@ import type { Outcome } from "./outcomes";
 import { removePerson, revokePerson } from "./people";
 import { setOrder, type Position } from "./positions";
 import type { Principal } from "./principals";
-import { setAbout, setAvatarColor } from "./profiles";
+import { setAbout, setAvatarColor, setFavorites } from "./profiles";
 import { removeLink, setLink, type PreparedLink, type ServiceLink } from "./service-links";
 import { copyShare } from "./share-copy";
 import {
@@ -176,6 +176,7 @@ export function mutationTarget(mutation: Mutation): MutationTarget | undefined {
     case "account.setDisplayName":
     case "account.setAvatarColor":
     case "account.setAbout":
+    case "account.setFavorites":
       return undefined;
     default:
       return mutation satisfies never;
@@ -233,6 +234,7 @@ const handlers = {
   "people.remove": ({ args }, context) => removePerson(args, context),
   "account.setAvatarColor": ({ args }, context) => setAvatarColor(args, context),
   "account.setAbout": ({ args }, context) => setAbout(args, context),
+  "account.setFavorites": ({ args }, context) => setFavorites(args, context),
 } satisfies Handlers;
 
 /** Every mutation's name, in the order of `mutationSchema`: for tests that must cover each one. */

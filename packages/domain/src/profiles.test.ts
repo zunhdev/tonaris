@@ -1,5 +1,5 @@
-// A person's profile (FR-11.16, TON-296): the avatar's hue, one of 12 or Automatic, and the About text, plain and at
-// most 160 code points, both app-only.
+// A person's profile (FR-11.16, TON-296, TON-297): the avatar's hue, one of 12 or Automatic, the About text, plain and
+// at most 160 code points, and up to four favorite albums of their own, all app-only.
 
 import { describe, expect, test } from "bun:test";
 
@@ -15,8 +15,28 @@ const denis = uuidv7();
 const me: Principal = { kind: "user", userId: denis, role: "user", client: "web" };
 const agent: Principal = { kind: "mcp", userId: denis, grantId: uuidv7(), mode: "manage" };
 
+const albumOf = (ownerId: string, title: string, trashed = false) => ({
+  id: uuidv7(),
+  ownerId,
+  trashed,
+  title,
+  artistCredit: "Someone",
+  releaseType: "album" as const,
+  isLive: false,
+  originalYear: 1990,
+  recordingYearStart: null,
+  recordingYearEnd: null,
+});
+const anna = uuidv7();
+const nightfall = albumOf(denis, "Nightfall");
+const binned = albumOf(denis, "Binned", true);
+const annas = albumOf(anna, "Jazz");
+
 function setup() {
-  const memory = memoryStore({ accounts: [{ id: denis, email: "denis@example.com" }] });
+  const memory = memoryStore({
+    accounts: [{ id: denis, email: "denis@example.com" }],
+    albums: [nightfall, binned, annas],
+  });
   const run = (mutation: Mutation, principal: Principal = me): Promise<CommandResult> =>
     runCommand(mutation, { principal, store: memory.store });
   return { ...memory, run };
@@ -77,5 +97,33 @@ describe("the About text (FR-11.16)", () => {
     expect(accounts.get(denis)?.about).toBe("Vinyl, mostly.");
     await run(about(" "));
     expect(accounts.get(denis)?.about).toBeNull();
+  });
+});
+
+const favorites = (albumIds: string[]): Mutation =>
+  mutationSchema.parse({ mutationId: uuidv7(), name: "account.setFavorites", args: { albumIds } });
+
+describe("favorite albums (FR-11.16, TON-297)", () => {
+  test("at most four, each once", () => {
+    expect(parse("account.setFavorites", { albumIds: [uuidv7(), uuidv7()] }).success).toBe(true);
+    const five = Array.from({ length: 5 }, () => uuidv7());
+    expect(parse("account.setFavorites", { albumIds: five }).success).toBe(false);
+    const id = uuidv7();
+    expect(parse("account.setFavorites", { albumIds: [id, id] }).success).toBe(false);
+  });
+
+  test("the person's own albums, one in Trash too, in order; not someone else's, nor through MCP", async () => {
+    const { run, favorites: kept } = setup();
+    expect(await run(favorites([nightfall.id]), agent)).toMatchObject({ code: "app_only" });
+    expect(await run(favorites([nightfall.id, annas.id]))).toMatchObject({
+      status: "failed",
+      code: "not_found",
+    });
+    expect(await run(favorites([nightfall.id, uuidv7()]))).toMatchObject({ code: "not_found" });
+    expect(kept.get(denis)).toBeUndefined();
+    expect(await run(favorites([binned.id, nightfall.id]))).toMatchObject({ status: "applied" });
+    expect(kept.get(denis)).toEqual([binned.id, nightfall.id]);
+    await run(favorites([]));
+    expect(kept.get(denis)).toEqual([]);
   });
 });

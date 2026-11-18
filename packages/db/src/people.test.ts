@@ -17,8 +17,8 @@ import {
 } from "@tonaris/domain";
 
 import { deleteAccountData } from "./account-deletion";
-import { connections, people, personShares } from "./people";
-import { peopleHidden, shareGrants, users } from "./schema";
+import { connections, favoritesOf, people, personShares } from "./people";
+import { peopleHidden, profileFavorites, shareGrants, users } from "./schema";
 import { sharingStore } from "./store/sharing";
 import { executeMutation } from "./sync";
 import { createTestDatabase, type TestDatabase } from "./testing";
@@ -290,5 +290,78 @@ describe("a person's page and hiding (FR-07.24)", () => {
     expect(await t.db.select().from(peopleHidden)).toHaveLength(2);
     await deleteAccountData(t.db, anna);
     expect(await t.db.select().from(peopleHidden)).toEqual([]);
+  });
+});
+
+async function newAlbum(ownerId: string, title: string): Promise<string> {
+  const id = uuidv7();
+  await run(ownerId, {
+    name: "album.create",
+    args: {
+      id,
+      title,
+      artistCredit: "Someone",
+      releaseType: "album",
+      isLive: false,
+      originalYear: 1990,
+      recordingYearStart: null,
+      recordingYearEnd: null,
+    },
+  });
+  return id;
+}
+
+describe("favorite albums (FR-11.16, TON-297)", () => {
+  test("in order; one in Trash hidden from their people and back in its place when restored; gone when purged", async () => {
+    const denis = await newPerson("Denis");
+    const anna = await newPerson("Anna");
+    const doom = await newList(denis, "Doom");
+    await grant(doom, anna, "accepted", { accepted: true, email: "anna@example.com" });
+    const ids = await Promise.all(
+      ["Nightfall", "Dopesmoker", "Homogenic"].map((title) => newAlbum(denis, title)),
+    );
+    const second = ids[1] ?? "";
+    await run(denis, { name: "account.setFavorites", args: { albumIds: ids } });
+    const seen = async () =>
+      (await personShares(t.db, anna, denis))?.favorites.map((favorite) => favorite.title);
+    expect(await seen()).toEqual(["Nightfall", "Dopesmoker", "Homogenic"]);
+    // Nothing else of the album: no ID, year or links.
+    expect(Object.keys((await personShares(t.db, anna, denis))?.favorites[0] ?? {})).toEqual([
+      "title",
+      "artistCredit",
+      "artworkUrl",
+    ]);
+
+    const unitId = uuidv7();
+    await run(denis, { name: "album.delete", args: { id: second, unitId } });
+    expect(await seen()).toEqual(["Nightfall", "Homogenic"]);
+    expect((await favoritesOf(t.db, denis)).map((favorite) => favorite.trashed)).toEqual([
+      false,
+      true,
+      false,
+    ]);
+    await run(denis, { name: "trash.recover", args: { unitId } });
+    expect(await seen()).toEqual(["Nightfall", "Dopesmoker", "Homogenic"]);
+
+    const again = uuidv7();
+    await run(denis, { name: "album.delete", args: { id: second, unitId: again } });
+    await run(denis, { name: "trash.purge", args: { unitIds: [again] } });
+    expect((await favoritesOf(t.db, denis)).map((favorite) => favorite.title)).toEqual([
+      "Nightfall",
+      "Homogenic",
+    ]);
+  });
+
+  test("hidden from anyone who isn't one of their people; account deletion removes them", async () => {
+    const denis = await newPerson("Denis");
+    const ben = await newPerson("Ben");
+    const nightfall = await newAlbum(denis, "Nightfall");
+    await run(denis, { name: "account.setFavorites", args: { albumIds: [nightfall] } });
+    // Ben invited Denis, who hasn't answered: Denis is one of Ben's people, but Ben isn't one of his.
+    const folk = await newList(ben, "Folk");
+    await grant(folk, denis, "pending");
+    expect(await personShares(t.db, ben, denis)).toMatchObject({ favorites: [], about: null });
+    await deleteAccountData(t.db, denis);
+    expect(await t.db.select().from(profileFavorites)).toEqual([]);
   });
 });

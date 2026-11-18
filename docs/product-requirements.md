@@ -614,7 +614,7 @@ The distinctions between *unknown*, *unused*, and *applied-empty* are preserved.
 - credentials, sessions, or MCP connections;
 - sharing configuration: invitations, grants, recipients, or links;
 - Shared with me references or other owners' content;
-- account profile data (display name, avatar color, About text, sign-in email);
+- account profile data (display name, avatar color, About text, favorite albums, sign-in email);
 - artwork image files. Artwork is exported as URLs.
 
 **FR-08.5 Consistency.** An export reflects one consistent point in time, with no half-applied changes. It states its creation time and format version. An album in several lists appears once, and its memberships reference it, so the file mirrors the collection's real structure.
@@ -781,6 +781,7 @@ Other users' collections are untouched, and their references to the deleted cont
 
 - **The avatar**, the name's first letter in that color, shows wherever the person is named to others: the sharing dialog, People, Shared with me, invitations, the "Shared by" pill, and guest link pages.
 - **The About text** shows only to the person's people (FR-07.23) from their side: those they invited, and those whose invitations they accepted. Guests, MCP agents and exports never get it.
+- **Up to four favorite albums** from their own collection, in their order, show to the same people on the person's page in People, as each album's cover, title and artist only (decided 18 November 2026, TON-297). A favorite in Trash is hidden until restored, and a purge removes it.
 - Profiles stay non-public (section 2.6).
 
 **FR-11.15 Feedback board.** Members send feedback and feature requests to a public board, where anyone can read, discuss and vote on requests (decided 1 November 2026, TON-132, TON-144).
@@ -1205,6 +1206,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (18 November 2026), your people** (P-TON-57, TON-294), from the creator's request to stop typing emails when sharing again: anyone you invited, unless they only ever declined, and anyone who invited you, once you accepted, is one of your people, even after the share ends. There are no friend requests. The invite field suggests them, the latest 8 before typing, and someone who invited you shows by name only and is invited by account. **Added** FR-07.23 and AC-52; **updated** FR-07.4 and section 2.6.
 - **Decision (18 November 2026), the People page** (P-TON-57, TON-295): People in the sidebar, after Shared with me, lists each person with what's shared each way, and a person's page lists both ways by name, each of the owner's opening its sharing dialog. On the desktop, "Stop sharing with {name}…" revokes all the owner's invitations to them after a confirmation, and "Remove from People" hides them until a new invitation; phones read only. **Added** FR-07.24 and AC-53.
 - **Decision (18 November 2026), your profile** (P-TON-57, TON-296): a person may choose their avatar's color, Automatic or one of 12 hues, and write a plain About text of up to 160 characters, in Settings → Profile. The avatar joins owners' names everywhere, guest pages included. The About text shows only to the person's people from their side, on their page in People and in a card from the "Shared by" pill; it stays out of exports and MCP. The privacy notice says so. **Added** FR-11.16; **updated** FR-11.13 and FR-08.4.
+- **Decision (18 November 2026), favorite albums** (P-TON-57, TON-297): a person picks up to four of their own albums in Settings → Profile, found by typing, and orders them. Their people see them on the person's page in People, by cover, title and artist only, with no year or service links, and not in the Shared by card (the creator's choices over my recommendations). A favorite in Trash is hidden until restored. **Updated** FR-11.16 and FR-08.4.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

@@ -153,7 +153,7 @@ export {
   pendingInvitations,
   recordInvitationEmail,
 } from "./invitations";
-export { people, personShares } from "./people";
+export { favoritesOf, people, personShares } from "./people";
 export { searchCollection } from "./search";
 export { copyApprovalScope, previewShareCopy, readCopyApprovalScope } from "./share-copy";
 export { previewSharing, type ImpactQuery } from "./sharing-impact";

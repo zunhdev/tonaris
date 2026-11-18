@@ -123,6 +123,7 @@ describe("migrations", () => {
       "passkey",
       "people_hidden",
       "positions",
+      "profile_favorites",
       "provider_cache",
       "saved_references",
       "service_state",

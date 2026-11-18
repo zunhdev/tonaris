@@ -3,7 +3,7 @@
 // less those they removed from People since their last connection. For the invite field's suggestions (DS-65), the
 // People page and a person's page (DS-121), and `share.invite` by person.
 
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 
 import {
   byBytes,
@@ -20,7 +20,7 @@ import {
 
 import { canReadContainer } from "./access";
 import { readSnapshot, type Database, type Executor } from "./client";
-import { containers, peopleHidden, shareGrants, users } from "./schema";
+import { albums, containers, peopleHidden, profileFavorites, shareGrants, users } from "./schema";
 
 /** A folder or list shared one way, with whether it is in Trash. */
 type Share = {
@@ -198,6 +198,43 @@ function personOf(
   };
 }
 
+/**
+ * `userId`'s favorite albums in order, with whether each is in Trash (FR-11.16, TON-297): their title, artist and
+ * artwork only, never anything else of the album.
+ */
+export async function favoritesOf(
+  db: Executor,
+  userId: string,
+): Promise<
+  {
+    albumId: string;
+    title: string;
+    artistCredit: string;
+    artworkUrl: string | null;
+    trashed: boolean;
+  }[]
+> {
+  const rows = await db
+    .select({
+      albumId: albums.id,
+      title: albums.title,
+      artistCredit: albums.artistCredit,
+      artworkUrl: albums.artworkUrl,
+      trashedAt: albums.trashedAt,
+    })
+    .from(profileFavorites)
+    .innerJoin(albums, eq(albums.id, profileFavorites.albumId))
+    .where(and(eq(profileFavorites.userId, userId), eq(albums.ownerId, userId)))
+    .orderBy(asc(profileFavorites.position));
+  return rows.map(({ albumId, title, artistCredit, artworkUrl, trashedAt }) => ({
+    albumId,
+    title,
+    artistCredit,
+    artworkUrl,
+    trashed: trashedAt !== null,
+  }));
+}
+
 /** What a person shows of themselves (FR-11.16): their About only to their people. */
 type Account = { displayName: string | null; avatarHue: number | null; about: string | null };
 
@@ -272,9 +309,16 @@ export function personShares(
     const account = accounts.get(personId) ?? nobody;
     const person = personOf(personId, account, connection, opens);
     if (!person) return undefined;
+    // Their profile shows only to their people (FR-11.16): the About text and favorites alike.
+    const shows = theirPeople.has(userId);
     return {
       person,
-      about: theirPeople.has(userId) ? account.about : null,
+      about: shows ? account.about : null,
+      favorites: shows
+        ? (await favoritesOf(tx, personId))
+            .filter((favorite) => !favorite.trashed)
+            .map(({ title, artistCredit, artworkUrl }) => ({ title, artistCredit, artworkUrl }))
+        : [],
       yours: connection.yours
         .filter((share) => !share.trashed)
         .flatMap(shown)

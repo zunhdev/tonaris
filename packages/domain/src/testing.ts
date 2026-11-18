@@ -169,6 +169,8 @@ export function memoryStore({
     { viewerId: string; containerId: string; linkId: string | null }
   >();
   const grantRows = new Map<string, GrantRow>();
+  /** Each person's favorite albums, in order (FR-11.16). */
+  const favoriteRows = new Map<string, string[]>();
   /** People hidden from someone's People, by `user:person` (FR-07.23). */
   const hiddenRows = new Map<string, Date>();
   const shareLinkRows = new Map<
@@ -737,6 +739,10 @@ export function memoryStore({
       if (account) account.about = about;
       return Promise.resolve();
     },
+    setFavorites(userId, albumIds) {
+      favoriteRows.set(userId, [...albumIds]);
+      return Promise.resolve();
+    },
     displayNameOf: (userId) => Promise.resolve(accountRows.get(userId)?.displayName ?? null),
     setDisplayName(userId, displayName) {
       const account = accountRows.get(userId);
@@ -868,6 +874,7 @@ export function memoryStore({
     accounts: accountRows,
     grants: grantRows,
     hidden: hiddenRows,
+    favorites: favoriteRows,
     shareLinks: shareLinkRows,
     references: referenceRows,
   };

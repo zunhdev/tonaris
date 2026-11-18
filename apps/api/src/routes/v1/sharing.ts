@@ -27,6 +27,7 @@ import {
 } from "@tonaris/domain";
 
 import type { SessionGuard } from "../../auth/plugin";
+import { presentFavorites, type ArtworkSigner } from "../../img/artwork";
 import { ProblemError } from "../../problem";
 
 /** The guest page a link's token opens (TS-32): `/s/` on the web app. */
@@ -34,7 +35,12 @@ export const shareUrl = (webOrigin: string, token: string) => `${webOrigin}/s/${
 
 export function sharingRoutes(
   session: SessionGuard,
-  { db, shareSecret, webOrigin }: { db: Database; shareSecret: string; webOrigin: string },
+  {
+    db,
+    shareSecret,
+    webOrigin,
+    artwork,
+  }: { db: Database; shareSecret: string; webOrigin: string; artwork: ArtworkSigner },
 ) {
   const impactQuery = z
     .object({
@@ -102,7 +108,7 @@ export function sharingRoutes(
         detail: {
           summary: "Get one of the person's people",
           description:
-            "One of the signed-in person's people (FR-07.23) and what's shared each way, by name (FR-07.24, DS-121): their own folders and lists outside Trash with an open invitation to them, and theirs they're invited to, pending, or accepted and can open now. Anyone else answers 404, as if they didn't exist. `share.revokePerson` and `people.remove` act on them, in the app only (X-03). Changes nothing.",
+            "One of the signed-in person's people (FR-07.23) and what's shared each way, by name (FR-07.24, DS-121): their own folders and lists outside Trash with an open invitation to them, and theirs they're invited to, pending, or accepted and can open now. Their About text and favorite albums come only when the signed-in person is one of their people from their side (FR-11.16). Anyone else answers 404, as if they didn't exist. `share.revokePerson` and `people.remove` act on them, in the app only (X-03). Changes nothing.",
           tags: ["sharing"],
           operationId: "getPerson",
         },
@@ -111,7 +117,7 @@ export function sharingRoutes(
         const shares = await personShares(db, account.id, id);
         if (!shares)
           throw new ProblemError(404, "not_found", "This person isn't one of your people.");
-        return shares;
+        return { ...shares, favorites: presentFavorites(artwork, shares.favorites) };
       },
     )
     .get(

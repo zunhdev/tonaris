@@ -15,7 +15,9 @@ import { cn } from "@tonaris/ui/lib/utils";
 import { artworkTile } from "./artwork-tile";
 
 /** Where an album's artwork is shown from: the API's image proxy, once the server has signed its URL. */
-export function artworkSrc(album: Album & { artworkSignature?: string }): string | undefined {
+export function artworkSrc(
+  album: Pick<Album, "artworkUrl"> & { artworkSignature?: string | undefined },
+): string | undefined {
   const { artworkUrl, artworkSignature } = album;
   if (!artworkUrl || !artworkSignature) return undefined;
   return `${apiUrl}${artworkPath(artworkUrl, artworkSignature)}`;
