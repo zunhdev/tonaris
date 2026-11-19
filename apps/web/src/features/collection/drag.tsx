@@ -43,6 +43,7 @@ import {
 import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
 import { useDropOnList } from "./drop-on-list";
+import { useEdgeScroll } from "./edge-scroll";
 import { useMoveWithConsent } from "./move";
 import { canMoveInto } from "./tree";
 import type { ViewMoves } from "./use-rearrange";
@@ -198,6 +199,8 @@ export function DragProvider({ children }: { children: ReactNode }) {
   // The list a dragged album is over, and whether ⌥ is held, which moves it there from the list on view.
   const [overList, setOverList] = useState<ListTarget | undefined>(undefined);
   const [altHeld, setAltHeld] = useState(false);
+  // Where the press that started the drag landed, while it lasts.
+  const [pressedAt, setPressedAt] = useState<{ x: number; y: number } | undefined>(undefined);
   const dropOnList = useDropOnList();
   const { tree } = useCollectionData();
   const drops = useRef(new Map<string, ViewMoves["drop"]>());
@@ -214,6 +217,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
 
   const end = () => {
     setActive(undefined);
+    setPressedAt(undefined);
     setIndicator(undefined);
     setDestination(undefined);
     setOverList(undefined);
@@ -234,6 +238,9 @@ export function DragProvider({ children }: { children: ReactNode }) {
     };
   }, [dragging]);
 
+  // Lists scroll as the pointer nears their edges, by whole pixels, which Safari keeps in step (TON-303).
+  useEdgeScroll(pressedAt);
+
   const state = useMemo<DragState>(
     () => ({ active, indicator, registerDrop }),
     [active, indicator, registerDrop],
@@ -244,6 +251,8 @@ export function DragProvider({ children }: { children: ReactNode }) {
       <DndContext
         sensors={sensors}
         collisionDetection={underPointer}
+        // Its own scrolling left Safari painting the list away from where the page had it (`useEdgeScroll`).
+        autoScroll={false}
         // Virtual rows are placed by a transform, which dnd-kit leaves out of its measures by default. Drop targets
         // are found on the page (`underPointer`), so dnd-kit's measures of them go unused.
         measuring={{ draggable: { measure: placeOf }, dragOverlay: { measure: placeOf } }}
@@ -260,6 +269,9 @@ export function DragProvider({ children }: { children: ReactNode }) {
         onDragStart={({ active: started, activatorEvent }) => {
           const data = started.data.current;
           if (isDragItem(data)) setActive(data);
+          if (activatorEvent instanceof PointerEvent) {
+            setPressedAt({ x: activatorEvent.clientX, y: activatorEvent.clientY });
+          }
           setAltHeld(
             activatorEvent !== null && "altKey" in activatorEvent && activatorEvent.altKey === true,
           );

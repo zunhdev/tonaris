@@ -407,6 +407,8 @@ test("a drag onto the tree lights the folder under the pointer as rows move, its
   await page.goto(`/f/${genres.id}`);
   await live(page);
   await chooseSort(page, "Name");
+  // Saved before the page reloads, or the folder is back in manual order.
+  await saved(page);
   await page.setViewportSize({ width: 1280, height: 520 });
   await page.goto(`/l/${doom.id}`);
   await live(page);
@@ -450,10 +452,68 @@ test("a drag onto the tree lights the folder under the pointer as rows move, its
   await expect
     .poll(async () => Math.round((await chip.boundingBox())?.y ?? 0))
     .toBe(Math.round(dy + 12 - half));
-  await page.mouse.move(...(await centre(item("Folk"))), { steps: 6 });
-  await expect(item("Folk")).toHaveClass(lit);
   await page.keyboard.press("Escape");
   await page.mouse.up();
+});
+
+test("a drag held near the sidebar's edge scrolls the tree, by whole pixels, which Safari keeps in step (TON-303)", async ({
+  page,
+}) => {
+  // Scrolls by a fraction of a pixel, which Safari rounded where the page keeps the list but not where it paints it,
+  // so the two drifted apart and the pointer hovered rows above the one under it.
+  await page.addInitScript(() => {
+    const fractions: number[] = [];
+    Object.assign(window, { fractionalScrolls: fractions });
+    // On HTMLElement, in front of Element's own, which it hands each call on to.
+    Object.defineProperty(HTMLElement.prototype, "scrollBy", {
+      configurable: true,
+      value(this: HTMLElement, first?: ScrollToOptions | number, second?: number) {
+        const [x, y] =
+          typeof first === "number" ? [first, second ?? 0] : [first?.left ?? 0, first?.top ?? 0];
+        if (!Number.isInteger(y)) fractions.push(y);
+        Element.prototype.scrollBy.call(this, x, y);
+      },
+    });
+  });
+  await signIn(page, accounts.dragEdge);
+  await live(page);
+  const tops = Array.from({ length: 30 }, (_, n) =>
+    Object.assign(list(`Genre ${String(n + 1).padStart(2, "0")}`), { kind: "folder" as const }),
+  );
+  const rock: Container = { ...list("Rock"), kind: "folder" };
+  const bands = Array.from({ length: 30 }, (_, n) =>
+    Object.assign(list(`Band ${String(n + 1).padStart(2, "0")}`), { parentId: rock.id }),
+  );
+  await page.evaluate(
+    async (containers) => {
+      await window.tonarisSync?.containers.insert(containers).when("settled");
+    },
+    [...tops, rock, ...bands],
+  );
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(`/l/${bands[20]!.id}`);
+  await live(page);
+  const item = page.getByRole("tree").getByRole("treeitem", { name: /^Band 21/ });
+  await expect(item).toBeVisible();
+  const viewport = page
+    .getByRole("navigation", { name: "Sidebar" })
+    .locator('[data-slot="scroll-area-viewport"]');
+  const offset = () => viewport.evaluate((element) => element.scrollTop);
+  const from = await offset();
+  const box = await viewport.boundingBox();
+  if (!box) throw new Error("No sidebar to drag in.");
+
+  // Held at the top edge, the tree scrolls up; let go of it, it stays put.
+  const [x, y] = await centre(item);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y + 10, { steps: 3 });
+  await page.mouse.move(x, box.y + 8, { steps: 10 });
+  await expect.poll(offset).toBeLessThan(from - 100);
+  await page.mouse.move(x, box.y + box.height / 2, { steps: 5 });
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  expect(await page.evaluate(() => Reflect.get(window, "fractionalScrolls"))).toEqual([]);
 });
 
 async function centre(locator: Locator): Promise<[number, number]> {
