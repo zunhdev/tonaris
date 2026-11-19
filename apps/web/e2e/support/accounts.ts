@@ -149,6 +149,8 @@ export const accounts = {
   rowMenuCreate: at("row-menu-create"),
   // Folder and list colors (container-menu.e2e.ts, TON-175).
   rowMenuColors: at("row-menu-colors"),
+  // Folder and list icons (container-menu.e2e.ts, TON-306).
+  rowMenuIcons: at("row-menu-icons"),
   // Closing a folder that holds the view (collection-navigation.e2e.ts).
   closeHolder: at("close-holder"),
   // The view's row scrolling into sight in a long tree (collection-navigation.e2e.ts, TON-300).

@@ -16,7 +16,15 @@ const container = (
   kind: Container["kind"],
   name: string,
   parentId: string | null = null,
-): Container => ({ id: uuidv7(), kind, parentId, name, description: null, color: null });
+): Container => ({
+  id: uuidv7(),
+  kind,
+  parentId,
+  name,
+  description: null,
+  color: null,
+  icon: null,
+});
 const item = (page: Page, name: string) =>
   page.getByRole("tree").getByRole("treeitem", { name: new RegExp(`^${name}`) });
 

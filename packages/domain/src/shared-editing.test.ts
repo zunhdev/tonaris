@@ -31,6 +31,7 @@ const container = (
   name,
   description: null,
   color: null,
+  icon: null,
   ownerId: denis,
   trashed: false,
 });
@@ -133,7 +134,7 @@ const m = (name: Mutation["name"], args: unknown, base?: unknown): Mutation =>
   });
 
 describe("folders and lists inside a share (FR-07.19)", () => {
-  test("an editor creates, renames, describes and colors them, in the owner's collection, the share's own too", async () => {
+  test("an editor creates, renames, describes, colors and gives them icons, in the owner's collection, the share's own too", async () => {
     const { run, containers, tree } = setup();
     const id = uuidv7();
     expect(
@@ -172,10 +173,14 @@ describe("folders and lists inside a share (FR-07.19)", () => {
         await run(m("container.setColor", { id: tree.metal.id, color: "red" }, { color: null })),
       ),
     ).toBe("applied");
+    expect(
+      code(await run(m("container.setIcon", { id: tree.metal.id, icon: "horns" }, { icon: null }))),
+    ).toBe("applied");
     expect(containers.get(tree.metal.id)).toMatchObject({
       name: "Heavy",
       description: "Loud",
       color: "red",
+      icon: "horns",
       ownerId: denis,
     });
   });

@@ -1,5 +1,6 @@
 // Folders and lists as clients hold them (TS-11, TS-24), and the commands that create, rename and move them
-// (TON-26), describe them (TON-54) and color them (TON-175). The albums in lists are memberships.ts.
+// (TON-26), describe them (TON-54), color them (TON-175) and give them icons (TON-306). The albums in lists are
+// memberships.ts.
 
 import type { CollectionStore } from "./collection-store";
 import {
@@ -38,6 +39,37 @@ export const containerColors = [
 ] as const;
 export type ContainerColor = (typeof containerColors)[number];
 
+/**
+ * The icons a folder or list can have in place of its glyph (DS-27, TON-306), in the picker's order. Each names what
+ * is drawn, not a genre, so one icon serves Rock and Русский рок alike.
+ */
+export const containerIcons = [
+  "horns",
+  "skull",
+  "guitar",
+  "drum",
+  "microphone",
+  "boombox",
+  "waveform",
+  "saxophone",
+  "cocktail",
+  "piano",
+  "violin",
+  "masks",
+  "campfire",
+  "pine",
+  "wheat",
+  "moon",
+  "sparkles",
+  "star",
+  "heart",
+  "clapperboard",
+  "gamepad",
+  "record",
+  "headphones",
+] as const;
+export type ContainerIconName = (typeof containerIcons)[number];
+
 /** A folder or list as `container.create` takes it. `parentId` null is the root (FR-01.3). */
 export const containerFieldsSchema = z
   .object({
@@ -60,8 +92,14 @@ export const containerSchema = containerFieldsSchema
       description:
         "Its own color, null for none: without one it takes the nearest folder's above it (TON-175).",
     }),
+    icon: z.enum(containerIcons).nullable().meta({
+      description:
+        "Its icon in place of the folder or list glyph, null for none. Not inherited (TON-306).",
+    }),
   })
-  .meta({ description: "A folder or list, with its description and color (FR-01.1, FR-03.5)." });
+  .meta({
+    description: "A folder or list, with its description, color and icon (FR-01.1, FR-03.5).",
+  });
 export type Container = z.infer<typeof containerSchema>;
 
 /** A container as the store keeps it: with its owner, and whether it is in Trash (TS-13). */
@@ -75,8 +113,9 @@ export function containerOf({
   name,
   description,
   color,
+  icon,
 }: Container): Container {
-  return { id, kind, parentId, name, description, color };
+  return { id, kind, parentId, name, description, color, icon };
 }
 
 /** The refusal of a description over the limit (FR-03.5, TS-18). Clients check it too, with these words. */
@@ -184,12 +223,13 @@ export async function createContainer(
   );
   if (isFailure(ownerId)) return ownerId;
   const { store } = context;
-  // A new folder or list has no description or color until one is set (FR-03.5, TON-175).
+  // A new folder or list has no description, color or icon until one is set (FR-03.5, TON-175, TON-306).
   const container = containerOf({
     ...args,
     name: args.name.trim(),
     description: null,
     color: null,
+    icon: null,
   });
   const problem = containerNameProblem(container.name);
   if (problem) return problem;
@@ -386,5 +426,27 @@ export async function colorContainer(
     id,
     op: "update",
     data: containerOf({ ...container, color }),
+  });
+}
+
+/**
+ * Sets a folder's or list's icon, or clears it with null (TON-306). `base.icon` is the one the client last saw
+ * (TS-21). Unlike a color, it shows on that folder or list only.
+ */
+export async function iconContainer(
+  { id, icon }: { id: string; icon: ContainerIconName | null },
+  base: { icon: ContainerIconName | null },
+  context: CommandContext,
+): Promise<CommandResult> {
+  const container = await changeableContainer(id, context);
+  if (isFailure(container)) return container;
+  if (container.icon !== base.icon) return conflict("icon", container.icon, icon, base.icon);
+  if (icon === container.icon) return applied();
+  await context.store.updateContainer(id, { icon });
+  return applied({
+    entity: "container",
+    id,
+    op: "update",
+    data: containerOf({ ...container, icon }),
   });
 }

@@ -1,8 +1,9 @@
 // A folder's or list's menu in the sidebar (TON-117, DS-27): New list and New folder, made inside a folder and beside
 // a list, as N and ⇧N make them from its row (TON-120); then Rename, Move to…, Share… and Delete…, each the command
-// its shortcut runs (F2, M, ⇧S, ⌫) on that folder or list; and Color, whose submenu sets its own color (TON-175). Each shows its keys from the shortcuts' list (DS-78). It
-// opens from the row's ⋯ with the pointer, and with Shift+F10 or the Menu key from the keyboard. Offline, the
-// commands wait, and the menu says why (DS-81).
+// its shortcut runs (F2, M, ⇧S, ⌫) on that folder or list; Color, whose submenu sets its own color (TON-175); and
+// Icon…, which opens the icon picker as ⌘K's Icon… does (TON-306). Each shows its keys from the shortcuts' list
+// (DS-78). It opens from the row's ⋯ with the pointer, and with Shift+F10 or the Menu key from the keyboard. Offline,
+// the commands wait, and the menu says why (DS-81).
 
 import { useShell } from "@/common/shell-context";
 import { shortcutLabel, type CommandId } from "@/common/shortcuts";
@@ -126,6 +127,18 @@ export function ContainerMenu({
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+            )}
+            {destructive && (
+              <DropdownMenuItem
+                disabled={commandBlocked("icon", on) !== undefined}
+                onClick={() => {
+                  if (!target) return;
+                  chosen.current = true;
+                  runCommand("icon", on);
+                }}
+              >
+                Icon…
+              </DropdownMenuItem>
             )}
             {destructive && <DropdownMenuSeparator />}
             <DropdownMenuItem

@@ -25,6 +25,7 @@ const doom: StoredContainer = {
   name: "Doom",
   description: null,
   color: null,
+  icon: null,
   ownerId: owner,
   trashed: false,
 };

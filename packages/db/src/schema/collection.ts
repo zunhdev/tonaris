@@ -17,6 +17,7 @@ import {
 
 import {
   containerColors,
+  containerIcons,
   containerKinds,
   provenanceSources,
   releaseTypes,
@@ -89,6 +90,8 @@ export const containers = table(
     description: text(),
     /** Its own color (TON-175), null for none: its contents without one take it. */
     color: text({ enum: containerColors }),
+    /** Its icon in place of the folder or list glyph (TON-306), null for none. Not inherited. */
+    icon: text({ enum: containerIcons }),
     trashedAt: instant(),
     trashUnitId: uuid().references(() => trashUnits.id),
     ...timestamps,
@@ -113,6 +116,7 @@ export const containers = table(
     ),
     check("containers_kind_check", oneOf(t.kind, containerKinds)),
     check("containers_color_check", oneOf(t.color, containerColors)),
+    check("containers_icon_check", oneOf(t.icon, containerIcons)),
     check("containers_name_check", notBlank(t.name)),
     check("containers_trash_check", trashStamp(t.trashedAt, t.trashUnitId)),
   ],

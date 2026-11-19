@@ -30,6 +30,7 @@ const container = (
   name,
   description: null,
   color: null,
+  icon: null,
 });
 
 async function send(page: Page, name: string, args: Record<string, unknown>) {

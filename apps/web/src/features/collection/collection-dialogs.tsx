@@ -52,6 +52,10 @@ type CollectionDialogs = {
   coloring: string | undefined;
   startColor: (id: string) => void;
   endColor: () => void;
+  /** The folder or list Icon… is open for, if it is open (TON-306). */
+  choosingIcon: string | undefined;
+  startIcon: (id: string) => void;
+  endIcon: () => void;
   /** The folder or list whose sharing dialog is open (DS-65). */
   sharing: string | undefined;
   startShare: (id: string) => void;
@@ -88,6 +92,7 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
   const [moving, setMoving] = useState<string | undefined>(undefined);
   const [confirmingMove, setConfirmingMove] = useState<MoveToConfirm | undefined>(undefined);
   const [coloring, setColoring] = useState<string | undefined>(undefined);
+  const [choosingIcon, setChoosingIcon] = useState<string | undefined>(undefined);
   const [sharing, setSharing] = useState<string | undefined>(undefined);
   const [deleting, setDeleting] = useState<string | undefined>(undefined);
   const [deletingAlbum, setDeletingAlbum] = useState<string | undefined>(undefined);
@@ -107,6 +112,9 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
       coloring,
       startColor: setColoring,
       endColor: () => setColoring(undefined),
+      choosingIcon,
+      startIcon: setChoosingIcon,
+      endIcon: () => setChoosingIcon(undefined),
       sharing,
       startShare: setSharing,
       endShare: () => setSharing(undefined),
@@ -133,6 +141,7 @@ export function CollectionDialogsProvider({ children }: { children: ReactNode })
       moving,
       confirmingMove,
       coloring,
+      choosingIcon,
       sharing,
       deleting,
       deletingAlbum,

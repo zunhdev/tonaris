@@ -105,6 +105,7 @@ export async function containerBase(
     parentId: found.parentId,
     description: found.description,
     color: found.color,
+    icon: found.icon,
   };
 }
 

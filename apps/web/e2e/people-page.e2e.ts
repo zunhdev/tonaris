@@ -18,6 +18,7 @@ const container = (kind: Container["kind"], name: string): Container => ({
   name,
   description: null,
   color: null,
+  icon: null,
 });
 
 /** Sends a mutation as the page's account, as the app does. */

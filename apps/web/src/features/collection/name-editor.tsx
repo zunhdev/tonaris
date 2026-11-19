@@ -107,6 +107,7 @@ export function NameEditor({
           name: trimmed,
           description: null,
           color: null,
+          icon: null,
         }),
       );
     } else {

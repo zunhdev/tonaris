@@ -453,6 +453,7 @@ const node = (
   name,
   description: null,
   color: null,
+  icon: null,
 });
 const createContainer = (args: Container): Mutation => ({
   mutationId: uuidv7(),
@@ -549,6 +550,7 @@ describe("folders and lists (FR-01.1–FR-01.5)", () => {
           name: "Level",
           description: null,
           color: null,
+          icon: null,
         }),
       );
       parentId = id;

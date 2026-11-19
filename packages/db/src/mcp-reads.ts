@@ -188,6 +188,7 @@ async function viewOf(
       parentId: containers.parentId,
       description: containers.description,
       color: containers.color,
+      icon: containers.icon,
       ownerId: containers.ownerId,
       ownerName: users.displayName,
     })

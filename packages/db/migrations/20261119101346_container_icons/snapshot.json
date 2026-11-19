@@ -1,0 +1,76 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "788f630d-cd81-43a6-b2c7-b3ef5bb25bf4",
+  "prevIds": [
+    "ba7ecd43-995b-47eb-afd6-5d82d4edb84a"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "containers",
+        "icon"
+      ],
+      "writes": [
+        "s|col|public.containers.icon",
+        "n|col|public.containers.icon",
+        "e|col|public.containers.icon"
+      ],
+      "reads": [
+        "n|tbl|public.containers",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "containers"
+      ],
+      "writes": [
+        "s|ck|public.containers.containers_icon_check",
+        "n|ck|public.containers.containers_icon_check",
+        "e|ck|public.containers.containers_icon_check",
+        "n|con|public.containers.containers_icon_check"
+      ],
+      "reads": [
+        "n|tbl|public.containers",
+        "n|sch|public",
+        "n|col|public.containers.icon"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "containers",
+        "name": "icon",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "containers",
+        "name": "containers_icon_check",
+        "value": "\"icon\" in ('horns', 'skull', 'guitar', 'drum', 'microphone', 'boombox', 'waveform', 'saxophone', 'cocktail', 'piano', 'violin', 'masks', 'campfire', 'pine', 'wheat', 'moon', 'sparkles', 'star', 'heart', 'clapperboard', 'gamepad', 'record', 'headphones')",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

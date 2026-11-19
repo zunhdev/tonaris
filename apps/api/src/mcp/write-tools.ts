@@ -23,6 +23,7 @@ import {
 import {
   albumFields,
   containerColors,
+  containerIcons,
   containerKinds,
   fieldTypes,
   maxBatchItems,
@@ -287,6 +288,30 @@ export function registerWriteTools(
       return run("set_color", args, () =>
         each(
           [{ name: "container.setColor", args: { id: args.containerId, color: args.color }, base }],
+          [{ containerId: args.containerId }],
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_icon",
+    {
+      title: "Give a folder or list an icon",
+      description: `Sets a folder's or list's icon, shown in place of its folder or list glyph, or clears it with null. The icons are ${containerIcons.join(", ")}: each names what is drawn, not a genre, such as guitar for rock or saxophone for jazz. Unlike a color, an icon shows on that folder or list only. Pass base, the icon you read, to be told if it changed since.`,
+      inputSchema: containerChange.extend({
+        icon: z.enum(containerIcons).nullable(),
+        base: z.object({ icon: z.enum(containerIcons).nullable() }).optional(),
+      }),
+      outputSchema: output({ containerId: uuid }),
+      annotations: writes,
+    },
+    async (args) => {
+      const current = await containerBase(db, { userId, containerId: args.containerId });
+      const base = args.base ?? { icon: current?.icon ?? null };
+      return run("set_icon", args, () =>
+        each(
+          [{ name: "container.setIcon", args: { id: args.containerId, icon: args.icon }, base }],
           [{ containerId: args.containerId }],
         ),
       );

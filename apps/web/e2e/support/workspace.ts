@@ -17,6 +17,7 @@ export const list = (name: string): Container => ({
   name,
   description: null,
   color: null,
+  icon: null,
 });
 
 /**

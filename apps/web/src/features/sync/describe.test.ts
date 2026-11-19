@@ -31,6 +31,7 @@ const jazz: Container = {
   name: "Jazz",
   description: null,
   color: null,
+  icon: null,
 };
 const later: Container = {
   id: uuidv7(),
@@ -39,6 +40,7 @@ const later: Container = {
   name: "Later",
   description: null,
   color: null,
+  icon: null,
 };
 
 const names: Names = {
@@ -105,6 +107,7 @@ describe("describeWrite (DS-80, DS-81)", () => {
       name: "Soon",
       description: null,
       color: null,
+      icon: null,
     };
     expect(write({ name: "container.create", args: soon })).toEqual({
       summary: "New list 'Soon'",
@@ -173,6 +176,24 @@ describe("describeWrite (DS-80, DS-81)", () => {
         base: { parentId: jazz.id },
       }).summary,
     ).toBe("Move 'Later' to Collection");
+    expect(
+      write({
+        name: "container.setIcon",
+        args: { id: jazz.id, icon: "saxophone" },
+        base: { icon: null },
+      }),
+    ).toEqual({
+      summary: "Give the folder 'Jazz' the saxophone icon",
+      what: "the icon of the folder 'Jazz'",
+      subject: "The icon of the folder 'Jazz'",
+    });
+    expect(
+      write({
+        name: "container.setIcon",
+        args: { id: jazz.id, icon: null },
+        base: { icon: "saxophone" },
+      }).summary,
+    ).toBe("Clear the icon of the folder 'Jazz'");
   });
 
   test("custom field types and options", () => {

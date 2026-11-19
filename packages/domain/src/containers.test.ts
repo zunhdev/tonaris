@@ -44,6 +44,7 @@ function stored(
     name,
     description: null,
     color: null,
+    icon: null,
     ownerId: owner,
     trashed: false,
     ...values,
@@ -127,7 +128,7 @@ describe("container.create (FR-01.1, FR-01.2)", () => {
           entity: "container",
           id: jazz.args.id,
           op: "insert",
-          data: { ...jazz.args, description: null, color: null },
+          data: { ...jazz.args, description: null, color: null, icon: null },
         },
       ],
     });
@@ -139,6 +140,7 @@ describe("container.create (FR-01.1, FR-01.2)", () => {
       ...favorites.args,
       description: null,
       color: null,
+      icon: null,
       ownerId: owner,
       trashed: false,
     });
@@ -323,6 +325,7 @@ describe("container.rename (FR-01.3)", () => {
             name: "Desert island",
             description: null,
             color: null,
+            icon: null,
           },
         },
       ],
@@ -399,6 +402,7 @@ describe("container.move (FR-01.4, FR-01.5)", () => {
             name: "Bebop",
             description: null,
             color: null,
+            icon: null,
           },
         },
       ],
@@ -601,6 +605,7 @@ describe("any sequence of commands leaves a sound tree (property)", () => {
                 name: row.name,
                 description: row.description,
                 color: row.color,
+                icon: row.icon,
               });
             }
           } else {

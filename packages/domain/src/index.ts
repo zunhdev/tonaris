@@ -165,6 +165,7 @@ export {
 export {
   containerColors,
   containerFieldsSchema,
+  containerIcons,
   containerKinds,
   containerNameProblem,
   containerSchema,
@@ -174,6 +175,7 @@ export {
   type Container,
   type ContainerColor,
   type ContainerFields,
+  type ContainerIconName,
   type ContainerKind,
   type StoredContainer,
 } from "./containers";

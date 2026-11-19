@@ -704,7 +704,7 @@ function ResultRow({
     return (
       <div {...optionProps}>
         <span className="text-fg-secondary">
-          <ContainerIcon kind={container.kind} />
+          <ContainerIcon kind={container.kind} icon={container.icon} />
         </span>
         <span className="min-w-0 flex-1 truncate text-fg-primary">
           <Highlighted text={container.name} query={query} />

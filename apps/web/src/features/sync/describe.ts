@@ -4,6 +4,7 @@
 // specific, names in single quotes.
 
 import { shownLink } from "@/features/capture/outcomes";
+import { iconNames } from "@/features/collection/container-glyphs";
 import { fieldTypeNames } from "@/features/collection/field-types";
 
 import {
@@ -345,6 +346,19 @@ export function describeWrite(mutation: Mutation, names: Names): Described {
         ),
         what: `the color of ${target}`,
         subject: capitalized(`the color of ${target}`),
+      };
+    }
+    case "container.setIcon": {
+      const given = names.container(mutation.args.id);
+      const target = kindNamed(given?.kind, given?.name);
+      return {
+        summary: capitalized(
+          mutation.args.icon === null
+            ? `clear the icon of ${target}`
+            : `give ${target} the ${iconNames[mutation.args.icon].toLowerCase()} icon`,
+        ),
+        what: `the icon of ${target}`,
+        subject: capitalized(`the icon of ${target}`),
       };
     }
     case "container.describe": {

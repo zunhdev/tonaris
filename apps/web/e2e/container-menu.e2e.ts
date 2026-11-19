@@ -1,6 +1,6 @@
 // A folder's or list's menu in the sidebar, and Rename in the header (TON-117, DS-27): with the pointer, a row's ⋯
-// opens New list and New folder, made inside a folder and beside a list (TON-120), then Rename, Move to…, Share… and
-// Delete…, each running its shortcut's command on that row; from the keyboard, Shift+F10 opens the same menu, and
+// opens New list and New folder, made inside a folder and beside a list (TON-120), then Rename, Move to…, Share…,
+// Color, Icon… and Delete…, each running its shortcut's command on that row; from the keyboard, Shift+F10 opens the same menu, and
 // Escape gives the focus back to the row. In Editing mode, the header's Rename opens the name's editor in the
 // sidebar. The "+" beside Collection makes them at the top level. Each test signs in with its own account.
 
@@ -53,6 +53,7 @@ test("a row's ⋯ renames, moves and deletes the folder or list it's on", async 
     "Move to…M",
     "Share…⇧S",
     "Color",
+    "Icon…",
     "Delete…⌫",
   ]);
   expect(await violations(page, '[data-slot="dropdown-menu-content"]')).toEqual([]);
@@ -255,4 +256,80 @@ test("a folder's color from the ⋯ menu shows on it and what's inside; ⌘K's C
     .getByRole("link", { name: "Doom" });
   await expect(chip).toHaveAttribute("data-color", "teal");
   expect(await violations(page, "aside")).toEqual([]);
+});
+
+test("a folder's icon from the ⋯ menu replaces its glyph, not its list's; ⌘K's Icon… gives the list one (TON-306)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.rowMenuIcons);
+  await live(page);
+  const metal = { ...list("Metal"), kind: "folder" as const, color: "orange" as const };
+  const doom = { ...list("Doom"), parentId: metal.id };
+  await page.evaluate(
+    async (containers) => {
+      await window.tonarisSync?.containers.insert(containers).when("settled");
+    },
+    [metal, doom],
+  );
+  // Doom's own page, so Metal is open in the tree.
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  const icon = (name: string) => item(page, name).locator("svg[data-color]");
+
+  // The ⋯ menu's Icon… opens the picker: None first and marked, then the icons, in Metal's color.
+  await openMenu(page, "Metal");
+  await menu(page, "Metal").getByRole("menuitem", { name: "Icon…" }).click();
+  const picker = page.getByRole("dialog", { name: "Icon for Metal" });
+  const icons = picker.getByRole("group", { name: "Icons" }).getByRole("button");
+  await expect(icons).toHaveCount(24);
+  await expect(icons.first()).toHaveAccessibleName("None");
+  await expect(icons.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(icons.first()).toBeFocused();
+  await expect(picker.locator('svg[data-color="orange"]')).toHaveCount(24);
+  expect(await violations(page, '[role="dialog"]')).toEqual([]);
+  // The arrow keys move through the grid; the name under it follows.
+  await page.keyboard.press("ArrowRight");
+  await expect(picker.getByRole("button", { name: "Horns" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(picker.getByRole("button", { name: "Waveform" })).toBeFocused();
+  await expect(picker.locator('[data-slot="icon-name"]')).toHaveText("Waveform");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Enter");
+  await expect(picker).toHaveCount(0);
+  // Horns replace Metal's folder glyph, in its color; Doom keeps the list glyph, in Metal's color.
+  await expect(icon("Metal")).toHaveAttribute("data-icon", "horns");
+  await expect(icon("Metal")).toHaveAttribute("data-color", "orange");
+  await expect(icon("Doom")).not.toHaveAttribute("data-icon");
+  await expect(icon("Doom")).toHaveAttribute("data-color", "orange");
+  // Choosing an icon is an edit, so Editing mode is on.
+  await expect(page.getByRole("radio", { name: "Edit" })).toBeChecked();
+
+  // ⌘K's Icon… gives Doom its own.
+  await item(page, "Doom").focus();
+  await page.keyboard.press("ControlOrMeta+k");
+  await page.getByRole("combobox", { name: "Search" }).fill(">icon");
+  await page.getByRole("option", { name: /^Icon…/ }).click();
+  const forDoom = page.getByRole("dialog", { name: "Icon for Doom" });
+  await expect(forDoom.getByRole("button", { name: "Horns" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await forDoom.getByRole("button", { name: "Skull" }).click();
+  await expect(forDoom).toHaveCount(0);
+  await expect(icon("Doom")).toHaveAttribute("data-icon", "skull");
+  await saved(page);
+
+  // Kept on reload; None brings Metal's folder glyph back.
+  await page.reload();
+  await live(page);
+  await expect(icon("Metal")).toHaveAttribute("data-icon", "horns");
+  await expect(icon("Doom")).toHaveAttribute("data-icon", "skull");
+  await openMenu(page, "Metal");
+  await menu(page, "Metal").getByRole("menuitem", { name: "Icon…" }).click();
+  await page
+    .getByRole("dialog", { name: "Icon for Metal" })
+    .getByRole("button", { name: "None" })
+    .click();
+  await expect(icon("Metal")).not.toHaveAttribute("data-icon");
+  await saved(page);
 });

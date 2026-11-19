@@ -15,7 +15,15 @@ const container = (
   kind: Container["kind"],
   name: string,
   parentId: string | null = null,
-): Container => ({ id: uuidv7(), kind, parentId, name, description: null, color: null });
+): Container => ({
+  id: uuidv7(),
+  kind,
+  parentId,
+  name,
+  description: null,
+  color: null,
+  icon: null,
+});
 
 /** Sends a mutation as the page's account, as the sharing dialog does. */
 async function send(page: Page, name: string, args: Record<string, unknown>) {

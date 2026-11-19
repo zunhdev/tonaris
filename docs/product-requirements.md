@@ -263,6 +263,8 @@ The rule applies to creation, renaming, moves, and recovery.
 
 **FR-01.19 Colors.** The owner may give any folder or list one of a fixed set of colors, or none. A folder or list without its own color shows the nearest folder's above it. Colors are part of how the collection is organized: they reach the owner's other sessions, viewers of a shared folder or list see them, and exports include them. Setting a color is an ordinary change, in the app and for Manage collection agents (FR-10.4).
 
+**FR-01.20 Icons.** The owner may give any folder or list one of a fixed set of icons, such as a guitar or a saxophone, shown in place of its folder or list symbol, or none. Unlike a color, an icon is not passed to what's inside. Icons are part of how the collection is organized, as colors are (FR-01.19): they reach the owner's other sessions, viewers of a shared folder or list see them, exports include them, and setting one is an ordinary change, in the app and for Manage collection agents (FR-10.4).
+
 ### FR-02 — Capture: links and manual entry
 
 **FR-02.1 Link capture.** A user pastes a Spotify, Apple Music, Qobuz, Tidal, or YouTube Music album link into a list or without one (FR-02.2). Common share-link variants are supported. Tonaris identifies the album behind the link (FR-02.12) and populates the available metadata automatically from permitted sources (G1): title, artist credit, artwork, source service and link, and available release information. Missing information stays unknown.
@@ -665,7 +667,7 @@ An approval never elevates a Read-only connection or enables an app-only operati
 
 **FR-10.4 Ordinary operations (Manage collection).**
 
-- Create and rename lists and folders, and edit their descriptions and colors (FR-01.19).
+- Create and rename lists and folders, and edit their descriptions, colors and icons (FR-01.19, FR-01.20).
 - Add albums from supplied links or manual data (FR-02).
 - Edit metadata and field values, and apply or remove fields on albums.
 - Create definitions (including initial options) and rename them.
@@ -1207,6 +1209,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (18 November 2026), the People page** (P-TON-57, TON-295): People in the sidebar, after Shared with me, lists each person with what's shared each way, and a person's page lists both ways by name, each of the owner's opening its sharing dialog. On the desktop, "Stop sharing with {name}…" revokes all the owner's invitations to them after a confirmation, and "Remove from People" hides them until a new invitation; phones read only. **Added** FR-07.24 and AC-53.
 - **Decision (18 November 2026), your profile** (P-TON-57, TON-296): a person may choose their avatar's color, Automatic or one of 12 hues, and write a plain About text of up to 160 characters, in Settings → Profile. The avatar joins owners' names everywhere, guest pages included. The About text shows only to the person's people from their side, on their page in People and in a card from the "Shared by" pill; it stays out of exports and MCP. The privacy notice says so. **Added** FR-11.16; **updated** FR-11.13 and FR-08.4.
 - **Decision (18 November 2026), favorite albums** (P-TON-57, TON-297): a person picks up to four of their own albums in Settings → Profile, found by typing, and orders them. Their people see them on the person's page in People, by cover, title and artist only, with no year or service links, and not in the Shared by card (the creator's choices over my recommendations). A favorite in Trash is hidden until restored. **Updated** FR-11.16 and FR-08.4.
+- **Decision (19 November 2026), folder and list icons** (TON-306), from the creator's idea and a to-scale mock of their genre folders: owners give folders and lists an icon from a fixed set, in place of the folder or list symbol; it is not passed to what's inside; viewers of a share see it, agents can set it, and exports carry it. **Added** FR-01.20; **updated** FR-10.4.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

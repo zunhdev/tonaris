@@ -20,6 +20,7 @@ const container = (kind: Container["kind"], name: string): Container => ({
   name,
   description: null,
   color: null,
+  icon: null,
 });
 const palette = (page: Page) => page.getByRole("dialog", { name: "Search" });
 const field = (page: Page) => page.getByRole("combobox", { name: "Search" });
@@ -93,7 +94,8 @@ test("commands: > lists only them, they act on the focus or say why not, and mat
   await expect(reference.getByText("Restore", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(reference).toHaveCount(0);
-  // Every command is in the palette too, with its keys; Color… and Move to position… have none (TON-175, TON-230).
+  // Every command is in the palette too, with its keys; Color…, Icon… and Move to position… have none (TON-175,
+  // TON-306, TON-230).
   // The list is virtualized and holds more than fits, so each is found by its label, which for two says the state.
   const labels: Partial<Record<CommandId, { query: string; label: RegExp }>> = {
     "toggle-mode": { query: "switch to", label: /Switch to (editing|viewing)/ },

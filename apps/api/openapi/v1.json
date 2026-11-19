@@ -4252,7 +4252,7 @@
     "/v1/export": {
       "get": {
         "summary": "Download your data",
-        "description": "The signed-in owner's whole collection as a ZIP (FR-08, TS-80): `tonaris-export.json` (format 1.2), `tonaris-export.schema.json`, `collection.md` and `README.md`, read in one consistent snapshot. Unsorted and Trash are included; sharing, Shared with me and the account's profile are not. 5 exports an hour; over that, `429` with `Retry-After`.",
+        "description": "The signed-in owner's whole collection as a ZIP (FR-08, TS-80): `tonaris-export.json` (format 1.3), `tonaris-export.schema.json`, `collection.md` and `README.md`, read in one consistent snapshot. Unsorted and Trash are included; sharing, Shared with me and the account's profile are not. 5 exports an hour; over that, `429` with `Retry-After`.",
         "tags": [
           "export"
         ],
@@ -7682,6 +7682,39 @@
                               "pink",
                               null
                             ]
+                          },
+                          "icon": {
+                            "description": "Its icon in place of the folder or list glyph, null for none. Not inherited (TON-306).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
                           }
                         },
                         "required": [
@@ -7690,10 +7723,11 @@
                           "parentId",
                           "name",
                           "description",
-                          "color"
+                          "color",
+                          "icon"
                         ],
                         "additionalProperties": false,
-                        "description": "A folder or list, with its description and color (FR-01.1, FR-03.5)."
+                        "description": "A folder or list, with its description, color and icon (FR-01.1, FR-03.5)."
                       },
                       "description": "The root, with no parent, and its active folders and lists."
                     },
@@ -8453,6 +8487,39 @@
                               "pink",
                               null
                             ]
+                          },
+                          "icon": {
+                            "description": "Its icon in place of the folder or list glyph, null for none. Not inherited (TON-306).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
                           }
                         },
                         "required": [
@@ -8461,10 +8528,11 @@
                           "parentId",
                           "name",
                           "description",
-                          "color"
+                          "color",
+                          "icon"
                         ],
                         "additionalProperties": false,
-                        "description": "A folder or list, with its description and color (FR-01.1, FR-03.5)."
+                        "description": "A folder or list, with its description, color and icon (FR-01.1, FR-03.5)."
                       },
                       "description": "The root, with no parent, and its active folders and lists."
                     },
@@ -11639,6 +11707,113 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "container.setIcon"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "icon": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "icon"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "icon": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "icon"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -14410,6 +14585,113 @@
                       "name",
                       "args"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "container.setIcon"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "icon": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "icon"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "icon": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "icon"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
+                    ]
                   }
                 ],
                 "description": "A mutation envelope (TS-20)."
@@ -17180,6 +17462,113 @@
                       "mutationId",
                       "name",
                       "args"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mutationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                        "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                      },
+                      "name": {
+                        "type": "string",
+                        "const": "container.setIcon"
+                      },
+                      "args": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "icon": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "icon"
+                        ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "icon": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
+                          }
+                        },
+                        "required": [
+                          "icon"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "mutationId",
+                      "name",
+                      "args",
+                      "base"
                     ]
                   }
                 ],
@@ -18544,6 +18933,39 @@
                               "pink",
                               null
                             ]
+                          },
+                          "icon": {
+                            "description": "Its icon in place of the folder or list glyph, null for none. Not inherited (TON-306).",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones",
+                              null
+                            ]
                           }
                         },
                         "required": [
@@ -18552,10 +18974,11 @@
                           "parentId",
                           "name",
                           "description",
-                          "color"
+                          "color",
+                          "icon"
                         ],
                         "additionalProperties": false,
-                        "description": "A folder or list, with its description and color (FR-01.1, FR-03.5)."
+                        "description": "A folder or list, with its description, color and icon (FR-01.1, FR-03.5)."
                       }
                     },
                     "memberships": {
@@ -19548,6 +19971,42 @@
                           }
                         ],
                         "description": "Its own color, null for none: without one it takes the nearest folder's above it (TON-175)."
+                      },
+                      "icon": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Its icon in place of the folder or list glyph, null for none. Not inherited (TON-306)."
                       }
                     },
                     "required": [
@@ -19556,10 +20015,11 @@
                       "parentId",
                       "name",
                       "description",
-                      "color"
+                      "color",
+                      "icon"
                     ],
                     "additionalProperties": false,
-                    "description": "A folder or list, with its description and color (FR-01.1, FR-03.5)."
+                    "description": "A folder or list, with its description, color and icon (FR-01.1, FR-03.5)."
                   },
                   {
                     "type": "null"
@@ -23656,6 +24116,122 @@
                   "mutationId",
                   "name",
                   "args"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mutationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+                    "description": "Made once per intent by the client, and sent again on every retry (TS-22)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "const": "container.setIcon"
+                  },
+                  "args": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "icon": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "icon"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "icon": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "horns",
+                              "skull",
+                              "guitar",
+                              "drum",
+                              "microphone",
+                              "boombox",
+                              "waveform",
+                              "saxophone",
+                              "cocktail",
+                              "piano",
+                              "violin",
+                              "masks",
+                              "campfire",
+                              "pine",
+                              "wheat",
+                              "moon",
+                              "sparkles",
+                              "star",
+                              "heart",
+                              "clapperboard",
+                              "gamepad",
+                              "record",
+                              "headphones"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "icon"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "mutationId",
+                  "name",
+                  "args",
+                  "base"
                 ],
                 "additionalProperties": false
               }

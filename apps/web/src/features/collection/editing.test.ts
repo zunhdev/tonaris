@@ -15,6 +15,7 @@ const metal: Container = {
   name: "Metal",
   description: null,
   color: null,
+  icon: null,
 };
 const doom: Container = {
   id: uuidv7(),
@@ -23,6 +24,7 @@ const doom: Container = {
   name: "Doom",
   description: null,
   color: null,
+  icon: null,
 };
 const later: Container = {
   id: uuidv7(),
@@ -31,6 +33,7 @@ const later: Container = {
   name: "Later",
   description: null,
   color: null,
+  icon: null,
 };
 
 describe("creating and renaming (DS-78)", () => {

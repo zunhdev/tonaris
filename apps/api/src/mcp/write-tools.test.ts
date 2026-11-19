@@ -107,6 +107,7 @@ describe("the tools a Manage connection gets (TS-62, TS-63, X-03)", () => {
         "set_artwork",
         "set_color",
         "set_description",
+        "set_icon",
         "set_link",
         "set_order",
         "set_view_preferences",
@@ -120,7 +121,7 @@ describe("the tools a Manage connection gets (TS-62, TS-63, X-03)", () => {
       ),
     ).toEqual([]);
     const writing = tools.filter((tool) => tool.annotations?.readOnlyHint === false);
-    expect(writing.length).toBe(29);
+    expect(writing.length).toBe(30);
   });
 
   test("a Read-only connection can't call a write tool, even by name", async () => {
@@ -233,8 +234,12 @@ describe("organizing (FR-10.4)", () => {
     expect(statuses(await write(mcp, "set_color", { containerId, color: "violet" }))).toEqual([
       "confirmed",
     ]);
+    // An icon, as the app's Icon… sets it (TON-306).
+    expect(statuses(await write(mcp, "set_icon", { containerId, icon: "skull" }))).toEqual([
+      "confirmed",
+    ]);
     expect(await read(mcp, "list_container", { containerId })).toMatchObject({
-      container: { name: "Epic Doom", description: "Long songs.", color: "violet" },
+      container: { name: "Epic Doom", description: "Long songs.", color: "violet", icon: "skull" },
     });
   });
 

@@ -23,6 +23,7 @@ const container = (kind: Container["kind"], name: string, parentId: string | nul
   parentId,
   description: null,
   color: null,
+  icon: null,
 });
 
 /** An entry added `n` minutes into 1 November 2026. */

@@ -1,0 +1,2 @@
+ALTER TABLE "containers" ADD COLUMN "icon" text;--> statement-breakpoint
+ALTER TABLE "containers" ADD CONSTRAINT "containers_icon_check" CHECK ("icon" in ('horns', 'skull', 'guitar', 'drum', 'microphone', 'boombox', 'waveform', 'saxophone', 'cocktail', 'piano', 'violin', 'masks', 'campfire', 'pine', 'wheat', 'moon', 'sparkles', 'star', 'heart', 'clapperboard', 'gamepad', 'record', 'headphones'));

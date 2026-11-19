@@ -23,6 +23,7 @@ test("⌘⌫ deletes the focused album after confirming; the inspector does too"
     name: "Doom",
     description: null,
     color: null,
+    icon: null,
   };
   await insert(page, doom);
   const dopesmoker = album("Dopesmoker", { artistCredit: "Sleep", originalYear: 1999 });
@@ -100,6 +101,7 @@ test("⌫ takes the focused album out of the list on view, with Undo, and keeps 
     name: "Doom",
     description: null,
     color: null,
+    icon: null,
   };
   await insert(page, doom);
   await added(page, [album("Dopesmoker", { artistCredit: "Sleep", originalYear: 1999 })], doom.id);

@@ -699,7 +699,11 @@ function ContainerRow({
       ) : (
         <span className="w-3.5 shrink-0" />
       )}
-      <ContainerIcon kind={container.kind} color={effectiveColor(container, tree.byId)} />
+      <ContainerIcon
+        kind={container.kind}
+        color={effectiveColor(container, tree.byId)}
+        icon={container.icon}
+      />
       <span className="min-w-0 flex-1 truncate">{container.name}</span>
       {/* What the person shares, or what a folder above does (DS-31, TON-227). */}
       <SharingGlyph containerId={container.id} />

@@ -352,13 +352,19 @@ function remake(
     }
     case "container.create": {
       if (containers.has(mutation.args.id)) return "unchanged";
-      planned.containerInserts.push({ ...mutation.args, description: null, color: null });
+      planned.containerInserts.push({
+        ...mutation.args,
+        description: null,
+        color: null,
+        icon: null,
+      });
       return planned.needs("container.insert");
     }
     case "container.rename":
     case "container.move":
     case "container.describe":
-    case "container.setColor": {
+    case "container.setColor":
+    case "container.setIcon": {
       const { args } = mutation;
       const current = containers.get(args.id);
       if (!current) return "gone";
@@ -372,6 +378,9 @@ function remake(
       } else if ("color" in args) {
         if (current.color === args.color) return "unchanged";
         change = { color: args.color };
+      } else if ("icon" in args) {
+        if (current.icon === args.icon) return "unchanged";
+        change = { icon: args.icon };
       } else {
         if (current.parentId === args.parentId) return "unchanged";
         change = { parentId: args.parentId };

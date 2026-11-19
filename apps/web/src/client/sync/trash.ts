@@ -202,12 +202,13 @@ export function createTrash({
           .filter((row) => !containers.has(row.id))
           .map((row): Container => {
             if (row.id !== unit.rootId) return row;
-            const { id, kind, description, color } = row;
+            const { id, kind, description, color, icon } = row;
             return {
               id,
               kind,
               description,
               color,
+              icon,
               parentId: choice.parentId === undefined ? row.parentId : choice.parentId,
               name: choice.name ?? row.name,
             };

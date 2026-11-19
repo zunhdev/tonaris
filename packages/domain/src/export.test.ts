@@ -33,6 +33,7 @@ const list = (name: string, parentId: string | null = null) => ({
   name,
   description: null,
   color: null,
+  icon: null,
   trashedAt: null,
   trashUnitId: null,
 });
@@ -55,6 +56,12 @@ const empty = (): ExportSource => ({
 const everything = () => true;
 
 describe("buildExport", () => {
+  test("a folder's or list's color and icon are kept (TON-175, TON-306)", () => {
+    const jazz = { ...list("Jazz"), color: "blue" as const, icon: "saxophone" as const };
+    const result = exportSchema.parse(buildExport({ ...empty(), containers: [jazz] }, everything));
+    expect(result.tree.containers[0]).toMatchObject({ color: "blue", icon: "saxophone" });
+  });
+
   test("an album in two lists appears once, and both lists reference it", () => {
     const kind = album("Kind of Blue");
     const jazz = list("Jazz");
@@ -73,7 +80,7 @@ describe("buildExport", () => {
     expect(result.tree.containers.map((each) => each.albumIds)).toEqual([[kind.id], [kind.id]]);
     expect(result).toMatchObject({
       format: "tonaris-export",
-      formatVersion: "1.2",
+      formatVersion: "1.3",
       exportedAt: "2026-10-29T12:00:00.000Z",
     });
   });

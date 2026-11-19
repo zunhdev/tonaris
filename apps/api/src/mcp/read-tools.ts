@@ -25,6 +25,7 @@ import {
 } from "@tonaris/db";
 import {
   containerColors,
+  containerIcons,
   approvalState,
   approvalSummary,
   containerKinds,
@@ -195,6 +196,10 @@ export function registerReadTools(server: McpServer, { db, principal }: ReadTool
               .enum(containerColors)
               .nullable()
               .describe("Its own color; null shows its nearest folder's (TON-175)."),
+            icon: z
+              .enum(containerIcons)
+              .nullable()
+              .describe("Its icon in place of the folder or list glyph; null for none (TON-306)."),
           })
           .nullable()
           .describe("The folder or list; null for the top level."),

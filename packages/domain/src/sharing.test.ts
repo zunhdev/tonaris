@@ -250,6 +250,7 @@ describe("access across moves, Trash and revocation, as properties", () => {
           name: `C${index}`,
           description: null,
           color: null,
+          icon: null,
           ownerId: owner,
           trashed: false,
         });
@@ -438,6 +439,7 @@ describe("access across moves, Trash and revocation, as properties", () => {
       name: "Metal",
       description: null,
       color: null,
+      icon: null,
       ownerId: owner,
       trashed: false,
     };

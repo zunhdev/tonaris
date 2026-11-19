@@ -38,6 +38,7 @@ export const containerColumns = {
   name: containers.name,
   description: containers.description,
   color: containers.color,
+  icon: containers.icon,
 };
 
 export const membershipColumns = {

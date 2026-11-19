@@ -109,6 +109,7 @@ function NameForm({ naming, onClose }: { naming: Naming; onClose: () => void }) 
           name: trimmed,
           description: null,
           color: null,
+          icon: null,
         }),
       );
     }

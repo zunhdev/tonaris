@@ -126,7 +126,7 @@ export const insideShare = (access: ContentAccess, id: string): boolean =>
 
 /** Why an editor can't move or delete a shared folder or list itself (FR-07.20), in the app's words too. */
 export const shareTopSentence =
-  "Only its owner can move or delete the shared folder or list itself. You can rename it, describe it and color it.";
+  "Only its owner can move or delete the shared folder or list itself. You can rename it, describe it, and set its color and icon.";
 
 /** The refusal of an editor's move or deletion of a shared folder or list itself (FR-07.20). */
 export const shareTopRefusal = () => failure("permission_denied", shareTopSentence);
