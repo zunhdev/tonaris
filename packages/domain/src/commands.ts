@@ -10,6 +10,7 @@ import {
   colorContainer,
   createContainer,
   describeContainer,
+  iconContainer,
   moveContainer,
   renameContainer,
   type Container,
@@ -126,6 +127,7 @@ export function mutationTarget(mutation: Mutation): MutationTarget | undefined {
     case "container.move":
     case "container.describe":
     case "container.setColor":
+    case "container.setIcon":
     case "container.delete":
       return container(mutation.args.id);
     case "album.create":
@@ -204,6 +206,7 @@ const handlers = {
   "container.move": ({ args, base }, context) => moveContainer(args, base, context),
   "container.describe": ({ args, base }, context) => describeContainer(args, base, context),
   "container.setColor": ({ args, base }, context) => colorContainer(args, base, context),
+  "container.setIcon": ({ args, base }, context) => iconContainer(args, base, context),
   "container.delete": ({ args }, context) => deleteContainer(args, context),
   "trash.recover": ({ args }, context) => recoverUnit(args, context),
   "album.delete": ({ args }, context) => deleteAlbum(args, context),

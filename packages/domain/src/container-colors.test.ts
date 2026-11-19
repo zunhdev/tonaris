@@ -24,6 +24,7 @@ const container = (
   name,
   description: null,
   color: null,
+  icon: null,
   ownerId: owner,
   trashed: false,
   ...values,

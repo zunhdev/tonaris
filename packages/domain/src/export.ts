@@ -5,7 +5,7 @@
 // Unknown is null, an unused field is absent, and an applied-empty field is null (FR-08.3).
 
 import { albumFieldsSchema, artworkUrlSchema, type Album } from "./albums";
-import { containerColors, containerKinds, type Container } from "./containers";
+import { containerColors, containerIcons, containerKinds, type Container } from "./containers";
 import { provenanceSources, type ProvenanceSource } from "./enrichment";
 import type { FieldValue } from "./field-values";
 import { fieldTypes, type CustomField } from "./fields";
@@ -27,9 +27,9 @@ import { z } from "./zod";
 export const exportFormat = "tonaris-export";
 /**
  * Semver: a minor version only adds fields (TS-81). 1.1 added `accountDefaults.folderLayout` (TON-174); 1.2 added
- * `tree.containers[].color` (TON-175).
+ * `tree.containers[].color` (TON-175); 1.3 added `tree.containers[].icon` (TON-306).
  */
-export const exportFormatVersion = "1.2";
+export const exportFormatVersion = "1.3";
 
 /** What replaces a value a provider's policy keeps out of exports and from agents (TS-15, FR-08.8). */
 export const withheld = { withheld: "provider-policy" } as const;
@@ -108,6 +108,9 @@ const containerSchema = z.object({
   color: z.enum(containerColors).nullable().meta({
     description:
       "Its own color, null for none; without one it shows its nearest folder's (TON-175).",
+  }),
+  icon: z.enum(containerIcons).nullable().meta({
+    description: "Its icon in place of the folder or list glyph, null for none (TON-306).",
   }),
   parentId: z.uuid().nullable(),
   albumIds: z.array(z.uuid()).meta({
@@ -343,6 +346,7 @@ export function buildExport(
         name: container.name,
         description: container.description,
         color: container.color,
+        icon: container.icon,
         parentId: container.parentId,
         albumIds:
           container.kind === "list"

@@ -10,7 +10,12 @@ import {
   syncedAlbumSchema,
 } from "./albums";
 import { captureArgsSchema } from "./capture";
-import { containerColors, containerFieldsSchema, containerSchema } from "./containers";
+import {
+  containerColors,
+  containerFieldsSchema,
+  containerIcons,
+  containerSchema,
+} from "./containers";
 import { fieldDeleteArgsSchema } from "./field-deletion";
 import {
   fieldAddOptionArgsSchema,
@@ -311,6 +316,17 @@ export const containerSetColorSchema = z.object({
   name: z.literal("container.setColor"),
   args: z.object({ id: z.uuid(), color: z.enum(containerColors).nullable() }),
   base: z.object({ color: z.enum(containerColors).nullable() }),
+});
+
+/**
+ * `container.setIcon`: sets a folder's or list's icon, or clears it with null (TON-306); `base.icon` is the one the
+ * client last saw (TS-21).
+ */
+export const containerSetIconSchema = z.object({
+  mutationId,
+  name: z.literal("container.setIcon"),
+  args: z.object({ id: z.uuid(), icon: z.enum(containerIcons).nullable() }),
+  base: z.object({ icon: z.enum(containerIcons).nullable() }),
 });
 
 /** `container.rename`: `base.name` is the name the client last saw (TS-21, FR-01.3). */
@@ -636,6 +652,7 @@ export const mutationSchema = z
     accountSetAvatarColorSchema,
     accountSetAboutSchema,
     accountSetFavoritesSchema,
+    containerSetIconSchema,
   ])
   .meta({ description: "A mutation envelope (TS-20)." });
 export type Mutation = z.infer<typeof mutationSchema>;

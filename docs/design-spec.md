@@ -470,6 +470,12 @@ A reissue's release date never appears in the year column. Tonaris saves albums,
 - **Where it shows:** the icon of the folder or list, in its color and filled with it at 25%, in the tree, folder rows and cards (DS-41), and shared and guest folders; and the album panel's list chips (DS-46).
 - **Where it's set:** the ⋯ menu's **Color** submenu, between Share… and Delete…, with None first and a swatch for each, the folder's or list's own checked; and ⌘K's **Color…** (DS-75), a dialog listing the same, which closes on a choice. Either switches to Editing first (DS-45); the menu's waits offline like its other items (DS-81). Agents set it with MCP's `set_color`.
 
+*As built in TON-306* (the creator's idea, approved from a to-scale mock of their genre folders, 19 November 2026): **folder and list icons** (FR-01.20).
+- **The set:** 23 icons in the picker's order: horns, skull, guitar, drum, microphone, boombox, waveform, saxophone, cocktail, piano, violin, masks, campfire, pine, wheat, moon, sparkles, star, heart, clapperboard, gamepad, record, headphones; or none. Each names what is drawn, not a genre, so one serves several. Each stays distinct from the rest at 14 px: the mock showed box shapes (turntable, cassette, radio), two guitars, and piano with keyboard blurring together, so the set keeps one of each. Lucide has no saxophone or violin, so those two are drawn on its 24 grid with its round caps and joins.
+- **Not inherited:** the icon replaces the glyph of its own folder or list only. An inherited one would draw every list under Metal as horns, so folders and lists would no longer differ; the chevron and the count still tell them apart where an icon shows.
+- **Where it shows:** in place of the folder or list glyph, in its color and with the same 25% fill, in the tree, folder rows and cards (DS-41), search (DS-75), and shared and guest folders.
+- **Where it's set:** the ⋯ menu's **Icon…**, after Color, and ⌘K's **Icon…** (DS-75) open one picker: a dialog titled "Icon for {name}" with None and the icons in a grid of six, each at 20 px in the folder's or list's color, the own one on `bg.selected`. The arrow keys, Home and End move through the grid, the name of the icon under the pointer or focus shows under it, and a choice closes the dialog. Either switches to Editing first (DS-45). Agents set it with MCP's `set_icon`.
+
 **DS-28 Standard confirmation dialog.** Built on AlertDialog. It is used for every *confirmed* operation (X-07). *(X-07, FR-07.14)*
 
 1. **Title:** the verb and target, e.g. "Delete folder 'Metal'?"
@@ -2312,4 +2318,6 @@ New questions are added here as **Open (design)** rows.
 | X-04 Device scope | DS-07, DS-45, DS-110 |
 | X-07 Confirmations | DS-05, DS-28, DS-50, DS-57 |
 *As built in TON-175:* **Color…** joins the folder and list commands. It has no key of its own, so the palette shows none beside it and doesn't announce a shortcut, and the reference lists it without keys (DS-78). It opens the Color dialog for the focused folder or list (DS-27).
+
+*As built in TON-306:* **Icon…** follows Color… among the folder and list commands, also without a key of its own. It opens the icon picker for the focused folder or list (DS-27).
 

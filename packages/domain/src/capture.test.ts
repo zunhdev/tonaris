@@ -102,6 +102,7 @@ const list = (name: string, values: Partial<StoredContainer> = {}): StoredContai
   kind: "list",
   description: null,
   color: null,
+  icon: null,
   parentId: null,
   name,
   ownerId: owner,

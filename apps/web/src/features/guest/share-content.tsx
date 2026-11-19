@@ -172,6 +172,7 @@ export function FolderItems({
                     <ContainerIcon
                       kind={child.kind}
                       color={colorOf?.(child) ?? null}
+                      icon={child.icon}
                       className="mr-1.5 inline-block align-[-3px]"
                     />
                     {child.name}
@@ -200,7 +201,11 @@ export function FolderItems({
             "aria-keyshortcuts": keysFor ? "Alt+ArrowUp Alt+ArrowDown" : undefined,
             children: (
               <>
-                <ContainerIcon kind={child.kind} color={colorOf?.(child) ?? null} />
+                <ContainerIcon
+                  kind={child.kind}
+                  color={colorOf?.(child) ?? null}
+                  icon={child.icon}
+                />
                 <span className="truncate">{child.name}</span>
               </>
             ),

@@ -58,6 +58,7 @@ test("a viewer sees it view-only, in their own order, live, until access ends", 
     name: "Doom",
     description: null,
     color: null,
+    icon: null,
   };
   await insert(page, doom);
   await saved(page);

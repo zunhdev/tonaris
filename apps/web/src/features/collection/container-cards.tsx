@@ -239,6 +239,7 @@ function ContainerCard({
         <ContainerIcon
           kind={container.kind}
           color={effectiveColor(container, tree.byId)}
+          icon={container.icon}
           className="mr-1.5 inline-block align-[-3px]"
         />
         {container.name}

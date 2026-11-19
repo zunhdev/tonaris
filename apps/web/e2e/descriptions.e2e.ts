@@ -30,6 +30,7 @@ test("a description is written, shown in the header and rows, kept through a mov
     name: "Rock",
     description: null,
     color: null,
+    icon: null,
   };
   const grunge = {
     id: uuidv7(),
@@ -38,6 +39,7 @@ test("a description is written, shown in the header and rows, kept through a mov
     name: "Grunge",
     description: null,
     color: null,
+    icon: null,
   };
   const other = {
     id: uuidv7(),
@@ -46,6 +48,7 @@ test("a description is written, shown in the header and rows, kept through a mov
     name: "Other",
     description: null,
     color: null,
+    icon: null,
   };
   await insert(page, rock, other, grunge);
   await saved(page);

@@ -450,6 +450,7 @@ describe("every write tool, as an editor's agent inside a share (DRIFT-024)", ()
       ["create_container", () => ({ kind: "folder", name: "Inner", parentId: metal }), "confirmed"],
       ["rename_container", () => ({ containerId: doom, name: "Doom II" }), "confirmed"],
       ["set_color", () => ({ containerId: doom, color: containerColors[0] }), "confirmed"],
+      ["set_icon", () => ({ containerId: doom, icon: "skull" }), "confirmed"],
       ["set_description", () => ({ containerId: doom, description: "Slow" }), "confirmed"],
       ["move_items", () => ({ containerIds: [doom], parentId: made.inner }), "confirmed"],
       [

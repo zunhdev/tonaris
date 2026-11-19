@@ -41,6 +41,7 @@ const container = (kind: StoredContainer["kind"], name: string): StoredContainer
   name,
   description: null,
   color: null,
+  icon: null,
   ownerId: owner,
   trashed: false,
 });

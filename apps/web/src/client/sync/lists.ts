@@ -52,6 +52,11 @@ function containerUpdates(original: Container, changes: Partial<Container>): Mut
       envelope("container.setColor", { id, color: changes.color }, { color: original.color }),
     );
   }
+  if (changes.icon !== undefined && changes.icon !== original.icon) {
+    updates.push(
+      envelope("container.setIcon", { id, icon: changes.icon }, { icon: original.icon }),
+    );
+  }
   return updates;
 }
 
@@ -71,13 +76,14 @@ export function createContainerCollection({
     handlers: {
       onInsert: ({ transaction }) =>
         writer.persistEach(transaction, ({ modified }) => {
-          const { id, description, color } = modified;
+          const { id, description, color, icon } = modified;
           return [
             envelope("container.create", pick(modified, createFields)),
             ...(description
               ? [envelope("container.describe", { id, description }, { description: null })]
               : []),
             ...(color ? [envelope("container.setColor", { id, color }, { color: null })] : []),
+            ...(icon ? [envelope("container.setIcon", { id, icon }, { icon: null })] : []),
           ];
         }),
       onUpdate: ({ transaction }) =>

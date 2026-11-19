@@ -19,7 +19,7 @@ const container = (
   name: string,
   parentId: string | null = null,
   description: string | null = null,
-): Container => ({ id: uuidv7(), kind, parentId, name, description, color: null });
+): Container => ({ id: uuidv7(), kind, parentId, name, description, color: null, icon: null });
 
 const album = (title: string, artistCredit: string): Album => ({
   id: uuidv7(),
@@ -227,6 +227,7 @@ describe("the parity fixture (X-02, TS-50)", () => {
       name,
       description: description ?? null,
       color: null,
+      icon: null,
     }),
   );
   const activeLists = new Set(fixtureContainers.map(({ id }) => id));

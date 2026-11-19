@@ -25,6 +25,7 @@ const container = (
   name,
   description: null,
   color: null,
+  icon: null,
 });
 
 test("⌫ moves a list to Trash, its album to Unsorted, and Undo brings it back", async ({

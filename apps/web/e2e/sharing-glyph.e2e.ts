@@ -18,6 +18,7 @@ const container = (kind: Container["kind"], name: string, parentId: string | nul
   name,
   description: null,
   color: null,
+  icon: null,
 });
 const treeItem = (page: Page, name: string) =>
   page.getByRole("tree").getByRole("treeitem", { name: new RegExp(`^${name}`) });

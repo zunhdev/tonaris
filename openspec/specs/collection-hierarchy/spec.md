@@ -193,7 +193,7 @@ A description SHALL stay with its folder or list through moves, Trash and recove
 - **THEN** nothing matches
 
 ### Requirement: Folders and lists have a menu in the sidebar
-Each folder and list in the sidebar SHALL offer a menu with New list, New folder, Rename, Move to…, Share…, Color and Delete…, opened from its ⋯ with the pointer or with Shift+F10 or the Menu key (FR-01.1, FR-01.3, FR-01.4, FR-01.11). New list and New folder SHALL create inside a folder, and beside a list (TON-120). Each item SHALL run what its shortcut runs on that folder or list, and show the shortcut. While offline, the items SHALL be disabled with the reason (DS-81).
+Each folder and list in the sidebar SHALL offer a menu with New list, New folder, Rename, Move to…, Share…, Color, Icon… and Delete…, opened from its ⋯ with the pointer or with Shift+F10 or the Menu key (FR-01.1, FR-01.3, FR-01.4, FR-01.11). New list and New folder SHALL create inside a folder, and beside a list (TON-120). Each item SHALL run what its shortcut runs on that folder or list, and show the shortcut. While offline, the items SHALL be disabled with the reason (DS-81).
 
 #### Scenario: Creating inside a folder
 - **WHEN** an owner chooses New list in the folder 'Metal''s menu and enters "Sludge"
@@ -323,3 +323,25 @@ In Editing mode, the header's Description, or a click on the description, SHALL 
 #### Scenario: Written in the panel
 - **WHEN** the owner opens Description, types two lines and presses Done
 - **THEN** the panel closes and the list's page shows both lines
+
+### Requirement: Folders and lists have icons
+An owner SHALL give a folder or list one of a fixed set of icons, or none, from its menu's Icon… or the palette's Icon… (FR-01.20, DS-27, TON-306). The icon SHALL replace the folder or list glyph in the sidebar's tree, folder rows and cards, and search, drawn in the folder's or list's color. Setting an icon SHALL be an ordinary change: it switches to Editing mode, reaches the owner's other sessions, and waits offline like other changes.
+
+#### Scenario: Giving a folder an icon from its menu
+- **WHEN** an owner chooses Icon… in the folder 'Metal''s menu and picks Horns
+- **THEN** 'Metal' shows horns in place of the folder glyph, Editing mode is on, and the icon is kept after a reload
+
+#### Scenario: Giving a list an icon from the palette
+- **WHEN** an owner focuses the list 'Doom', opens the palette, runs Icon… and picks Skull
+- **THEN** 'Doom' shows a skull
+
+#### Scenario: Clearing an icon
+- **WHEN** an owner picks None for 'Metal'
+- **THEN** 'Metal' shows the folder glyph again
+
+### Requirement: A folder's icon stays its own
+A folder's icon SHALL NOT pass to what's inside: a folder or list without its own icon SHALL keep its folder or list glyph, in its inherited color (FR-01.20, DS-27, TON-306).
+
+#### Scenario: A list inside a folder with an icon
+- **WHEN** the orange folder 'Metal' has horns and its list 'Doom' has no icon
+- **THEN** 'Doom' shows the list glyph, in orange

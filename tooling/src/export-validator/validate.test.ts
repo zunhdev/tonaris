@@ -110,7 +110,7 @@ describe("validateArchive", () => {
         },
       ),
     );
-    expect(problems).toEqual(["tonaris-export.schema.json isn't format 1.2's schema."]);
+    expect(problems).toEqual(["tonaris-export.schema.json isn't format 1.3's schema."]);
   });
 
   test("not a ZIP", () => {

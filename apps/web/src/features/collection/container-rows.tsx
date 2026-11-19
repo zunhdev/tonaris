@@ -219,6 +219,7 @@ function ContainerRow({
     <ContainerIcon
       kind={container.kind}
       color={effectiveColor(container, tree.byId)}
+      icon={container.icon}
       className={compact ? "size-5" : undefined}
     />
   );

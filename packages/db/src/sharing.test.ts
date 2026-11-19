@@ -126,6 +126,7 @@ async function made(
     name,
     description: null,
     color: null,
+    icon: null,
   };
   await run(principal, { name: "container.create", args: container });
   return container;
@@ -637,6 +638,11 @@ describe("whose collection each mutation changes (DRIFT-055)", () => {
         name: "container.setColor",
         args: { id: doom.id, color: null },
         base: { color: null },
+      },
+      "container.setIcon": {
+        name: "container.setIcon",
+        args: { id: doom.id, icon: null },
+        base: { icon: null },
       },
       "container.delete": { name: "container.delete", args: { id: doom.id, unitId: uuidv7() } },
       "album.create": {

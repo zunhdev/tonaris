@@ -22,6 +22,7 @@ const folder = (name: string, parentId: string | null = null): Container => ({
   name,
   description: null,
   color: null,
+  icon: null,
 });
 const list = (name: string, parentId: string | null = null): Container => ({
   ...folder(name, parentId),

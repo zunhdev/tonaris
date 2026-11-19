@@ -22,6 +22,7 @@ import { CapturePanel } from "@/features/capture/capture-panel";
 import { AddToListDialog } from "@/features/collection/add-to-list";
 import { useCollectionUi } from "@/features/collection/collection-ui";
 import { ColorDialog } from "@/features/collection/container-color";
+import { IconDialog } from "@/features/collection/container-icon";
 import {
   DeleteAlbumDialog,
   DeleteAlbumsDialog,
@@ -221,6 +222,7 @@ export function Shell({ account, children }: { account: Account; children: React
       <MoveConfirmDialog />
       <PositionDialog />
       <ColorDialog />
+      <IconDialog />
       <ShareDialog />
       <InvitationToasts accountId={account.id} />
       <LostShareEdits />

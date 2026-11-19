@@ -515,13 +515,14 @@ export function memoryStore({
     activeChildren: (ownerId, parentId) =>
       Promise.resolve(
         activeChildren(ownerId, parentId).map(
-          ({ id, kind, name, parentId: parent, description, color }): Container => ({
+          ({ id, kind, name, parentId: parent, description, color, icon }): Container => ({
             id,
             kind,
             parentId: parent,
             name,
             description,
             color,
+            icon,
           }),
         ),
       ),

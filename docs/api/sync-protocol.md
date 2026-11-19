@@ -144,7 +144,7 @@ The server ends a stream in four cases:
 - **`base`** holds the prior value of exactly the fields being changed (TS-21). A field whose saved value differs is a conflict, and nothing in the mutation applies. Fields not named are never compared, so edits to different fields of one record both apply.
 - **The mutations today:**
   - `album.create`, `album.update`, `album.setArtwork`, `album.capture`;
-  - `container.create`, `container.rename`, `container.move`, `container.describe`, `container.setColor`, `container.delete`;
+  - `container.create`, `container.rename`, `container.move`, `container.describe`, `container.setColor`, `container.setIcon`, `container.delete`;
   - `trash.recover`, `album.delete`, `trash.purge`;
   - `membership.add`, `membership.remove`;
   - `link.set`, `link.remove`;
@@ -214,6 +214,7 @@ The server ends a stream in four cases:
   - **Display name:** inviting or turning a link on needs one (`display_name_required`). So does keeping one while any invitation is pending or accepted, or any link is on.
 - **Descriptions** (FR-03.5): **`container.describe`** `{id, description}`, with `base.description`, sets a folder's or list's plain-text description. It is trimmed, and empty text or null clears it. At most 2,000 characters; not in Trash (`trashed`). `container.create` makes none (TON-54).
 - **Colors** (FR-01.19, TON-175): **`container.setColor`** `{id, color}`, with `base.color`, sets a folder's or list's own color, or clears it with `null`. `color` is one of `red`, `orange`, `amber`, `green`, `teal`, `blue`, `violet` and `pink`. The stream sends the whole `container`. A folder or list without its own color shows its nearest folder's above it. Clients work that out; nothing stores it.
+- **Icons** (FR-01.20, TON-306): **`container.setIcon`** `{id, icon}`, with `base.icon`, sets a folder's or list's icon, or clears it with `null`. `icon` is one of `horns`, `skull`, `guitar`, `drum`, `microphone`, `boombox`, `waveform`, `saxophone`, `cocktail`, `piano`, `violin`, `masks`, `campfire`, `pine`, `wheat`, `moon`, `sparkles`, `star`, `heart`, `clapperboard`, `gamepad`, `record` and `headphones`. The stream sends the whole `container`. An icon shows on its own folder or list only; nothing inside takes it.
 - **Custom fields** (FR-03.6, FR-03.9, FR-03.11), defined per account (TON-49):
   - **`field.create`** `{id, name, type, options}` defines a field: `text`, `number`, `date`, `yes_no`, `single_choice` or `multiple_choice`. Only choice fields take options, each `{id, label}`, kept in the order given.
   - **`field.rename`** `{id, name}`, with `base.name`, renames it everywhere.

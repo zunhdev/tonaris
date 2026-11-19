@@ -49,6 +49,7 @@ const edits = new Set<CommandId>([
   "rename",
   "move",
   "color",
+  "icon",
   "delete",
   "delete-album",
   "add-to-list",
@@ -56,7 +57,7 @@ const edits = new Set<CommandId>([
 const onAlbum = new Set<CommandId>(["add-to-list", "open-in", "delete-album"]);
 /** What acts on the view's selected albums when there are some (TON-231). */
 const selects = new Set<CommandId>(["add-to-list", "delete-album"]);
-const onContainer = new Set<CommandId>(["rename", "move", "color", "delete", "share"]);
+const onContainer = new Set<CommandId>(["rename", "move", "color", "icon", "delete", "share"]);
 /** Sharing is online-only: it waits while offline, but isn't a collection edit, so it needs no Editing mode. */
 const online = new Set<CommandId>(["share"]);
 
@@ -260,7 +261,7 @@ export function useCommandRunner({
         // As F2 in the tree: the name's editor, in place.
         const container = now.tree.byId.get(containerOf(id, on) ?? "");
         if (container) now.startEditor({ mode: "rename", id: container.id, name: container.name });
-      } else if (id === "move" || id === "color" || id === "delete") {
+      } else if (id === "move" || id === "color" || id === "icon" || id === "delete") {
         // Edit intent switches to Editing first (DS-45).
         const container = containerOf(id, on);
         // ⌫ on an album in a list takes it out of the list (DS-50, TON-228).
@@ -276,6 +277,7 @@ export function useCommandRunner({
         now.mode.enterEditing();
         if (id === "move") now.dialogs.startMove(container);
         else if (id === "color") now.dialogs.startColor(container);
+        else if (id === "icon") now.dialogs.startIcon(container);
         else now.deleteContainer(container);
       } else if (id === "add-to-list" || id === "delete-album") {
         // The selection, when there is one, else the album open or focused (TON-231).

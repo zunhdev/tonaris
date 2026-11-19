@@ -45,6 +45,7 @@ const container = (
   name,
   description: null,
   color: null,
+  icon: null,
   trashedAt: null,
   trashUnitId: null,
   ...extra,

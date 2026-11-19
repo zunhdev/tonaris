@@ -483,6 +483,7 @@ describe("folders, lists and entries (FR-09.3, TON-26, TON-27)", () => {
       name: "Jazz",
       description: null,
       color: null,
+      icon: null,
     };
     const list: Container = {
       id: uuidv7(),
@@ -491,6 +492,7 @@ describe("folders, lists and entries (FR-09.3, TON-26, TON-27)", () => {
       name: "Favorites",
       description: null,
       color: null,
+      icon: null,
     };
 
     await web.containers.insert([folder, list]).when("settled");
@@ -528,6 +530,7 @@ describe("folders, lists and entries (FR-09.3, TON-26, TON-27)", () => {
       name: "Later",
       description: null,
       color: null,
+      icon: null,
     };
     await web.containers.insert(later).when("settled");
     const twin: Container = { ...later, id: uuidv7(), name: "later" };
@@ -670,6 +673,7 @@ describe("tabs sharing one stream (TS-23)", () => {
       name: "Later",
       description: null,
       color: null,
+      icon: null,
     };
     await web.containers.insert(list).when("settled");
 
@@ -722,6 +726,7 @@ describe("changes from elsewhere (FR-09.1, DS-82)", () => {
       name: "Later",
       description: null,
       color: null,
+      icon: null,
     };
     await web.containers.insert(list).when("settled");
     await until(() => phone.containers.has(list.id), 3_000, "the list");
@@ -787,6 +792,7 @@ describe("resubmitting (DS-80, FR-09.4, FR-13.2)", () => {
       name: "Later",
       description: null,
       color: null,
+      icon: null,
     };
     await web.containers.insert(later).when("settled");
     const twin: Container = { ...later, id: uuidv7() };
@@ -817,6 +823,7 @@ describe("resubmitting (DS-80, FR-09.4, FR-13.2)", () => {
       name: "Later",
       description: null,
       color: null,
+      icon: null,
     };
     await web.containers.insert(list).when("settled");
     const before = web.network.sent.length;
@@ -850,6 +857,7 @@ describe("batch reports (FR-13.4, FR-13.5, DS-84)", () => {
       name: "Later",
       description: null,
       color: null,
+      icon: null,
     };
     await web.containers.insert(later).when("settled");
 
@@ -861,6 +869,7 @@ describe("batch reports (FR-13.4, FR-13.5, DS-84)", () => {
       name: "Later",
       description: null,
       color: null,
+      icon: null,
     };
     const inside: Container = {
       id: uuidv7(),
@@ -869,6 +878,7 @@ describe("batch reports (FR-13.4, FR-13.5, DS-84)", () => {
       name: "Doom",
       description: null,
       color: null,
+      icon: null,
     };
     const soon: Container = {
       id: uuidv7(),
@@ -877,6 +887,7 @@ describe("batch reports (FR-13.4, FR-13.5, DS-84)", () => {
       name: "Soon",
       description: null,
       color: null,
+      icon: null,
     };
     const error = await web.containers
       .insert([folder, inside, soon])
@@ -1069,6 +1080,7 @@ describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
       name: "Later",
       description: null,
       color: null,
+      icon: null,
     };
     const doom: Container = {
       id: uuidv7(),
@@ -1077,6 +1089,7 @@ describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
       name: "Doom",
       description: null,
       color: null,
+      icon: null,
     };
     await web.containers.insert([later, doom]).when("settled");
     const sent = web.network.sent.length;
@@ -1121,6 +1134,7 @@ describe("manual order (TS-16, FR-05.2, FR-09.4)", () => {
       name: "Doom",
       description: null,
       color: null,
+      icon: null,
     };
     await web.containers.insert(doom).when("settled");
     await until(() => phone.containers.has(doom.id));
@@ -1241,6 +1255,7 @@ describe("captures (TON-45, TS-22)", () => {
       name: "Doom",
       description: null,
       color: null,
+      icon: null,
     };
     const created = web.containers.insert(doom);
     const [capture] = web.captures.send([{ link: links.slow, listId: doom.id }]);
@@ -1512,6 +1527,7 @@ describe("folder and list descriptions (FR-03.5, FR-09.1)", () => {
         name: "Grunge",
         description: "Seattle",
         color: null,
+        icon: null,
       })
       .when("settled");
     await until(
@@ -1549,6 +1565,7 @@ describe("Trash (FR-01.11, FR-01.13, TON-55)", () => {
         name: "Doom",
         description: null,
         color: null,
+        icon: null,
       })
       .when("settled");
     const { id: albumId } = await saved(web);
@@ -1603,6 +1620,7 @@ describe("albums in Trash (FR-14.1, FR-14.2, TON-57)", () => {
         name: "Doom",
         description: null,
         color: null,
+        icon: null,
       })
       .when("settled");
     const { id: albumId } = await saved(web);

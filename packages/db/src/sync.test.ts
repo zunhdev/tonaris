@@ -327,6 +327,7 @@ describe("bootstrapSnapshot (TS-24)", () => {
           name: "Jazz",
           description: null,
           color: null,
+          icon: null,
         },
         {
           id: listId,
@@ -335,6 +336,7 @@ describe("bootstrapSnapshot (TS-24)", () => {
           name: "Hard bop",
           description: null,
           color: null,
+          icon: null,
         },
       ].toSorted((a, b) => a.id.localeCompare(b.id)),
     );
@@ -430,6 +432,7 @@ const node = (
   parentId,
   description: null,
   color: null,
+  icon: null,
   name,
 });
 
