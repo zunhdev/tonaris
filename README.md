@@ -159,16 +159,17 @@ Feature and Design issues each get exactly one [OpenSpec](https://github.com/Fis
 
 In Claude Code:
 
-1. `/opsx:propose <what to build>` creates `openspec/changes/<name>/` with a proposal, spec deltas, a design, and tasks. Add `x-linear: TON-<n>` to the change's `.openspec.yaml`, using exactly that key, because `--strict` rejects any other unknown key.
-2. `/opsx:apply` implements the tasks.
-3. Once review is done, `/opsx:archive` is the PR's last commit. It moves the change to `openspec/changes/archive/` and merges its deltas into `openspec/specs/`.
+1. `/openspec-propose <what to build>` creates `openspec/changes/<name>/` with a proposal, spec deltas, a design, and tasks. Add `x-linear: TON-<n>` to the change's `.openspec.yaml`, using exactly that key, because `--strict` rejects any other unknown key.
+2. `/openspec-apply-change` implements the tasks.
+3. Once review is done, `/openspec-archive-change` is the PR's last commit. It moves the change to `openspec/changes/archive/` and merges its deltas into `openspec/specs/`.
 
 Notes:
 
 - `openspec/config.yaml` gives every change the project context and per-artifact rules (TS-133).
 - The CLI is pinned as a devDependency. Outside Claude Code, run it as `bunx openspec …`.
-- In Claude Code, a SessionStart hook in `.claude/settings.json` puts `node_modules/.bin` on PATH, so the generated commands and skills can call `openspec` directly. That needs Node 20.19 or later on PATH; `bun run check:specs` works without Node.
-- After upgrading `@fission-ai/openspec`, run `bunx openspec update` and commit the regenerated `.claude/commands/opsx/` and `.claude/skills/openspec-*` files.
+- In Claude Code, a SessionStart hook in `.claude/settings.json` puts `node_modules/.bin` on PATH, so OpenSpec's skills can call `openspec` directly. That needs Node 20.19 or later on PATH; `bun run check:specs` works without Node.
+- OpenSpec's skills live in `.agents/skills/`, and `.claude/skills/openspec-*` links to them (OpenSpec 2.0, TON-304).
+- After upgrading `@fission-ai/openspec`, run `bunx openspec update` and commit the regenerated `.agents/skills/openspec-*` files and links.
 
 ### Claude Code skills
 

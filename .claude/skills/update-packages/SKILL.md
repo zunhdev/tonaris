@@ -17,7 +17,7 @@ Run all three and keep their output in the scratchpad:
 - `bun audit`: GitHub's reviewed database, transitive dependencies included.
 - `bun run deps:check --json`: what taze offers under `taze.config.ts` (majors included, 7-day cooldown).
 
-taze drops a package without a word when a metadata request fails. Compare its list with `bun outdated --recursive`, and rerun `bunx taze --include <name>` for any package missing from it. With the cooldown, a package whose newest release is younger than 7 days shows the newest one that is old enough, or nothing.
+taze drops a package without a word when a metadata request fails. Compare its list with `bun outdated --recursive`, and rerun `bunx taze --include <name>` for any package missing from it. taze ignores the `packageMode` for TanStack DB, so its release candidates show only with `bunx taze latest --include @tanstack/db,@tanstack/react-db`. With the cooldown, a package whose newest release is younger than 7 days shows the newest one that is old enough, or nothing.
 
 **Done when** one list holds every advisory hit and every outdated package, each with its current and target version and the advisory it fixes, if any.
 
@@ -42,7 +42,7 @@ Work on the branch of a Linear Chore (team TON, labels Chore and infra, "Depende
    - `@playwright/test`: `bunx playwright install chromium`.
    - `elysia`, `@elysia/*` or `zod`: `bun run openapi:generate`, then read the diff of `apps/api/openapi/v1.json`. Only additions are allowed (TS-09).
    - `drizzle-*`: `bun run db:check`. Merged migrations are never edited.
-   - `@fission-ai/openspec`: `bunx openspec update`, and commit the regenerated `.claude/commands/opsx/` and `.claude/skills/openspec-*` files.
+   - `@fission-ai/openspec`: `bunx openspec update`, and commit the regenerated `.agents/skills/openspec-*` files and their links in `.claude/skills/`.
 3. `bun run format` twice (oxfmt doesn't always finish in one pass), then `bun run check`. When an upgrade breaks something, read its notes and fix forward. If the fix isn't small, put that package back on its old pin and list it as held back, with the reason.
 4. `bun run build`, the native production bundles.
 5. Run `bun run deps:advisories` and `bun audit` again. The hits you fixed must be gone. Explain each one left: no fix released yet, dev tool only, and so on.
