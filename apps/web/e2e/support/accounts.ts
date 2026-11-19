@@ -82,6 +82,8 @@ export const accounts = {
   albumDrag: at("album-drag"),
   // The folder a drag lights is the one under the pointer (manual-order.e2e.ts, TON-302).
   dragTarget: at("drag-target"),
+  // A drag near the sidebar's edge scrolls it by whole pixels (manual-order.e2e.ts, TON-303).
+  dragEdge: at("drag-edge"),
   arrangePlaces: at("arrange-places"),
   arrangeMoves: at("arrange-moves"),
   arrangeSync: at("arrange-sync"),
