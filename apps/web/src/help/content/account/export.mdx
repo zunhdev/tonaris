@@ -1,0 +1,77 @@
+---
+title: Export your collection
+summary: Download your whole collection as a ZIP file from Settings, under Data, whenever you like.
+order: 3
+device: computer
+keywords:
+  [
+    backup,
+    back up,
+    download,
+    save a copy,
+    export data,
+    json,
+    csv,
+    markdown,
+    data portability,
+    take my data,
+    storage,
+    how many albums,
+  ]
+related: [account/delete-account, reference/limits]
+---
+
+Your collection is yours to keep. An export is one ZIP file with everything you own in Tonaris: a complete file for programs and AI tools, and a copy you can read.
+
+## Download your data
+
+1. Choose your name at the top of the sidebar, then **Settings**, then **Data**. Or press <Keys k="G" /> then <Keys k="S" />, and choose **Data**.
+2. Under **Download your data**, choose the **Download your data** button.
+
+While Tonaris prepares it, the page says "Preparing your export…". You can go to other pages meanwhile: the download still starts. Then the page says the file's name, such as _tonaris-export-20261121-1430.zip_. **Download again** saves it once more, until your next export or until you sign out.
+
+If the export fails, the page says why, with **Retry**.
+
+<Picture
+  name="account-data"
+  alt="Settings, Data: Usage with a bar, then Download your data with the Included and Not included lists and the Download your data button."
+  caption="The page says what the export holds and what it leaves out."
+/>
+
+## What's in the ZIP
+
+- **tonaris-export.json**: everything, complete, for programs and AI tools.
+- **tonaris-export.schema.json**: a description of that file's format, for programs.
+- **collection.md**: a readable outline of your collection. Each folder is a heading and each list a table, in your order, with title, artist, year, type, links and your own fields. Unsorted and Trash follow, with Trash's dates.
+- **README.md**: explains the files, in plain English.
+
+The export holds:
+
+- every album, including those in Unsorted and Trash. An album in several lists is in it once.
+- your folders and lists, with their descriptions.
+- your custom fields and their values.
+- how you arranged and viewed each folder and list.
+
+## What it leaves out
+
+- Your sign-in email and your profile.
+- Sharing: invitations, people and links.
+- Shared with me, and anything other people own.
+- AI connections.
+- Cover pictures. Their web addresses are in the export, not the pictures.
+
+<Note kind="info">
+  Tonaris can't read an export back in. It's a copy for you to keep, or to use somewhere else.
+</Note>
+
+## How often you can export
+
+Up to <Limit of="exportsPerHour" /> times an hour. After that, Tonaris says how many minutes to wait. An export that failed doesn't count.
+
+## Your usage
+
+Above the export, **Usage** shows how many albums you have out of <Limit of="albums" />, and how many of them are in Trash. Albums in Trash count until you [delete them for good](/help/trash/get-it-back). Restoring an album uses its old place again. See [Limits](/help/reference/limits).
+
+<Note kind="phone">
+  On a phone, Data shows your usage, but downloading your data needs a computer.
+</Note>

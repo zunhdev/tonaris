@@ -4,38 +4,45 @@
 import type { MDXContent } from "mdx/types";
 
 import type { HelpPageMeta } from "./sections";
-import picture0 from "./pictures/add-album.webp";
-import picture1 from "./pictures/add-albums-card-labels.webp";
-import picture2 from "./pictures/add-albums-dialog.webp";
-import picture3 from "./pictures/add-albums-new-album.webp";
-import picture4 from "./pictures/add-albums-panel-editing.webp";
-import picture5 from "./pictures/add-albums-which-album.webp";
-import picture6 from "./pictures/browse-album-panel.webp";
-import picture7 from "./pictures/browse-card-links.webp";
-import picture8 from "./pictures/browse-search.webp";
-import picture9 from "./pictures/browse-shortcuts.webp";
-import picture10 from "./pictures/browse-view-options.webp";
-import picture11 from "./pictures/fields-album-panel.webp";
-import picture12 from "./pictures/fields-settings.webp";
-import picture13 from "./pictures/fields-type-locked.webp";
-import picture14 from "./pictures/open-in.webp";
-import picture15 from "./pictures/organize-add-to-list.webp";
-import picture16 from "./pictures/organize-album-lists.webp";
-import picture17 from "./pictures/organize-description.webp";
-import picture18 from "./pictures/organize-edit-mode.webp";
-import picture19 from "./pictures/organize-folder-cards.webp";
-import picture20 from "./pictures/organize-icon-picker.webp";
-import picture21 from "./pictures/organize-move-to.webp";
-import picture22 from "./pictures/organize-selection-bar.webp";
-import picture23 from "./pictures/phone-list.webp";
-import picture24 from "./pictures/share-dialog.webp";
-import picture25 from "./pictures/share-editing.webp";
-import picture26 from "./pictures/share-move-confirm.webp";
-import picture27 from "./pictures/share-person-page.webp";
-import picture28 from "./pictures/share-shared-view.webp";
-import picture29 from "./pictures/share-turn-off-link.webp";
-import picture30 from "./pictures/sign-in.webp";
-import picture31 from "./pictures/workspace.webp";
+import picture0 from "./pictures/account-data.webp";
+import picture1 from "./pictures/account-delete-account.webp";
+import picture2 from "./pictures/account-profile.webp";
+import picture3 from "./pictures/add-album.webp";
+import picture4 from "./pictures/add-albums-card-labels.webp";
+import picture5 from "./pictures/add-albums-dialog.webp";
+import picture6 from "./pictures/add-albums-new-album.webp";
+import picture7 from "./pictures/add-albums-panel-editing.webp";
+import picture8 from "./pictures/add-albums-which-album.webp";
+import picture9 from "./pictures/browse-album-panel.webp";
+import picture10 from "./pictures/browse-card-links.webp";
+import picture11 from "./pictures/browse-search.webp";
+import picture12 from "./pictures/browse-shortcuts.webp";
+import picture13 from "./pictures/browse-view-options.webp";
+import picture14 from "./pictures/fields-album-panel.webp";
+import picture15 from "./pictures/fields-settings.webp";
+import picture16 from "./pictures/fields-type-locked.webp";
+import picture17 from "./pictures/open-in.webp";
+import picture18 from "./pictures/organize-add-to-list.webp";
+import picture19 from "./pictures/organize-album-lists.webp";
+import picture20 from "./pictures/organize-description.webp";
+import picture21 from "./pictures/organize-edit-mode.webp";
+import picture22 from "./pictures/organize-folder-cards.webp";
+import picture23 from "./pictures/organize-icon-picker.webp";
+import picture24 from "./pictures/organize-move-to.webp";
+import picture25 from "./pictures/organize-selection-bar.webp";
+import picture26 from "./pictures/phone-list.webp";
+import picture27 from "./pictures/reference-usage.webp";
+import picture28 from "./pictures/saving-offline.webp";
+import picture29 from "./pictures/share-dialog.webp";
+import picture30 from "./pictures/share-editing.webp";
+import picture31 from "./pictures/share-move-confirm.webp";
+import picture32 from "./pictures/share-person-page.webp";
+import picture33 from "./pictures/share-shared-view.webp";
+import picture34 from "./pictures/share-turn-off-link.webp";
+import picture35 from "./pictures/sign-in.webp";
+import picture36 from "./pictures/trash-delete-album.webp";
+import picture37 from "./pictures/trash-view.webp";
+import picture38 from "./pictures/workspace.webp";
 
 export const helpPages = [
   {"slug":"start-here/what-tonaris-is","section":"start-here","title":"What Tonaris is","summary":"A home for the albums you care about, sorted your way, that opens each one in the service you listen with.","order":1,"device":"any","keywords":["about","overview","introduction","how it works","what is it","explained"],"related":["start-here/your-first-ten-minutes","start-here/joining-and-signing-in"],"headings":[{"id":"five-ideas","text":"Five ideas","depth":2},{"id":"albums","text":"Albums","depth":3},{"id":"lists","text":"Lists","depth":3},{"id":"folders","text":"Folders","depth":3},{"id":"unsorted","text":"Unsorted","depth":3},{"id":"your-streaming-services","text":"Your streaming services","depth":3},{"id":"what-else-it-does","text":"What else it does","depth":2}]},
@@ -66,6 +73,14 @@ export const helpPages = [
   {"slug":"share/shared-with-you","section":"share","title":"When someone shares with you","summary":"Accept an invitation, and the folder or list shows in Shared with me, always up to date. A shared link opens without an account.","order":5,"device":"any","keywords":["invitation","invite","accept","decline","inbox","notification","guest","open link","leave","unsubscribe","save link","duplicate"],"related":["share/editing-a-share","share/people","browse/search-and-commands"],"headings":[{"id":"answer-an-invitation","text":"Answer an invitation","depth":2},{"id":"shared-with-me","text":"Shared with me","depth":2},{"id":"copy-one-into-your-collection","text":"Copy one into your collection","depth":2},{"id":"open-a-shared-link","text":"Open a shared link","depth":2},{"id":"leave-or-remove-a-share","text":"Leave or remove a share","depth":2},{"id":"no-longer-available","text":"No longer available","depth":2}]},
   {"slug":"share/editing-a-share","section":"share","title":"Editing someone else's folder or list","summary":"When someone lets you edit, you change their folder or list as they would, inside it only. Everything you add stays in their collection.","order":6,"device":"computer","keywords":["collaborate","co-edit","contributor","editor","can edit","work together","build together","permissions","shared playlist"],"related":["share/shared-with-you","organize/viewing-and-editing","agents/what-agents-do"],"headings":[{"id":"how-you-know-you-can-edit","text":"How you know you can edit","depth":2},{"id":"start-editing","text":"Start editing","depth":2},{"id":"what-you-can-do","text":"What you can do","depth":2},{"id":"what-stays-with-the-owner","text":"What stays with the owner","depth":2},{"id":"deleting","text":"Deleting","depth":2},{"id":"when-you-can-no-longer-edit","text":"When you can no longer edit","depth":2},{"id":"ai-agents","text":"AI agents","depth":2}]},
   {"slug":"share/people","section":"share","title":"People","summary":"Your people are everyone you've shared with by invitation, either way. The People page shows what you share with each of them, and what they share with you.","order":7,"device":"any","keywords":["contacts","friends","followers","address book","collaborators","members","profile","about me","block","remove person"],"related":["account/profile","share/change-or-stop","share/share-a-folder-or-list"],"headings":[{"id":"the-people-page","text":"The People page","depth":2},{"id":"a-persons-page","text":"A person's page","depth":2},{"id":"your-profile","text":"Your profile","depth":2},{"id":"suggestions-when-you-invite","text":"Suggestions when you invite","depth":2},{"id":"stop-sharing-with-someone","text":"Stop sharing with someone","depth":2},{"id":"remove-someone-from-people","text":"Remove someone from People","depth":2}]},
+  {"slug":"trash/remove-delete-undo","section":"trash","title":"Remove, delete and undo","summary":"Taking an album out of a list keeps it in your collection. Deleting moves a folder, list or album to Trash, where it waits 30 days.","order":1,"device":"computer","keywords":["bin","recycle bin","erase","discard","take out of playlist","remove from playlist","deleted by mistake","accidentally deleted","ctrl z","undelete"],"related":["trash/get-it-back","organize/lists-in-and-out","organize/viewing-and-editing"],"headings":[{"id":"take-an-album-out-of-a-list","text":"Take an album out of a list","depth":2},{"id":"delete-a-list","text":"Delete a list","depth":2},{"id":"delete-a-folder","text":"Delete a folder","depth":2},{"id":"delete-an-album-from-your-collection","text":"Delete an album from your collection","depth":2},{"id":"what-goes-to-trash-together","text":"What goes to Trash together","depth":2},{"id":"what-cant-be-undone","text":"What can't be undone","depth":2}]},
+  {"slug":"trash/get-it-back","section":"trash","title":"Get something back from Trash","summary":"Deleted folders, lists and albums wait in Trash for 30 days. Restore puts each back where it was.","order":2,"device":"computer","keywords":["recover","undelete","restore deleted","bin","recycle bin","deleted items","lost list","missing album","disappeared","permanently delete"],"related":["trash/remove-delete-undo","reference/limits"],"headings":[{"id":"open-trash","text":"Open Trash","depth":2},{"id":"restore-something","text":"Restore something","depth":2},{"id":"when-tonaris-asks-where","text":"When Tonaris asks where","depth":3},{"id":"when-tonaris-asks-for-a-name","text":"When Tonaris asks for a name","depth":3},{"id":"when-others-would-see-it","text":"When others would see it","depth":3},{"id":"what-restore-skips","text":"What Restore skips","depth":2},{"id":"if-the-album-is-in-your-collection-again","text":"If the album is in your collection again","depth":2},{"id":"delete-something-for-good","text":"Delete something for good","depth":2}]},
+  {"slug":"account/profile","section":"account","title":"Your profile and who sees it","summary":"Your display name, avatar color, About line and favorite albums are what the people you share with see of you. You set them in Settings, under Profile.","order":1,"device":"any","keywords":["username","nickname","change my name","avatar","profile picture","bio","about me","favorites","privacy","who can see","public profile"],"related":["share/people","account/email-and-passkeys"],"headings":[{"id":"display-name","text":"Display name","depth":2},{"id":"avatar-color","text":"Avatar color","depth":2},{"id":"about","text":"About","depth":2},{"id":"favorite-albums","text":"Favorite albums","depth":2},{"id":"who-sees-what","text":"Who sees what","depth":2}]},
+  {"slug":"account/email-and-passkeys","section":"account","title":"Your sign-in email and passkeys","summary":"Change your sign-in email after confirming both the old and the new address. Add passkeys to sign in without an emailed code.","order":2,"device":"any","keywords":["change email","new email address","update email","login","password","face id","touch id","fingerprint","windows hello","security","remove passkey"],"related":["start-here/joining-and-signing-in","account/profile"],"headings":[{"id":"change-your-sign-in-email","text":"Change your sign-in email","depth":2},{"id":"passkeys","text":"Passkeys","depth":2},{"id":"add-a-passkey","text":"Add a passkey","depth":3},{"id":"rename-or-remove-a-passkey","text":"Rename or remove a passkey","depth":3},{"id":"lost-access-to-your-email","text":"Lost access to your email?","depth":2}]},
+  {"slug":"account/export","section":"account","title":"Export your collection","summary":"Download your whole collection as a ZIP file from Settings, under Data, whenever you like.","order":3,"device":"computer","keywords":["backup","back up","download","save a copy","export data","json","csv","markdown","data portability","take my data","storage","how many albums"],"related":["account/delete-account","reference/limits"],"headings":[{"id":"download-your-data","text":"Download your data","depth":2},{"id":"whats-in-the-zip","text":"What's in the ZIP","depth":2},{"id":"what-it-leaves-out","text":"What it leaves out","depth":2},{"id":"how-often-you-can-export","text":"How often you can export","depth":2},{"id":"your-usage","text":"Your usage","depth":2}]},
+  {"slug":"account/delete-account","section":"account","title":"Delete your account","summary":"Delete account, in Settings under Account, removes your account and everything you own in Tonaris for good. Export your collection first.","order":4,"device":"any","keywords":["close account","remove account","cancel account","deactivate","leave tonaris","erase my data","right to be forgotten","GDPR","quit"],"related":["account/export","share/shared-with-you"],"headings":[{"id":"before-you-start","text":"Before you start","depth":2},{"id":"delete-your-account","text":"Delete your account","depth":2},{"id":"what-happens-at-once","text":"What happens at once","depth":2},{"id":"whats-removed","text":"What's removed","depth":2},{"id":"what-others-shared-with-you","text":"What others shared with you","depth":2}]},
+  {"slug":"saving/how-saving-works","section":"saving","title":"How saving works","summary":"Tonaris saves each change as you make it, and shows it on every device you're signed in on. There is no Save button.","order":1,"device":"any","keywords":["save","save button","autosave","sync","synchronize","not saving","offline","internet connection","refresh","reload","other devices","tabs"],"related":["saving/when-an-edit-doesnt-save","phone/on-your-phone"],"headings":[{"id":"when-a-change-counts-as-saved","text":"When a change counts as saved","depth":2},{"id":"the-activity-row","text":"The Activity row","depth":2},{"id":"every-device-and-tab-in-step","text":"Every device and tab in step","depth":2},{"id":"working-offline","text":"Working offline","depth":2},{"id":"reloading-or-closing-the-page","text":"Reloading or closing the page","depth":2}]},
+  {"slug":"saving/when-an-edit-doesnt-save","section":"saving","title":"When an edit doesn't save","summary":"Tonaris tells you when a change couldn't be saved, keeps it until you deal with it, and lets you try again or choose which version stays.","order":2,"device":"any","keywords":["error","failed","not saved","couldn't save","lost changes","try again","sync error","sync conflict","overwritten","changed elsewhere","log out"],"related":["saving/how-saving-works","help/get-in-touch"],"headings":[{"id":"a-change-that-failed","text":"A change that failed","depth":2},{"id":"changed-somewhere-else","text":"Changed somewhere else","depth":2},{"id":"several-changes-at-once","text":"Several changes at once","depth":2},{"id":"going-offline","text":"Going offline","depth":2},{"id":"signing-out-with-unsaved-changes","text":"Signing out with unsaved changes","depth":2}]},
 ] as const satisfies readonly HelpPageMeta[];
 
 export type HelpSlug = (typeof helpPages)[number]["slug"];
@@ -100,42 +115,57 @@ export const helpContent: Record<HelpSlug, () => Promise<{ default: MDXContent }
   "share/shared-with-you": () => import("./content/share/shared-with-you.mdx"),
   "share/editing-a-share": () => import("./content/share/editing-a-share.mdx"),
   "share/people": () => import("./content/share/people.mdx"),
+  "trash/remove-delete-undo": () => import("./content/trash/remove-delete-undo.mdx"),
+  "trash/get-it-back": () => import("./content/trash/get-it-back.mdx"),
+  "account/profile": () => import("./content/account/profile.mdx"),
+  "account/email-and-passkeys": () => import("./content/account/email-and-passkeys.mdx"),
+  "account/export": () => import("./content/account/export.mdx"),
+  "account/delete-account": () => import("./content/account/delete-account.mdx"),
+  "saving/how-saving-works": () => import("./content/saving/how-saving-works.mdx"),
+  "saving/when-an-edit-doesnt-save": () => import("./content/saving/when-an-edit-doesnt-save.mdx"),
 };
 
 /** Each picture's address and the size it shows at. */
 export const helpPictures = {
-  "add-album": { src: picture0, ...{"width":608,"height":426} },
-  "add-albums-card-labels": { src: picture1, ...{"width":1180,"height":278} },
-  "add-albums-dialog": { src: picture2, ...{"width":608,"height":426} },
-  "add-albums-new-album": { src: picture3, ...{"width":608,"height":900} },
-  "add-albums-panel-editing": { src: picture4, ...{"width":380,"height":1300} },
-  "add-albums-which-album": { src: picture5, ...{"width":744,"height":172} },
-  "browse-album-panel": { src: picture6, ...{"width":1176,"height":1500} },
-  "browse-card-links": { src: picture7, ...{"width":1180,"height":540} },
-  "browse-search": { src: picture8, ...{"width":672,"height":229} },
-  "browse-shortcuts": { src: picture9, ...{"width":544,"height":1200} },
-  "browse-view-options": { src: picture10, ...{"width":602,"height":402} },
-  "fields-album-panel": { src: picture11, ...{"width":379,"height":293} },
-  "fields-settings": { src: picture12, ...{"width":1200,"height":900} },
-  "fields-type-locked": { src: picture13, ...{"width":1200,"height":900} },
-  "open-in": { src: picture14, ...{"width":382,"height":478} },
-  "organize-add-to-list": { src: picture15, ...{"width":560,"height":412} },
-  "organize-album-lists": { src: picture16, ...{"width":379,"height":101} },
-  "organize-description": { src: picture17, ...{"width":712,"height":162} },
-  "organize-edit-mode": { src: picture18, ...{"width":1208,"height":172} },
-  "organize-folder-cards": { src: picture19, ...{"width":854,"height":520} },
-  "organize-icon-picker": { src: picture20, ...{"width":368,"height":314} },
-  "organize-move-to": { src: picture21, ...{"width":560,"height":352} },
-  "organize-selection-bar": { src: picture22, ...{"width":1216,"height":311} },
-  "phone-list": { src: picture23, ...{"width":390,"height":844} },
-  "share-dialog": { src: picture24, ...{"width":608,"height":361} },
-  "share-editing": { src: picture25, ...{"width":1200,"height":420} },
-  "share-move-confirm": { src: picture26, ...{"width":496,"height":216} },
-  "share-person-page": { src: picture27, ...{"width":1200,"height":560} },
-  "share-shared-view": { src: picture28, ...{"width":1200,"height":360} },
-  "share-turn-off-link": { src: picture29, ...{"width":608,"height":405} },
-  "sign-in": { src: picture30, ...{"width":1440,"height":900} },
-  "workspace": { src: picture31, ...{"width":1440,"height":900} },
+  "account-data": { src: picture0, ...{"width":1200,"height":1100} },
+  "account-delete-account": { src: picture1, ...{"width":608,"height":608} },
+  "account-profile": { src: picture2, ...{"width":1200,"height":860} },
+  "add-album": { src: picture3, ...{"width":608,"height":426} },
+  "add-albums-card-labels": { src: picture4, ...{"width":1180,"height":278} },
+  "add-albums-dialog": { src: picture5, ...{"width":608,"height":426} },
+  "add-albums-new-album": { src: picture6, ...{"width":608,"height":900} },
+  "add-albums-panel-editing": { src: picture7, ...{"width":380,"height":1300} },
+  "add-albums-which-album": { src: picture8, ...{"width":744,"height":172} },
+  "browse-album-panel": { src: picture9, ...{"width":1176,"height":1500} },
+  "browse-card-links": { src: picture10, ...{"width":1180,"height":540} },
+  "browse-search": { src: picture11, ...{"width":672,"height":229} },
+  "browse-shortcuts": { src: picture12, ...{"width":544,"height":1200} },
+  "browse-view-options": { src: picture13, ...{"width":602,"height":402} },
+  "fields-album-panel": { src: picture14, ...{"width":379,"height":293} },
+  "fields-settings": { src: picture15, ...{"width":1200,"height":900} },
+  "fields-type-locked": { src: picture16, ...{"width":1200,"height":900} },
+  "open-in": { src: picture17, ...{"width":382,"height":478} },
+  "organize-add-to-list": { src: picture18, ...{"width":560,"height":412} },
+  "organize-album-lists": { src: picture19, ...{"width":379,"height":101} },
+  "organize-description": { src: picture20, ...{"width":712,"height":162} },
+  "organize-edit-mode": { src: picture21, ...{"width":1208,"height":172} },
+  "organize-folder-cards": { src: picture22, ...{"width":854,"height":520} },
+  "organize-icon-picker": { src: picture23, ...{"width":368,"height":314} },
+  "organize-move-to": { src: picture24, ...{"width":560,"height":352} },
+  "organize-selection-bar": { src: picture25, ...{"width":1216,"height":311} },
+  "phone-list": { src: picture26, ...{"width":390,"height":844} },
+  "reference-usage": { src: picture27, ...{"width":656,"height":126} },
+  "saving-offline": { src: picture28, ...{"width":1440,"height":900} },
+  "share-dialog": { src: picture29, ...{"width":608,"height":361} },
+  "share-editing": { src: picture30, ...{"width":1200,"height":420} },
+  "share-move-confirm": { src: picture31, ...{"width":496,"height":216} },
+  "share-person-page": { src: picture32, ...{"width":1200,"height":560} },
+  "share-shared-view": { src: picture33, ...{"width":1200,"height":360} },
+  "share-turn-off-link": { src: picture34, ...{"width":608,"height":405} },
+  "sign-in": { src: picture35, ...{"width":1440,"height":900} },
+  "trash-delete-album": { src: picture36, ...{"width":496,"height":248} },
+  "trash-view": { src: picture37, ...{"width":1184,"height":176} },
+  "workspace": { src: picture38, ...{"width":1440,"height":900} },
 } as const;
 
 export type HelpPictureName = keyof typeof helpPictures;

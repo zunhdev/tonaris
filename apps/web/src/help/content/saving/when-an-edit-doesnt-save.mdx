@@ -1,0 +1,69 @@
+---
+title: When an edit doesn't save
+summary: Tonaris tells you when a change couldn't be saved, keeps it until you deal with it, and lets you try again or choose which version stays.
+order: 2
+keywords:
+  [
+    error,
+    failed,
+    not saved,
+    couldn't save,
+    lost changes,
+    try again,
+    sync error,
+    sync conflict,
+    overwritten,
+    changed elsewhere,
+    log out,
+  ]
+related: [saving/how-saving-works, help/get-in-touch]
+---
+
+Sometimes a change can't be saved: a name is already taken, or someone changed the same thing first. Tonaris puts back the saved value, says why, and keeps your change in **Activity** until you deal with it. Nothing is lost without you knowing.
+
+## A change that failed
+
+A message says **Couldn't save**, what it was, and why. For example: "'Later' already exists at the top level. Choose another name." The message stays until you close it.
+
+- **Retry** makes the same change again, checked against what's saved now. Fix the cause first, such as renaming the other list.
+- **Edit**, for some changes such as a new list's name, opens it again with what you typed.
+
+Closing the message keeps the change in Activity, even after a reload, and the Activity row says **1 needs review**. Choose **Activity**, then **Retry**, or **Dismiss** to let the change go.
+
+## Changed somewhere else
+
+Tonaris never saves your change over a newer one without asking. If another tab, device, person or AI agent changed the same thing after you last saw it, your change isn't saved. A message says, for example, "'Late night' changed while you were editing", with **Review**.
+
+The review shows each field twice: **Current**, what's saved now, and **Yours**. Choose:
+
+- **Keep current** to drop your change.
+- **Apply mine** to save yours over the current one.
+
+Closing the review without choosing keeps it in Activity. Changes to different fields don't clash: if you change an album's year while someone changes its title, both are saved.
+
+## Several changes at once
+
+When one action makes several changes, such as adding several albums or making several lists, Tonaris reports them together. If all are saved, nothing appears. If not, one message says how many weren't, such as "Couldn't save 2 of 4 changes", with **View report**.
+
+The report in Activity sorts the changes into groups: **Needs you**, **Failed**, **Skipped**, **Waiting to confirm**, **Saving** and **Completed**. A change is skipped when it needed one that failed, such as a list inside a new folder that couldn't be saved.
+
+- **Retry** on a failed change tries it again with the changes skipped because of it.
+- **Retry all** tries every failed change again.
+- **Dismiss** closes the report.
+
+What was saved is never sent twice.
+
+## Going offline
+
+When the connection drops, the Activity row says **Offline — changes can't be saved**. Changes already on their way wait and go out once you're back. See [Working offline](/help/saving/how-saving-works#working-offline).
+
+## Signing out with unsaved changes
+
+Signing out removes what Tonaris keeps in this browser, including changes not sent yet. If there are any, Tonaris asks first, **Sign out with unsaved changes?**, and says how many.
+
+- **Cancel** keeps you signed in, so the changes can still be saved.
+- **Sign out** drops them.
+
+<Note kind="tip">Before signing out, wait until the Activity row shows nothing on its right.</Note>
+
+If something keeps failing, [get in touch](/help/help/get-in-touch).

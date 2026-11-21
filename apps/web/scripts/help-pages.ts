@@ -33,18 +33,10 @@ const otherPages = new Set(["", "recovery", "search"]);
  * until TON-315. Each is taken off as it's written, and TON-313 empties the list.
  */
 const plannedPages = new Set([
-  "trash/remove-delete-undo",
-  "trash/get-it-back",
   "agents/what-agents-do",
   "agents/connect",
   "agents/approvals",
   "phone/on-your-phone",
-  "account/profile",
-  "account/email-and-passkeys",
-  "account/export",
-  "account/delete-account",
-  "saving/how-saving-works",
-  "saving/when-an-edit-doesnt-save",
   "reference/keyboard-shortcuts",
   "reference/services-and-links",
   "reference/limits",
