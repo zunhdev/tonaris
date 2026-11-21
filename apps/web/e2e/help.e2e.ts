@@ -116,7 +116,8 @@ test("Help works by keyboard alone: the skip link, and the contents by arrows", 
   await page.keyboard.press("Home");
   await expect(contents.getByRole("link", { name: "Help home" })).toBeFocused();
   await page.keyboard.press("End");
-  await expect(contents.getByRole("link", { name: "Joining and signing in" })).toBeFocused();
+  await expect(contents.locator("[data-help-row]").last()).toBeFocused();
+  await contents.getByRole("link", { name: "Joining and signing in" }).focus();
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("heading", { level: 1, name: "Joining and signing in" }),

@@ -11,7 +11,8 @@ import { closeDatabase, createDatabase, migrateDatabase, redact } from "@tonaris
 import { ensureDatabase } from "@tonaris/db/testing";
 
 import { createSignInLimiter, signInLimits } from "./auth/sign-in-limits";
-import { fixtureCapture, fixtureCovers, fixtureImageFetch } from "./capture-fixtures";
+import { fixtureCovers, fixtureImageFetch } from "./capture-fixtures";
+import { picturesCapture } from "./pictures-capture";
 import { createRequestLimiter, relaxedRequestLimits } from "./request-limits";
 import { localApp } from "./testing";
 
@@ -35,10 +36,15 @@ const seeded = Bun.spawnSync(["bun", seeder], {
 });
 if (seeded.exitCode !== 0) throw new Error(`Seeding the demo into ${redact(url)} failed.`);
 const info: unknown = await Bun.file(infoFile).json();
-const linkToken =
-  typeof info === "object" && info !== null && "linkToken" in info ? info.linkToken : undefined;
-if (typeof linkToken !== "string")
-  throw new Error(`The seeder wrote no link token to ${infoFile}.`);
+const read = (key: string): string => {
+  const value =
+    typeof info === "object" && info !== null && key in info ? Reflect.get(info, key) : undefined;
+  if (typeof value !== "string") throw new Error(`The seeder wrote no ${key} to ${infoFile}.`);
+  return value;
+};
+const linkToken = read("linkToken");
+// The saved Harbour Songs, which "Which album is this?" offers as the one already in the collection.
+const harbourSongs = read("harbourSongs");
 
 const unlimited = { max: 10_000, windowMs: signInLimits.perIp.windowMs };
 const app = localApp(db, {
@@ -48,7 +54,7 @@ const app = localApp(db, {
   },
   limiter: createSignInLimiter({ perEmail: unlimited, perIp: unlimited }),
   requestLimiter: createRequestLimiter(relaxedRequestLimits),
-  capture: fixtureCapture(),
+  capture: picturesCapture(harbourSongs),
   imageFetch: fixtureImageFetch,
   covers: fixtureCovers,
 });

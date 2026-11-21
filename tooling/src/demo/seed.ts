@@ -67,9 +67,14 @@ if (import.meta.main) {
         `Sign in as ${demo.accounts.map((account) => account.email).join(", ")}; the code arrives in Mailpit.\n` +
         `Late night's guest page: /s/${demo.linkToken}`,
     );
-    // The pictures run's API (apps/api/src/pictures-server.ts) reads the link's token from here.
+    // The pictures run's API (apps/api/src/pictures-server.ts) reads the link's token, and the release group of the
+    // album it asks "Which album is this?" about, from here.
     const infoFile = process.env.DEMO_INFO_FILE;
-    if (infoFile) await Bun.write(infoFile, JSON.stringify({ linkToken: demo.linkToken }));
+    const harbourSongs = demo.rows.albums.find(
+      (album) => album.ownerId === demo.owner.id && album.title === "Harbour Songs",
+    )?.mbReleaseGroupId;
+    if (infoFile)
+      await Bun.write(infoFile, JSON.stringify({ linkToken: demo.linkToken, harbourSongs }));
   } finally {
     await closeDatabase(db);
   }

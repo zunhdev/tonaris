@@ -87,11 +87,17 @@ export async function visit(page: Page, route: string): Promise<void> {
 /** Waits for fonts, images and the page's fades (DS-17) to finish. */
 export async function settled(page: Page): Promise<void> {
   await page.evaluate(() => document.fonts.ready);
+  // Loaded or failed: a cover that fails shows its letter tile, as in the app.
+  await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+  // Fades and slides finish; a spinner's endless loop never does, so it doesn't count.
   await page.waitForFunction(() =>
-    [...document.images].every((image) => image.complete && image.naturalWidth > 0),
-  );
-  await page.waitForFunction(() =>
-    document.getAnimations().every((animation) => animation.playState !== "running"),
+    document
+      .getAnimations()
+      .every(
+        (animation) =>
+          animation.playState !== "running" ||
+          animation.effect?.getTiming().iterations === Number.POSITIVE_INFINITY,
+      ),
   );
 }
 

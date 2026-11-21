@@ -1,0 +1,71 @@
+---
+title: When Tonaris asks you to choose
+summary: When a link could mean more than one album, or Tonaris can't find the album, it saves nothing until you choose the album or enter its details.
+order: 2
+device: computer
+keywords:
+  [
+    wrong album,
+    which album,
+    not found,
+    can't find album,
+    missing album,
+    match,
+    decide later,
+    needs you,
+    needs your choice,
+    album details,
+  ]
+related: [add-albums/paste-links, add-albums/add-by-hand]
+---
+
+Tonaris doesn't guess. When it isn't sure which album a link is for, it saves nothing and asks you. Other links you added go on without waiting.
+
+## Where the question shows
+
+The link's row waits at the top of the list it was going to, or of **Unsorted**.
+
+- **One link:** a message says "Choose which album this link is", with **Decide**, which opens that list. Or it says "Add this album's details", with **Enter manually**.
+- **Several links:** the panel at the bottom right counts the ones that "need you". Its report in **Activity**, at the bottom of the sidebar, lists them under **Needs you**.
+
+## Choose among several albums
+
+The row asks "Which album is this?", with a button for each album the link fits. One you already have says "In your collection", with its artist and year.
+
+<Picture
+  name="add-albums-which-album"
+  alt="A row in the list To listen asking Which album is this?, with two album buttons, one marked In your collection, and None of these and Decide later."
+  caption="Nothing is saved until you choose."
+/>
+
+1. Choose the album the link is for. Tonaris adds it, or puts the one you already have in the list.
+2. If none of them is right, choose **None of these**. The album form opens with the link kept.
+3. Enter the title, artist and year, then choose **Add album**, or press <Keys k="⌘ Enter" />.
+
+To answer later, choose **Decide later**. The question folds to "Fits more than one album." and waits until you choose **Decide**.
+
+## When Tonaris can't find the album
+
+Sometimes MusicBrainz, where Tonaris looks albums up, doesn't have the album, or doesn't know its year. The row then says why, such as "Tonaris couldn't find this album in MusicBrainz. Enter its details; the link is kept."
+
+1. Choose **Enter manually**. The album form opens with a note saying why.
+2. Check the title, artist and year, and fill in what's missing. For an Apple Music link, Tonaris fills them in from Apple. For an album MusicBrainz has without a year, it fills in the title and artist.
+3. Choose **Add album**, or press <Keys k="⌘ Enter" />.
+
+The album is saved with the link, as you entered it. To give it a cover, open it in the album panel afterwards: see [Fix an album's details, cover and links](/help/add-albums/fix-details).
+
+Tidal and Qobuz song links always ask for details: they don't say which album the song is on. Paste the album's link instead, and Tonaris can look it up.
+
+## After you choose
+
+The row becomes the album, and Tonaris tells you what it did, as for any link: [Albums you already have](/help/add-albums/paste-links#albums-you-already-have) lists the messages.
+
+## Stop a question
+
+Choose **Dismiss** in the row to drop the link. Nothing is saved, and you can add the album again later.
+
+<Note kind="info">
+  An album you enter yourself isn't linked to MusicBrainz, so Tonaris doesn't recognize it from
+  another service's link later. Add more links to it in the album panel, not with **Add album**, or
+  you may get a second copy.
+</Note>

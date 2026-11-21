@@ -41,7 +41,12 @@ export default defineConfig({
       command: `bun --bun vite build && bun --bun vite preview --port ${picturesPort} --strictPort`,
       url: `http://localhost:${picturesPort}/sign-in`,
       // The sync client on the page tells the run when the workspace is live (src/config.ts).
-      env: { API_URL: `http://localhost:${picturesApiPort}`, TEST_HOOKS: "1" },
+      // Pages may ask for pictures this run is about to take (scripts/help-pages.ts).
+      env: {
+        API_URL: `http://localhost:${picturesApiPort}`,
+        TEST_HOOKS: "1",
+        HELP_PICTURES_PENDING: "1",
+      },
       timeout: 120_000,
     },
   ],
