@@ -56,15 +56,11 @@ Help's pictures SHALL be taken from the app on a demo collection of invented alb
 - **THEN** it hears what the picture shows
 
 ### Requirement: Links between Help's pages can't break unnoticed
-Building Help SHALL fail when a page links to a Help page or heading that doesn't exist, names a related page that doesn't exist, or shows a picture that isn't there (TS-136). The app's links into Help SHALL name their page and heading by type, so type-checking fails on one that doesn't exist (FR-16.5).
+Building Help SHALL fail when a page links to a Help page or heading that doesn't exist, names a related page that doesn't exist, or shows a picture that isn't there (TS-136). The app's links into Help SHALL use typed page names.
 
 #### Scenario: A renamed page
 - **WHEN** a page is renamed and another still links to its old address
 - **THEN** generating the page list fails and names the page with the broken link
-
-#### Scenario: A renamed heading the app links to
-- **WHEN** a heading the app's Learn more names is renamed in Help
-- **THEN** type-checking the app fails at that link
 
 ### Requirement: Help's search finds a page by the reader's words
 Help's search SHALL search every section of every page (FR-16.4, TS-136). Any form of a word SHALL find the others, accents and capitals aside; little words SHALL not count, so a whole question works; and everyday or other apps' words SHALL find Tonaris's, which the answer names. A word Help never uses SHALL be read as the one a letter away, saying so, and a word two letters away SHALL only be offered.
@@ -112,24 +108,3 @@ A test SHALL hold searches people type, with typos, other apps' words and whole 
 #### Scenario: A change that loses a page
 - **WHEN** a page's keywords change so that "recycle bin" no longer finds Get something back from Trash first
 - **THEN** the search test fails
-
-### Requirement: Help is a link away before signing in
-Under the sign-in card and on shared pages, Terms · Privacy · Help SHALL lead to Help's home (FR-16.5, DS-122).
-
-#### Scenario: Stuck at sign-in
-- **WHEN** a visitor on `/sign-in` chooses Help
-- **THEN** Help's home opens
-
-### Requirement: Help opens from inside the app in a new tab
-The account menu, on a computer and a phone, SHALL offer Help; ⌘K SHALL offer Open help, and after a search's results "Search help for '…'", which opens Help's results for the same words; and the `?` sheet SHALL link to Help's Keyboard shortcuts (FR-16.5, DS-122). Each SHALL open in a new tab, so the workspace keeps its place.
-
-#### Scenario: From ⌘K
-- **WHEN** someone types "dark mode" in ⌘K and chooses "Search help for 'dark mode'"
-- **THEN** `/help/search?q=dark%20mode` opens in a new tab, and the palette closes
-
-### Requirement: "Learn more" goes where people hesitate
-"Learn more" SHALL link to the Help section about what's in front of the reader, in a new tab, in the sharing dialog, the "Which album is this?" card, Custom fields, Connections, Export, Trash, Activity and an empty collection, and nowhere else (FR-16.5, DS-122). A screen reader SHALL hear what it's about.
-
-#### Scenario: At Connections
-- **WHEN** someone chooses Learn more under Connected clients
-- **THEN** Connect Claude, ChatGPT or Codex opens at "Choose what the agent may do", in a new tab
