@@ -335,8 +335,13 @@ const robinTree: readonly ContainerSpec[] = [
         kind: "list",
         name: "Late night",
         layout: "grid",
-        description:
+        description: [
           "For after midnight: slow, warm and **quiet**. Nothing that wakes the neighbours.",
+          "",
+          "Most of these I found on night buses and in empty stations, so they sound best through headphones, with the lights low. Start with *Blue Hour Sessions*, end with *Saltwater Radio*.",
+          "",
+          "No drums louder than the rain.",
+        ].join("\n"),
       },
       { kind: "list", name: "Rainy Sundays" },
       { kind: "list", name: "Morning coffee" },
@@ -417,6 +422,7 @@ const robinValues: Record<string, Record<string, Value>> = {
 };
 
 const robinFavorites = ["Blue Hour Sessions", "Field Notes", "Night Bus Hymns", "Paper Suns"];
+const miraFavorites = ["Sunbleached", "Heatwave Radio", "Tidal Postcards"];
 
 const day = 86_400_000;
 /** Robin joined on 2 March 2026; the albums arrived over the months after. */
@@ -571,7 +577,7 @@ export function generateDemo(): Demo {
   const robinContainers = tree(owner.id, robinTree, null);
   const robinAlbumIds = collection(owner.id, robinAlbums, robinContainers);
   const miraContainers = tree(mira.id, miraTree, null);
-  collection(mira.id, miraAlbums, miraContainers);
+  const miraAlbumIds = collection(mira.id, miraAlbums, miraContainers);
 
   // Custom fields, defined on Robin's first day.
   const fieldIds = new Map<string, { id: string; options: Map<string, string> }>();
@@ -637,6 +643,11 @@ export function generateDemo(): Demo {
     const albumId = robinAlbumIds.get(title);
     if (!albumId) throw new Error(`No favorite "${title}"`);
     rows.profileFavorites.push({ userId: owner.id, albumId, position, ...stamps(tick()) });
+  }
+  for (const [position, title] of miraFavorites.entries()) {
+    const albumId = miraAlbumIds.get(title);
+    if (!albumId) throw new Error(`No favorite "${title}" of Mira's`);
+    rows.profileFavorites.push({ userId: mira.id, albumId, position, ...stamps(tick()) });
   }
 
   // Sharing: Late night by link, Jazz with Sam to edit, and Mira's Summer 2026 with Robin to view.

@@ -1,0 +1,81 @@
+---
+title: Change or remove a field
+summary: Rename a field or its options at any time. Change its type only while no album uses it. Deleting a field takes it off every album for good.
+order: 2
+device: computer
+keywords:
+  [
+    edit field,
+    rename tag,
+    delete tag,
+    convert,
+    wrong type,
+    field type,
+    retype,
+    edit options,
+    rating scale,
+    undo,
+    mistake,
+  ]
+related: [fields/custom-fields, trash/get-it-back]
+---
+
+You change fields in **Settings**, then **Custom fields**. Press <Keys k="G" /> then <Keys k="S" /> to open Settings. The table shows each field's type, its options and how many albums use it, such as "Used by 12 albums · 2 in Trash". Choose a field's name to open it.
+
+## Rename a field
+
+1. Choose the field's name to open it.
+2. Change its **Name** and press <Keys k="Enter" />. <Keys k="Esc" /> puts back the old name.
+
+The new name shows on every album at once, in Trash too, and every value stays as it was. Like a new field, it can't take the name of another of your fields.
+
+## Change its type
+
+You can change a field's **Type** only while no album uses it: not an album in Trash, and not an album with the field added but empty. When an album does, the **Type** is locked, with a line such as "Used by 3 albums. Create a new field of the type you need instead." and a **Create new field** button.
+
+Why: a new type would mean turning every value into something else, such as dates into numbers. Tonaris never changes or throws away your values to make that possible. So make a new field of the type you need, fill it in, then delete the old one.
+
+<Picture
+  name="fields-type-locked"
+  alt="The field Rating open in Settings: its Type locked because albums use it, and the way to create a new field of another type instead."
+  caption="A field's type is locked while any album uses it."
+/>
+
+While no album uses it:
+
+- Between **Single choice** and **Multiple choice**, the options stay as they are.
+- From a choice type to any other type, the options go. Tonaris lists them first and changes the type only when you choose **Change type**. **Keep options** leaves it as it was. Changing back later doesn't bring the options back.
+
+## Change the options
+
+- **Rename an option:** change its text and press <Keys k="Enter" />. Every album that chose it shows the new name.
+- **Add an option:** type it in the **New option** box and press <Keys k="Enter" />, or choose **Add option**. It goes at the end.
+- **Remove an option:** choose **×** next to it. If no album chose it, it goes at once.
+
+If any album chose the option, Tonaris asks first, in a message such as "Remove option 'Cassette'?" with how many albums chose it. Confirm with **Remove from 3 albums**, or whatever number it shows. Removing it clears it from those albums, in Trash too. A single choice becomes empty, and a multiple choice keeps its other options. The field stays on those albums.
+
+<Note kind="careful">
+  Removing an option that albums chose can't be undone. Adding an option with the same name later
+  makes a new one that no album has chosen.
+</Note>
+
+## Delete a field
+
+1. Choose the field's name to open it.
+2. Choose **Delete field**.
+3. Tonaris shows what goes: the field, its options, and how many albums have it. Choose **Delete field** again to confirm.
+
+Tonaris always asks, even when no album uses the field.
+
+<Note kind="careful">
+  Deleting a field takes it and its values off every album, in Trash too. It can't be undone: the
+  field doesn't go to Trash, and getting an album back from Trash doesn't bring the field back.
+</Note>
+
+You can then make a new field with the same name. It starts on no album.
+
+## Albums you share
+
+When some of the albums are in a folder or list you share, the confirmation says so. For example: "2 of these albums are in what you share: the people you share them with stop seeing 'Cassette' on them."
+
+People who can edit your folder or list fill in values, but only you can rename, change, add, remove or delete fields and options.
