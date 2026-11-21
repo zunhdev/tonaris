@@ -5,8 +5,8 @@
 //   come grouped by page, best first, each section with its heading and a snippet with the matching words marked.
 //   Above them it says when it read a typo as a word ("Showing results for") and which of Tonaris's words it looked
 //   for too ("Also looked for").
-// - Finding nothing, it says so. A word Help doesn't use may get a spelling offered that finds something ("Did you
-//   mean"), first in the list.
+// - Finding nothing, it says so, and offers Questions and answers and Get in touch (TON-321). A word Help doesn't use
+//   may get a spelling offered that finds something ("Did you mean"), first in the list.
 // - ↑ ↓ move, Enter opens, ⌘K or Esc closes. A result opens its page at its section, marking the words searched for
 //   (arrival.tsx). "All results on a page" opens /help/search.
 // The field is a combobox over a listbox (DS-115), as the app's own search is.
@@ -93,32 +93,40 @@ function PageGroupHeader({ slug, page }: { slug: string; page: string }) {
   );
 }
 
+/** Where else to look when nothing matches, as the results page offers (TON-321). */
+const elsewhere: readonly HelpSlug[] = ["help/questions", "help/get-in-touch"];
+
+/** Pages as options, each by its title. */
+function pageOptions(slugs: readonly HelpSlug[]): Group["options"] {
+  return slugs.flatMap((slug) => {
+    const page = helpPage(slug);
+    if (!page) return [];
+    return [
+      {
+        option: { kind: "page", slug },
+        key: slug,
+        body: (
+          <>
+            <FileText
+              aria-hidden
+              strokeWidth={1.5}
+              className="mt-0.5 size-4 shrink-0 text-fg-tertiary"
+            />
+            <span className="text-fg-primary">{page.title}</span>
+          </>
+        ),
+      },
+    ];
+  });
+}
+
 /** The palette's groups: before anything is typed, or for an answer. */
 function groupsOf(answer: HelpSearchAnswer | undefined, recent: readonly string[]): Group[] {
   if (!answer) {
     const often: Group = {
       id: "often",
       header: <span className="font-medium text-fg-tertiary">Often asked</span>,
-      options: oftenAsked.flatMap((slug) => {
-        const page = helpPage(slug);
-        if (!page) return [];
-        return [
-          {
-            option: { kind: "page", slug },
-            key: slug,
-            body: (
-              <>
-                <FileText
-                  aria-hidden
-                  strokeWidth={1.5}
-                  className="mt-0.5 size-4 shrink-0 text-fg-tertiary"
-                />
-                <span className="text-fg-primary">{page.title}</span>
-              </>
-            ),
-          },
-        ];
-      }),
+      options: pageOptions(oftenAsked),
     };
     const lately: Group = {
       id: "recent",
@@ -166,6 +174,16 @@ function groupsOf(answer: HelpSearchAnswer | undefined, recent: readonly string[
             ],
           },
         ];
+  if (answer.results.length === 0) {
+    return [
+      ...offered,
+      {
+        id: "elsewhere",
+        header: <span className="font-medium text-fg-tertiary">Or try</span>,
+        options: pageOptions(elsewhere),
+      },
+    ];
+  }
   return [
     ...offered,
     ...answer.results.map((result): Group => ({

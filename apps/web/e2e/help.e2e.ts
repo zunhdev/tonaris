@@ -241,6 +241,14 @@ test("search reads a typo as the word it was a letter from, and offers one two l
   await expect(palette.getByText("Showing results for “spotify link”.")).toBeVisible();
   await expect(palette.getByRole("option").first()).toBeVisible();
 
+  // Nothing found is never a dead end (TON-321).
+  await field.fill("qwzxv");
+  await expect(palette.getByText("Nothing matches “qwzxv”.")).toBeVisible();
+  await expect(palette.getByRole("group", { name: "Or try" }).getByRole("option")).toHaveText([
+    "Questions and answers",
+    "Get in touch",
+  ]);
+
   await field.fill("vynil");
   await expect(palette.getByText("Nothing matches “vynil”.")).toBeVisible();
   await expect(palette.getByRole("group", { name: "Did you mean" })).toContainText("vinyl");
