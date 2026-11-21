@@ -18,7 +18,7 @@ Help's search SHALL search every section of every page (FR-16.4, TS-136). Any fo
 - **THEN** nothing matches, and "vinyl" is offered as "Did you mean"
 
 ### Requirement: Search opens over any Help page
-Help's header SHALL open search from every page, as SHALL the search field on Help's home, ⌘K and / (DS-122). Empty, it SHALL offer the pages people look for most and the reader's recent searches. Results SHALL come grouped by page, best first, each section with its heading and a snippet with the matching words marked; ↑ and ↓ SHALL move between them and Enter SHALL open one. On a phone, search SHALL fill the screen, with Cancel.
+Help's header SHALL open search from every page, as SHALL the search field on Help's home, ⌘K and / (FR-16.4, DS-122). Empty, it SHALL offer the pages people look for most and the reader's recent searches. Results SHALL come grouped by page, best first, each section with its heading and a snippet with the matching words marked; ↑ and ↓ SHALL move between them and Enter SHALL open one. On a phone, search SHALL fill the screen, with Cancel.
 
 #### Scenario: From the keyboard
 - **WHEN** someone presses ⌘K on a Help page and types "recycle bin"
@@ -29,21 +29,21 @@ Help's header SHALL open search from every page, as SHALL the search field on He
 - **THEN** search fills the screen, and Cancel closes it
 
 ### Requirement: A result opens at its answer
-A result SHALL open its page at its section, with the words searched for marked in the page's text, or Tonaris's words for them when the reader's don't appear (DS-122).
+A result SHALL open its page at its section, with the words searched for marked in the page's text, or Tonaris's words for them when the reader's don't appear (FR-16.4, DS-122).
 
 #### Scenario: Arriving
 - **WHEN** someone opens a search result for "recycle bin"
 - **THEN** its page opens at the section, with words marked
 
 ### Requirement: A search has a page of its own
-`/help/search?q=` SHALL show every section found for the search, rendered on the server, with the same notes as the palette; finding nothing, it SHALL say so and offer other ways to an answer. Search engines SHALL not index it.
+`/help/search?q=` SHALL show every section found for the search, rendered on the server, with the same notes as the palette (FR-16.4, DS-122); finding nothing, it SHALL say so and offer other ways to an answer. Search engines SHALL not index it.
 
 #### Scenario: A shared search
 - **WHEN** `/help/search?q=export` is requested from the web server
 - **THEN** the HTML already reads how many results there are for “export”, and lists Export your collection
 
 ### Requirement: Search is measured by searches people type
-A test SHALL hold searches people type, with typos, other apps' words and whole questions, each with the page it must find first or among the first three, so a change that makes one worse fails.
+A test SHALL hold searches people type, with typos, other apps' words and whole questions, each with the page it must find first or among the first three, so a change that makes one worse fails (FR-16.4, TS-136).
 
 #### Scenario: A change that loses a page
 - **WHEN** a page's keywords change so that "recycle bin" no longer finds Get something back from Trash first
