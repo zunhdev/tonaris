@@ -1,7 +1,10 @@
 // The shortcut reference (DS-78): `?` or the account menu's "Keyboard shortcuts" opens it, listing the shortcuts
-// that work now. Shortcuts arriving with later issues join the list with them.
+// that work now. Shortcuts arriving with later issues join the list with them. It ends with a way to Help's own
+// Keyboard shortcuts page, which prints, and to the rest of Help (TON-315).
 
 import { platformKeys, shortcutReference } from "@/common/shortcuts";
+import { helpAddress } from "@/features/help/links";
+import { useRef } from "react";
 
 import {
   Dialog,
@@ -18,11 +21,15 @@ export function ShortcutReference({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  // The title takes the focus, so the sheet opens at its top rather than at the link to Help at its end.
+  const title = useRef<HTMLHeadingElement>(null);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent initialFocus={title}>
         <DialogHeader>
-          <DialogTitle>Keyboard shortcuts</DialogTitle>
+          <DialogTitle ref={title} tabIndex={-1} className="outline-none">
+            Keyboard shortcuts
+          </DialogTitle>
           <DialogDescription>
             They work anywhere except while you type in a field.
           </DialogDescription>
@@ -51,6 +58,18 @@ export function ShortcutReference({
             </dl>
           </section>
         ))}
+        <p className="text-small text-fg-secondary">
+          To print them, or to see how anything works,{" "}
+          <a
+            href={helpAddress("reference/keyboard-shortcuts")}
+            target="_blank"
+            rel="noopener"
+            className="rounded-sm text-accent-solid underline-offset-3 focus-ring hover:underline"
+          >
+            open Help<span className="sr-only">, in a new tab</span>
+          </a>
+          .
+        </p>
       </DialogContent>
     </Dialog>
   );

@@ -7,6 +7,7 @@ import { apiUrl } from "@/config";
 import { modeText } from "@/features/connections/modes";
 import { usePendingApprovals } from "@/features/connections/pending-approvals";
 import { SetupGuide } from "@/features/connections/setup-guide";
+import { LearnMore } from "@/features/help/links";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -95,7 +96,12 @@ export function ConnectionsSettings({ connections }: { connections: readonly Con
           Connected clients
         </h2>
         <p className="text-fg-secondary">
-          To change what a client may do, revoke it and connect it again.
+          To change what a client may do, revoke it and connect it again.{" "}
+          <LearnMore
+            page="agents/connect"
+            anchor="choose-what-the-agent-may-do"
+            about="what an agent may do"
+          />
         </p>
         {error && (
           <p role="alert" className="text-status-danger">

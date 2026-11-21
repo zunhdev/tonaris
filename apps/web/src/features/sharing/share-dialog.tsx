@@ -11,6 +11,7 @@ import { count } from "@/common/words";
 import { Avatar } from "@/features/account/avatar";
 import { useCollectionDialogs } from "@/features/collection/collection-dialogs";
 import { useCollectionData } from "@/features/collection/data";
+import { LearnMore } from "@/features/help/links";
 import { InviteField } from "@/features/sharing/invite-field";
 import { sharingChanged } from "@/features/sharing/own-sharing";
 import { RolePicker } from "@/features/sharing/role-picker";
@@ -145,7 +146,8 @@ function ShareBody({ id, name, kind }: { id: string; name: string; kind: "folder
           {kind === "folder" &&
             " Sharing a folder includes everything inside it, now and in the future."}{" "}
           People who can edit also add, change, move and delete what's inside, and what they add
-          stays in your collection.
+          stays in your collection.{" "}
+          <LearnMore page="share/ways-to-share" anchor="the-three-ways" about="ways to share" />
         </DialogDescription>
       </DialogHeader>
       {offline && (

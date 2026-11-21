@@ -113,6 +113,9 @@ test("results are grouped, located and highlighted; Trash and descriptions aren'
   await expect(albums).toHaveCount(9);
   await expect(albums.nth(8)).toHaveText("Show all 10");
   expect(await violations(page, '[data-slot="command-content"]')).toEqual([]);
+  // Up from the first goes round to the last, Search help, then to Show all.
+  await page.keyboard.press("ArrowUp");
+  await expect(group(page, "Help").getByRole("option")).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowUp");
   await expect(albums.nth(8)).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("Enter");

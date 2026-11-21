@@ -17,6 +17,7 @@ import { useCollectionData } from "@/features/collection/data";
 import { FieldCreateDialog } from "@/features/collection/field-create-dialog";
 import { fieldTypeNames } from "@/features/collection/field-types";
 import { useInlineDraft } from "@/features/collection/inline-draft";
+import { LearnMore } from "@/features/help/links";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSyncClient } from "@/features/sync/sync-provider";
 import { ChevronRight, X } from "lucide-react";
@@ -133,6 +134,7 @@ export function CustomFieldsSettings() {
           New field
         </Button>
         {limit && <p className="text-small text-fg-secondary">{limit.problem.detail}</p>}
+        <LearnMore page="fields/custom-fields" about="custom fields" className="text-small" />
       </div>
       {ready && fields.length === 0 ? (
         <p className="text-fg-secondary">

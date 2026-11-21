@@ -133,8 +133,17 @@ export function createShortcutMatcher({ sequenceMs = 1_500 } = {}): ShortcutMatc
   };
 }
 
-/** What the palette runs (DS-75): every action shortcut, and F2 and R, which act where they are pressed. */
-export type CommandId = Exclude<ShortcutAction, "search"> | "rename" | "restore" | "color" | "icon";
+/**
+ * What the palette runs (DS-75): every action shortcut, F2 and R, which act where they are pressed, and Open help
+ * (TON-315).
+ */
+export type CommandId =
+  | Exclude<ShortcutAction, "search">
+  | "rename"
+  | "restore"
+  | "color"
+  | "icon"
+  | "help";
 
 /** What a command acts on: the focus when it was asked for. */
 export type CommandTarget = {
@@ -214,6 +223,8 @@ export const commands: readonly Command[] = [
   },
   { id: "restore", title: "Restore", keys: ["R"], section: "Trash" },
   { id: "shortcuts", title: "Keyboard shortcuts", keys: ["?"], section: "Help" },
+  // From ⌘K, in a new tab, without a key of its own (TON-315).
+  { id: "help", title: "Open help", keys: [], section: "Help" },
 ];
 
 const commandsById: ReadonlyMap<CommandId, Command> = new Map(
@@ -267,6 +278,7 @@ export const phoneCommands: ReadonlySet<CommandId> = new Set<CommandId>([
   "go-settings",
   "view-options",
   "open-in",
+  "help",
 ]);
 
 /** The palette's frequent commands before there is any history (decided with the creator, 29 October 2026). */
