@@ -278,5 +278,5 @@
       }
     }
   ],
-  "ignorePatterns": ["**/routeTree.gen.ts"]
+  "ignorePatterns": ["**/routeTree.gen.ts", "**/pages.gen.ts"]
 }

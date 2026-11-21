@@ -5,6 +5,7 @@
     "packages/db/migrations/**",
     "apps/api/openapi/**",
     "**/routeTree.gen.ts",
+    "**/pages.gen.ts",
     "packages/domain/fixtures/**",
     "tooling/fixtures/**",
     "**/playwright/.auth/**"

@@ -622,6 +622,7 @@ Shared containers in the user's own collection carry a sharing glyph: people, li
 | `/sign-in`, `/sign-in/verify` | Sign-in; the email link lands on `/sign-in/verify` with the code (TS-70) |
 | `/join/:admissionToken` | Admission landing |
 | `/help/recovery` | Lost-email help |
+| `/help`, `/help/:section/:page` | Help's home and pages (DS-122, TON-307) |
 
 Presentation choices are not in the URL; they are personal synced preferences (FR-11.8). Selection and the open inspector may be reflected in the URL for deep-linking (`?album=:id`).
 
@@ -2109,6 +2110,14 @@ The creator chose direction 1, "in the app's clothes", refined, from sketches on
 - **The server's page stays the same for everyone,** with Sign in, so crawlers, link previews and caching are unaffected.
 - **Once the browser learns the visitor is signed in** (`GET /v1/me`, as the workspace asks), the header's, the hero's and the close's Sign in become **Open Tonaris**, to `/` and so to the last view. The close reads "Tonaris is invitation-only for now. You're signed in, so your collection is one click away." Until the answer comes, a signed-in visitor sees Sign in for a moment.
 
+**DS-122 Help** (`/help`, `/help/{section}/{page}`, server-rendered). *(FR-16; decided with the creator 21 November 2026 from the variants canvas TON-307: picks 1A, 2A, 3A with 3C, 4A, 5A with 5C, and 6A)*
+- **The frame:** a "Skip to content" link first; then the sticky header, as the landing page's (DS-120): the wordmark, which leads to `/welcome`, "Help" in `text.brand` at medium weight, which leads to Help's home, and Sign in, or Open Tonaris once the browser learns the visitor is signed in (TON-185). The footer has the wordmark and Terms · Privacy.
+- **The contents (2A):** on a computer, a 256 px sidebar with "Help home" and every section that has pages, each a disclosure with its color's square (the folder colors, DS-27); the current section starts open and the current page is marked `bg.selected`. The keyboard moves through it as through the tree (DS-27): ↑ and ↓ between rows, → opens a section, ← closes it or goes up to it, Home and End. On a phone (5A), the header's Contents button opens them in a bottom sheet (DS-110), which closes on a choice.
+- **The home (1A):** no sidebar. "Tonaris Help" in `text.headline`, a line on what Help is for, then "New here?" with What Tonaris is and Your first ten minutes as two cards, then "Browse by topic": each section as a tile with its icon in its color and its first three pages, "{n} more" for the rest. Search joins the top in TON-314.
+- **A page (2A):** the section's name in its color, the title in `text.display`, the one-sentence answer in `text.lead`, and "Needs a computer" with a monitor icon where the page's tasks need one. The page reads at up to 680 px in `text.body`, `fg.secondary`; section headings are `text.page`, lower ones `text.title`, each with a link to itself on hover and focus. From 1280 px, "On this page" sits on the right with the page's sections, marking the one in view. Related pages, then Previous and Next in reading order, close it.
+- **Its parts (4A, quiet):** a numbered list is steps, each number in an `accent.soft` circle; bold is a label in the app. A step with a key names it beside the mouse action, "or press L", as keycaps the reader's computer names: ⌘, ⌥, ⇧ and ⌫ on a Mac, Ctrl, Alt, Shift and Backspace elsewhere (the server renders a Mac's). Screen readers hear each key's name. Notes sit on `bg.panel` with an icon: a tip (amber lightbulb), On a phone (pink), more to know (blue), and what can't be undone (danger, on its tint). Pictures (FR-16.3) sit in a framed box at the size they were taken for, with a sentence for screen readers and a caption. Two choices can sit side by side.
+- **An address that isn't a page** answers 404 with "This page isn't in Help" and a way back to its home.
+
 ## 15. States, copy, and mobile
 
 **DS-105 Empty states.** One sentence and one action. *(FR-01.9, FR-12)*
@@ -2289,6 +2298,7 @@ No design questions are open. The creator settled these on 17 October 2026, rows
 | 11 | Primary button labels below 4.5:1 on the accent (DS-12, DS-14), 18 Oct 2026 | New `accent.fill` (0.54 0.17 275) behind near-white `fg.on-accent` labels; `accent.solid` stays for focus and selection |
 | 12 | A landing page (DS-120), 1 Nov 2026 | Direction 1, "in the app's clothes", refined, with invented albums in cover set 1, "Label series"; at `/welcome`, where signed-out visits to `/` arrive, and `/sign-in` back to just the card |
 | 13 | Input borders at rest below 3:1 (DS-14), 7 Nov 2026 | Filled fields with a faint edge (TON-168's 4A): 3:1 under the pointer, told apart at rest by fill, label and place |
+| 14 | Help's look (DS-122), 21 Nov 2026 | From TON-307's canvas: a search-first home with topic tiles (1A), pages in three columns (2A), search as a palette with a results page (3A, 3C), quiet parts with each step's key (4A), a phone top bar (5A, 5C), and the shortcuts as cards by topic (6A) |
 
 New questions are added here as **Open (design)** rows.
 
@@ -2312,6 +2322,7 @@ New questions are added here as **Open (design)** rows.
 | FR-13 Errors and outcomes | DS-80, DS-84, DS-107, DS-108 |
 | FR-14 Album deletion and recovery | DS-50, DS-56 |
 | FR-15 Capacity | DS-98 |
+| FR-16 Help | DS-122 |
 | Q-01 Performance | DS-01, DS-106, DS-118 |
 | Q-02 Accessibility | DS-03, DS-14, DS-17, DS-27, DS-49, DS-83, DS-115 |
 | Q-10 Experience direction | DS-04, DS-10–DS-20 |
