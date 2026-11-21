@@ -1,0 +1,97 @@
+---
+title: Get something back from Trash
+summary: Deleted folders, lists and albums wait in Trash for 30 days. Restore puts each back where it was.
+order: 2
+device: computer
+keywords:
+  [
+    recover,
+    undelete,
+    restore deleted,
+    bin,
+    recycle bin,
+    deleted items,
+    lost list,
+    missing album,
+    disappeared,
+    permanently delete,
+  ]
+related: [trash/remove-delete-undo, reference/limits]
+---
+
+Everything you delete waits in Trash for 30 days. Until then you can restore it or delete it for good. After that, Tonaris deletes it for good by itself.
+
+## Open Trash
+
+Choose **Trash** in the sidebar, below your folders and lists. Or press <Keys k="G" /> then <Keys k="T" />.
+
+Each row is something you deleted, newest first:
+
+- **Contents** says what it is: an album, a list, or a folder with what was inside it.
+- **Deleted** is the date you deleted it.
+- **Expires** counts the days left, such as "Expires in 12 days". With less than 3 days left, it changes color. Point at it to see the exact date and time.
+- **Was in** is where it was: **Collection** for the top level, or a folder's name.
+
+To find something, type in **Filter by name** at the top.
+
+<Picture
+  name="trash-view"
+  alt="Trash with three rows: the folder Moods opened to show its lists, the list Rainy Sundays, and the album Midnight Ferry, each with Restore and Delete permanently…."
+  caption="A folder's row opens to show what's inside it. Those lists come back with the folder."
+/>
+
+Choose a folder's name to see what was inside it. Those folders and lists have no buttons of their own: they come back, or go, with the folder.
+
+## Restore something
+
+1. Open Trash and find the row.
+2. Choose **Restore**. Or, with the focus on the row, press <Keys k="R" />.
+
+A folder or list goes back into the folder it was in, with everything you deleted with it. An album goes back into its lists, or into **Unsorted** if none of them is left.
+
+### When Tonaris asks where
+
+If the folder it was in is in Trash too, or gone, Tonaris asks where to put it. Type in **Find a folder**, choose a folder or **Collection** for the top level, and choose **Restore**.
+
+### When Tonaris asks for a name
+
+If a folder or list with the same name is already there, type another name and choose **Restore**. To put it somewhere else, choose **Choose another location…**. Tonaris never renames anything by itself.
+
+If you choose **Cancel**, it stays in Trash, and its days keep counting down.
+
+### When others would see it
+
+If what you restore would be inside something you share, Tonaris asks first and shows who will see it. Choose **Restore** or **Cancel**.
+
+## What Restore skips
+
+A restored list can't take back its albums that are in Trash, or deleted for good. A restored album can't go back into a list that's in Trash. Tonaris restores everything else, and the notice says how many it skipped. Choose **Details** to see each album and why.
+
+## If the album is in your collection again
+
+If you deleted an album and later added it again, restoring the old one would make two copies. Tonaris stops, shows both, and changes nothing until you choose:
+
+- **Keep the active album** keeps the one in your collection. The old one stays in Trash.
+- **Delete the active album, then restore…** moves the one in your collection to Trash, after asking, and restores the old one.
+
+## Delete something for good
+
+1. Choose **Delete permanently…** on its row.
+2. Tonaris says what goes. Choose the button, such as **Permanently delete 1 item**.
+
+To delete everything, choose **Empty Trash…** at the top.
+
+<Note kind="careful">
+  This can't be undone. A folder or list deleted for good doesn't take its albums: they stay in
+  their other lists or in Unsorted. An album deleted for good goes with its links and field values.
+</Note>
+
+Albums in Trash count toward your <Limit of="albums" /> albums. Deleting one for good frees its place. See [Limits](/help/reference/limits).
+
+<Note kind="info">
+  When someone who edits a folder or list you share deletes something in it, it comes to your Trash.
+</Note>
+
+<Note kind="phone">
+  Trash is on a computer only. On a phone, it says "Trash is on the desktop app."
+</Note>

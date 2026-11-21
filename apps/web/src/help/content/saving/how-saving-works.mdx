@@ -1,0 +1,78 @@
+---
+title: How saving works
+summary: Tonaris saves each change as you make it, and shows it on every device you're signed in on. There is no Save button.
+order: 1
+keywords:
+  [
+    save,
+    save button,
+    autosave,
+    sync,
+    synchronize,
+    not saving,
+    offline,
+    internet connection,
+    refresh,
+    reload,
+    other devices,
+    tabs,
+  ]
+related: [saving/when-an-edit-doesnt-save, phone/on-your-phone]
+---
+
+Each change shows at once, and Tonaris saves it in the background while you keep working. Once it's saved, every device and tab where you're signed in shows it.
+
+## When a change counts as saved
+
+A change counts as saved only once Tonaris has confirmed it. Until then:
+
+- If it takes more than a moment, a small spinner shows beside it.
+- If there's no answer within 15 seconds, it shows **Waiting to confirm**, with a cloud icon. Tonaris checks again when the connection is back.
+
+A saved change shows nothing: no mark and no message. If a change can't be saved, Tonaris tells you and puts back the saved value. See [When an edit doesn't save](/help/saving/when-an-edit-doesnt-save).
+
+## The Activity row
+
+**Activity**, at the bottom of the sidebar, shows how saving is going. On its right it can show:
+
+- **Saving…** while a change is on its way.
+- **2 waiting**: changes waiting to confirm.
+- **1 needs review**: a change that wasn't saved and needs you.
+- A number: reports Activity keeps, such as one for several changes that didn't all save.
+
+With nothing on its right, everything is saved. Choose **Activity** to see each change that isn't saved yet, with what to do next. When there's nothing, it says "All changes are saved."
+
+## Every device and tab in step
+
+A saved change shows on your other devices and tabs without reloading. So do changes from AI agents you connect and from people who edit what you share.
+
+When something changes somewhere else, its row or card lights up for a moment and fades. Your own changes in this tab don't.
+
+## Working offline
+
+When your device loses its connection, or Tonaris can't reach its server for 15 seconds, you're offline:
+
+- The Activity row says **Offline — changes can't be saved**.
+- A bar over your collection says **Offline — showing what was last loaded**. You can still look through it.
+- Buttons and keys that change things are turned off until you're back. Some say "You're offline" when you point at them.
+
+Changes still on their way wait in your browser. When the connection is back, Tonaris sends them in the order you made them.
+
+When the connection drops for a moment, the row says **Reconnecting…**. You can keep working: your changes wait, then go out in order.
+
+<Picture
+  name="saving-offline"
+  alt="Tonaris offline: the bar Offline — showing what was last loaded over the list, and Offline — changes can't be saved at the bottom of the sidebar."
+  caption="Offline, you can still look through your collection. Changes wait until the connection is back."
+/>
+
+## Reloading or closing the page
+
+Changes not sent yet are kept in your browser. If you reload or close the tab, the next Tonaris tab you open in that browser sends them. Each change is saved once, never twice, and never over a newer one.
+
+Signing out removes them from the browser, so if there are any, Tonaris asks first and says how many.
+
+<Note kind="phone">
+  A phone has no Activity row. A message tells you when something isn't saved, and the offline bar
+  shows when you're offline.
+</Note>
