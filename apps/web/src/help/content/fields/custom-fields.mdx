@@ -1,0 +1,95 @@
+---
+title: Track anything with custom fields
+summary: Make your own fields, such as a rating, the formats you own or the date you bought an album, and fill them in on the albums you choose.
+order: 1
+device: computer
+keywords:
+  [
+    tag,
+    tags,
+    stars,
+    score,
+    comment,
+    property,
+    attribute,
+    column,
+    metadata,
+    owned,
+    label,
+    personal data,
+  ]
+related: [fields/change-or-remove, browse/album-panel]
+---
+
+Every album has a title, an artist, a year and links. Custom fields add what matters to you: a rating, the formats you own it on, when you bought it. You make a field once, then use it on any album you like.
+
+## Make a field
+
+1. Choose your name at the top of the sidebar, then **Settings**. Or press <Keys k="G" /> then <Keys k="S" />.
+2. Choose **Custom fields**, then **New field**.
+3. Type a **Name**, such as _Rating_, and choose a **Type**.
+4. For **Single choice** or **Multiple choice**, type the **Options**, one in each box. **Add option** adds a box.
+5. Choose **Create field**, or press <Keys k="⌘ Enter" />.
+
+The new field is on no album yet. You can also make one from an album, as below.
+
+<Picture
+  name="fields-settings"
+  alt="Settings, Custom fields: a table of the fields Bought, Format, Heard live, Notes, Plays and Rating, each with its type, options and how many albums use it."
+  caption="Settings → Custom fields lists your fields and how many albums use each."
+/>
+
+## The six types
+
+| Type                | What it holds              | For example                    |
+| ------------------- | -------------------------- | ------------------------------ |
+| **Text**            | Any words                  | _Notes_: "Signed copy, Lisbon" |
+| **Number**          | A number                   | _Plays_: 12                    |
+| **Date**            | A date                     | _Bought_: 2026-03-14           |
+| **Yes/no**          | Yes or No                  | _Heard live_: Yes              |
+| **Single choice**   | One of the options you set | _Rating_: ★★★★                 |
+| **Multiple choice** | Any of the options you set | _Format_: Vinyl, CD            |
+
+Type a date as year, month and day, such as 2026-03-14, or pick it from the calendar.
+
+## Use a field on an album
+
+1. Open the album in the album panel, and switch to [Editing mode](/help/organize/viewing-and-editing) with <Keys k="E" />.
+2. Under **Custom fields**, choose **Add field**, then the field. **Create field…** makes a new field and adds it.
+3. Fill it in: type the text, number or date and press <Keys k="Enter" />, or choose **Yes**, **No** or an option.
+
+A choice saves as you make it. Typed values save when you press <Keys k="Enter" /> or move on, and <Keys k="Esc" /> puts back what was there.
+
+The values belong to the album, so they're the same in every list it's in.
+
+<Picture
+  name="fields-album-panel"
+  alt="The album panel for Blue Hour Sessions in Editing mode, under Custom fields: Bought, Format with Vinyl, Heard live, Notes and Rating, and Add field."
+  caption="In Editing mode, the album panel's fields can be filled in."
+/>
+
+## Empty is not the same as not added
+
+A field you add to an album and leave empty shows **Empty**, or **—** for Yes/no. That's different from a field the album doesn't have, and different from 0 or No. Tonaris never fills in a value for you. So _Rating_ added but empty can mean "not rated yet", and no _Rating_ at all, "not one I rate".
+
+To take a field off an album, choose **×** next to it in Editing mode. Its value goes with it, and **Undo** brings both back. Add the field again later, and it starts empty.
+
+## Limits
+
+- Up to <Limit of="fields" /> fields.
+- Up to <Limit of="fieldOptions" /> options in each choice field.
+- Up to <Limit of="textValueLength" /> characters in a text value.
+- Two fields can't have the same name, and two options in one field can't have the same name, even with different capital letters.
+
+Search doesn't look in custom fields: it finds albums by their title and artist.
+
+## What the people you share with see
+
+When you share a folder or list, the fields its albums use are shared with it, with their values. Fields that none of those albums use stay private, and so do options none of them chose.
+
+People who can edit your folder or list see all your fields and all their options, so they can fill them in on its albums. Only you can make, rename or delete fields and options. See [Change or remove a field](/help/fields/change-or-remove).
+
+<Note kind="phone">
+  On a phone, an album's details show its fields and values. Making fields and filling them in needs
+  a computer.
+</Note>
