@@ -15,7 +15,8 @@
     "test:e2e:matrix": "bun run test:e2e && bun run test:e2e:firefox && bun run test:e2e:webkit",
     "typecheck": "tsc --noEmit",
     "test:perf": "playwright test --config playwright.perf.config.ts",
-    "test:verify": "playwright test --config playwright.verify.config.ts"
+    "test:verify": "playwright test --config playwright.verify.config.ts",
+    "pictures": "playwright test --config playwright.pictures.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",

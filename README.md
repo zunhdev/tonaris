@@ -62,6 +62,7 @@ bun run openapi:check           # the committed OpenAPI document matches the API
 bun test                        # all tests but the finished spikes' (bunfig.toml); the integration tests need the local Postgres
 bun run test:e2e                # Playwright browser tests of the web app (needs Node and Chromium)
 bun run --cwd apps/web test:perf  # TS-120 performance run on the reference workload; not part of check
+bun run pictures                # the Help pages' pictures, from the demo collection of invented albums; not part of check
 bun run build                   # production bundles: apps/api/dist (bin/*.js) and apps/web/dist
 ```
 
@@ -95,6 +96,7 @@ bun run db:create                               # once: create the tonaris and t
 bun run db:migrate                              # apply the committed migrations to tonaris
 CREATOR_EMAIL=you@example.com bun run seed:creator  # once: create your creator account
 bun run seed:workload                           # optional: the 5,000-album reference workload (TS-120)
+bun run seed:demo                               # optional: the demo collection of invented albums the Help pages show
 bun dev                                         # web and api together; each reloads when you save
 bun run mail:test                               # send one email to Mailpit
 ```
@@ -109,6 +111,7 @@ bun run mail:test                               # send one email to Mailpit
 - The web app runs TanStack Start on Vite (`bun --bun vite dev`).
 - **Signing in:** open http://localhost:3000, enter the creator's email, and take the code (or the link) from the Mailpit inbox. Sign-in never creates accounts: any other address gets a "no account" email. Sign out from the account menu at the top of the sidebar.
 - **Reference workload:** `bun run seed:workload` gives `workload@tonaris.test` 5,000 albums in 250 lists and 60 folders, plus 3 collections shared with it by `workload-sharer-1@tonaris.test` to `-3`. Sign in as any of them. Every run replaces exactly those accounts' data with the same rows, IDs included, and leaves your own account alone. `WORKLOAD_ALBUMS=50000 bun run seed:workload` gives the owner 50,000 albums instead, the album limit (TON-287).
+- **Demo collection:** `bun run seed:demo` gives `robin@demo.tonaris.test` 24 invented albums in folders and lists, custom fields, a list shared by link, a folder shared with `sam@demo.tonaris.test` to edit, and a list from `mira@demo.tonaris.test`. `bun run pictures` seeds it into a `tonaris_pictures` database of its own, takes the Help pages' pictures in `apps/web/pictures/*.pictures.ts` with the covers drawn for those albums, and saves them as WebP in `apps/web/src/help/pictures/`. Run it again after changing a pictured screen.
 - **Settings:** every setting has a local default, so none is needed to run locally. `.env.example` lists them all (TS-105). Bun reads a `.env` file from the directory a command runs in, such as `apps/api`.
 - **Browsers:** the session cookie is `__Secure-` and `Secure` locally too, as in production (TS-70). Chrome and Firefox accept that on `http://localhost`; Safari does not, so sign in locally with Chrome or Firefox.
 - The defaults connect as `postgres` without a password. Set `DATABASE_URL` or `TEST_DATABASE_URL` to use another server; production must set `DATABASE_URL`.
