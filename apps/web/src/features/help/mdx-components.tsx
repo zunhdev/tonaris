@@ -10,6 +10,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { Limit } from "./facts";
 import { Keys } from "./keys";
 
 const linkClass =
@@ -181,6 +182,7 @@ export const helpComponents: MDXComponents = {
   td: ({ children }) => <td className="border-b border-subtle py-2 pr-4 align-top">{children}</td>,
   hr: () => <hr className="my-4 border-subtle" />,
   Keys,
+  Limit,
   Note,
   Picture,
   Compare,

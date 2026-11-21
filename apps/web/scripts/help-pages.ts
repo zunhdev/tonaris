@@ -28,6 +28,46 @@ const outFile = path.join(helpDir, "pages.gen.ts");
 /** Help's pages that live outside content/, which pages may link to. */
 const otherPages = new Set(["", "recovery", "search"]);
 
+/**
+ * Pages still being written (TON-309 to TON-313), which pages may already link to: Help isn't linked from anywhere
+ * until TON-315. Each is taken off as it's written, and TON-313 empties the list.
+ */
+const plannedPages = new Set([
+  "organize/folders-and-lists",
+  "organize/one-album-many-lists",
+  "organize/lists-in-and-out",
+  "organize/move-and-rearrange",
+  "organize/colors-icons-descriptions",
+  "organize/viewing-and-editing",
+  "fields/custom-fields",
+  "fields/change-or-remove",
+  "share/ways-to-share",
+  "share/share-a-folder-or-list",
+  "share/change-or-stop",
+  "share/move-or-delete-shared",
+  "share/shared-with-you",
+  "share/editing-a-share",
+  "share/people",
+  "trash/remove-delete-undo",
+  "trash/get-it-back",
+  "agents/what-agents-do",
+  "agents/connect",
+  "agents/approvals",
+  "phone/on-your-phone",
+  "account/profile",
+  "account/email-and-passkeys",
+  "account/export",
+  "account/delete-account",
+  "saving/how-saving-works",
+  "saving/when-an-edit-doesnt-save",
+  "reference/keyboard-shortcuts",
+  "reference/services-and-links",
+  "reference/limits",
+  "reference/words",
+  "help/questions",
+  "help/get-in-touch",
+]);
+
 type Page = HelpPageMeta & { file: string; source: string };
 type Picture = { name: string; file: string; width: number; height: number };
 
@@ -162,7 +202,9 @@ async function readPictures(): Promise<Picture[]> {
 function problems(pages: readonly Page[], pictures: readonly Picture[]): string[] {
   const bySlug = new Map(pages.map((page) => [page.slug, page]));
   const pictureNames = new Set(pictures.map((picture) => picture.name));
-  const found: string[] = [];
+  const found = pages
+    .filter((page) => plannedPages.has(page.slug))
+    .map((page) => `${page.file}: written now, so take it off plannedPages`);
   for (const page of pages) {
     const links = [
       ...page.source.matchAll(/\]\(\/help\/?([^)\s#]*)(#[^)\s]*)?\)/g),
@@ -170,17 +212,22 @@ function problems(pages: readonly Page[], pictures: readonly Picture[]): string[
     ];
     for (const [, target = "", anchor] of links) {
       const linked = bySlug.get(target);
-      if (!linked && !otherPages.has(target)) {
+      if (!linked && !otherPages.has(target) && !plannedPages.has(target)) {
         found.push(`${page.file}: a link to /help/${target}, which isn't a page`);
       } else if (linked && anchor && !linked.headings.some((h) => `#${h.id}` === anchor)) {
         found.push(`${page.file}: a link to /help/${target}${anchor}, which isn't a heading there`);
       }
     }
     for (const slug of page.related) {
-      if (!bySlug.has(slug)) found.push(`${page.file}: related page ${slug} doesn't exist`);
+      if (!bySlug.has(slug) && !plannedPages.has(slug)) {
+        found.push(`${page.file}: related page ${slug} doesn't exist`);
+      }
     }
     for (const [, name = ""] of page.source.matchAll(/<Picture[^>]*\bname="([^"]+)"/g)) {
-      if (!pictureNames.has(name)) found.push(`${page.file}: no picture pictures/${name}.webp`);
+      // The pictures run builds the app before it takes the pictures pages ask for (playwright.pictures.config.ts).
+      if (!pictureNames.has(name) && !process.env.HELP_PICTURES_PENDING) {
+        found.push(`${page.file}: no picture pictures/${name}.webp`);
+      }
     }
   }
   return found;

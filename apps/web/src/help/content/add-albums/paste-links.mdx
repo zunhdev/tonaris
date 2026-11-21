@@ -1,0 +1,84 @@
+---
+title: Add albums by pasting links
+summary: Paste a link to an album or a song from Spotify, Apple Music, Qobuz, Tidal or YouTube Music, and Tonaris adds the album with its title, artist, year and cover.
+order: 1
+device: computer
+keywords:
+  [
+    import,
+    add music,
+    add record,
+    URL,
+    copy link,
+    share link,
+    bulk add,
+    many albums at once,
+    duplicate,
+    already added,
+    not working,
+  ]
+related: [add-albums/choose-a-match, add-albums/add-by-hand, reference/services-and-links]
+---
+
+A link is the quickest way to add an album. It tells Tonaris which album you mean, and Tonaris fills in the title, artist, year, release type and cover.
+
+## Which links work
+
+Album and song links from the five services work, and Spotify's short links too. For a song, Tonaris adds the album the song is on.
+
+Playlist, artist and video links don't. Tidal and Qobuz song links don't say which album they're on, so Tonaris asks you for the album's details. [Services and links Tonaris reads](/help/reference/services-and-links) lists every form.
+
+## Copy a link
+
+In your streaming app, open the album's share menu and copy its link. On a service's website, the address in your browser works too, except in YouTube Music: use its Share menu there.
+
+## Add albums from links
+
+1. Choose **Add album** in the sidebar, or press <Keys k="C" />.
+2. Paste the links into **Links**, one per line.
+3. Check **List**. It starts with the list you're viewing. Choose it to pick another list, or **No list (goes to Unsorted)**.
+4. Choose **Add**, or press <Keys k="⌘ Enter" />.
+
+<Picture
+  name="add-albums-dialog"
+  alt="The Add albums window with three links in Links, the list To listen chosen under List, and the Add button."
+  caption="One link per line. Every album goes into the list you choose."
+/>
+
+You can add up to <Limit of="batch" /> links at once. In Editing mode, a list also has **Add album** below its albums.
+
+## Paste straight into a list
+
+Open a list and press <Keys k="⌘ V" />. Each pasted line that is a link becomes an album in that list. Tonaris switches to Editing for you.
+
+This works while no text field is selected and no album is open. With an album open, the paste [adds the link to that album](/help/add-albums/fix-details#paste-a-link-onto-an-open-album) instead.
+
+Paste anywhere else, such as in a folder, and the albums go to **Unsorted**, where albums in no list wait. A message offers **Add to list…**.
+
+## While Tonaris works
+
+Each link shows as a row at the top of the list it goes to, or of **Unsorted**, reading "Resolving link…". You can keep working. When the album is found, the row becomes the album, with [details from MusicBrainz](/help/add-albums/where-details-come-from).
+
+With several links, a panel at the bottom right counts them: "Adding 12 · 8 done · 2 need you · 1 failed". Choose it to see each link's result in **Activity**.
+
+## Albums you already have
+
+An album is in your collection once. If a link is for an album you have, even another edition of it, Tonaris puts that album in the list instead of adding a copy: "Already in your collection — added to this list", or "Already in this list".
+
+If the album has no link for that service yet, it gets this one. If it has a different one, Tonaris keeps yours: "Kept your existing Spotify link". Choose **Review** to replace it.
+
+An album in Trash comes back: "Restored from Trash and added". It goes into the list you're adding to, or Unsorted, not the lists it was in before.
+
+## When a link doesn't work
+
+If Tonaris can't read a line, or can't reach MusicBrainz, the row stays with the reason and these choices:
+
+- **Retry** tries again.
+- **Enter manually** opens the album form to [add the album by hand](/help/add-albums/add-by-hand), with the link filled in when Tonaris can read it.
+- **Dismiss** drops the link.
+
+The row stays until you dismiss it, even after a reload. When a link fits several albums, or Tonaris needs details, it [asks you](/help/add-albums/choose-a-match).
+
+## Limits
+
+Tonaris adds up to <Limit of="capturesPerHour" /> albums from links an hour. Past that, the row says so: try later, or enter the album by hand. Links that failed or wait for you don't count. Your collection holds up to <Limit of="albums" /> albums, Trash included.

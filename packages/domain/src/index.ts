@@ -222,6 +222,7 @@ export {
   maxMemberships,
   maxNameLength,
   maxPurgeUnits,
+  maxTextValueLength,
   trashRetentionDays,
 } from "./limits";
 export {

@@ -5,15 +5,35 @@ import type { MDXContent } from "mdx/types";
 
 import type { HelpPageMeta } from "./sections";
 import picture0 from "./pictures/add-album.webp";
-import picture1 from "./pictures/open-in.webp";
-import picture2 from "./pictures/phone-list.webp";
-import picture3 from "./pictures/sign-in.webp";
-import picture4 from "./pictures/workspace.webp";
+import picture1 from "./pictures/add-albums-card-labels.webp";
+import picture2 from "./pictures/add-albums-dialog.webp";
+import picture3 from "./pictures/add-albums-new-album.webp";
+import picture4 from "./pictures/add-albums-panel-editing.webp";
+import picture5 from "./pictures/add-albums-which-album.webp";
+import picture6 from "./pictures/browse-album-panel.webp";
+import picture7 from "./pictures/browse-card-links.webp";
+import picture8 from "./pictures/browse-search.webp";
+import picture9 from "./pictures/browse-shortcuts.webp";
+import picture10 from "./pictures/browse-view-options.webp";
+import picture11 from "./pictures/open-in.webp";
+import picture12 from "./pictures/phone-list.webp";
+import picture13 from "./pictures/sign-in.webp";
+import picture14 from "./pictures/workspace.webp";
 
 export const helpPages = [
   {"slug":"start-here/what-tonaris-is","section":"start-here","title":"What Tonaris is","summary":"A home for the albums you care about, sorted your way, that opens each one in the service you listen with.","order":1,"device":"any","keywords":["about","overview","introduction","how it works","what is it","explained"],"related":["start-here/your-first-ten-minutes","start-here/joining-and-signing-in"],"headings":[{"id":"five-ideas","text":"Five ideas","depth":2},{"id":"albums","text":"Albums","depth":3},{"id":"lists","text":"Lists","depth":3},{"id":"folders","text":"Folders","depth":3},{"id":"unsorted","text":"Unsorted","depth":3},{"id":"your-streaming-services","text":"Your streaming services","depth":3},{"id":"what-else-it-does","text":"What else it does","depth":2}]},
   {"slug":"start-here/your-first-ten-minutes","section":"start-here","title":"Your first ten minutes","summary":"Make a list, add an album to it from a link, and play it in your streaming service.","order":2,"device":"computer","keywords":["getting started","tutorial","first steps","begin","new user","quick start","setup"],"related":["start-here/what-tonaris-is","start-here/joining-and-signing-in"],"headings":[{"id":"1-make-a-list","text":"1. Make a list","depth":2},{"id":"2-copy-an-albums-link","text":"2. Copy an album's link","depth":2},{"id":"3-add-the-album","text":"3. Add the album","depth":2},{"id":"4-play-it","text":"4. Play it","depth":2},{"id":"5-make-it-yours","text":"5. Make it yours","depth":2},{"id":"where-to-go-next","text":"Where to go next","depth":2}]},
   {"slug":"start-here/joining-and-signing-in","section":"start-here","title":"Joining and signing in","summary":"Tonaris has no passwords. You sign in with a code sent to your email, or with a passkey.","order":3,"device":"any","keywords":["login","log in","sign up","register","password","account","invitation","invite","join","code","passkey","sign out","logout"],"related":["start-here/your-first-ten-minutes"],"headings":[{"id":"joining-tonaris","text":"Joining Tonaris","depth":2},{"id":"signing-in","text":"Signing in","depth":2},{"id":"signing-in-with-a-passkey","text":"Signing in with a passkey","depth":2},{"id":"signing-out","text":"Signing out","depth":2},{"id":"lost-access-to-your-email","text":"Lost access to your email?","depth":2}]},
+  {"slug":"add-albums/paste-links","section":"add-albums","title":"Add albums by pasting links","summary":"Paste a link to an album or a song from Spotify, Apple Music, Qobuz, Tidal or YouTube Music, and Tonaris adds the album with its title, artist, year and cover.","order":1,"device":"computer","keywords":["import","add music","add record","URL","copy link","share link","bulk add","many albums at once","duplicate","already added","not working"],"related":["add-albums/choose-a-match","add-albums/add-by-hand","reference/services-and-links"],"headings":[{"id":"which-links-work","text":"Which links work","depth":2},{"id":"copy-a-link","text":"Copy a link","depth":2},{"id":"add-albums-from-links","text":"Add albums from links","depth":2},{"id":"paste-straight-into-a-list","text":"Paste straight into a list","depth":2},{"id":"while-tonaris-works","text":"While Tonaris works","depth":2},{"id":"albums-you-already-have","text":"Albums you already have","depth":2},{"id":"when-a-link-doesnt-work","text":"When a link doesn't work","depth":2},{"id":"limits","text":"Limits","depth":2}]},
+  {"slug":"add-albums/choose-a-match","section":"add-albums","title":"When Tonaris asks you to choose","summary":"When a link could mean more than one album, or Tonaris can't find the album, it saves nothing until you choose the album or enter its details.","order":2,"device":"computer","keywords":["wrong album","which album","not found","can't find album","missing album","match","decide later","needs you","needs your choice","album details"],"related":["add-albums/paste-links","add-albums/add-by-hand"],"headings":[{"id":"where-the-question-shows","text":"Where the question shows","depth":2},{"id":"choose-among-several-albums","text":"Choose among several albums","depth":2},{"id":"when-tonaris-cant-find-the-album","text":"When Tonaris can't find the album","depth":2},{"id":"after-you-choose","text":"After you choose","depth":2},{"id":"stop-a-question","text":"Stop a question","depth":2}]},
+  {"slug":"add-albums/add-by-hand","section":"add-albums","title":"Add an album by hand","summary":"Choose Add album, then Enter manually, and type the album's title, artist and year. Everything else is optional.","order":3,"device":"computer","keywords":["manual","type in","create album","new album","not on Spotify","not on streaming","vinyl only","bootleg","without a link","form"],"related":["add-albums/paste-links","add-albums/fix-details","fields/custom-fields"],"headings":[{"id":"open-the-form","text":"Open the form","depth":2},{"id":"what-you-must-fill-in","text":"What you must fill in","depth":2},{"id":"what-you-can-add","text":"What you can add","depth":2},{"id":"choose-its-list","text":"Choose its list","depth":2},{"id":"save-it","text":"Save it","depth":2}]},
+  {"slug":"add-albums/where-details-come-from","section":"add-albums","title":"Where album details come from","summary":"Tonaris takes an album's title, artist, year and type from MusicBrainz, and its cover from the Cover Art Archive, and fills in only what's missing.","order":4,"device":"any","keywords":["metadata","wrong year","wrong cover","remaster","deluxe edition","reissue","vinyl","release date","rec.","source","database","info"],"related":["add-albums/fix-details","browse/album-panel","browse/covers-or-rows"],"headings":[{"id":"musicbrainz-and-the-cover-art-archive","text":"MusicBrainz and the Cover Art Archive","depth":2},{"id":"albums-not-editions","text":"Albums, not editions","depth":2},{"id":"which-year-an-album-shows","text":"Which year an album shows","depth":2},{"id":"release-types","text":"Release types","depth":2},{"id":"your-edits-stay","text":"Your edits stay","depth":2},{"id":"what-properties-shows","text":"What Properties shows","depth":2}]},
+  {"slug":"add-albums/fix-details","section":"add-albums","title":"Fix an album's details, cover and links","summary":"In Editing mode, change an album's title, artist or year in its row, or anything about it in the album panel. Every list it's in shows the change.","order":5,"device":"computer","keywords":["edit album","change year","rename album","wrong title","typo","wrong cover","change artwork","album art","wrong link","broken link","correct"],"related":["add-albums/where-details-come-from","organize/viewing-and-editing","browse/album-panel"],"headings":[{"id":"edit-in-a-row","text":"Edit in a row","depth":2},{"id":"edit-in-the-album-panel","text":"Edit in the album panel","depth":2},{"id":"change-the-cover","text":"Change the cover","depth":2},{"id":"add-replace-or-remove-a-link","text":"Add, replace or remove a link","depth":2},{"id":"paste-a-link-onto-an-open-album","text":"Paste a link onto an open album","depth":2},{"id":"if-the-album-changed-on-another-device","text":"If the album changed on another device","depth":2}]},
+  {"slug":"browse/covers-or-rows","section":"browse","title":"Covers or rows, sorting and grouping","summary":"Every folder, list and Unsorted has View options, opened with V, to show covers or rows, choose the order, and group albums by release type.","order":1,"device":"any","keywords":["grid view","list view","thumbnails","album art","sort order","order by year","alphabetical","group by type","EPs and singles","chronological","default view","display settings"],"related":["organize/move-and-rearrange","add-albums/where-details-come-from"],"headings":[{"id":"covers-or-rows","text":"Covers or rows","depth":2},{"id":"sort-lists-and-unsorted","text":"Sort lists and Unsorted","depth":2},{"id":"what-the-year-means","text":"What the year means","depth":2},{"id":"group-by-release-type","text":"Group by release type","depth":2},{"id":"sort-folders","text":"Sort folders","depth":2},{"id":"each-view-remembers","text":"Each view remembers","depth":2},{"id":"defaults-for-new-views","text":"Defaults for new views","depth":2}]},
+  {"slug":"browse/album-panel","section":"browse","title":"The album panel","summary":"Choose an album to open it in a panel on the right, with its cover, links, your own fields, its lists and its details.","order":2,"device":"any","keywords":["album details","album info","side panel","details pane","properties","open album","album page","edit album","close album","resize panel"],"related":["add-albums/fix-details","organize/viewing-and-editing","browse/listen"],"headings":[{"id":"open-and-close-it","text":"Open and close it","depth":2},{"id":"what-it-shows","text":"What it shows","depth":2},{"id":"make-it-wider-or-narrower","text":"Make it wider or narrower","depth":2},{"id":"an-album-on-a-page-of-its-own","text":"An album on a page of its own","depth":2},{"id":"edit-in-the-panel","text":"Edit in the panel","depth":2},{"id":"delete-the-album","text":"Delete the album","depth":2}]},
+  {"slug":"browse/search-and-commands","section":"browse","title":"Search and commands","summary":"One search box finds your folders, lists and albums by name, title or artist, and runs any command by its name.","order":3,"device":"any","keywords":["find","look up","find album","find artist","quick search","command palette","spotlight","ctrl k","cmd k","filter","transliteration"],"related":["browse/keyboard","browse/album-panel","share/shared-with-you"],"headings":[{"id":"open-search","text":"Open search","depth":2},{"id":"what-it-finds","text":"What it finds","depth":2},{"id":"how-it-matches","text":"How it matches","depth":2},{"id":"open-what-it-finds","text":"Open what it finds","depth":2},{"id":"run-a-command","text":"Run a command","depth":2},{"id":"before-you-type","text":"Before you type","depth":2}]},
+  {"slug":"browse/listen","section":"browse","title":"Listen in your streaming service","summary":"Tonaris doesn't play music. Choose a service on an album, or press O, and the album opens in Spotify, Apple Music, Qobuz, Tidal or YouTube Music.","order":4,"device":"any","keywords":["play","play album","open in Spotify","open in Apple Music","music app","web player","desktop app","default service","hide services","service order"],"related":["reference/services-and-links","add-albums/fix-details","browse/album-panel"],"headings":[{"id":"from-a-card-or-a-row","text":"From a card or a row","depth":2},{"id":"open-in","text":"Open in…","depth":2},{"id":"web-page-or-app","text":"Web page or app","depth":2},{"id":"your-services-in-your-order","text":"Your services, in your order","depth":2}]},
+  {"slug":"browse/keyboard","section":"browse","title":"Move around with the keyboard","summary":"Almost everything in Tonaris has a key. This tour goes through the screen part by part; press ? in Tonaris for every key.","order":5,"device":"computer","keywords":["shortcuts","hotkeys","keyboard navigation","without a mouse","accessibility","key bindings","vim keys","screen reader","arrow keys"],"related":["reference/keyboard-shortcuts","browse/search-and-commands","browse/album-panel"],"headings":[{"id":"when-keys-wait","text":"When keys wait","depth":2},{"id":"the-sidebar","text":"The sidebar","depth":2},{"id":"going-places","text":"Going places","depth":2},{"id":"in-a-view","text":"In a view","depth":2},{"id":"selecting-albums","text":"Selecting albums","depth":2},{"id":"with-an-album-open","text":"With an album open","depth":2},{"id":"dialogs-menus-and-messages","text":"Dialogs, menus and messages","depth":2},{"id":"search-and-commands","text":"Search and commands","depth":2},{"id":"every-key","text":"Every key","depth":2}]},
 ] as const satisfies readonly HelpPageMeta[];
 
 export type HelpSlug = (typeof helpPages)[number]["slug"];
@@ -23,15 +43,35 @@ export const helpContent: Record<HelpSlug, () => Promise<{ default: MDXContent }
   "start-here/what-tonaris-is": () => import("./content/start-here/what-tonaris-is.mdx"),
   "start-here/your-first-ten-minutes": () => import("./content/start-here/your-first-ten-minutes.mdx"),
   "start-here/joining-and-signing-in": () => import("./content/start-here/joining-and-signing-in.mdx"),
+  "add-albums/paste-links": () => import("./content/add-albums/paste-links.mdx"),
+  "add-albums/choose-a-match": () => import("./content/add-albums/choose-a-match.mdx"),
+  "add-albums/add-by-hand": () => import("./content/add-albums/add-by-hand.mdx"),
+  "add-albums/where-details-come-from": () => import("./content/add-albums/where-details-come-from.mdx"),
+  "add-albums/fix-details": () => import("./content/add-albums/fix-details.mdx"),
+  "browse/covers-or-rows": () => import("./content/browse/covers-or-rows.mdx"),
+  "browse/album-panel": () => import("./content/browse/album-panel.mdx"),
+  "browse/search-and-commands": () => import("./content/browse/search-and-commands.mdx"),
+  "browse/listen": () => import("./content/browse/listen.mdx"),
+  "browse/keyboard": () => import("./content/browse/keyboard.mdx"),
 };
 
 /** Each picture's address and the size it shows at. */
 export const helpPictures = {
   "add-album": { src: picture0, ...{"width":608,"height":426} },
-  "open-in": { src: picture1, ...{"width":382,"height":478} },
-  "phone-list": { src: picture2, ...{"width":390,"height":844} },
-  "sign-in": { src: picture3, ...{"width":1440,"height":900} },
-  "workspace": { src: picture4, ...{"width":1440,"height":900} },
+  "add-albums-card-labels": { src: picture1, ...{"width":1180,"height":278} },
+  "add-albums-dialog": { src: picture2, ...{"width":608,"height":426} },
+  "add-albums-new-album": { src: picture3, ...{"width":608,"height":900} },
+  "add-albums-panel-editing": { src: picture4, ...{"width":380,"height":1300} },
+  "add-albums-which-album": { src: picture5, ...{"width":744,"height":172} },
+  "browse-album-panel": { src: picture6, ...{"width":1176,"height":1500} },
+  "browse-card-links": { src: picture7, ...{"width":1180,"height":540} },
+  "browse-search": { src: picture8, ...{"width":672,"height":229} },
+  "browse-shortcuts": { src: picture9, ...{"width":544,"height":1200} },
+  "browse-view-options": { src: picture10, ...{"width":602,"height":349} },
+  "open-in": { src: picture11, ...{"width":382,"height":478} },
+  "phone-list": { src: picture12, ...{"width":390,"height":844} },
+  "sign-in": { src: picture13, ...{"width":1440,"height":900} },
+  "workspace": { src: picture14, ...{"width":1440,"height":900} },
 } as const;
 
 export type HelpPictureName = keyof typeof helpPictures;

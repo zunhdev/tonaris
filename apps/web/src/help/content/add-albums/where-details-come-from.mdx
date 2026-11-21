@@ -1,0 +1,78 @@
+---
+title: Where album details come from
+summary: Tonaris takes an album's title, artist, year and type from MusicBrainz, and its cover from the Cover Art Archive, and fills in only what's missing.
+order: 4
+keywords:
+  [
+    metadata,
+    wrong year,
+    wrong cover,
+    remaster,
+    deluxe edition,
+    reissue,
+    vinyl,
+    release date,
+    rec.,
+    source,
+    database,
+    info,
+  ]
+related: [add-albums/fix-details, browse/album-panel, browse/covers-or-rows]
+---
+
+A link only tells Tonaris which album you mean. The album's details come from two free, open sources that music fans keep up to date.
+
+## MusicBrainz and the Cover Art Archive
+
+- **MusicBrainz** is an open music encyclopedia that anyone can edit. Tonaris takes the album's title, artist, year and release type from it, and, for a live album, when it was recorded.
+- **The Cover Art Archive** holds covers that MusicBrainz's community uploads. Tonaris uses the album's front cover, when there is one.
+
+Tonaris doesn't copy details from the streaming services. One exception: when MusicBrainz doesn't have an album from an Apple Music link, the album form offers Apple's title, artist and year for you to check.
+
+An album without a cover shows its first letter instead. You can [add a cover](/help/add-albums/fix-details#change-the-cover) yourself.
+
+## Albums, not editions
+
+Tonaris keeps albums, not editions. A remaster, a deluxe edition or a vinyl reissue is the same album as the original. Whichever edition your link is for, Tonaris saves the album with its original title and the year it first came out.
+
+So each album is in your collection once. A link to another edition of an album you have goes to that album. Two different albums with the same title stay apart.
+
+## Which year an album shows
+
+- **Most albums** show the year they first came out, from their earliest release.
+- **Live albums** show when they were recorded, after "rec.": rec. 1998, or rec. 1975–1985 for a recording made over several years.
+- **A live album whose recording year isn't known** shows its release year, with a small calendar mark. Point to the mark to read "Recording year unknown — sorted by release year".
+
+Sorting by year uses the year the album shows. Every album has a year: when MusicBrainz doesn't know it, Tonaris asks you for it.
+
+## Release types
+
+An album's release type is **Album**, **EP**, **Single** or **Compilation**, from MusicBrainz. **Live** is separate, so an album can be a live compilation. When MusicBrainz doesn't say, the type is **Unknown**.
+
+When albums show as covers, a small label in a cover's top-left corner says EP, Single, Compilation or Live. A studio album has no label. In rows, the type has a column of its own.
+
+<Picture
+  name="add-albums-card-labels"
+  alt="Album covers in the list Late night: Saltwater Radio labeled Live, with rec. 1985 as its year, Concrete Garden labeled EP, and two studio albums with no label."
+  caption="Labels show what isn't a plain studio album. Live albums show when they were recorded."
+/>
+
+## Your edits stay
+
+Tonaris fills in only what's missing. It never changes a value an album already has, whether you typed it or it came from MusicBrainz. When you add a link for an album you already have, Tonaris may fill a gap, such as a missing cover, and leaves everything else as it is.
+
+So if you change an album's year or type, it stays as you set it. MusicBrainz has no say over it after that.
+
+## What Properties shows
+
+Open an album and scroll to **Properties**, at the bottom of the album panel. It lists:
+
+- **Release type** and **Live**.
+- **Original release year**, and for a live album **Recording year or range**, with a line saying which year the album sorts by.
+- **Added**: the date you added the album.
+- **In lists**: how many lists it's in, or "None, in Unsorted".
+- **Links**: the services it has links for.
+
+In Editing mode, the release type and years move up, under **Chronology**, where you can change them.
+
+<Note kind="phone">On a phone, open an album to see the same Properties.</Note>
