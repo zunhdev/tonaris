@@ -1,0 +1,62 @@
+---
+title: Connect Claude, ChatGPT or Codex
+summary: Add Tonaris to your AI app with its server address, sign in to Tonaris, and choose what the agent may do.
+order: 2
+keywords:
+  [
+    connector,
+    custom connector,
+    plugin,
+    MCP server,
+    server URL,
+    set up AI,
+    link AI,
+    integration,
+    OAuth,
+    authorize,
+    add Tonaris to Claude,
+  ]
+related: [agents/what-agents-do, agents/approvals]
+---
+
+You connect from the AI app, not from Tonaris. You add Tonaris there with its server address, then sign in to Tonaris and choose what the agent may do. It takes a few minutes.
+
+## What you need
+
+- Your Tonaris account.
+- An account with Claude, ChatGPT or Codex. Each one's plan and app needs are in the steps below.
+
+## The steps
+
+Choose your AI app to see its steps.
+
+<ConnectGuide />
+
+The same steps, with the server address and a **Copy** button, are in Tonaris too: choose your name at the top of the sidebar, then **Settings**, or press <Keys k="G" /> then <Keys k="S" />. Then choose **Connections**.
+
+## Choose what the agent may do
+
+During the steps, your AI app opens a Tonaris page that asks what to allow. If you aren't signed in to Tonaris in that browser, it asks you to [sign in](/help/start-here/joining-and-signing-in) first.
+
+<Picture
+  name="agents-consent"
+  alt="The page Claude wants access to your Tonaris collection, with Read-only selected under Access, Manage collection below it, and the Cancel and Connect buttons."
+  caption="Read-only is chosen at the start. Choose Manage collection only if you want the agent to make changes."
+/>
+
+The page names the app as it calls itself, and the address it comes from, such as chatgpt.com. Check that this is the app you are connecting.
+
+1. Under **Access**, keep **Read-only**, or choose **Manage collection**.
+2. Choose **Connect**. Or choose **Cancel**, and nothing is connected.
+
+The page then sends you back to your AI app. If the app asked only to read, the page offers **Read-only** alone. [What an AI agent can do for you](/help/agents/what-agents-do#read-only-or-manage-collection) explains both modes.
+
+If the page says the request has expired or was already answered, start connecting again from your AI app.
+
+## After you connect
+
+In **Settings**, then **Connections**, your AI app shows under **Connected clients** with its mode, the day it connected, and when it was last used. Until it first uses Tonaris, it says **Not used yet**.
+
+To change the mode, choose **Revoke**, then connect again. In ChatGPT, then choose **Refresh** on the plugin's page, so ChatGPT sees what Tonaris now allows.
+
+When the agent asks to delete something, you [approve or decline it in Tonaris](/help/agents/approvals).

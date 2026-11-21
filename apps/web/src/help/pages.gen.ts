@@ -13,41 +13,49 @@ import picture5 from "./pictures/add-albums-dialog.webp";
 import picture6 from "./pictures/add-albums-new-album.webp";
 import picture7 from "./pictures/add-albums-panel-editing.webp";
 import picture8 from "./pictures/add-albums-which-album.webp";
-import picture9 from "./pictures/browse-album-panel.webp";
-import picture10 from "./pictures/browse-card-links.webp";
-import picture11 from "./pictures/browse-search.webp";
-import picture12 from "./pictures/browse-shortcuts.webp";
-import picture13 from "./pictures/browse-view-options.webp";
-import picture14 from "./pictures/fields-album-panel.webp";
-import picture15 from "./pictures/fields-settings.webp";
-import picture16 from "./pictures/fields-type-locked.webp";
-import picture17 from "./pictures/open-in.webp";
-import picture18 from "./pictures/organize-add-to-list.webp";
-import picture19 from "./pictures/organize-album-lists.webp";
-import picture20 from "./pictures/organize-description.webp";
-import picture21 from "./pictures/organize-edit-mode.webp";
-import picture22 from "./pictures/organize-folder-cards.webp";
-import picture23 from "./pictures/organize-icon-picker.webp";
-import picture24 from "./pictures/organize-move-to.webp";
-import picture25 from "./pictures/organize-selection-bar.webp";
-import picture26 from "./pictures/phone-list.webp";
-import picture27 from "./pictures/reference-usage.webp";
-import picture28 from "./pictures/saving-offline.webp";
-import picture29 from "./pictures/share-dialog.webp";
-import picture30 from "./pictures/share-editing.webp";
-import picture31 from "./pictures/share-move-confirm.webp";
-import picture32 from "./pictures/share-person-page.webp";
-import picture33 from "./pictures/share-shared-view.webp";
-import picture34 from "./pictures/share-turn-off-link.webp";
-import picture35 from "./pictures/sign-in.webp";
-import picture36 from "./pictures/trash-delete-album.webp";
-import picture37 from "./pictures/trash-view.webp";
-import picture38 from "./pictures/workspace.webp";
+import picture9 from "./pictures/agents-connected-clients.webp";
+import picture10 from "./pictures/agents-consent.webp";
+import picture11 from "./pictures/browse-album-panel.webp";
+import picture12 from "./pictures/browse-card-links.webp";
+import picture13 from "./pictures/browse-search.webp";
+import picture14 from "./pictures/browse-shortcuts.webp";
+import picture15 from "./pictures/browse-view-options.webp";
+import picture16 from "./pictures/fields-album-panel.webp";
+import picture17 from "./pictures/fields-settings.webp";
+import picture18 from "./pictures/fields-type-locked.webp";
+import picture19 from "./pictures/help-account-menu.webp";
+import picture20 from "./pictures/open-in.webp";
+import picture21 from "./pictures/organize-add-to-list.webp";
+import picture22 from "./pictures/organize-album-lists.webp";
+import picture23 from "./pictures/organize-description.webp";
+import picture24 from "./pictures/organize-edit-mode.webp";
+import picture25 from "./pictures/organize-folder-cards.webp";
+import picture26 from "./pictures/organize-icon-picker.webp";
+import picture27 from "./pictures/organize-move-to.webp";
+import picture28 from "./pictures/organize-selection-bar.webp";
+import picture29 from "./pictures/phone-agents-approval.webp";
+import picture30 from "./pictures/phone-album-sheet.webp";
+import picture31 from "./pictures/phone-collection.webp";
+import picture32 from "./pictures/phone-list.webp";
+import picture33 from "./pictures/reference-usage.webp";
+import picture34 from "./pictures/saving-offline.webp";
+import picture35 from "./pictures/share-dialog.webp";
+import picture36 from "./pictures/share-editing.webp";
+import picture37 from "./pictures/share-move-confirm.webp";
+import picture38 from "./pictures/share-person-page.webp";
+import picture39 from "./pictures/share-shared-view.webp";
+import picture40 from "./pictures/share-turn-off-link.webp";
+import picture41 from "./pictures/sign-in.webp";
+import picture42 from "./pictures/start-here-install-preferences.webp";
+import picture43 from "./pictures/trash-delete-album.webp";
+import picture44 from "./pictures/trash-view.webp";
+import picture45 from "./pictures/workspace.webp";
 
 export const helpPages = [
   {"slug":"start-here/what-tonaris-is","section":"start-here","title":"What Tonaris is","summary":"A home for the albums you care about, sorted your way, that opens each one in the service you listen with.","order":1,"device":"any","keywords":["about","overview","introduction","how it works","what is it","explained"],"related":["start-here/your-first-ten-minutes","start-here/joining-and-signing-in"],"headings":[{"id":"five-ideas","text":"Five ideas","depth":2},{"id":"albums","text":"Albums","depth":3},{"id":"lists","text":"Lists","depth":3},{"id":"folders","text":"Folders","depth":3},{"id":"unsorted","text":"Unsorted","depth":3},{"id":"your-streaming-services","text":"Your streaming services","depth":3},{"id":"what-else-it-does","text":"What else it does","depth":2}]},
   {"slug":"start-here/your-first-ten-minutes","section":"start-here","title":"Your first ten minutes","summary":"Make a list, add an album to it from a link, and play it in your streaming service.","order":2,"device":"computer","keywords":["getting started","tutorial","first steps","begin","new user","quick start","setup"],"related":["start-here/what-tonaris-is","start-here/joining-and-signing-in"],"headings":[{"id":"1-make-a-list","text":"1. Make a list","depth":2},{"id":"2-copy-an-albums-link","text":"2. Copy an album's link","depth":2},{"id":"3-add-the-album","text":"3. Add the album","depth":2},{"id":"4-play-it","text":"4. Play it","depth":2},{"id":"5-make-it-yours","text":"5. Make it yours","depth":2},{"id":"where-to-go-next","text":"Where to go next","depth":2}]},
   {"slug":"start-here/joining-and-signing-in","section":"start-here","title":"Joining and signing in","summary":"Tonaris has no passwords. You sign in with a code sent to your email, or with a passkey.","order":3,"device":"any","keywords":["login","log in","sign up","register","password","account","invitation","invite","join","code","passkey","sign out","logout"],"related":["start-here/your-first-ten-minutes"],"headings":[{"id":"joining-tonaris","text":"Joining Tonaris","depth":2},{"id":"signing-in","text":"Signing in","depth":2},{"id":"signing-in-with-a-passkey","text":"Signing in with a passkey","depth":2},{"id":"signing-out","text":"Signing out","depth":2},{"id":"lost-access-to-your-email","text":"Lost access to your email?","depth":2}]},
+  {"slug":"start-here/install-the-app","section":"start-here","title":"Install Tonaris as an app","summary":"Install Tonaris from your browser, and it opens in a window of its own, from your Dock, Start menu or Home Screen, like any other app.","order":4,"device":"any","keywords":["desktop app","download","app store","mac app","windows app","iphone app","android app","PWA","home screen","dock","taskbar","shortcut","uninstall"],"related":["start-here/joining-and-signing-in","phone/on-your-phone"],"headings":[{"id":"what-changes-once-its-installed","text":"What changes once it's installed","depth":2},{"id":"on-a-computer","text":"On a computer","depth":2},{"id":"chrome","text":"Chrome","depth":3},{"id":"microsoft-edge","text":"Microsoft Edge","depth":3},{"id":"safari-on-a-mac","text":"Safari on a Mac","depth":3},{"id":"firefox","text":"Firefox","depth":3},{"id":"on-a-phone-or-tablet","text":"On a phone or tablet","depth":2},{"id":"iphone-and-ipad","text":"iPhone and iPad","depth":3},{"id":"android","text":"Android","depth":3},{"id":"remove-the-app","text":"Remove the app","depth":2}]},
   {"slug":"add-albums/paste-links","section":"add-albums","title":"Add albums by pasting links","summary":"Paste a link to an album or a song from Spotify, Apple Music, Qobuz, Tidal or YouTube Music, and Tonaris adds the album with its title, artist, year and cover.","order":1,"device":"computer","keywords":["import","add music","add record","URL","copy link","share link","bulk add","many albums at once","duplicate","already added","not working"],"related":["add-albums/choose-a-match","add-albums/add-by-hand","reference/services-and-links"],"headings":[{"id":"which-links-work","text":"Which links work","depth":2},{"id":"copy-a-link","text":"Copy a link","depth":2},{"id":"add-albums-from-links","text":"Add albums from links","depth":2},{"id":"paste-straight-into-a-list","text":"Paste straight into a list","depth":2},{"id":"while-tonaris-works","text":"While Tonaris works","depth":2},{"id":"albums-you-already-have","text":"Albums you already have","depth":2},{"id":"when-a-link-doesnt-work","text":"When a link doesn't work","depth":2},{"id":"limits","text":"Limits","depth":2}]},
   {"slug":"add-albums/choose-a-match","section":"add-albums","title":"When Tonaris asks you to choose","summary":"When a link could mean more than one album, or Tonaris can't find the album, it saves nothing until you choose the album or enter its details.","order":2,"device":"computer","keywords":["wrong album","which album","not found","can't find album","missing album","match","decide later","needs you","needs your choice","album details"],"related":["add-albums/paste-links","add-albums/add-by-hand"],"headings":[{"id":"where-the-question-shows","text":"Where the question shows","depth":2},{"id":"choose-among-several-albums","text":"Choose among several albums","depth":2},{"id":"when-tonaris-cant-find-the-album","text":"When Tonaris can't find the album","depth":2},{"id":"after-you-choose","text":"After you choose","depth":2},{"id":"stop-a-question","text":"Stop a question","depth":2}]},
   {"slug":"add-albums/add-by-hand","section":"add-albums","title":"Add an album by hand","summary":"Choose Add album, then Enter manually, and type the album's title, artist and year. Everything else is optional.","order":3,"device":"computer","keywords":["manual","type in","create album","new album","not on Spotify","not on streaming","vinyl only","bootleg","without a link","form"],"related":["add-albums/paste-links","add-albums/fix-details","fields/custom-fields"],"headings":[{"id":"open-the-form","text":"Open the form","depth":2},{"id":"what-you-must-fill-in","text":"What you must fill in","depth":2},{"id":"what-you-can-add","text":"What you can add","depth":2},{"id":"choose-its-list","text":"Choose its list","depth":2},{"id":"save-it","text":"Save it","depth":2}]},
@@ -75,12 +83,22 @@ export const helpPages = [
   {"slug":"share/people","section":"share","title":"People","summary":"Your people are everyone you've shared with by invitation, either way. The People page shows what you share with each of them, and what they share with you.","order":7,"device":"any","keywords":["contacts","friends","followers","address book","collaborators","members","profile","about me","block","remove person"],"related":["account/profile","share/change-or-stop","share/share-a-folder-or-list"],"headings":[{"id":"the-people-page","text":"The People page","depth":2},{"id":"a-persons-page","text":"A person's page","depth":2},{"id":"your-profile","text":"Your profile","depth":2},{"id":"suggestions-when-you-invite","text":"Suggestions when you invite","depth":2},{"id":"stop-sharing-with-someone","text":"Stop sharing with someone","depth":2},{"id":"remove-someone-from-people","text":"Remove someone from People","depth":2}]},
   {"slug":"trash/remove-delete-undo","section":"trash","title":"Remove, delete and undo","summary":"Taking an album out of a list keeps it in your collection. Deleting moves a folder, list or album to Trash, where it waits 30 days.","order":1,"device":"computer","keywords":["bin","recycle bin","erase","discard","take out of playlist","remove from playlist","deleted by mistake","accidentally deleted","ctrl z","undelete"],"related":["trash/get-it-back","organize/lists-in-and-out","organize/viewing-and-editing"],"headings":[{"id":"take-an-album-out-of-a-list","text":"Take an album out of a list","depth":2},{"id":"delete-a-list","text":"Delete a list","depth":2},{"id":"delete-a-folder","text":"Delete a folder","depth":2},{"id":"delete-an-album-from-your-collection","text":"Delete an album from your collection","depth":2},{"id":"what-goes-to-trash-together","text":"What goes to Trash together","depth":2},{"id":"what-cant-be-undone","text":"What can't be undone","depth":2}]},
   {"slug":"trash/get-it-back","section":"trash","title":"Get something back from Trash","summary":"Deleted folders, lists and albums wait in Trash for 30 days. Restore puts each back where it was.","order":2,"device":"computer","keywords":["recover","undelete","restore deleted","bin","recycle bin","deleted items","lost list","missing album","disappeared","permanently delete"],"related":["trash/remove-delete-undo","reference/limits"],"headings":[{"id":"open-trash","text":"Open Trash","depth":2},{"id":"restore-something","text":"Restore something","depth":2},{"id":"when-tonaris-asks-where","text":"When Tonaris asks where","depth":3},{"id":"when-tonaris-asks-for-a-name","text":"When Tonaris asks for a name","depth":3},{"id":"when-others-would-see-it","text":"When others would see it","depth":3},{"id":"what-restore-skips","text":"What Restore skips","depth":2},{"id":"if-the-album-is-in-your-collection-again","text":"If the album is in your collection again","depth":2},{"id":"delete-something-for-good","text":"Delete something for good","depth":2}]},
+  {"slug":"agents/what-agents-do","section":"agents","title":"What an AI agent can do for you","summary":"An AI app such as Claude, ChatGPT or Codex can search your collection and organize it for you, and it asks you first before it deletes anything.","order":1,"device":"any","keywords":["AI assistant","chatbot","bot","LLM","artificial intelligence","automate","let AI organize","AI permissions","Model Context Protocol","integration"],"related":["agents/connect","agents/approvals"],"headings":[{"id":"how-it-works","text":"How it works","depth":2},{"id":"what-you-can-ask","text":"What you can ask","depth":2},{"id":"read-only-or-manage-collection","text":"Read-only or Manage collection","depth":2},{"id":"what-always-waits-for-you","text":"What always waits for you","depth":2},{"id":"what-agents-can-never-do","text":"What agents can never do","depth":2},{"id":"shared-folders-and-lists","text":"Shared folders and lists","depth":2}]},
+  {"slug":"agents/connect","section":"agents","title":"Connect Claude, ChatGPT or Codex","summary":"Add Tonaris to your AI app with its server address, sign in to Tonaris, and choose what the agent may do.","order":2,"device":"any","keywords":["connector","custom connector","plugin","MCP server","server URL","set up AI","link AI","integration","OAuth","authorize","add Tonaris to Claude"],"related":["agents/what-agents-do","agents/approvals"],"headings":[{"id":"what-you-need","text":"What you need","depth":2},{"id":"the-steps","text":"The steps","depth":2},{"id":"choose-what-the-agent-may-do","text":"Choose what the agent may do","depth":2},{"id":"after-you-connect","text":"After you connect","depth":2}]},
+  {"slug":"agents/approvals","section":"agents","title":"Approve requests and manage connections","summary":"When an agent asks to delete something, you approve or decline it on a Tonaris page, on any device. Nothing changes until you approve.","order":3,"device":"any","keywords":["permission","confirm","allow","deny","reject","disconnect","remove AI","revoke access","unlink","pending request","agent waiting"],"related":["agents/what-agents-do","trash/get-it-back"],"headings":[{"id":"how-a-request-reaches-you","text":"How a request reaches you","depth":2},{"id":"what-a-request-shows","text":"What a request shows","depth":2},{"id":"approve-or-decline","text":"Approve or decline","depth":2},{"id":"see-and-remove-connections","text":"See and remove connections","depth":2}]},
+  {"slug":"phone/on-your-phone","section":"phone","title":"Tonaris on your phone","summary":"On a phone, you browse your collection, search it and open albums in your streaming service. Adding and organizing need a computer.","order":1,"device":"any","keywords":["mobile","smartphone","iOS","tablet","PWA","web app","download the app","App Store","Google Play","app icon","small screen"],"related":["browse/listen","agents/approvals"],"headings":[{"id":"what-you-can-do-on-a-phone","text":"What you can do on a phone","depth":2},{"id":"what-needs-a-computer","text":"What needs a computer","depth":2},{"id":"add-tonaris-to-your-home-screen","text":"Add Tonaris to your Home Screen","depth":2},{"id":"links-and-the-installed-app","text":"Links and the installed app","depth":2}]},
   {"slug":"account/profile","section":"account","title":"Your profile and who sees it","summary":"Your display name, avatar color, About line and favorite albums are what the people you share with see of you. You set them in Settings, under Profile.","order":1,"device":"any","keywords":["username","nickname","change my name","avatar","profile picture","bio","about me","favorites","privacy","who can see","public profile"],"related":["share/people","account/email-and-passkeys"],"headings":[{"id":"display-name","text":"Display name","depth":2},{"id":"avatar-color","text":"Avatar color","depth":2},{"id":"about","text":"About","depth":2},{"id":"favorite-albums","text":"Favorite albums","depth":2},{"id":"who-sees-what","text":"Who sees what","depth":2}]},
   {"slug":"account/email-and-passkeys","section":"account","title":"Your sign-in email and passkeys","summary":"Change your sign-in email after confirming both the old and the new address. Add passkeys to sign in without an emailed code.","order":2,"device":"any","keywords":["change email","new email address","update email","login","password","face id","touch id","fingerprint","windows hello","security","remove passkey"],"related":["start-here/joining-and-signing-in","account/profile"],"headings":[{"id":"change-your-sign-in-email","text":"Change your sign-in email","depth":2},{"id":"passkeys","text":"Passkeys","depth":2},{"id":"add-a-passkey","text":"Add a passkey","depth":3},{"id":"rename-or-remove-a-passkey","text":"Rename or remove a passkey","depth":3},{"id":"lost-access-to-your-email","text":"Lost access to your email?","depth":2}]},
   {"slug":"account/export","section":"account","title":"Export your collection","summary":"Download your whole collection as a ZIP file from Settings, under Data, whenever you like.","order":3,"device":"computer","keywords":["backup","back up","download","save a copy","export data","json","csv","markdown","data portability","take my data","storage","how many albums"],"related":["account/delete-account","reference/limits"],"headings":[{"id":"download-your-data","text":"Download your data","depth":2},{"id":"whats-in-the-zip","text":"What's in the ZIP","depth":2},{"id":"what-it-leaves-out","text":"What it leaves out","depth":2},{"id":"how-often-you-can-export","text":"How often you can export","depth":2},{"id":"your-usage","text":"Your usage","depth":2}]},
   {"slug":"account/delete-account","section":"account","title":"Delete your account","summary":"Delete account, in Settings under Account, removes your account and everything you own in Tonaris for good. Export your collection first.","order":4,"device":"any","keywords":["close account","remove account","cancel account","deactivate","leave tonaris","erase my data","right to be forgotten","GDPR","quit"],"related":["account/export","share/shared-with-you"],"headings":[{"id":"before-you-start","text":"Before you start","depth":2},{"id":"delete-your-account","text":"Delete your account","depth":2},{"id":"what-happens-at-once","text":"What happens at once","depth":2},{"id":"whats-removed","text":"What's removed","depth":2},{"id":"what-others-shared-with-you","text":"What others shared with you","depth":2}]},
   {"slug":"saving/how-saving-works","section":"saving","title":"How saving works","summary":"Tonaris saves each change as you make it, and shows it on every device you're signed in on. There is no Save button.","order":1,"device":"any","keywords":["save","save button","autosave","sync","synchronize","not saving","offline","internet connection","refresh","reload","other devices","tabs"],"related":["saving/when-an-edit-doesnt-save","phone/on-your-phone"],"headings":[{"id":"when-a-change-counts-as-saved","text":"When a change counts as saved","depth":2},{"id":"the-activity-row","text":"The Activity row","depth":2},{"id":"every-device-and-tab-in-step","text":"Every device and tab in step","depth":2},{"id":"working-offline","text":"Working offline","depth":2},{"id":"reloading-or-closing-the-page","text":"Reloading or closing the page","depth":2}]},
   {"slug":"saving/when-an-edit-doesnt-save","section":"saving","title":"When an edit doesn't save","summary":"Tonaris tells you when a change couldn't be saved, keeps it until you deal with it, and lets you try again or choose which version stays.","order":2,"device":"any","keywords":["error","failed","not saved","couldn't save","lost changes","try again","sync error","sync conflict","overwritten","changed elsewhere","log out"],"related":["saving/how-saving-works","help/get-in-touch"],"headings":[{"id":"a-change-that-failed","text":"A change that failed","depth":2},{"id":"changed-somewhere-else","text":"Changed somewhere else","depth":2},{"id":"several-changes-at-once","text":"Several changes at once","depth":2},{"id":"going-offline","text":"Going offline","depth":2},{"id":"signing-out-with-unsaved-changes","text":"Signing out with unsaved changes","depth":2}]},
+  {"slug":"reference/keyboard-shortcuts","section":"reference","title":"Keyboard shortcuts","summary":"Every key Tonaris has, grouped by what it does, and the rules they follow.","order":1,"device":"computer","keywords":["hotkeys","keybindings","key combinations","cheat sheet","keyboard commands","Cmd","Ctrl","Command key","Control key"],"related":["browse/keyboard","browse/search-and-commands"],"headings":[{"id":"how-the-keys-work","text":"How the keys work","depth":2}]},
+  {"slug":"reference/services-and-links","section":"reference","title":"Services and links Tonaris reads","summary":"Tonaris reads album and song links from Spotify, Apple Music, Qobuz, Tidal and YouTube Music. Playlists, artists and other services don't work.","order":2,"device":"any","keywords":["supported services","Deezer","Bandcamp","SoundCloud","Amazon Music","URL","share link","unsupported link","link not working","track link","which streaming services"],"related":["add-albums/paste-links","browse/listen"],"headings":[{"id":"the-five-services","text":"The five services","depth":2},{"id":"songs-from-tidal-and-qobuz","text":"Songs from Tidal and Qobuz","depth":2},{"id":"youtube-music","text":"YouTube Music","depth":2},{"id":"what-doesnt-work","text":"What doesn't work","depth":2},{"id":"how-links-open","text":"How links open","depth":2}]},
+  {"slug":"reference/limits","section":"reference","title":"Limits","summary":"Each account has limits, such as how many albums it can keep. At a limit, only the new thing is refused, and everything else keeps working.","order":3,"device":"any","keywords":["maximum","quota","cap","how many","too many","storage","capacity","rate limit","full","space"],"related":["trash/get-it-back","account/export"],"headings":[{"id":"your-collection","text":"Your collection","depth":2},{"id":"text","text":"Text","depth":2},{"id":"how-much-at-a-time","text":"How much at a time","depth":2},{"id":"at-a-limit","text":"At a limit","depth":2},{"id":"trash-counts","text":"Trash counts","depth":2},{"id":"see-your-usage","text":"See your usage","depth":2}]},
+  {"slug":"reference/words","section":"reference","title":"Words used in Tonaris","summary":"What the words Tonaris uses mean, from album to passkey, each with the page that says more.","order":4,"device":"any","keywords":["glossary","dictionary","terms","definitions","meaning","vocabulary","what does it mean","jargon"],"related":["start-here/what-tonaris-is","help/questions"],"headings":[{"id":"your-collection","text":"Your collection","depth":2},{"id":"sharing","text":"Sharing","depth":2},{"id":"ai-agents","text":"AI agents","depth":2},{"id":"saving-and-your-account","text":"Saving and your account","depth":2}]},
+  {"slug":"help/questions","section":"help","title":"Questions and answers","summary":"Short answers to the questions people ask most, each with the page that says more.","order":1,"device":"any","keywords":["FAQ","frequently asked questions","common questions","troubleshooting","problem","how do I","why","help me"],"related":["help/get-in-touch","reference/words"],"headings":[{"id":"is-there-a-password","text":"Is there a password?","depth":2},{"id":"what-if-my-sign-in-code-doesnt-arrive","text":"What if my sign-in code doesn't arrive?","depth":2},{"id":"does-tonaris-play-music","text":"Does Tonaris play music?","depth":2},{"id":"can-i-import-my-spotify-library","text":"Can I import my Spotify library?","depth":2},{"id":"can-i-add-songs-or-playlists","text":"Can I add songs or playlists?","depth":2},{"id":"why-does-an-album-show-this-year","text":"Why does an album show this year?","depth":2},{"id":"why-is-a-cover-missing","text":"Why is a cover missing?","depth":2},{"id":"can-i-keep-a-vinyl-and-a-cd-edition-apart","text":"Can I keep a vinyl and a CD edition apart?","depth":2},{"id":"what-is-unsorted","text":"What is Unsorted?","depth":2},{"id":"how-many-albums-can-i-keep","text":"How many albums can I keep?","depth":2},{"id":"who-can-see-my-collection","text":"Who can see my collection?","depth":2},{"id":"can-someone-else-change-my-list","text":"Can someone else change my list?","depth":2},{"id":"can-an-ai-agent-delete-my-albums","text":"Can an AI agent delete my albums?","depth":2},{"id":"can-i-get-back-something-deleted-more-than-30-days-ago","text":"Can I get back something deleted more than 30 days ago?","depth":2},{"id":"can-i-take-my-data-with-me","text":"Can I take my data with me?","depth":2},{"id":"can-i-use-tonaris-on-my-phone","text":"Can I use Tonaris on my phone?","depth":2},{"id":"does-tonaris-work-without-an-internet-connection","text":"Does Tonaris work without an internet connection?","depth":2},{"id":"is-tonaris-in-my-language","text":"Is Tonaris in my language?","depth":2},{"id":"is-there-a-light-theme","text":"Is there a light theme?","depth":2}]},
+  {"slug":"help/get-in-touch","section":"help","title":"Get in touch","summary":"Share ideas and report problems on the Tonaris feedback board. For a problem with your account, write to the support address.","order":2,"device":"any","keywords":["contact","support","bug","bug report","feature request","suggestion","complaint","help desk","customer service","roadmap","email the creator"],"related":["help/questions","saving/when-an-edit-doesnt-save"],"headings":[{"id":"open-the-feedback-board","text":"Open the feedback board","depth":2},{"id":"how-the-board-works","text":"How the board works","depth":2},{"id":"report-a-problem","text":"Report a problem","depth":2},{"id":"problems-with-your-account","text":"Problems with your account","depth":2}]},
 ] as const satisfies readonly HelpPageMeta[];
 
 export type HelpSlug = (typeof helpPages)[number]["slug"];
@@ -90,6 +108,7 @@ export const helpContent: Record<HelpSlug, () => Promise<{ default: MDXContent }
   "start-here/what-tonaris-is": () => import("./content/start-here/what-tonaris-is.mdx"),
   "start-here/your-first-ten-minutes": () => import("./content/start-here/your-first-ten-minutes.mdx"),
   "start-here/joining-and-signing-in": () => import("./content/start-here/joining-and-signing-in.mdx"),
+  "start-here/install-the-app": () => import("./content/start-here/install-the-app.mdx"),
   "add-albums/paste-links": () => import("./content/add-albums/paste-links.mdx"),
   "add-albums/choose-a-match": () => import("./content/add-albums/choose-a-match.mdx"),
   "add-albums/add-by-hand": () => import("./content/add-albums/add-by-hand.mdx"),
@@ -117,12 +136,22 @@ export const helpContent: Record<HelpSlug, () => Promise<{ default: MDXContent }
   "share/people": () => import("./content/share/people.mdx"),
   "trash/remove-delete-undo": () => import("./content/trash/remove-delete-undo.mdx"),
   "trash/get-it-back": () => import("./content/trash/get-it-back.mdx"),
+  "agents/what-agents-do": () => import("./content/agents/what-agents-do.mdx"),
+  "agents/connect": () => import("./content/agents/connect.mdx"),
+  "agents/approvals": () => import("./content/agents/approvals.mdx"),
+  "phone/on-your-phone": () => import("./content/phone/on-your-phone.mdx"),
   "account/profile": () => import("./content/account/profile.mdx"),
   "account/email-and-passkeys": () => import("./content/account/email-and-passkeys.mdx"),
   "account/export": () => import("./content/account/export.mdx"),
   "account/delete-account": () => import("./content/account/delete-account.mdx"),
   "saving/how-saving-works": () => import("./content/saving/how-saving-works.mdx"),
   "saving/when-an-edit-doesnt-save": () => import("./content/saving/when-an-edit-doesnt-save.mdx"),
+  "reference/keyboard-shortcuts": () => import("./content/reference/keyboard-shortcuts.mdx"),
+  "reference/services-and-links": () => import("./content/reference/services-and-links.mdx"),
+  "reference/limits": () => import("./content/reference/limits.mdx"),
+  "reference/words": () => import("./content/reference/words.mdx"),
+  "help/questions": () => import("./content/help/questions.mdx"),
+  "help/get-in-touch": () => import("./content/help/get-in-touch.mdx"),
 };
 
 /** Each picture's address and the size it shows at. */
@@ -136,36 +165,43 @@ export const helpPictures = {
   "add-albums-new-album": { src: picture6, ...{"width":608,"height":900} },
   "add-albums-panel-editing": { src: picture7, ...{"width":380,"height":1300} },
   "add-albums-which-album": { src: picture8, ...{"width":744,"height":172} },
-  "browse-album-panel": { src: picture9, ...{"width":1176,"height":1500} },
-  "browse-card-links": { src: picture10, ...{"width":1180,"height":540} },
-  "browse-search": { src: picture11, ...{"width":672,"height":229} },
-  "browse-shortcuts": { src: picture12, ...{"width":544,"height":1200} },
-  "browse-view-options": { src: picture13, ...{"width":602,"height":402} },
-  "fields-album-panel": { src: picture14, ...{"width":379,"height":293} },
-  "fields-settings": { src: picture15, ...{"width":1200,"height":900} },
-  "fields-type-locked": { src: picture16, ...{"width":1200,"height":900} },
-  "open-in": { src: picture17, ...{"width":382,"height":478} },
-  "organize-add-to-list": { src: picture18, ...{"width":560,"height":412} },
-  "organize-album-lists": { src: picture19, ...{"width":379,"height":101} },
-  "organize-description": { src: picture20, ...{"width":712,"height":162} },
-  "organize-edit-mode": { src: picture21, ...{"width":1208,"height":172} },
-  "organize-folder-cards": { src: picture22, ...{"width":854,"height":520} },
-  "organize-icon-picker": { src: picture23, ...{"width":368,"height":314} },
-  "organize-move-to": { src: picture24, ...{"width":560,"height":352} },
-  "organize-selection-bar": { src: picture25, ...{"width":1216,"height":311} },
-  "phone-list": { src: picture26, ...{"width":390,"height":844} },
-  "reference-usage": { src: picture27, ...{"width":656,"height":126} },
-  "saving-offline": { src: picture28, ...{"width":1440,"height":900} },
-  "share-dialog": { src: picture29, ...{"width":608,"height":361} },
-  "share-editing": { src: picture30, ...{"width":1200,"height":420} },
-  "share-move-confirm": { src: picture31, ...{"width":496,"height":216} },
-  "share-person-page": { src: picture32, ...{"width":1200,"height":560} },
-  "share-shared-view": { src: picture33, ...{"width":1200,"height":360} },
-  "share-turn-off-link": { src: picture34, ...{"width":608,"height":405} },
-  "sign-in": { src: picture35, ...{"width":1440,"height":900} },
-  "trash-delete-album": { src: picture36, ...{"width":496,"height":248} },
-  "trash-view": { src: picture37, ...{"width":1184,"height":176} },
-  "workspace": { src: picture38, ...{"width":1440,"height":900} },
+  "agents-connected-clients": { src: picture9, ...{"width":656,"height":205} },
+  "agents-consent": { src: picture10, ...{"width":398,"height":472} },
+  "browse-album-panel": { src: picture11, ...{"width":1176,"height":1500} },
+  "browse-card-links": { src: picture12, ...{"width":1180,"height":540} },
+  "browse-search": { src: picture13, ...{"width":672,"height":229} },
+  "browse-shortcuts": { src: picture14, ...{"width":544,"height":1200} },
+  "browse-view-options": { src: picture15, ...{"width":602,"height":402} },
+  "fields-album-panel": { src: picture16, ...{"width":379,"height":293} },
+  "fields-settings": { src: picture17, ...{"width":1200,"height":900} },
+  "fields-type-locked": { src: picture18, ...{"width":1200,"height":900} },
+  "help-account-menu": { src: picture19, ...{"width":247,"height":240} },
+  "open-in": { src: picture20, ...{"width":382,"height":478} },
+  "organize-add-to-list": { src: picture21, ...{"width":560,"height":412} },
+  "organize-album-lists": { src: picture22, ...{"width":379,"height":101} },
+  "organize-description": { src: picture23, ...{"width":712,"height":162} },
+  "organize-edit-mode": { src: picture24, ...{"width":1208,"height":172} },
+  "organize-folder-cards": { src: picture25, ...{"width":854,"height":520} },
+  "organize-icon-picker": { src: picture26, ...{"width":368,"height":314} },
+  "organize-move-to": { src: picture27, ...{"width":560,"height":352} },
+  "organize-selection-bar": { src: picture28, ...{"width":1216,"height":311} },
+  "phone-agents-approval": { src: picture29, ...{"width":390,"height":844} },
+  "phone-album-sheet": { src: picture30, ...{"width":390,"height":844} },
+  "phone-collection": { src: picture31, ...{"width":390,"height":844} },
+  "phone-list": { src: picture32, ...{"width":390,"height":844} },
+  "reference-usage": { src: picture33, ...{"width":656,"height":126} },
+  "saving-offline": { src: picture34, ...{"width":1440,"height":900} },
+  "share-dialog": { src: picture35, ...{"width":608,"height":361} },
+  "share-editing": { src: picture36, ...{"width":1200,"height":420} },
+  "share-move-confirm": { src: picture37, ...{"width":496,"height":216} },
+  "share-person-page": { src: picture38, ...{"width":1200,"height":560} },
+  "share-shared-view": { src: picture39, ...{"width":1200,"height":360} },
+  "share-turn-off-link": { src: picture40, ...{"width":608,"height":405} },
+  "sign-in": { src: picture41, ...{"width":1440,"height":900} },
+  "start-here-install-preferences": { src: picture42, ...{"width":416,"height":130} },
+  "trash-delete-album": { src: picture43, ...{"width":496,"height":248} },
+  "trash-view": { src: picture44, ...{"width":1184,"height":176} },
+  "workspace": { src: picture45, ...{"width":1440,"height":900} },
 } as const;
 
 export type HelpPictureName = keyof typeof helpPictures;

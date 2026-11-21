@@ -54,7 +54,7 @@ function OnThisPage({ page }: { page: HelpPage }) {
   return (
     <nav
       aria-label="On this page"
-      className="sticky top-24 hidden w-52 shrink-0 self-start xl:block"
+      className="sticky top-24 hidden w-52 shrink-0 self-start xl:block print:hidden"
     >
       <p className="mb-2 text-small font-medium text-fg-primary">On this page</p>
       <ul className="flex flex-col gap-1.5 text-small">
@@ -129,7 +129,7 @@ export function HelpPageView({ page }: { page: HelpPage }) {
         {related.length > 0 && (
           <section
             aria-labelledby="related"
-            className="mt-6 flex flex-col gap-2.5 border-t border-subtle pt-6"
+            className="mt-6 flex flex-col gap-2.5 border-t border-subtle pt-6 print:hidden"
           >
             <h2
               id="related"
@@ -153,7 +153,10 @@ export function HelpPageView({ page }: { page: HelpPage }) {
           </section>
         )}
         {(previous ?? next) && (
-          <nav aria-label="Previous and next" className="mt-2 grid gap-3 sm:grid-cols-2">
+          <nav
+            aria-label="Previous and next"
+            className="mt-2 grid gap-3 sm:grid-cols-2 print:hidden"
+          >
             {previous && <PageLink page={previous} direction="previous" />}
             {next && <PageLink page={next} direction="next" />}
           </nav>

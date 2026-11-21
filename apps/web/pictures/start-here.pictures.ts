@@ -47,3 +47,11 @@ test("a list on a phone", async ({ browser }) => {
   await visit(page, `/l/${idOf(found, "Late night")}`);
   await shot(page, "phone-list");
 });
+
+test("how to install, in Settings → Preferences", async ({ browser }) => {
+  const page = await open(browser, "owner");
+  await page.setViewportSize({ width: 1440, height: 1400 });
+  await visit(page, "/settings/preferences");
+  const app = page.getByRole("region", { name: "App" });
+  await shot(page, "start-here-install-preferences", { of: app, pad: 16 });
+});

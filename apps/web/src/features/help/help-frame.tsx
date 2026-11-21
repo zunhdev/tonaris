@@ -78,7 +78,7 @@ export function HelpFrame({
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-10 border-b border-subtle bg-app/85 backdrop-blur-md">
+      <header className="sticky top-0 z-10 border-b border-subtle bg-app/85 backdrop-blur-md print:hidden">
         <div className="mx-auto flex h-14 max-w-[80rem] items-center gap-3 px-4 md:h-16 md:px-6">
           <Link to="/welcome" aria-label="Tonaris, what it is" className="rounded-md focus-ring">
             <Wordmark />
@@ -99,7 +99,7 @@ export function HelpFrame({
       </header>
       <div className="mx-auto flex max-w-[80rem]">
         {contents && (
-          <aside className="sticky top-16 hidden max-h-[calc(100dvh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-subtle py-6 pr-3 pl-4 md:block">
+          <aside className="sticky top-16 hidden max-h-[calc(100dvh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-subtle py-6 pr-3 pl-4 md:block print:hidden">
             <HelpNav current={current} />
           </aside>
         )}
@@ -110,7 +110,7 @@ export function HelpFrame({
           {aside}
         </div>
       </div>
-      <footer className="border-t border-subtle">
+      <footer className="border-t border-subtle print:hidden">
         <div className="mx-auto flex max-w-[80rem] flex-wrap items-center justify-between gap-4 px-4 py-6 text-small text-fg-tertiary md:px-6">
           <Wordmark className="text-fg-secondary" />
           <p className="flex gap-3">

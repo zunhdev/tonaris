@@ -1,0 +1,68 @@
+---
+title: Limits
+summary: Each account has limits, such as how many albums it can keep. At a limit, only the new thing is refused, and everything else keeps working.
+order: 3
+keywords: [maximum, quota, cap, how many, too many, storage, capacity, rate limit, full, space]
+related: [trash/get-it-back, account/export]
+---
+
+The limits are high, and most collections never reach one. They keep Tonaris quick for everyone.
+
+## Your collection
+
+| What                                                         | Limit                          |
+| ------------------------------------------------------------ | ------------------------------ |
+| Albums, Trash included                                       | <Limit of="albums" />          |
+| Folders and lists together, Trash included                   | <Limit of="containers" />      |
+| Levels of folders inside folders                             | 32                             |
+| Places in lists: each time an album is in a list counts once | <Limit of="memberships" />     |
+| Custom fields                                                | <Limit of="fields" />          |
+| Options in one choice field                                  | <Limit of="fieldOptions" />    |
+| Folders and lists you keep in **Shared with me** from links  | <Limit of="savedReferences" /> |
+| Favorite albums on your profile                              | <Limit of="favorites" />       |
+
+An invitation you accept always fits in **Shared with me**, even past its limit.
+
+## Text
+
+| What                                 | Characters, at most              |
+| ------------------------------------ | -------------------------------- |
+| An album's title, or its artist      | 1,000                            |
+| A folder, list, field or option name | <Limit of="nameLength" />        |
+| A folder's or list's description     | <Limit of="descriptionLength" /> |
+| A text field's value on an album     | <Limit of="textValueLength" />   |
+| Your About text                      | <Limit of="aboutLength" />       |
+
+## How much at a time
+
+| What                                                        | Limit                          |
+| ----------------------------------------------------------- | ------------------------------ |
+| Albums added from links in one hour, by you or your agents  | <Limit of="capturesPerHour" /> |
+| Downloads of your data in one hour                          | <Limit of="exportsPerHour" />  |
+| Links pasted at once, or items in one request from an agent | <Limit of="batch" />           |
+
+Trash keeps what you delete for 30 days.
+
+## At a limit
+
+Only the new thing is refused, with a message that says why and what to do. Everything else keeps working: you can still open, edit, move, remove and share.
+
+- **At the album limit,** a new album is refused. Getting an album back from Trash still works, and so does adding a link to an album you already have, since neither needs a new place.
+- **At the hourly limit on links,** you can still add albums by hand, or try again later.
+
+What people add to a folder or list they can edit for you counts toward your limits, as it's in your collection.
+
+## Trash counts
+
+Albums, folders and lists in Trash count until they're deleted for good, by you or after 30 days. To make room now, [delete them from Trash](/help/trash/get-it-back) on a computer. Taking an album out of a list frees nothing: the album is still in your collection.
+
+## See your usage
+
+In **Settings**, then **Data**, **Usage** shows how many albums you have of the limit, how many of them are in Trash, and a bar for both. To get there, choose your name at the top of the sidebar, then **Settings**, or press <Keys k="G" /> then <Keys k="S" />. Then choose **Data**.
+
+<Picture
+  name="reference-usage"
+  alt="Usage in Settings: a line with the number of albums used of the limit and how many are in Trash, and a bar split between the two."
+/>
+
+When you're close to the album limit, **Add albums** shows how many you've used, with links to Trash and to your usage.
