@@ -33,13 +33,6 @@ const otherPages = new Set(["", "recovery", "search"]);
  * until TON-315. Each is taken off as it's written, and TON-313 empties the list.
  */
 const plannedPages = new Set([
-  "share/ways-to-share",
-  "share/share-a-folder-or-list",
-  "share/change-or-stop",
-  "share/move-or-delete-shared",
-  "share/shared-with-you",
-  "share/editing-a-share",
-  "share/people",
   "trash/remove-delete-undo",
   "trash/get-it-back",
   "agents/what-agents-do",
