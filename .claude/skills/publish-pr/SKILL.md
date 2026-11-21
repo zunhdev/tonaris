@@ -20,6 +20,7 @@ CI doesn't run the tests (they're too costly on the free plan), so the local run
 2. `bun run check`: format, lint, types, workspace and reference checks, specs, migrations, OpenAPI, unit and browser tests. It needs the local Postgres and Mailpit.
 3. `bun run build`, when `apps/` or `packages/` changed. A new workspace package that the web app imports also needs a line in `apps/web/Dockerfile`.
 4. Feature and Design issues: the OpenSpec change is archived as the PR's last commit (the `openspec-archive-change` skill). Then run `bun run check:specs >/dev/null 2>&1 && echo OK || echo FAIL` with the exit code visible. Bug, Chore and Spike issues have no OpenSpec change.
+5. Help (FR-16): when the change alters what people see or do, the Help pages that describe it are updated in this PR. Find them with `grep -rli "<the feature's words>" apps/web/src/help/content`. When it changes a screen a Help picture shows, take the pictures again with `bun run pictures` and look at the ones that changed. A Bug fix that makes the app match its Help page needs neither. `bun run check` already fails on a link between pages, or from the app, that points nowhere.
 
 **Done when** all of them pass. Report a failure; never push past one.
 

@@ -2218,6 +2218,7 @@ The "Protect main" ruleset requires **Static checks**, and requires **Tests** ag
 - **Lifecycle:** `openspec-propose` → `openspec-apply-change` → review → `openspec-archive-change` as the PR's last commit → merge.
   - Archiving moves the change to `openspec/changes/archive/` and merges its deltas into `openspec/specs/`.
   - Because the archive is part of the same PR, `main` never holds a half-finished change.
+- **Help stays current (FR-16, TON-316):** a change's proposal names the Help pages and pictures it affects, and its tasks update them in the same PR, retaking pictures with `bun run pictures`. The publish-pr skill checks it before pushing, and the drift audit reads Help's pages against the app. Links between Help's pages, and from the app into Help, are checked by `bun run check` (TS-136).
 - **Do not bulk-convert the PRD.** OpenSpec's guidance is that this produces stale specs. Capabilities grow change by change, and each requirement names its source FR ID.
 - **Tooling:**
   - The CLI is a root devDependency pinned exactly (`@fission-ai/openspec`, TS-07). `bun run check:specs` runs `openspec validate --all --strict`.

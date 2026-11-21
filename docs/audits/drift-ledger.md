@@ -26,6 +26,7 @@ One area gets a full read per audit, the one read longest ago.
 | Design system | `packages/ui/src` | 2026-11-13 |
 | Tooling | `tooling/src` | 2026-11-13 |
 | Specs | `docs/`, `openspec/specs/` | 2026-11-13 |
+| Help | `apps/web/src/help` (pages and pictures, against the app) | never |
 
 ## Findings
 
