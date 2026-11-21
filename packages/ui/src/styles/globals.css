@@ -84,6 +84,12 @@
   }
 }
 
+/* Words a Help search found, marked on the page it opened (DS-122): the accent at 30%, as in the search's snippets. */
+::highlight(help-search) {
+  background-color: color-mix(in oklch, var(--accent-solid) 30%, transparent);
+  color: var(--fg-primary);
+}
+
 /* A pending save's marker shows only after 300ms (DS-80); it then appears without motion. */
 @keyframes save-state-appear {
   to {
