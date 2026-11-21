@@ -14,6 +14,7 @@ import { useShell } from "@/common/shell-context";
 import { count as counted } from "@/common/words";
 import { useCapture } from "@/features/capture/capture-context";
 import { CaptureRows } from "@/features/capture/capture-rows";
+import { LearnMore } from "@/features/help/links";
 import { CopyShareButton } from "@/features/sharing/copy-share";
 import { OwnerPill } from "@/features/sharing/owner-pill";
 import { PhoneShared } from "@/features/sharing/phone-shared";
@@ -503,6 +504,7 @@ export function RootView() {
               <Link to="/settings/connections" className={buttonVariants({ variant: "ghost" })}>
                 Connect an AI assistant
               </Link>
+              <LearnMore page="start-here/your-first-ten-minutes" about="getting started" />
             </div>
           }
         />

@@ -2,10 +2,11 @@
 // workspace as it looks, How it works in four steps, What sets it apart, On your phone, and Sign in. Direction 1, "in
 // the app's clothes", that the creator chose: the app's dark tokens, larger type (DS-13's landing sizes), and pictures
 // drawn from the app's parts with invented albums (pictures.tsx). Rendered on the server and static; once the browser
-// knows the visitor is signed in, its Sign in buttons become Open Tonaris, to their collection (TON-185).
+// knows the visitor is signed in, its Sign in buttons become Open Tonaris, to their collection (TON-185). Help sits
+// in the header and the footer (TON-315).
 
 import { useSignedIn } from "@/features/account/session";
-import { LegalLinks } from "@/features/legal/legal-page";
+import { FooterLinks } from "@/features/legal/legal-page";
 import { Link } from "@tanstack/react-router";
 import { Bot, ChevronDown, Download, FolderTree, Share2, Zap, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -82,7 +83,7 @@ export function LandingPage() {
             Album details from MusicBrainz and the Cover Art Archive. The albums on this page are
             invented.
           </p>
-          <LegalLinks />
+          <FooterLinks />
         </div>
       </footer>
     </div>
@@ -110,6 +111,10 @@ function Header({ signedIn }: { signedIn: boolean }) {
               On your phone
             </a>
           </span>
+          {/* On a phone too: Help is the one way in besides Sign in (TON-315). */}
+          <Link to="/help" className={section}>
+            Help
+          </Link>
           <EntryLink
             signedIn={signedIn}
             className={buttonVariants({ size: "lg", className: "h-11 px-4 md:h-9 md:px-3.5" })}

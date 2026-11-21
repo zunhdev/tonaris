@@ -8,6 +8,7 @@
 // The count of changes needing review keeps failures and conflicts in view once their toasts are closed (DS-02).
 
 import { needsPerson, type BatchReport, type SaveState } from "@/client/sync/save-states";
+import { LearnMore } from "@/features/help/links";
 import { CloudOff, CloudSync, History, LoaderCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -180,6 +181,11 @@ function Activity({
             ),
           )}
         </ul>
+      )}
+      {entries.length > 0 && (
+        <p className="mt-2 text-small text-fg-secondary">
+          <LearnMore page="saving/when-an-edit-doesnt-save" about="changes that weren't saved" />
+        </p>
       )}
     </>
   );

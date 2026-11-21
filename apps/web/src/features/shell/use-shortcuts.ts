@@ -27,6 +27,7 @@ import { useDeleteContainer } from "@/features/collection/delete-containers";
 import { useInspector } from "@/features/collection/inspector-state";
 import { sharingRefusal, useCollectionPlace } from "@/features/collection/place";
 import { useRemoveFromList } from "@/features/collection/remove-from-list";
+import { openHelp } from "@/features/help/links";
 import { useOpenIn } from "@/features/open/open-in";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
 import { useRecover } from "@/features/trash/recovery";
@@ -217,6 +218,8 @@ export function useCommandRunner({
       if (to) void now.navigate({ to });
       else if (id === "toggle-sidebar") now.toggleSidebar();
       else if (id === "shortcuts") now.openShortcuts();
+      // In a new tab, so the workspace keeps its place (TON-315).
+      else if (id === "help") openHelp();
       // Choosing how a view looks isn't an edit, so it works offline (X-04).
       else if (id === "view-options") now.ui.openViewOptions();
       else if (id === "move-to-position") {

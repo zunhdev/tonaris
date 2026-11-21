@@ -10,7 +10,8 @@
 // option is always rendered, for `aria-activedescendant`. Built only while open. What others share with the person
 // comes from the server's search instead (FR-12.3; decided with the creator, 29 October 2026), 150 ms after typing
 // stops, while online: a "Shared with me" group after Albums, each result "Shared by {name}" with the path it can be
-// seen by, opening in the viewer page. "No results" waits for its answer.
+// seen by, opening in the viewer page. "No results" waits for its answer. Last, "Search help for '…'" opens Help's
+// results for the same words in a new tab (TON-315).
 
 // The combobox pattern's listbox, groups and options are plain elements with ARIA roles: virtualized rows are
 // absolutely positioned, which a native `select` and its options can't be.
@@ -38,10 +39,11 @@ import { useCollectionData } from "@/features/collection/data";
 import { ContainerIcon } from "@/features/collection/icons";
 import { chronology } from "@/features/collection/order";
 import { shareLocation } from "@/features/collection/place";
+import { helpSearchAddress } from "@/features/help/links";
 import { useConnection } from "@/features/sync/sync-provider";
 import { useNavigate } from "@tanstack/react-router";
 import { defaultRangeExtractor, useVirtualizer } from "@tanstack/react-virtual";
-import { CornerDownLeft, Search } from "lucide-react";
+import { CircleHelp, CornerDownLeft, Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -86,7 +88,15 @@ const groupLimit = 8;
 /** How many recent items an empty palette shows. */
 const recentShown = 8;
 
-type Group = "recent" | "folders" | "lists" | "albums" | "shared" | "commands" | "frequent";
+type Group =
+  | "recent"
+  | "folders"
+  | "lists"
+  | "albums"
+  | "shared"
+  | "commands"
+  | "frequent"
+  | "help";
 
 /** A command as the palette shows it: its label now, and why it can't run, if it can't. */
 type CommandRow = { command: Command; label: string; blocked: string | undefined };
@@ -98,6 +108,7 @@ type Row =
   | { type: "shared-container"; group: Group; item: SharedSearchContainer }
   | { type: "shared-album"; group: Group; item: SharedSearchAlbum }
   | ({ type: "command"; group: Group } & CommandRow)
+  | { type: "help"; group: Group; text: string }
   | { type: "more"; group: Group; total: number };
 
 type Section = {
@@ -115,6 +126,7 @@ const heights: Record<Row["type"], number> = {
   "shared-container": 36,
   "shared-album": 48,
   command: 36,
+  help: 36,
   more: 32,
 };
 
@@ -365,6 +377,7 @@ function PaletteBody({
         title: "Commands",
         items: matchCommands(commandRows, text).map(toCommand("commands")),
       },
+      { group: "help", title: "Help", items: [{ type: "help", group: "help", text: text.trim() }] },
     ];
   }, [
     commandMode,
@@ -424,6 +437,12 @@ function PaletteBody({
       setExpanded((current) => new Set([...current, row.group]));
       return;
     }
+    if (row.type === "help") {
+      // Help's results for the same words, in a new tab, so the workspace keeps its place (TON-315).
+      window.open(helpSearchAddress(row.text), "_blank", "noopener");
+      close();
+      return;
+    }
     if (row.type === "command") {
       // A command that can't run stays put, saying why.
       if (row.blocked !== undefined) return;
@@ -472,7 +491,14 @@ function PaletteBody({
     }
   };
 
-  const total = blank ? 0 : sections.reduce((sum, section) => sum + section.items.length, 0);
+  // What was found, without the way to search Help for it.
+  const total = blank
+    ? 0
+    : sections.reduce(
+        (sum, section) => sum + (section.group === "help" ? 0 : section.items.length),
+        0,
+      );
+  const nothing = rows.length === 0 || (!blank && !commandMode && total === 0);
   const listboxId = `${id}-results`;
   const virtualRows = virtualizer.getVirtualItems();
   const shownGroups = sections.filter((section) => section.items.length > 0);
@@ -507,6 +533,15 @@ function PaletteBody({
           className="h-9 pl-8"
         />
       </div>
+      {nothing && (
+        <p className="px-4 py-6 text-center text-fg-tertiary">
+          {commandMode
+            ? `No commands match '${text.trim()}'.`
+            : found.settled
+              ? `No results for '${query.trim()}'.`
+              : "Searching…"}
+        </p>
+      )}
       <div
         ref={scroller}
         id={listboxId}
@@ -544,15 +579,6 @@ function PaletteBody({
           ))}
         </div>
       </div>
-      {rows.length === 0 && (
-        <p className="px-4 py-6 text-center text-fg-tertiary">
-          {commandMode
-            ? `No commands match '${text.trim()}'.`
-            : found.settled
-              ? `No results for '${query.trim()}'.`
-              : "Searching…"}
-        </p>
-      )}
       {found.offline && !commandMode && !blank && (
         <p className="border-t border-subtle px-4 py-2 text-small text-fg-tertiary">
           Shared content isn't searched while offline.
@@ -618,6 +644,18 @@ function ResultRow({
     return (
       <div {...optionProps} className={cn(optionProps.className, "text-fg-secondary")}>
         Show all {row.total}
+      </div>
+    );
+  }
+  if (row.type === "help") {
+    return (
+      <div {...optionProps}>
+        <span className="text-fg-secondary">
+          <CircleHelp strokeWidth={1.5} aria-hidden className="size-4" />
+        </span>
+        <span className="min-w-0 flex-1 truncate text-fg-primary">
+          Search help for '{row.text}'<span className="sr-only">, in a new tab</span>
+        </span>
       </div>
     );
   }

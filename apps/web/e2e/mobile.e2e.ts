@@ -93,6 +93,7 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
   const items = page.getByRole("menu").getByRole("menuitem");
   await expect(items).toHaveText([
     "Settings",
+    "Help",
     "Feedback and ideas",
     "Terms of use",
     "Privacy notice",
@@ -103,7 +104,7 @@ test("a phone browses by drilling down, and opens an album in a sheet", async ({
     Promise.all((await items.all()).map(async (item) => (await item.boundingBox())!));
   await expect
     .poll(async () => (await boxes()).map((box) => Math.round(box.height)))
-    .toEqual([44, 44, 44, 44, 44]);
+    .toEqual([44, 44, 44, 44, 44, 44]);
   const width = page.viewportSize()?.width ?? 0;
   for (const box of await boxes()) expect(box.x + box.width).toBeLessThanOrEqual(width);
   // One line of `text.base` (22 px), not two.

@@ -11,6 +11,7 @@ import { PageHeader, toCollection } from "@/common/page-header";
 import { pageScroll } from "@/common/page-scroll";
 import { count } from "@/common/words";
 import { useCollectionData } from "@/features/collection/data";
+import { LearnMore } from "@/features/help/links";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useNotify } from "@/features/sync/notify";
 import { useSyncClient } from "@/features/sync/sync-provider";
@@ -205,7 +206,8 @@ export function TrashView() {
       />
       {units.isReady && all.length === 0 ? (
         <p className="p-8 text-center text-fg-secondary">
-          Nothing in Trash. Deleted items stay here for 30 days.
+          Nothing in Trash. Deleted items stay here for 30 days.{" "}
+          <LearnMore page="trash/get-it-back" about="Trash" />
         </p>
       ) : shown.length === 0 ? (
         <p className="p-8 text-center text-fg-secondary">Nothing in Trash matches '{filter}'.</p>

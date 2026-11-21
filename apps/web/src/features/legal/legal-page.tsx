@@ -23,8 +23,8 @@ export async function loadSupport(): Promise<{ support: string | undefined }> {
   }
 }
 
-/** "Terms · Privacy", under the sign-in card, on shared pages and on the agreement screen. */
-export function LegalLinks() {
+/** "Terms · Privacy · Help", under the sign-in card, on shared pages and in the landing page's footer (TON-315). */
+export function FooterLinks() {
   return (
     <p className="text-small text-fg-secondary">
       <Link to="/terms" className={linkClass}>
@@ -33,6 +33,10 @@ export function LegalLinks() {
       {" · "}
       <Link to="/privacy" className={linkClass}>
         Privacy
+      </Link>
+      {" · "}
+      <Link to="/help" className={linkClass}>
+        Help
       </Link>
     </p>
   );

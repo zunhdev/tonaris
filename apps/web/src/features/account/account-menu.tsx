@@ -1,8 +1,9 @@
 // The account menu at the top of the sidebar (DS-31): a round avatar (TON-169) and the display name, or the email until
 // there is one.
 // **Settings** leads to Settings → Preferences, the first settings page built (DS-92); **Admin**, for the creator
-// only, to Admin → Admissions (DS-100); **Keyboard shortcuts** opens the reference (DS-78); and **Feedback and
-// ideas** opens the feedback board, when there is one, already signed in (FR-11.15). Signing out deletes
+// only, to Admin → Admissions (DS-100); **Keyboard shortcuts** opens the reference (DS-78); **Help** opens Help in a
+// new tab, so the workspace keeps its place (TON-315); and **Feedback and ideas** opens the feedback board, when
+// there is one, already signed in (FR-11.15). Signing out deletes
 // what this browser keeps for the account: unsent changes and conflicts waiting for review. With changes still
 // unsent, it asks first (decided 22 October 2026). On a phone it is the top bar's Account button, its avatar alone, without Admin or
 // the shortcuts, which a phone doesn't have, and with 44 px items (DS-110).
@@ -10,10 +11,12 @@
 import { clearBrowserCopy, unsentInShares } from "@/client/sync/persistence";
 import { useShell } from "@/common/shell-context";
 import { feedbackUrl } from "@/config";
+import { openHelp } from "@/features/help/links";
 import { useOwnSyncClient } from "@/features/sync/sync-provider";
 import { useRouter } from "@tanstack/react-router";
 import {
   ChevronsUpDown,
+  CircleHelp,
   FileText,
   Keyboard,
   LogOut,
@@ -142,6 +145,10 @@ export function AccountMenu({
               Keyboard shortcuts
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem onClick={() => openHelp()}>
+            <CircleHelp strokeWidth={1.5} aria-hidden />
+            Help
+          </DropdownMenuItem>
           {/* The feedback board, signed in through Tonaris (FR-11.15, TON-144), on phones too; only when there is one. */}
           {feedbackUrl && (
             <DropdownMenuItem onClick={() => window.open(feedbackUrl, "_blank", "noopener")}>

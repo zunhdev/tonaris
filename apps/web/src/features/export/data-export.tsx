@@ -4,6 +4,7 @@
 // FR-08.1 asks.
 
 import { useNarrowScreen } from "@/common/media";
+import { LearnMore } from "@/features/help/links";
 import { useId } from "react";
 
 import { Button } from "@tonaris/ui/components/button";
@@ -90,7 +91,8 @@ export function DataExport() {
       </h2>
       <p className="text-fg-secondary">
         A ZIP with a JSON file (complete, for programs and AI tools), a Markdown file (readable
-        outline of your collection) and a README.
+        outline of your collection) and a README.{" "}
+        <LearnMore page="account/export" about="exports" />
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">

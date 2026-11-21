@@ -13,7 +13,7 @@ import { effectiveColor } from "@/features/collection/container-palette";
 import { DescriptionText } from "@/features/collection/description-text";
 import { sections, sortAlbums, sortContainers } from "@/features/collection/order";
 import { ancestorsOf, buildTree } from "@/features/collection/tree";
-import { LegalLinks } from "@/features/legal/legal-page";
+import { FooterLinks } from "@/features/legal/legal-page";
 import { ClientOnly, Link } from "@tanstack/react-router";
 import { useCallback, useMemo, type ReactNode } from "react";
 
@@ -69,7 +69,7 @@ function GuestFrame({ children }: { children: ReactNode }) {
         >
           Sign in
         </a>
-        <LegalLinks />
+        <FooterLinks />
       </footer>
     </div>
   );

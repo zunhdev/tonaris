@@ -193,6 +193,8 @@ export const accounts = {
   // The search palette (search.e2e.ts), one per test.
   searchResults: at("search-results"),
   searchOpening: at("search-opening"),
+  // The ways into Help from inside the app (help-ways-in.e2e.ts, TON-315).
+  helpWaysIn: at("help-ways-in"),
   // Palette commands (palette-commands.e2e.ts), one per test.
   paletteCommands: at("palette-commands"),
   paletteRecent: at("palette-recent"),

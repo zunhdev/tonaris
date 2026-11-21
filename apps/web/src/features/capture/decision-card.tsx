@@ -7,6 +7,7 @@
 import type { SaveState } from "@/client/sync/save-states";
 import { cellText } from "@/features/collection/album-edit";
 import { useCollectionData } from "@/features/collection/data";
+import { LearnMore } from "@/features/help/links";
 import { useAnnounce } from "@/features/sync/announcer";
 import { useSaveActions } from "@/features/sync/save-actions";
 import { useConnection, useSyncClient } from "@/features/sync/sync-provider";
@@ -91,6 +92,12 @@ export function DecisionCard({
         <Button size="sm" variant="ghost" onClick={() => setFolded(true)}>
           Decide later
         </Button>
+        <LearnMore
+          page="add-albums/choose-a-match"
+          anchor="choose-among-several-albums"
+          about="choosing the album"
+          className="self-center text-small"
+        />
       </div>
     </section>
   );
