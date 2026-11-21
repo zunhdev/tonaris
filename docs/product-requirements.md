@@ -903,6 +903,14 @@ Restoring or re-adding an album reuses its slot, even at capacity.
 
 **FR-15.5 Operating budget.** The creator sets the monthly operating budget and chooses hosting. The specs don't estimate or plan costs; FR-15.1–FR-15.4 keep usage bounded.
 
+### FR-16 — Help
+
+**FR-16.1 Help pages.** Public pages at `/help` explain every workflow of the app to the people who use it, before and after they sign in (decided 21 November 2026, P-TON-58). They are organized by what people want to do, not by how the app is built; each page answers one question, answer first, in the app's own words and in plain English, and closes with related pages. The creator's admin pages are left out. Help is in English only.
+
+**FR-16.2 Keys.** Every step that has a key names it beside the mouse action, as the reader's computer labels it, and a keyboard shortcuts page lists every key (the creator, 21 November 2026). Help itself works by keyboard alone.
+
+**FR-16.3 Pictures.** Help's pictures show the app as it looks, with invented albums only: no real album's name or artwork appears (as on the landing page).
+
 ## 6. Quality requirements
 
 **Q-01 Performance.** Interactions are fast and modern, in the style of Linear's optimistic updates: immediate feedback, visible pending saves, accurate outcomes, and preserved input and saved state on failure.
@@ -1210,6 +1218,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (18 November 2026), your profile** (P-TON-57, TON-296): a person may choose their avatar's color, Automatic or one of 12 hues, and write a plain About text of up to 160 characters, in Settings → Profile. The avatar joins owners' names everywhere, guest pages included. The About text shows only to the person's people from their side, on their page in People and in a card from the "Shared by" pill; it stays out of exports and MCP. The privacy notice says so. **Added** FR-11.16; **updated** FR-11.13 and FR-08.4.
 - **Decision (18 November 2026), favorite albums** (P-TON-57, TON-297): a person picks up to four of their own albums in Settings → Profile, found by typing, and orders them. Their people see them on the person's page in People, by cover, title and artist only, with no year or service links, and not in the Shared by card (the creator's choices over my recommendations). A favorite in Trash is hidden until restored. **Updated** FR-11.16 and FR-08.4.
 - **Decision (19 November 2026), folder and list icons** (TON-306), from the creator's idea and a to-scale mock of their genre folders: owners give folders and lists an icon from a fixed set, in place of the folder or list symbol; it is not passed to what's inside; viewers of a share see it, agents can set it, and exports carry it. **Added** FR-01.20; **updated** FR-10.4.
+- **Decision (21 November 2026), Help** (P-TON-58, TON-307), before the closed beta ends: public Help pages at `/help`, built into the web app, organized by what people want to do, with pictures of an invented collection. Search and keyboard get special attention: every step names its key, and a shortcuts page lists them all. **Added** FR-16.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;

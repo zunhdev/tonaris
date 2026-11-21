@@ -3,11 +3,20 @@
   "compilerOptions": {
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
-    "types": ["vite/client", "bun"],
+    "types": ["vite/client", "bun", "mdx"],
     "paths": {
       "@/*": ["./src/*"],
       "@tonaris/ui/*": ["../../packages/ui/src/*"]
     }
   },
-  "include": ["src", "e2e", "perf", "pictures", "*.config.ts", "server.ts", "wait-for-api.ts"]
+  "include": [
+    "src",
+    "e2e",
+    "perf",
+    "pictures",
+    "*.config.ts",
+    "server.ts",
+    "wait-for-api.ts",
+    "scripts/help-pages.ts"
+  ]
 }

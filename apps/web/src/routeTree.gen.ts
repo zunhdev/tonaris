@@ -22,6 +22,8 @@ import { Route as WorkspaceCRouteImport } from './routes/_workspace/c'
 import { Route as WorkspaceTrashRouteImport } from './routes/_workspace/trash'
 import { Route as WorkspaceUnsortedRouteImport } from './routes/_workspace/unsorted'
 import { Route as ApprovalsIdRouteImport } from './routes/approvals.$id'
+import { Route as HelpIndexRouteImport } from './routes/help.index'
+import { Route as HelpSplatRouteImport } from './routes/help.$'
 import { Route as HelpRecoveryRouteImport } from './routes/help.recovery'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
@@ -109,6 +111,16 @@ const WorkspaceUnsortedRoute = WorkspaceUnsortedRouteImport.update({
 const ApprovalsIdRoute = ApprovalsIdRouteImport.update({
   id: '/approvals/$id',
   path: '/approvals/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpIndexRoute = HelpIndexRouteImport.update({
+  id: '/help/',
+  path: '/help/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpSplatRoute = HelpSplatRouteImport.update({
+  id: '/help/$',
+  path: '/help/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRecoveryRoute = HelpRecoveryRouteImport.update({
@@ -264,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/help/$': typeof HelpSplatRoute
   '/help/recovery': typeof HelpRecoveryRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
@@ -271,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/recover/$token': typeof RecoverTokenRoute
   '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
+  '/help/': typeof HelpIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
@@ -301,6 +315,7 @@ export interface FileRoutesByTo {
   '/trash': typeof WorkspaceTrashRoute
   '/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/help/$': typeof HelpSplatRoute
   '/help/recovery': typeof HelpRecoveryRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
@@ -308,6 +323,7 @@ export interface FileRoutesByTo {
   '/recover/$token': typeof RecoverTokenRoute
   '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
+  '/help': typeof HelpIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/f/$folderId': typeof WorkspaceFFolderIdRoute
@@ -342,6 +358,7 @@ export interface FileRoutesById {
   '/_workspace/trash': typeof WorkspaceTrashRoute
   '/_workspace/unsorted': typeof WorkspaceUnsortedRoute
   '/approvals/$id': typeof ApprovalsIdRoute
+  '/help/$': typeof HelpSplatRoute
   '/help/recovery': typeof HelpRecoveryRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
@@ -350,6 +367,7 @@ export interface FileRoutesById {
   '/s/$token': typeof STokenRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/_workspace/': typeof WorkspaceIndexRoute
+  '/help/': typeof HelpIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/_workspace/a/$albumId': typeof WorkspaceAAlbumIdRoute
   '/_workspace/f/$folderId': typeof WorkspaceFFolderIdRoute
@@ -383,6 +401,7 @@ export interface FileRouteTypes {
     | '/trash'
     | '/unsorted'
     | '/approvals/$id'
+    | '/help/$'
     | '/help/recovery'
     | '/join/$token'
     | '/oauth/authorize'
@@ -390,6 +409,7 @@ export interface FileRouteTypes {
     | '/recover/$token'
     | '/s/$token'
     | '/sign-in/verify'
+    | '/help/'
     | '/sign-in/'
     | '/a/$albumId'
     | '/f/$folderId'
@@ -420,6 +440,7 @@ export interface FileRouteTypes {
     | '/trash'
     | '/unsorted'
     | '/approvals/$id'
+    | '/help/$'
     | '/help/recovery'
     | '/join/$token'
     | '/oauth/authorize'
@@ -427,6 +448,7 @@ export interface FileRouteTypes {
     | '/recover/$token'
     | '/s/$token'
     | '/sign-in/verify'
+    | '/help'
     | '/sign-in'
     | '/a/$albumId'
     | '/f/$folderId'
@@ -460,6 +482,7 @@ export interface FileRouteTypes {
     | '/_workspace/trash'
     | '/_workspace/unsorted'
     | '/approvals/$id'
+    | '/help/$'
     | '/help/recovery'
     | '/join/$token'
     | '/oauth/authorize'
@@ -468,6 +491,7 @@ export interface FileRouteTypes {
     | '/s/$token'
     | '/sign-in/verify'
     | '/_workspace/'
+    | '/help/'
     | '/sign-in/'
     | '/_workspace/a/$albumId'
     | '/_workspace/f/$folderId'
@@ -497,12 +521,14 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WelcomeRoute: typeof WelcomeRoute
   ApprovalsIdRoute: typeof ApprovalsIdRoute
+  HelpSplatRoute: typeof HelpSplatRoute
   HelpRecoveryRoute: typeof HelpRecoveryRoute
   JoinTokenRoute: typeof JoinTokenRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthConsentRoute: typeof OauthConsentRoute
   RecoverTokenRoute: typeof RecoverTokenRoute
   STokenRoute: typeof STokenRoute
+  HelpIndexRoute: typeof HelpIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -596,6 +622,20 @@ declare module '@tanstack/react-router' {
       path: '/approvals/$id'
       fullPath: '/approvals/$id'
       preLoaderRoute: typeof ApprovalsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/': {
+      id: '/help/'
+      path: '/help'
+      fullPath: '/help/'
+      preLoaderRoute: typeof HelpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/$': {
+      id: '/help/$'
+      path: '/help/$'
+      fullPath: '/help/$'
+      preLoaderRoute: typeof HelpSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help/recovery': {
@@ -884,12 +924,14 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WelcomeRoute: WelcomeRoute,
   ApprovalsIdRoute: ApprovalsIdRoute,
+  HelpSplatRoute: HelpSplatRoute,
   HelpRecoveryRoute: HelpRecoveryRoute,
   JoinTokenRoute: JoinTokenRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthConsentRoute: OauthConsentRoute,
   RecoverTokenRoute: RecoverTokenRoute,
   STokenRoute: STokenRoute,
+  HelpIndexRoute: HelpIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
