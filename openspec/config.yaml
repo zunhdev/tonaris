@@ -17,8 +17,10 @@ rules:
   proposal:
     - Only Linear Feature and Design issues get a change; chores, spikes and bugs have none (TS-132).
     - Name the Linear issue and the FR rule IDs implemented.
+    - "In Impact, name the Help pages (`apps/web/src/help/content`) whose steps, labels, keys or limits the change alters, and the Help pictures of screens it changes; or say none are (FR-16, TON-316)."
     - "Add `x-linear: TON-<n>` to the change's .openspec.yaml. Use exactly that key; OpenSpec ignores `x-` keys, but any other unknown key fails `openspec validate --strict`."
   specs:
     - One requirement per FR rule touched; put the FR ID in the requirement text; scenarios mirror AC checks.
   tasks:
     - Include tests (unit/integration/e2e or MCP contract) for every requirement scenario.
+    - "Add a task to update the Help pages the proposal names, and, when it names pictures, one to take them again with `bun run pictures` (FR-16, TON-316)."
