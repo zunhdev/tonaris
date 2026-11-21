@@ -1,4 +1,4 @@
-// Help's page list (TS-136): reads every page under src/help/content/<section>/<name>.mdx and every picture under
+// Help's page list and search sections (TS-136): reads every page under src/help/content/<section>/<name>.mdx and every picture under
 // src/help/pictures/, checks them, and writes src/help/pages.gen.ts, as TanStack Router writes routeTree.gen.ts. The
 // list gives the sidebar, the home and On this page what they need without loading a page, and the app typed slugs
 // for its links into Help. A broken link between pages, a missing picture or a bad field stops the build.
@@ -11,6 +11,8 @@ import { fileURLToPath } from "node:url";
 import GithubSlugger from "github-slugger";
 import type { Plugin } from "vite";
 
+import { shortcutReference } from "../src/common/shortcuts.ts";
+import { helpLimits, limitText, type HelpLimit } from "../src/help/limits.ts";
 import {
   helpDevices,
   helpSections,
@@ -24,6 +26,7 @@ const helpDir = fileURLToPath(new URL("../src/help", import.meta.url));
 const contentDir = path.join(helpDir, "content");
 const picturesDir = path.join(helpDir, "pictures");
 const outFile = path.join(helpDir, "pages.gen.ts");
+const searchFile = path.join(helpDir, "search.gen.json");
 
 /** Help's pages that live outside content/, which pages may link to. */
 const otherPages = new Set(["", "recovery", "search"]);
@@ -195,12 +198,125 @@ const shownSize = ({ name, width, height }: Picture) => {
   return { width: Math.round(width / scale), height: Math.round(height / scale) };
 };
 
-/** pages.gen.ts as it should be now. */
-export async function generateHelpPages(): Promise<string> {
+/** Names people search keys by, so "ctrl k" finds ⌘ K; the text keeps the keys as shown. */
+const keyNames: Record<string, string> = {
+  "⌘": "cmd command ctrl control",
+  "⌥": "option alt",
+  "⇧": "shift",
+  "⌫": "delete backspace",
+  "↑": "up arrow",
+  "↓": "down arrow",
+  "←": "left arrow",
+  "→": "right arrow",
+  Esc: "esc escape",
+  "?": "question mark",
+};
+const namesOf = (keys: readonly string[]) => keys.map((key) => keyNames[key] ?? key);
+
+const isLimit = (of: string): of is HelpLimit => of in helpLimits;
+
+/** A part of a page as search reads it: what shows, without Markdown's marks or components' tags, and its keys' names. */
+function plainText(mdx: string): { text: string; keys: string } {
+  const keys: string[] = [];
+  const pressed = (each: readonly string[]) => {
+    keys.push(...namesOf(each));
+    return each.join(" ");
+  };
+  // The keyboard cheatsheet: each action and its keys.
+  const shortcuts = () =>
+    shortcutReference
+      .map(
+        (group) =>
+          `${group.title}. ${group.keys.map((entry) => `${entry.action}: ${pressed(entry.keys)}.`).join(" ")}`,
+      )
+      .join(" ");
+  const text = mdx
+    .replaceAll(/<Keys k="([^"]*)" \/>/g, (_, k: string) => pressed(k.split(" ").filter(Boolean)))
+    .replaceAll(/<Limit of="(\w+)" \/>/g, (_, of: string) => (isLimit(of) ? limitText(of) : ""))
+    .replaceAll(/<Shortcuts \/>/g, shortcuts)
+    .replaceAll(/<Picture[^>]*?caption="([^"]*)"[^>]*\/>/gs, "$1")
+    .replaceAll(/<Picture[^>]*\/>/gs, "")
+    .replaceAll(/<Choice title="([^"]*)">/g, "$1. ")
+    .replaceAll(/<\/?[A-Z][^>]*>/g, " ")
+    .replaceAll(/\{"([^"]*)"\}/g, "$1")
+    .replaceAll(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replaceAll(/\*\*|__|`/g, "")
+    .replaceAll(/(^|[\s(])[*_]([^*_\n]+)[*_]/g, "$1$2")
+    .replaceAll(/^\s*([-*]|\d+\.)\s+/gm, "")
+    .replaceAll(/^\s*\|?[-:| ]+\|?\s*$/gm, "")
+    .replaceAll("|", " ")
+    .replaceAll(/\s+/g, " ")
+    .trim();
+  return { text, keys: [...new Set(keys.join(" ").split(" "))].join(" ") };
+}
+
+type SearchDoc = {
+  id: string;
+  slug: string;
+  page: string;
+  section: string;
+  heading: string;
+  anchor: string;
+  keywords: string;
+  /** The names of the keys the part shows, such as "cmd command ctrl control k". */
+  keys: string;
+  text: string;
+};
+
+/** Every section of every page, for search (TON-314): the page's opening, then each heading's part. */
+function searchDocs(pages: readonly Page[]): SearchDoc[] {
+  const docs: SearchDoc[] = [];
+  for (const page of pages) {
+    const section = helpSections.find((each) => each.id === page.section)?.title ?? "";
+    const slugger = new GithubSlugger();
+    let current = { heading: "", anchor: "", lines: [] as string[] };
+    const parts = [current];
+    let fenced = false;
+    for (const line of page.source.split("\n")) {
+      if (line.startsWith("```")) fenced = !fenced;
+      const match = fenced ? null : /^(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
+      if (match) {
+        const text = headingText(match[2] ?? "");
+        const anchor = slugger.slug(text);
+        // Lower headings stay in their section's text; their words still count there.
+        if ((match[1] ?? "").length <= 2) {
+          current = { heading: text, anchor, lines: [] };
+          parts.push(current);
+          continue;
+        }
+      }
+      current.lines.push(line);
+    }
+    for (const part of parts) {
+      const opening = part.anchor === "";
+      // The page's summary shows under its title, so it opens the page's text.
+      const { text, keys } = plainText(
+        [...(opening ? [page.summary, ""] : []), ...part.lines].join("\n"),
+      );
+      if (!opening && text === "") continue;
+      docs.push({
+        id: opening ? page.slug : `${page.slug}#${part.anchor}`,
+        slug: page.slug,
+        page: page.title,
+        section,
+        heading: part.heading,
+        anchor: part.anchor,
+        // The summary says best what the page is about, so it counts as its search words do too.
+        keywords: opening ? `${page.summary} ${page.keywords.join(" ")}` : "",
+        keys,
+        text,
+      });
+    }
+  }
+  return docs;
+}
+
+/** pages.gen.ts and search.gen.json as they should be now. */
+export async function generateHelpFiles(): Promise<{ pages: string; search: string }> {
   const [pages, pictures] = await Promise.all([readPages(), readPictures()]);
   const found = problems(pages, pictures);
   if (found.length > 0) throw new Error(`Help pages:\n${found.join("\n")}`);
-  return [
+  const list = [
     "// Generated by apps/web/scripts/help-pages.ts from src/help/content and src/help/pictures (TS-136). Don't edit",
     "// it by hand: `bun --bun vite` writes it as pages change, and a test checks it is current.",
     "",
@@ -231,15 +347,26 @@ export async function generateHelpPages(): Promise<string> {
     "export type HelpPictureName = keyof typeof helpPictures;",
     "",
   ].join("\n");
+  return { pages: list, search: `${JSON.stringify(searchDocs(pages), null, 1)}\n` };
 }
 
-/** Writes pages.gen.ts when it changed; true if it did. */
+/** Writes pages.gen.ts and search.gen.json when they changed; true if either did. */
 export async function writeHelpPages(): Promise<boolean> {
-  const next = await generateHelpPages();
-  const current = await readFile(outFile, "utf8").catch(() => "");
-  if (current === next) return false;
-  await writeFile(outFile, next);
-  return true;
+  const next = await generateHelpFiles();
+  let wrote = false;
+  for (const [file, text] of [
+    [outFile, next.pages],
+    [searchFile, next.search],
+  ] as const) {
+    // One after the other: two files, written at most once each.
+    // oxlint-disable-next-line no-await-in-loop
+    const current = await readFile(file, "utf8").catch(() => "");
+    if (current === text) continue;
+    // oxlint-disable-next-line no-await-in-loop
+    await writeFile(file, text);
+    wrote = true;
+  }
+  return wrote;
 }
 
 /** Writes the page list before a build, and again as pages and pictures change in development. */
@@ -263,6 +390,8 @@ export function helpPages(): Plugin {
 
 if (import.meta.main) {
   console.log(
-    (await writeHelpPages()) ? "Wrote src/help/pages.gen.ts." : "pages.gen.ts is current.",
+    (await writeHelpPages())
+      ? "Wrote src/help/pages.gen.ts and search.gen.json."
+      : "pages.gen.ts and search.gen.json are current.",
   );
 }

@@ -1,12 +1,20 @@
 // `/help/{section}/{page}` (FR-16.1, DS-122): a Help page, public and rendered on the server with its content
-// (features/help). An address that isn't a page is answered with Not found, and a way back to Help.
+// (features/help). An address that isn't a page is answered with Not found, and a way back to Help. Opened from
+// Help's search, `?hl=` carries what was searched for, which the page marks (FR-16.4).
 
 import { HelpFrame } from "@/features/help/help-frame";
 import { HelpPageView } from "@/features/help/help-page";
 import { helpPage } from "@/features/help/pages";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
+/** Longer than any search worth marking. */
+const maxMarked = 200;
+
 export const Route = createFileRoute("/help/$")({
+  validateSearch: (search: Record<string, unknown>): { hl?: string } =>
+    typeof search.hl === "string" && search.hl.trim() !== ""
+      ? { hl: search.hl.slice(0, maxMarked) }
+      : {},
   loader: ({ params }) => {
     // TanStack Router's name for what a splat matched.
     // oxlint-disable-next-line no-underscore-dangle
@@ -32,8 +40,9 @@ export const Route = createFileRoute("/help/$")({
 
 function HelpPageRoute() {
   const { slug } = Route.useLoaderData();
+  const { hl } = Route.useSearch();
   const page = helpPage(slug);
-  return page ? <HelpPageView page={page} /> : <NotInHelp />;
+  return page ? <HelpPageView page={page} marked={hl} /> : <NotInHelp />;
 }
 
 function NotInHelp() {

@@ -1,17 +1,19 @@
 // A Help page (FR-16.1, DS-122, the creator's picks 2A and 4A): the section's name in its color, the title, the
 // one-sentence answer, "Needs a computer" where it does, then the page at a reading width. On a wide screen On this
-// page sits on the right and marks the section in view. Related pages, then Previous and Next, close it.
+// page sits on the right and marks the section in view. Related pages, then Previous and Next, close it. Opened from
+// search, it marks the words searched for (search/arrival.tsx).
 
 import { helpContent } from "@/help/pages.gen";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Monitor } from "lucide-react";
 import { createElement, lazy, Suspense, useEffect, useState, type ComponentType } from "react";
 
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { HelpFrame } from "./help-frame";
+import { HelpFrame, helpContentId } from "./help-frame";
 import { helpComponents } from "./mdx-components";
 import { helpPage, neighbours, sectionOf, sectionText, type HelpPage } from "./pages";
+import { SearchArrival } from "./search/arrival";
 
 type Content = ComponentType<{ components: typeof helpComponents }>;
 
@@ -103,7 +105,15 @@ function PageLink({ page, direction }: { page: HelpPage; direction: "previous" |
   );
 }
 
-export function HelpPageView({ page }: { page: HelpPage }) {
+export function HelpPageView({
+  page,
+  marked,
+}: {
+  page: HelpPage;
+  /** What was searched for, when the page was opened from search. */
+  marked?: string;
+}) {
+  const hash = useLocation({ select: (location) => location.hash });
   const section = sectionOf(page);
   const { previous, next } = neighbours(page.slug);
   const related = page.related.flatMap((slug) => helpPage(slug) ?? []);
@@ -125,6 +135,7 @@ export function HelpPageView({ page }: { page: HelpPage }) {
         </header>
         <Suspense fallback={null}>
           {createElement(contentOf(page), { components: helpComponents })}
+          <SearchArrival key={page.slug} rootId={helpContentId} query={marked} hash={hash} />
         </Suspense>
         {related.length > 0 && (
           <section

@@ -25,6 +25,7 @@ import { Route as ApprovalsIdRouteImport } from './routes/approvals.$id'
 import { Route as HelpIndexRouteImport } from './routes/help.index'
 import { Route as HelpSplatRouteImport } from './routes/help.$'
 import { Route as HelpRecoveryRouteImport } from './routes/help.recovery'
+import { Route as HelpSearchRouteImport } from './routes/help.search'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
@@ -126,6 +127,11 @@ const HelpSplatRoute = HelpSplatRouteImport.update({
 const HelpRecoveryRoute = HelpRecoveryRouteImport.update({
   id: '/help/recovery',
   path: '/help/recovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpSearchRoute = HelpSearchRouteImport.update({
+  id: '/help/search',
+  path: '/help/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinTokenRoute = JoinTokenRouteImport.update({
@@ -278,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/approvals/$id': typeof ApprovalsIdRoute
   '/help/$': typeof HelpSplatRoute
   '/help/recovery': typeof HelpRecoveryRoute
+  '/help/search': typeof HelpSearchRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/approvals/$id': typeof ApprovalsIdRoute
   '/help/$': typeof HelpSplatRoute
   '/help/recovery': typeof HelpRecoveryRoute
+  '/help/search': typeof HelpSearchRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
@@ -360,6 +368,7 @@ export interface FileRoutesById {
   '/approvals/$id': typeof ApprovalsIdRoute
   '/help/$': typeof HelpSplatRoute
   '/help/recovery': typeof HelpRecoveryRoute
+  '/help/search': typeof HelpSearchRoute
   '/join/$token': typeof JoinTokenRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
@@ -403,6 +412,7 @@ export interface FileRouteTypes {
     | '/approvals/$id'
     | '/help/$'
     | '/help/recovery'
+    | '/help/search'
     | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/approvals/$id'
     | '/help/$'
     | '/help/recovery'
+    | '/help/search'
     | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/approvals/$id'
     | '/help/$'
     | '/help/recovery'
+    | '/help/search'
     | '/join/$token'
     | '/oauth/authorize'
     | '/oauth/consent'
@@ -523,6 +535,7 @@ export interface RootRouteChildren {
   ApprovalsIdRoute: typeof ApprovalsIdRoute
   HelpSplatRoute: typeof HelpSplatRoute
   HelpRecoveryRoute: typeof HelpRecoveryRoute
+  HelpSearchRoute: typeof HelpSearchRoute
   JoinTokenRoute: typeof JoinTokenRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthConsentRoute: typeof OauthConsentRoute
@@ -643,6 +656,13 @@ declare module '@tanstack/react-router' {
       path: '/help/recovery'
       fullPath: '/help/recovery'
       preLoaderRoute: typeof HelpRecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/search': {
+      id: '/help/search'
+      path: '/help/search'
+      fullPath: '/help/search'
+      preLoaderRoute: typeof HelpSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join/$token': {
@@ -926,6 +946,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApprovalsIdRoute: ApprovalsIdRoute,
   HelpSplatRoute: HelpSplatRoute,
   HelpRecoveryRoute: HelpRecoveryRoute,
+  HelpSearchRoute: HelpSearchRoute,
   JoinTokenRoute: JoinTokenRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthConsentRoute: OauthConsentRoute,

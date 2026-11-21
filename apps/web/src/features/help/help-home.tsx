@@ -1,11 +1,13 @@
-// Help's home (DS-122, the creator's pick 1A): what Help is for, then "New here?" with the first two pages, then
-// every section as a tile with its pages. Search joins the top in TON-314.
+// Help's home (DS-122, the creator's pick 1A): what Help is for and a search field, then "New here?" with the first
+// two pages, then every section as a tile with its pages. Typing in the field opens Help's search with what was typed
+// (TON-314); before the page's scripts run, it's a plain form that opens /help/search.
 
 import type { HelpSlug } from "@/help/pages.gen";
 import type { HelpIcon } from "@/help/sections";
 import { Link } from "@tanstack/react-router";
 import {
   BookOpen,
+  Search,
   CirclePlus,
   Clock,
   Folder,
@@ -21,11 +23,12 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { cn } from "@tonaris/ui/lib/utils";
 
-import { HelpFrame } from "./help-frame";
+import { HelpFrame, useOpenHelpSearch } from "./help-frame";
+import { Keys } from "./keys";
 import { helpPage, sectionsWithPages, sectionText, type HelpPage } from "./pages";
 
 export const sectionIcons: Record<HelpIcon, LucideIcon> = {
@@ -105,6 +108,42 @@ function Tile({
   );
 }
 
+function HomeSearch() {
+  const openSearch = useOpenHelpSearch();
+  const id = useId();
+  return (
+    <search className="w-full max-w-xl">
+      <form action="/help/search" method="get" className="relative">
+        <label htmlFor={id} className="sr-only">
+          Search Help
+        </label>
+        <Search
+          aria-hidden
+          strokeWidth={1.5}
+          className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-fg-tertiary"
+        />
+        <input
+          id={id}
+          name="q"
+          type="search"
+          autoComplete="off"
+          enterKeyHint="search"
+          placeholder="Search Help, such as “share a list”"
+          value=""
+          onChange={(event) => openSearch(event.target.value)}
+          className="h-13 w-full rounded-lg border border-subtle bg-field pr-4 pl-12 text-[1rem] text-fg-primary focus-ring transition-colors duration-100 outline-none placeholder:text-fg-tertiary hover:border-strong md:pr-20"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 max-md:hidden"
+        >
+          <Keys k="⌘ K" />
+        </span>
+      </form>
+    </search>
+  );
+}
+
 export function HelpHome() {
   const sections = sectionsWithPages();
   return (
@@ -115,6 +154,7 @@ export function HelpHome() {
           <p className="max-w-xl text-lead text-fg-secondary">
             Short answers to how Tonaris works, from your first album to sharing a whole folder.
           </p>
+          <HomeSearch />
         </section>
 
         <section aria-labelledby="new-here" className="flex flex-col gap-4">

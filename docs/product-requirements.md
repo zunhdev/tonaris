@@ -911,6 +911,8 @@ Restoring or re-adding an album reuses its slot, even at capacity.
 
 **FR-16.3 Pictures.** Help's pictures show the app as it looks, with invented albums only: no real album's name or artwork appears (as on the landing page).
 
+**FR-16.4 Search.** Help can be searched from every page, in the reader's own words (decided 21 November 2026, TON-314): any form of a word, a whole question, a typo, and everyday or other apps' words, such as playlist or recycle bin, find the pages that use Tonaris's. A result shows the part of the page that answers, and opening it goes straight to that part with the words marked. A search has an address of its own, so it can be shared.
+
 ## 6. Quality requirements
 
 **Q-01 Performance.** Interactions are fast and modern, in the style of Linear's optimistic updates: immediate feedback, visible pending saves, accurate outcomes, and preserved input and saved state on failure.
@@ -1219,6 +1221,7 @@ Provider investigation may require new product decisions. Bring conflicts back h
 - **Decision (18 November 2026), favorite albums** (P-TON-57, TON-297): a person picks up to four of their own albums in Settings → Profile, found by typing, and orders them. Their people see them on the person's page in People, by cover, title and artist only, with no year or service links, and not in the Shared by card (the creator's choices over my recommendations). A favorite in Trash is hidden until restored. **Updated** FR-11.16 and FR-08.4.
 - **Decision (19 November 2026), folder and list icons** (TON-306), from the creator's idea and a to-scale mock of their genre folders: owners give folders and lists an icon from a fixed set, in place of the folder or list symbol; it is not passed to what's inside; viewers of a share see it, agents can set it, and exports carry it. **Added** FR-01.20; **updated** FR-10.4.
 - **Decision (21 November 2026), Help** (P-TON-58, TON-307), before the closed beta ends: public Help pages at `/help`, built into the web app, organized by what people want to do, with pictures of an invented collection. Search and keyboard get special attention: every step names its key, and a shortcuts page lists them all. **Added** FR-16.
+- **Decision (21 November 2026), Help search** (TON-314), from the creator's request that it be "real good": it finds a page by the reader's words, not only the app's, reads a typo as the word meant, and opens the answer at its section with the words marked. **Added** FR-16.4.
 - **Clarifications (14 November 2026, TON-224)**, from the full-surface audit (no intended behavior change):
   - a failed capture's form is prefilled only with what the terms permit: Apple's hints, or MusicBrainz's values for an album without a year (FR-02.4, G1);
   - FR-02.9's open question was answered by G2 on 21 October 2026;
