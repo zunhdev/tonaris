@@ -64,7 +64,7 @@ export function ShortcutReference({
             href={helpAddress("reference/keyboard-shortcuts")}
             target="_blank"
             rel="noopener"
-            className="rounded-sm text-accent-solid underline-offset-3 focus-ring hover:underline"
+            className="rounded-sm text-accent-solid underline decoration-accent-solid/40 underline-offset-3 focus-ring hover:decoration-accent-solid"
           >
             open Help<span className="sr-only">, in a new tab</span>
           </a>

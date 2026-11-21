@@ -282,7 +282,8 @@ function SearchBody({
     } else if (event.key === "Enter" && !event.nativeEvent.isComposing) {
       event.preventDefault();
       if (current) choose(current);
-      else if (text && answer) allResults();
+      // Before the search has loaded, or with nothing found, Enter opens the results page.
+      else if (text) allResults();
     } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       // ⌘K again closes it.
       event.preventDefault();

@@ -289,6 +289,7 @@ test("the home's field opens search with what was typed, and searches come back"
   const field = palette.getByRole("combobox", { name: "Search Help" });
   await expect(field).toHaveValue("share");
   await expect(field).toBeFocused();
+  await expect(palette.getByRole("option").first()).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(palette).toBeHidden();
   await expect(page).toHaveURL(/\?hl=share/);

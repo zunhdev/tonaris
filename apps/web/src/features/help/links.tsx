@@ -48,7 +48,8 @@ export function LearnMore<S extends HelpSlug>({
       target="_blank"
       rel="noopener"
       className={cn(
-        "rounded-sm text-accent-solid underline-offset-3 focus-ring hover:underline",
+        // Underlined, so it stands apart from the sentence around it by more than its color.
+        "rounded-sm text-accent-solid underline decoration-accent-solid/40 underline-offset-3 focus-ring hover:decoration-accent-solid",
         className,
       )}
     >
