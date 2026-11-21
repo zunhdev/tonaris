@@ -10,8 +10,10 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@tonaris/ui/lib/utils";
 
+import { ConnectGuide } from "./connect-guide";
 import { Limit } from "./facts";
 import { Keys } from "./keys";
+import { Shortcuts } from "./shortcuts";
 
 const linkClass =
   "text-accent-solid underline decoration-accent-solid/40 underline-offset-3 hover:decoration-accent-solid";
@@ -187,4 +189,6 @@ export const helpComponents: MDXComponents = {
   Picture,
   Compare,
   Choice,
+  Shortcuts,
+  ConnectGuide,
 };

@@ -2118,6 +2118,8 @@ The creator chose direction 1, "in the app's clothes", refined, from sketches on
 - **Its parts (4A, quiet):** a numbered list is steps, each number in an `accent.soft` circle; bold is a label in the app. A step with a key names it beside the mouse action, "or press L", as keycaps the reader's computer names: ⌘, ⌥, ⇧ and ⌫ on a Mac, Ctrl, Alt, Shift and Backspace elsewhere (the server renders a Mac's). Screen readers hear each key's name. Notes sit on `bg.panel` with an icon: a tip (amber lightbulb), On a phone (pink), more to know (blue), and what can't be undone (danger, on its tint). Pictures (FR-16.3) sit in a framed box at the size they were taken for, with a sentence for screen readers and a caption. Two choices can sit side by side.
 - **An address that isn't a page** answers 404 with "This page isn't in Help" and a way back to its home.
 
+*As built in TON-313:* **Keyboard shortcuts (6A)** shows the app's own shortcut list (`shortcutReference`, as the `?` sheet does): first "Learn these first", eight keys as large keycaps on cards, then each group as a card of actions and keys. Keys pressed together sit side by side, the Go to keys read "G then H", and other pairs "↑ or ↓". A command with no key reads "No key; find it with ⌘K". A Mac and Windows and Linux switch, two native radios (the design system's segmented control writes `style` attributes, which the CSP refuses in server-rendered HTML), starts from the reader's computer. Print leaves out the header, the contents, On this page, Related, and Previous and Next.
+
 ## 15. States, copy, and mobile
 
 **DS-105 Empty states.** One sentence and one action. *(FR-01.9, FR-12)*

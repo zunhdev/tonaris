@@ -149,3 +149,30 @@ test("an address that isn't a page is Not found, with a way back", async ({ page
   await page.getByRole("link", { name: "Go to Help's home" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Tonaris Help" })).toBeVisible();
 });
+
+test("the keyboard shortcuts page lists every key, for a Mac or for Windows", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/help/reference/keyboard-shortcuts");
+  const keysFor = page.getByRole("group", { name: "Keys for" });
+  await expect(keysFor).toBeVisible();
+  const groups = ["Moving around", "Views", "Albums", "Folders and lists", "Trash", "Help"];
+  await Promise.all(
+    groups.map((group) => expect(page.getByRole("region", { name: group })).toBeVisible()),
+  );
+  const search = page
+    .getByRole("region", { name: "Moving around" })
+    .locator("div")
+    .filter({ hasText: /^Search/ });
+  // The arrows switch, as in any radio group, and the keys follow.
+  const choose = (name: string) => keysFor.locator("label").filter({ hasText: name }).click();
+  await choose("Mac");
+  await expect(keysFor.getByRole("radio", { name: "Mac" })).toBeChecked();
+  await page.keyboard.press("ArrowRight");
+  await expect(keysFor.getByRole("radio", { name: "Windows and Linux" })).toBeChecked();
+  await expect(search.locator("kbd").first()).toHaveText("Ctrl");
+  await expect(search).toContainText("Control K");
+  await choose("Mac");
+  await expect(search.locator("kbd").first()).toHaveText("⌘");
+  await expect(page.getByRole("button", { name: "Print" })).toBeVisible();
+  expect(await violations(page, "body")).toEqual([]);
+});

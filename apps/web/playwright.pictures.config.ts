@@ -46,6 +46,9 @@ export default defineConfig({
         API_URL: `http://localhost:${picturesApiPort}`,
         TEST_HOOKS: "1",
         HELP_PICTURES_PENDING: "1",
+        // The account menu's Feedback and ideas shows only with a board (FR-11.15); an invented one.
+        FEEDBACK_URL: "https://feedback.example.test",
+        FEEDBACK_CALLBACK_URL: "https://login.example.test/oauth/_tonaris/callback",
       },
       timeout: 120_000,
     },
