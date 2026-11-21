@@ -37,12 +37,13 @@ import {
 
 import { type Account, generateWorkload, scaledWorkload, type Workload } from "./generate";
 
-type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 /** Rows per INSERT, well under Postgres's limit of 65,535 bind parameters per statement. */
 const batchSize = 1_000;
 
-async function insert<T extends PgTable>(
+/** Inserts `rows` into `table` in batches; the demo collection's seeder uses it too (tooling/src/demo). */
+export async function insert<T extends PgTable>(
   tx: Transaction,
   table: T,
   rows: readonly PgInsertValue<T>[],
@@ -82,7 +83,10 @@ export async function seedWorkload(
  * Deletes the accounts, matched by id or email, with everything they own or saved. Owner columns don't cascade
  * from `user` (TS-74), so the owned rows go first; deleting containers and albums cascades to what hangs off them.
  */
-async function removeAccounts(tx: Transaction, accounts: readonly Account[]): Promise<void> {
+export async function removeAccounts(
+  tx: Transaction,
+  accounts: readonly Pick<Account, "id" | "email">[],
+): Promise<void> {
   const found = await tx
     .select({ id: users.id })
     .from(users)
