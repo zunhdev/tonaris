@@ -217,7 +217,7 @@
   "anchor": "on-a-phone-or-tablet",
   "keywords": "",
   "keys": "",
-  "text": "### iPhone and iPad Open Tonaris in Safari. Tap Share. If you don't see it, tap ⋯ beside the address first, then Share. Tap Add to Home Screen. Leave Open as Web App on. Tap Add. Tonaris then opens full screen from its icon. In the installed app, pull down from the top of a view to reload it. ### Android Open Tonaris in Chrome. Tap Chrome's menu ⋮, then Add to home screen. Tap Install. Depending on your Chrome, the menu may read Install app instead. On a phone, Tonaris is for looking through your collection, searching it and opening albums. See Tonaris on your phone."
+  "text": "### iPhone and iPad Open Tonaris in Safari. Tap Share. If you don't see it, tap ⋯ beside the address first, then Share. Tap Add to Home Screen. Leave Open as Web App on. Tap Add. Tonaris then opens full screen from its icon. In the installed app, pull down from the top of a view to reload it. On an iPhone or iPad, Tonaris suggests this itself: a bar at the bottom of the screen with Install, which shows these steps. Close it with ×, and it won't come back on that device. If you opened Tonaris from another app, such as Threads, Instagram or Telegram, its browser can't add Tonaris to your Home Screen. Tap Install, then Copy link, and open the link in Safari. ### Android Open Tonaris in Chrome. Tap Chrome's menu ⋮, then Add to home screen. Tap Install. Depending on your Chrome, the menu may read Install app instead. On a phone, Tonaris is for looking through your collection, searching it and opening albums. See Tonaris on your phone."
  },
  {
   "id": "start-here/install-the-app#remove-the-app",
